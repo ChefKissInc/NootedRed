@@ -38,3 +38,7 @@ DerivedData/
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
 /MacKernelSDK
+.idea/
+out/
+*.iml
+*.ipr

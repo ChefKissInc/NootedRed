@@ -1,7 +1,6 @@
 #include "AMDRadeonPicasso.hpp"
-#include <Availability.h>
 
-#if !__ACIDANTHERA_MAC_SDK
+#ifndef __ACIDANTHERA_MAC_SDK
 #error Using wrong SDK, this project must be compiled using the Acidanthera MacKernelSDK
 #endif
 
@@ -20,7 +19,7 @@ bool AMDRadeonPicasso::init(OSDictionary *properties) {
 
     while (1);
 
-    return true;
+//    return true;
 }
 
 bool AMDRadeonPicasso::start(IOService *provider) {
@@ -30,5 +29,5 @@ bool AMDRadeonPicasso::start(IOService *provider) {
 
     while (1);
 
-    return true;
+//    return true;
 }
