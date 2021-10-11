@@ -1,7 +1,6 @@
 #include "AMDRadeonPicasso.hpp"
 
-#define super IOService
-OSDefineMetaClassAndStructors(AMDRadeonPicasso, IOService);
+OSDefineMetaClassAndStructors(AMDRadeonPicasso, super);
 
 void AMDRadeonPicasso::free() {
     super::free();

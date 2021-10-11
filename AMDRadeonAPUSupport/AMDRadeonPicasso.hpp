@@ -1,7 +1,9 @@
 #include <IOKit/IOService.h>
 #include <IOKit/IOLib.h>
 
-class AMDRadeonPicasso : public IOService {
+#define super IOService
+
+class AMDRadeonPicasso : public super {
     OSDeclareDefaultStructors(AMDRadeonPicasso);
 
     virtual void free() override;
