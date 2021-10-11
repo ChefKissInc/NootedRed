@@ -1,5 +1,5 @@
 # AMDRadeonAPUSupport
 
-AMD APU graphics support kext
+AMD APU graphics support kext [Lilu](https://github.com/acidanthera/Lilu) plugin.
 
-The AMDRadeonAPUSupport kext is licensed under BSD-3. Source is based on mesa code.
+The AMDRadeonAPUSupport kext is licensed under BSD-3.
