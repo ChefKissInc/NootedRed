@@ -7,14 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		40991ABB270B5E8400538004 /* AMDRadeonAPUSupport.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40991ABA270B5E8400538004 /* AMDRadeonAPUSupport.hpp */; };
-		40991ABD270B5E8400538004 /* AMDRadeonAPUSupport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40991ABC270B5E8400538004 /* AMDRadeonAPUSupport.cpp */; };
+		40991ABB270B5E8400538004 /* AMDRadeonPicasso.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40991ABA270B5E8400538004 /* AMDRadeonPicasso.hpp */; };
+		40991ABD270B5E8400538004 /* AMDRadeonPicasso.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40991ABC270B5E8400538004 /* AMDRadeonPicasso.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		40991AB7270B5E8400538004 /* AMDRadeonAPUSupport.kext */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AMDRadeonAPUSupport.kext; sourceTree = BUILT_PRODUCTS_DIR; };
-		40991ABA270B5E8400538004 /* AMDRadeonAPUSupport.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AMDRadeonAPUSupport.hpp; sourceTree = "<group>"; };
-		40991ABC270B5E8400538004 /* AMDRadeonAPUSupport.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AMDRadeonAPUSupport.cpp; sourceTree = "<group>"; };
+		40991ABA270B5E8400538004 /* AMDRadeonPicasso.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AMDRadeonPicasso.hpp; sourceTree = "<group>"; };
+		40991ABC270B5E8400538004 /* AMDRadeonPicasso.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AMDRadeonPicasso.cpp; sourceTree = "<group>"; };
 		40991ABE270B5E8400538004 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -48,8 +48,8 @@
 		40991AB9270B5E8400538004 /* AMDRadeonAPUSupport */ = {
 			isa = PBXGroup;
 			children = (
-				40991ABA270B5E8400538004 /* AMDRadeonAPUSupport.hpp */,
-				40991ABC270B5E8400538004 /* AMDRadeonAPUSupport.cpp */,
+				40991ABA270B5E8400538004 /* AMDRadeonPicasso.hpp */,
+				40991ABC270B5E8400538004 /* AMDRadeonPicasso.cpp */,
 				40991ABE270B5E8400538004 /* Info.plist */,
 			);
 			path = AMDRadeonAPUSupport;
@@ -62,7 +62,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				40991ABB270B5E8400538004 /* AMDRadeonAPUSupport.hpp in Headers */,
+				40991ABB270B5E8400538004 /* AMDRadeonPicasso.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -134,7 +134,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				40991ABD270B5E8400538004 /* AMDRadeonAPUSupport.cpp in Sources */,
+				40991ABD270B5E8400538004 /* AMDRadeonPicasso.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

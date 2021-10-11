@@ -2,9 +2,76 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright 2021 VisualDevelopment. All rights reserved.</string>
+	<key>CFBundleSupportedPlatforms</key>
+	<array>
+		<string>MacOSX</string>
+	</array>
+	<key>LSMinimumSystemVersion</key>
+	<string>10.14</string>
+	<key>OSBundleRequired</key>
+	<string></string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundlePackageType</key>
+	<string>KEXT</string>
+	<key>CFBundleName</key>
+	<string>${PRODUCT_NAME}</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.visualdevelopment.${PRODUCT_NAME:rfc1034identifier}</string>
+	<key>CFBundleIconFile</key>
+	<string></string>
+	<key>CFBundleExecutable</key>
+	<string>${EXECUTABLE_NAME}</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
 	<key>IOKitPersonalities</key>
-	<dict/>
+	<dict>
+		<key>Picasso</key>
+		<dict>
+			<key>CFBundleIdentifier</key>
+			<string>com.visualdevelopment.${PRODUCT_NAME:rfc1034identifier}</string>
+			<key>IOClass</key>
+			<string>AMDRadeonPicasso</string>
+			<key>IOMatchCategory</key>
+			<string>${PRODUCT_NAME}</string>
+			<key>IOPCIMatch</key>
+			<string>0x15D81002</string>
+			<key>IOPCITunnelCompatible</key>
+			<true/>
+			<key>IOProbeScore</key>
+			<integer>65051</integer>
+			<key>IOPropertyMatch</key>
+			<dict/>
+			<key>IOProviderClass</key>
+			<string>IOPCIDevice</string>
+		</dict>
+	</dict>
 	<key>OSBundleLibraries</key>
-	<dict/>
+	<dict>
+		<key>com.apple.iokit.IOACPIFamily</key>
+		<string>1.4</string>
+		<key>com.apple.iokit.IOGraphicsFamily</key>
+		<string>2.4.1</string>
+		<key>com.apple.iokit.IOPCIFamily</key>
+		<string>2.9</string>
+		<key>com.apple.kpi.bsd</key>
+		<string>15.0.0</string>
+		<key>com.apple.kpi.iokit</key>
+		<string>15.0.0</string>
+		<key>com.apple.kpi.libkern</key>
+		<string>15.0.0</string>
+		<key>com.apple.kpi.mach</key>
+		<string>15.0.0</string>
+		<key>com.apple.kpi.unsupported</key>
+		<string>15.0.0</string>
+	</dict>
 </dict>
 </plist>
