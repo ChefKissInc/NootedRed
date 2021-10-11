@@ -9,7 +9,7 @@
 		<string>MacOSX</string>
 	</array>
 	<key>LSMinimumSystemVersion</key>
-	<string>10.14</string>
+	<string>10.12</string>
 	<key>OSBundleRequired</key>
 	<string></string>
 	<key>CFBundleVersion</key>
@@ -25,7 +25,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.visualdevelopment.${PRODUCT_NAME:rfc1034identifier}</string>
+	<string>com.VisualDevelopment.${PRODUCT_NAME:rfc1034identifier}</string>
 	<key>CFBundleIconFile</key>
 	<string></string>
 	<key>CFBundleExecutable</key>
@@ -37,7 +37,7 @@
 		<key>Picasso</key>
 		<dict>
 			<key>CFBundleIdentifier</key>
-			<string>com.visualdevelopment.${PRODUCT_NAME:rfc1034identifier}</string>
+			<string>com.VisualDevelopment.${PRODUCT_NAME:rfc1034identifier}</string>
 			<key>IOClass</key>
 			<string>AMDRadeonPicasso</string>
 			<key>IOMatchCategory</key>
