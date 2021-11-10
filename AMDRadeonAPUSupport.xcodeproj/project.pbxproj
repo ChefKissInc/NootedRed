@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4008BE11273AA45200626513 /* plugin_start.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4008BE10273AA45200626513 /* plugin_start.cpp */; };
 		409C9E562711B1C9004B831C /* libkmod.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 409C9E552711B1C9004B831C /* libkmod.a */; };
 		40FF923F272AE01300F7859E /* PlugStart.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FF923E272AE01300F7859E /* PlugStart.cpp */; };
 		40FF9242272AE02900F7859E /* AMDRadeonAPUSupport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FF9240272AE02900F7859E /* AMDRadeonAPUSupport.cpp */; };
@@ -14,6 +15,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4008BE10273AA45200626513 /* plugin_start.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = plugin_start.cpp; path = Lilu.kext/Contents/Resources/Library/plugin_start.cpp; sourceTree = "<group>"; };
 		40991AB7270B5E8400538004 /* AMDRadeonAPUSupport.kext */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AMDRadeonAPUSupport.kext; sourceTree = BUILT_PRODUCTS_DIR; };
 		40991ABE270B5E8400538004 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		409C9E552711B1C9004B831C /* libkmod.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libkmod.a; path = usr/lib/libkmod.a; sourceTree = SDKROOT; };
@@ -37,6 +39,7 @@
 		40991AAD270B5E8400538004 = {
 			isa = PBXGroup;
 			children = (
+				4008BE10273AA45200626513 /* plugin_start.cpp */,
 				40991AB9270B5E8400538004 /* AMDRadeonAPUSupport */,
 				40991AB8270B5E8400538004 /* Products */,
 				409C9E542711B1C8004B831C /* Frameworks */,
@@ -151,6 +154,7 @@
 			files = (
 				40FF9242272AE02900F7859E /* AMDRadeonAPUSupport.cpp in Sources */,
 				40FF923F272AE01300F7859E /* PlugStart.cpp in Sources */,
+				4008BE11273AA45200626513 /* plugin_start.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -210,11 +214,14 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = "\"$(PROJECT_DIR)/MacKernelSDK/Headers\"";
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/MacKernelSDK/Headers",
+					"$(PROJECT_DIR)/Lilu.kext/Contents/Resources",
+				);
 				KERNEL_EXTENSION_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/MacKernelSDK/Headers";
 				KERNEL_FRAMEWORK_HEADERS = "$(PROJECT_DIR)/MacKernelSDK/Headers";
 				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/MacKernelSDK/Library/x86_64";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -269,11 +276,14 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = "\"$(PROJECT_DIR)/MacKernelSDK/Headers\"";
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/MacKernelSDK/Headers",
+					"$(PROJECT_DIR)/Lilu.kext/Contents/Resources",
+				);
 				KERNEL_EXTENSION_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/MacKernelSDK/Headers";
 				KERNEL_FRAMEWORK_HEADERS = "$(PROJECT_DIR)/MacKernelSDK/Headers";
 				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/MacKernelSDK/Library/x86_64";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
