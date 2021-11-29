@@ -22,13 +22,11 @@ static KernelPatcher::KextInfo kextRadeonX5000HWLibs {
 };
 
 void omgItsFuckingEverythingUp() {
-    IOLog("-------------------\n\n\nNon raven! It's fucking everything up\n\n\n-------------------");
-    while (true);
+    IOPanic("Non raven! It's fucking everything up");
 }
 
 void omgItsTryingToInit() {
-    IOLog("-------------------\n\n\nIt's initializing raven!\n\n\n-------------------");
-    while (true);
+    IOPanic("It's initializing raven!");
 }
 
 PluginConfiguration ADDPR(config) {
@@ -66,16 +64,16 @@ PluginConfiguration ADDPR(config) {
                     {"_PPT_Vega20_BackEnd_Initialize", omgItsFuckingEverythingUp},
                     {"_PhwVega20_Initialize", omgItsFuckingEverythingUp},
                     {"_PhwRaven_Initialize", omgItsTryingToInit},
-                    {"PTR__PhwRenoir_Initialize_004b7068", omgItsTryingToInit},
-                    {"PTR__PPT_Renoir_BackEnd_Initialize_004b7010", omgItsTryingToInit},
-                    {"PTR__PPT_Renoir_BackEnd_Initialize_004b7010", omgItsTryingToInit},
+                    {"_PPT_Tonga_BackEnd_Initialize", omgItsTryingToInit},
+                    {"_PPT_Raven_BackEnd_Initialize", omgItsTryingToInit},
+                    {"_PPT_Renoir_BackEnd_Initialize", omgItsTryingToInit},
                     {"_PhwSoc15_PPTables_Initialize", omgItsFuckingEverythingUp},
                     {"_Phw_SwSmu_BackEnd_Initialize", omgItsFuckingEverythingUp},
                     {"_PhwSoc15_Initialize", omgItsFuckingEverythingUp},
                 };
 
                 if (!patcher.routeMultiple(index, requests, address, size, true, true))
-                    SYSLOG("apu", "Failed to route Radeon X5000 HWLibs functions");
+                    IOPanic("AMDRadeonAPUSupport: Failed to route Radeon X5000 HWLibs functions");
             }
         });
     }
