@@ -12,4 +12,6 @@ static KernelPatcher::KextInfo kextRadeonX5000HWLibs {
 
 void WhateverRed::init() {
     SYSLOG("wer", "WhateverRed plugin loaded");
+
+    lilu.onKextLoad(&kextRadeonX5000HWLibs);
 }
