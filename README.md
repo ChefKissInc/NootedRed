@@ -1,5 +1,5 @@
-# AMDRadeonAPUSupport
+# WhateverRed
 
-AMD APU graphics support kext [Lilu](https://github.com/acidanthera/Lilu) plugin.
+AMD iGPU [Lilu](https://github.com/acidanthera/Lilu) plugin.
 
-The AMDRadeonAPUSupport kext is licensed under BSD-3.
+The WhateverRed kext is licensed under BSD-3.

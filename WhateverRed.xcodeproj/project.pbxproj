@@ -9,19 +9,19 @@
 /* Begin PBXBuildFile section */
 		4008BE11273AA45200626513 /* plugin_start.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4008BE10273AA45200626513 /* plugin_start.cpp */; };
 		409C9E562711B1C9004B831C /* libkmod.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 409C9E552711B1C9004B831C /* libkmod.a */; };
-		40FF923F272AE01300F7859E /* PlugStart.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FF923E272AE01300F7859E /* PlugStart.cpp */; };
-		40FF9242272AE02900F7859E /* AMDRadeonAPUSupport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FF9240272AE02900F7859E /* AMDRadeonAPUSupport.cpp */; };
-		40FF9243272AE02900F7859E /* AMDRadeonAPUSupport.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FF9241272AE02900F7859E /* AMDRadeonAPUSupport.hpp */; };
+		40FF923F272AE01300F7859E /* kern_start.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FF923E272AE01300F7859E /* kern_start.cpp */; };
+		40FF9242272AE02900F7859E /* kern_wer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FF9240272AE02900F7859E /* kern_wer.cpp */; };
+		40FF9243272AE02900F7859E /* kern_wer.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FF9241272AE02900F7859E /* kern_wer.hpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		4008BE10273AA45200626513 /* plugin_start.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = plugin_start.cpp; path = Lilu.kext/Contents/Resources/Library/plugin_start.cpp; sourceTree = "<group>"; };
-		40991AB7270B5E8400538004 /* AMDRadeonAPUSupport.kext */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AMDRadeonAPUSupport.kext; sourceTree = BUILT_PRODUCTS_DIR; };
+		40991AB7270B5E8400538004 /* WhateverRed.kext */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WhateverRed.kext; sourceTree = BUILT_PRODUCTS_DIR; };
 		40991ABE270B5E8400538004 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		409C9E552711B1C9004B831C /* libkmod.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libkmod.a; path = usr/lib/libkmod.a; sourceTree = SDKROOT; };
-		40FF923E272AE01300F7859E /* PlugStart.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = PlugStart.cpp; sourceTree = "<group>"; };
-		40FF9240272AE02900F7859E /* AMDRadeonAPUSupport.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AMDRadeonAPUSupport.cpp; sourceTree = "<group>"; };
-		40FF9241272AE02900F7859E /* AMDRadeonAPUSupport.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AMDRadeonAPUSupport.hpp; sourceTree = "<group>"; };
+		40FF923E272AE01300F7859E /* kern_start.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_start.cpp; sourceTree = "<group>"; };
+		40FF9240272AE02900F7859E /* kern_wer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_wer.cpp; sourceTree = "<group>"; };
+		40FF9241272AE02900F7859E /* kern_wer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_wer.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -40,7 +40,7 @@
 			isa = PBXGroup;
 			children = (
 				4008BE10273AA45200626513 /* plugin_start.cpp */,
-				40991AB9270B5E8400538004 /* AMDRadeonAPUSupport */,
+				40991AB9270B5E8400538004 /* WhateverRed */,
 				40991AB8270B5E8400538004 /* Products */,
 				409C9E542711B1C8004B831C /* Frameworks */,
 			);
@@ -49,20 +49,20 @@
 		40991AB8270B5E8400538004 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				40991AB7270B5E8400538004 /* AMDRadeonAPUSupport.kext */,
+				40991AB7270B5E8400538004 /* WhateverRed.kext */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		40991AB9270B5E8400538004 /* AMDRadeonAPUSupport */ = {
+		40991AB9270B5E8400538004 /* WhateverRed */ = {
 			isa = PBXGroup;
 			children = (
 				40991ABE270B5E8400538004 /* Info.plist */,
-				40FF923E272AE01300F7859E /* PlugStart.cpp */,
-				40FF9240272AE02900F7859E /* AMDRadeonAPUSupport.cpp */,
-				40FF9241272AE02900F7859E /* AMDRadeonAPUSupport.hpp */,
+				40FF923E272AE01300F7859E /* kern_start.cpp */,
+				40FF9240272AE02900F7859E /* kern_wer.cpp */,
+				40FF9241272AE02900F7859E /* kern_wer.hpp */,
 			);
-			path = AMDRadeonAPUSupport;
+			path = WhateverRed;
 			sourceTree = "<group>";
 		};
 		409C9E542711B1C8004B831C /* Frameworks */ = {
@@ -80,16 +80,16 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				40FF9243272AE02900F7859E /* AMDRadeonAPUSupport.hpp in Headers */,
+				40FF9243272AE02900F7859E /* kern_wer.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		40991AB6270B5E8400538004 /* AMDRadeonAPUSupport */ = {
+		40991AB6270B5E8400538004 /* WhateverRed */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 40991AC1270B5E8400538004 /* Build configuration list for PBXNativeTarget "AMDRadeonAPUSupport" */;
+			buildConfigurationList = 40991AC1270B5E8400538004 /* Build configuration list for PBXNativeTarget "WhateverRed" */;
 			buildPhases = (
 				40991AB2270B5E8400538004 /* Headers */,
 				40991AB3270B5E8400538004 /* Sources */,
@@ -100,9 +100,9 @@
 			);
 			dependencies = (
 			);
-			name = AMDRadeonAPUSupport;
-			productName = AMDRadeonAPUSupport;
-			productReference = 40991AB7270B5E8400538004 /* AMDRadeonAPUSupport.kext */;
+			name = WhateverRed;
+			productName = WhateverRed;
+			productReference = 40991AB7270B5E8400538004 /* WhateverRed.kext */;
 			productType = "com.apple.product-type.kernel-extension";
 		};
 /* End PBXNativeTarget section */
@@ -119,7 +119,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 40991AB1270B5E8400538004 /* Build configuration list for PBXProject "AMDRadeonAPUSupport" */;
+			buildConfigurationList = 40991AB1270B5E8400538004 /* Build configuration list for PBXProject "WhateverRed" */;
 			compatibilityVersion = "Xcode 13.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -132,7 +132,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				40991AB6270B5E8400538004 /* AMDRadeonAPUSupport */,
+				40991AB6270B5E8400538004 /* WhateverRed */,
 			);
 		};
 /* End PBXProject section */
@@ -152,8 +152,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				40FF9242272AE02900F7859E /* AMDRadeonAPUSupport.cpp in Sources */,
-				40FF923F272AE01300F7859E /* PlugStart.cpp in Sources */,
+				40FF9242272AE02900F7859E /* kern_wer.cpp in Sources */,
+				40FF923F272AE01300F7859E /* kern_start.cpp in Sources */,
 				4008BE11273AA45200626513 /* plugin_start.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -302,13 +302,13 @@
 				CURRENT_PROJECT_VERSION = 1.0.0d1;
 				EXCLUDED_ARCHS = "arm64 arm64e";
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = AMDRadeonAPUSupport/Info.plist;
+				INFOPLIST_FILE = WhateverRed/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MARKETING_VERSION = 1.0;
-				MODULE_NAME = com.VisualDevelopment.AMDRadeonAPUSupport;
+				MODULE_NAME = com.VisualDevelopment.WhateverRed;
 				MODULE_VERSION = 1.0.0d1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.VisualDevelopment.AMDRadeonAPUSupport;
+				PRODUCT_BUNDLE_IDENTIFIER = com.VisualDevelopment.WhateverRed;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -321,20 +321,22 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1.0.0d1;
+				DEVELOPMENT_TEAM = "";
 				EXCLUDED_ARCHS = "arm64 arm64e";
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = AMDRadeonAPUSupport/Info.plist;
+				INFOPLIST_FILE = WhateverRed/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MARKETING_VERSION = 1.0;
-				MODULE_NAME = com.VisualDevelopment.AMDRadeonAPUSupport;
+				MODULE_NAME = com.VisualDevelopment.WhateverRed;
 				MODULE_VERSION = 1.0.0d1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.VisualDevelopment.AMDRadeonAPUSupport;
+				PRODUCT_BUNDLE_IDENTIFIER = com.VisualDevelopment.WhateverRed;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				WRAPPER_EXTENSION = kext;
@@ -344,7 +346,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		40991AB1270B5E8400538004 /* Build configuration list for PBXProject "AMDRadeonAPUSupport" */ = {
+		40991AB1270B5E8400538004 /* Build configuration list for PBXProject "WhateverRed" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				40991ABF270B5E8400538004 /* Debug */,
@@ -353,7 +355,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		40991AC1270B5E8400538004 /* Build configuration list for PBXNativeTarget "AMDRadeonAPUSupport" */ = {
+		40991AC1270B5E8400538004 /* Build configuration list for PBXNativeTarget "WhateverRed" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				40991AC2270B5E8400538004 /* Debug */,
