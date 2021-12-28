@@ -2,44 +2,120 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CFBundleDevelopmentRegion</key>
-	<string>en</string>
-	<key>CFBundleExecutable</key>
-	<string>$(EXECUTABLE_NAME)</string>
-	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.0</string>
-	<key>CFBundleName</key>
-	<string>$(PRODUCT_NAME)</string>
-	<key>CFBundlePackageType</key>
-	<string>KEXT</string>
-	<key>CFBundleShortVersionString</key>
-	<string>$(MODULE_VERSION)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
-	<key>CFBundleVersion</key>
-	<string>$(MODULE_VERSION)</string>
-	<key>OSBundleCompatibleVersion</key>
-	<string>1.0</string>
 	<key>IOKitPersonalities</key>
 	<dict>
-		<key>Picasso &amp; Raven Controller Wrangler</key>
+		<key>Picasso &amp; Raven Accelerator</key>
 		<dict>
 			<key>CFBundleIdentifier</key>
-			<string>com.apple.kext.AMD10000Controller</string>
+			<string>com.apple.kext.AMDRadeonX5000</string>
+			<key>GpuDebugPolicy</key>
+			<integer>0</integer>
 			<key>IOClass</key>
-			<string>AMD10000ControllerWrangler</string>
+			<string>AMDRadeonX5000_AMDVega10GraphicsAccelerator</string>
+			<key>IODVDBundleName</key>
+			<string>AMDRadeonVADriver2</string>
+			<key>IOGVACodec</key>
+			<string>VCE</string>
+			<key>IOGVAH264EncodeCapabilities</key>
+			<dict>
+				<key>VTQualityRating</key>
+				<integer>50</integer>
+				<key>VTRating</key>
+				<integer>350</integer>
+			</dict>
+			<key>IOGVAHEVCDecode</key>
+			<string>1</string>
+			<key>IOGVAHEVCDecodeCapabilities</key>
+			<dict>
+				<key>VTPerProfileDetails</key>
+				<dict>
+					<key>1</key>
+					<dict>
+						<key>VTMaxDecodeLevel</key>
+						<integer>153</integer>
+					</dict>
+					<key>2</key>
+					<dict>
+						<key>VTMaxDecodeLevel</key>
+						<integer>153</integer>
+					</dict>
+					<key>3</key>
+					<dict>
+						<key>VTMaxDecodeLevel</key>
+						<integer>153</integer>
+					</dict>
+				</dict>
+				<key>VTSupportedProfileArray</key>
+				<array>
+					<integer>1</integer>
+					<integer>2</integer>
+					<integer>3</integer>
+				</array>
+			</dict>
+			<key>IOGVAHEVCEncode</key>
+			<string>1</string>
+			<key>IOGVAHEVCEncodeCapabilities</key>
+			<dict>
+				<key>VTPerProfileDetails</key>
+				<dict>
+					<key>1</key>
+					<dict>
+						<key>VTMaxEncodeLevel</key>
+						<integer>153</integer>
+					</dict>
+				</dict>
+				<key>VTQualityRating</key>
+				<integer>50</integer>
+				<key>VTRating</key>
+				<integer>350</integer>
+				<key>VTSupportedProfileArray</key>
+				<array>
+					<integer>1</integer>
+				</array>
+			</dict>
+			<key>IOKitDebug</key>
+			<integer>0</integer>
 			<key>IOMatchCategory</key>
-			<string>IOFramebuffer</string>
+			<string>IOAccelerator</string>
 			<key>IOPCIPrimaryMatch</key>
 			<string>0x15D81002 0x15DD1002</string>
 			<key>IOPCITunnelCompatible</key>
 			<true/>
-			<key>IOProbeScore</key>
-			<integer>65050</integer>
+			<key>IOPropertyMatch</key>
+			<dict>
+				<key>LoadAccelerator</key>
+				<true/>
+			</dict>
 			<key>IOProviderClass</key>
 			<string>IOPCIDevice</string>
+			<key>IOSourceVersion</key>
+			<string>0.0.0.0.0</string>
+			<key>IOVARendererID</key>
+			<integer>16908288</integer>
+			<key>SWIP_properties</key>
+			<dict>
+				<key>EnableSwVCNFWLoading</key>
+				<integer>0</integer>
+				<key>EnableVCNFWLog</key>
+				<integer>1</integer>
+			</dict>
+			<key>cail_properties</key>
+			<dict>
+				<key>CAIL_DisableCailLoadUcode</key>
+				<integer>1</integer>
+				<key>CAIL_DisableJpegEngine</key>
+				<integer>0</integer>
+				<key>CAIL_EnableLBPWSupport</key>
+				<integer>0</integer>
+				<key>CAIL_EnablePeerDataAperture</key>
+				<integer>0</integer>
+				<key>CAIL_EnableSecureMmFwLoading</key>
+				<integer>1</integer>
+				<key>CAIL_EnableXdmaSupport</key>
+				<integer>0</integer>
+			</dict>
 		</dict>
 		<key>Picasso &amp; Raven Controller</key>
 		<dict>
@@ -155,116 +231,22 @@
 				<integer>524288</integer>
 			</dict>
 		</dict>
-		<key>Picasso &amp; Raven Accelerator</key>
+		<key>Picasso &amp; Raven Controller Wrangler</key>
 		<dict>
 			<key>CFBundleIdentifier</key>
-			<string>com.apple.kext.AMDRadeonX5000</string>
-			<key>GpuDebugPolicy</key>
-			<integer>0</integer>
+			<string>com.apple.kext.AMD10000Controller</string>
 			<key>IOClass</key>
-			<string>AMDRadeonX5000_AMDVega10GraphicsAccelerator</string>
-			<key>IODVDBundleName</key>
-			<string>AMDRadeonVADriver2</string>
-			<key>IOGVACodec</key>
-			<string>VCE</string>
-			<key>IOGVAH264EncodeCapabilities</key>
-			<dict>
-				<key>VTQualityRating</key>
-				<integer>50</integer>
-				<key>VTRating</key>
-				<integer>350</integer>
-			</dict>
-			<key>IOGVAHEVCDecode</key>
-			<string>1</string>
-			<key>IOGVAHEVCDecodeCapabilities</key>
-			<dict>
-				<key>VTPerProfileDetails</key>
-				<dict>
-					<key>1</key>
-					<dict>
-						<key>VTMaxDecodeLevel</key>
-						<integer>153</integer>
-					</dict>
-					<key>2</key>
-					<dict>
-						<key>VTMaxDecodeLevel</key>
-						<integer>153</integer>
-					</dict>
-					<key>3</key>
-					<dict>
-						<key>VTMaxDecodeLevel</key>
-						<integer>153</integer>
-					</dict>
-				</dict>
-				<key>VTSupportedProfileArray</key>
-				<array>
-					<integer>1</integer>
-					<integer>2</integer>
-					<integer>3</integer>
-				</array>
-			</dict>
-			<key>IOGVAHEVCEncode</key>
-			<string>1</string>
-			<key>IOGVAHEVCEncodeCapabilities</key>
-			<dict>
-				<key>VTPerProfileDetails</key>
-				<dict>
-					<key>1</key>
-					<dict>
-						<key>VTMaxEncodeLevel</key>
-						<integer>153</integer>
-					</dict>
-				</dict>
-				<key>VTQualityRating</key>
-				<integer>50</integer>
-				<key>VTRating</key>
-				<integer>350</integer>
-				<key>VTSupportedProfileArray</key>
-				<array>
-					<integer>1</integer>
-				</array>
-			</dict>
-			<key>IOKitDebug</key>
-			<integer>0</integer>
+			<string>AMD10000ControllerWrangler</string>
 			<key>IOMatchCategory</key>
-			<string>IOAccelerator</string>
+			<string>IOFramebuffer</string>
 			<key>IOPCIPrimaryMatch</key>
 			<string>0x15D81002 0x15DD1002</string>
 			<key>IOPCITunnelCompatible</key>
 			<true/>
-			<key>IOPropertyMatch</key>
-			<dict>
-				<key>LoadAccelerator</key>
-				<true/>
-			</dict>
+			<key>IOProbeScore</key>
+			<integer>65050</integer>
 			<key>IOProviderClass</key>
 			<string>IOPCIDevice</string>
-			<key>IOSourceVersion</key>
-			<string>0.0.0.0.0</string>
-			<key>IOVARendererID</key>
-			<integer>16908288</integer>
-			<key>SWIP_properties</key>
-			<dict>
-				<key>EnableSwVCNFWLoading</key>
-				<integer>0</integer>
-				<key>EnableVCNFWLog</key>
-				<integer>1</integer>
-			</dict>
-			<key>cail_properties</key>
-			<dict>
-				<key>CAIL_DisableCailLoadUcode</key>
-				<integer>1</integer>
-				<key>CAIL_DisableJpegEngine</key>
-				<integer>0</integer>
-				<key>CAIL_EnableLBPWSupport</key>
-				<integer>0</integer>
-				<key>CAIL_EnablePeerDataAperture</key>
-				<integer>0</integer>
-				<key>CAIL_EnableSecureMmFwLoading</key>
-				<integer>1</integer>
-				<key>CAIL_EnableXdmaSupport</key>
-				<integer>0</integer>
-			</dict>
 		</dict>
 		<key>Picasso &amp; Raven HWServices</key>
 		<dict>
@@ -302,8 +284,8 @@
 			<string>IOKit</string>
 		</dict>
 	</dict>
-	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2021 VisualDevelopment. All rights reserved.</string>
+	<key>OSBundleCompatibleVersion</key>
+	<string>1.0</string>
 	<key>OSBundleLibraries</key>
 	<dict>
 		<key>as.vit9696.Lilu</key>
