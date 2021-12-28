@@ -7,68 +7,68 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4008BE11273AA45200626513 /* plugin_start.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4008BE10273AA45200626513 /* plugin_start.cpp */; };
-		409C9E562711B1C9004B831C /* libkmod.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 409C9E552711B1C9004B831C /* libkmod.a */; };
-		40FF923F272AE01300F7859E /* kern_start.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FF923E272AE01300F7859E /* kern_start.cpp */; };
-		40FF9242272AE02900F7859E /* kern_wer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FF9240272AE02900F7859E /* kern_wer.cpp */; };
-		40FF9243272AE02900F7859E /* kern_wer.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FF9241272AE02900F7859E /* kern_wer.hpp */; };
+		1936F7FA277BA7CF00C6C74E /* PluginStart.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1936F7F9277BA7CF00C6C74E /* PluginStart.cpp */; };
+		1936F7FC277BA82200C6C74E /* plugin_start.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1936F7FB277BA82200C6C74E /* plugin_start.cpp */; };
+		195002C3277BA34200B816D9 /* WhateverRed.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 195002C2277BA34200B816D9 /* WhateverRed.hpp */; };
+		195002C5277BA34200B816D9 /* WhateverRed.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 195002C4277BA34200B816D9 /* WhateverRed.cpp */; };
+		195002CE277BA64C00B816D9 /* libkmod.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 195002CD277BA64C00B816D9 /* libkmod.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		4008BE10273AA45200626513 /* plugin_start.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = plugin_start.cpp; path = Lilu.kext/Contents/Resources/Library/plugin_start.cpp; sourceTree = "<group>"; };
-		40991AB7270B5E8400538004 /* WhateverRed.kext */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WhateverRed.kext; sourceTree = BUILT_PRODUCTS_DIR; };
-		40991ABE270B5E8400538004 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		409C9E552711B1C9004B831C /* libkmod.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libkmod.a; path = usr/lib/libkmod.a; sourceTree = SDKROOT; };
-		40FF923E272AE01300F7859E /* kern_start.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_start.cpp; sourceTree = "<group>"; };
-		40FF9240272AE02900F7859E /* kern_wer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_wer.cpp; sourceTree = "<group>"; };
-		40FF9241272AE02900F7859E /* kern_wer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_wer.hpp; sourceTree = "<group>"; };
+		1936F7F9277BA7CF00C6C74E /* PluginStart.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = PluginStart.cpp; sourceTree = "<group>"; };
+		1936F7FB277BA82200C6C74E /* plugin_start.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = plugin_start.cpp; path = Lilu.kext/Contents/Resources/Library/plugin_start.cpp; sourceTree = "<group>"; };
+		195002BF277BA34200B816D9 /* WhateverRed.kext */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WhateverRed.kext; sourceTree = BUILT_PRODUCTS_DIR; };
+		195002C2277BA34200B816D9 /* WhateverRed.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = WhateverRed.hpp; sourceTree = "<group>"; };
+		195002C4277BA34200B816D9 /* WhateverRed.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = WhateverRed.cpp; sourceTree = "<group>"; };
+		195002C6277BA34200B816D9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		195002CD277BA64C00B816D9 /* libkmod.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libkmod.a; path = usr/lib/libkmod.a; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		40991AB4270B5E8400538004 /* Frameworks */ = {
+		195002BC277BA34200B816D9 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				409C9E562711B1C9004B831C /* libkmod.a in Frameworks */,
+				195002CE277BA64C00B816D9 /* libkmod.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		40991AAD270B5E8400538004 = {
+		195002B5277BA34200B816D9 = {
 			isa = PBXGroup;
 			children = (
-				4008BE10273AA45200626513 /* plugin_start.cpp */,
-				40991AB9270B5E8400538004 /* WhateverRed */,
-				40991AB8270B5E8400538004 /* Products */,
-				409C9E542711B1C8004B831C /* Frameworks */,
+				1936F7FB277BA82200C6C74E /* plugin_start.cpp */,
+				195002C1277BA34200B816D9 /* WhateverRed */,
+				195002C0277BA34200B816D9 /* Products */,
+				195002CC277BA64C00B816D9 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
-		40991AB8270B5E8400538004 /* Products */ = {
+		195002C0277BA34200B816D9 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				40991AB7270B5E8400538004 /* WhateverRed.kext */,
+				195002BF277BA34200B816D9 /* WhateverRed.kext */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		40991AB9270B5E8400538004 /* WhateverRed */ = {
+		195002C1277BA34200B816D9 /* WhateverRed */ = {
 			isa = PBXGroup;
 			children = (
-				40991ABE270B5E8400538004 /* Info.plist */,
-				40FF923E272AE01300F7859E /* kern_start.cpp */,
-				40FF9240272AE02900F7859E /* kern_wer.cpp */,
-				40FF9241272AE02900F7859E /* kern_wer.hpp */,
+				195002C2277BA34200B816D9 /* WhateverRed.hpp */,
+				195002C4277BA34200B816D9 /* WhateverRed.cpp */,
+				195002C6277BA34200B816D9 /* Info.plist */,
+				1936F7F9277BA7CF00C6C74E /* PluginStart.cpp */,
 			);
 			path = WhateverRed;
 			sourceTree = "<group>";
 		};
-		409C9E542711B1C8004B831C /* Frameworks */ = {
+		195002CC277BA64C00B816D9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				409C9E552711B1C9004B831C /* libkmod.a */,
+				195002CD277BA64C00B816D9 /* libkmod.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -76,25 +76,25 @@
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
-		40991AB2270B5E8400538004 /* Headers */ = {
+		195002BA277BA34200B816D9 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				40FF9243272AE02900F7859E /* kern_wer.hpp in Headers */,
+				195002C3277BA34200B816D9 /* WhateverRed.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		40991AB6270B5E8400538004 /* WhateverRed */ = {
+		195002BE277BA34200B816D9 /* WhateverRed */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 40991AC1270B5E8400538004 /* Build configuration list for PBXNativeTarget "WhateverRed" */;
+			buildConfigurationList = 195002C9277BA34200B816D9 /* Build configuration list for PBXNativeTarget "WhateverRed" */;
 			buildPhases = (
-				40991AB2270B5E8400538004 /* Headers */,
-				40991AB3270B5E8400538004 /* Sources */,
-				40991AB4270B5E8400538004 /* Frameworks */,
-				40991AB5270B5E8400538004 /* Resources */,
+				195002BA277BA34200B816D9 /* Headers */,
+				195002BB277BA34200B816D9 /* Sources */,
+				195002BC277BA34200B816D9 /* Frameworks */,
+				195002BD277BA34200B816D9 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -102,24 +102,24 @@
 			);
 			name = WhateverRed;
 			productName = WhateverRed;
-			productReference = 40991AB7270B5E8400538004 /* WhateverRed.kext */;
+			productReference = 195002BF277BA34200B816D9 /* WhateverRed.kext */;
 			productType = "com.apple.product-type.kernel-extension";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		40991AAE270B5E8400538004 /* Project object */ = {
+		195002B6277BA34200B816D9 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastUpgradeCheck = 1310;
 				TargetAttributes = {
-					40991AB6270B5E8400538004 = {
-						CreatedOnToolsVersion = 13.0;
+					195002BE277BA34200B816D9 = {
+						CreatedOnToolsVersion = 13.1;
 					};
 				};
 			};
-			buildConfigurationList = 40991AB1270B5E8400538004 /* Build configuration list for PBXProject "WhateverRed" */;
+			buildConfigurationList = 195002B9277BA34200B816D9 /* Build configuration list for PBXProject "WhateverRed" */;
 			compatibilityVersion = "Xcode 13.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -127,18 +127,18 @@
 				en,
 				Base,
 			);
-			mainGroup = 40991AAD270B5E8400538004;
-			productRefGroup = 40991AB8270B5E8400538004 /* Products */;
+			mainGroup = 195002B5277BA34200B816D9;
+			productRefGroup = 195002C0277BA34200B816D9 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				40991AB6270B5E8400538004 /* WhateverRed */,
+				195002BE277BA34200B816D9 /* WhateverRed */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		40991AB5270B5E8400538004 /* Resources */ = {
+		195002BD277BA34200B816D9 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -148,24 +148,24 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		40991AB3270B5E8400538004 /* Sources */ = {
+		195002BB277BA34200B816D9 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				40FF9242272AE02900F7859E /* kern_wer.cpp in Sources */,
-				40FF923F272AE01300F7859E /* kern_start.cpp in Sources */,
-				4008BE11273AA45200626513 /* plugin_start.cpp in Sources */,
+				1936F7FC277BA82200C6C74E /* plugin_start.cpp in Sources */,
+				195002C5277BA34200B816D9 /* WhateverRed.cpp in Sources */,
+				1936F7FA277BA7CF00C6C74E /* PluginStart.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		40991ABF270B5E8400538004 /* Debug */ = {
+		195002C7277BA34200B816D9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD)";
+				ARCHS = x86_64;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
@@ -196,17 +196,18 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1.0.0;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				EXCLUDED_ARCHS = "arm64 arm64e";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
+					"PRODUCT_NAME=$(PRODUCT_NAME)",
+					"MODULE_VERSION=$(MODULE_VERSION)",
 					"DEBUG=1",
-					"$(inherited)",
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -215,25 +216,27 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
-					"$(PROJECT_DIR)/MacKernelSDK/Headers",
 					"$(PROJECT_DIR)/Lilu.kext/Contents/Resources",
+					"$(PROJECT_DIR)/MacKernelSDK/Headers",
 				);
 				KERNEL_EXTENSION_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/MacKernelSDK/Headers";
 				KERNEL_FRAMEWORK_HEADERS = "$(PROJECT_DIR)/MacKernelSDK/Headers";
 				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/MacKernelSDK/Library/x86_64";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MODULE_VERSION = 1.0.0d1;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "\"$(TARGET_NAME)\"";
 				SDKROOT = macosx;
 			};
 			name = Debug;
 		};
-		40991AC0270B5E8400538004 /* Release */ = {
+		195002C8277BA34200B816D9 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD)";
+				ARCHS = x86_64;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
@@ -264,12 +267,16 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1.0.0;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				EXCLUDED_ARCHS = "arm64 arm64e";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"PRODUCT_NAME=$(PRODUCT_NAME)",
+					"MODULE_VERSION=$(MODULE_VERSION)",
+				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
@@ -277,33 +284,32 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
-					"$(PROJECT_DIR)/MacKernelSDK/Headers",
 					"$(PROJECT_DIR)/Lilu.kext/Contents/Resources",
+					"$(PROJECT_DIR)/MacKernelSDK/Headers",
 				);
 				KERNEL_EXTENSION_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/MacKernelSDK/Headers";
 				KERNEL_FRAMEWORK_HEADERS = "$(PROJECT_DIR)/MacKernelSDK/Headers";
 				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/MacKernelSDK/Library/x86_64";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MODULE_VERSION = 1.0.0d1;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "\"$(TARGET_NAME)\"";
 				SDKROOT = macosx;
 			};
 			name = Release;
 		};
-		40991AC2270B5E8400538004 /* Debug */ = {
+		195002CA277BA34200B816D9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
-				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1.0.0d1;
-				EXCLUDED_ARCHS = "arm64 arm64e";
+				CURRENT_PROJECT_VERSION = 1.0;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WhateverRed/Info.plist;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2021 VisualDevelopment. All rights reserved.";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MARKETING_VERSION = 1.0;
 				MODULE_NAME = com.VisualDevelopment.WhateverRed;
@@ -316,27 +322,22 @@
 			};
 			name = Debug;
 		};
-		40991AC3270B5E8400538004 /* Release */ = {
+		195002CB277BA34200B816D9 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
-				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1.0.0d1;
-				DEVELOPMENT_TEAM = "";
-				EXCLUDED_ARCHS = "arm64 arm64e";
+				CURRENT_PROJECT_VERSION = 1.0;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WhateverRed/Info.plist;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2021 VisualDevelopment. All rights reserved.";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MARKETING_VERSION = 1.0;
 				MODULE_NAME = com.VisualDevelopment.WhateverRed;
 				MODULE_VERSION = 1.0.0d1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.VisualDevelopment.WhateverRed;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				WRAPPER_EXTENSION = kext;
@@ -346,25 +347,25 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		40991AB1270B5E8400538004 /* Build configuration list for PBXProject "WhateverRed" */ = {
+		195002B9277BA34200B816D9 /* Build configuration list for PBXProject "WhateverRed" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				40991ABF270B5E8400538004 /* Debug */,
-				40991AC0270B5E8400538004 /* Release */,
+				195002C7277BA34200B816D9 /* Debug */,
+				195002C8277BA34200B816D9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		40991AC1270B5E8400538004 /* Build configuration list for PBXNativeTarget "WhateverRed" */ = {
+		195002C9277BA34200B816D9 /* Build configuration list for PBXNativeTarget "WhateverRed" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				40991AC2270B5E8400538004 /* Debug */,
-				40991AC3270B5E8400538004 /* Release */,
+				195002CA277BA34200B816D9 /* Debug */,
+				195002CB277BA34200B816D9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 40991AAE270B5E8400538004 /* Project object */;
+	rootObject = 195002B6277BA34200B816D9 /* Project object */;
 }

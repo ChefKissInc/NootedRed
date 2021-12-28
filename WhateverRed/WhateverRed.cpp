@@ -1,4 +1,4 @@
-#include "kern_wer.hpp"
+#include "WhateverRed.hpp"
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_devinfo.hpp>
 
@@ -31,21 +31,25 @@ static int patchedGetHardwareInfo(void *obj, uint16_t *hwInfo) {
     return ret;
 }
 
-void WhateverRed::init() {
+void WER::init() {
     SYSLOG("wer", "WhateverRed plugin loaded");
 
     lilu.onPatcherLoadForce([](void *user, KernelPatcher &patcher) {
-        static_cast<WhateverRed *>(user)->processKernel(patcher);
+        static_cast<WER *>(user)->processKernel(patcher);
     }, this);
 
     lilu.onKextLoadForce(nullptr, 0, [](void *user, KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
-        static_cast<WhateverRed *>(user)->processKext(patcher, index, address, size);
+        static_cast<WER *>(user)->processKext(patcher, index, address, size);
     }, this);
 
     lilu.onKextLoadForce(&kextRadeonX5000HWLibs);
 }
 
-void WhateverRed::processKernel(KernelPatcher &patcher) {
+void WER::deinit() {
+
+}
+
+void WER::processKernel(KernelPatcher &patcher) {
     auto devInfo = DeviceInfo::create();
     if (!devInfo) {
         panic("WhateverRed: Failed to get device info");
@@ -94,7 +98,7 @@ void WhateverRed::processKernel(KernelPatcher &patcher) {
     DeviceInfo::deleter(devInfo);
 }
 
-void WhateverRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
+void WER::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (index == kextRadeonX5000.loadIndex) {
         KernelPatcher::RouteRequest requests[] = {
             KernelPatcher::RouteRequest {
