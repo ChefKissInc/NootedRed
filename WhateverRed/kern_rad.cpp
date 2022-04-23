@@ -19,14 +19,16 @@
 static const char *pathFramebuffer[] = {"/System/Library/Extensions/AMDFramebuffer.kext/Contents/MacOS/AMDFramebuffer"};
 static const char *pathSupport[] = {"/System/Library/Extensions/AMDSupport.kext/Contents/MacOS/AMDSupport"};
 static const char *pathRadeonX5000[] = {"/System/Library/Extensions/AMDRadeonX5000.kext/Contents/MacOS/AMDRadeonX5000"};
+static const char *pathRadeonX5000HWLibs[] = {
+	"/System/Library/Extensions/AMDRadeonX5000HWServices.kext/Contents/PlugIns/AMDRadeonX5000HWLibs.kext/Contents/MacOS/AMDRadeonX5000HWLibs",
+};
 
-static const char *idRadeonX5000New{"com.apple.kext.AMDRadeonX5000"};
-
-static KernelPatcher::KextInfo kextRadeonFramebuffer{"com.apple.kext.AMDFramebuffer", pathFramebuffer, arrsize(pathFramebuffer), {}, {}, KernelPatcher::KextInfo::Unloaded};
+static KernelPatcher::KextInfo kextRadeonFramebuffer{"com.apple.kext.AMDFramebuffer", pathFramebuffer, 1, {}, {}, KernelPatcher::KextInfo::Unloaded};
 static KernelPatcher::KextInfo kextRadeonSupport{"com.apple.kext.AMDSupport", pathSupport, 1, {}, {}, KernelPatcher::KextInfo::Unloaded};
+static KernelPatcher::KextInfo kextRadeonX5000HWLibs{"com.apple.kext.AMDRadeonX5000HWLibs", pathRadeonX5000HWLibs, 1, {}, {}, KernelPatcher::KextInfo::Unloaded};
 
 static KernelPatcher::KextInfo kextRadeonHardware[] = {
-	{idRadeonX5000New, pathRadeonX5000, arrsize(pathRadeonX5000), {}, {}, KernelPatcher::KextInfo::Unloaded},
+	{"com.apple.kext.AMDRadeonX5000", pathRadeonX5000, arrsize(pathRadeonX5000), {}, {}, KernelPatcher::KextInfo::Unloaded},
 };
 
 /**
@@ -51,33 +53,17 @@ void RAD::init()
 	callbackRAD = this;
 
 	currentPropProvider.init();
-	currentLegacyPropProvider.init();
 
 	force24BppMode = checkKernelArgument("-rad24");
-	useCustomAgdpDecision = getKernelVersion() >= KernelVersion::Catalina;
 
-	// Certain displays do not support 32-bit colour output, so we have to force 24-bit.
-	if (getKernelVersion() >= KernelVersion::Sierra && force24BppMode)
-	{
-		lilu.onKextLoadForce(&kextRadeonFramebuffer);
-	}
+	if (force24BppMode) lilu.onKextLoadForce(&kextRadeonFramebuffer);
 
-	// Certain GPUs cannot output to DVI at full resolution.
 	dviSingleLink = checkKernelArgument("-raddvi");
-
-	// Disabling Metal may be useful for testing
 	forceOpenGL = checkKernelArgument("-radgl");
-
-	// Fix accelerator name if requested
 	fixConfigName = checkKernelArgument("-radcfg");
-
-	// Broken drivers can still let us boot in vesa mode
 	forceVesaMode = checkKernelArgument("-radvesa");
-
-	// Fix codec PID to be spoofed PID if requested
 	forceCodecInfo = checkKernelArgument("-radcodec");
 
-	// To support overriding connectors and -radvesa mode we need to patch AMDSupport.
 	lilu.onKextLoadForce(&kextRadeonSupport);
 
 	initHardwareKextMods();
@@ -105,181 +91,34 @@ void RAD::deinit()
 
 void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info)
 {
-	bool hasAMD = false;
 	for (size_t i = 0; i < info->videoExternal.size(); i++)
 	{
 		if (info->videoExternal[i].vendor == WIOKit::VendorID::ATIAMD)
 		{
-			if (!hasAMD)
-			{
-				hasAMD = true;
-			}
+			if (info->videoExternal[i].video->getProperty("enable-gva-support")) enableGvaSupport = true;
 
-			if (info->videoExternal[i].video->getProperty("enable-gva-support"))
-				enableGvaSupport = true;
-
-			// When injecting values into device properties one cannot specify boolean types.
-			// Provide special support for Force_Load_FalconSMUFW.
 			auto smufw = OSDynamicCast(OSData, info->videoExternal[i].video->getProperty("Force_Load_FalconSMUFW"));
-			if (smufw && smufw->getLength() == 1)
+			if (smufw && smufw->getLength() == 1) {
 				info->videoExternal[i].video->setProperty("Force_Load_FalconSMUFW",
 														  *static_cast<const uint8_t *>(smufw->getBytesNoCopy()) ? kOSBooleanTrue : kOSBooleanFalse);
+			}
 		}
 	}
 
-	if (hasAMD)
-	{
-		int gva;
-		if (PE_parse_boot_argn("radgva", &gva, sizeof(gva)))
-			enableGvaSupport = gva != 0;
+	int gva;
+	if (PE_parse_boot_argn("radgva", &gva, sizeof(gva))) enableGvaSupport = gva != 0;
 
-		KernelPatcher::RouteRequest requests[]{
-			KernelPatcher::RouteRequest("__ZN15IORegistryEntry11setPropertyEPKcPvj", wrapSetProperty, orgSetProperty),
-			KernelPatcher::RouteRequest("__ZNK15IORegistryEntry11getPropertyEPKc", wrapGetProperty, orgGetProperty),
-		};
-		patcher.routeMultiple(KernelPatcher::KernelID, requests);
-
-		if (useCustomAgdpDecision && info->firmwareVendor == DeviceInfo::FirmwareVendor::Apple)
-			useCustomAgdpDecision = false;
-	}
-	else
-	{
-		kextRadeonFramebuffer.switchOff();
-		kextRadeonSupport.switchOff();
-
-		for (size_t i = 0; i < maxHardwareKexts; i++)
-			kextRadeonHardware[i].switchOff();
-	}
+	KernelPatcher::RouteRequest requests[] = {
+		KernelPatcher::RouteRequest("__ZN15IORegistryEntry11setPropertyEPKcPvj", wrapSetProperty, orgSetProperty),
+		KernelPatcher::RouteRequest("__ZNK15IORegistryEntry11getPropertyEPKc", wrapGetProperty, orgGetProperty),
+	};
+	patcher.routeMultiple(KernelPatcher::KernelID, requests);
 }
 
-void RAD::updatePwmMaxBrightnessFromInternalDisplay()
-{
-	OSDictionary *matching = IOService::serviceMatching("AppleBacklightDisplay");
-	if (matching == nullptr)
-	{
-		DBGLOG("igfx", "isRadeonX6000WiredToInternalDisplay null AppleBacklightDisplay");
-		return;
-	}
-
-	OSIterator *iter = IOService::getMatchingServices(matching);
-	if (iter == nullptr)
-	{
-		DBGLOG("igfx", "isRadeonX6000WiredToInternalDisplay null matching");
-		matching->release();
-		return;
-	}
-
-	IORegistryEntry *display = OSDynamicCast(IORegistryEntry, iter->getNextObject());
-	if (display == nullptr)
-	{
-		DBGLOG("igfx", "isRadeonX6000WiredToInternalDisplay null display");
-		iter->release();
-		matching->release();
-		return;
-	}
-
-	OSDictionary *iodispparm = OSDynamicCast(OSDictionary, display->getProperty("IODisplayParameters"));
-	if (iodispparm == nullptr)
-	{
-		DBGLOG("igfx", "isRadeonX6000WiredToInternalDisplay null IODisplayParameters");
-		iter->release();
-		matching->release();
-		return;
-	}
-
-	OSDictionary *linearbri = OSDynamicCast(OSDictionary, iodispparm->getObject("linear-brightness"));
-	if (linearbri == nullptr)
-	{
-		DBGLOG("igfx", "isRadeonX6000WiredToInternalDisplay null linear-brightness");
-		iter->release();
-		matching->release();
-		return;
-	}
-
-	OSNumber *maxbri = OSDynamicCast(OSNumber, linearbri->getObject("max"));
-	if (maxbri == nullptr)
-	{
-		DBGLOG("igfx", "isRadeonX6000WiredToInternalDisplay null max");
-		iter->release();
-		matching->release();
-		return;
-	}
-
-	callbackRAD->maxPwmBacklightLvl = maxbri->unsigned32BitValue();
-	DBGLOG("igfx", "updatePwmMaxBrightnessFromInternalDisplay get max brightness: 0x%x", callbackRAD->maxPwmBacklightLvl);
-
-	iter->release();
-	matching->release();
-}
-
-uint32_t RAD::wrapDcePanelCntlHwInit(void *panel_cntl)
-{
-	callbackRAD->panelCntlPtr = panel_cntl;
-	callbackRAD->updatePwmMaxBrightnessFromInternalDisplay(); // read max brightness value from IOReg
-	uint32_t ret = FunctionCast(wrapDcePanelCntlHwInit, callbackRAD->orgDcePanelCntlHwInit)(panel_cntl);
-	return ret;
-}
-
-IOReturn RAD::wrapAMDRadeonX6000AmdRadeonFramebufferSetAttribute(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute, uintptr_t value)
-{
-	IOReturn ret = FunctionCast(wrapAMDRadeonX6000AmdRadeonFramebufferSetAttribute, callbackRAD->orgAMDRadeonX6000AmdRadeonFramebufferSetAttribute)(framebuffer, connectIndex, attribute, value);
-	if (attribute != (UInt32)'bklt')
-	{
-		return ret;
-	}
-
-	if (callbackRAD->maxPwmBacklightLvl == 0)
-	{
-		DBGLOG("igfx", "wrapAMDRadeonX6000AmdRadeonFramebufferSetAttribute zero maxPwmBacklightLvl");
-		return 0;
-	}
-
-	if (callbackRAD->panelCntlPtr == nullptr)
-	{
-		DBGLOG("igfx", "wrapAMDRadeonX6000AmdRadeonFramebufferSetAttribute null panel cntl");
-		return 0;
-	}
-
-	if (callbackRAD->orgDceDriverSetBacklight == nullptr)
-	{
-		DBGLOG("igfx", "wrapAMDRadeonX6000AmdRadeonFramebufferSetAttribute null orgDcLinkSetBacklightLevel");
-		return 0;
-	}
-
-	// set the backlight of AMD navi10 driver
-	callbackRAD->curPwmBacklightLvl = (uint32_t)value;
-	uint32_t btlper = callbackRAD->curPwmBacklightLvl * 100 / callbackRAD->maxPwmBacklightLvl;
-	uint32_t pwmval = 0;
-	if (btlper >= 100)
-	{
-		// This is from the dmcu_set_backlight_level function of Linux source
-		// ...
-		// if (backlight_pwm_u16_16 & 0x10000)
-		// 	   backlight_8_bit = 0xFF;
-		// else
-		// 	   backlight_8_bit = (backlight_pwm_u16_16 >> 8) & 0xFF;
-		// ...
-		// The max brightness should have 0x10000 bit set
-		pwmval = 0x1FF00;
-	}
-	else
-	{
-		pwmval = ((btlper * 0xFF) / 100) << 8U;
-	}
-
-	callbackRAD->orgDceDriverSetBacklight(callbackRAD->panelCntlPtr, pwmval);
-	return 0;
-}
-
-IOReturn RAD::wrapAMDRadeonX6000AmdRadeonFramebufferGetAttribute(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute, uintptr_t *value)
-{
-	IOReturn ret = FunctionCast(wrapAMDRadeonX6000AmdRadeonFramebufferGetAttribute, callbackRAD->orgAMDRadeonX6000AmdRadeonFramebufferGetAttribute)(framebuffer, connectIndex, attribute, value);
-	if (attribute == (UInt32)'bklt')
-	{
-		// enable the backlight feature of AMD navi10 driver
-		*value = callbackRAD->curPwmBacklightLvl;
-		ret = 0;
-	}
+bool RAD::wrapTtlIsPicassoDevice(void *dev) {
+	SYSLOG("rad", "ttlIsPicassoAM4Device called!");
+	auto ret = FunctionCast(wrapTtlIsPicassoDevice, callbackRAD->orgTtlIsPicassoDevice)(dev);
+	SYSLOG("rad", "ttlIsPicassoAM4Device returned %x", ret);
 	return ret;
 }
 
@@ -288,27 +127,35 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 
 	if (kextRadeonFramebuffer.loadIndex == index)
 	{
-		if (force24BppMode)
-			process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
+		if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
+
 		return true;
 	}
-
-	if (kextRadeonSupport.loadIndex == index)
+	else if (kextRadeonSupport.loadIndex == index)
 	{
 		processConnectorOverrides(patcher, address, size);
 
-		if (getKernelVersion() > KernelVersion::Mojave ||
-			(getKernelVersion() == KernelVersion::Mojave && getKernelMinorVersion() >= 5))
-		{
-			KernelPatcher::RouteRequest request("__ZN13ATIController8TestVRAME13PCI_REG_INDEXb", doNotTestVram);
-			patcher.routeMultiple(index, &request, 1, address, size);
-		}
+		KernelPatcher::RouteRequest requests[] = {
+			{"__ZN13ATIController8TestVRAME13PCI_REG_INDEXb", doNotTestVram},
+			{"__ZN16AtiDeviceControl16notifyLinkChangeE31kAGDCRegisterLinkControlEvent_tmj", wrapNotifyLinkChange, orgNotifyLinkChange},
+		};
+		patcher.routeMultiple(index, requests, arrsize(requests), address, size);
 
-		if (useCustomAgdpDecision)
-		{
-			KernelPatcher::RouteRequest request("__ZN16AtiDeviceControl16notifyLinkChangeE31kAGDCRegisterLinkControlEvent_tmj", wrapNotifyLinkChange, orgNotifyLinkChange);
-			patcher.routeMultiple(index, &request, 1, address, size);
-		}
+		return true;
+	}
+	else if (kextRadeonX5000HWLibs.loadIndex == index)
+	{
+		DBGLOG("rad", "patching AMD firmware table");
+		uint8_t find[] = {0x16, 0x16, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00};
+		uint8_t repl[] = {0x15, 0xD8, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00};
+		KernelPatcher::LookupPatch patch{&kextRadeonX5000HWLibs, find, repl, sizeof(find), 1};
+		patcher.applyLookupPatch(&patch);
+		patcher.clearError();
+
+		KernelPatcher::RouteRequest requests[] = {
+			{"_ttlIsPicassoAM4Device", wrapTtlIsPicassoDevice, orgTtlIsPicassoDevice},
+		};
+		patcher.routeMultiple(index, requests, arrsize(requests), address, size);
 
 		return true;
 	}
@@ -378,15 +225,37 @@ void RAD::process24BitOutput(KernelPatcher &patcher, KernelPatcher::KextInfo &in
 
 void RAD::processConnectorOverrides(KernelPatcher &patcher, mach_vm_address_t address, size_t size)
 {
-	KernelPatcher::RouteRequest requests[]{
-		KernelPatcher::RouteRequest("__ZN14AtiBiosParser116getConnectorInfoEP13ConnectorInfoRh", wrapGetConnectorsInfoV1, orgGetConnectorsInfoV1),
-		KernelPatcher::RouteRequest("__ZN14AtiBiosParser216getConnectorInfoEP13ConnectorInfoRh", wrapGetConnectorsInfoV2, orgGetConnectorsInfoV2),
-		KernelPatcher::RouteRequest("__ZN14AtiBiosParser126translateAtomConnectorInfoERN30AtiObjectInfoTableInterface_V117AtomConnectorInfoER13ConnectorInfo",
-									wrapTranslateAtomConnectorInfoV1, orgTranslateAtomConnectorInfoV1),
-		KernelPatcher::RouteRequest("__ZN14AtiBiosParser226translateAtomConnectorInfoERN30AtiObjectInfoTableInterface_V217AtomConnectorInfoER13ConnectorInfo",
-									wrapTranslateAtomConnectorInfoV2, orgTranslateAtomConnectorInfoV2),
-		KernelPatcher::RouteRequest("__ZN13ATIController5startEP9IOService", wrapATIControllerStart, orgATIControllerStart)};
+	KernelPatcher::RouteRequest requests[] = {
+		{"__ZN14AtiBiosParser116getConnectorInfoEP13ConnectorInfoRh", wrapGetConnectorsInfoV1, orgGetConnectorsInfoV1},
+		{"__ZN14AtiBiosParser216getConnectorInfoEP13ConnectorInfoRh", wrapGetConnectorsInfoV2, orgGetConnectorsInfoV2},
+		{
+			"__ZN14AtiBiosParser126translateAtomConnectorInfoERN30AtiObjectInfoTableInterface_V117AtomConnectorInfoER13ConnectorInfo",
+			wrapTranslateAtomConnectorInfoV1,
+			orgTranslateAtomConnectorInfoV1,
+		},
+		{
+			"__ZN14AtiBiosParser226translateAtomConnectorInfoERN30AtiObjectInfoTableInterface_V217AtomConnectorInfoER13ConnectorInfo",
+			wrapTranslateAtomConnectorInfoV2,
+			orgTranslateAtomConnectorInfoV2,
+		},
+		{"__ZN13ATIController5startEP9IOService", wrapATIControllerStart, orgATIControllerStart},
+
+	};
 	patcher.routeMultiple(kextRadeonSupport.loadIndex, requests, address, size);
+}
+
+uint64_t RAD::wrapConfigureDevice(void *that, IOPCIDevice *dev) {
+	SYSLOG("rad", "configureDevice called!");
+	auto ret = FunctionCast(wrapConfigureDevice, callbackRAD->orgConfigureDevice)(that, dev);
+	SYSLOG("rad", "configureDevice returned %x", ret);
+	return ret;
+}
+
+IOService *RAD::wrapInitLinkToPeer(void *that, const char *matchCategoryName) {
+	SYSLOG("rad", "initLinkToPeer called!");
+	auto ret = FunctionCast(wrapInitLinkToPeer, callbackRAD->orgInitLinkToPeer)(that, matchCategoryName);
+	SYSLOG("rad", "initLinkToPeer returned %x", ret);
+	return ret;
 }
 
 void RAD::processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size)
@@ -414,12 +283,11 @@ void RAD::processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_ad
 		}
 	}
 
-	DBGLOG("rad", "patching AMD firmware table");
-	uint8_t find[] = {0x16, 0x16, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00};
-	uint8_t repl[] = {0x15, 0xDD, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00};
-	KernelPatcher::LookupPatch patch = {&hardware, find, repl, sizeof(find), 1};
-	patcher.applyLookupPatch(&patch);
-	patcher.clearError();
+	KernelPatcher::RouteRequest requests[] = {
+		{"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator15configureDeviceEP11IOPCIDevice", wrapConfigureDevice, orgConfigureDevice},
+		{"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator14initLinkToPeerEPKc", wrapInitLinkToPeer, orgInitLinkToPeer},
+	};
+	patcher.routeMultiple(hardware.loadIndex, requests, arrsize(requests), address, size);
 
 	// Patch AppleGVA support for non-supported models
 	if (forceCodecInfo && getHWInfoProcNames[hwIndex] != nullptr)
@@ -559,15 +427,11 @@ void RAD::applyPropertyFixes(IOService *service, uint32_t connectorNum)
 {
 	if (service && getKernelVersion() >= KernelVersion::HighSierra)
 	{
-		// Starting with 10.13.2 this is important to fix sleep issues due to enforced 6 screens
 		if (!service->getProperty("CFG,CFG_FB_LIMIT"))
 		{
 			DBGLOG("rad", "setting fb limit to %u", connectorNum);
 			service->setProperty("CFG_FB_LIMIT", connectorNum, 32);
 		}
-
-		// In the past we set CFG_USE_AGDC to false, which caused visual glitches and broken multimonitor support.
-		// A better workaround is to disable AGDP just like we do globally.
 	}
 }
 
@@ -579,7 +443,6 @@ void RAD::updateConnectorsInfo(void *atomutils, t_getAtomObjectTableForType gett
 		RADConnectors::print(connectors, *sz);
 	}
 
-	// Check if the user wants to override automatically detected connectors
 	auto cons = ctrl->getProperty("connectors");
 	if (cons)
 	{
@@ -629,7 +492,6 @@ void RAD::updateConnectorsInfo(void *atomutils, t_getAtomObjectTableForType gett
 
 		applyPropertyFixes(ctrl, *sz);
 
-		// Prioritise connectors, since it may cause black screen on e.g. R9 370
 		const uint8_t *senseList = nullptr;
 		uint8_t senseNum = 0;
 		auto priData = OSDynamicCast(OSData, ctrl->getProperty("connector-priority"));
@@ -662,8 +524,7 @@ void RAD::autocorrectConnectors(uint8_t *baseAddr, AtomDisplayObjectPath *displa
 		}
 
 		uint8_t txmit = 0, enc = 0;
-		if (!getTxEnc(displayPaths[i].usGraphicObjIds, txmit, enc))
-			continue;
+		if (!getTxEnc(displayPaths[i].usGraphicObjIds, txmit, enc)) continue;
 
 		uint8_t sense = getSenseID(baseAddr + connectorObjects[i].usRecordOffset);
 		if (!sense)
@@ -680,14 +541,6 @@ void RAD::autocorrectConnectors(uint8_t *baseAddr, AtomDisplayObjectPath *displa
 
 void RAD::autocorrectConnector(uint8_t connector, uint8_t sense, uint8_t txmit, uint8_t enc, RADConnectors::Connector *connectors, uint8_t sz)
 {
-	// This function attempts to fix the following issues:
-	//
-	// 1. Incompatible DVI transmitter on 290X, 370 and probably some other models
-	// In this case a correct transmitter is detected by AtiAtomBiosDce60::getPropertiesForEncoderObject, however, later
-	// in AtiAtomBiosDce60::getPropertiesForConnectorObject for DVI DL and TITFP513 this value is conjuncted with 0xCF,
-	// which makes it wrong: 0x10 -> 0, 0x11 -> 1. As a result one gets black screen when connecting multiple displays.
-	// getPropertiesForEncoderObject takes usGraphicObjIds and getPropertiesForConnectorObject takes usConnObjectId
-
 	if (callbackRAD->dviSingleLink)
 	{
 		if (connector != CONNECTOR_OBJECT_ID_DUAL_LINK_DVI_I &&
@@ -719,21 +572,17 @@ void RAD::autocorrectConnector(uint8_t connector, uint8_t sense, uint8_t txmit, 
 			if (isModern)
 			{
 				auto &con = (&connectors->modern)[j];
-				if (fixTransmit(con, j, sense, txmit))
-					break;
+				if (fixTransmit(con, j, sense, txmit)) break;
 			}
 			else
 			{
 				auto &con = (&connectors->legacy)[j];
-				if (fixTransmit(con, j, sense, txmit))
-					break;
+				if (fixTransmit(con, j, sense, txmit)) break;
 			}
 		}
 	}
 	else
-	{
 		DBGLOG("rad", "autocorrectConnector use -raddvi to enable dvi autocorrection");
-	}
 }
 
 void RAD::reprioritiseConnectors(const uint8_t *senseList, uint8_t senseNum, RADConnectors::Connector *connectors, uint8_t sz)
@@ -749,9 +598,6 @@ void RAD::reprioritiseConnectors(const uint8_t *senseList, uint8_t senseNum, RAD
 
 	bool isModern = RADConnectors::modern();
 	uint16_t priCount = 1;
-	// Automatically detected connectors have equal priority (0), which often results in black screen
-	// This allows to change this firstly by user-defined list, then by type list.
-	// TODO: priority is ignored for 5xxx and 6xxx GPUs, should we manually reorder items?
 	for (uint8_t i = 0; i < senseNum + typeNum + 1; i++)
 	{
 		for (uint8_t j = 0; j < sz; j++)
@@ -760,8 +606,7 @@ void RAD::reprioritiseConnectors(const uint8_t *senseList, uint8_t senseNum, RAD
 			{
 				if (i == senseNum + typeNum)
 				{
-					if (con.priority == 0)
-						con.priority = priCount++;
+					if (con.priority == 0) con.priority = priCount++;
 				}
 				else if (i < senseNum)
 				{
@@ -784,8 +629,7 @@ void RAD::reprioritiseConnectors(const uint8_t *senseList, uint8_t senseNum, RAD
 			};
 
 			if ((isModern && reorder((&connectors->modern)[j])) ||
-				(!isModern && reorder((&connectors->legacy)[j])))
-				break;
+				(!isModern && reorder((&connectors->legacy)[j]))) break;
 		}
 	}
 }
@@ -849,9 +693,7 @@ void RAD::setGvaProperties(IOService *accelService)
 					DBGLOG("rad", "recovering IOGVAHEVCDecode");
 				}
 				else
-				{
 					SYSLOG("rad", "allocation failure in IOGVAHEVCDecode");
-				}
 
 				OSSafeReleaseNULL(VTMaxDecodeLevel);
 				OSSafeReleaseNULL(VTMaxDecodeLevelKey);
@@ -880,7 +722,6 @@ void RAD::setGvaProperties(IOService *accelService)
 
 				OSArray *VTSupportedProfileArray = OSArray::withCapacity(1);
 				OSNumber *VTSupportedProfileArray1 = OSNumber::withNumber(1, 32);
-
 				OSDictionary *IOGVAHEVCEncodeCapabilities = OSDictionary::withCapacity(4);
 				OSString *VTPerProfileDetailsKey = OSString::withCString("VTPerProfileDetails");
 				OSString *VTQualityRatingKey = OSString::withCString("VTQualityRating");
@@ -895,7 +736,6 @@ void RAD::setGvaProperties(IOService *accelService)
 					VTQualityRatingKey != nullptr && VTQualityRating != nullptr && VTRatingKey != nullptr && VTRating != nullptr &&
 					IOGVAHEVCEncodeCapabilities != nullptr)
 				{
-
 					VTPerProfileDetailsInner->setObject(VTMaxEncodeLevelKey, VTMaxEncodeLevel);
 					VTPerProfileDetails->setObject(VTPerProfileDetailsKey1, VTPerProfileDetailsInner);
 					VTSupportedProfileArray->setObject(VTSupportedProfileArray1);
@@ -911,9 +751,7 @@ void RAD::setGvaProperties(IOService *accelService)
 					DBGLOG("rad", "recovering IOGVAHEVCEncode");
 				}
 				else
-				{
 					SYSLOG("rad", "allocation failure in IOGVAHEVCEncode");
-				}
 
 				OSSafeReleaseNULL(VTMaxEncodeLevel);
 				OSSafeReleaseNULL(VTMaxEncodeLevelKey);
@@ -951,27 +789,19 @@ void RAD::updateAccelConfig(size_t hwIndex, IOService *accelService, const char 
 					if (modelStr)
 					{
 						if (modelStr[0] == 'A' && ((modelStr[1] == 'M' && modelStr[2] == 'D') || (modelStr[1] == 'T' && modelStr[2] == 'I')) && modelStr[3] == ' ')
-						{
 							modelStr += 4;
-						}
 
 						DBGLOG("rad", "updateAccelConfig found gpu model %s", modelStr);
 						*accelConfig = modelStr;
 					}
 					else
-					{
 						DBGLOG("rad", "updateAccelConfig found null gpu model");
-					}
 				}
 				else
-				{
 					DBGLOG("rad", "updateAccelConfig failed to find gpu model");
-				}
 			}
 			else
-			{
 				DBGLOG("rad", "updateAccelConfig failed to find accelerator parent");
-			}
 		}
 	}
 }
@@ -1053,9 +883,7 @@ uint32_t RAD::wrapGetConnectorsInfoV1(void *that, RADConnectors::Connector *conn
 			callbackRAD->updateConnectorsInfo(static_cast<void **>(that)[1], callbackRAD->orgGetAtomObjectTableForType, *props, connectors, sz);
 	}
 	else
-	{
 		DBGLOG("rad", "getConnectorsInfoV1 failed %X or undefined %d", code, props == nullptr);
-	}
 
 	return code;
 }

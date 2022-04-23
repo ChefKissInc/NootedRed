@@ -48,7 +48,7 @@
 			<key>IODVDBundleName</key>
 			<string>AMDRadeonVADriver2</string>
 			<key>IOGVACodec</key>
-			<string>AMDU7V4</string>
+			<string>VCE</string>
 			<key>IOGVAH264EncodeCapabilities</key>
 			<dict>
 				<key>VTQualityRating</key>
@@ -111,7 +111,7 @@
 			<key>IOMatchCategory</key>
 			<string>IOAccelerator</string>
 			<key>IOPCIMatch</key>
-			<string>0x15DD1002</string>
+			<string>0x15DD1002 0x15D81002</string>
 			<key>IOPCITunnelCompatible</key>
 			<true/>
 			<key>_IOPropertyMatch</key>
@@ -150,7 +150,7 @@
 			<key>IOMatchCategory</key>
 			<string>AMDRadeonX5000HWServices</string>
 			<key>IOPCIMatch</key>
-			<string>0x15DD1002</string>
+			<string>0x15DD1002 0x15D81002</string>
 			<key>IOPCITunnelCompatible</key>
 			<true/>
 			<key>IOProbeScore</key>
@@ -172,7 +172,7 @@
 			<key>IOMatchCategory</key>
 			<string>IOFramebuffer</string>
 			<key>IOPCIMatch</key>
-			<string>0x15DD1002</string>
+			<string>0x15DD1002 0x15D81002</string>
 			<key>IOPCITunnelCompatible</key>
 			<true/>
 			<key>IOProbeScore</key>
@@ -672,7 +672,7 @@
 			<key>IOName</key>
 			<string>AMD10000Controller</string>
 			<key>IOPCIMatch</key>
-			<string>0x15DD1002</string>
+			<string>0x15DD1002 0x15D81002</string>
 			<key>IOPCITunnelCompatible</key>
 			<true/>
 			<key>IOProbeScore</key>

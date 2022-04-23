@@ -14,7 +14,6 @@
 
 namespace RADConnectors
 {
-
 	/**
 	 *  Connectors from AMDSupport before 10.12
 	 */

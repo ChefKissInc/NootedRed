@@ -280,16 +280,6 @@ private:
 	bool isGraphicsPolicyModRequired(DeviceInfo *info);
 
 	/**
-	 *  Attempts to find a printable name of an Intel GPU
-	 *
-	 *  @param dev      devide-id
-	 *  @param fakeId   fake devide-id
-	 *
-	 *  @return autodetected GPU name or nullptr
-	 */
-	const char *getIntelModel(uint32_t dev, uint32_t &fakeId);
-
-	/**
 	 *  Attempts to find a printable name of a Radeon GPU
 	 *
 	 *  @param dev    devide-id
