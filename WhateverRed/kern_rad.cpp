@@ -65,6 +65,7 @@ void RAD::init()
 	forceCodecInfo = checkKernelArgument("-radcodec");
 
 	lilu.onKextLoadForce(&kextRadeonSupport);
+	lilu.onKextLoadForce(&kextRadeonX5000HWLibs);
 
 	initHardwareKextMods();
 
@@ -147,9 +148,11 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 	{
 		DBGLOG("rad", "patching AMD firmware table");
 		uint8_t find[] = {0x16, 0x16, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00};
-		uint8_t repl[] = {0x15, 0xD8, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00};
-		KernelPatcher::LookupPatch patch{&kextRadeonX5000HWLibs, find, repl, sizeof(find), 1};
+		uint8_t repl[] = {0xD8, 0x15, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00};
+		KernelPatcher::LookupPatch patch{&kextRadeonX5000HWLibs, find, repl, sizeof(find), 2};
 		patcher.applyLookupPatch(&patch);
+		if (patcher.getError() != KernelPatcher::Error::NoError)
+			DBGLOG("rad", "AMD firmware table patching error: %d", patcher.getError());
 		patcher.clearError();
 
 		KernelPatcher::RouteRequest requests[] = {
