@@ -96,10 +96,12 @@ void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info)
 	{
 		if (info->videoExternal[i].vendor == WIOKit::VendorID::ATIAMD)
 		{
-			if (info->videoExternal[i].video->getProperty("enable-gva-support")) enableGvaSupport = true;
+			if (info->videoExternal[i].video->getProperty("enable-gva-support"))
+				enableGvaSupport = true;
 
 			auto smufw = OSDynamicCast(OSData, info->videoExternal[i].video->getProperty("Force_Load_FalconSMUFW"));
-			if (smufw && smufw->getLength() == 1) {
+			if (smufw && smufw->getLength() == 1)
+			{
 				info->videoExternal[i].video->setProperty("Force_Load_FalconSMUFW",
 														  *static_cast<const uint8_t *>(smufw->getBytesNoCopy()) ? kOSBooleanTrue : kOSBooleanFalse);
 			}
@@ -107,7 +109,8 @@ void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info)
 	}
 
 	int gva;
-	if (PE_parse_boot_argn("radgva", &gva, sizeof(gva))) enableGvaSupport = gva != 0;
+	if (PE_parse_boot_argn("radgva", &gva, sizeof(gva)))
+		enableGvaSupport = gva != 0;
 
 	KernelPatcher::RouteRequest requests[] = {
 		KernelPatcher::RouteRequest("__ZN15IORegistryEntry11setPropertyEPKcPvj", wrapSetProperty, orgSetProperty),
@@ -247,14 +250,16 @@ void RAD::processConnectorOverrides(KernelPatcher &patcher, mach_vm_address_t ad
 	patcher.routeMultiple(kextRadeonSupport.loadIndex, requests, address, size);
 }
 
-uint64_t RAD::wrapConfigureDevice(void *that, IOPCIDevice *dev) {
+uint64_t RAD::wrapConfigureDevice(void *that, IOPCIDevice *dev)
+{
 	SYSLOG("rad", "configureDevice called!");
 	auto ret = FunctionCast(wrapConfigureDevice, callbackRAD->orgConfigureDevice)(that, dev);
 	SYSLOG("rad", "configureDevice returned %x", ret);
 	return ret;
 }
 
-IOService *RAD::wrapInitLinkToPeer(void *that, const char *matchCategoryName) {
+IOService *RAD::wrapInitLinkToPeer(void *that, const char *matchCategoryName)
+{
 	SYSLOG("rad", "initLinkToPeer called!");
 	auto ret = FunctionCast(wrapInitLinkToPeer, callbackRAD->orgInitLinkToPeer)(that, matchCategoryName);
 	SYSLOG("rad", "initLinkToPeer returned %x", ret);
@@ -392,7 +397,7 @@ void RAD::mergeProperties(OSDictionary *props, const char *prefix, IOService *pr
 				}
 				else
 				{
-					// DBGLOG("rad", "prop %s does not match %s prefix", safeString(name), prefix);
+					DBGLOG("rad", "prop %s does not match %s prefix", safeString(name), prefix);
 				}
 			}
 
@@ -527,7 +532,8 @@ void RAD::autocorrectConnectors(uint8_t *baseAddr, AtomDisplayObjectPath *displa
 		}
 
 		uint8_t txmit = 0, enc = 0;
-		if (!getTxEnc(displayPaths[i].usGraphicObjIds, txmit, enc)) continue;
+		if (!getTxEnc(displayPaths[i].usGraphicObjIds, txmit, enc))
+			continue;
 
 		uint8_t sense = getSenseID(baseAddr + connectorObjects[i].usRecordOffset);
 		if (!sense)
@@ -575,12 +581,14 @@ void RAD::autocorrectConnector(uint8_t connector, uint8_t sense, uint8_t txmit, 
 			if (isModern)
 			{
 				auto &con = (&connectors->modern)[j];
-				if (fixTransmit(con, j, sense, txmit)) break;
+				if (fixTransmit(con, j, sense, txmit))
+					break;
 			}
 			else
 			{
 				auto &con = (&connectors->legacy)[j];
-				if (fixTransmit(con, j, sense, txmit)) break;
+				if (fixTransmit(con, j, sense, txmit))
+					break;
 			}
 		}
 	}
@@ -609,7 +617,8 @@ void RAD::reprioritiseConnectors(const uint8_t *senseList, uint8_t senseNum, RAD
 			{
 				if (i == senseNum + typeNum)
 				{
-					if (con.priority == 0) con.priority = priCount++;
+					if (con.priority == 0)
+						con.priority = priCount++;
 				}
 				else if (i < senseNum)
 				{
@@ -632,145 +641,8 @@ void RAD::reprioritiseConnectors(const uint8_t *senseList, uint8_t senseNum, RAD
 			};
 
 			if ((isModern && reorder((&connectors->modern)[j])) ||
-				(!isModern && reorder((&connectors->legacy)[j]))) break;
-		}
-	}
-}
-
-void RAD::setGvaProperties(IOService *accelService)
-{
-	auto codecStr = OSDynamicCast(OSString, accelService->getProperty("IOGVACodec"));
-	if (codecStr == nullptr)
-	{
-		DBGLOG("rad", "updating X4000 accelerator IOGVACodec to VCE");
-		accelService->setProperty("IOGVACodec", "VCE");
-	}
-	else
-	{
-		auto codec = codecStr->getCStringNoCopy();
-		DBGLOG("rad", "X4000 accelerator IOGVACodec is already set to %s", safeString(codec));
-		if (codec != nullptr && strncmp(codec, "AMD", strlen("AMD")) == 0)
-		{
-			bool needsDecode = accelService->getProperty("IOGVAHEVCDecode") == nullptr;
-			bool needsEncode = accelService->getProperty("IOGVAHEVCEncode") == nullptr;
-			if (needsDecode)
-			{
-				OSObject *VTMaxDecodeLevel = OSNumber::withNumber(153, 32);
-				OSString *VTMaxDecodeLevelKey = OSString::withCString("VTMaxDecodeLevel");
-				OSDictionary *VTPerProfileDetailsInner = OSDictionary::withCapacity(1);
-				OSDictionary *VTPerProfileDetails = OSDictionary::withCapacity(3);
-				OSString *VTPerProfileDetailsKey1 = OSString::withCString("1");
-				OSString *VTPerProfileDetailsKey2 = OSString::withCString("2");
-				OSString *VTPerProfileDetailsKey3 = OSString::withCString("3");
-
-				OSArray *VTSupportedProfileArray = OSArray::withCapacity(3);
-				OSNumber *VTSupportedProfileArray1 = OSNumber::withNumber(1, 32);
-				OSNumber *VTSupportedProfileArray2 = OSNumber::withNumber(2, 32);
-				OSNumber *VTSupportedProfileArray3 = OSNumber::withNumber(3, 32);
-
-				OSDictionary *IOGVAHEVCDecodeCapabilities = OSDictionary::withCapacity(2);
-				OSString *VTPerProfileDetailsKey = OSString::withCString("VTPerProfileDetails");
-				OSString *VTSupportedProfileArrayKey = OSString::withCString("VTSupportedProfileArray");
-
-				if (VTMaxDecodeLevel != nullptr && VTMaxDecodeLevelKey != nullptr && VTPerProfileDetailsInner != nullptr &&
-					VTPerProfileDetails != nullptr && VTPerProfileDetailsKey1 != nullptr && VTPerProfileDetailsKey2 != nullptr &&
-					VTPerProfileDetailsKey3 != nullptr && VTSupportedProfileArrayKey != nullptr && VTSupportedProfileArray1 != nullptr &&
-					VTSupportedProfileArray2 != nullptr && VTSupportedProfileArray3 != nullptr && VTSupportedProfileArray != nullptr &&
-					VTPerProfileDetailsKey != nullptr && IOGVAHEVCDecodeCapabilities != nullptr)
-				{
-					VTPerProfileDetailsInner->setObject(VTMaxDecodeLevelKey, VTMaxDecodeLevel);
-					VTPerProfileDetails->setObject(VTPerProfileDetailsKey1, VTPerProfileDetailsInner);
-					VTPerProfileDetails->setObject(VTPerProfileDetailsKey2, VTPerProfileDetailsInner);
-					VTPerProfileDetails->setObject(VTPerProfileDetailsKey3, VTPerProfileDetailsInner);
-
-					VTSupportedProfileArray->setObject(VTSupportedProfileArray1);
-					VTSupportedProfileArray->setObject(VTSupportedProfileArray2);
-					VTSupportedProfileArray->setObject(VTSupportedProfileArray3);
-
-					IOGVAHEVCDecodeCapabilities->setObject(VTPerProfileDetailsKey, VTPerProfileDetails);
-					IOGVAHEVCDecodeCapabilities->setObject(VTSupportedProfileArrayKey, VTSupportedProfileArray);
-
-					accelService->setProperty("IOGVAHEVCDecode", "1");
-					accelService->setProperty("IOGVAHEVCDecodeCapabilities", IOGVAHEVCDecodeCapabilities);
-
-					DBGLOG("rad", "recovering IOGVAHEVCDecode");
-				}
-				else
-					SYSLOG("rad", "allocation failure in IOGVAHEVCDecode");
-
-				OSSafeReleaseNULL(VTMaxDecodeLevel);
-				OSSafeReleaseNULL(VTMaxDecodeLevelKey);
-				OSSafeReleaseNULL(VTPerProfileDetailsInner);
-				OSSafeReleaseNULL(VTPerProfileDetails);
-				OSSafeReleaseNULL(VTPerProfileDetailsKey1);
-				OSSafeReleaseNULL(VTPerProfileDetailsKey2);
-				OSSafeReleaseNULL(VTPerProfileDetailsKey3);
-				OSSafeReleaseNULL(VTSupportedProfileArrayKey);
-				OSSafeReleaseNULL(VTSupportedProfileArray1);
-				OSSafeReleaseNULL(VTSupportedProfileArray2);
-				OSSafeReleaseNULL(VTSupportedProfileArray3);
-				OSSafeReleaseNULL(VTSupportedProfileArray);
-				OSSafeReleaseNULL(VTPerProfileDetailsKey);
-				OSSafeReleaseNULL(IOGVAHEVCDecodeCapabilities);
-			}
-
-			if (needsEncode)
-			{
-				OSObject *VTMaxEncodeLevel = OSNumber::withNumber(153, 32);
-				OSString *VTMaxEncodeLevelKey = OSString::withCString("VTMaxEncodeLevel");
-
-				OSDictionary *VTPerProfileDetailsInner = OSDictionary::withCapacity(1);
-				OSDictionary *VTPerProfileDetails = OSDictionary::withCapacity(1);
-				OSString *VTPerProfileDetailsKey1 = OSString::withCString("1");
-
-				OSArray *VTSupportedProfileArray = OSArray::withCapacity(1);
-				OSNumber *VTSupportedProfileArray1 = OSNumber::withNumber(1, 32);
-				OSDictionary *IOGVAHEVCEncodeCapabilities = OSDictionary::withCapacity(4);
-				OSString *VTPerProfileDetailsKey = OSString::withCString("VTPerProfileDetails");
-				OSString *VTQualityRatingKey = OSString::withCString("VTQualityRating");
-				OSNumber *VTQualityRating = OSNumber::withNumber(50, 32);
-				OSString *VTRatingKey = OSString::withCString("VTRating");
-				OSNumber *VTRating = OSNumber::withNumber(350, 32);
-				OSString *VTSupportedProfileArrayKey = OSString::withCString("VTSupportedProfileArray");
-
-				if (VTMaxEncodeLevel != nullptr && VTMaxEncodeLevelKey != nullptr && VTPerProfileDetailsInner != nullptr &&
-					VTPerProfileDetails != nullptr && VTPerProfileDetailsKey1 != nullptr && VTSupportedProfileArrayKey != nullptr &&
-					VTSupportedProfileArray1 != nullptr && VTSupportedProfileArray != nullptr && VTPerProfileDetailsKey != nullptr &&
-					VTQualityRatingKey != nullptr && VTQualityRating != nullptr && VTRatingKey != nullptr && VTRating != nullptr &&
-					IOGVAHEVCEncodeCapabilities != nullptr)
-				{
-					VTPerProfileDetailsInner->setObject(VTMaxEncodeLevelKey, VTMaxEncodeLevel);
-					VTPerProfileDetails->setObject(VTPerProfileDetailsKey1, VTPerProfileDetailsInner);
-					VTSupportedProfileArray->setObject(VTSupportedProfileArray1);
-
-					IOGVAHEVCEncodeCapabilities->setObject(VTPerProfileDetailsKey, VTPerProfileDetails);
-					IOGVAHEVCEncodeCapabilities->setObject(VTQualityRatingKey, VTQualityRating);
-					IOGVAHEVCEncodeCapabilities->setObject(VTRatingKey, VTRating);
-					IOGVAHEVCEncodeCapabilities->setObject(VTSupportedProfileArrayKey, VTSupportedProfileArray);
-
-					accelService->setProperty("IOGVAHEVCEncode", "1");
-					accelService->setProperty("IOGVAHEVCEncodeCapabilities", IOGVAHEVCEncodeCapabilities);
-
-					DBGLOG("rad", "recovering IOGVAHEVCEncode");
-				}
-				else
-					SYSLOG("rad", "allocation failure in IOGVAHEVCEncode");
-
-				OSSafeReleaseNULL(VTMaxEncodeLevel);
-				OSSafeReleaseNULL(VTMaxEncodeLevelKey);
-				OSSafeReleaseNULL(VTPerProfileDetailsInner);
-				OSSafeReleaseNULL(VTPerProfileDetails);
-				OSSafeReleaseNULL(VTPerProfileDetailsKey1);
-				OSSafeReleaseNULL(VTSupportedProfileArrayKey);
-				OSSafeReleaseNULL(VTSupportedProfileArray1);
-				OSSafeReleaseNULL(VTSupportedProfileArray);
-				OSSafeReleaseNULL(VTPerProfileDetailsKey);
-				OSSafeReleaseNULL(VTQualityRatingKey);
-				OSSafeReleaseNULL(VTQualityRating);
-				OSSafeReleaseNULL(VTRatingKey);
-				OSSafeReleaseNULL(VTRating);
-				OSSafeReleaseNULL(IOGVAHEVCEncodeCapabilities);
-			}
+				(!isModern && reorder((&connectors->legacy)[j])))
+				break;
 		}
 	}
 }
@@ -991,24 +863,8 @@ bool RAD::wrapATIControllerStart(IOService *ctrl, IOService *provider)
 	return r;
 }
 
-IOReturn RAD::findProjectByPartNumber(IOService *ctrl, void *properties)
-{
-	// Drivers have predefined framebuffers for the following models:
-	// 113-4E353BU, 113-4E3531U, 113-C94002A1XTA
-	// Despite this looking sane, at least with Sapphire 113-4E353BU-O50 (RX 580) these framebuffers break connectors.
-	return kIOReturnNotFound;
-}
-
 bool RAD::doNotTestVram(IOService *ctrl, uint32_t reg, bool retryOnFail)
 {
-	// Based on vladie's patch description:
-	// TestVRAM fills memory with 0xaa55aa55 bytes (it's magenta pixels visible onscreen),
-	// and it tries to test too much of address space, writing this bytes to framebuffer memory.
-	// If you have verbose mode enabled (as i have), there is a possibility that framebuffer
-	// will scroll during this test, and TestVRAM will write 0xaa55aa55, but read 0x00000000
-	// (because magenta-colored pixels are scrolled up) causing kernel panic.
-	//
-	// Here we just do not do video memory testing for simplicity.
 	return true;
 }
 
@@ -1020,9 +876,6 @@ bool RAD::wrapNotifyLinkChange(void *atiDeviceControl, kAGDCRegisterLinkControlE
 	{
 		auto cmd = static_cast<AGDCValidateDetailedTiming_t *>(eventData);
 		DBGLOG("rad", "AGDCValidateDetailedTiming %u -> %d (%u)", cmd->framebufferIndex, ret, cmd->modeStatus);
-		// While we have this condition below, the only actual value we get is ret = true, cmd->modeStatus = 0.
-		// This is because AGDP is disabled, and starting from 10.15.1b2 AMDFramebuffer no longer accepts 0 in
-		// __ZN14AMDFramebuffer22validateDetailedTimingEPvy
 		if (ret == false || cmd->modeStatus < 1 || cmd->modeStatus > 3)
 		{
 			cmd->modeStatus = 2;
@@ -1052,7 +905,6 @@ void RAD::updateGetHWInfo(IOService *accelVideoCtx, void *hwInfo)
 	uint32_t dev = org;
 	if (!WIOKit::getOSDataValue(pciDev, "codec-device-id", dev))
 	{
-		// fallback to device-id only if we do not have codec-device-id
 		WIOKit::getOSDataValue(pciDev, "device-id", dev);
 	}
 	DBGLOG("rad", "getHWInfo: original PID: 0x%04X, replaced PID: 0x%04X", org, dev);

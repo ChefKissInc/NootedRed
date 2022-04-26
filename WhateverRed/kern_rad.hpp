@@ -63,7 +63,7 @@ private:
 		}
 		else
 			SYSLOG("rad", "populateGetHWInfo invalid use for %lu", Index);
-		
+
 		return kIOReturnInvalid;
 	}
 
@@ -82,7 +82,7 @@ private:
 	bool forceCodecInfo = false;
 	size_t maxHardwareKexts = 1;
 
-	static bool wrapTtlIsPicassoDevice(void* dev);
+	static bool wrapTtlIsPicassoDevice(void *dev);
 	void initHardwareKextMods();
 	void mergeProperty(OSDictionary *props, const char *name, OSObject *value);
 	void mergeProperties(OSDictionary *props, const char *prefix, IOService *provider);
@@ -112,7 +112,6 @@ private:
 	static uint64_t wrapConfigureDevice(void *that, IOPCIDevice *dev);
 	static IOService *wrapInitLinkToPeer(void *that, const char *matchCategoryName);
 	void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);
-	void setGvaProperties(IOService *accelService);
 	void updateAccelConfig(size_t hwIndex, IOService *accelService, const char **accelConfig);
 
 	static bool wrapSetProperty(IORegistryEntry *that, const char *aKey, void *bytes, unsigned length);
@@ -125,7 +124,6 @@ private:
 	static uint32_t wrapTranslateAtomConnectorInfoV2(void *that, RADConnectors::AtomConnectorInfo *info, RADConnectors::Connector *connector);
 	static bool wrapATIControllerStart(IOService *ctrl, IOService *provider);
 	static bool wrapNotifyLinkChange(void *atiDeviceControl, kAGDCRegisterLinkControlEvent_t event, void *eventData, uint32_t eventFlags);
-	static IOReturn findProjectByPartNumber(IOService *ctrl, void *properties);
 	static bool doNotTestVram(IOService *ctrl, uint32_t reg, bool retryOnFail);
 	static void updateGetHWInfo(IOService *accelVideoCtx, void *hwInfo);
 };
