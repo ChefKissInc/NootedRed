@@ -45,7 +45,11 @@ private:
 	mach_vm_address_t orgATIControllerStart{};
 	mach_vm_address_t orgNotifyLinkChange{};
 	mach_vm_address_t orgPopulateAccelConfig[1]{}, orgGetHWInfo[1]{};
-	mach_vm_address_t orgConfigureDevice{}, orgInitLinkToPeer{};
+	mach_vm_address_t orgConfigureDevice{}, orgInitLinkToPeer{}, orgCreateHWHandler{};
+	mach_vm_address_t orgCreateHWInterface{}, orgGetHWMemory{}, orgGetATIChipConfigBit{};
+	mach_vm_address_t orgAllocateAMDHWRegisters{}, orgSetupCAIL{}, orgInitializeHWWorkarounds{};
+	mach_vm_address_t orgAllocateAMDHWAlignManager{}, orgMapDoorbellMemory{}, orgInitializeProjectDependentResources{};
+	mach_vm_address_t orgHwInitializeFbMemSize{}, orgHwInitializeFbBase{}, orgInitWithController{};
 	t_populateAccelConfig wrapPopulateAccelConfig[1] = {populateAccelConfig<0>};
 
 	const char *populateAccelConfigProcNames[1] = {
@@ -109,8 +113,23 @@ private:
 
 	void process24BitOutput(KernelPatcher &patcher, KernelPatcher::KextInfo &info, mach_vm_address_t address, size_t size);
 	void processConnectorOverrides(KernelPatcher &patcher, mach_vm_address_t address, size_t size);
+	static IOReturn noProjectByPartNumber(IOService* that, uint64_t partNumber);
+	static uint64_t wrapInitializeProjectDependentResources(void* that);
+	static uint64_t wrapHwInitializeFbMemSize(void* that);
+	static uint64_t wrapHwInitializeFbBase(void* that);
+	static uint64_t wrapInitWithController(void* that, void* controller);
 	static uint64_t wrapConfigureDevice(void *that, IOPCIDevice *dev);
+	static uint64_t wrapCreateHWHandler(void* that);
+	static uint64_t wrapCreateHWInterface(void* that, IOPCIDevice *dev);
+	static uint64_t wrapGetHWMemory(void* that);
+	static uint64_t wrapGetATIChipConfigBit(void* that);
+	static uint64_t wrapAllocateAMDHWRegisters(void* that);
+	static bool wrapSetupCAIL(void* that);
+	static uint64_t wrapInitializeHWWorkarounds(void* that);
+	static uint64_t wrapAllocateAMDHWAlignManager(void* that);
+	static bool wrapMapDoorbellMemory(void* that);
 	static IOService *wrapInitLinkToPeer(void *that, const char *matchCategoryName);
+	
 	void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);
 	void updateAccelConfig(size_t hwIndex, IOService *accelService, const char **accelConfig);
 
