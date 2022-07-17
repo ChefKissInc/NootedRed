@@ -79,7 +79,7 @@ private:
 
 	bool force24BppMode = false;
 	bool dviSingleLink = false;
-	bool forceOpenGL = false;
+
 	bool fixConfigName = false;
 	bool enableGvaSupport = false;
 	bool forceVesaMode = false;
@@ -136,10 +136,8 @@ private:
 	static bool wrapSetProperty(IORegistryEntry *that, const char *aKey, void *bytes, unsigned length);
 	static OSObject *wrapGetProperty(IORegistryEntry *that, const char *aKey);
 
-	static uint32_t wrapGetConnectorsInfoV1(void *that, RADConnectors::Connector *connectors, uint8_t *sz);
 	static uint32_t wrapGetConnectorsInfoV2(void *that, RADConnectors::Connector *connectors, uint8_t *sz);
 
-	static uint32_t wrapTranslateAtomConnectorInfoV1(void *that, RADConnectors::AtomConnectorInfo *info, RADConnectors::Connector *connector);
 	static uint32_t wrapTranslateAtomConnectorInfoV2(void *that, RADConnectors::AtomConnectorInfo *info, RADConnectors::Connector *connector);
 	static bool wrapATIControllerStart(IOService *ctrl, IOService *provider);
 	static bool wrapNotifyLinkChange(void *atiDeviceControl, kAGDCRegisterLinkControlEvent_t event, void *eventData, uint32_t eventFlags);

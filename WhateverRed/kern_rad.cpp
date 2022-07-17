@@ -69,7 +69,6 @@ void RAD::init()
 	if (force24BppMode) lilu.onKextLoadForce(&kextRadeonFramebuffer);
 
 	dviSingleLink = checkKernelArgument("-raddvi");
-	forceOpenGL = checkKernelArgument("-radgl");
 	fixConfigName = checkKernelArgument("-radcfg");
 	forceVesaMode = checkKernelArgument("-radvesa");
 	forceCodecInfo = checkKernelArgument("-radcodec");
@@ -269,13 +268,7 @@ void RAD::process24BitOutput(KernelPatcher &patcher, KernelPatcher::KextInfo &in
 void RAD::processConnectorOverrides(KernelPatcher &patcher, mach_vm_address_t address, size_t size)
 {
 	KernelPatcher::RouteRequest requests[] = {
-		{"__ZN14AtiBiosParser116getConnectorInfoEP13ConnectorInfoRh", wrapGetConnectorsInfoV1, orgGetConnectorsInfoV1},
 		{"__ZN14AtiBiosParser216getConnectorInfoEP13ConnectorInfoRh", wrapGetConnectorsInfoV2, orgGetConnectorsInfoV2},
-		{
-			"__ZN14AtiBiosParser126translateAtomConnectorInfoERN30AtiObjectInfoTableInterface_V117AtomConnectorInfoER13ConnectorInfo",
-			wrapTranslateAtomConnectorInfoV1,
-			orgTranslateAtomConnectorInfoV1,
-		},
 		{
 			"__ZN14AtiBiosParser226translateAtomConnectorInfoERN30AtiObjectInfoTableInterface_V217AtomConnectorInfoER13ConnectorInfo",
 			wrapTranslateAtomConnectorInfoV2,
@@ -323,27 +316,6 @@ void RAD::processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_ad
 {
 	auto &hardware = kextRadeonHardware[hwIndex];
 
-	// Enforce OpenGL support if requested
-	if (forceOpenGL)
-	{
-		DBGLOG("rad", "disabling Metal support");
-		uint8_t find1[] = {0x4D, 0x65, 0x74, 0x61, 0x6C, 0x53, 0x74, 0x61};
-		uint8_t find2[] = {0x4D, 0x65, 0x74, 0x61, 0x6C, 0x50, 0x6C, 0x75};
-		uint8_t repl1[] = {0x50, 0x65, 0x74, 0x61, 0x6C, 0x53, 0x74, 0x61};
-		uint8_t repl2[] = {0x50, 0x65, 0x74, 0x61, 0x6C, 0x50, 0x6C, 0x75};
-
-		KernelPatcher::LookupPatch antimetal[] = {
-			{&hardware, find1, repl1, sizeof(find1), 2},
-			{&hardware, find2, repl2, sizeof(find1), 2},
-		};
-
-		for (auto &p : antimetal)
-		{
-			patcher.applyLookupPatch(&p);
-			patcher.clearError();
-		}
-	}
-
 	KernelPatcher::RouteRequest requests[] = {
 		{"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator15configureDeviceEP11IOPCIDevice", wrapConfigureDevice, orgConfigureDevice},
 		{"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator14initLinkToPeerEPKc", wrapInitLinkToPeer, orgInitLinkToPeer},
@@ -355,7 +327,7 @@ void RAD::processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_ad
 		{"__ZN26AMDRadeonX5000_AMDHardware9setupCAILEv", wrapSetupCAIL, orgSetupCAIL},
 		{"__ZN30AMDRadeonX5000_AMDGFX9Hardware23initializeHWWorkaroundsEv", wrapInitializeHWWorkarounds, orgInitializeHWWorkarounds},
 		{"__ZN30AMDRadeonX5000_AMDGFX9Hardware25allocateAMDHWAlignManagerEv", wrapAllocateAMDHWAlignManager, orgAllocateAMDHWAlignManager},
-		{"__ZN26AMDRadeonX5000_AMDHardware17mapDoorbellMemoryEv", wrapMapDoorbellMemory, orgMapDoorbellMemory}
+		{"__ZN26AMDRadeonX5000_AMDHardware17mapDoorbellMemoryEv", wrapMapDoorbellMemory, orgMapDoorbellMemory},
 	};
 	patcher.routeMultiple(hardware.loadIndex, requests, arrsize(requests), address, size);
 
@@ -555,9 +527,13 @@ void RAD::updateConnectorsInfo(void *atomutils, t_getAtomObjectTableForType gett
 			auto displayPaths = static_cast<AtomDisplayObjectPath *>(gettable(atomutils, AtomObjectTableType::DisplayPath, &displayPathNum));
 			auto connectorObjects = static_cast<AtomConnectorObject *>(gettable(atomutils, AtomObjectTableType::ConnectorObject, &connectorObjectNum));
 			if (displayPathNum == connectorObjectNum)
+			{
 				autocorrectConnectors(baseAddr, displayPaths, displayPathNum, connectorObjects, connectorObjectNum, connectors, *sz);
+			}
 			else
+			{
 				DBGLOG("rad", "getConnectorsInfo found different displaypaths %u and connectors %u", displayPathNum, connectorObjectNum);
+			}
 		}
 
 		applyPropertyFixes(ctrl, *sz);
@@ -595,7 +571,9 @@ void RAD::autocorrectConnectors(uint8_t *baseAddr, AtomDisplayObjectPath *displa
 
 		uint8_t txmit = 0, enc = 0;
 		if (!getTxEnc(displayPaths[i].usGraphicObjIds, txmit, enc))
+		{
 			continue;
+		}
 
 		uint8_t sense = getSenseID(baseAddr + connectorObjects[i].usRecordOffset);
 		if (!sense)
@@ -704,7 +682,9 @@ void RAD::reprioritiseConnectors(const uint8_t *senseList, uint8_t senseNum, RAD
 
 			if ((isModern && reorder((&connectors->modern)[j])) ||
 				(!isModern && reorder((&connectors->legacy)[j])))
+			{
 				break;
+			}
 		}
 	}
 }
@@ -807,24 +787,6 @@ OSObject *RAD::wrapGetProperty(IORegistryEntry *that, const char *aKey)
 	return obj;
 }
 
-uint32_t RAD::wrapGetConnectorsInfoV1(void *that, RADConnectors::Connector *connectors, uint8_t *sz)
-{
-	uint32_t code = FunctionCast(wrapGetConnectorsInfoV1, callbackRAD->orgGetConnectorsInfoV1)(that, connectors, sz);
-	auto props = callbackRAD->currentPropProvider.get();
-
-	if (code == 0 && sz && props && *props)
-	{
-		if (getKernelVersion() >= KernelVersion::HighSierra)
-			callbackRAD->updateConnectorsInfo(nullptr, nullptr, *props, connectors, sz);
-		else
-			callbackRAD->updateConnectorsInfo(static_cast<void **>(that)[1], callbackRAD->orgGetAtomObjectTableForType, *props, connectors, sz);
-	}
-	else
-		DBGLOG("rad", "getConnectorsInfoV1 failed %X or undefined %d", code, props == nullptr);
-
-	return code;
-}
-
 uint32_t RAD::wrapGetConnectorsInfoV2(void *that, RADConnectors::Connector *connectors, uint8_t *sz)
 {
 	uint32_t code = FunctionCast(wrapGetConnectorsInfoV2, callbackRAD->orgGetConnectorsInfoV2)(that, connectors, sz);
@@ -834,51 +796,6 @@ uint32_t RAD::wrapGetConnectorsInfoV2(void *that, RADConnectors::Connector *conn
 		callbackRAD->updateConnectorsInfo(nullptr, nullptr, *props, connectors, sz);
 	else
 		DBGLOG("rad", "getConnectorsInfoV2 failed %X or undefined %d", code, props == nullptr);
-
-	return code;
-}
-
-uint32_t RAD::wrapTranslateAtomConnectorInfoV1(void *that, RADConnectors::AtomConnectorInfo *info, RADConnectors::Connector *connector)
-{
-	uint32_t code = FunctionCast(wrapTranslateAtomConnectorInfoV1, callbackRAD->orgTranslateAtomConnectorInfoV1)(that, info, connector);
-
-	if (code == 0 && info && connector)
-	{
-		RADConnectors::print(connector, 1);
-
-		uint8_t sense = getSenseID(info->i2cRecord);
-		if (sense)
-		{
-			DBGLOG("rad", "translateAtomConnectorInfoV1 got sense id %02X", sense);
-
-			// We need to extract usGraphicObjIds from info->hpdRecord, which is of type ATOM_SRC_DST_TABLE_FOR_ONE_OBJECT:
-			// struct ATOM_SRC_DST_TABLE_FOR_ONE_OBJECT {
-			//   uint8_t ucNumberOfSrc;
-			//   uint16_t usSrcObjectID[ucNumberOfSrc];
-			//   uint8_t ucNumberOfDst;
-			//   uint16_t usDstObjectID[ucNumberOfDst];
-			// };
-			// The value we need is in usSrcObjectID. The structure is byte-packed.
-
-			uint8_t ucNumberOfSrc = info->hpdRecord[0];
-			for (uint8_t i = 0; i < ucNumberOfSrc; i++)
-			{
-				auto usSrcObjectID = *reinterpret_cast<uint16_t *>(info->hpdRecord + sizeof(uint8_t) + i * sizeof(uint16_t));
-				DBGLOG("rad", "translateAtomConnectorInfoV1 checking %04X object id", usSrcObjectID);
-				if (((usSrcObjectID & OBJECT_TYPE_MASK) >> OBJECT_TYPE_SHIFT) == GRAPH_OBJECT_TYPE_ENCODER)
-				{
-					uint8_t txmit = 0, enc = 0;
-					if (getTxEnc(usSrcObjectID, txmit, enc))
-						callbackRAD->autocorrectConnector(getConnectorID(info->usConnObjectId), getSenseID(info->i2cRecord), txmit, enc, connector, 1);
-					break;
-				}
-			}
-		}
-		else
-		{
-			DBGLOG("rad", "translateAtomConnectorInfoV1 failed to detect sense for translated connector");
-		}
-	}
 
 	return code;
 }
