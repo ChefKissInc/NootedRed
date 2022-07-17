@@ -146,6 +146,21 @@ uint64_t RAD::wrapInitWithController(void *that, void *controller) {
 	return ret;
 }
 
+IntegratedVRAMInfoInterface *RAD::createVramInfo(void *helper, uint32_t offset) {
+	SYSLOG("rad", "creating fake VRAM info, get rekt ayymd");
+	DataTableInitInfo initInfo {
+		.helper = helper,
+		.tableOffset = offset,
+		.revision = AtiAtomDataRevision {
+			.formatRevision = 2,
+			.contentRevision = 3,
+		},
+	};
+	auto *ret = new IntegratedVRAMInfoInterface;
+	ret->init(&initInfo);
+	return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
 {
 
@@ -163,6 +178,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"__ZN13ATIController8TestVRAME13PCI_REG_INDEXb", doNotTestVram},
 			{"__ZN16AtiDeviceControl16notifyLinkChangeE31kAGDCRegisterLinkControlEvent_tmj", wrapNotifyLinkChange, orgNotifyLinkChange},
 			{"__ZN11AtiAsicInfo18initWithControllerEP13ATIController", wrapInitWithController, orgInitWithController},
+			{"__ZN23AtiVramInfoInterface_V214createVramInfoEP14AtiVBiosHelperj", createVramInfo},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMDSupport symbols");

@@ -234,4 +234,45 @@ inline bool getTxEnc(uint16_t usGraphicObjIds, uint8_t &txmit, uint8_t &enc)
 	return true;
 }
 
+struct AtiAtomDataRevision {
+	uint32_t formatRevision = 0, contentRevision = 0;
+};
+
+struct DataTableInitInfo {
+	void *helper = NULL;
+	uint32_t tableOffset = 0;
+	AtiAtomDataRevision revision {};
+};
+
+class AtiAtomTable : public OSObject {
+	OSDeclareDefaultStructors(AtiAtomTable);
+	
+protected:
+	void *helper = NULL;
+	
+public:
+	virtual bool init(void *helper);
+};
+
+class AtiDataTable : public AtiAtomTable {
+	OSDeclareDefaultStructors(AtiDataTable);
+	
+protected:
+	uint32_t tableOffset = 0;
+	AtiAtomDataRevision revision {};
+	char *data {0};
+	
+public:
+	virtual bool init(DataTableInitInfo *initInfo);
+	virtual uint32_t getMajorRevision();
+	virtual uint32_t getMinorRevision();
+};
+
+class IntegratedVRAMInfoInterface : public AtiDataTable {
+	OSDeclareDefaultStructors(IntegratedVRAMInfoInterface);
+	
+public:
+	virtual void debugVramInfo();
+};
+
 #endif /* kern_atom_h */

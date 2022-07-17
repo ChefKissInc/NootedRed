@@ -131,6 +131,7 @@ private:
 	static IOService *wrapInitLinkToPeer(void *that, const char *matchCategoryName);
 	
 	void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);
+	static IntegratedVRAMInfoInterface *createVramInfo(void *helper, uint32_t offset);
 	void updateAccelConfig(size_t hwIndex, IOService *accelService, const char **accelConfig);
 
 	static bool wrapSetProperty(IORegistryEntry *that, const char *aKey, void *bytes, unsigned length);

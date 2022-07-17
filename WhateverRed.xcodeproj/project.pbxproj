@@ -11,6 +11,7 @@
 		1C748C2D1C21952C0024EED2 /* kern_start.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C748C2C1C21952C0024EED2 /* kern_start.cpp */; };
 		1C9CB7B01C789FF500231E41 /* kern_rad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C9CB7AE1C789FF500231E41 /* kern_rad.cpp */; };
 		1C9CB7B11C789FF500231E41 /* kern_rad.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 1C9CB7AF1C789FF500231E41 /* kern_rad.hpp */; };
+		4088D17928837284001ECF4B /* kern_atom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4088D17828837284001ECF4B /* kern_atom.cpp */; };
 		CE405ED91E4A080700AA0B3D /* plugin_start.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CE405ED81E4A080700AA0B3D /* plugin_start.cpp */; };
 		CE8DA0832517C41A008C44E8 /* libkmod.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CE8DA0822517C41A008C44E8 /* libkmod.a */; };
 		CEA03B5E20EE825A00BA842F /* kern_wred.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CEA03B5C20EE825A00BA842F /* kern_wred.cpp */; };
@@ -38,6 +39,7 @@
 		1C748C2E1C21952C0024EED2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1C9CB7AE1C789FF500231E41 /* kern_rad.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = kern_rad.cpp; sourceTree = "<group>"; };
 		1C9CB7AF1C789FF500231E41 /* kern_rad.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = kern_rad.hpp; sourceTree = "<group>"; };
+		4088D17828837284001ECF4B /* kern_atom.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_atom.cpp; sourceTree = "<group>"; };
 		CE405EBA1E49DD7100AA0B3D /* kern_compression.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_compression.hpp; sourceTree = "<group>"; };
 		CE405EBB1E49DD7100AA0B3D /* kern_disasm.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_disasm.hpp; sourceTree = "<group>"; };
 		CE405EBC1E49DD7100AA0B3D /* kern_file.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_file.hpp; sourceTree = "<group>"; };
@@ -103,6 +105,7 @@
 				CEA03B5D20EE825A00BA842F /* kern_wred.hpp */,
 				1C748C2E1C21952C0024EED2 /* Info.plist */,
 				198893C128085E2000C02A16 /* kern_model.cpp */,
+				4088D17828837284001ECF4B /* kern_atom.cpp */,
 			);
 			path = WhateverRed;
 			sourceTree = "<group>";
@@ -245,6 +248,7 @@
 			files = (
 				1C9CB7B01C789FF500231E41 /* kern_rad.cpp in Sources */,
 				CEA03B5E20EE825A00BA842F /* kern_wred.cpp in Sources */,
+				4088D17928837284001ECF4B /* kern_atom.cpp in Sources */,
 				CE405ED91E4A080700AA0B3D /* plugin_start.cpp in Sources */,
 				198893C228085E2000C02A16 /* kern_model.cpp in Sources */,
 				1C748C2D1C21952C0024EED2 /* kern_start.cpp in Sources */,
