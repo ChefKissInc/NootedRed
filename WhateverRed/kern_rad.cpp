@@ -161,6 +161,17 @@ IntegratedVRAMInfoInterface *RAD::createVramInfo(void *helper, uint32_t offset) 
 	return ret;
 }
 
+void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider) {
+	SYSLOG("rad", "patching device type table");
+	MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock);
+	*(uint32_t *)callbackRAD->deviceTypeTable = provider->extendedConfigRead16(kIOPCIConfigDeviceID);
+	*((uint32_t *)callbackRAD->deviceTypeTable + 1) = 6;
+	MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
+	
+	SYSLOG("rad", "calling original AmdTtlServices constructor");
+	FunctionCast(wrapAmdTtlServicesConstructor, callbackRAD->orgAmdTtlServicesConstructor)(that, provider);
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
 {
 
@@ -187,17 +198,16 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 	}
 	else if (kextRadeonX5000HWLibs.loadIndex == index)
 	{
-		DBGLOG("rad", "patching AMD firmware table");
-		uint8_t find[] = {0x16, 0x16, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00};
-		uint8_t repl[] = {0xD8, 0x15, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00};
-		KernelPatcher::LookupPatch patch{&kextRadeonX5000HWLibs, find, repl, sizeof(find), 1};
-		patcher.applyLookupPatch(&patch);
-		if (patcher.getError() != KernelPatcher::Error::NoError)
-			DBGLOG("rad", "AMD firmware table patching error: %d", patcher.getError());
+		DBGLOG("rad", "resolving device type table");
+		this->deviceTypeTable = patcher.solveSymbol(index, "__ZL15deviceTypeTable");
+		if (!this->deviceTypeTable) {
+			panic("RAD: Failed to resolve device type table");
+		}
 		patcher.clearError();
 
 		KernelPatcher::RouteRequest requests[] = {
 			{"_ttlIsPicassoAM4Device", wrapTtlIsPicassoDevice, orgTtlIsPicassoDevice},
+			{"__ZN14AmdTtlServicesC2EP11IOPCIDevice", wrapAmdTtlServicesConstructor, orgAmdTtlServicesConstructor},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMDRadeonX5000HWLibs symbols");

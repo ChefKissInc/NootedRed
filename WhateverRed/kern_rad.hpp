@@ -50,6 +50,7 @@ private:
 	mach_vm_address_t orgAllocateAMDHWRegisters{}, orgSetupCAIL{}, orgInitializeHWWorkarounds{};
 	mach_vm_address_t orgAllocateAMDHWAlignManager{}, orgMapDoorbellMemory{}, orgInitializeProjectDependentResources{};
 	mach_vm_address_t orgHwInitializeFbMemSize{}, orgHwInitializeFbBase{}, orgInitWithController{};
+	mach_vm_address_t deviceTypeTable{}, orgAmdTtlServicesConstructor{};
 	t_populateAccelConfig wrapPopulateAccelConfig[1] = {populateAccelConfig<0>};
 
 	const char *populateAccelConfigProcNames[1] = {
@@ -113,6 +114,7 @@ private:
 
 	void process24BitOutput(KernelPatcher &patcher, KernelPatcher::KextInfo &info, mach_vm_address_t address, size_t size);
 	void processConnectorOverrides(KernelPatcher &patcher, mach_vm_address_t address, size_t size);
+	static void wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider);
 	static IOReturn noProjectByPartNumber(IOService* that, uint64_t partNumber);
 	static uint64_t wrapInitializeProjectDependentResources(void* that);
 	static uint64_t wrapHwInitializeFbMemSize(void* that);
