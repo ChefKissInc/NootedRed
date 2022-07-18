@@ -2,8 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>OSBundleCompatibleVersion</key>
-	<string>1.0</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleExecutable</key>
@@ -24,25 +22,34 @@
 	<string>$(MODULE_VERSION)</string>
 	<key>IOKitPersonalities</key>
 	<dict>
-		<key>com.VisualDevelopment.WhateverRed</key>
+		<key>AMD Radeon Vega APU HW Services</key>
 		<dict>
 			<key>CFBundleIdentifier</key>
-			<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+			<string>com.apple.kext.AMDRadeonX5000HWServices</string>
 			<key>IOClass</key>
-			<string>$(PRODUCT_NAME:rfc1034identifier)</string>
+			<string>AMDRadeonX5000_AMDRadeonHWServicesVega</string>
 			<key>IOMatchCategory</key>
-			<string>$(PRODUCT_NAME:rfc1034identifier)</string>
+			<string>AMDRadeonX5000HWServices</string>
+			<key>IOPCIMatch</key>
+			<string>0x15DD1002 0x15D81002 0x164C1002 0x16361002</string>
+			<key>IOPCITunnelCompatible</key>
+			<true/>
+			<key>IOProbeScore</key>
+			<integer>65051</integer>
+			<key>IOPropertyMatch</key>
+			<dict>
+				<key>LoadHWServices</key>
+				<true/>
+			</dict>
 			<key>IOProviderClass</key>
-			<string>IOResources</string>
-			<key>IOResourceMatch</key>
-			<string>IOKit</string>
+			<string>IOPCIDevice</string>
 		</dict>
 		<key>AMDVegaAPUGraphicsAccelerator</key>
 		<dict>
-			<key>GPUDebugGARTSize</key>
-			<integer>512000000</integer>
 			<key>CFBundleIdentifier</key>
 			<string>com.apple.kext.AMDRadeonX5000</string>
+			<key>GPUDebugGARTSize</key>
+			<integer>512000000</integer>
 			<key>GpuDebugPolicy</key>
 			<integer>-1</integer>
 			<key>IOClass</key>
@@ -143,28 +150,6 @@
 				<integer>0</integer>
 			</dict>
 		</dict>
-		<key>AMD Radeon Vega APU HW Services</key>
-		<dict>
-			<key>CFBundleIdentifier</key>
-			<string>com.apple.kext.AMDRadeonX5000HWServices</string>
-			<key>IOClass</key>
-			<string>AMDRadeonX5000_AMDRadeonHWServicesVega</string>
-			<key>IOMatchCategory</key>
-			<string>AMDRadeonX5000HWServices</string>
-			<key>IOPCIMatch</key>
-			<string>0x15DD1002 0x15D81002</string>
-			<key>IOPCITunnelCompatible</key>
-			<true/>
-			<key>IOProbeScore</key>
-			<integer>65051</integer>
-			<key>IOPropertyMatch</key>
-			<dict>
-				<key>LoadHWServices</key>
-				<true/>
-			</dict>
-			<key>IOProviderClass</key>
-			<string>IOPCIDevice</string>
-		</dict>
 		<key>AtiGpuWrangler</key>
 		<dict>
 			<key>CFBundleIdentifier</key>
@@ -257,7 +242,11 @@
 					<key>CFG_NVV</key>
 					<integer>2</integer>
 					<key>CFG_PTPL2_TBL</key>
-					<data>tAAAAKgAAACcAAAAkAAAAIQAAAB4AAAAbAAAAGAAAABUAAAASAAAADwAAAAwAAAAJAAAABgAAAAMAAAAAQAAAA==</data>
+					<data>
+					tAAAAKgAAACcAAAAkAAAAIQAAAB4AAAAbAAA
+					AGAAAABUAAAASAAAADwAAAAwAAAAJAAAABgA
+					AAAMAAAAAQAAAA==
+					</data>
 				</dict>
 				<key>aty_properties</key>
 				<dict>
@@ -323,7 +312,11 @@
 					<key>CFG_NVV</key>
 					<integer>2</integer>
 					<key>CFG_PTPL2_TBL</key>
-					<data>0gAAAMwAAADGAAAAwAAAALoAAAC0AAAAqgAAAKAAAACWAAAAjAAAAIIAAAB4AAAAbgAAAGQAAABaAAAAHgAAAA==</data>
+					<data>
+					0gAAAMwAAADGAAAAwAAAALoAAAC0AAAAqgAA
+					AKAAAACWAAAAjAAAAIIAAAB4AAAAbgAAAGQA
+					AABaAAAAHgAAAA==
+					</data>
 				</dict>
 				<key>aty_properties</key>
 				<dict>
@@ -436,7 +429,11 @@
 					<key>CFG_NVV</key>
 					<integer>2</integer>
 					<key>CFG_PTPL2_TBL</key>
-					<data>tAAAAKgAAACcAAAAkAAAAIQAAAB4AAAAbAAAAGAAAABUAAAASAAAADwAAAAwAAAAJAAAABgAAAAMAAAAAQAAAA==</data>
+					<data>
+					tAAAAKgAAACcAAAAkAAAAIQAAAB4AAAAbAAA
+					AGAAAABUAAAASAAAADwAAAAwAAAAJAAAABgA
+					AAAMAAAAAQAAAA==
+					</data>
 				</dict>
 				<key>aty_properties</key>
 				<dict>
@@ -463,7 +460,11 @@
 					<key>CFG_NVV</key>
 					<integer>2</integer>
 					<key>CFG_PTPL2_TBL</key>
-					<data>0gAAAMwAAADGAAAAwAAAALoAAAC0AAAAqgAAAKAAAACWAAAAjAAAAIIAAAB4AAAAbgAAAGQAAABaAAAAHgAAAA==</data>
+					<data>
+					0gAAAMwAAADGAAAAwAAAALoAAAC0AAAAqgAA
+					AKAAAACWAAAAjAAAAIIAAAB4AAAAbgAAAGQA
+					AABaAAAAHgAAAA==
+					</data>
 				</dict>
 				<key>aty_properties</key>
 				<dict>
@@ -543,7 +544,11 @@
 					<key>CFG_NVV</key>
 					<integer>2</integer>
 					<key>CFG_PTPL2_TBL</key>
-					<data>ggAAAH4AAAB6AAAAdgAAAHIAAABuAAAAagAAAGYAAABiAAAAXgAAAFoAAABWAAAAUgAAAE4AAABKAAAARgAAAA==</data>
+					<data>
+					ggAAAH4AAAB6AAAAdgAAAHIAAABuAAAAagAA
+					AGYAAABiAAAAXgAAAFoAAABWAAAAUgAAAE4A
+					AABKAAAARgAAAA==
+					</data>
 				</dict>
 				<key>aty_properties</key>
 				<dict>
@@ -568,7 +573,11 @@
 					<key>CFG_NVV</key>
 					<integer>2</integer>
 					<key>CFG_PTPL2_TBL</key>
-					<data>KAAAACcAAAAmAAAAJQAAACQAAAAjAAAAIQAAAB8AAAAdAAAAGwAAABkAAAAXAAAAFQAAABMAAAARAAAABgAAAA==</data>
+					<data>
+					KAAAACcAAAAmAAAAJQAAACQAAAAjAAAAIQAA
+					AB8AAAAdAAAAGwAAABkAAAAXAAAAFQAAABMA
+					AAARAAAABgAAAA==
+					</data>
 				</dict>
 				<key>aty_properties</key>
 				<dict>
@@ -620,7 +629,11 @@
 					<key>CFG_NVV</key>
 					<integer>2</integer>
 					<key>CFG_PTPL2_TBL</key>
-					<data>KAAAACcAAAAmAAAAJQAAACQAAAAjAAAAIQAAAB8AAAAdAAAAGwAAABkAAAAXAAAAFQAAABMAAAARAAAABgAAAA==</data>
+					<data>
+					KAAAACcAAAAmAAAAJQAAACQAAAAjAAAAIQAA
+					AB8AAAAdAAAAGwAAABkAAAAXAAAAFQAAABMA
+					AAARAAAABgAAAA==
+					</data>
 					<key>CFG_USE_FBC</key>
 					<true/>
 				</dict>
@@ -777,11 +790,30 @@
 				<integer>524288</integer>
 			</dict>
 		</dict>
+		<key>com.VisualDevelopment.WhateverRed</key>
+		<dict>
+			<key>CFBundleIdentifier</key>
+			<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+			<key>IOClass</key>
+			<string>$(PRODUCT_NAME:rfc1034identifier)</string>
+			<key>IOMatchCategory</key>
+			<string>$(PRODUCT_NAME:rfc1034identifier)</string>
+			<key>IOProviderClass</key>
+			<string>IOResources</string>
+			<key>IOResourceMatch</key>
+			<string>IOKit</string>
+		</dict>
 	</dict>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2022 VisualDevelopment. All rights reserved.</string>
+	<key>OSBundleCompatibleVersion</key>
+	<string>1.0</string>
 	<key>OSBundleLibraries</key>
 	<dict>
+		<key>as.vit9696.Lilu</key>
+		<string>1.2.0</string>
+		<key>com.apple.iokit.IOPCIFamily</key>
+		<string>1.0.0b1</string>
 		<key>com.apple.kpi.bsd</key>
 		<string>10.0.0</string>
 		<key>com.apple.kpi.dsep</key>
@@ -794,10 +826,6 @@
 		<string>10.0.0</string>
 		<key>com.apple.kpi.unsupported</key>
 		<string>10.0.0</string>
-		<key>com.apple.iokit.IOPCIFamily</key>
-		<string>1.0.0b1</string>
-		<key>as.vit9696.Lilu</key>
-		<string>1.2.0</string>
 	</dict>
 	<key>OSBundleRequired</key>
 	<string>Safe Boot</string>
