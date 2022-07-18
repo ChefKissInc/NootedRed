@@ -53,7 +53,7 @@
 			<key>GpuDebugPolicy</key>
 			<integer>-1</integer>
 			<key>IOClass</key>
-			<string>AMDRadeonX5000_AMDVega12GraphicsAccelerator</string>
+			<string>AMDRadeonX5000_AMDVega20GraphicsAccelerator</string>
 			<key>IODVDBundleName</key>
 			<string>AMDRadeonVADriver2</string>
 			<key>IOGVACodec</key>
@@ -120,7 +120,7 @@
 			<key>IOMatchCategory</key>
 			<string>IOAccelerator</string>
 			<key>IOPCIMatch</key>
-			<string>0x15DD1002 0x15D81002</string>
+			<string>0x15DD1002 0x15D81002 0x164C1002 0x16361002</string>
 			<key>IOPCITunnelCompatible</key>
 			<true/>
 			<key>IOPropertyMatch</key>
@@ -159,7 +159,7 @@
 			<key>IOMatchCategory</key>
 			<string>IOFramebuffer</string>
 			<key>IOPCIMatch</key>
-			<string>0x15DD1002 0x15D81002</string>
+			<string>0x15DD1002 0x15D81002 0x164C1002 0x16361002</string>
 			<key>IOPCITunnelCompatible</key>
 			<true/>
 			<key>IOProbeScore</key>
@@ -687,7 +687,7 @@
 			<key>IOName</key>
 			<string>AMD10000Controller</string>
 			<key>IOPCIMatch</key>
-			<string>0x15DD1002 0x15D81002</string>
+			<string>0x15DD1002 0x15D81002 0x164C1002 0x16361002</string>
 			<key>IOPCITunnelCompatible</key>
 			<true/>
 			<key>IOProbeScore</key>
