@@ -247,6 +247,14 @@ uint64_t RAD::wrapSmuGetHwVersion(uint64_t param_1, uint32_t param_2) {
 	return ret != 2 ? ret : 3;
 }
 
+uint64_t RAD::wrapPspSwInit(int *param_1, uint32_t *param_2) {
+	SYSLOG("rad", "_psp_sw_init called!");
+	SYSLOG("rad", "_psp_sw_init: param_1 = %p param_2 = %p", param_1, param_2);
+	auto ret = FunctionCast(wrapPspSwInit, callbackRAD->orgPspSwInit)(param_1, param_2);
+	SYSLOG("rad", "_psp_sw_init returned 0x%llx", ret);
+	return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
 {
 	
@@ -292,6 +300,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"_smu_init_function_pointer_list", wrapSmuInitFunctionPointerList, orgSmuInitFunctionPointerList},
 			{"_smu_internal_sw_init", wrapSmuInternalSwInit, orgSmuInternalSwInit},
 			{"_smu_get_hw_version", wrapSmuGetHwVersion, orgSmuGetHwVersion},
+			{"_psp_sw_init", wrapPspSwInit, orgPspSwInit},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMDRadeonX5000HWLibs symbols");
