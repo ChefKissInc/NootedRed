@@ -22,42 +22,31 @@
 	<string>$(MODULE_VERSION)</string>
 	<key>IOKitPersonalities</key>
 	<dict>
-		<key>AMD Radeon Vega APU HW Services</key>
+		<key>com.VisualDevelopment.WhateverRed</key>
 		<dict>
 			<key>CFBundleIdentifier</key>
-			<string>com.apple.kext.AMDRadeonX5000HWServices</string>
+			<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 			<key>IOClass</key>
-			<string>AMDRadeonX5000_AMDRadeonHWServicesVega</string>
+			<string>$(PRODUCT_NAME:rfc1034identifier)</string>
 			<key>IOMatchCategory</key>
-			<string>AMDRadeonX5000HWServices</string>
-			<key>IOPCIMatch</key>
-			<string>0x15DD1002 0x15D81002 0x164C1002 0x16361002</string>
-			<key>IOPCITunnelCompatible</key>
-			<true/>
-			<key>IOProbeScore</key>
-			<integer>65051</integer>
-			<key>IOPropertyMatch</key>
-			<dict>
-				<key>LoadHWServices</key>
-				<true/>
-			</dict>
+			<string>$(PRODUCT_NAME:rfc1034identifier)</string>
 			<key>IOProviderClass</key>
-			<string>IOPCIDevice</string>
+			<string>IOResources</string>
+			<key>IOResourceMatch</key>
+			<string>IOKit</string>
 		</dict>
-		<key>AMDVegaAPUGraphicsAccelerator</key>
+		<key>iGPU Accelerator</key>
 		<dict>
 			<key>CFBundleIdentifier</key>
 			<string>com.apple.kext.AMDRadeonX5000</string>
-			<key>GPUDebugGARTSize</key>
-			<integer>512000000</integer>
 			<key>GpuDebugPolicy</key>
 			<integer>-1</integer>
 			<key>IOClass</key>
-			<string>AMDRadeonX5000_AMDVega20GraphicsAccelerator</string>
+			<string>AMDRadeonX5000_AMDVega10GraphicsAccelerator</string>
 			<key>IODVDBundleName</key>
 			<string>AMDRadeonVADriver2</string>
 			<key>IOGVACodec</key>
-			<string>AMDVCN1</string>
+			<string>AMDVCE</string>
 			<key>IOGVAH264EncodeCapabilities</key>
 			<dict>
 				<key>VTQualityRating</key>
@@ -137,7 +126,7 @@
 			<key>cail_properties</key>
 			<dict>
 				<key>CAIL_DisableCailLoadUcode</key>
-				<integer>1</integer>
+				<integer>0</integer>
 				<key>CAIL_DisableJpegEngine</key>
 				<integer>0</integer>
 				<key>CAIL_EnableLBPWSupport</key>
@@ -145,539 +134,13 @@
 				<key>CAIL_EnablePeerDataAperture</key>
 				<integer>0</integer>
 				<key>CAIL_EnableSecureMmFwLoading</key>
-				<integer>1</integer>
+				<integer>0</integer>
 				<key>CAIL_EnableXdmaSupport</key>
 				<integer>0</integer>
 			</dict>
 		</dict>
-		<key>AtiGpuWrangler</key>
+		<key>iGPU Controller</key>
 		<dict>
-			<key>CFBundleIdentifier</key>
-			<string>com.apple.kext.AMD10000Controller</string>
-			<key>IOClass</key>
-			<string>AMD10000ControllerWrangler</string>
-			<key>IOMatchCategory</key>
-			<string>IOFramebuffer</string>
-			<key>IOPCIMatch</key>
-			<string>0x15DD1002 0x15D81002 0x164C1002 0x16361002</string>
-			<key>IOPCITunnelCompatible</key>
-			<true/>
-			<key>IOProbeScore</key>
-			<integer>65050</integer>
-			<key>IOProviderClass</key>
-			<string>IOPCIDevice</string>
-		</dict>
-		<key>Controller</key>
-		<dict>
-			<key>ATY,Araguaia</key>
-			<dict>
-				<key>aty_config</key>
-				<dict>
-					<key>CFG_NVV</key>
-					<integer>2</integer>
-					<key>CFG_PTPL2_CNT</key>
-					<integer>16</integer>
-					<key>CFG_PTPL2_MAX</key>
-					<integer>300</integer>
-					<key>CFG_PTPL2_MIN</key>
-					<integer>90</integer>
-					<key>CFG_TPS1S</key>
-					<true/>
-				</dict>
-				<key>aty_properties</key>
-				<dict>
-					<key>PP_ACDCGpioDisabled</key>
-					<integer>0</integer>
-					<key>PP_DiDtSQPatternWidthOverride</key>
-					<integer>14</integer>
-					<key>PP_DiDtSQStallPatternOverride</key>
-					<integer>16383</integer>
-					<key>PP_DisableDIDT</key>
-					<integer>0</integer>
-					<key>PP_DisablePCCLimitControl</key>
-					<integer>1</integer>
-					<key>PP_FclkGfxClkRatio</key>
-					<integer>1036831949</integer>
-					<key>PP_PhmUseDummyBackEnd</key>
-					<integer>0</integer>
-					<key>PP_WorkLoadPolicyMask</key>
-					<integer>1</integer>
-				</dict>
-			</dict>
-			<key>ATY,Baudo</key>
-			<dict>
-				<key>aty_config</key>
-				<dict>
-					<key>CFG_NVV</key>
-					<integer>2</integer>
-					<key>CFG_PTPL2_CNT</key>
-					<integer>16</integer>
-					<key>CFG_PTPL2_MAX</key>
-					<integer>50</integer>
-					<key>CFG_PTPL2_MIN</key>
-					<integer>5</integer>
-				</dict>
-				<key>aty_properties</key>
-				<dict>
-					<key>PP_ACDCGpioDisabled</key>
-					<integer>0</integer>
-					<key>PP_DiDtSQPatternWidthOverride</key>
-					<integer>14</integer>
-					<key>PP_DiDtSQStallPatternOverride</key>
-					<integer>16383</integer>
-					<key>PP_DisableDIDT</key>
-					<integer>0</integer>
-					<key>PP_DisablePCCLimitControl</key>
-					<integer>1</integer>
-					<key>PP_GfxOffControl</key>
-					<integer>1</integer>
-					<key>PP_PhmUseDummyBackEnd</key>
-					<integer>0</integer>
-				</dict>
-			</dict>
-			<key>ATY,Catatumbo</key>
-			<dict>
-				<key>aty_config</key>
-				<dict>
-					<key>CFG_NVV</key>
-					<integer>2</integer>
-					<key>CFG_PTPL2_TBL</key>
-					<data>
-					tAAAAKgAAACcAAAAkAAAAIQAAAB4AAAAbAAA
-					AGAAAABUAAAASAAAADwAAAAwAAAAJAAAABgA
-					AAAMAAAAAQAAAA==
-					</data>
-				</dict>
-				<key>aty_properties</key>
-				<dict>
-					<key>PP_ACDCGpioDisabled</key>
-					<integer>0</integer>
-					<key>PP_DiDtSQPatternWidthOverride</key>
-					<integer>14</integer>
-					<key>PP_DiDtSQStallPatternOverride</key>
-					<integer>16383</integer>
-					<key>PP_DisableDIDT</key>
-					<integer>0</integer>
-					<key>PP_DisablePCCLimitControl</key>
-					<integer>1</integer>
-					<key>PP_PhmUseDummyBackEnd</key>
-					<integer>0</integer>
-					<key>PP_VG10TelemetrySlopOverWrite</key>
-					<integer>514</integer>
-				</dict>
-			</dict>
-			<key>ATY,Donguil</key>
-			<dict>
-				<key>aty_config</key>
-				<dict>
-					<key>CFG_NVV</key>
-					<integer>2</integer>
-					<key>CFG_PTPL2_CNT</key>
-					<integer>16</integer>
-					<key>CFG_PTPL2_MAX</key>
-					<integer>200</integer>
-					<key>CFG_PTPL2_MIN</key>
-					<integer>90</integer>
-					<key>CFG_TPS1S</key>
-					<true/>
-				</dict>
-				<key>aty_properties</key>
-				<dict>
-					<key>PM_PWR_GEMINI_BGT</key>
-					<integer>400</integer>
-					<key>PP_ACDCGpioDisabled</key>
-					<integer>0</integer>
-					<key>PP_DiDtSQPatternWidthOverride</key>
-					<integer>14</integer>
-					<key>PP_DiDtSQStallPatternOverride</key>
-					<integer>16383</integer>
-					<key>PP_DisableDIDT</key>
-					<integer>0</integer>
-					<key>PP_DisablePCCLimitControl</key>
-					<integer>1</integer>
-					<key>PP_EnableUploadFirmware</key>
-					<integer>1</integer>
-					<key>PP_FclkGfxClkRatio</key>
-					<integer>1036831949</integer>
-					<key>PP_PhmUseDummyBackEnd</key>
-					<integer>0</integer>
-					<key>PP_WorkLoadPolicyMask</key>
-					<integer>1</integer>
-				</dict>
-			</dict>
-			<key>ATY,Envira</key>
-			<dict>
-				<key>aty_config</key>
-				<dict>
-					<key>CFG_NVV</key>
-					<integer>2</integer>
-					<key>CFG_PTPL2_TBL</key>
-					<data>
-					0gAAAMwAAADGAAAAwAAAALoAAAC0AAAAqgAA
-					AKAAAACWAAAAjAAAAIIAAAB4AAAAbgAAAGQA
-					AABaAAAAHgAAAA==
-					</data>
-				</dict>
-				<key>aty_properties</key>
-				<dict>
-					<key>PP_ACDCGpioDisabled</key>
-					<integer>0</integer>
-					<key>PP_DiDtSQPatternWidthOverride</key>
-					<integer>14</integer>
-					<key>PP_DiDtSQStallPatternOverride</key>
-					<integer>16383</integer>
-					<key>PP_DisableDIDT</key>
-					<integer>0</integer>
-					<key>PP_DisablePCCLimitControl</key>
-					<integer>1</integer>
-					<key>PP_PhmUseDummyBackEnd</key>
-					<integer>0</integer>
-				</dict>
-			</dict>
-			<key>ATY,Guanta</key>
-			<dict>
-				<key>aty_config</key>
-				<dict>
-					<key>CFG_NVV</key>
-					<integer>2</integer>
-				</dict>
-				<key>aty_properties</key>
-				<dict>
-					<key>PP_ACDCGpioDisabled</key>
-					<integer>0</integer>
-					<key>PP_DiDtSQPatternWidthOverride</key>
-					<integer>14</integer>
-					<key>PP_DiDtSQStallPatternOverride</key>
-					<integer>16383</integer>
-					<key>PP_DisableDIDT</key>
-					<integer>0</integer>
-					<key>PP_DisablePCCLimitControl</key>
-					<integer>1</integer>
-					<key>PP_EnableUploadFirmware</key>
-					<integer>1</integer>
-					<key>PP_PhmUseDummyBackEnd</key>
-					<integer>0</integer>
-				</dict>
-			</dict>
-			<key>ATY,Hullinco</key>
-			<dict>
-				<key>aty_config</key>
-				<dict>
-					<key>CFG_NVV</key>
-					<integer>2</integer>
-				</dict>
-				<key>aty_properties</key>
-				<dict>
-					<key>PP_ACDCGpioDisabled</key>
-					<integer>0</integer>
-					<key>PP_DiDtSQPatternWidthOverride</key>
-					<integer>14</integer>
-					<key>PP_DiDtSQStallPatternOverride</key>
-					<integer>16383</integer>
-					<key>PP_DisableDIDT</key>
-					<integer>0</integer>
-					<key>PP_DisablePCCLimitControl</key>
-					<integer>1</integer>
-					<key>PP_EnableUploadFirmware</key>
-					<integer>1</integer>
-					<key>PP_PhmUseDummyBackEnd</key>
-					<integer>0</integer>
-				</dict>
-			</dict>
-			<key>ATY,Ichabod</key>
-			<dict>
-				<key>aty_config</key>
-				<dict>
-					<key>CFG_NVV</key>
-					<integer>2</integer>
-				</dict>
-				<key>aty_properties</key>
-				<dict>
-					<key>PP_ACDCGpioDisabled</key>
-					<integer>0</integer>
-					<key>PP_DiDtSQPatternWidthOverride</key>
-					<integer>14</integer>
-					<key>PP_DiDtSQStallPatternOverride</key>
-					<integer>16383</integer>
-					<key>PP_DisableDIDT</key>
-					<integer>0</integer>
-					<key>PP_DisablePCCLimitControl</key>
-					<integer>1</integer>
-					<key>PP_PhmUseDummyBackEnd</key>
-					<integer>1</integer>
-				</dict>
-			</dict>
-			<key>ATY,Iriri</key>
-			<dict>
-				<key>aty_config</key>
-				<dict>
-					<key>CFG_NVV</key>
-					<integer>2</integer>
-				</dict>
-				<key>aty_properties</key>
-				<dict>
-					<key>PP_ACDCGpioDisabled</key>
-					<integer>0</integer>
-					<key>PP_DisablePCCLimitControl</key>
-					<integer>1</integer>
-				</dict>
-			</dict>
-			<key>ATY,Itata</key>
-			<dict>
-				<key>aty_config</key>
-				<dict>
-					<key>CFG_NVV</key>
-					<integer>2</integer>
-					<key>CFG_PTPL2_TBL</key>
-					<data>
-					tAAAAKgAAACcAAAAkAAAAIQAAAB4AAAAbAAA
-					AGAAAABUAAAASAAAADwAAAAwAAAAJAAAABgA
-					AAAMAAAAAQAAAA==
-					</data>
-				</dict>
-				<key>aty_properties</key>
-				<dict>
-					<key>PP_ACDCGpioDisabled</key>
-					<integer>0</integer>
-					<key>PP_DiDtSQPatternWidthOverride</key>
-					<integer>14</integer>
-					<key>PP_DiDtSQStallPatternOverride</key>
-					<integer>16383</integer>
-					<key>PP_DisableDIDT</key>
-					<integer>0</integer>
-					<key>PP_DisablePCCLimitControl</key>
-					<integer>1</integer>
-					<key>PP_PhmUseDummyBackEnd</key>
-					<integer>0</integer>
-					<key>PP_VG10TelemetrySlopOverWrite</key>
-					<integer>514</integer>
-				</dict>
-			</dict>
-			<key>ATY,Japura</key>
-			<dict>
-				<key>aty_config</key>
-				<dict>
-					<key>CFG_NVV</key>
-					<integer>2</integer>
-					<key>CFG_PTPL2_TBL</key>
-					<data>
-					0gAAAMwAAADGAAAAwAAAALoAAAC0AAAAqgAA
-					AKAAAACWAAAAjAAAAIIAAAB4AAAAbgAAAGQA
-					AABaAAAAHgAAAA==
-					</data>
-				</dict>
-				<key>aty_properties</key>
-				<dict>
-					<key>PP_ACDCGpioDisabled</key>
-					<integer>0</integer>
-					<key>PP_DiDtSQPatternWidthOverride</key>
-					<integer>14</integer>
-					<key>PP_DiDtSQStallPatternOverride</key>
-					<integer>16383</integer>
-					<key>PP_DisableDIDT</key>
-					<integer>0</integer>
-					<key>PP_DisablePCCLimitControl</key>
-					<integer>1</integer>
-					<key>PP_PhmUseDummyBackEnd</key>
-					<integer>0</integer>
-				</dict>
-			</dict>
-			<key>ATY,Kamarang</key>
-			<dict>
-				<key>aty_config</key>
-				<dict>
-					<key>CFG_NVV</key>
-					<integer>2</integer>
-				</dict>
-				<key>aty_properties</key>
-				<dict>
-					<key>PP_ACDCGpioDisabled</key>
-					<integer>0</integer>
-					<key>PP_DisablePCCLimitControl</key>
-					<integer>1</integer>
-				</dict>
-			</dict>
-			<key>ATY,Rapel</key>
-			<dict>
-				<key>aty_config</key>
-				<dict>
-					<key>CFG_NVV</key>
-					<integer>2</integer>
-				</dict>
-				<key>aty_properties</key>
-				<dict>
-					<key>PP_ACDCGpioDisabled</key>
-					<integer>0</integer>
-					<key>PP_DiDtSQPatternWidthOverride</key>
-					<integer>14</integer>
-					<key>PP_DiDtSQStallPatternOverride</key>
-					<integer>16383</integer>
-					<key>PP_DisableDIDT</key>
-					<integer>0</integer>
-					<key>PP_DisablePCCLimitControl</key>
-					<integer>1</integer>
-					<key>PP_PhmUseDummyBackEnd</key>
-					<integer>0</integer>
-				</dict>
-			</dict>
-			<key>ATY,Sleipnir</key>
-			<dict>
-				<key>aty_config</key>
-				<dict>
-					<key>CFG_NVV</key>
-					<integer>2</integer>
-				</dict>
-				<key>aty_properties</key>
-				<dict>
-					<key>Force_Load_FalconSMUFW</key>
-					<true/>
-					<key>PP_ACDCGpioDisabled</key>
-					<integer>0</integer>
-					<key>PP_DisablePCCLimitControl</key>
-					<integer>1</integer>
-				</dict>
-			</dict>
-			<key>ATY,Ucayali</key>
-			<dict>
-				<key>aty_config</key>
-				<dict>
-					<key>CFG_NVV</key>
-					<integer>2</integer>
-					<key>CFG_PTPL2_TBL</key>
-					<data>
-					ggAAAH4AAAB6AAAAdgAAAHIAAABuAAAAagAA
-					AGYAAABiAAAAXgAAAFoAAABWAAAAUgAAAE4A
-					AABKAAAARgAAAA==
-					</data>
-				</dict>
-				<key>aty_properties</key>
-				<dict>
-					<key>PP_ACDCGpioDisabled</key>
-					<integer>0</integer>
-					<key>PP_DiDtSQPatternWidthOverride</key>
-					<integer>14</integer>
-					<key>PP_DiDtSQStallPatternOverride</key>
-					<integer>16383</integer>
-					<key>PP_DisableDIDT</key>
-					<integer>0</integer>
-					<key>PP_DisablePCCLimitControl</key>
-					<integer>1</integer>
-					<key>PP_PhmUseDummyBackEnd</key>
-					<integer>0</integer>
-				</dict>
-			</dict>
-			<key>ATY,Valdivia</key>
-			<dict>
-				<key>aty_config</key>
-				<dict>
-					<key>CFG_NVV</key>
-					<integer>2</integer>
-					<key>CFG_PTPL2_TBL</key>
-					<data>
-					KAAAACcAAAAmAAAAJQAAACQAAAAjAAAAIQAA
-					AB8AAAAdAAAAGwAAABkAAAAXAAAAFQAAABMA
-					AAARAAAABgAAAA==
-					</data>
-				</dict>
-				<key>aty_properties</key>
-				<dict>
-					<key>PP_ACDCGpioDisabled</key>
-					<integer>0</integer>
-					<key>PP_DiDtSQPatternWidthOverride</key>
-					<integer>14</integer>
-					<key>PP_DiDtSQStallPatternOverride</key>
-					<integer>16383</integer>
-					<key>PP_DisableDIDT</key>
-					<integer>0</integer>
-					<key>PP_DisablePCCLimitControl</key>
-					<integer>1</integer>
-					<key>PP_GfxOffControl</key>
-					<integer>0</integer>
-					<key>PP_PhmUseDummyBackEnd</key>
-					<integer>0</integer>
-				</dict>
-			</dict>
-			<key>ATY,Wenamu</key>
-			<dict>
-				<key>aty_config</key>
-				<dict>
-					<key>CFG_NVV</key>
-					<integer>2</integer>
-				</dict>
-				<key>aty_properties</key>
-				<dict>
-					<key>PP_ACDCGpioDisabled</key>
-					<integer>0</integer>
-					<key>PP_DiDtSQPatternWidthOverride</key>
-					<integer>14</integer>
-					<key>PP_DiDtSQStallPatternOverride</key>
-					<integer>16383</integer>
-					<key>PP_DisableDIDT</key>
-					<integer>0</integer>
-					<key>PP_DisablePCCLimitControl</key>
-					<integer>1</integer>
-					<key>PP_PhmUseDummyBackEnd</key>
-					<integer>0</integer>
-					<key>PP_VG10TelemetrySlopOverWrite</key>
-					<integer>514</integer>
-				</dict>
-			</dict>
-			<key>ATY,Xingu</key>
-			<dict>
-				<key>aty_config</key>
-				<dict>
-					<key>CFG_NVV</key>
-					<integer>2</integer>
-					<key>CFG_PTPL2_TBL</key>
-					<data>
-					KAAAACcAAAAmAAAAJQAAACQAAAAjAAAAIQAA
-					AB8AAAAdAAAAGwAAABkAAAAXAAAAFQAAABMA
-					AAARAAAABgAAAA==
-					</data>
-					<key>CFG_USE_FBC</key>
-					<true/>
-				</dict>
-				<key>aty_properties</key>
-				<dict>
-					<key>PP_ACDCGpioDisabled</key>
-					<integer>0</integer>
-					<key>PP_DiDtSQPatternWidthOverride</key>
-					<integer>14</integer>
-					<key>PP_DiDtSQStallPatternOverride</key>
-					<integer>16383</integer>
-					<key>PP_DisableDIDT</key>
-					<integer>0</integer>
-					<key>PP_DisablePCCLimitControl</key>
-					<integer>1</integer>
-					<key>PP_GfxOffControl</key>
-					<integer>1</integer>
-					<key>PP_PhmUseDummyBackEnd</key>
-					<integer>0</integer>
-				</dict>
-			</dict>
-			<key>ATY,Zutia</key>
-			<dict>
-				<key>aty_config</key>
-				<dict>
-					<key>CFG_NVV</key>
-					<integer>2</integer>
-				</dict>
-				<key>aty_properties</key>
-				<dict>
-					<key>PP_ACDCGpioDisabled</key>
-					<integer>0</integer>
-					<key>PP_DiDtSQPatternWidthOverride</key>
-					<integer>14</integer>
-					<key>PP_DiDtSQStallPatternOverride</key>
-					<integer>16383</integer>
-					<key>PP_DisableDIDT</key>
-					<integer>0</integer>
-					<key>PP_DisablePCCLimitControl</key>
-					<integer>1</integer>
-					<key>PP_PhmUseDummyBackEnd</key>
-					<integer>0</integer>
-				</dict>
-			</dict>
 			<key>CFBundleIdentifier</key>
 			<string>com.apple.kext.AMD10000Controller</string>
 			<key>IOClass</key>
@@ -706,7 +169,7 @@
 				<key>CFG_CAA</key>
 				<integer>0</integer>
 				<key>CFG_FB_LIMIT</key>
-				<integer>0</integer>
+				<integer>3</integer>
 				<key>CFG_FORCEMAXDPM</key>
 				<false/>
 				<key>CFG_FORCE_MAX_DPS</key>
@@ -729,6 +192,8 @@
 				<false/>
 				<key>CFG_NO_SLS</key>
 				<false/>
+				<key>CFG_NVV</key>
+				<integer>2</integer>
 				<key>CFG_PAA</key>
 				<integer>0</integer>
 				<key>CFG_PULSE_INT</key>
@@ -774,7 +239,13 @@
 			</dict>
 			<key>aty_properties</key>
 			<dict>
+				<key>Force_Load_FalconSMUFW</key>
+				<true/>
+				<key>PP_ACDCGpioDisabled</key>
+				<integer>0</integer>
 				<key>PP_DisableClockStretcher</key>
+				<integer>1</integer>
+				<key>PP_DisablePCCLimitControl</key>
 				<integer>1</integer>
 				<key>PP_DisableULV</key>
 				<integer>1</integer>
@@ -790,28 +261,54 @@
 				<integer>524288</integer>
 			</dict>
 		</dict>
-		<key>com.VisualDevelopment.WhateverRed</key>
+		<key>iGPU Controller Wrangler</key>
 		<dict>
 			<key>CFBundleIdentifier</key>
-			<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+			<string>com.apple.kext.AMD10000Controller</string>
 			<key>IOClass</key>
-			<string>$(PRODUCT_NAME:rfc1034identifier)</string>
+			<string>AMD10000ControllerWrangler</string>
 			<key>IOMatchCategory</key>
-			<string>$(PRODUCT_NAME:rfc1034identifier)</string>
+			<string>IOFramebuffer</string>
+			<key>IOPCIMatch</key>
+			<string>0x15DD1002 0x15D81002 0x164C1002 0x16361002</string>
+			<key>IOPCITunnelCompatible</key>
+			<true/>
+			<key>IOProbeScore</key>
+			<integer>65050</integer>
 			<key>IOProviderClass</key>
-			<string>IOResources</string>
-			<key>IOResourceMatch</key>
-			<string>IOKit</string>
+			<string>IOPCIDevice</string>
+		</dict>
+		<key>iGPU Hardware Services</key>
+		<dict>
+			<key>CFBundleIdentifier</key>
+			<string>com.apple.kext.AMDRadeonX5000HWServices</string>
+			<key>IOClass</key>
+			<string>AMDRadeonX5000_AMDRadeonHWServicesVega</string>
+			<key>IOMatchCategory</key>
+			<string>AMDRadeonX5000HWServices</string>
+			<key>IOPCIMatch</key>
+			<string>0x15DD1002 0x15D81002 0x164C1002 0x16361002</string>
+			<key>IOPCITunnelCompatible</key>
+			<true/>
+			<key>IOProbeScore</key>
+			<integer>65051</integer>
+			<key>IOPropertyMatch</key>
+			<dict>
+				<key>LoadHWServices</key>
+				<true/>
+			</dict>
+			<key>IOProviderClass</key>
+			<string>IOPCIDevice</string>
 		</dict>
 	</dict>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2022 VisualDevelopment. All rights reserved.</string>
+	<string>Copyright © 2022 ChefKiss Inc. All rights reserved.</string>
 	<key>OSBundleCompatibleVersion</key>
 	<string>1.0</string>
 	<key>OSBundleLibraries</key>
 	<dict>
 		<key>as.vit9696.Lilu</key>
-		<string>1.2.0</string>
+		<string>1.4.7</string>
 		<key>com.apple.iokit.IOPCIFamily</key>
 		<string>1.0.0b1</string>
 		<key>com.apple.kpi.bsd</key>
