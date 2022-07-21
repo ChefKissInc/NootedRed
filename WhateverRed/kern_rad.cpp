@@ -239,6 +239,14 @@ uint32_t RAD::wrapSmuInternalSwInit(uint64_t param_1, uint64_t param_2, void *pa
 	return ret;
 }
 
+uint64_t RAD::wrapSmuGetHwVersion(uint64_t param_1, uint32_t param_2) {
+	SYSLOG("rad", "_smu_get_hw_version called!");
+	SYSLOG("rad", "_smu_get_hw_version: param_1 = 0x%llx param_2 = 0x%x", param_1, param_2);
+	auto ret = FunctionCast(wrapSmuGetHwVersion, callbackRAD->orgSmuGetHwVersion)(param_1, param_2);
+	SYSLOG("rad", "_smu_get_hw_version returned 0x%llx", ret);
+	return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
 {
 	
@@ -283,6 +291,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"_smu_cos_alloc_memory", wrapSmuCosAllocMemory, orgSmuCosAllocMemory},
 			{"_smu_init_function_pointer_list", wrapSmuInitFunctionPointerList, orgSmuInitFunctionPointerList},
 			{"_smu_internal_sw_init", wrapSmuInternalSwInit, orgSmuInternalSwInit},
+			{"_smu_get_hw_version", wrapSmuGetHwVersion, orgSmuGetHwVersion},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMDRadeonX5000HWLibs symbols");
