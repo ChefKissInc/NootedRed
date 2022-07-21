@@ -244,7 +244,7 @@ uint64_t RAD::wrapSmuGetHwVersion(uint64_t param_1, uint32_t param_2) {
 	SYSLOG("rad", "_smu_get_hw_version: param_1 = 0x%llx param_2 = 0x%x", param_1, param_2);
 	auto ret = FunctionCast(wrapSmuGetHwVersion, callbackRAD->orgSmuGetHwVersion)(param_1, param_2);
 	SYSLOG("rad", "_smu_get_hw_version returned 0x%llx", ret);
-	return ret;
+	return ret != 2 ? ret : 3;
 }
 
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
