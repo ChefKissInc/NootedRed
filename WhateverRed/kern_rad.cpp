@@ -181,9 +181,10 @@ uint32_t RAD::wrapTtlInit(void *that, uint64_t *param_1) {
 	return ret;
 }
 
-uint64_t RAD::wrapTtlDevSetSmuFwVersion(void *tlsInstance, uint64_t b) {
+uint64_t RAD::wrapTtlDevSetSmuFwVersion(void *tlsInstance, uint32_t *b) {
 	SYSLOG("rad", "_ttlDevSetSmuFwVersion called!");
 	SYSLOG("rad", "_ttlDevSetSmuFwVersion: tlsInstance %p param_2 %p", tlsInstance, b);
+	SYSLOG("rad", "_ttlDevSetSmuFwVersion: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x", b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]);
 	auto ret = FunctionCast(wrapTtlDevSetSmuFwVersion, callbackRAD->orgTtlDevSetSmuFwVersion)(tlsInstance, b);
 	SYSLOG("rad", "_ttlDevSetSmuFwVersion returned 0x%x", ret);
 	return ret;
@@ -235,7 +236,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"__ZN14AmdTtlServicesC2EP11IOPCIDevice", wrapAmdTtlServicesConstructor, orgAmdTtlServicesConstructor},
 			{"__ZN14AmdTtlServices10initializeEP30_TtlLibraryInitializationInput", wrapTtlInit, orgTtlInit},
 			{"_ttlDevSetSmuFwVersion", wrapTtlDevSetSmuFwVersion, orgTtlDevSetSmuFwVersion},
-			{"_IpiSetFwEntry", wrapIpiSetFwEntry, orgIpiSetFwEntry}
+			{"_IpiSetFwEntry", wrapIpiSetFwEntry, orgIpiSetFwEntry},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMDRadeonX5000HWLibs symbols");

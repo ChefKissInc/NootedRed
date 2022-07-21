@@ -127,7 +127,7 @@ private:
 	static uint64_t wrapInitializeHWWorkarounds(void* that);
 	static uint64_t wrapAllocateAMDHWAlignManager(void* that);
 	static bool wrapMapDoorbellMemory(void* that);
-	static uint64_t wrapTtlDevSetSmuFwVersion(void *tlsInstance, uint64_t b);
+	static uint64_t wrapTtlDevSetSmuFwVersion(void *tlsInstance, uint32_t *b);
 	static uint64_t wrapIpiSetFwEntry(void *tlsInstance, void *b);
 	static IOService *wrapInitLinkToPeer(void *that, const char *matchCategoryName);
 	
