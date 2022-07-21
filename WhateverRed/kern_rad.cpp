@@ -215,6 +215,30 @@ uint64_t RAD::wrapSmuSwInit(void *input, uint64_t *output) {
 	return ret;
 }
 
+uint32_t RAD::wrapSmuCosAllocMemory(void *param_1, uint64_t param_2, uint32_t param_3, uint32_t *param_4) {
+	SYSLOG("rad", "_smu_cos_alloc_memory called!");
+	SYSLOG("rad", "_smu_cos_alloc_memory: param_1 = %p param_2 = 0x%llx param_3 = 0x%x param_4 = %p", param_1, param_2, param_3, param_4);
+	auto ret = FunctionCast(wrapSmuCosAllocMemory, callbackRAD->orgSmuCosAllocMemory)(param_1, param_2, param_3, param_4);
+	SYSLOG("rad", "_smu_cos_alloc_memory returned 0x%x", ret);
+	return ret;
+}
+
+uint32_t RAD::wrapSmuInitFunctionPointerList(uint64_t param_1, uint64_t param_2, uint32_t param_3) {
+	SYSLOG("rad", "_smu_init_function_pointer_list called!");
+	SYSLOG("rad", "_smu_init_function_pointer_list: param_1 = 0x%llx param_2 = 0x%llx param_3 = 0x%x", param_1, param_2, param_3);
+	auto ret = FunctionCast(wrapSmuInitFunctionPointerList, callbackRAD->orgSmuInitFunctionPointerList)(param_1, param_2, param_3);
+	SYSLOG("rad", "_smu_init_function_pointer_list returned 0x%x", ret);
+	return ret;
+}
+
+uint32_t RAD::wrapSmuInternalSwInit(uint64_t param_1, uint64_t param_2, void *param_3) {
+	SYSLOG("rad", "_smu_internal_sw_init called!");
+	SYSLOG("rad", "_smu_internal_sw_init: param_1 = 0x%llx param_2 = 0x%llx param_3 = %p", param_1, param_2, param_3);
+	auto ret = FunctionCast(wrapSmuInternalSwInit, callbackRAD->orgSmuInternalSwInit)(param_1, param_2, param_3);
+	SYSLOG("rad", "_smu_internal_sw_init returned 0x%x", ret);
+	return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
 {
 	
@@ -256,6 +280,9 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"_IpiSetFwEntry", wrapIpiSetFwEntry, orgIpiSetFwEntry},
 			{"_ipi_smu_sw_init", wrapIpiSmuSwInit, orgIpiSmuSwInit},
 			{"_smu_sw_init", wrapSmuSwInit, orgSmuSwInit},
+			{"_smu_cos_alloc_memory", wrapSmuCosAllocMemory, orgSmuCosAllocMemory},
+			{"_smu_init_function_pointer_list", wrapSmuInitFunctionPointerList, orgSmuInitFunctionPointerList},
+			{"_smu_internal_sw_init", wrapSmuInternalSwInit, orgSmuInternalSwInit},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMDRadeonX5000HWLibs symbols");
