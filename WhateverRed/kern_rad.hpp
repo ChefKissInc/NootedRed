@@ -52,7 +52,7 @@ private:
 	/* X5000HWLibs */
 	mach_vm_address_t orgTtlInitialize{}, orgTtlIsPicassoDevice{};
 	mach_vm_address_t orgTtlDevSetSmuFwVersion{}, orgIpiSetFwEntry{};
-	mach_vm_address_t orgIpiSmuSwInit{};
+	mach_vm_address_t orgIpiSmuSwInit{}, orgSmuSwInit{};
 	/* ----------- */
 	
 	template <size_t Index>
@@ -140,6 +140,7 @@ private:
 	static uint64_t wrapTtlDevSetSmuFwVersion(void *tlsInstance, uint32_t *b);
 	static uint64_t wrapIpiSetFwEntry(void *tlsInstance, void *b);
 	static uint64_t wrapIpiSmuSwInit(void *tlsInstance);
+	static uint64_t wrapSmuSwInit(void *input, uint64_t *output);
 	/* ----------- */
 	
 	void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);

@@ -212,6 +212,15 @@ uint64_t RAD::wrapIpiSmuSwInit(void *tlsInstance) {
 	IOSleep(250);
 	return ret;
 }
+
+uint64_t RAD::wrapSmuSwInit(void *input, uint64_t *output) {
+	SYSLOG("rad", "_smu_sw_init called!");
+	SYSLOG("rad", "_smu_sw_init: input = %p output = %p", input, output);
+	IOSleep(250);
+	auto ret = FunctionCast(wrapSmuSwInit, callbackRAD->orgSmuSwInit)(input, output);
+	IOSleep(250);
+	SYSLOG("rad", "_smu_sw_init: output 0:0x%llx 1:0x%llx", output[0], output[1]);
+	SYSLOG("rad", "_smu_sw_init returned 0x%x", ret);
 	return ret;
 }
 
@@ -255,6 +264,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"_ttlDevSetSmuFwVersion", wrapTtlDevSetSmuFwVersion, orgTtlDevSetSmuFwVersion},
 			{"_IpiSetFwEntry", wrapIpiSetFwEntry, orgIpiSetFwEntry},
 			{"_ipi_smu_sw_init", wrapIpiSmuSwInit, orgIpiSmuSwInit},
+			{"_smu_sw_init", wrapSmuSwInit, orgSmuSwInit},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMDRadeonX5000HWLibs symbols");
