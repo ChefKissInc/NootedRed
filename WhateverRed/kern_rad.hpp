@@ -53,6 +53,7 @@ private:
 	mach_vm_address_t orgGetState{}, orgInitTtl{}, orgConfRegBase{};
 	mach_vm_address_t orgReadChipRev{}, orgTtlInit{};
 	mach_vm_address_t orgTtlDevSetSmuFwVersion{}, orgIpiSetFwEntry{};
+	mach_vm_address_t orgIpiSmuSwInit{};
 	
 	template <size_t Index>
 	static IOReturn populateGetHWInfo(IOService *accelVideoCtx, void *hwInfo)
@@ -150,6 +151,7 @@ private:
 	static uint64_t wrapConfRegBase(void *that);
 	static uint8_t wrapReadChipRev(void *that);
 	static uint32_t wrapTtlInit(void *that, uint64_t *param_1);
+	static uint64_t wrapIpiSmuSwInit(void *tlsInstance);
 };
 
 #endif /* kern_rad_hpp */

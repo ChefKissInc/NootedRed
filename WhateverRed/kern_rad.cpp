@@ -198,6 +198,14 @@ uint64_t RAD::wrapIpiSetFwEntry(void *tlsInstance, void *b) {
 	return ret;
 }
 
+uint64_t RAD::wrapIpiSmuSwInit(void *tlsInstance) {
+	SYSLOG("rad", "_ipi_smu_sw_init called!");
+	SYSLOG("rad", "_ipi_smu_sw_init: tlsInstance %p", tlsInstance);
+	auto ret = FunctionCast(wrapIpiSmuSwInit, callbackRAD->orgIpiSmuSwInit)(tlsInstance);
+	SYSLOG("rad", "_ipi_smu_sw_init returned 0x%x", ret);
+	return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
 {
 	
@@ -237,6 +245,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"__ZN14AmdTtlServices10initializeEP30_TtlLibraryInitializationInput", wrapTtlInit, orgTtlInit},
 			{"_ttlDevSetSmuFwVersion", wrapTtlDevSetSmuFwVersion, orgTtlDevSetSmuFwVersion},
 			{"_IpiSetFwEntry", wrapIpiSetFwEntry, orgIpiSetFwEntry},
+			{"_ipi_smu_sw_init", wrapIpiSmuSwInit, orgIpiSmuSwInit},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMDRadeonX5000HWLibs symbols");
