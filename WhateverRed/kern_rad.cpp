@@ -178,7 +178,6 @@ uint32_t RAD::wrapTtlInitialize(void *that, uint64_t *param_1) {
 	SYSLOG("rad", "TTL::initialize: 0:0x%llx 1:0x%llx 2:0x%llx 3:0x%llx 4:0x%llx 5:0x%llx", param_1[0], param_1[1], param_1[2], param_1[3], param_1[4], param_1[5]);
 	auto ret = FunctionCast(wrapTtlInitialize, callbackRAD->orgTtlInitialize)(that, param_1);
 	SYSLOG("rad", "TTL::initialize returned %x", ret);
-	IOSleep(250);
 	return ret;
 }
 
@@ -186,39 +185,31 @@ uint64_t RAD::wrapTtlDevSetSmuFwVersion(void *tlsInstance, uint32_t *b) {
 	SYSLOG("rad", "_ttlDevSetSmuFwVersion called!");
 	SYSLOG("rad", "_ttlDevSetSmuFwVersion: tlsInstance = %p param_2 = %p", tlsInstance, b);
 	SYSLOG("rad", "_ttlDevSetSmuFwVersion: param_2 0:0x%x 1:0x%x 2:0x%x 3:0x%x 4:0x%x 5:0x%x 6:0x%x 7:0x%x", b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]);
-	IOSleep(250);
 	auto ret = FunctionCast(wrapTtlDevSetSmuFwVersion, callbackRAD->orgTtlDevSetSmuFwVersion)(tlsInstance, b);
 	SYSLOG("rad", "_ttlDevSetSmuFwVersion returned 0x%x", ret);
-	IOSleep(250);
 	return ret;
 }
 
 uint64_t RAD::wrapIpiSetFwEntry(void *tlsInstance, void *b) {
 	SYSLOG("rad", "_IpiSetFwEntry called!");
 	SYSLOG("rad", "_IpiSetFwEntry: tlsInstance = %p param_2 = %p", tlsInstance, b);
-	IOSleep(250);
 	auto ret = FunctionCast(wrapIpiSetFwEntry, callbackRAD->orgIpiSetFwEntry)(tlsInstance, b);
 	SYSLOG("rad", "_IpiSetFwEntry returned 0x%x", ret);
-	IOSleep(250);
 	return ret;
 }
 
 uint64_t RAD::wrapIpiSmuSwInit(void *tlsInstance) {
 	SYSLOG("rad", "_ipi_smu_sw_init called!");
 	SYSLOG("rad", "_ipi_smu_sw_init: tlsInstance = %p", tlsInstance);
-	IOSleep(250);
 	auto ret = FunctionCast(wrapIpiSmuSwInit, callbackRAD->orgIpiSmuSwInit)(tlsInstance);
 	SYSLOG("rad", "_ipi_smu_sw_init returned 0x%x", ret);
-	IOSleep(250);
 	return ret;
 }
 
 uint64_t RAD::wrapSmuSwInit(void *input, uint64_t *output) {
 	SYSLOG("rad", "_smu_sw_init called!");
 	SYSLOG("rad", "_smu_sw_init: input = %p output = %p", input, output);
-	IOSleep(250);
 	auto ret = FunctionCast(wrapSmuSwInit, callbackRAD->orgSmuSwInit)(input, output);
-	IOSleep(250);
 	SYSLOG("rad", "_smu_sw_init: output 0:0x%llx 1:0x%llx", output[0], output[1]);
 	SYSLOG("rad", "_smu_sw_init returned 0x%x", ret);
 	return ret;
