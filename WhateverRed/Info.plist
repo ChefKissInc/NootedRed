@@ -259,6 +259,8 @@
 				<integer>0</integer>
 				<key>PP_ToolsLogSpaceSize</key>
 				<integer>524288</integer>
+				<key>SMU_FalconEnableSideLoading</key>
+				<true/>
 			</dict>
 		</dict>
 		<key>iGPU Controller Wrangler</key>
