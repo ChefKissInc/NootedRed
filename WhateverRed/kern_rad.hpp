@@ -37,23 +37,23 @@ private:
 	static RAD *callbackRAD;
 	ThreadLocal<IOService *, 8> currentPropProvider;
 	
-	mach_vm_address_t orgTtlIsPicassoDevice{};
-	mach_vm_address_t orgSetProperty{}, orgGetProperty{};
-	mach_vm_address_t orgGetConnectorsInfoV2{};
-	mach_vm_address_t orgTranslateAtomConnectorInfoV2{};
-	mach_vm_address_t orgATIControllerStart{};
-	mach_vm_address_t orgNotifyLinkChange{};
-	mach_vm_address_t orgPopulateAccelConfig[1]{}, orgGetHWInfo[1]{};
+	mach_vm_address_t orgSetProperty{}, orgGetProperty{}, orgGetConnectorsInfoV2{};
+	mach_vm_address_t orgTranslateAtomConnectorInfoV2{}, orgATIControllerStart{};
+	mach_vm_address_t orgNotifyLinkChange{}, orgPopulateAccelConfig[1]{}, orgGetHWInfo[1]{};
 	mach_vm_address_t orgConfigureDevice{}, orgInitLinkToPeer{}, orgCreateHWHandler{};
 	mach_vm_address_t orgCreateHWInterface{}, orgGetHWMemory{}, orgGetATIChipConfigBit{};
 	mach_vm_address_t orgAllocateAMDHWRegisters{}, orgSetupCAIL{}, orgInitializeHWWorkarounds{};
-	mach_vm_address_t orgAllocateAMDHWAlignManager{}, orgMapDoorbellMemory{}, orgInitializeProjectDependentResources{};
+	mach_vm_address_t orgAllocateAMDHWAlignManager{}, orgMapDoorbellMemory{};
+	mach_vm_address_t orgInitializeProjectDependentResources{};
 	mach_vm_address_t orgHwInitializeFbMemSize{}, orgHwInitializeFbBase{}, orgInitWithController{};
 	mach_vm_address_t deviceTypeTable{}, orgAmdTtlServicesConstructor{};
-	mach_vm_address_t orgGetState{}, orgInitTtl{}, orgConfRegBase{};
-	mach_vm_address_t orgReadChipRev{}, orgTtlInit{};
+	mach_vm_address_t orgGetState{}, orgConfRegBase{}, orgReadChipRev{};
+	mach_vm_address_t orgInitializeTtl{};
+	/* X5000HWLibs */
+	mach_vm_address_t orgTtlInitialize{}, orgTtlIsPicassoDevice{};
 	mach_vm_address_t orgTtlDevSetSmuFwVersion{}, orgIpiSetFwEntry{};
 	mach_vm_address_t orgIpiSmuSwInit{};
+	/* ----------- */
 	
 	template <size_t Index>
 	static IOReturn populateGetHWInfo(IOService *accelVideoCtx, void *hwInfo)
@@ -85,7 +85,6 @@ private:
 	bool forceCodecInfo = false;
 	size_t maxHardwareKexts = 1;
 	
-	static bool wrapTtlIsPicassoDevice(void *dev);
 	void initHardwareKextMods();
 	void mergeProperty(OSDictionary *props, const char *name, OSObject *value);
 	void mergeProperties(OSDictionary *props, const char *prefix, IOService *provider);
@@ -112,7 +111,7 @@ private:
 	
 	void process24BitOutput(KernelPatcher &patcher, KernelPatcher::KextInfo &info, mach_vm_address_t address, size_t size);
 	void processConnectorOverrides(KernelPatcher &patcher, mach_vm_address_t address, size_t size);
-	static void wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider);
+	
 	static IOReturn noProjectByPartNumber(IOService* that, uint64_t partNumber);
 	static uint64_t wrapInitializeProjectDependentResources(void* that);
 	static uint64_t wrapHwInitializeFbMemSize(void* that);
@@ -128,9 +127,20 @@ private:
 	static uint64_t wrapInitializeHWWorkarounds(void* that);
 	static uint64_t wrapAllocateAMDHWAlignManager(void* that);
 	static bool wrapMapDoorbellMemory(void* that);
+	static IOService *wrapInitLinkToPeer(void *that, const char *matchCategoryName);
+	static uint64_t wrapGetState(void *that);
+	static uint32_t wrapInitializeTtl(void *that, void *param_1);
+	static uint64_t wrapConfRegBase(void *that);
+	static uint8_t wrapReadChipRev(void *that);
+	
+	/* X5000HWLibs */
+	static bool wrapTtlIsPicassoDevice(void *dev);
+	static void wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider);
+	static uint32_t wrapTtlInitialize(void *that, uint64_t *param_1);
 	static uint64_t wrapTtlDevSetSmuFwVersion(void *tlsInstance, uint32_t *b);
 	static uint64_t wrapIpiSetFwEntry(void *tlsInstance, void *b);
-	static IOService *wrapInitLinkToPeer(void *that, const char *matchCategoryName);
+	static uint64_t wrapIpiSmuSwInit(void *tlsInstance);
+	/* ----------- */
 	
 	void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);
 	static IntegratedVRAMInfoInterface *createVramInfo(void *helper, uint32_t offset);
@@ -146,12 +156,6 @@ private:
 	static bool wrapNotifyLinkChange(void *atiDeviceControl, kAGDCRegisterLinkControlEvent_t event, void *eventData, uint32_t eventFlags);
 	static bool doNotTestVram(IOService *ctrl, uint32_t reg, bool retryOnFail);
 	static void updateGetHWInfo(IOService *accelVideoCtx, void *hwInfo);
-	static uint64_t wrapGetState(void *that);
-	static uint32_t wrapInitTtl(void *that, void *param_1);
-	static uint64_t wrapConfRegBase(void *that);
-	static uint8_t wrapReadChipRev(void *that);
-	static uint32_t wrapTtlInit(void *that, uint64_t *param_1);
-	static uint64_t wrapIpiSmuSwInit(void *tlsInstance);
 };
 
 #endif /* kern_rad_hpp */

@@ -173,11 +173,11 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider) 
 	FunctionCast(wrapAmdTtlServicesConstructor, callbackRAD->orgAmdTtlServicesConstructor)(that, provider);
 }
 
-uint32_t RAD::wrapTtlInit(void *that, uint64_t *param_1) {
-	SYSLOG("rad", "TtlInit called!");
-	SYSLOG("rad", "TtlInit: 0x%llx 0x%llx 0x%llx 0x%llx 0x%llx 0x%llx", param_1[0], param_1[1], param_1[2], param_1[3], param_1[4], param_1[5]);
-	auto ret = FunctionCast(wrapTtlInit, callbackRAD->orgTtlInit)(that, param_1);
-	SYSLOG("rad", "TtlInit returned %x", ret);
+uint32_t RAD::wrapTtlInitialize(void *that, uint64_t *param_1) {
+	SYSLOG("rad", "TTL::initialize called!");
+	SYSLOG("rad", "TTL::initialize: 0x%llx 0x%llx 0x%llx 0x%llx 0x%llx 0x%llx", param_1[0], param_1[1], param_1[2], param_1[3], param_1[4], param_1[5]);
+	auto ret = FunctionCast(wrapTtlInitialize, callbackRAD->orgTtlInitialize)(that, param_1);
+	SYSLOG("rad", "TTL::initialize returned %x", ret);
 	return ret;
 }
 
@@ -242,7 +242,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 		KernelPatcher::RouteRequest requests[] = {
 			{"_ttlIsPicassoAM4Device", wrapTtlIsPicassoDevice, orgTtlIsPicassoDevice},
 			{"__ZN14AmdTtlServicesC2EP11IOPCIDevice", wrapAmdTtlServicesConstructor, orgAmdTtlServicesConstructor},
-			{"__ZN14AmdTtlServices10initializeEP30_TtlLibraryInitializationInput", wrapTtlInit, orgTtlInit},
+			{"__ZN14AmdTtlServices10initializeEP30_TtlLibraryInitializationInput", wrapTtlInitialize, orgTtlInitialize},
 			{"_ttlDevSetSmuFwVersion", wrapTtlDevSetSmuFwVersion, orgTtlDevSetSmuFwVersion},
 			{"_IpiSetFwEntry", wrapIpiSetFwEntry, orgIpiSetFwEntry},
 			{"_ipi_smu_sw_init", wrapIpiSmuSwInit, orgIpiSmuSwInit},
@@ -382,14 +382,15 @@ WRAP_SIMPLE(uint64_t, AllocateAMDHWAlignManager, "0x%x")
 WRAP_SIMPLE(bool, MapDoorbellMemory, "%d")
 WRAP_SIMPLE(uint64_t, GetState, "%d")
 
-uint32_t RAD::wrapInitTtl(void *that, void *param_1)
+uint32_t RAD::wrapInitializeTtl(void *that, void *param_1)
 {
 	SYSLOG("rad", "initializeTtl called!");
-	auto ret = FunctionCast(wrapInitTtl, callbackRAD->orgInitTtl)(that, param_1);
+	auto ret = FunctionCast(wrapInitializeTtl, callbackRAD->orgInitializeTtl)(that, param_1);
 	SYSLOG("rad", "initializeTtl returned 0x%x", ret);
 	return ret;
 }
-WRAP_SIMPLE(uint64_t, ConfRegBase, "0x%x")
+
+WRAP_SIMPLE(uint64_t, ConfRegBase, "0x%llx")
 WRAP_SIMPLE(uint8_t, ReadChipRev, "%d")
 
 void RAD::processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size)
@@ -409,7 +410,7 @@ void RAD::processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_ad
 		{"__ZN30AMDRadeonX5000_AMDGFX9Hardware25allocateAMDHWAlignManagerEv", wrapAllocateAMDHWAlignManager, orgAllocateAMDHWAlignManager},
 		{"__ZN26AMDRadeonX5000_AMDHardware17mapDoorbellMemoryEv", wrapMapDoorbellMemory, orgMapDoorbellMemory},
 		{"__ZN27AMDRadeonX5000_AMDHWHandler8getStateEv", wrapGetState, orgGetState},
-		{"__ZN28AMDRadeonX5000_AMDRTHardware13initializeTtlEP16_GART_PARAMETERS", wrapInitTtl, orgInitTtl},
+		{"__ZN28AMDRadeonX5000_AMDRTHardware13initializeTtlEP16_GART_PARAMETERS", wrapInitializeTtl, orgInitializeTtl},
 		{"__ZN28AMDRadeonX5000_AMDRTHardware22configureRegisterBasesEv", wrapConfRegBase, orgConfRegBase},
 		{"__ZN32AMDRadeonX5000_AMDVega10Hardware23readChipRevFromRegisterEv", wrapReadChipRev, orgReadChipRev},
 	};
