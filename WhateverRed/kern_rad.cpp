@@ -289,7 +289,6 @@ uint32_t RAD::wrapInternalCosReadFw(uint64_t param_1, uint64_t *param_2) {
 	SYSLOG("rad", "_internal_cos_read_fw: param_1 = 0x%llx param_2 = %p", param_1, param_2);
 	auto ret = FunctionCast(wrapInternalCosReadFw, callbackRAD->orgInternalCosReadFw)(param_1, param_2);
 	SYSLOG("rad", "_internal_cos_read_fw returned 0x%x", ret);
-	panic("Who's Steve jobs? Ligma balls.");
 	return ret;
 }
 
