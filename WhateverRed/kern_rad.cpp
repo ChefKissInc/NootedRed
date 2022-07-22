@@ -415,6 +415,11 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMDRadeonX6000Framebuffer symbols");
 		
+		uint8_t find[] = { 0x48, 0x8b, 0x43, 0x20, 0x0f, 0xb7, 0x70, 0x16, 0xe8, 0x59, 0xd8, 0xff, 0xff };
+		uint8_t repl[] = { 0x48, 0x8b, 0x43, 0x20, 0x0f, 0xb7, 0x70, 0x14, 0xe8, 0x59, 0xd8, 0xff, 0xff };
+		KernelPatcher::LookupPatch patch {&kextRadeonX6000Framebuffer, find, repl, arrsize(find), 2};
+		patcher.applyLookupPatch(&patch);
+		
 		return true;
 	}
 	
