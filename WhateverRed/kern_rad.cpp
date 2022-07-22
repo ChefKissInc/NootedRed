@@ -284,6 +284,14 @@ uint32_t RAD::wrapGcGetHwVersion(int *param_1) {
 	return ret;
  }
 
+uint32_t RAD::wrapInternalCosReadFw(uint64_t param_1, uint64_t *param_2) {
+	SYSLOG("rad", "_internal_cos_read_fw called!");
+	SYSLOG("rad", "_internal_cos_read_fw: param_1 = 0x%llx param_2 = %p", param_1, param_2);
+	auto ret = FunctionCast(wrapInternalCosReadFw, callbackRAD->orgInternalCosReadFw)(param_1, param_2);
+	OSReportWithBacktrace("Steve jobs has ligma?? (NOT CLICKBAIT)");
+	return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
 {
 	
@@ -331,6 +339,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"_smu_get_hw_version", wrapSmuGetHwVersion, orgSmuGetHwVersion},
 			{"_psp_sw_init", wrapPspSwInit, orgPspSwInit},
 			{"_gc_get_hw_version", wrapGcGetHwVersion, orgGcGetHwVersion},
+			{"_internal_cos_read_fw", wrapInternalCosReadFw, orgInternalCosReadFw},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMDRadeonX5000HWLibs symbols");

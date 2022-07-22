@@ -55,6 +55,7 @@ private:
 	mach_vm_address_t orgIpiSmuSwInit{}, orgSmuSwInit{}, orgSmuCosAllocMemory{};
 	mach_vm_address_t orgSmuInitFunctionPointerList{}, orgSmuInternalSwInit{};
 	mach_vm_address_t orgSmuGetHwVersion{}, orgPspSwInit{}, orgGcGetHwVersion{};
+	mach_vm_address_t orgInternalCosReadFw{};
 	/* ----------- */
 	
 	template <size_t Index>
@@ -149,6 +150,7 @@ private:
 	static uint64_t wrapSmuGetHwVersion(uint64_t param_1, uint32_t param_2);
 	static uint64_t wrapPspSwInit(int *param_1, uint32_t *param_2);
 	static uint32_t wrapGcGetHwVersion(int *param_1);
+	static uint32_t wrapInternalCosReadFw(uint64_t param_1, uint64_t *param_2);
 	/* ----------- */
 	
 	void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);
