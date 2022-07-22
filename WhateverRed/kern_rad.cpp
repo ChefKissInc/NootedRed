@@ -400,10 +400,16 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMDRadeonX6000HWLibs symbols");
 		
+		auto *orgAmdTtlServicesInitialize = reinterpret_cast<uint8_t *>(patcher.solveSymbol(index, "__ZN14AmdTtlServices10initializeEP30_TtlLibraryInitializationInput"));
+		if (!orgAmdTtlServicesInitialize)
+		{
+			panic("RAD: Failed to solve AmdTtlServices::initialize");
+		}
+		
 		uint8_t find[] = { 0x74, 0x6E, 0x45, 0x85, 0xF6, 0x0F, 0x84, 0xB4, 0x00, 0x00, 0x00 };
 		uint8_t repl[] = { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 };
-		KernelPatcher::LookupPatch patch {&kextRadeonX6000HWLibs, find, repl, arrsize(find), 2};
-		patcher.applyLookupPatch(&patch);
+		KernelPatcher::LookupPatch patch {&kextRadeonX6000HWLibs, find, repl, arrsize(find), 1};
+		patcher.applyLookupPatch(&patch, orgAmdTtlServicesInitialize, 0x50);
 		patcher.clearError();
 		
 		return true;
@@ -416,17 +422,22 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMDRadeonX6000Framebuffer symbols");
 		
-		uint8_t find1[] = { 0x48, 0x8b, 0x43, 0x20, 0x0f, 0xb7, 0x70, 0x16, 0xe8, 0x59, 0xd8, 0xff, 0xff };
-		uint8_t repl1[] = { 0x48, 0x8b, 0x43, 0x20, 0x0f, 0xb7, 0x70, 0x12, 0xe8, 0x59, 0xd8, 0xff, 0xff };
-		uint8_t find2[] = { 0xe8, 0x06, 0x09, 0x00, 0x00, 0x83, 0x7d, 0xe4, 0x02, 0x75, 0x44, 0x8b, 0x5d, 0xe8 };
-		uint8_t repl2[] = { 0xe8, 0x06, 0x09, 0x00, 0x00, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x8b, 0x5d, 0xe8 };
+		auto *orgCreatePspDirectory = reinterpret_cast<uint8_t *>(patcher.solveSymbol(index, "__ZN19AmdAtomPspDirectory18createPspDirectoryEP15AmdAtomFwHelperj"));
+		if (orgCreatePspDirectory == nullptr)
+		{
+			panic("RAD: Failed to resolve AmdAtomPspDirectory::createPspDirectory");
+		}
+		uint8_t find1[] = { 0x48, 0x8B, 0x43, 0x20, 0x0F, 0xB7, 0x70, 0x16, 0xE8, 0x59, 0xD8, 0xFF, 0xFF };
+		uint8_t repl1[] = { 0x48, 0x8B, 0x43, 0x20, 0x0F, 0xB7, 0x70, 0x12, 0xE8, 0x59, 0xD8, 0xFF, 0xFF };
+		uint8_t find2[] = { 0xE8, 0x06, 0x09, 0x00, 0x00, 0x83, 0x7D, 0xE4, 0x02, 0x75, 0x44, 0x8B, 0x5D, 0xE8 };
+		uint8_t repl2[] = { 0xE8, 0x06, 0x09, 0x00, 0x00, 0x83, 0x7D, 0xE4, 0x02, 0x90, 0x90, 0x8B, 0x5D, 0xE8 };
 		KernelPatcher::LookupPatch patch[] = {
-			{&kextRadeonX6000Framebuffer, find1, repl1, arrsize(find1), 2},
-			{&kextRadeonX6000Framebuffer, find2, repl2, arrsize(find2), 2},
+			{&kextRadeonX6000Framebuffer, find1, repl1, arrsize(find1), 1},
+			{&kextRadeonX6000Framebuffer, find2, repl2, arrsize(find2), 1},
 		};
 		for (auto &p : patch)
 		{
-			patcher.applyLookupPatch(&p);
+			patcher.applyLookupPatch(&p, orgCreatePspDirectory, 0xAF);
 			patcher.clearError();
 		}
 		
