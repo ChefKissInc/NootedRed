@@ -255,11 +255,17 @@ uint64_t RAD::wrapPspSwInit(int *param_1, uint32_t *param_2) {
 	SYSLOG("rad", "_psp_sw_init called!");
 	SYSLOG("rad", "_psp_sw_init: param_1 = %p param_2 = %p", param_1, param_2);
 	SYSLOG("rad", "_psp_sw_init: param_1: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x", param_1[0], param_1[1], param_1[2], param_1[3], param_1[4], param_1[5]);
-	if (param_1[3] == 0xA) {
-		SYSLOG("rad", "Spoofing PSP version 10 to 11");
-		param_1[3] = 0xB;
-		param_1[4] = 0x0;
-		param_1[5] = 0x0;
+	switch (param_1[3]) {
+		case 0xA:
+			[[fallthrough]];
+		case 0xB:
+			SYSLOG("rad", "Spoofing PSP version 10/11.x.x to 11");
+			param_1[3] = 0xB;
+			param_1[4] = 0x0;
+			param_1[5] = 0x0;
+			break;
+		default:
+			break;
 	}
 	auto ret = FunctionCast(wrapPspSwInit, callbackRAD->orgPspSwInit)(param_1, param_2);
 	SYSLOG("rad", "_psp_sw_init returned 0x%llx", ret);
