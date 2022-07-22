@@ -31,10 +31,12 @@ static const char *pathRadeonX6000[] = {"/System/Library/Extensions/AMDRadeonX60
 static const char *pathRadeonX6000HWLibs[] = {
 	"/System/Library/Extensions/AMDRadeonX6000HWServices.kext/Contents/PlugIns/AMDRadeonX6000HWLibs.kext/Contents/MacOS/AMDRadeonX6000HWLibs",
 };
+static const char *pathRadeonX6000Framebuffer[] = {"/System/Library/Extensions/AMDRadeonX6000Framebuffer.kext/Contents/MacOS/AMDRadeonX6000Framebuffer"};
 
 static KernelPatcher::KextInfo kextRadeonFramebuffer{"com.apple.kext.AMDFramebuffer", pathFramebuffer, 1, {}, {}, KernelPatcher::KextInfo::Unloaded};
 static KernelPatcher::KextInfo kextRadeonSupport{"com.apple.kext.AMDSupport", pathSupport, 1, {}, {}, KernelPatcher::KextInfo::Unloaded};
 static KernelPatcher::KextInfo kextRadeonX6000HWLibs{"com.apple.kext.AMDRadeonX6000HWLibs", pathRadeonX6000HWLibs, 1, {}, {}, KernelPatcher::KextInfo::Unloaded};
+static KernelPatcher::KextInfo kextRadeonX6000Framebuffer{"com.apple.kext.AMDRadeonX6000Framebuffer", pathRadeonX6000Framebuffer, 1, {}, {}, KernelPatcher::KextInfo::Unloaded};
 
 static KernelPatcher::KextInfo kextRadeonHardware[] = {
 	{"com.apple.kext.AMDRadeonX6000", pathRadeonX6000, arrsize(pathRadeonX6000), {}, {}, KernelPatcher::KextInfo::Unloaded},
@@ -72,6 +74,7 @@ void RAD::init()
 	forceVesaMode = checkKernelArgument("-radvesa");
 	forceCodecInfo = checkKernelArgument("-radcodec");
 	
+	lilu.onKextLoadForce(&kextRadeonX6000Framebuffer);
 	lilu.onKextLoadForce(&kextRadeonSupport);
 	lilu.onKextLoadForce(&kextRadeonX6000HWLibs);
 	
@@ -305,7 +308,17 @@ void RAD::wrapPopulateFirmwareDirectory(void *that)
 	SYSLOG("rad", "----------------------------------------------------------------------");
 }
 
+uint32_t RAD::wrapGetVideoMemoryType(void *that) {
+	SYSLOG("rad", "AMDRadeonX6000_AmdBiosParserHelper::getVideoMemoryType called!");
+	SYSLOG("rad", "AMDRadeonX6000_AmdBiosParserHelper::getVideoMemoryType: this = %p", that);
+	return 4;
+}
 
+uint32_t RAD::wrapGetVideoMemoryBitWidth(void *that) {
+	SYSLOG("rad", "AMDRadeonX6000_AmdBiosParserHelper::getVideoMemoryBitWidth called!");
+	SYSLOG("rad", "AMDRadeonX6000_AmdBiosParserHelper::getVideoMemoryBitWidth: this = %p", that);
+	return 64;
+}
 
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
 {
@@ -371,6 +384,16 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 		uint8_t repl[] = { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 };
 		KernelPatcher::LookupPatch patch {&kextRadeonX6000HWLibs, find, repl, arrsize(find), 2};
 		patcher.applyLookupPatch(&patch);
+		
+		return true;
+	} else if (kextRadeonX6000Framebuffer.loadIndex == index) {
+		KernelPatcher::RouteRequest requests[] = {
+			{"__ZNK34AMDRadeonX6000_AmdBiosParserHelper18getVideoMemoryTypeEv", wrapGetVideoMemoryType},
+			{"__ZNK34AMDRadeonX6000_AmdBiosParserHelper22getVideoMemoryBitWidthEv", wrapGetVideoMemoryBitWidth},
+		};
+		
+		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
+			panic("Failed to route AMDRadeonX6000Framebuffer symbols");
 		
 		return true;
 	}

@@ -136,7 +136,7 @@ private:
 	static uint64_t wrapConfRegBase(void *that);
 	static uint8_t wrapReadChipRev(void *that);
 	
-	/* X5000HWLibs */
+	/* X6000HWLibs */
 	static bool wrapTtlIsPicassoDevice(void *dev);
 	static void wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider);
 	static uint32_t wrapTtlInitialize(void *that, uint64_t *param1);
@@ -153,6 +153,11 @@ private:
 	static uint32_t wrapInternalCosReadFw(uint64_t param1, uint64_t *param2);
 	static void wrapPopulateFirmwareDirectory(void *that);
 	/* ----------- */
+	
+	/* X6000Framebuffer */
+	static uint32_t wrapGetVideoMemoryType(void *that);
+	static uint32_t wrapGetVideoMemoryBitWidth(void *that);
+	/* ---------------- */
 	
 	void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);
 	static IntegratedVRAMInfoInterface *createVramInfo(void *helper, uint32_t offset);
