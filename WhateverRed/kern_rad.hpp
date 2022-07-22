@@ -32,6 +32,8 @@ private:
 	
 	using t_getAtomObjectTableForType = void *(*)(void *that, AtomObjectTableType type, uint8_t *sz);
 	using t_getHWInfo = IOReturn (*)(IOService *accelVideoCtx, void *hwInfo);
+	using t_createFirmware = void* (*)(const void *data, uint32_t size, uint32_t param3, const char *filename);
+	using t_putFirmware = bool (*)(void *that, uint32_t deviceType, void *fw);
 	
 	static RAD *callbackRAD;
 	ThreadLocal<IOService *, 8> currentPropProvider;
@@ -53,7 +55,9 @@ private:
 	mach_vm_address_t orgIpiSmuSwInit{}, orgSmuSwInit{}, orgSmuCosAllocMemory{};
 	mach_vm_address_t orgSmuInitFunctionPointerList{}, orgSmuInternalSwInit{};
 	mach_vm_address_t orgSmuGetHwVersion{}, orgPspSwInit{}, orgGcGetHwVersion{};
-	mach_vm_address_t orgInternalCosReadFw{};
+	mach_vm_address_t orgInternalCosReadFw{}, orgPopulateFirmwareDirectory{};
+	t_createFirmware createFirmware = nullptr;
+	t_putFirmware putFirmware = nullptr;
 	/* ----------- */
 	
 	template <size_t Index>
@@ -147,6 +151,7 @@ private:
 	static uint64_t wrapPspSwInit(int *param1, uint32_t *param2);
 	static uint32_t wrapGcGetHwVersion(int *param1);
 	static uint32_t wrapInternalCosReadFw(uint64_t param1, uint64_t *param2);
+	static void wrapPopulateFirmwareDirectory(void *that);
 	/* ----------- */
 	
 	void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);

@@ -15,6 +15,7 @@
 #include <IOKit/IOPlatformExpert.h>
 
 #include "kern_rad.hpp"
+#include "kern_fw.hpp"
 
 #define WRAP_SIMPLE(ty, func, fmt)											\
 	ty RAD::wrap##func(void* that) {										\
@@ -287,6 +288,20 @@ uint32_t RAD::wrapInternalCosReadFw(uint64_t param1, uint64_t *param2) {
 	return ret;
 }
 
+void RAD::wrapPopulateFirmwareDirectory(void *that)
+{
+	SYSLOG("rad", "AMDRadeonX6000_AMDRadeonHWLibsX6000::populateFirmwareDirectory called!");
+	FunctionCast(wrapPopulateFirmwareDirectory, callbackRAD->orgPopulateFirmwareDirectory)(that);
+	SYSLOG("rad", "injecting ativvaxy_rv.dat!");
+	auto *fwDesc = getFWDescByName("ativvaxy_rv.dat");
+	
+	auto *fw = callbackRAD->createFirmware(fwDesc->getBytesNoCopy(), fwDesc->getLength(), 0x200, "ativvaxy_rv.dat");
+	void *fwDir = (void *)*(uint64_t *)((uint8_t *)that + 0xB8);
+	callbackRAD->putFirmware(fwDir, 6, fw);
+}
+
+
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
 {
 	
@@ -318,6 +333,14 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 		if (!this->deviceTypeTable) {
 			panic("RAD: Failed to resolve device type table");
 		}
+		this->createFirmware = FunctionCast(this->createFirmware, patcher.solveSymbol(index, "__ZN11AMDFirmware14createFirmwareEPhjjPKc"));
+		if (!this->createFirmware) {
+			panic("RAD: Failed to resolve AMDFirmware::createFirmware");
+		}
+		this->putFirmware = FunctionCast(this->putFirmware, patcher.solveSymbol(index, "__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware"));
+		if (!this->putFirmware) {
+			panic("RAD: Failed to resolve AMDFirmwareDirectory::putFirmware");
+		}
 		
 		KernelPatcher::RouteRequest requests[] = {
 //			{"_ttlIsPicassoAM4Device", wrapTtlIsPicassoDevice, orgTtlIsPicassoDevice},
@@ -334,6 +357,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"_psp_sw_init", wrapPspSwInit, orgPspSwInit},
 			{"_gc_get_hw_version", wrapGcGetHwVersion, orgGcGetHwVersion},
 			{"_internal_cos_read_fw", wrapInternalCosReadFw, orgInternalCosReadFw},
+			{"__ZN35AMDRadeonX6000_AMDRadeonHWLibsX600025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory, orgPopulateFirmwareDirectory},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMDRadeonX6000HWLibs symbols");
