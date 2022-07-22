@@ -162,18 +162,18 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider) 
 	FunctionCast(wrapAmdTtlServicesConstructor, callbackRAD->orgAmdTtlServicesConstructor)(that, provider);
 }
 
-uint32_t RAD::wrapTtlInitialize(void *that, uint64_t *param_1) {
+uint32_t RAD::wrapTtlInitialize(void *that, uint64_t *param1) {
 	SYSLOG("rad", "TTL::initialize called!");
-	SYSLOG("rad", "TTL::initialize: 0:0x%llx 1:0x%llx 2:0x%llx 3:0x%llx 4:0x%llx 5:0x%llx", param_1[0], param_1[1], param_1[2], param_1[3], param_1[4], param_1[5]);
-	auto ret = FunctionCast(wrapTtlInitialize, callbackRAD->orgTtlInitialize)(that, param_1);
+	SYSLOG("rad", "TTL::initialize: 0:0x%llx 1:0x%llx 2:0x%llx 3:0x%llx 4:0x%llx 5:0x%llx", param1[0], param1[1], param1[2], param1[3], param1[4], param1[5]);
+	auto ret = FunctionCast(wrapTtlInitialize, callbackRAD->orgTtlInitialize)(that, param1);
 	SYSLOG("rad", "TTL::initialize returned %x", ret);
 	return ret;
 }
 
 uint64_t RAD::wrapTtlDevSetSmuFwVersion(void *tlsInstance, uint32_t *b) {
 	SYSLOG("rad", "_ttlDevSetSmuFwVersion called!");
-	SYSLOG("rad", "_ttlDevSetSmuFwVersion: tlsInstance = %p param_2 = %p", tlsInstance, b);
-	SYSLOG("rad", "_ttlDevSetSmuFwVersion: param_2 0:0x%x 1:0x%x 2:0x%x 3:0x%x 4:0x%x 5:0x%x 6:0x%x 7:0x%x", b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]);
+	SYSLOG("rad", "_ttlDevSetSmuFwVersion: tlsInstance = %p param2 = %p", tlsInstance, b);
+	SYSLOG("rad", "_ttlDevSetSmuFwVersion: param2 0:0x%x 1:0x%x 2:0x%x 3:0x%x 4:0x%x 5:0x%x 6:0x%x 7:0x%x", b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]);
 	auto ret = FunctionCast(wrapTtlDevSetSmuFwVersion, callbackRAD->orgTtlDevSetSmuFwVersion)(tlsInstance, b);
 	SYSLOG("rad", "_ttlDevSetSmuFwVersion returned 0x%x", ret);
 	return ret;
@@ -181,7 +181,7 @@ uint64_t RAD::wrapTtlDevSetSmuFwVersion(void *tlsInstance, uint32_t *b) {
 
 uint64_t RAD::wrapIpiSetFwEntry(void *tlsInstance, void *b) {
 	SYSLOG("rad", "_IpiSetFwEntry called!");
-	SYSLOG("rad", "_IpiSetFwEntry: tlsInstance = %p param_2 = %p", tlsInstance, b);
+	SYSLOG("rad", "_IpiSetFwEntry: tlsInstance = %p param2 = %p", tlsInstance, b);
 	auto ret = FunctionCast(wrapIpiSetFwEntry, callbackRAD->orgIpiSetFwEntry)(tlsInstance, b);
 	SYSLOG("rad", "_IpiSetFwEntry returned 0x%x", ret);
 	return ret;
@@ -204,34 +204,38 @@ uint64_t RAD::wrapSmuSwInit(void *input, uint64_t *output) {
 	return ret;
 }
 
-uint32_t RAD::wrapSmuCosAllocMemory(void *param_1, uint64_t param_2, uint32_t param_3, uint32_t *param_4) {
+uint32_t RAD::wrapSmuCosAllocMemory(void *param1, uint64_t param2, uint32_t param3, uint32_t *param4)
+{
 	SYSLOG("rad", "_smu_cos_alloc_memory called!");
-	SYSLOG("rad", "_smu_cos_alloc_memory: param_1 = %p param_2 = 0x%llx param_3 = 0x%x param_4 = %p", param_1, param_2, param_3, param_4);
-	auto ret = FunctionCast(wrapSmuCosAllocMemory, callbackRAD->orgSmuCosAllocMemory)(param_1, param_2, param_3, param_4);
+	SYSLOG("rad", "_smu_cos_alloc_memory: param1 = %p param2 = 0x%llx param3 = 0x%x param4 = %p", param1, param2, param3, param4);
+	auto ret = FunctionCast(wrapSmuCosAllocMemory, callbackRAD->orgSmuCosAllocMemory)(param1, param2, param3, param4);
 	SYSLOG("rad", "_smu_cos_alloc_memory returned 0x%x", ret);
 	return ret;
 }
 
-uint32_t RAD::wrapSmuInitFunctionPointerList(uint64_t param_1, uint64_t param_2, uint32_t param_3) {
+uint32_t RAD::wrapSmuInitFunctionPointerList(uint64_t param1, uint64_t param2, uint32_t param3)
+{
 	SYSLOG("rad", "_smu_init_function_pointer_list called!");
-	SYSLOG("rad", "_smu_init_function_pointer_list: param_1 = 0x%llx param_2 = 0x%llx param_3 = 0x%x", param_1, param_2, param_3);
-	auto ret = FunctionCast(wrapSmuInitFunctionPointerList, callbackRAD->orgSmuInitFunctionPointerList)(param_1, param_2, param_3);
+	SYSLOG("rad", "_smu_init_function_pointer_list: param1 = 0x%llx param2 = 0x%llx param3 = 0x%x", param1, param2, param3);
+	auto ret = FunctionCast(wrapSmuInitFunctionPointerList, callbackRAD->orgSmuInitFunctionPointerList)(param1, param2, param3);
 	SYSLOG("rad", "_smu_init_function_pointer_list returned 0x%x", ret);
 	return ret;
 }
 
-uint32_t RAD::wrapSmuInternalSwInit(uint64_t param_1, uint64_t param_2, void *param_3) {
+uint32_t RAD::wrapSmuInternalSwInit(uint64_t param1, uint64_t param2, void *param3)
+{
 	SYSLOG("rad", "_smu_internal_sw_init called!");
-	SYSLOG("rad", "_smu_internal_sw_init: param_1 = 0x%llx param_2 = 0x%llx param_3 = %p", param_1, param_2, param_3);
-	auto ret = FunctionCast(wrapSmuInternalSwInit, callbackRAD->orgSmuInternalSwInit)(param_1, param_2, param_3);
+	SYSLOG("rad", "_smu_internal_sw_init: param1 = 0x%llx param2 = 0x%llx param3 = %p", param1, param2, param3);
+	auto ret = FunctionCast(wrapSmuInternalSwInit, callbackRAD->orgSmuInternalSwInit)(param1, param2, param3);
 	SYSLOG("rad", "_smu_internal_sw_init returned 0x%x", ret);
 	return ret;
 }
 
-uint64_t RAD::wrapSmuGetHwVersion(uint64_t param_1, uint32_t param_2) {
+uint64_t RAD::wrapSmuGetHwVersion(uint64_t param1, uint32_t param2)
+{
 	SYSLOG("rad", "_smu_get_hw_version called!");
-	SYSLOG("rad", "_smu_get_hw_version: param_1 = 0x%llx param_2 = 0x%x", param_1, param_2);
-	auto ret = FunctionCast(wrapSmuGetHwVersion, callbackRAD->orgSmuGetHwVersion)(param_1, param_2);
+	SYSLOG("rad", "_smu_get_hw_version: param1 = 0x%llx param2 = 0x%x", param1, param2);
+	auto ret = FunctionCast(wrapSmuGetHwVersion, callbackRAD->orgSmuGetHwVersion)(param1, param2);
 	SYSLOG("rad", "_smu_get_hw_version returned 0x%llx", ret);
 	if (ret == 2) {
 		SYSLOG("rad", "Spoofing SMU version 10 to 11");
@@ -240,31 +244,33 @@ uint64_t RAD::wrapSmuGetHwVersion(uint64_t param_1, uint32_t param_2) {
 	return ret;
 }
 
-uint64_t RAD::wrapPspSwInit(int *param_1, uint32_t *param_2) {
+uint64_t RAD::wrapPspSwInit(int *param1, uint32_t *param2)
+{
 	SYSLOG("rad", "_psp_sw_init called!");
-	SYSLOG("rad", "_psp_sw_init: param_1 = %p param_2 = %p", param_1, param_2);
-	SYSLOG("rad", "_psp_sw_init: param_1: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x", param_1[0], param_1[1], param_1[2], param_1[3], param_1[4], param_1[5]);
-	switch (param_1[3]) {
+	SYSLOG("rad", "_psp_sw_init: param1 = %p param2 = %p", param1, param2);
+	SYSLOG("rad", "_psp_sw_init: param1: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x", param1[0], param1[1], param1[2], param1[3], param1[4], param1[5]);
+	switch (param1[3]) {
 		case 0xA:
 			[[fallthrough]];
 		case 0xB:
 			SYSLOG("rad", "Spoofing PSP version 10/11.x.x to 11");
-			param_1[3] = 0xB;
-			param_1[4] = 0x0;
-			param_1[5] = 0x0;
+			param1[3] = 0xB;
+			param1[4] = 0x0;
+			param1[5] = 0x0;
 			break;
 		default:
 			break;
 	}
-	auto ret = FunctionCast(wrapPspSwInit, callbackRAD->orgPspSwInit)(param_1, param_2);
+	auto ret = FunctionCast(wrapPspSwInit, callbackRAD->orgPspSwInit)(param1, param2);
 	SYSLOG("rad", "_psp_sw_init returned 0x%llx", ret);
 	return ret;
 }
 
-uint32_t RAD::wrapGcGetHwVersion(int *param_1) {
+uint32_t RAD::wrapGcGetHwVersion(int *param1)
+{
 	SYSLOG("rad", "_gc_get_hw_version called!");
-	SYSLOG("rad", "_gc_get_hw_version: param_1 = %p", param_1);
-	auto ret = FunctionCast(wrapGcGetHwVersion, callbackRAD->orgGcGetHwVersion)(param_1);
+	SYSLOG("rad", "_gc_get_hw_version: param1 = %p", param1);
+	auto ret = FunctionCast(wrapGcGetHwVersion, callbackRAD->orgGcGetHwVersion)(param1);
 	SYSLOG("rad", "_gc_get_hw_version returned 0x%x", ret);
 	if ((ret & 0xFF000) == 0x90000) {
 		SYSLOG("rad", "Spoofing GC version 9.x.x to 9.2.1");
@@ -273,10 +279,10 @@ uint32_t RAD::wrapGcGetHwVersion(int *param_1) {
 	return ret;
  }
 
-uint32_t RAD::wrapInternalCosReadFw(uint64_t param_1, uint64_t *param_2) {
+uint32_t RAD::wrapInternalCosReadFw(uint64_t param1, uint64_t *param2) {
 	SYSLOG("rad", "_internal_cos_read_fw called!");
-	SYSLOG("rad", "_internal_cos_read_fw: param_1 = 0x%llx param_2 = %p", param_1, param_2);
-	auto ret = FunctionCast(wrapInternalCosReadFw, callbackRAD->orgInternalCosReadFw)(param_1, param_2);
+	SYSLOG("rad", "_internal_cos_read_fw: param1 = 0x%llx param2 = %p", param1, param2);
+	auto ret = FunctionCast(wrapInternalCosReadFw, callbackRAD->orgInternalCosReadFw)(param1, param2);
 	SYSLOG("rad", "_internal_cos_read_fw returned 0x%x", ret);
 	return ret;
 }
@@ -312,7 +318,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 		if (!this->deviceTypeTable) {
 			panic("RAD: Failed to resolve device type table");
 		}
-		patcher.clearError();
 		
 		KernelPatcher::RouteRequest requests[] = {
 //			{"_ttlIsPicassoAM4Device", wrapTtlIsPicassoDevice, orgTtlIsPicassoDevice},
@@ -451,10 +456,10 @@ WRAP_SIMPLE(uint64_t, AllocateAMDHWAlignManager, "0x%x")
 WRAP_SIMPLE(bool, MapDoorbellMemory, "%d")
 WRAP_SIMPLE(uint64_t, GetState, "%d")
 
-uint32_t RAD::wrapInitializeTtl(void *that, void *param_1)
+uint32_t RAD::wrapInitializeTtl(void *that, void *param1)
 {
 	SYSLOG("rad", "initializeTtl called!");
-	auto ret = FunctionCast(wrapInitializeTtl, callbackRAD->orgInitializeTtl)(that, param_1);
+	auto ret = FunctionCast(wrapInitializeTtl, callbackRAD->orgInitializeTtl)(that, param1);
 	SYSLOG("rad", "initializeTtl returned 0x%x", ret);
 	return ret;
 }

@@ -128,25 +128,25 @@ private:
 	static bool wrapMapDoorbellMemory(void* that);
 	static IOService *wrapInitLinkToPeer(void *that, const char *matchCategoryName);
 	static uint64_t wrapGetState(void *that);
-	static uint32_t wrapInitializeTtl(void *that, void *param_1);
+	static uint32_t wrapInitializeTtl(void *that, void *param1);
 	static uint64_t wrapConfRegBase(void *that);
 	static uint8_t wrapReadChipRev(void *that);
 	
 	/* X5000HWLibs */
 	static bool wrapTtlIsPicassoDevice(void *dev);
 	static void wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider);
-	static uint32_t wrapTtlInitialize(void *that, uint64_t *param_1);
+	static uint32_t wrapTtlInitialize(void *that, uint64_t *param1);
 	static uint64_t wrapTtlDevSetSmuFwVersion(void *tlsInstance, uint32_t *b);
 	static uint64_t wrapIpiSetFwEntry(void *tlsInstance, void *b);
 	static uint64_t wrapIpiSmuSwInit(void *tlsInstance);
 	static uint64_t wrapSmuSwInit(void *input, uint64_t *output);
-	static uint32_t wrapSmuCosAllocMemory(void *param_1, uint64_t param_2, uint32_t param_3, uint32_t *param_4);
-	static uint32_t wrapSmuInitFunctionPointerList(uint64_t param_1, uint64_t param_2, uint32_t param_3);
-	static uint32_t wrapSmuInternalSwInit(uint64_t param_1, uint64_t param_2, void *param_3);
-	static uint64_t wrapSmuGetHwVersion(uint64_t param_1, uint32_t param_2);
-	static uint64_t wrapPspSwInit(int *param_1, uint32_t *param_2);
-	static uint32_t wrapGcGetHwVersion(int *param_1);
-	static uint32_t wrapInternalCosReadFw(uint64_t param_1, uint64_t *param_2);
+	static uint32_t wrapSmuCosAllocMemory(void *param1, uint64_t param2, uint32_t param3, uint32_t *param4);
+	static uint32_t wrapSmuInitFunctionPointerList(uint64_t param1, uint64_t param2, uint32_t param3);
+	static uint32_t wrapSmuInternalSwInit(uint64_t param1, uint64_t param2, void *param3);
+	static uint64_t wrapSmuGetHwVersion(uint64_t param1, uint32_t param2);
+	static uint64_t wrapPspSwInit(int *param1, uint32_t *param2);
+	static uint32_t wrapGcGetHwVersion(int *param1);
+	static uint32_t wrapInternalCosReadFw(uint64_t param1, uint64_t *param2);
 	/* ----------- */
 	
 	void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);
