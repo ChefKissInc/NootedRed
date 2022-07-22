@@ -156,7 +156,7 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider) 
 	SYSLOG("rad", "patching device type table");
 	MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock);
 	*(uint32_t *)callbackRAD->deviceTypeTable = provider->extendedConfigRead16(kIOPCIConfigDeviceID);
-	*((uint32_t *)callbackRAD->deviceTypeTable + 1) = 6;
+	*((uint32_t *)callbackRAD->deviceTypeTable + 1) = 3;
 	MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 	
 	SYSLOG("rad", "calling original AmdTtlServices constructor");
@@ -290,14 +290,19 @@ uint32_t RAD::wrapInternalCosReadFw(uint64_t param1, uint64_t *param2) {
 
 void RAD::wrapPopulateFirmwareDirectory(void *that)
 {
+	SYSLOG("rad", "----------------------------------------------------------------------");
 	SYSLOG("rad", "AMDRadeonX6000_AMDRadeonHWLibsX6000::populateFirmwareDirectory called!");
 	FunctionCast(wrapPopulateFirmwareDirectory, callbackRAD->orgPopulateFirmwareDirectory)(that);
 	SYSLOG("rad", "injecting ativvaxy_rv.dat!");
 	auto *fwDesc = getFWDescByName("ativvaxy_rv.dat");
 	
 	auto *fw = callbackRAD->createFirmware(fwDesc->getBytesNoCopy(), fwDesc->getLength(), 0x200, "ativvaxy_rv.dat");
-	void *fwDir = (void *)*(uint64_t *)((uint8_t *)that + 0xB8);
-	callbackRAD->putFirmware(fwDir, 6, fw);
+	auto *fwDir = *(void **)((uint8_t *)that + 0xB8);
+	SYSLOG("rad", "fwDir = %p", fwDir);
+	if (!callbackRAD->putFirmware(fwDir, 3, fw)) {
+		panic("Failed to inject ativvaxy_rv.dat firmware");
+	}
+	SYSLOG("rad", "----------------------------------------------------------------------");
 }
 
 
