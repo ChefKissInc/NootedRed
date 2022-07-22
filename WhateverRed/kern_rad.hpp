@@ -31,7 +31,6 @@ private:
 	static constexpr size_t MaxGetFrameBufferProcs = 3;
 	
 	using t_getAtomObjectTableForType = void *(*)(void *that, AtomObjectTableType type, uint8_t *sz);
-	using t_populateAccelConfig = void (*)(IOService *accelService, const char **accelConfig);
 	using t_getHWInfo = IOReturn (*)(IOService *accelVideoCtx, void *hwInfo);
 	
 	static RAD *callbackRAD;
