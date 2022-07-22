@@ -22,31 +22,61 @@
 	<string>$(MODULE_VERSION)</string>
 	<key>IOKitPersonalities</key>
 	<dict>
-		<key>com.VisualDevelopment.WhateverRed</key>
+		<key>AMD Radeon X6000 HW Services</key>
 		<dict>
 			<key>CFBundleIdentifier</key>
-			<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+			<string>com.apple.kext.AMDRadeonX6000HWServices</string>
 			<key>IOClass</key>
-			<string>$(PRODUCT_NAME:rfc1034identifier)</string>
+			<string>AMDRadeonX6000_AMDRadeonHWServicesNavi</string>
 			<key>IOMatchCategory</key>
-			<string>$(PRODUCT_NAME:rfc1034identifier)</string>
+			<string>AMDRadeonX6000HWServices</string>
+			<key>IOPCIMatch</key>
+			<string>0x15DD1002 0x15D81002 0x164C1002 0x16361002</string>
+			<key>IOPCITunnelCompatible</key>
+			<true/>
+			<key>IOProbeScore</key>
+			<integer>65051</integer>
+			<key>IOPropertyMatch</key>
+			<dict>
+				<key>LoadHWServices</key>
+				<true/>
+			</dict>
 			<key>IOProviderClass</key>
-			<string>IOResources</string>
-			<key>IOResourceMatch</key>
-			<string>IOKit</string>
+			<string>IOPCIDevice</string>
 		</dict>
-		<key>iGPU Accelerator</key>
+		<key>AMDGPUWrangler</key>
 		<dict>
 			<key>CFBundleIdentifier</key>
-			<string>com.apple.kext.AMDRadeonX5000</string>
+			<string>com.apple.kext.AMDRadeonX6000Framebuffer</string>
+			<key>IOClass</key>
+			<string>AMDRadeonX6000_AmdGpuWrangler</string>
+			<key>IOMatchCategory</key>
+			<string>IOFramebuffer</string>
+			<key>IOPCIMatch</key>
+			<string>0x15DD1002 0x15D81002 0x164C1002 0x16361002</string>
+			<key>IOPCITunnelCompatible</key>
+			<true/>
+			<key>IOProbeScore</key>
+			<integer>60000</integer>
+			<key>IOProviderClass</key>
+			<string>IOPCIDevice</string>
+		</dict>
+		<key>AMDNavi10GraphicsAccelerator</key>
+		<dict>
+			<key>CFBundleIdentifier</key>
+			<string>com.apple.kext.AMDRadeonX6000</string>
+			<key>GPUDCCDisplayable</key>
+			<false/>
+			<key>GPUDebugNullClientMask</key>
+			<integer>0</integer>
 			<key>GpuDebugPolicy</key>
 			<integer>-1</integer>
 			<key>IOClass</key>
-			<string>AMDRadeonX5000_AMDVega10GraphicsAccelerator</string>
+			<string>AMDRadeonX6000_AMDNavi10GraphicsAccelerator</string>
 			<key>IODVDBundleName</key>
 			<string>AMDRadeonVADriver2</string>
 			<key>IOGVACodec</key>
-			<string>AMDVCE</string>
+			<string>AMDVCN2</string>
 			<key>IOGVAH264EncodeCapabilities</key>
 			<dict>
 				<key>VTQualityRating</key>
@@ -123,38 +153,110 @@
 			<string>0.0.0.0.0</string>
 			<key>IOVARendererID</key>
 			<integer>16908288</integer>
-			<key>cail_properties</key>
+			<key>SWIP_properties</key>
 			<dict>
-				<key>CAIL_DisableCailLoadUcode</key>
+				<key>EnableSwVCNFWLoading</key>
+				<integer>0</integer>
+				<key>EnableVCNFWLog</key>
 				<integer>1</integer>
-				<key>CAIL_DisableJpegEngine</key>
-				<integer>0</integer>
-				<key>CAIL_EnableLBPWSupport</key>
-				<integer>0</integer>
-				<key>CAIL_EnablePeerDataAperture</key>
-				<integer>0</integer>
-				<key>CAIL_EnableSecureMmFwLoading</key>
-				<integer>0</integer>
-				<key>CAIL_EnableXdmaSupport</key>
-				<integer>0</integer>
 			</dict>
+			<key>cail_properties</key>
+			<dict/>
 		</dict>
-		<key>iGPU Controller</key>
+		<key>AMDRadeonNavi10Controller</key>
 		<dict>
+			<key>ATY,Adder</key>
+			<dict>
+				<key>aty_config</key>
+				<dict>
+					<key>CFG_NO_PP</key>
+					<false/>
+					<key>CFG_PTPL2_CNT</key>
+					<integer>16</integer>
+					<key>CFG_PTPL2_MAX</key>
+					<integer>250</integer>
+					<key>CFG_PTPL2_MIN</key>
+					<integer>100</integer>
+				</dict>
+				<key>aty_properties</key>
+				<dict>
+					<key>DalEarlyTps1Pattern</key>
+					<integer>1</integer>
+					<key>PP_DiDtSQStallPatternOverride</key>
+					<integer>16383</integer>
+					<key>PP_DisableDIDT</key>
+					<integer>0</integer>
+					<key>PP_PhmUseDummyBackEnd</key>
+					<integer>0</integer>
+					<key>PP_WorkLoadPolicyMask</key>
+					<integer>32</integer>
+					<key>SMU_ActivityMonitorTable</key>
+					<data>
+					AAQABAIA6AMAAAEAAAAAAAAAAADQAQEAMP7+
+					/wAAAAAABAAAAgDoAwAAAQAAAAAAAAAAANAB
+					AQA45v//AAAAAAAAAAAAAAAAAAAAAAAAAAAA
+					AAAAAAAAAAAAAAAAAAAAEAkFAAFkPAAAAAAA
+					AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+					AA==
+					</data>
+					<key>SMU_DisallowedFeatures</key>
+					<integer>64</integer>
+				</dict>
+			</dict>
+			<key>ATY,Ikaheka</key>
+			<dict>
+				<key>aty_config</key>
+				<dict>
+					<key>CFG_LINK_BUILT_IN_MAP</key>
+					<integer>3</integer>
+					<key>CFG_NO_PP</key>
+					<false/>
+					<key>CFG_PTPL2_CNT</key>
+					<integer>16</integer>
+					<key>CFG_PTPL2_MAX</key>
+					<integer>130</integer>
+					<key>CFG_PTPL2_MIN</key>
+					<integer>50</integer>
+				</dict>
+				<key>aty_properties</key>
+				<dict>
+					<key>DalExtraDelayBacklightOff</key>
+					<integer>25</integer>
+					<key>PP_DiDtSQStallPatternOverride</key>
+					<integer>16383</integer>
+					<key>PP_DisableDIDT</key>
+					<integer>0</integer>
+					<key>PP_GfxOffControl</key>
+					<integer>0</integer>
+					<key>PP_PhmUseDummyBackEnd</key>
+					<integer>0</integer>
+					<key>PP_WorkLoadPolicyMask</key>
+					<integer>32</integer>
+					<key>SMU_ActivityMonitorTable</key>
+					<data>
+					AAAAAgIF6AMAAAAAAAAAAAAAAAAAAAEAAAD/
+					/wAAAAAAAAACAgroAwAAAQAAAAAAAAAAAAAA
+					AAAAAAAAAAD2/wAAAAAABQAAAAAAAAAAAAAA
+					AAAAAAAAAAAAAAAAAAAAAAAAABkyPAAFAAAA
+					AQAAAAAAAAAAAAAAfnAAAAAAAAAgAQYAMGkA
+					AA==
+					</data>
+					<key>SMU_DisallowedFeatures</key>
+					<integer>3012184920132</integer>
+				</dict>
+			</dict>
 			<key>CFBundleIdentifier</key>
-			<string>com.apple.kext.AMD10000Controller</string>
+			<string>com.apple.kext.AMDRadeonX6000Framebuffer</string>
 			<key>IOClass</key>
-			<string>AMD10000Controller</string>
+			<string>AMDRadeonX6000_AmdRadeonControllerNavi10</string>
 			<key>IOMatchCategory</key>
 			<string>ATIFramebuffer</string>
-			<key>IOName</key>
-			<string>AMD10000Controller</string>
 			<key>IOPCIMatch</key>
 			<string>0x15DD1002 0x15D81002 0x164C1002 0x16361002</string>
 			<key>IOPCITunnelCompatible</key>
 			<true/>
 			<key>IOProbeScore</key>
-			<integer>65050</integer>
+			<integer>6000</integer>
 			<key>IOPropertyMatch</key>
 			<dict>
 				<key>LoadController</key>
@@ -164,39 +266,7 @@
 			<string>IOPCIDevice</string>
 			<key>aty_config</key>
 			<dict>
-				<key>CFG_APER_MODE</key>
-				<integer>1</integer>
-				<key>CFG_CAA</key>
-				<integer>0</integer>
-				<key>CFG_FB_LIMIT</key>
-				<integer>3</integer>
-				<key>CFG_FORCEMAXDPM</key>
-				<false/>
-				<key>CFG_FORCE_MAX_DPS</key>
-				<false/>
-				<key>CFG_GEN_FLAGS</key>
-				<integer>0</integer>
-				<key>CFG_INT_SSPC</key>
-				<integer>25</integer>
-				<key>CFG_NODM</key>
-				<true/>
-				<key>CFG_NON_ZERO_MC_LOC</key>
-				<true/>
-				<key>CFG_NO_HDCP</key>
-				<false/>
-				<key>CFG_NO_MSI</key>
-				<false/>
-				<key>CFG_NO_MST</key>
-				<false/>
-				<key>CFG_NO_PP</key>
-				<false/>
-				<key>CFG_NO_SLS</key>
-				<false/>
-				<key>CFG_NVV</key>
-				<integer>2</integer>
-				<key>CFG_PAA</key>
-				<integer>0</integer>
-				<key>CFG_PULSE_INT</key>
+				<key>CFG_CORRECT_BLPT</key>
 				<true/>
 				<key>CFG_TRANS_WSRV</key>
 				<true/>
@@ -204,51 +274,21 @@
 				<false/>
 				<key>CFG_UFL_STP</key>
 				<false/>
-				<key>CFG_USE_AGDC</key>
-				<true/>
-				<key>CFG_USE_CP2</key>
-				<true/>
-				<key>CFG_USE_CPSTATUS</key>
-				<true/>
 				<key>CFG_USE_DPT</key>
 				<true/>
-				<key>CFG_USE_FBC</key>
-				<false/>
-				<key>CFG_USE_FBWRKLP</key>
-				<true/>
-				<key>CFG_USE_FEDS</key>
-				<true/>
-				<key>CFG_USE_HDMI20</key>
-				<true/>
-				<key>CFG_USE_LPT</key>
-				<false/>
-				<key>CFG_USE_SCANOUT</key>
-				<true/>
-				<key>CFG_USE_SRRB</key>
-				<false/>
-				<key>CFG_USE_STUTTER</key>
-				<true/>
-				<key>CFG_USE_SWIP</key>
-				<true/>
-				<key>CFG_USE_TCON</key>
-				<true/>
-				<key>DALReadDelayStutterOff</key>
-				<integer>4</integer>
-				<key>DALUseUrgencyWaterMarkOffset</key>
-				<integer>0</integer>
 			</dict>
 			<key>aty_properties</key>
 			<dict>
-				<key>Force_Load_FalconSMUFW</key>
-				<true/>
-				<key>PP_ACDCGpioDisabled</key>
-				<integer>0</integer>
+				<key>DalDisableDisplayID2</key>
+				<integer>1</integer>
+				<key>DalDisableLTTPR</key>
+				<integer>1</integer>
+				<key>DalSkipDetectionLT</key>
+				<integer>1</integer>
 				<key>PP_DisableClockStretcher</key>
 				<integer>1</integer>
-				<key>PP_DisablePCCLimitControl</key>
-				<integer>1</integer>
 				<key>PP_DisableULV</key>
-				<integer>1</integer>
+				<integer>0</integer>
 				<key>PP_EnableUploadFirmware</key>
 				<integer>0</integer>
 				<key>PP_Falcon_QuickTransition_Enable</key>
@@ -259,48 +299,22 @@
 				<integer>0</integer>
 				<key>PP_ToolsLogSpaceSize</key>
 				<integer>524288</integer>
-				<key>SMU_FalconEnableSideLoading</key>
-				<true/>
+				<key>PP_WorkLoadPolicyMask</key>
+				<integer>16</integer>
 			</dict>
 		</dict>
-		<key>iGPU Controller Wrangler</key>
+		<key>com.VisualDevelopment.WhateverRed</key>
 		<dict>
 			<key>CFBundleIdentifier</key>
-			<string>com.apple.kext.AMD10000Controller</string>
+			<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 			<key>IOClass</key>
-			<string>AMD10000ControllerWrangler</string>
+			<string>$(PRODUCT_NAME:rfc1034identifier)</string>
 			<key>IOMatchCategory</key>
-			<string>IOFramebuffer</string>
-			<key>IOPCIMatch</key>
-			<string>0x15DD1002 0x15D81002 0x164C1002 0x16361002</string>
-			<key>IOPCITunnelCompatible</key>
-			<true/>
-			<key>IOProbeScore</key>
-			<integer>65050</integer>
+			<string>$(PRODUCT_NAME:rfc1034identifier)</string>
 			<key>IOProviderClass</key>
-			<string>IOPCIDevice</string>
-		</dict>
-		<key>iGPU Hardware Services</key>
-		<dict>
-			<key>CFBundleIdentifier</key>
-			<string>com.apple.kext.AMDRadeonX5000HWServices</string>
-			<key>IOClass</key>
-			<string>AMDRadeonX5000_AMDRadeonHWServicesVega</string>
-			<key>IOMatchCategory</key>
-			<string>AMDRadeonX5000HWServices</string>
-			<key>IOPCIMatch</key>
-			<string>0x15DD1002 0x15D81002 0x164C1002 0x16361002</string>
-			<key>IOPCITunnelCompatible</key>
-			<true/>
-			<key>IOProbeScore</key>
-			<integer>65051</integer>
-			<key>IOPropertyMatch</key>
-			<dict>
-				<key>LoadHWServices</key>
-				<true/>
-			</dict>
-			<key>IOProviderClass</key>
-			<string>IOPCIDevice</string>
+			<string>IOResources</string>
+			<key>IOResourceMatch</key>
+			<string>IOKit</string>
 		</dict>
 	</dict>
 	<key>NSHumanReadableCopyright</key>

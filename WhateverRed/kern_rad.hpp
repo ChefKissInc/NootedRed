@@ -44,8 +44,7 @@ private:
 	mach_vm_address_t orgCreateHWInterface{}, orgGetHWMemory{}, orgGetATIChipConfigBit{};
 	mach_vm_address_t orgAllocateAMDHWRegisters{}, orgSetupCAIL{}, orgInitializeHWWorkarounds{};
 	mach_vm_address_t orgAllocateAMDHWAlignManager{}, orgMapDoorbellMemory{};
-	mach_vm_address_t orgInitializeProjectDependentResources{};
-	mach_vm_address_t orgHwInitializeFbMemSize{}, orgHwInitializeFbBase{}, orgInitWithController{};
+	mach_vm_address_t orgInitWithController{};
 	mach_vm_address_t deviceTypeTable{}, orgAmdTtlServicesConstructor{};
 	mach_vm_address_t orgGetState{}, orgConfRegBase{}, orgReadChipRev{};
 	mach_vm_address_t orgInitializeTtl{};
@@ -115,7 +114,6 @@ private:
 	void process24BitOutput(KernelPatcher &patcher, KernelPatcher::KextInfo &info, mach_vm_address_t address, size_t size);
 	void processConnectorOverrides(KernelPatcher &patcher, mach_vm_address_t address, size_t size);
 	
-	static IOReturn noProjectByPartNumber(IOService* that, uint64_t partNumber);
 	static uint64_t wrapInitializeProjectDependentResources(void* that);
 	static uint64_t wrapHwInitializeFbMemSize(void* that);
 	static uint64_t wrapHwInitializeFbBase(void* that);
@@ -126,7 +124,6 @@ private:
 	static uint64_t wrapGetHWMemory(void* that);
 	static uint64_t wrapGetATIChipConfigBit(void* that);
 	static uint64_t wrapAllocateAMDHWRegisters(void* that);
-	static bool wrapSetupCAIL(void* that);
 	static uint64_t wrapInitializeHWWorkarounds(void* that);
 	static uint64_t wrapAllocateAMDHWAlignManager(void* that);
 	static bool wrapMapDoorbellMemory(void* that);
