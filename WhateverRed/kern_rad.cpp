@@ -266,6 +266,18 @@ uint64_t RAD::wrapPspSwInit(int *param_1, uint32_t *param_2) {
 	return ret;
 }
 
+uint32_t RAD::wrapGcGetHwVersion(int *param_1) {
+	SYSLOG("rad", "_gc_get_hw_version called!");
+	SYSLOG("rad", "_gc_get_hw_version: param_1 = %p", param_1);
+	auto ret = FunctionCast(wrapGcGetHwVersion, callbackRAD->orgGcGetHwVersion)(param_1);
+	SYSLOG("rad", "_gc_get_hw_version returned 0x%x", ret);
+	if ((ret & 0xFF000) == 0x90000) {
+		SYSLOG("rad", "Spoofing GC version 9.x.x to 9.2.1");
+		return 0x90201;
+	}
+	return ret;
+ }
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
 {
 	
@@ -312,6 +324,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"_smu_internal_sw_init", wrapSmuInternalSwInit, orgSmuInternalSwInit},
 			{"_smu_get_hw_version", wrapSmuGetHwVersion, orgSmuGetHwVersion},
 			{"_psp_sw_init", wrapPspSwInit, orgPspSwInit},
+			{"_gc_get_hw_version", wrapGcGetHwVersion, orgGcGetHwVersion},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMDRadeonX5000HWLibs symbols");
