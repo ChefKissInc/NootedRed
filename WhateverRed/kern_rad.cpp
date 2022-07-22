@@ -159,7 +159,7 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider) 
 	SYSLOG("rad", "patching device type table");
 	MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock);
 	*(uint32_t *)callbackRAD->deviceTypeTable = provider->extendedConfigRead16(kIOPCIConfigDeviceID);
-	*((uint32_t *)callbackRAD->deviceTypeTable + 1) = 3;
+	*((uint32_t *)callbackRAD->deviceTypeTable + 1) = 1;
 	MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 	
 	SYSLOG("rad", "calling original AmdTtlServices constructor");
@@ -241,23 +241,35 @@ uint64_t RAD::wrapSmuGetHwVersion(uint64_t param1, uint32_t param2)
 	SYSLOG("rad", "_smu_get_hw_version: param1 = 0x%llx param2 = 0x%x", param1, param2);
 	auto ret = FunctionCast(wrapSmuGetHwVersion, callbackRAD->orgSmuGetHwVersion)(param1, param2);
 	SYSLOG("rad", "_smu_get_hw_version returned 0x%llx", ret);
-	if (ret == 2) {
-		SYSLOG("rad", "Spoofing SMU version 10 to 11");
-		return 3;
+	switch (ret)
+	{
+		case 0x2:
+			SYSLOG("rad", "Spoofing SMU version 10 to 9");
+			return 0x1;
+		case 0xC:
+			SYSLOG("rad", "Spoofing SMU version 12 to 11");
+			return 0x3;
+		default:
+			return ret;
 	}
-	return ret;
 }
 
-uint64_t RAD::wrapPspSwInit(int *param1, uint32_t *param2)
+uint64_t RAD::wrapPspSwInit(uint32_t *param1, uint32_t *param2)
 {
 	SYSLOG("rad", "_psp_sw_init called!");
 	SYSLOG("rad", "_psp_sw_init: param1 = %p param2 = %p", param1, param2);
 	SYSLOG("rad", "_psp_sw_init: param1: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x", param1[0], param1[1], param1[2], param1[3], param1[4], param1[5]);
 	switch (param1[3]) {
 		case 0xA:
-			[[fallthrough]];
+			SYSLOG("rad", "Spoofing PSP version 10 to 9");
+			param1[3] = 0x9;
+			param1[4] = 0x0;
+			param1[5] = 0x0;
+			break;
 		case 0xB:
-			SYSLOG("rad", "Spoofing PSP version 10/11.x.x to 11");
+			[[fallthrough]];
+		case 0xC:
+			SYSLOG("rad", "Spoofing PSP version 11/12 to 11");
 			param1[3] = 0xB;
 			param1[4] = 0x0;
 			param1[5] = 0x0;
@@ -270,7 +282,7 @@ uint64_t RAD::wrapPspSwInit(int *param1, uint32_t *param2)
 	return ret;
 }
 
-uint32_t RAD::wrapGcGetHwVersion(int *param1)
+uint32_t RAD::wrapGcGetHwVersion(uint32_t *param1)
 {
 	SYSLOG("rad", "_gc_get_hw_version called!");
 	SYSLOG("rad", "_gc_get_hw_version: param1 = %p", param1);
@@ -281,7 +293,7 @@ uint32_t RAD::wrapGcGetHwVersion(int *param1)
 		return 0x90201;
 	}
 	return ret;
- }
+}
 
 uint32_t RAD::wrapInternalCosReadFw(uint64_t param1, uint64_t *param2) {
 	SYSLOG("rad", "_internal_cos_read_fw called!");
@@ -302,7 +314,7 @@ void RAD::wrapPopulateFirmwareDirectory(void *that)
 	auto *fw = callbackRAD->createFirmware(fwDesc->getBytesNoCopy(), fwDesc->getLength(), 0x200, "ativvaxy_rv.dat");
 	auto *fwDir = *(void **)((uint8_t *)that + 0xB8);
 	SYSLOG("rad", "fwDir = %p", fwDir);
-	if (!callbackRAD->putFirmware(fwDir, 3, fw)) {
+	if (!callbackRAD->putFirmware(fwDir, 1, fw)) {
 		panic("Failed to inject ativvaxy_rv.dat firmware");
 	}
 	SYSLOG("rad", "----------------------------------------------------------------------");
@@ -320,9 +332,16 @@ uint32_t RAD::wrapGetVideoMemoryBitWidth(void *that) {
 	return 64;
 }
 
+uint64_t RAD::wrapPspRapIsSupported(uint64_t param1) {
+	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+	SYSLOG("rad", "_psp_rap_is_supported called!");
+	SYSLOG("rad", "_psp_rap_is_supported: param1 = 0x%llx", param1);
+	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+	return 0;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
 {
-	
 	if (kextRadeonFramebuffer.loadIndex == index)
 	{
 		if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -376,6 +395,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"_gc_get_hw_version", wrapGcGetHwVersion, orgGcGetHwVersion},
 			{"_internal_cos_read_fw", wrapInternalCosReadFw, orgInternalCosReadFw},
 			{"__ZN35AMDRadeonX6000_AMDRadeonHWLibsX600025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory, orgPopulateFirmwareDirectory},
+			{"_psp_rap_is_supported", wrapPspRapIsSupported},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMDRadeonX6000HWLibs symbols");
@@ -464,7 +484,13 @@ void RAD::process24BitOutput(KernelPatcher &patcher, KernelPatcher::KextInfo &in
 void RAD::processConnectorOverrides(KernelPatcher &patcher, mach_vm_address_t address, size_t size)
 {
 	KernelPatcher::RouteRequest requests[] = {
+		{"__ZN14AtiBiosParser116getConnectorInfoEP13ConnectorInfoRh", wrapGetConnectorsInfoV1, orgGetConnectorsInfoV1},
 		{"__ZN14AtiBiosParser216getConnectorInfoEP13ConnectorInfoRh", wrapGetConnectorsInfoV2, orgGetConnectorsInfoV2},
+		{
+			"__ZN14AtiBiosParser126translateAtomConnectorInfoERN30AtiObjectInfoTableInterface_V117AtomConnectorInfoER13ConnectorInfo",
+			wrapTranslateAtomConnectorInfoV1,
+			orgTranslateAtomConnectorInfoV1,
+		},
 		{
 			"__ZN14AtiBiosParser226translateAtomConnectorInfoERN30AtiObjectInfoTableInterface_V217AtomConnectorInfoER13ConnectorInfo",
 			wrapTranslateAtomConnectorInfoV2,
@@ -678,14 +704,26 @@ void RAD::mergeProperties(OSDictionary *props, const char *prefix, IOService *pr
 
 void RAD::applyPropertyFixes(IOService *service, uint32_t connectorNum)
 {
-	if (service && getKernelVersion() >= KernelVersion::HighSierra)
+	if (!service->getProperty("CFG,CFG_FB_LIMIT"))
 	{
-		if (!service->getProperty("CFG,CFG_FB_LIMIT"))
-		{
-			DBGLOG("rad", "setting fb limit to %u", connectorNum);
-			service->setProperty("CFG_FB_LIMIT", connectorNum, 32);
-		}
+		DBGLOG("rad", "setting fb limit to %u", connectorNum);
+		service->setProperty("CFG_FB_LIMIT", connectorNum, 32);
 	}
+}
+
+uint32_t RAD::wrapGetConnectorsInfoV1(void *that, RADConnectors::Connector *connectors, uint8_t *sz)
+{
+	uint32_t code = FunctionCast(wrapGetConnectorsInfoV1, callbackRAD->orgGetConnectorsInfoV1)(that, connectors, sz);
+	auto props = callbackRAD->currentPropProvider.get();
+	
+	if (code == 0 && sz && props && *props)
+	{
+		callbackRAD->updateConnectorsInfo(nullptr, nullptr, *props, connectors, sz);
+	}
+	else
+		DBGLOG("rad", "getConnectorsInfoV1 failed %X or undefined %d", code, props == nullptr);
+	
+	return code;
 }
 
 void RAD::updateConnectorsInfo(void *atomutils, t_getAtomObjectTableForType gettable, IOService *ctrl, RADConnectors::Connector *connectors, uint8_t *sz)
@@ -768,6 +806,52 @@ void RAD::updateConnectorsInfo(void *atomutils, t_getAtomObjectTableForType gett
 	DBGLOG("rad", "getConnectorsInfo resulting %u connectors follow", *sz);
 	RADConnectors::print(connectors, *sz);
 }
+
+uint32_t RAD::wrapTranslateAtomConnectorInfoV1(void *that, RADConnectors::AtomConnectorInfo *info, RADConnectors::Connector *connector)
+{
+	uint32_t code = FunctionCast(wrapTranslateAtomConnectorInfoV1, callbackRAD->orgTranslateAtomConnectorInfoV1)(that, info, connector);
+	
+	if (code == 0 && info && connector)
+	{
+		RADConnectors::print(connector, 1);
+		
+		uint8_t sense = getSenseID(info->i2cRecord);
+		if (sense)
+		{
+			DBGLOG("rad", "translateAtomConnectorInfoV1 got sense id %02X", sense);
+			
+				// We need to extract usGraphicObjIds from info->hpdRecord, which is of type ATOM_SRC_DST_TABLE_FOR_ONE_OBJECT:
+				// struct ATOM_SRC_DST_TABLE_FOR_ONE_OBJECT {
+				//   uint8_t ucNumberOfSrc;
+				//   uint16_t usSrcObjectID[ucNumberOfSrc];
+				//   uint8_t ucNumberOfDst;
+				//   uint16_t usDstObjectID[ucNumberOfDst];
+				// };
+				// The value we need is in usSrcObjectID. The structure is byte-packed.
+			
+			uint8_t ucNumberOfSrc = info->hpdRecord[0];
+			for (uint8_t i = 0; i < ucNumberOfSrc; i++)
+			{
+				auto usSrcObjectID = *reinterpret_cast<uint16_t *>(info->hpdRecord + sizeof(uint8_t) + i * sizeof(uint16_t));
+				DBGLOG("rad", "translateAtomConnectorInfoV1 checking %04X object id", usSrcObjectID);
+				if (((usSrcObjectID & OBJECT_TYPE_MASK) >> OBJECT_TYPE_SHIFT) == GRAPH_OBJECT_TYPE_ENCODER)
+				{
+					uint8_t txmit = 0, enc = 0;
+					if (getTxEnc(usSrcObjectID, txmit, enc))
+						callbackRAD->autocorrectConnector(getConnectorID(info->usConnObjectId), getSenseID(info->i2cRecord), txmit, enc, connector, 1);
+					break;
+				}
+			}
+		}
+		else
+		{
+			DBGLOG("rad", "translateAtomConnectorInfoV1 failed to detect sense for translated connector");
+		}
+	}
+	
+	return code;
+}
+
 
 void RAD::autocorrectConnectors(uint8_t *baseAddr, AtomDisplayObjectPath *displayPaths, uint8_t displayPathNum, AtomConnectorObject *connectorObjects,
 								[[maybe_unused]] uint8_t connectorObjectNum, RADConnectors::Connector *connectors, uint8_t sz)

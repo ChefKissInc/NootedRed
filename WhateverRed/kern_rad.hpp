@@ -39,6 +39,7 @@ private:
 	ThreadLocal<IOService *, 8> currentPropProvider;
 	
 	mach_vm_address_t orgSetProperty{}, orgGetProperty{}, orgGetConnectorsInfoV2{};
+	mach_vm_address_t orgGetConnectorsInfoV1{}, orgTranslateAtomConnectorInfoV1{};
 	mach_vm_address_t orgTranslateAtomConnectorInfoV2{}, orgATIControllerStart{};
 	mach_vm_address_t orgNotifyLinkChange{}, orgPopulateAccelConfig[1]{}, orgGetHWInfo[1]{};
 	mach_vm_address_t orgConfigureDevice{}, orgInitLinkToPeer{}, orgCreateHWHandler{};
@@ -148,10 +149,11 @@ private:
 	static uint32_t wrapSmuInitFunctionPointerList(uint64_t param1, uint64_t param2, uint32_t param3);
 	static uint32_t wrapSmuInternalSwInit(uint64_t param1, uint64_t param2, void *param3);
 	static uint64_t wrapSmuGetHwVersion(uint64_t param1, uint32_t param2);
-	static uint64_t wrapPspSwInit(int *param1, uint32_t *param2);
-	static uint32_t wrapGcGetHwVersion(int *param1);
+	static uint64_t wrapPspSwInit(uint32_t *param1, uint32_t *param2);
+	static uint32_t wrapGcGetHwVersion(uint32_t *param1);
 	static uint32_t wrapInternalCosReadFw(uint64_t param1, uint64_t *param2);
 	static void wrapPopulateFirmwareDirectory(void *that);
+	static uint64_t wrapPspRapIsSupported(uint64_t param1);
 	/* ----------- */
 	
 	/* X6000Framebuffer */
@@ -165,9 +167,9 @@ private:
 	
 	static bool wrapSetProperty(IORegistryEntry *that, const char *aKey, void *bytes, unsigned length);
 	static OSObject *wrapGetProperty(IORegistryEntry *that, const char *aKey);
-	
+	static uint32_t wrapGetConnectorsInfoV1(void *that, RADConnectors::Connector *connectors, uint8_t *sz);
 	static uint32_t wrapGetConnectorsInfoV2(void *that, RADConnectors::Connector *connectors, uint8_t *sz);
-	
+	static uint32_t wrapTranslateAtomConnectorInfoV1(void *that, RADConnectors::AtomConnectorInfo *info, RADConnectors::Connector *connector);
 	static uint32_t wrapTranslateAtomConnectorInfoV2(void *that, RADConnectors::AtomConnectorInfo *info, RADConnectors::Connector *connector);
 	static bool wrapATIControllerStart(IOService *ctrl, IOService *provider);
 	static bool wrapNotifyLinkChange(void *atiDeviceControl, kAGDCRegisterLinkControlEvent_t event, void *eventData, uint32_t eventFlags);
