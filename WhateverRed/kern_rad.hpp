@@ -59,6 +59,7 @@ private:
 	t_createFirmware createFirmware = nullptr;
 	t_putFirmware putFirmware = nullptr;
 	mach_vm_address_t orgGetVideoMemoryType{}, orgGetVideoMemoryBitWidth{};
+	mach_vm_address_t orgGetHardwareInfo{};
 	/* ----------- */
 	
 	template <size_t Index>
@@ -153,6 +154,7 @@ private:
 	static uint32_t wrapInternalCosReadFw(uint64_t param1, uint64_t *param2);
 	static void wrapPopulateFirmwareDirectory(void *that);
 	static uint64_t wrapPspRapIsSupported(uint64_t param1);
+	static uint64_t wrapGetHardwareInfo(void *that, void *param1);
 	/* ----------- */
 	
 	/* X6000Framebuffer */

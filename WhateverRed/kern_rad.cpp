@@ -384,6 +384,14 @@ IOReturn RAD::wrapGetPspFirmwareInfo(void *that, void *fwInfo)
 	return kIOReturnSuccess;
 }
 
+uint64_t RAD::wrapGetHardwareInfo(void *that, void *param1)
+{
+	SYSLOG("rad", "getHardwareInfo called!");
+	SYSLOG("rad", "getHardwareInfo: this = %p param1 = %o", that, param1);
+	auto ret = FunctionCast(wrapGetHardwareInfo, callbackRAD->orgGetHardwareInfo)(that, param1);
+	return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
 {
 	if (kextRadeonFramebuffer.loadIndex == index)
@@ -620,6 +628,7 @@ void RAD::processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_ad
 		{"__ZN28AMDRadeonX6000_AMDRTHardware13initializeTtlEP16_GART_PARAMETERS", wrapInitializeTtl, orgInitializeTtl},
 		{"__ZN28AMDRadeonX6000_AMDRTHardware22configureRegisterBasesEv", wrapConfRegBase, orgConfRegBase},
 		{"__ZN32AMDRadeonX6000_AMDNavi10Hardware23readChipRevFromRegisterEv", wrapReadChipRev, orgReadChipRev},
+		{"__ZN29AMDRadeonX6000_AMDAccelDevice15getHardwareInfoEP24_sAMD_GET_HW_INFO_VALUES", wrapGetHardwareInfo, orgGetHardwareInfo}
 	};
 	patcher.routeMultiple(hardware.loadIndex, requests, arrsize(requests), address, size);
 	
