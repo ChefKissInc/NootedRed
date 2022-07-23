@@ -130,8 +130,6 @@ void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info)
 	patcher.routeMultiple(KernelPatcher::KernelID, requests);
 }
 
-WRAP_SIMPLE(bool, TtlIsPicassoDevice, "%d")
-
 uint64_t RAD::wrapInitWithController(void *that, void *controller)
 {
 	SYSLOG("rad", "initWithController called!");
@@ -430,7 +428,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 		}
 		
 		KernelPatcher::RouteRequest requests[] = {
-			{"_ttlIsPicassoAM4Device", wrapTtlIsPicassoDevice, orgTtlIsPicassoDevice},
 			{"__ZN14AmdTtlServicesC2EP11IOPCIDevice", wrapAmdTtlServicesConstructor, orgAmdTtlServicesConstructor},
 			{"__ZN14AmdTtlServices10initializeEP30_TtlLibraryInitializationInput", wrapTtlInitialize, orgTtlInitialize},
 			{"_ttlDevSetSmuFwVersion", wrapTtlDevSetSmuFwVersion, orgTtlDevSetSmuFwVersion},

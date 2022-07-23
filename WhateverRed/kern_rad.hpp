@@ -51,8 +51,7 @@ private:
 	mach_vm_address_t orgGetState{}, orgConfRegBase{}, orgReadChipRev{};
 	mach_vm_address_t orgInitializeTtl{};
 	/* X5000HWLibs */
-	mach_vm_address_t orgTtlInitialize{}, orgTtlIsPicassoDevice{};
-	mach_vm_address_t orgTtlDevSetSmuFwVersion{}, orgIpiSetFwEntry{};
+	mach_vm_address_t orgTtlInitialize{}, orgTtlDevSetSmuFwVersion{}, orgIpiSetFwEntry{};
 	mach_vm_address_t orgIpiSmuSwInit{}, orgSmuSwInit{}, orgSmuCosAllocMemory{};
 	mach_vm_address_t orgSmuInitFunctionPointerList{}, orgSmuInternalSwInit{};
 	mach_vm_address_t orgSmuGetHwVersion{}, orgPspSwInit{}, orgGcGetHwVersion{};
@@ -139,7 +138,6 @@ private:
 	static uint8_t wrapReadChipRev(void *that);
 	
 	/* X6000HWLibs */
-	static bool wrapTtlIsPicassoDevice(void *dev);
 	static void wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider);
 	static uint32_t wrapTtlInitialize(void *that, uint64_t *param1);
 	static uint64_t wrapTtlDevSetSmuFwVersion(void *tlsInstance, uint32_t *b);
