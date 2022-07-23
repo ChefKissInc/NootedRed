@@ -408,15 +408,15 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 	else if (kextRadeonX6000HWLibs.loadIndex == index)
 	{
 		DBGLOG("rad", "resolving device type table");
-		this->deviceTypeTable = patcher.solveSymbol(index, "__ZL15deviceTypeTable");
-		if (!this->deviceTypeTable) {
+		deviceTypeTable = patcher.solveSymbol(index, "__ZL15deviceTypeTable");
+		if (!deviceTypeTable) {
 			panic("RAD: Failed to resolve device type table");
 		}
-		this->createFirmware = FunctionCast(this->createFirmware, patcher.solveSymbol(index, "__ZN11AMDFirmware14createFirmwareEPhjjPKc"));
+		createFirmware = reinterpret_cast<t_createFirmware>(patcher.solveSymbol(index, "__ZN11AMDFirmware14createFirmwareEPhjjPKc"));
 		if (!this->createFirmware) {
 			panic("RAD: Failed to resolve AMDFirmware::createFirmware");
 		}
-		this->putFirmware = FunctionCast(this->putFirmware, patcher.solveSymbol(index, "__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware"));
+		this->putFirmware = reinterpret_cast<t_putFirmware>(patcher.solveSymbol(index, "__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware"));
 		if (!this->putFirmware) {
 			panic("RAD: Failed to resolve AMDFirmwareDirectory::putFirmware");
 		}
