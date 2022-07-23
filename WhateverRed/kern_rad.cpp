@@ -132,14 +132,17 @@ void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info)
 
 WRAP_SIMPLE(bool, TtlIsPicassoDevice, "%d")
 
-uint64_t RAD::wrapInitWithController(void *that, void *controller) {
+uint64_t RAD::wrapInitWithController(void *that, void *controller)
+{
 	SYSLOG("rad", "initWithController called!");
 	auto ret = FunctionCast(wrapInitWithController, callbackRAD->orgInitWithController)(that, controller);
 	SYSLOG("rad", "initWithController returned %llx", ret);
 	return ret;
 }
 
-IntegratedVRAMInfoInterface *RAD::createVramInfo(void *helper, uint32_t offset) {
+IntegratedVRAMInfoInterface *RAD::createVramInfo(void *helper, uint32_t offset)
+{
+	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
 	SYSLOG("rad", "creating fake VRAM info, get rekt ayymd");
 	SYSLOG("rad", "createVramInfo offset = 0x%x", offset);
 	DataTableInitInfo initInfo {
@@ -152,10 +155,12 @@ IntegratedVRAMInfoInterface *RAD::createVramInfo(void *helper, uint32_t offset) 
 	};
 	auto *ret = new IntegratedVRAMInfoInterface;
 	ret->init(&initInfo);
+	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
 	return ret;
 }
 
-void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider) {
+void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider)
+{
 	SYSLOG("rad", "patching device type table");
 	MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock);
 	*(uint32_t *)callbackRAD->deviceTypeTable = provider->extendedConfigRead16(kIOPCIConfigDeviceID);
@@ -166,7 +171,8 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider) 
 	FunctionCast(wrapAmdTtlServicesConstructor, callbackRAD->orgAmdTtlServicesConstructor)(that, provider);
 }
 
-uint32_t RAD::wrapTtlInitialize(void *that, uint64_t *param1) {
+uint32_t RAD::wrapTtlInitialize(void *that, uint64_t *param1)
+{
 	SYSLOG("rad", "TTL::initialize called!");
 	SYSLOG("rad", "TTL::initialize: 0:0x%llx 1:0x%llx 2:0x%llx 3:0x%llx 4:0x%llx 5:0x%llx", param1[0], param1[1], param1[2], param1[3], param1[4], param1[5]);
 	auto ret = FunctionCast(wrapTtlInitialize, callbackRAD->orgTtlInitialize)(that, param1);
@@ -174,7 +180,8 @@ uint32_t RAD::wrapTtlInitialize(void *that, uint64_t *param1) {
 	return ret;
 }
 
-uint64_t RAD::wrapTtlDevSetSmuFwVersion(void *tlsInstance, uint32_t *b) {
+uint64_t RAD::wrapTtlDevSetSmuFwVersion(void *tlsInstance, uint32_t *b)
+{
 	SYSLOG("rad", "_ttlDevSetSmuFwVersion called!");
 	SYSLOG("rad", "_ttlDevSetSmuFwVersion: tlsInstance = %p param2 = %p", tlsInstance, b);
 	SYSLOG("rad", "_ttlDevSetSmuFwVersion: param2 0:0x%x 1:0x%x 2:0x%x 3:0x%x 4:0x%x 5:0x%x 6:0x%x 7:0x%x", b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]);
@@ -183,7 +190,8 @@ uint64_t RAD::wrapTtlDevSetSmuFwVersion(void *tlsInstance, uint32_t *b) {
 	return ret;
 }
 
-uint64_t RAD::wrapIpiSetFwEntry(void *tlsInstance, void *b) {
+uint64_t RAD::wrapIpiSetFwEntry(void *tlsInstance, void *b)
+{
 	SYSLOG("rad", "_IpiSetFwEntry called!");
 	SYSLOG("rad", "_IpiSetFwEntry: tlsInstance = %p param2 = %p", tlsInstance, b);
 	auto ret = FunctionCast(wrapIpiSetFwEntry, callbackRAD->orgIpiSetFwEntry)(tlsInstance, b);
@@ -191,7 +199,8 @@ uint64_t RAD::wrapIpiSetFwEntry(void *tlsInstance, void *b) {
 	return ret;
 }
 
-uint64_t RAD::wrapIpiSmuSwInit(void *tlsInstance) {
+uint64_t RAD::wrapIpiSmuSwInit(void *tlsInstance)
+{
 	SYSLOG("rad", "_ipi_smu_sw_init called!");
 	SYSLOG("rad", "_ipi_smu_sw_init: tlsInstance = %p", tlsInstance);
 	auto ret = FunctionCast(wrapIpiSmuSwInit, callbackRAD->orgIpiSmuSwInit)(tlsInstance);
@@ -199,7 +208,8 @@ uint64_t RAD::wrapIpiSmuSwInit(void *tlsInstance) {
 	return ret;
 }
 
-uint64_t RAD::wrapSmuSwInit(void *input, uint64_t *output) {
+uint64_t RAD::wrapSmuSwInit(void *input, uint64_t *output)
+{
 	SYSLOG("rad", "_smu_sw_init called!");
 	SYSLOG("rad", "_smu_sw_init: input = %p output = %p", input, output);
 	auto ret = FunctionCast(wrapSmuSwInit, callbackRAD->orgSmuSwInit)(input, output);
@@ -295,7 +305,8 @@ uint32_t RAD::wrapGcGetHwVersion(uint32_t *param1)
 	return ret;
 }
 
-uint32_t RAD::wrapInternalCosReadFw(uint64_t param1, uint64_t *param2) {
+uint32_t RAD::wrapInternalCosReadFw(uint64_t param1, uint64_t *param2)
+{
 	SYSLOG("rad", "_internal_cos_read_fw called!");
 	SYSLOG("rad", "_internal_cos_read_fw: param1 = 0x%llx param2 = %p", param1, param2);
 	auto ret = FunctionCast(wrapInternalCosReadFw, callbackRAD->orgInternalCosReadFw)(param1, param2);
@@ -320,21 +331,24 @@ void RAD::wrapPopulateFirmwareDirectory(void *that)
 	SYSLOG("rad", "----------------------------------------------------------------------");
 }
 
-uint32_t RAD::wrapGetVideoMemoryType(void *that) {
+uint32_t RAD::wrapGetVideoMemoryType(void *that)
+{
 	SYSLOG("rad", "AMDRadeonX6000_AmdBiosParserHelper::getVideoMemoryType called!");
 	SYSLOG("rad", "AMDRadeonX6000_AmdBiosParserHelper::getVideoMemoryType: this = %p", that);
 	auto ret = FunctionCast(wrapGetVideoMemoryType, callbackRAD->orgGetVideoMemoryType)(that);
 	return ret != 0 ? ret : 4;
 }
 
-uint32_t RAD::wrapGetVideoMemoryBitWidth(void *that) {
+uint32_t RAD::wrapGetVideoMemoryBitWidth(void *that)
+{
 	SYSLOG("rad", "AMDRadeonX6000_AmdBiosParserHelper::getVideoMemoryBitWidth called!");
 	SYSLOG("rad", "AMDRadeonX6000_AmdBiosParserHelper::getVideoMemoryBitWidth: this = %p", that);
 	auto ret = FunctionCast(wrapGetVideoMemoryBitWidth, callbackRAD->orgGetVideoMemoryBitWidth)(that);
 	return ret != 0 ? ret : 64;
 }
 
-uint64_t RAD::wrapPspRapIsSupported(uint64_t param1) {
+uint64_t RAD::wrapPspRapIsSupported(uint64_t param1)
+{
 	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
 	SYSLOG("rad", "_psp_rap_is_supported called!");
 	SYSLOG("rad", "_psp_rap_is_supported: param1 = 0x%llx", param1);
