@@ -70,13 +70,13 @@
 			<key>GPUDebugNullClientMask</key>
 			<integer>0</integer>
 			<key>GpuDebugPolicy</key>
-			<integer>-1</integer>
+			<integer>0</integer>
 			<key>IOClass</key>
 			<string>AMDRadeonX6000_AMDNavi10GraphicsAccelerator</string>
 			<key>IODVDBundleName</key>
 			<string>AMDRadeonVADriver2</string>
 			<key>IOGVACodec</key>
-			<string>AMDVCN2</string>
+			<string>AMDVCN1</string>
 			<key>IOGVAH264EncodeCapabilities</key>
 			<dict>
 				<key>VTQualityRating</key>
