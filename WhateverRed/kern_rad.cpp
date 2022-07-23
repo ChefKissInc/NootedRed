@@ -292,14 +292,16 @@ uint64_t RAD::wrapPspSwInit(uint32_t *param1, uint32_t *param2)
 
 uint32_t RAD::wrapGcGetHwVersion(uint32_t *param1)
 {
+	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
 	SYSLOG("rad", "_gc_get_hw_version called!");
 	SYSLOG("rad", "_gc_get_hw_version: param1 = %p", param1);
 	auto ret = FunctionCast(wrapGcGetHwVersion, callbackRAD->orgGcGetHwVersion)(param1);
 	SYSLOG("rad", "_gc_get_hw_version returned 0x%x", ret);
-	if ((ret & 0xFF000) == 0x90000) {
+	if ((ret & 0xFF0000) == 0x90000) {
 		SYSLOG("rad", "Spoofing GC version 9.x.x to 9.2.1");
 		return 0x90201;
 	}
+	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
 	return ret;
 }
 
@@ -314,7 +316,7 @@ uint32_t RAD::wrapInternalCosReadFw(uint64_t param1, uint64_t *param2)
 
 void RAD::wrapPopulateFirmwareDirectory(void *that)
 {
-	SYSLOG("rad", "----------------------------------------------------------------------");
+	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
 	SYSLOG("rad", "AMDRadeonX6000_AMDRadeonHWLibsX6000::populateFirmwareDirectory called!");
 	FunctionCast(wrapPopulateFirmwareDirectory, callbackRAD->orgPopulateFirmwareDirectory)(that);
 	SYSLOG("rad", "injecting ativvaxy_rv.dat!");
@@ -326,7 +328,7 @@ void RAD::wrapPopulateFirmwareDirectory(void *that)
 	if (!callbackRAD->putFirmware(fwDir, 1, fw)) {
 		panic("Failed to inject ativvaxy_rv.dat firmware");
 	}
-	SYSLOG("rad", "----------------------------------------------------------------------");
+	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
 }
 
 uint32_t RAD::wrapGetVideoMemoryType(void *that)
