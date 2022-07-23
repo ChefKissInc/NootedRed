@@ -160,6 +160,9 @@ private:
 	/* X6000Framebuffer */
 	static uint32_t wrapGetVideoMemoryType(void *that);
 	static uint32_t wrapGetVideoMemoryBitWidth(void *that);
+	static uint64_t wrapCreatePspDirectory(void *fwHelper, uint32_t tableOffset);
+	static uint64_t wrapCreateVramInfo(void *fwHelper, uint32_t tableOffset);
+	static uint32_t wrapPopulateVramInfo(void *that, void *param1);
 	/* ---------------- */
 	
 	void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);

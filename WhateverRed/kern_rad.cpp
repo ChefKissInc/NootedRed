@@ -356,6 +356,27 @@ uint64_t RAD::wrapPspRapIsSupported(uint64_t param1)
 	return 0;
 }
 
+uint64_t RAD::wrapCreatePspDirectory(void *fwHelper, uint32_t tableOffset)
+{
+	SYSLOG("rad", "createPspDirectory called! Returning 1, stupid unused code.");
+	SYSLOG("rad", "createPspDirectory: fwHelper = %p tableOffset = 0x%x", fwHelper, tableOffset);
+	return 1;
+}
+
+uint64_t RAD::wrapCreateVramInfo(void *fwHelper, uint32_t tableOffset)
+{
+	SYSLOG("rad", "createVramInfo called! Returning 1, stupid unused code.");
+	SYSLOG("rad", "createVramInfo: fwHelper = %p tableOffset = 0x%x", fwHelper, tableOffset);
+	return 1;
+}
+
+uint32_t RAD::wrapPopulateVramInfo(void *that, void *param1)
+{
+	SYSLOG("rad", "populateVramInfo called! Returning 0, stupid unused code.");
+	SYSLOG("rad", "createVramInfo: this = %p param1 = 0x%x", that, param1);
+	return 0;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
 {
 	if (kextRadeonFramebuffer.loadIndex == index)
@@ -433,6 +454,9 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 		KernelPatcher::RouteRequest requests[] = {
 			{"__ZNK34AMDRadeonX6000_AmdBiosParserHelper18getVideoMemoryTypeEv", wrapGetVideoMemoryType, orgGetVideoMemoryType},
 			{"__ZNK34AMDRadeonX6000_AmdBiosParserHelper22getVideoMemoryBitWidthEv", wrapGetVideoMemoryBitWidth, orgGetVideoMemoryBitWidth},
+			{"__ZN19AmdAtomPspDirectory18createPspDirectoryEP15AmdAtomFwHelperj", wrapCreatePspDirectory},
+			{"__ZN15AmdAtomVramInfo14createVramInfoEP15AmdAtomFwHelperj", wrapCreateVramInfo},
+			{"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", wrapPopulateVramInfo},
 		};
 		
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
