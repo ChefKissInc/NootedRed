@@ -323,13 +323,15 @@ void RAD::wrapPopulateFirmwareDirectory(void *that)
 uint32_t RAD::wrapGetVideoMemoryType(void *that) {
 	SYSLOG("rad", "AMDRadeonX6000_AmdBiosParserHelper::getVideoMemoryType called!");
 	SYSLOG("rad", "AMDRadeonX6000_AmdBiosParserHelper::getVideoMemoryType: this = %p", that);
-	return 4;
+	auto ret = FunctionCast(wrapGetVideoMemoryType, callbackRAD->orgGetVideoMemoryType)(that);
+	return ret != 0 ? ret : 4;
 }
 
 uint32_t RAD::wrapGetVideoMemoryBitWidth(void *that) {
 	SYSLOG("rad", "AMDRadeonX6000_AmdBiosParserHelper::getVideoMemoryBitWidth called!");
 	SYSLOG("rad", "AMDRadeonX6000_AmdBiosParserHelper::getVideoMemoryBitWidth: this = %p", that);
-	return 64;
+	auto ret = FunctionCast(wrapGetVideoMemoryBitWidth, callbackRAD->orgGetVideoMemoryBitWidth)(that);
+	return ret != 0 ? ret : 64;
 }
 
 uint64_t RAD::wrapPspRapIsSupported(uint64_t param1) {
@@ -404,7 +406,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"_psp_rap_is_supported", wrapPspRapIsSupported},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
-			panic("Failed to route AMDRadeonX6000HWLibs symbols");
+			panic("RAD: Failed to route AMDRadeonX6000HWLibs symbols");
 		
 		uint8_t find[] = { 0x74, 0x6E, 0x45, 0x85, 0xF6, 0x0F, 0x84, 0xB4, 0x00, 0x00, 0x00 };
 		uint8_t repl[] = { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 };
@@ -414,35 +416,15 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 		
 		return true;
 	} else if (kextRadeonX6000Framebuffer.loadIndex == index) {
-		auto *orgInitializeAtomDataTable = reinterpret_cast<uint8_t *>(patcher.solveSymbol(index, "__ZN17AmdAtomFwServices23initializeAtomDataTableEv"));
-		if (orgInitializeAtomDataTable == nullptr)
-		{
-			panic("RAD: Failed to resolve AmdAtomFwServices::initializeAtomDataTable");
-		}
-		auto *orgCreatePspDirectory = reinterpret_cast<uint8_t *>(patcher.solveSymbol(index, "__ZN19AmdAtomPspDirectory18createPspDirectoryEP15AmdAtomFwHelperj"));
-		if (orgCreatePspDirectory == nullptr)
-		{
-			panic("RAD: Failed to resolve AmdAtomPspDirectory::createPspDirectory");
-		}
-		
 		KernelPatcher::RouteRequest requests[] = {
-			{"__ZNK34AMDRadeonX6000_AmdBiosParserHelper18getVideoMemoryTypeEv", wrapGetVideoMemoryType},
-			{"__ZNK34AMDRadeonX6000_AmdBiosParserHelper22getVideoMemoryBitWidthEv", wrapGetVideoMemoryBitWidth},
+			{"__ZNK34AMDRadeonX6000_AmdBiosParserHelper18getVideoMemoryTypeEv", wrapGetVideoMemoryType, orgGetVideoMemoryType},
+			{"__ZNK34AMDRadeonX6000_AmdBiosParserHelper22getVideoMemoryBitWidthEv", wrapGetVideoMemoryBitWidth, orgGetVideoMemoryBitWidth},
 		};
 		
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
-			panic("Failed to route AMDRadeonX6000Framebuffer symbols");
-		uint8_t find1[] = { 0x48, 0x8B, 0x43, 0x20, 0x0F, 0xB7, 0x70, 0x16, 0xE8, 0x59, 0xD8, 0xFF, 0xFF };
-		uint8_t repl1[] = { 0x48, 0x8B, 0x43, 0x20, 0x0F, 0xB7, 0x70, 0x12, 0xE8, 0x59, 0xD8, 0xFF, 0xFF };
-		KernelPatcher::LookupPatch patch1 = {&kextRadeonX6000Framebuffer, find1, repl1, arrsize(find1), 1};
-		patcher.applyLookupPatch(&patch1, orgInitializeAtomDataTable, 0x163);
-		patcher.clearError();
-		
-		uint8_t find2[] = { 0xE8, 0x06, 0x09, 0x00, 0x00, 0x83, 0x7D, 0xE4, 0x02, 0x75, 0x44, 0x8B, 0x5D, 0xE8 };
-		uint8_t repl2[] = { 0xE8, 0x06, 0x09, 0x00, 0x00, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x8B, 0x5D, 0xE8 };
-		KernelPatcher::LookupPatch patch2 = {&kextRadeonX6000Framebuffer, find2, repl2, arrsize(find2), 1};
-		patcher.applyLookupPatch(&patch2, orgCreatePspDirectory, 0xAF);
-		patcher.clearError();
+		{
+			panic("RAD: Failed to route AMDRadeonX6000Framebuffer symbols");
+		}
 		
 		return true;
 	}

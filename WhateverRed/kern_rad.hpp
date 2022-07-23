@@ -59,6 +59,7 @@ private:
 	mach_vm_address_t orgInternalCosReadFw{}, orgPopulateFirmwareDirectory{};
 	t_createFirmware createFirmware = nullptr;
 	t_putFirmware putFirmware = nullptr;
+	mach_vm_address_t orgGetVideoMemoryType{}, orgGetVideoMemoryBitWidth{};
 	/* ----------- */
 	
 	template <size_t Index>
