@@ -370,11 +370,18 @@ uint64_t RAD::wrapCreateVramInfo(void *fwHelper, uint32_t tableOffset)
 	return 1;
 }
 
-uint32_t RAD::wrapPopulateVramInfo(void *that, void *param1)
+IOReturn RAD::wrapPopulateVramInfo(void *that, void *param1)
 {
-	SYSLOG("rad", "populateVramInfo called! Returning 0, stupid unused code.");
+	SYSLOG("rad", "populateVramInfo called! Returning kIOReturnSuccess, stupid useless code.");
 	SYSLOG("rad", "createVramInfo: this = %p param1 = 0x%x", that, param1);
-	return 0;
+	return kIOReturnSuccess;
+}
+
+IOReturn RAD::wrapGetPspFirmwareInfo(void *that, void *fwInfo)
+{
+	SYSLOG("rad", "getPspFirmwareInfo called! Returning kIOReturnSuccess, stupid useless code.");
+	SYSLOG("rad", "getPspFirmwareInfo: this = %p fwInfo = %p", that, fwInfo);
+	return kIOReturnSuccess;
 }
 
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
@@ -423,7 +430,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 		}
 		
 		KernelPatcher::RouteRequest requests[] = {
-//			{"_ttlIsPicassoAM4Device", wrapTtlIsPicassoDevice, orgTtlIsPicassoDevice},
+			{"_ttlIsPicassoAM4Device", wrapTtlIsPicassoDevice, orgTtlIsPicassoDevice},
 			{"__ZN14AmdTtlServicesC2EP11IOPCIDevice", wrapAmdTtlServicesConstructor, orgAmdTtlServicesConstructor},
 			{"__ZN14AmdTtlServices10initializeEP30_TtlLibraryInitializationInput", wrapTtlInitialize, orgTtlInitialize},
 			{"_ttlDevSetSmuFwVersion", wrapTtlDevSetSmuFwVersion, orgTtlDevSetSmuFwVersion},
@@ -457,6 +464,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"__ZN19AmdAtomPspDirectory18createPspDirectoryEP15AmdAtomFwHelperj", wrapCreatePspDirectory},
 			{"__ZN15AmdAtomVramInfo14createVramInfoEP15AmdAtomFwHelperj", wrapCreateVramInfo},
 			{"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", wrapPopulateVramInfo},
+			{"__ZNK17AmdAtomFwServices18getPspFirmwareInfoER19AtomPspFirmwareInfo", wrapGetPspFirmwareInfo},
 		};
 		
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))

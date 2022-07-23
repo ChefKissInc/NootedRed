@@ -162,7 +162,8 @@ private:
 	static uint32_t wrapGetVideoMemoryBitWidth(void *that);
 	static uint64_t wrapCreatePspDirectory(void *fwHelper, uint32_t tableOffset);
 	static uint64_t wrapCreateVramInfo(void *fwHelper, uint32_t tableOffset);
-	static uint32_t wrapPopulateVramInfo(void *that, void *param1);
+	static IOReturn wrapPopulateVramInfo(void *that, void *param1);
+	static IOReturn wrapGetPspFirmwareInfo(void *that, void *fwInfo);
 	/* ---------------- */
 	
 	void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);
