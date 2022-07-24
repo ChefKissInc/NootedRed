@@ -324,17 +324,6 @@ void RAD::wrapPopulateFirmwareDirectory(void *that)
 	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
 }
 
-uint64_t RAD::wrapPspRapIsSupported(uint64_t param1)
-{
-	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
-	SYSLOG("rad", "_psp_rap_is_supported called! Returning 0");
-	SYSLOG("rad", "_psp_rap_is_supported: param1 = 0x%llx", param1);
-	auto ret = FunctionCast(wrapPspRapIsSupported, callbackRAD->orgPspRapIsSupported)(param1);
-	SYSLOG("rad", "_psp_rap_is_supported returned 0x%llx", ret);
-	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
-	return 0;
-}
-
 uint64_t RAD::wrapGetHardwareInfo(void *that, void *param1)
 {
 	SYSLOG("rad", "getHardwareInfo called!");
@@ -384,14 +373,6 @@ uint32_t RAD::wrapDmcuGetHwVersion(uint32_t *param1)
 	SYSLOG("rad", "_dmcu_get_hw_version returned 0x%x", ret);
 	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
 	return ret;
-}
-
-uint64_t RAD::wrapPspRapMemInit(uint64_t param1)
-{
-	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
-	SYSLOG("rad", "_psp_rap_mem_init called! Returning 0");
-	SYSLOG("rad", "_psp_rap_mem_init: param1 = 0x%llx", param1);
-	return 0;
 }
 
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
@@ -451,12 +432,10 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"_gc_get_hw_version", wrapGcGetHwVersion, orgGcGetHwVersion},
 			{"_internal_cos_read_fw", wrapInternalCosReadFw, orgInternalCosReadFw},
 			{"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory, orgPopulateFirmwareDirectory},
-			{"_psp_rap_is_supported", wrapPspRapIsSupported, orgPspRapIsSupported},
 			{"_TtlQueryHwIpInstanceInfo", wrapTtlQueryHwIpInstanceInfo, orgTtlQueryHwIpInstanceInfo},
 			{"_ttlIsHwAvailable", wrapTtlIsHwAvailable, orgTtlIsHwAvailable},
 			{"_IpiSmuIsSwipExcluded", wrapIpiSmuIsSwipExcluded},
 			{"_dmcu_get_hw_version", wrapDmcuGetHwVersion, orgDmcuGetHwVersion},
-			{"_psp_rap_mem_init", wrapPspRapMemInit},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");

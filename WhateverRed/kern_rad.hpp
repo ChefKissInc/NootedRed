@@ -59,8 +59,7 @@ private:
 	t_createFirmware orgCreateFirmware = nullptr;
 	t_putFirmware orgPutFirmware = nullptr;
 	mach_vm_address_t orgGetHardwareInfo{}, orgTtlQueryHwIpInstanceInfo{};
-	mach_vm_address_t orgTtlIsHwAvailable{}, orgPspRapIsSupported{};
-	mach_vm_address_t orgDmcuGetHwVersion{};
+	mach_vm_address_t orgTtlIsHwAvailable{}, orgDmcuGetHwVersion{};
 	/* ----------- */
 	
 	template <size_t Index>
@@ -155,13 +154,11 @@ private:
 	static uint32_t wrapGcGetHwVersion(uint32_t *param1);
 	static uint32_t wrapInternalCosReadFw(uint64_t param1, uint64_t *param2);
 	static void wrapPopulateFirmwareDirectory(void *that);
-	static uint64_t wrapPspRapIsSupported(uint64_t param1);
 	static uint64_t wrapGetHardwareInfo(void *that, void *param1);
 	static uint64_t wrapTtlQueryHwIpInstanceInfo(void *param1, uint32_t *param2, uint32_t *param3);
 	static bool wrapTtlIsHwAvailable(uint64_t *param1);
 	static bool wrapIpiSmuIsSwipExcluded();
 	static uint32_t wrapDmcuGetHwVersion(uint32_t *param1);
-	static uint64_t wrapPspRapMemInit(uint64_t param1);
 	/* ----------- */
 	
 	void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);
