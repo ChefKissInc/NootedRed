@@ -47,7 +47,7 @@ private:
 	mach_vm_address_t orgAllocateAMDHWRegisters{}, orgSetupCAIL{}, orgInitializeHWWorkarounds{};
 	mach_vm_address_t orgAllocateAMDHWAlignManager{}, orgMapDoorbellMemory{};
 	mach_vm_address_t orgHwInitializeFbMemSize{}, orgHwInitializeFbBase{}, orgInitWithController{};
-	mach_vm_address_t deviceTypeTable{}, orgAmdTtlServicesConstructor{};
+	mach_vm_address_t orgDeviceTypeTable{}, orgAmdTtlServicesConstructor{};
 	mach_vm_address_t orgGetState{}, orgConfRegBase{}, orgReadChipRev{};
 	mach_vm_address_t orgInitializeTtl{}, orgInitializeProjectDependentResources{};
 	/* X5000HWLibs */
@@ -56,8 +56,8 @@ private:
 	mach_vm_address_t orgSmuInitFunctionPointerList{}, orgSmuInternalSwInit{};
 	mach_vm_address_t orgSmuGetHwVersion{}, orgPspSwInit{}, orgGcGetHwVersion{};
 	mach_vm_address_t orgInternalCosReadFw{}, orgPopulateFirmwareDirectory{};
-	t_createFirmware createFirmware = nullptr;
-	t_putFirmware putFirmware = nullptr;
+	t_createFirmware orgCreateFirmware = nullptr;
+	t_putFirmware orgPutFirmware = nullptr;
 	mach_vm_address_t orgGetHardwareInfo{}, orgTtlQueryHwIpInstanceInfo{};
 	mach_vm_address_t orgTtlIsHwAvailable{}, orgPspRapIsSupported{};
 	mach_vm_address_t orgDmcuGetHwVersion{};
@@ -161,6 +161,7 @@ private:
 	static bool wrapTtlIsHwAvailable(uint64_t *param1);
 	static bool wrapIpiSmuIsSwipExcluded();
 	static uint32_t wrapDmcuGetHwVersion(uint32_t *param1);
+	static uint64_t wrapPspRapMemInit(uint64_t param1);
 	/* ----------- */
 	
 	void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);

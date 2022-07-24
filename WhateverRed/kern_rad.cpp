@@ -170,8 +170,8 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider)
 {
 	SYSLOG("rad", "patching device type table");
 	MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock);
-	*(uint32_t *)callbackRAD->deviceTypeTable = provider->extendedConfigRead16(kIOPCIConfigDeviceID);
-	*((uint32_t *)callbackRAD->deviceTypeTable + 1) = 6;
+	*(uint32_t *)callbackRAD->orgDeviceTypeTable = provider->extendedConfigRead16(kIOPCIConfigDeviceID);
+	*((uint32_t *)callbackRAD->orgDeviceTypeTable + 1) = 6;
 	MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 	
 	SYSLOG("rad", "calling original AmdTtlServices constructor");
@@ -315,10 +315,10 @@ void RAD::wrapPopulateFirmwareDirectory(void *that)
 	SYSLOG("rad", "injecting ativvaxy_rv.dat!");
 	auto *fwDesc = getFWDescByName("ativvaxy_rv.dat");
 	
-	auto *fw = callbackRAD->createFirmware(fwDesc->getBytesNoCopy(), fwDesc->getLength(), 0x200, "ativvaxy_rv.dat");
+	auto *fw = callbackRAD->orgCreateFirmware(fwDesc->getBytesNoCopy(), fwDesc->getLength(), 0x200, "ativvaxy_rv.dat");
 	auto *fwDir = *(void **)((uint8_t *)that + 0xB8);
 	SYSLOG("rad", "fwDir = %p", fwDir);
-	if (!callbackRAD->putFirmware(fwDir, 6, fw)) {
+	if (!callbackRAD->orgPutFirmware(fwDir, 6, fw)) {
 		panic("Failed to inject ativvaxy_rv.dat firmware");
 	}
 	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
@@ -327,12 +327,12 @@ void RAD::wrapPopulateFirmwareDirectory(void *that)
 uint64_t RAD::wrapPspRapIsSupported(uint64_t param1)
 {
 	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
-	SYSLOG("rad", "_psp_rap_is_supported called!");
+	SYSLOG("rad", "_psp_rap_is_supported called! Returning 0");
 	SYSLOG("rad", "_psp_rap_is_supported: param1 = 0x%llx", param1);
 	auto ret = FunctionCast(wrapPspRapIsSupported, callbackRAD->orgPspRapIsSupported)(param1);
 	SYSLOG("rad", "_psp_rap_is_supported returned 0x%llx", ret);
 	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
-	return ret;
+	return 0;
 }
 
 uint64_t RAD::wrapGetHardwareInfo(void *that, void *param1)
@@ -340,6 +340,7 @@ uint64_t RAD::wrapGetHardwareInfo(void *that, void *param1)
 	SYSLOG("rad", "getHardwareInfo called!");
 	SYSLOG("rad", "getHardwareInfo: this = %p param1 = %o", that, param1);
 	auto ret = FunctionCast(wrapGetHardwareInfo, callbackRAD->orgGetHardwareInfo)(that, param1);
+	SYSLOG("rad", "getHardwareInfo returned 0x%llx", ret);
 	return ret;
 }
 
@@ -385,6 +386,14 @@ uint32_t RAD::wrapDmcuGetHwVersion(uint32_t *param1)
 	return ret;
 }
 
+uint64_t RAD::wrapPspRapMemInit(uint64_t param1)
+{
+	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+	SYSLOG("rad", "_psp_rap_mem_init called! Returning 0");
+	SYSLOG("rad", "_psp_rap_mem_init: param1 = 0x%llx", param1);
+	return 0;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
 {
 	if (kextRadeonFramebuffer.loadIndex == index)
@@ -411,18 +420,18 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 	else if (kextRadeonX5000HWLibs.loadIndex == index)
 	{
 		DBGLOG("rad", "resolving device type table");
-		deviceTypeTable = patcher.solveSymbol(index, "__ZL15deviceTypeTable");
-		if (!deviceTypeTable)
+		orgDeviceTypeTable = patcher.solveSymbol(index, "__ZL15deviceTypeTable");
+		if (!orgDeviceTypeTable)
 		{
 			panic("RAD: Failed to resolve device type table");
 		}
-		createFirmware = reinterpret_cast<t_createFirmware>(patcher.solveSymbol(index, "__ZN11AMDFirmware14createFirmwareEPhjjPKc"));
-		if (!this->createFirmware)
+		orgCreateFirmware = reinterpret_cast<t_createFirmware>(patcher.solveSymbol(index, "__ZN11AMDFirmware14createFirmwareEPhjjPKc"));
+		if (!this->orgCreateFirmware)
 		{
 			panic("RAD: Failed to resolve AMDFirmware::createFirmware");
 		}
-		this->putFirmware = reinterpret_cast<t_putFirmware>(patcher.solveSymbol(index, "__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware"));
-		if (!this->putFirmware)
+		orgPutFirmware = reinterpret_cast<t_putFirmware>(patcher.solveSymbol(index, "__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware"));
+		if (!orgPutFirmware)
 		{
 			panic("RAD: Failed to resolve AMDFirmwareDirectory::putFirmware");
 		}
@@ -447,6 +456,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"_ttlIsHwAvailable", wrapTtlIsHwAvailable, orgTtlIsHwAvailable},
 			{"_IpiSmuIsSwipExcluded", wrapIpiSmuIsSwipExcluded},
 			{"_dmcu_get_hw_version", wrapDmcuGetHwVersion, orgDmcuGetHwVersion},
+			{"_psp_rap_mem_init", wrapPspRapMemInit},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
