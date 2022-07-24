@@ -427,12 +427,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			panic("RAD: Failed to resolve AMDFirmwareDirectory::putFirmware");
 		}
 		
-		auto *orgAmdTtlServicesInitialize = reinterpret_cast<uint8_t *>(patcher.solveSymbol(index, "__ZN14AmdTtlServices10initializeEP30_TtlLibraryInitializationInput"));
-		if (!orgAmdTtlServicesInitialize)
-		{
-			panic("RAD: Failed to solve AmdTtlServices::initialize");
-		}
-		
 		KernelPatcher::RouteRequest requests[] = {
 			{"__ZN14AmdTtlServicesC2EP11IOPCIDevice", wrapAmdTtlServicesConstructor, orgAmdTtlServicesConstructor},
 			{"__ZN14AmdTtlServices10initializeEP30_TtlLibraryInitializationInput", wrapTtlInitialize, orgTtlInitialize},
@@ -460,7 +454,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 		uint8_t find[] = { 0x49, 0x83, 0x7f, 0x08, 0x00, 0x74, 0x6e, 0x45, 0x85, 0xf6, 0x0f, 0x84, 0xb4, 0x00, 0x00, 0x00 };
 		uint8_t repl[] = { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 };
 		KernelPatcher::LookupPatch patch {&kextRadeonX5000HWLibs, find, repl, arrsize(find), 2};
-		patcher.applyLookupPatch(&patch, orgAmdTtlServicesInitialize, 0x50);
+		patcher.applyLookupPatch(&patch);
 		patcher.clearError();
 		
 		return true;
