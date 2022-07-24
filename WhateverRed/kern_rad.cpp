@@ -771,7 +771,7 @@ uint32_t RAD::wrapGetConnectorsInfoV1(void *that, RADConnectors::Connector *conn
 		callbackRAD->updateConnectorsInfo(nullptr, nullptr, *props, connectors, sz);
 	}
 	else
-		DBGLOG("rad", "getConnectorsInfoV1 failed %X or undefined %d", code, props == nullptr);
+		SYSLOG("rad", "getConnectorsInfoV1 failed %X or undefined %d", code, props == nullptr);
 	
 	return code;
 }
@@ -780,7 +780,7 @@ void RAD::updateConnectorsInfo(void *atomutils, t_getAtomObjectTableForType gett
 {
 	if (atomutils)
 	{
-		DBGLOG("rad", "getConnectorsInfo found %u connectors", *sz);
+		SYSLOG("rad", "getConnectorsInfo found %u connectors", *sz);
 		RADConnectors::print(connectors, *sz);
 	}
 	
@@ -797,30 +797,30 @@ void RAD::updateConnectorsInfo(void *atomutils, t_getAtomObjectTableForType gett
 			if (WIOKit::getOSDataValue(ctrl, "connector-count", consCount))
 			{
 				*sz = consCount;
-				DBGLOG("rad", "getConnectorsInfo got size override to %u", *sz);
+				SYSLOG("rad", "getConnectorsInfo got size override to %u", *sz);
 			}
 			
 			if (consPtr && consSize > 0 && *sz > 0 && RADConnectors::valid(consSize, *sz))
 			{
 				RADConnectors::copy(connectors, *sz, static_cast<const RADConnectors::Connector *>(consPtr), consSize);
-				DBGLOG("rad", "getConnectorsInfo installed %u connectors", *sz);
+				SYSLOG("rad", "getConnectorsInfo installed %u connectors", *sz);
 				applyPropertyFixes(ctrl, *sz);
 			}
 			else
 			{
-				DBGLOG("rad", "getConnectorsInfo conoverrides have invalid size %u for %u num", consSize, *sz);
+				SYSLOG("rad", "getConnectorsInfo conoverrides have invalid size %u for %u num", consSize, *sz);
 			}
 		}
 		else
 		{
-			DBGLOG("rad", "getConnectorsInfo conoverrides have invalid type");
+			SYSLOG("rad", "getConnectorsInfo conoverrides have invalid type");
 		}
 	}
 	else
 	{
 		if (atomutils)
 		{
-			DBGLOG("rad", "getConnectorsInfo attempting to autofix connectors");
+			SYSLOG("rad", "getConnectorsInfo attempting to autofix connectors");
 			uint8_t sHeader = 0, displayPathNum = 0, connectorObjectNum = 0;
 			auto baseAddr = static_cast<uint8_t *>(gettable(atomutils, AtomObjectTableType::Common, &sHeader)) - sizeof(uint32_t);
 			auto displayPaths = static_cast<AtomDisplayObjectPath *>(gettable(atomutils, AtomObjectTableType::DisplayPath, &displayPathNum));
@@ -831,7 +831,7 @@ void RAD::updateConnectorsInfo(void *atomutils, t_getAtomObjectTableForType gett
 			}
 			else
 			{
-				DBGLOG("rad", "getConnectorsInfo found different displaypaths %u and connectors %u", displayPathNum, connectorObjectNum);
+				SYSLOG("rad", "getConnectorsInfo found different displaypaths %u and connectors %u", displayPathNum, connectorObjectNum);
 			}
 		}
 		
@@ -844,16 +844,16 @@ void RAD::updateConnectorsInfo(void *atomutils, t_getAtomObjectTableForType gett
 		{
 			senseList = static_cast<const uint8_t *>(priData->getBytesNoCopy());
 			senseNum = static_cast<uint8_t>(priData->getLength());
-			DBGLOG("rad", "getConnectorInfo found %u senses in connector-priority", senseNum);
+			SYSLOG("rad", "getConnectorInfo found %u senses in connector-priority", senseNum);
 			reprioritiseConnectors(senseList, senseNum, connectors, *sz);
 		}
 		else
 		{
-			DBGLOG("rad", "getConnectorInfo leaving unchaged priority");
+			SYSLOG("rad", "getConnectorInfo leaving unchaged priority");
 		}
 	}
 	
-	DBGLOG("rad", "getConnectorsInfo resulting %u connectors follow", *sz);
+	SYSLOG("rad", "getConnectorsInfo resulting %u connectors follow", *sz);
 	RADConnectors::print(connectors, *sz);
 }
 
@@ -868,7 +868,7 @@ uint32_t RAD::wrapTranslateAtomConnectorInfoV1(void *that, RADConnectors::AtomCo
 		uint8_t sense = getSenseID(info->i2cRecord);
 		if (sense)
 		{
-			DBGLOG("rad", "translateAtomConnectorInfoV1 got sense id %02X", sense);
+			SYSLOG("rad", "translateAtomConnectorInfoV1 got sense id %02X", sense);
 			
 				// We need to extract usGraphicObjIds from info->hpdRecord, which is of type ATOM_SRC_DST_TABLE_FOR_ONE_OBJECT:
 				// struct ATOM_SRC_DST_TABLE_FOR_ONE_OBJECT {
@@ -883,7 +883,7 @@ uint32_t RAD::wrapTranslateAtomConnectorInfoV1(void *that, RADConnectors::AtomCo
 			for (uint8_t i = 0; i < ucNumberOfSrc; i++)
 			{
 				auto usSrcObjectID = *reinterpret_cast<uint16_t *>(info->hpdRecord + sizeof(uint8_t) + i * sizeof(uint16_t));
-				DBGLOG("rad", "translateAtomConnectorInfoV1 checking %04X object id", usSrcObjectID);
+				SYSLOG("rad", "translateAtomConnectorInfoV1 checking %04X object id", usSrcObjectID);
 				if (((usSrcObjectID & OBJECT_TYPE_MASK) >> OBJECT_TYPE_SHIFT) == GRAPH_OBJECT_TYPE_ENCODER)
 				{
 					uint8_t txmit = 0, enc = 0;
@@ -895,7 +895,7 @@ uint32_t RAD::wrapTranslateAtomConnectorInfoV1(void *that, RADConnectors::AtomCo
 		}
 		else
 		{
-			DBGLOG("rad", "translateAtomConnectorInfoV1 failed to detect sense for translated connector");
+			SYSLOG("rad", "translateAtomConnectorInfoV1 failed to detect sense for translated connector");
 		}
 	}
 	
@@ -910,7 +910,7 @@ void RAD::autocorrectConnectors(uint8_t *baseAddr, AtomDisplayObjectPath *displa
 	{
 		if (!isEncoder(displayPaths[i].usGraphicObjIds))
 		{
-			DBGLOG("rad", "autocorrectConnectors not encoder %X at %u", displayPaths[i].usGraphicObjIds, i);
+			SYSLOG("rad", "autocorrectConnectors not encoder %X at %u", displayPaths[i].usGraphicObjIds, i);
 			continue;
 		}
 		
@@ -923,11 +923,11 @@ void RAD::autocorrectConnectors(uint8_t *baseAddr, AtomDisplayObjectPath *displa
 		uint8_t sense = getSenseID(baseAddr + connectorObjects[i].usRecordOffset);
 		if (!sense)
 		{
-			DBGLOG("rad", "autocorrectConnectors failed to detect sense for %u connector", i);
+			SYSLOG("rad", "autocorrectConnectors failed to detect sense for %u connector", i);
 			continue;
 		}
 		
-		DBGLOG("rad", "autocorrectConnectors found txmit %02X enc %02X sense %02X for %u connector", txmit, enc, sense, i);
+		SYSLOG("rad", "autocorrectConnectors found txmit %02X enc %02X sense %02X for %u connector", txmit, enc, sense, i);
 		
 		autocorrectConnector(getConnectorID(displayPaths[i].usConnObjectId), sense, txmit, enc, connectors, sz);
 	}
@@ -941,7 +941,7 @@ void RAD::autocorrectConnector(uint8_t connector, uint8_t sense, uint8_t txmit, 
 			connector != CONNECTOR_OBJECT_ID_DUAL_LINK_DVI_D &&
 			connector != CONNECTOR_OBJECT_ID_LVDS)
 		{
-			DBGLOG("rad", "autocorrectConnector found unsupported connector type %02X", connector);
+			SYSLOG("rad", "autocorrectConnector found unsupported connector type %02X", connector);
 			return;
 		}
 		
@@ -951,7 +951,7 @@ void RAD::autocorrectConnector(uint8_t connector, uint8_t sense, uint8_t txmit, 
 			{
 				if (con.transmitter != txmit && (con.transmitter & 0xCF) == con.transmitter)
 				{
-					DBGLOG("rad", "autocorrectConnector replacing txmit %02X with %02X for %u connector sense %02X",
+					SYSLOG("rad", "autocorrectConnector replacing txmit %02X with %02X for %u connector sense %02X",
 						   con.transmitter, txmit, idx, sense);
 					con.transmitter = txmit;
 				}
@@ -978,7 +978,7 @@ void RAD::autocorrectConnector(uint8_t connector, uint8_t sense, uint8_t txmit, 
 		}
 	}
 	else
-		DBGLOG("rad", "autocorrectConnector use -raddvi to enable dvi autocorrection");
+		SYSLOG("rad", "autocorrectConnector use -raddvi to enable dvi autocorrection");
 }
 
 void RAD::reprioritiseConnectors(const uint8_t *senseList, uint8_t senseNum, RADConnectors::Connector *connectors, uint8_t sz)
@@ -1009,7 +1009,7 @@ void RAD::reprioritiseConnectors(const uint8_t *senseList, uint8_t senseNum, RAD
 				{
 					if (con.sense == senseList[i])
 					{
-						DBGLOG("rad", "reprioritiseConnectors setting priority of sense %02X to %u by sense", con.sense, priCount);
+						SYSLOG("rad", "reprioritiseConnectors setting priority of sense %02X to %u by sense", con.sense, priCount);
 						con.priority = priCount++;
 						return true;
 					}
@@ -1018,7 +1018,7 @@ void RAD::reprioritiseConnectors(const uint8_t *senseList, uint8_t senseNum, RAD
 				{
 					if (con.priority == 0 && con.type == typeList[i - senseNum])
 					{
-						DBGLOG("rad", "reprioritiseConnectors setting priority of sense %02X to %u by type", con.sense, priCount);
+						SYSLOG("rad", "reprioritiseConnectors setting priority of sense %02X to %u by type", con.sense, priCount);
 						con.priority = priCount++;
 					}
 				}
@@ -1140,7 +1140,7 @@ uint32_t RAD::wrapGetConnectorsInfoV2(void *that, RADConnectors::Connector *conn
 	if (code == 0 && sz && props && *props)
 		callbackRAD->updateConnectorsInfo(nullptr, nullptr, *props, connectors, sz);
 	else
-		DBGLOG("rad", "getConnectorsInfoV2 failed %X or undefined %d", code, props == nullptr);
+		SYSLOG("rad", "getConnectorsInfoV2 failed %X or undefined %d", code, props == nullptr);
 	
 	return code;
 }
@@ -1156,14 +1156,14 @@ uint32_t RAD::wrapTranslateAtomConnectorInfoV2(void *that, RADConnectors::AtomCo
 		uint8_t sense = getSenseID(info->i2cRecord);
 		if (sense)
 		{
-			DBGLOG("rad", "translateAtomConnectorInfoV2 got sense id %02X", sense);
+			SYSLOG("rad", "translateAtomConnectorInfoV2 got sense id %02X", sense);
 			uint8_t txmit = 0, enc = 0;
 			if (getTxEnc(info->usGraphicObjIds, txmit, enc))
 				callbackRAD->autocorrectConnector(getConnectorID(info->usConnObjectId), getSenseID(info->i2cRecord), txmit, enc, connector, 1);
 		}
 		else
 		{
-			DBGLOG("rad", "translateAtomConnectorInfoV2 failed to detect sense for translated connector");
+			SYSLOG("rad", "translateAtomConnectorInfoV2 failed to detect sense for translated connector");
 		}
 	}
 	
@@ -1172,19 +1172,16 @@ uint32_t RAD::wrapTranslateAtomConnectorInfoV2(void *that, RADConnectors::AtomCo
 
 bool RAD::wrapATIControllerStart(IOService *ctrl, IOService *provider)
 {
-	DBGLOG("rad", "starting controller " PRIKADDR, CASTKADDR(current_thread()));
+	SYSLOG("rad", "starting controller " PRIKADDR, CASTKADDR(current_thread()));
 	if (callbackRAD->forceVesaMode)
 	{
-		DBGLOG("rad", "disabling video acceleration on request");
+		SYSLOG("rad", "disabling video acceleration on request");
 		return false;
 	}
 	
-	IOPCIDevice *pciDev = OSDynamicCast(IOPCIDevice, provider);
-	pciDev->setProperty("Force_Load_FalconSMUFW", kOSBooleanTrue);
-	
 	callbackRAD->currentPropProvider.set(provider);
 	bool r = FunctionCast(wrapATIControllerStart, callbackRAD->orgATIControllerStart)(ctrl, provider);
-	DBGLOG("rad", "starting controller done %d " PRIKADDR, r, CASTKADDR(current_thread()));
+	SYSLOG("rad", "starting controller done %d " PRIKADDR, r, CASTKADDR(current_thread()));
 	callbackRAD->currentPropProvider.erase();
 	
 	return r;
@@ -1202,7 +1199,7 @@ bool RAD::wrapNotifyLinkChange(void *atiDeviceControl, kAGDCRegisterLinkControlE
 	if (event == kAGDCValidateDetailedTiming)
 	{
 		auto cmd = static_cast<AGDCValidateDetailedTiming_t *>(eventData);
-		DBGLOG("rad", "AGDCValidateDetailedTiming %u -> %d (%u)", cmd->framebufferIndex, ret, cmd->modeStatus);
+		SYSLOG("rad", "AGDCValidateDetailedTiming %u -> %d (%u)", cmd->framebufferIndex, ret, cmd->modeStatus);
 		if (ret == false || cmd->modeStatus < 1 || cmd->modeStatus > 3)
 		{
 			cmd->modeStatus = 2;
@@ -1234,6 +1231,6 @@ void RAD::updateGetHWInfo(IOService *accelVideoCtx, void *hwInfo)
 	{
 		WIOKit::getOSDataValue(pciDev, "device-id", dev);
 	}
-	DBGLOG("rad", "getHWInfo: original PID: 0x%04X, replaced PID: 0x%04X", org, dev);
+	SYSLOG("rad", "getHWInfo: original PID: 0x%04X, replaced PID: 0x%04X", org, dev);
 	org = static_cast<uint16_t>(dev);
 }
