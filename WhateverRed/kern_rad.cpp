@@ -131,6 +131,10 @@ void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info)
 	patcher.routeMultiple(KernelPatcher::KernelID, requests);
 }
 
+IOReturn RAD::wrapProjectByPartNumber([[maybe_unused]] IOService* that, [[maybe_unused]] uint64_t partNumber) {
+	return kIOReturnNotFound;
+}
+
 WRAP_SIMPLE(uint64_t, InitializeProjectDependentResources, "0x%llx")
 WRAP_SIMPLE(uint64_t, HwInitializeFbMemSize, "0x%llx")
 WRAP_SIMPLE(uint64_t, HwInitializeFbBase, "0x%llx")
@@ -464,6 +468,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 		DBGLOG("rad", "Hooking AMD10000Controller");
 		
 		KernelPatcher::RouteRequest requests[] = {
+			{"__ZN18AMD10000Controller23findProjectByPartNumberEP20ControllerProperties", wrapProjectByPartNumber},
 			{"__ZN18AMD10000Controller35initializeProjectDependentResourcesEv", wrapInitializeProjectDependentResources, orgInitializeProjectDependentResources},
 			{"__ZN18AMD10000Controller21hwInitializeFbMemSizeEv", wrapHwInitializeFbMemSize, orgHwInitializeFbMemSize},
 			{"__ZN18AMD10000Controller18hwInitializeFbBaseEv", wrapHwInitializeFbMemSize, orgHwInitializeFbMemSize},

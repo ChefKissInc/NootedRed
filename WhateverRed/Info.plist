@@ -46,7 +46,7 @@
 			<key>IODVDBundleName</key>
 			<string>AMDRadeonVADriver2</string>
 			<key>IOGVACodec</key>
-			<string>AMDVCN1</string>
+			<string>AMDVCE</string>
 			<key>IOGVAH264EncodeCapabilities</key>
 			<dict>
 				<key>VTQualityRating</key>
@@ -126,7 +126,7 @@
 			<key>cail_properties</key>
 			<dict>
 				<key>CAIL_DisableCailLoadUcode</key>
-				<integer>0</integer>
+				<integer>1</integer>
 				<key>CAIL_DisableJpegEngine</key>
 				<integer>0</integer>
 				<key>CAIL_EnableLBPWSupport</key>

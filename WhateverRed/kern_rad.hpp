@@ -119,7 +119,7 @@ private:
 	
 	void process24BitOutput(KernelPatcher &patcher, KernelPatcher::KextInfo &info, mach_vm_address_t address, size_t size);
 	void processConnectorOverrides(KernelPatcher &patcher, mach_vm_address_t address, size_t size);
-	
+	static IOReturn wrapProjectByPartNumber(IOService* that, uint64_t partNumber);
 	static uint64_t wrapInitializeProjectDependentResources(void* that);
 	static uint64_t wrapHwInitializeFbMemSize(void* that);
 	static uint64_t wrapHwInitializeFbBase(void* that);
