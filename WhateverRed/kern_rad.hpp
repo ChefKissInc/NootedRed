@@ -46,10 +46,10 @@ private:
 	mach_vm_address_t orgCreateHWInterface{}, orgGetHWMemory{}, orgGetATIChipConfigBit{};
 	mach_vm_address_t orgAllocateAMDHWRegisters{}, orgSetupCAIL{}, orgInitializeHWWorkarounds{};
 	mach_vm_address_t orgAllocateAMDHWAlignManager{}, orgMapDoorbellMemory{};
-	mach_vm_address_t orgInitWithController{};
+	mach_vm_address_t orgHwInitializeFbMemSize{}, orgHwInitializeFbBase{}, orgInitWithController{};
 	mach_vm_address_t deviceTypeTable{}, orgAmdTtlServicesConstructor{};
 	mach_vm_address_t orgGetState{}, orgConfRegBase{}, orgReadChipRev{};
-	mach_vm_address_t orgInitializeTtl{};
+	mach_vm_address_t orgInitializeTtl{}, orgInitializeProjectDependentResources{};
 	/* X5000HWLibs */
 	mach_vm_address_t orgTtlInitialize{}, orgTtlDevSetSmuFwVersion{}, orgIpiSetFwEntry{};
 	mach_vm_address_t orgIpiSmuSwInit{}, orgSmuSwInit{}, orgSmuCosAllocMemory{};
@@ -58,8 +58,9 @@ private:
 	mach_vm_address_t orgInternalCosReadFw{}, orgPopulateFirmwareDirectory{};
 	t_createFirmware createFirmware = nullptr;
 	t_putFirmware putFirmware = nullptr;
-	mach_vm_address_t orgGetVideoMemoryType{}, orgGetVideoMemoryBitWidth{};
-	mach_vm_address_t orgGetHardwareInfo{};
+	mach_vm_address_t orgGetHardwareInfo{}, orgTtlQueryHwIpInstanceInfo{};
+	mach_vm_address_t orgTtlIsHwAvailable{}, orgPspRapIsSupported{};
+	mach_vm_address_t orgDmcuGetHwVersion{};
 	/* ----------- */
 	
 	template <size_t Index>
@@ -129,6 +130,7 @@ private:
 	static uint64_t wrapGetHWMemory(void* that);
 	static uint64_t wrapGetATIChipConfigBit(void* that);
 	static uint64_t wrapAllocateAMDHWRegisters(void* that);
+	static bool wrapSetupCAIL(void* that);
 	static uint64_t wrapInitializeHWWorkarounds(void* that);
 	static uint64_t wrapAllocateAMDHWAlignManager(void* that);
 	static bool wrapMapDoorbellMemory(void* that);
@@ -138,7 +140,7 @@ private:
 	static uint64_t wrapConfRegBase(void *that);
 	static uint8_t wrapReadChipRev(void *that);
 	
-	/* X6000HWLibs */
+	/* X5000HWLibs */
 	static void wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider);
 	static uint32_t wrapTtlInitialize(void *that, uint64_t *param1);
 	static uint64_t wrapTtlDevSetSmuFwVersion(void *tlsInstance, uint32_t *b);
@@ -155,16 +157,11 @@ private:
 	static void wrapPopulateFirmwareDirectory(void *that);
 	static uint64_t wrapPspRapIsSupported(uint64_t param1);
 	static uint64_t wrapGetHardwareInfo(void *that, void *param1);
+	static uint64_t wrapTtlQueryHwIpInstanceInfo(void *param1, uint32_t *param2, uint32_t *param3);
+	static bool wrapTtlIsHwAvailable(uint64_t *param1);
+	static bool wrapIpiSmuIsSwipExcluded();
+	static uint32_t wrapDmcuGetHwVersion(uint32_t *param1);
 	/* ----------- */
-	
-	/* X6000Framebuffer */
-	static uint32_t wrapGetVideoMemoryType(void *that);
-	static uint32_t wrapGetVideoMemoryBitWidth(void *that);
-	static uint64_t wrapCreatePspDirectory(void *fwHelper, uint32_t tableOffset);
-	static uint64_t wrapCreateVramInfo(void *fwHelper, uint32_t tableOffset);
-	static IOReturn wrapPopulateVramInfo(void *that, void *param1);
-	static IOReturn wrapGetPspFirmwareInfo(void *that, void *fwInfo);
-	/* ---------------- */
 	
 	void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);
 	static IntegratedVRAMInfoInterface *createVramInfo(void *helper, uint32_t offset);
