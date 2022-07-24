@@ -309,7 +309,6 @@ uint32_t RAD::wrapInternalCosReadFw(uint64_t param1, uint64_t *param2)
 
 void RAD::wrapPopulateFirmwareDirectory(void *that)
 {
-	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
 	SYSLOG("rad", "AMDRadeonX5000_AMDRadeonHWLibsX5000::populateFirmwareDirectory called!");
 	FunctionCast(wrapPopulateFirmwareDirectory, callbackRAD->orgPopulateFirmwareDirectory)(that);
 	SYSLOG("rad", "injecting ativvaxy_rv.dat!");
@@ -321,7 +320,6 @@ void RAD::wrapPopulateFirmwareDirectory(void *that)
 	if (!callbackRAD->orgPutFirmware(fwDir, 6, fw)) {
 		panic("Failed to inject ativvaxy_rv.dat firmware");
 	}
-	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
 }
 
 uint64_t RAD::wrapGetHardwareInfo(void *that, void *param1)
@@ -347,12 +345,12 @@ uint64_t RAD::wrapTtlQueryHwIpInstanceInfo(void *param1, uint32_t *param2, uint3
 
 bool RAD::wrapTtlIsHwAvailable(uint64_t *param1)
 {
-	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
-	SYSLOG("rad", "_ttlIsHwAvailable called!");
-	SYSLOG("rad", "_ttlIsHwAvailable: param1 = %p", param1);
+	DBGLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+	DBGLOG("rad", "_ttlIsHwAvailable called!");
+	DBGLOG("rad", "_ttlIsHwAvailable: param1 = %p", param1);
 	auto ret = FunctionCast(wrapTtlIsHwAvailable, callbackRAD->orgTtlIsHwAvailable)(param1);
-	SYSLOG("rad", "_ttlIsHwAvailable returned %d", ret);
-	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+	DBGLOG("rad", "_ttlIsHwAvailable returned %d", ret);
+	DBGLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
 	return ret;
 }
 
@@ -577,7 +575,13 @@ WRAP_SIMPLE(bool, SetupCAIL, "%d")
 WRAP_SIMPLE(uint64_t, InitializeHWWorkarounds, "0x%x")
 WRAP_SIMPLE(uint64_t, AllocateAMDHWAlignManager, "0x%x")
 WRAP_SIMPLE(bool, MapDoorbellMemory, "%d")
-WRAP_SIMPLE(uint64_t, GetState, "%d")
+uint64_t RAD::wrapGetState(void* that)
+{
+	DBGLOG("rad", "getState called!");
+	auto ret = FunctionCast(wrapGetState, callbackRAD->orgGetState)(that);
+	DBGLOG("rad", "getState returned 0x%llx", ret);
+	return ret;
+}
 
 uint32_t RAD::wrapInitializeTtl(void *that, void *param1)
 {
