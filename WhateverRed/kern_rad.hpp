@@ -52,6 +52,8 @@ private:
 	mach_vm_address_t orgInitializeTtl{}, orgInitializeProjectDependentResources{};
 	mach_vm_address_t orgCreateAtomBiosProxy{}, orgInitializeResources{};
 	mach_vm_address_t orgVega10RegServInit{}, orgPopulateDeviceMemory{};
+	mach_vm_address_t orgCreateAsicInfo{}, orgPowerUpHardware{};
+	
 	/* X5000HWLibs */
 	mach_vm_address_t orgTtlInitialize{}, orgTtlDevSetSmuFwVersion{}, orgIpiSetFwEntry{};
 	mach_vm_address_t orgIpiSmuSwInit{}, orgSmuSwInit{}, orgSmuCosAllocMemory{};
@@ -144,6 +146,8 @@ private:
 	static IOReturn wrapInitializeResources(void *that);
 	static bool wrapVega10RegServInit(void *that, uint64_t param1, uint64_t param2, void *controller);
 	static IOReturn wrapPopulateDeviceMemory(void *that, uint32_t reg);
+	static void *wrapCreateAsicInfo(void *controller);
+	static IOReturn wrapPowerUpHardware(void *that);
 	
 	/* X5000HWLibs */
 	static void wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider);

@@ -418,6 +418,28 @@ IOReturn RAD::wrapPopulateDeviceMemory(void *that, uint32_t reg)
 	return kIOReturnSuccess;
 }
 
+void *RAD::wrapCreateAsicInfo(void *controller)
+{
+	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+	SYSLOG("rad", "createAsicInfo called!");
+	SYSLOG("rad", "createAsicInfo: controller = %p", controller);
+	auto ret = FunctionCast(wrapCreateAsicInfo, callbackRAD->orgCreateAsicInfo)(controller);
+	SYSLOG("rad", "createAsicInfo returned %p", ret);
+	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+	return 0;
+}
+
+IOReturn RAD::wrapPowerUpHardware(void *that)
+{
+	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+	SYSLOG("rad", "powerUpHardware called!");
+	SYSLOG("rad", "powerUpHardware: this = %p", that);
+	auto ret = FunctionCast(wrapPowerUpHardware, callbackRAD->orgPowerUpHardware)(that);
+	SYSLOG("rad", "powerUpHardware returned 0x%x", ret);
+	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+	return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
 {
 	if (kextRadeonFramebuffer.loadIndex == index)
@@ -502,6 +524,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"__ZN18AMD10000Controller18hwInitializeFbBaseEv", wrapHwInitializeFbMemSize, orgHwInitializeFbMemSize},
 			{"__ZN18AMD10000Controller19initializeResourcesEv", wrapInitializeResources, orgInitializeResources},
 			{"__ZN21Vega10RegisterService4initEyyP13ATIController", wrapVega10RegServInit, orgVega10RegServInit},
+			{"__ZN24DEVICE_COMPONENT_FACTORY14createAsicInfoEP13ATIController", wrapCreateAsicInfo, orgCreateAtomBiosProxy},
+			{"__ZN18AMD10000Controller15powerUpHardwareEv", wrapPowerUpHardware, orgPowerUpHardware},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMD10000Controller symbols");
