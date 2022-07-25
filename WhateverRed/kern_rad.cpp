@@ -418,17 +418,7 @@ IOReturn RAD::wrapPopulateDeviceMemory(void *that, uint32_t reg)
 	return kIOReturnSuccess;
 }
 
-void *RAD::wrapCreateAsicInfo(void *controller)
-{
-	SYSLOG("rad", "----------------------------------------------------------------------");
-	SYSLOG("rad", "createAsicInfo called!");
-	SYSLOG("rad", "createAsicInfo: controller = %p", controller);
-	auto ret = FunctionCast(wrapCreateAsicInfo, callbackRAD->orgCreateAsicInfo)(controller);
-	SYSLOG("rad", "createAsicInfo returned %p", ret);
-	SYSLOG("rad", "----------------------------------------------------------------------");
-	return 0;
-}
-
+WRAP_SIMPLE(void *, CreateAsicInfo, "%p")
 WRAP_SIMPLE(IOReturn, PowerUpHardware, "0x%x")
 WRAP_SIMPLE(IOReturn, AsicInfoRefresh, "0x%x")
 
