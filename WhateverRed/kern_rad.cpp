@@ -505,12 +505,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
 		
-		uint8_t find[] = { 0x49, 0x83, 0x7f, 0x08, 0x00, 0x74, 0x6e, 0x45, 0x85, 0xf6, 0x0f, 0x84, 0xb4, 0x00, 0x00, 0x00 };
-		uint8_t repl[] = { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 };
-		KernelPatcher::LookupPatch patch {&kextRadeonX5000HWLibs, find, repl, arrsize(find), 2};
-		patcher.applyLookupPatch(&patch);
-		patcher.clearError();
-		
 		return true;
 	} else if (kextAMD10000Controller.loadIndex == index) {
 		DBGLOG("rad", "Hooking AMD10000Controller");
