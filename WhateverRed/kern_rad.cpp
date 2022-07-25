@@ -436,6 +436,21 @@ bool RAD::wrapDetectPowerDown(void *that)
 WRAP_SIMPLE(IOReturn, InitializeAsic, "0x%x")
 WRAP_SIMPLE(IOReturn, CreateHwInterrupts, "0x%x")
 
+void *RAD::wrapGetGpuHwConstants(void *param1)
+{
+	DBGLOG("rad", "----------------------------------------------------------------------");
+	DBGLOG("rad", "_GetGpuHwConstants called!");
+	DBGLOG("rad", "_GetGpuHwConstants: param1 = %p", param1);
+	auto ret = FunctionCast(wrapGetGpuHwConstants, callbackRAD->orgGetGpuHwConstants)(param1);
+	DBGLOG("rad", "_GetGpuHwConstants returned %p", ret);
+	DBGLOG("rad", "----------------------------------------------------------------------");
+	if (!ret)
+	{
+		panic("_GetGpuHwConstants returned ZERO value!");
+	}
+	return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
 {
 	if (kextRadeonFramebuffer.loadIndex == index)
@@ -501,6 +516,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"_ttlIsHwAvailable", wrapTtlIsHwAvailable, orgTtlIsHwAvailable},
 			{"_IpiSmuIsSwipExcluded", wrapIpiSmuIsSwipExcluded},
 			{"_dmcu_get_hw_version", wrapDmcuGetHwVersion, orgDmcuGetHwVersion},
+			{"_GetGpuHwConstants", wrapGetGpuHwConstants, orgGetGpuHwConstants},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");

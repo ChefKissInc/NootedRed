@@ -54,6 +54,7 @@ private:
 	mach_vm_address_t orgVega10RegServInit{}, orgPopulateDeviceMemory{};
 	mach_vm_address_t orgCreateAsicInfo{}, orgPowerUpHardware{};
 	mach_vm_address_t orgAsicInfoRefresh{}, orgCreateHwInterrupts{};
+	mach_vm_address_t orgGetGpuHwConstants{};
 	
 	/* X5000HWLibs */
 	mach_vm_address_t orgTtlInitialize{}, orgTtlDevSetSmuFwVersion{}, orgIpiSetFwEntry{};
@@ -154,6 +155,7 @@ private:
 	static bool wrapDetectPowerDown(void *that);
 	static IOReturn wrapInitializeAsic(void *that);
 	static IOReturn wrapCreateHwInterrupts(void *that);
+	static void *wrapGetGpuHwConstants(void *param1);
 	
 	/* X5000HWLibs */
 	static void wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider);
