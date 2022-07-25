@@ -65,6 +65,7 @@ private:
 	t_putFirmware orgPutFirmware = nullptr;
 	mach_vm_address_t orgGetHardwareInfo{}, orgTtlQueryHwIpInstanceInfo{};
 	mach_vm_address_t orgTtlIsHwAvailable{}, orgDmcuGetHwVersion{};
+	mach_vm_address_t orgDetectPowerDown{}, orgInitializeAsic{};
 	/* ----------- */
 	
 	template <size_t Index>
@@ -150,6 +151,8 @@ private:
 	static void *wrapCreateAsicInfo(void *controller);
 	static IOReturn wrapPowerUpHardware(void *that);
 	static IOReturn wrapAsicInfoRefresh(void *that);
+	static bool wrapDetectPowerDown(void *that);
+	static IOReturn wrapInitializeAsic(void *that);
 	
 	/* X5000HWLibs */
 	static void wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider);

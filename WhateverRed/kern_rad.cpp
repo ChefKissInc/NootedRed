@@ -429,27 +429,10 @@ void *RAD::wrapCreateAsicInfo(void *controller)
 	return 0;
 }
 
-IOReturn RAD::wrapPowerUpHardware(void *that)
-{
-	SYSLOG("rad", "----------------------------------------------------------------------");
-	SYSLOG("rad", "powerUpHardware called!");
-	SYSLOG("rad", "powerUpHardware: this = %p", that);
-	auto ret = FunctionCast(wrapPowerUpHardware, callbackRAD->orgPowerUpHardware)(that);
-	SYSLOG("rad", "powerUpHardware returned 0x%x", ret);
-	SYSLOG("rad", "----------------------------------------------------------------------");
-	return ret;
-}
-
-IOReturn RAD::wrapAsicInfoRefresh(void *that)
-{
-	SYSLOG("rad", "----------------------------------------------------------------------");
-	SYSLOG("rad", "AtiAsicInfo::refresh called!");
-	SYSLOG("rad", "AtiAsicInfo::refresh: this = %p", that);
-	auto ret = FunctionCast(wrapAsicInfoRefresh, callbackRAD->orgAsicInfoRefresh)(that);
-	SYSLOG("rad", "AtiAsicInfo::refresh returned 0x%x", ret);
-	SYSLOG("rad", "----------------------------------------------------------------------");
-	return ret;
-}
+WRAP_SIMPLE(IOReturn, PowerUpHardware, "0x%x")
+WRAP_SIMPLE(IOReturn, AsicInfoRefresh, "0x%x")
+WRAP_SIMPLE(bool, DetectPowerDown, "%d")
+WRAP_SIMPLE(IOReturn, InitializeAsic, "0x%x")
 
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
 {
@@ -471,6 +454,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"__ZN13AtomBiosProxy19createAtomBiosProxyER16AtomBiosInitData", wrapCreateAtomBiosProxy, orgCreateAtomBiosProxy},
 			{"__ZN13ATIController20populateDeviceMemoryE13PCI_REG_INDEX", wrapPopulateDeviceMemory, orgPopulateDeviceMemory},
 			{"__ZN11AtiAsicInfo7refreshEv", wrapAsicInfoRefresh, orgAsicInfoRefresh},
+			{"__ZN14AtiBiosParser214initializeAsicEv", wrapInitializeAsic, orgInitializeAsic},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMDSupport symbols");
@@ -538,6 +522,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"__ZN21Vega10RegisterService4initEyyP13ATIController", wrapVega10RegServInit, orgVega10RegServInit},
 			{"__ZN24DEVICE_COMPONENT_FACTORY14createAsicInfoEP13ATIController", wrapCreateAsicInfo, orgCreateAsicInfo},
 			{"__ZN18AMD10000Controller15powerUpHardwareEv", wrapPowerUpHardware, orgPowerUpHardware},
+			{"__ZN18AMD10000Controller15detectPowerDownEv", wrapDetectPowerDown, orgDetectPowerDown},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMD10000Controller symbols");
@@ -1274,6 +1259,7 @@ bool RAD::wrapATIControllerStart(IOService *ctrl, IOService *provider)
 
 bool RAD::doNotTestVram([[maybe_unused]] IOService * ctrl, [[maybe_unused]] uint32_t reg, [[maybe_unused]] bool retryOnFail)
 {
+	SYSLOG("rad", "TestVRAM called! Returning true");
 	return true;
 }
 
