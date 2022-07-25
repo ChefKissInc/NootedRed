@@ -37,7 +37,6 @@ private:
 	
 	static RAD *callbackRAD;
 	ThreadLocal<IOService *, 8> currentPropProvider;
-	bool isPoweredDown = true;
 	
 	mach_vm_address_t orgSetProperty{}, orgGetProperty{}, orgGetConnectorsInfoV2{};
 	mach_vm_address_t orgGetConnectorsInfoV1{}, orgTranslateAtomConnectorInfoV1{};
@@ -54,7 +53,7 @@ private:
 	mach_vm_address_t orgCreateAtomBiosProxy{}, orgInitializeResources{};
 	mach_vm_address_t orgVega10RegServInit{}, orgPopulateDeviceMemory{};
 	mach_vm_address_t orgCreateAsicInfo{}, orgPowerUpHardware{};
-	mach_vm_address_t orgAsicInfoRefresh{};
+	mach_vm_address_t orgAsicInfoRefresh{}, orgCreateHwInterrupts{};
 	
 	/* X5000HWLibs */
 	mach_vm_address_t orgTtlInitialize{}, orgTtlDevSetSmuFwVersion{}, orgIpiSetFwEntry{};
@@ -154,6 +153,7 @@ private:
 	static IOReturn wrapAsicInfoRefresh(void *that);
 	static bool wrapDetectPowerDown(void *that);
 	static IOReturn wrapInitializeAsic(void *that);
+	static IOReturn wrapCreateHwInterrupts(void *that);
 	
 	/* X5000HWLibs */
 	static void wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider);

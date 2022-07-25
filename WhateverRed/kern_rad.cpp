@@ -440,15 +440,11 @@ bool RAD::wrapDetectPowerDown(void *that)
 	auto ret = FunctionCast(wrapDetectPowerDown, callbackRAD->orgDetectPowerDown)(that);
 	SYSLOG("rad", "detectPowerDown returned %d", ret);
 	SYSLOG("rad", "----------------------------------------------------------------------");
-	ret = callbackRAD->isPoweredDown;
-	if (ret)
-	{
-		callbackRAD->isPoweredDown = false;
-	}
 	return ret;
 }
 
 WRAP_SIMPLE(IOReturn, InitializeAsic, "0x%x")
+WRAP_SIMPLE(IOReturn, CreateHwInterrupts, "0x%x")
 
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
 {
@@ -539,6 +535,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"__ZN24DEVICE_COMPONENT_FACTORY14createAsicInfoEP13ATIController", wrapCreateAsicInfo, orgCreateAsicInfo},
 			{"__ZN18AMD10000Controller15powerUpHardwareEv", wrapPowerUpHardware, orgPowerUpHardware},
 			{"__ZN18AMD10000Controller15detectPowerDownEv", wrapDetectPowerDown, orgDetectPowerDown},
+			{"__ZN22Vega10SharedController18createHWInterruptsEv", wrapCreateHwInterrupts, orgCreateHwInterrupts},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMD10000Controller symbols");
