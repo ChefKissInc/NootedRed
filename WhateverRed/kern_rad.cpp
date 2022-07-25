@@ -373,6 +373,51 @@ uint32_t RAD::wrapDmcuGetHwVersion(uint32_t *param1)
 	return ret;
 }
 
+void *RAD::wrapCreateAtomBiosProxy(void *param1)
+{
+	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+	SYSLOG("rad", "createAtomBiosProxy called!");
+	SYSLOG("rad", "createAtomBiosProxy: param1 = %p", param1);
+	auto ret = FunctionCast(wrapCreateAtomBiosProxy, callbackRAD->orgCreateAtomBiosProxy)(param1);
+	SYSLOG("rad", "createAtomBiosProxy returned %p", ret);
+	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+	return ret;
+}
+
+IOReturn RAD::wrapInitializeResources(void *that)
+{
+	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+	SYSLOG("rad", "initializeResources called!");
+	SYSLOG("rad", "initializeResources: this = %p", that);
+	auto ret = FunctionCast(wrapInitializeResources, callbackRAD->orgInitializeResources)(that);
+	SYSLOG("rad", "initializeResources returned 0x%x", ret);
+	SYSLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+	return ret;
+}
+
+bool RAD::wrapVega10RegServInit(void *that, uint64_t param1, uint64_t param2, void *controller)
+{
+	
+	DBGLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+	DBGLOG("rad", "Vega10RegisterService::init called!");
+	DBGLOG("rad", "Vega10RegisterService::init: this = %p param1 = 0x%llx param2 = 0x%llx controller = %p", that, param1, param2, controller);
+	auto ret = FunctionCast(wrapVega10RegServInit, callbackRAD->orgVega10RegServInit)(that, param1, param2, controller);
+	DBGLOG("rad", "Vega10RegisterService::init returned %d", ret);
+	DBGLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+	return ret;
+}
+
+IOReturn RAD::wrapPopulateDeviceMemory(void *that, uint32_t reg)
+{
+	DBGLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+	DBGLOG("rad", "populateDeviceMemory called!");
+	DBGLOG("rad", "populateDeviceMemory: this = %p reg = 0x%x", that, reg);
+	auto ret = FunctionCast(wrapPopulateDeviceMemory, callbackRAD->orgPopulateDeviceMemory)(that, reg);
+	DBGLOG("rad", "populateDeviceMemory returned 0x%x", ret);
+	DBGLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+	return kIOReturnSuccess;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
 {
 	if (kextRadeonFramebuffer.loadIndex == index)
@@ -390,6 +435,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"__ZN16AtiDeviceControl16notifyLinkChangeE31kAGDCRegisterLinkControlEvent_tmj", wrapNotifyLinkChange, orgNotifyLinkChange},
 			{"__ZN11AtiAsicInfo18initWithControllerEP13ATIController", wrapInitWithController, orgInitWithController},
 			{"__ZN23AtiVramInfoInterface_V214createVramInfoEP14AtiVBiosHelperj", createVramInfo},
+			{"__ZN13AtomBiosProxy19createAtomBiosProxyER16AtomBiosInitData", wrapCreateAtomBiosProxy, orgCreateAtomBiosProxy},
+			{"__ZN13ATIController20populateDeviceMemoryE13PCI_REG_INDEX", wrapPopulateDeviceMemory, orgPopulateDeviceMemory},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMDSupport symbols");
@@ -453,6 +500,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"__ZN18AMD10000Controller35initializeProjectDependentResourcesEv", wrapInitializeProjectDependentResources, orgInitializeProjectDependentResources},
 			{"__ZN18AMD10000Controller21hwInitializeFbMemSizeEv", wrapHwInitializeFbMemSize, orgHwInitializeFbMemSize},
 			{"__ZN18AMD10000Controller18hwInitializeFbBaseEv", wrapHwInitializeFbMemSize, orgHwInitializeFbMemSize},
+			{"__ZN18AMD10000Controller19initializeResourcesEv", wrapInitializeResources, orgInitializeResources},
+			{"__ZN21Vega10RegisterService4initEyyP13ATIController", wrapVega10RegServInit, orgVega10RegServInit},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMD10000Controller symbols");

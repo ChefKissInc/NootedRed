@@ -50,6 +50,8 @@ private:
 	mach_vm_address_t orgDeviceTypeTable{}, orgAmdTtlServicesConstructor{};
 	mach_vm_address_t orgGetState{}, orgConfRegBase{}, orgReadChipRev{};
 	mach_vm_address_t orgInitializeTtl{}, orgInitializeProjectDependentResources{};
+	mach_vm_address_t orgCreateAtomBiosProxy{}, orgInitializeResources{};
+	mach_vm_address_t orgVega10RegServInit{}, orgPopulateDeviceMemory{};
 	/* X5000HWLibs */
 	mach_vm_address_t orgTtlInitialize{}, orgTtlDevSetSmuFwVersion{}, orgIpiSetFwEntry{};
 	mach_vm_address_t orgIpiSmuSwInit{}, orgSmuSwInit{}, orgSmuCosAllocMemory{};
@@ -138,6 +140,10 @@ private:
 	static uint32_t wrapInitializeTtl(void *that, void *param1);
 	static uint64_t wrapConfRegBase(void *that);
 	static uint8_t wrapReadChipRev(void *that);
+	static void *wrapCreateAtomBiosProxy(void *param1);
+	static IOReturn wrapInitializeResources(void *that);
+	static bool wrapVega10RegServInit(void *that, uint64_t param1, uint64_t param2, void *controller);
+	static IOReturn wrapPopulateDeviceMemory(void *that, uint32_t reg);
 	
 	/* X5000HWLibs */
 	static void wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider);
