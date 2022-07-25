@@ -37,6 +37,7 @@ private:
 	
 	static RAD *callbackRAD;
 	ThreadLocal<IOService *, 8> currentPropProvider;
+	bool isPoweredDown = true;
 	
 	mach_vm_address_t orgSetProperty{}, orgGetProperty{}, orgGetConnectorsInfoV2{};
 	mach_vm_address_t orgGetConnectorsInfoV1{}, orgTranslateAtomConnectorInfoV1{};

@@ -431,7 +431,23 @@ void *RAD::wrapCreateAsicInfo(void *controller)
 
 WRAP_SIMPLE(IOReturn, PowerUpHardware, "0x%x")
 WRAP_SIMPLE(IOReturn, AsicInfoRefresh, "0x%x")
-WRAP_SIMPLE(bool, DetectPowerDown, "%d")
+
+bool RAD::wrapDetectPowerDown(void *that)
+{
+	SYSLOG("rad", "----------------------------------------------------------------------");
+	SYSLOG("rad", "detectPowerDown called!");
+	SYSLOG("rad", "detectPowerDown: this = %p", that);
+	auto ret = FunctionCast(wrapDetectPowerDown, callbackRAD->orgDetectPowerDown)(that);
+	SYSLOG("rad", "detectPowerDown returned %d", ret);
+	SYSLOG("rad", "----------------------------------------------------------------------");
+	ret = callbackRAD->isPoweredDown;
+	if (ret)
+	{
+		callbackRAD->isPoweredDown = false;
+	}
+	return ret;
+}
+
 WRAP_SIMPLE(IOReturn, InitializeAsic, "0x%x")
 
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
@@ -526,6 +542,12 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMD10000Controller symbols");
+		
+		uint8_t find[] = { 0x3d, 0x60, 0x68, 0x00, 0x00, 0x0f, 0x8c, 0x32, 0x00, 0x00, 0x00, 0x0f, 0xb7, 0x45, 0xe6, 0x3d, 0x7f, 0x68, 0x00, 0x00, 0x0f, 0x8f, 0x23, 0x00, 0x00, 0x00, 0xbf, 0x78, 0x00, 0x00, 0x00 };
+		uint8_t repl[] = { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x0f, 0xb7, 0x45, 0xe6, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0xbf, 0x78, 0x00, 0x00, 0x00 };
+		KernelPatcher::LookupPatch patch {&kextAMD10000Controller, find, repl, arrsize(find), 2};
+		patcher.applyLookupPatch(&patch);
+		patcher.clearError();
 		
 		return true;
 	}
