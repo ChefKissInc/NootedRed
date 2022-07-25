@@ -149,7 +149,7 @@ uint64_t RAD::wrapInitWithController(void *that, void *controller)
 
 IntegratedVRAMInfoInterface *RAD::createVramInfo(void *helper, uint32_t offset)
 {
-	SYSLOG("rad", "----------------------------------------------------------------------\n\n");
+	SYSLOG("rad", "----------------------------------------------------------------------");
 	SYSLOG("rad", "creating fake VRAM info, get rekt ayymd");
 	SYSLOG("rad", "createVramInfo offset = 0x%x", offset);
 	DataTableInitInfo initInfo {
@@ -162,7 +162,7 @@ IntegratedVRAMInfoInterface *RAD::createVramInfo(void *helper, uint32_t offset)
 	};
 	auto *ret = new IntegratedVRAMInfoInterface;
 	ret->init(&initInfo);
-	SYSLOG("rad", "----------------------------------------------------------------------\n\n");
+	SYSLOG("rad", "----------------------------------------------------------------------");
 	return ret;
 }
 
@@ -333,121 +333,121 @@ uint64_t RAD::wrapGetHardwareInfo(void *that, void *param1)
 
 uint64_t RAD::wrapTtlQueryHwIpInstanceInfo(void *param1, uint32_t *param2, uint32_t *param3)
 {
-	SYSLOG("rad", "----------------------------------------------------------------------\n\n");
+	SYSLOG("rad", "----------------------------------------------------------------------");
 	SYSLOG("rad", "_TtlQueryHwIpInstanceInfo called!");
 	SYSLOG("rad", "_TtlQueryHwIpInstanceInfo: param1 = %p param2 = %p param3 = %p", param1, param2, param3);
 	SYSLOG("rad", "_TtlQueryHwIpInstanceInfo: *param2 = 0x%x", *param2);
 	auto ret = FunctionCast(wrapTtlQueryHwIpInstanceInfo, callbackRAD->orgTtlQueryHwIpInstanceInfo)(param1, param2, param3);
 	SYSLOG("rad", "_TtlQueryHwIpInstanceInfo returned 0x%llx", ret);
-	SYSLOG("rad", "----------------------------------------------------------------------\n\n");
+	SYSLOG("rad", "----------------------------------------------------------------------");
 	return ret;
 }
 
 bool RAD::wrapTtlIsHwAvailable(uint64_t *param1)
 {
-	DBGLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+	DBGLOG("rad", "----------------------------------------------------------------------");
 	DBGLOG("rad", "_ttlIsHwAvailable called!");
 	DBGLOG("rad", "_ttlIsHwAvailable: param1 = %p", param1);
 	auto ret = FunctionCast(wrapTtlIsHwAvailable, callbackRAD->orgTtlIsHwAvailable)(param1);
 	DBGLOG("rad", "_ttlIsHwAvailable returned %d", ret);
-	DBGLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+	DBGLOG("rad", "----------------------------------------------------------------------");
 	return ret;
 }
 
 bool RAD::wrapIpiSmuIsSwipExcluded()
 {
-	SYSLOG("rad", "----------------------------------------------------------------------\n\n");
+	SYSLOG("rad", "----------------------------------------------------------------------");
 	SYSLOG("rad", "_IpiSmuIsSwipExcluded called!");
-	SYSLOG("rad", "----------------------------------------------------------------------\n\n");
+	SYSLOG("rad", "----------------------------------------------------------------------");
 	return true;
 }
 
 uint32_t RAD::wrapDmcuGetHwVersion(uint32_t *param1)
 {
-	SYSLOG("rad", "----------------------------------------------------------------------\n\n");
+	SYSLOG("rad", "----------------------------------------------------------------------");
 	SYSLOG("rad", "_dmcu_get_hw_version called!");
 	SYSLOG("rad", "_dmcu_get_hw_version: param1 = %p", param1);
 	auto ret = FunctionCast(wrapDmcuGetHwVersion, callbackRAD->orgDmcuGetHwVersion)(param1);
 	SYSLOG("rad", "_dmcu_get_hw_version returned 0x%x", ret);
-	SYSLOG("rad", "----------------------------------------------------------------------\n\n");
+	SYSLOG("rad", "----------------------------------------------------------------------");
 	return ret;
 }
 
 void *RAD::wrapCreateAtomBiosProxy(void *param1)
 {
-	SYSLOG("rad", "----------------------------------------------------------------------\n\n");
+	SYSLOG("rad", "----------------------------------------------------------------------");
 	SYSLOG("rad", "createAtomBiosProxy called!");
 	SYSLOG("rad", "createAtomBiosProxy: param1 = %p", param1);
 	auto ret = FunctionCast(wrapCreateAtomBiosProxy, callbackRAD->orgCreateAtomBiosProxy)(param1);
 	SYSLOG("rad", "createAtomBiosProxy returned %p", ret);
-	SYSLOG("rad", "----------------------------------------------------------------------\n\n");
+	SYSLOG("rad", "----------------------------------------------------------------------");
 	return ret;
 }
 
 IOReturn RAD::wrapInitializeResources(void *that)
 {
-	SYSLOG("rad", "----------------------------------------------------------------------\n\n");
+	SYSLOG("rad", "----------------------------------------------------------------------");
 	SYSLOG("rad", "initializeResources called!");
 	SYSLOG("rad", "initializeResources: this = %p", that);
 	auto ret = FunctionCast(wrapInitializeResources, callbackRAD->orgInitializeResources)(that);
 	SYSLOG("rad", "initializeResources returned 0x%x", ret);
-	SYSLOG("rad", "----------------------------------------------------------------------\n\n");
+	SYSLOG("rad", "----------------------------------------------------------------------");
 	return ret;
 }
 
 bool RAD::wrapVega10RegServInit(void *that, uint64_t param1, uint64_t param2, void *controller)
 {
 	
-	DBGLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+	DBGLOG("rad", "----------------------------------------------------------------------");
 	DBGLOG("rad", "Vega10RegisterService::init called!");
 	DBGLOG("rad", "Vega10RegisterService::init: this = %p param1 = 0x%llx param2 = 0x%llx controller = %p", that, param1, param2, controller);
 	auto ret = FunctionCast(wrapVega10RegServInit, callbackRAD->orgVega10RegServInit)(that, param1, param2, controller);
 	DBGLOG("rad", "Vega10RegisterService::init returned %d", ret);
-	DBGLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+	DBGLOG("rad", "----------------------------------------------------------------------");
 	return ret;
 }
 
 IOReturn RAD::wrapPopulateDeviceMemory(void *that, uint32_t reg)
 {
-	DBGLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+	DBGLOG("rad", "----------------------------------------------------------------------");
 	DBGLOG("rad", "populateDeviceMemory called!");
 	DBGLOG("rad", "populateDeviceMemory: this = %p reg = 0x%x", that, reg);
 	auto ret = FunctionCast(wrapPopulateDeviceMemory, callbackRAD->orgPopulateDeviceMemory)(that, reg);
 	DBGLOG("rad", "populateDeviceMemory returned 0x%x", ret);
-	DBGLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+	DBGLOG("rad", "----------------------------------------------------------------------");
 	return kIOReturnSuccess;
 }
 
 void *RAD::wrapCreateAsicInfo(void *controller)
 {
-	SYSLOG("rad", "----------------------------------------------------------------------\n\n");
+	SYSLOG("rad", "----------------------------------------------------------------------");
 	SYSLOG("rad", "createAsicInfo called!");
 	SYSLOG("rad", "createAsicInfo: controller = %p", controller);
 	auto ret = FunctionCast(wrapCreateAsicInfo, callbackRAD->orgCreateAsicInfo)(controller);
 	SYSLOG("rad", "createAsicInfo returned %p", ret);
-	SYSLOG("rad", "----------------------------------------------------------------------\n\n");
+	SYSLOG("rad", "----------------------------------------------------------------------");
 	return 0;
 }
 
 IOReturn RAD::wrapPowerUpHardware(void *that)
 {
-	SYSLOG("rad", "----------------------------------------------------------------------\n\n");
+	SYSLOG("rad", "----------------------------------------------------------------------");
 	SYSLOG("rad", "powerUpHardware called!");
 	SYSLOG("rad", "powerUpHardware: this = %p", that);
 	auto ret = FunctionCast(wrapPowerUpHardware, callbackRAD->orgPowerUpHardware)(that);
 	SYSLOG("rad", "powerUpHardware returned 0x%x", ret);
-	SYSLOG("rad", "----------------------------------------------------------------------\n\n");
+	SYSLOG("rad", "----------------------------------------------------------------------");
 	return ret;
 }
 
 IOReturn RAD::wrapAsicInfoRefresh(void *that)
 {
-	SYSLOG("rad", "----------------------------------------------------------------------\n\n");
+	SYSLOG("rad", "----------------------------------------------------------------------");
 	SYSLOG("rad", "AtiAsicInfo::refresh called!");
 	SYSLOG("rad", "AtiAsicInfo::refresh: this = %p", that);
 	auto ret = FunctionCast(wrapAsicInfoRefresh, callbackRAD->orgAsicInfoRefresh)(that);
 	SYSLOG("rad", "AtiAsicInfo::refresh returned 0x%x", ret);
-	SYSLOG("rad", "----------------------------------------------------------------------\n\n");
+	SYSLOG("rad", "----------------------------------------------------------------------");
 	return ret;
 }
 
