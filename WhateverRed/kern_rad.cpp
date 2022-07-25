@@ -470,6 +470,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"__ZN23AtiVramInfoInterface_V214createVramInfoEP14AtiVBiosHelperj", createVramInfo},
 			{"__ZN13AtomBiosProxy19createAtomBiosProxyER16AtomBiosInitData", wrapCreateAtomBiosProxy, orgCreateAtomBiosProxy},
 			{"__ZN13ATIController20populateDeviceMemoryE13PCI_REG_INDEX", wrapPopulateDeviceMemory, orgPopulateDeviceMemory},
+			{"__ZN11AtiAsicInfo7refreshEv", wrapAsicInfoRefresh, orgAsicInfoRefresh},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMDSupport symbols");
@@ -537,7 +538,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"__ZN21Vega10RegisterService4initEyyP13ATIController", wrapVega10RegServInit, orgVega10RegServInit},
 			{"__ZN24DEVICE_COMPONENT_FACTORY14createAsicInfoEP13ATIController", wrapCreateAsicInfo, orgCreateAsicInfo},
 			{"__ZN18AMD10000Controller15powerUpHardwareEv", wrapPowerUpHardware, orgPowerUpHardware},
-			{"__ZN11AtiAsicInfo7refreshEv", wrapAsicInfoRefresh, orgAsicInfoRefresh},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMD10000Controller symbols");
