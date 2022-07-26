@@ -342,6 +342,18 @@ void *RAD::wrapGetGpuHwConstants(uint8_t *param1)
 	return ret;
 }
 
+uint64_t RAD::wrapMCILUpdateGfxCGPG(void *param1)
+{
+	
+	SYSLOG("rad", "----------------------------------------------------------------------");
+	SYSLOG("rad", "_Cail_MCILUpdateGfxCGPG called!");
+	SYSLOG("rad", "_Cail_MCILUpdateGfxCGPG: param1 = %p", param1);
+	auto ret = FunctionCast(wrapMCILUpdateGfxCGPG, callbackRAD->orgMCILUpdateGfxCGPG)(param1);
+	SYSLOG("rad", "_Cail_MCILUpdateGfxCGPG returned 0x%llx", ret);
+	IOSleep(60000);
+	return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
 {
 	if (kextRadeonFramebuffer.loadIndex == index)
