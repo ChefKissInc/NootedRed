@@ -145,14 +145,6 @@
 				<integer>0</integer>
 				<key>CAIL_DisableJpegEngine</key>
 				<integer>0</integer>
-				<key>CAIL_EnableLBPWSupport</key>
-				<integer>0</integer>
-				<key>CAIL_EnablePeerDataAperture</key>
-				<integer>0</integer>
-				<key>CAIL_EnableSecureMmFwLoading</key>
-				<integer>1</integer>
-				<key>CAIL_EnableXdmaSupport</key>
-				<integer>0</integer>
 			</dict>
 		</dict>
 		<key>AtiGpuWrangler</key>
@@ -202,7 +194,7 @@
 				<key>CFG_CAA</key>
 				<integer>0</integer>
 				<key>CFG_FB_LIMIT</key>
-				<integer>3</integer>
+				<integer>0</integer>
 				<key>CFG_FORCEMAXDPM</key>
 				<false/>
 				<key>CFG_FORCE_MAX_DPS</key>
@@ -225,8 +217,16 @@
 				<false/>
 				<key>CFG_NO_SLS</key>
 				<false/>
+				<key>CFG_NVV</key>
+				<integer>2</integer>
 				<key>CFG_PAA</key>
 				<integer>0</integer>
+				<key>CFG_PTPL2_CNT</key>
+				<integer>16</integer>
+				<key>CFG_PTPL2_MAX</key>
+				<integer>250</integer>
+				<key>CFG_PTPL2_MIN</key>
+				<integer>100</integer>
 				<key>CFG_PULSE_INT</key>
 				<true/>
 				<key>CFG_TRANS_WSRV</key>
@@ -270,7 +270,13 @@
 			</dict>
 			<key>aty_properties</key>
 			<dict>
+				<key>Force_Load_FalconSMUFW</key>
+				<true/>
+				<key>PP_ACDCGpioDisabled</key>
+				<integer>0</integer>
 				<key>PP_DisableClockStretcher</key>
+				<integer>1</integer>
+				<key>PP_DisablePCCLimitControl</key>
 				<integer>1</integer>
 				<key>PP_DisableULV</key>
 				<integer>1</integer>
