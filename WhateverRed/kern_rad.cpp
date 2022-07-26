@@ -9,6 +9,7 @@
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_iokit.hpp>
 #include <Headers/kern_devinfo.hpp>
+#include <Headers/kern_file.hpp>
 #include <IOKit/IOService.h>
 
 #include <Availability.h>
@@ -336,7 +337,6 @@ void *RAD::wrapGetGpuHwConstants(uint8_t *param1)
 	if (!ret)
 	{
 		SYSLOG("rad", "_GetGpuHwConstants failed!");
-		IOSleep(60000);
 		panic("_GetGpuHwConstants returned ZERO value!");
 	}
 	return ret;
@@ -350,7 +350,8 @@ uint64_t RAD::wrapMCILUpdateGfxCGPG(void *param1)
 	SYSLOG("rad", "_Cail_MCILUpdateGfxCGPG: param1 = %p", param1);
 	auto ret = FunctionCast(wrapMCILUpdateGfxCGPG, callbackRAD->orgMCILUpdateGfxCGPG)(param1);
 	SYSLOG("rad", "_Cail_MCILUpdateGfxCGPG returned 0x%llx", ret);
-	IOSleep(60000);
+	auto *text = "Holee Sheet";
+	FileIO::writeBufferToFile("/Library/haha.txt", (void*)text, strlen(text));
 	return ret;
 }
 
