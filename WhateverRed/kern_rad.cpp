@@ -147,23 +147,10 @@ uint64_t RAD::wrapInitWithController(void *that, void *controller)
 	return ret;
 }
 
-IntegratedVRAMInfoInterface *RAD::createVramInfo(void *helper, uint32_t offset)
+uint64_t RAD::createVramInfo([[maybe_unused]] void *helper, [[maybe_unused]] uint32_t offset)
 {
-	SYSLOG("rad", "----------------------------------------------------------------------");
-	SYSLOG("rad", "creating fake VRAM info, get rekt ayymd");
-	SYSLOG("rad", "createVramInfo offset = 0x%x", offset);
-	DataTableInitInfo initInfo {
-		.helper = helper,
-		.tableOffset = offset,
-		.revision = AtiAtomDataRevision {
-			.formatRevision = 2,
-			.contentRevision = 3,
-		},
-	};
-	auto *ret = new IntegratedVRAMInfoInterface;
-	ret->init(&initInfo);
-	SYSLOG("rad", "----------------------------------------------------------------------");
-	return ret;
+	SYSLOG("rad", "createVramInfo called! Returning fake value");
+	return 1;
 }
 
 void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider)
@@ -176,15 +163,6 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider)
 	
 	SYSLOG("rad", "calling original AmdTtlServices constructor");
 	FunctionCast(wrapAmdTtlServicesConstructor, callbackRAD->orgAmdTtlServicesConstructor)(that, provider);
-}
-
-uint32_t RAD::wrapTtlInitialize(void *that, uint64_t *param1)
-{
-	SYSLOG("rad", "TTL::initialize called!");
-	SYSLOG("rad", "TTL::initialize: 0:0x%llx 1:0x%llx 2:0x%llx 3:0x%llx 4:0x%llx 5:0x%llx", param1[0], param1[1], param1[2], param1[3], param1[4], param1[5]);
-	auto ret = FunctionCast(wrapTtlInitialize, callbackRAD->orgTtlInitialize)(that, param1);
-	SYSLOG("rad", "TTL::initialize returned %x", ret);
-	return ret;
 }
 
 uint64_t RAD::wrapTtlDevSetSmuFwVersion(void *tlsInstance, uint32_t *b)
@@ -222,24 +200,6 @@ uint64_t RAD::wrapSmuSwInit(void *input, uint64_t *output)
 	auto ret = FunctionCast(wrapSmuSwInit, callbackRAD->orgSmuSwInit)(input, output);
 	SYSLOG("rad", "_smu_sw_init: output 0:0x%llx 1:0x%llx", output[0], output[1]);
 	SYSLOG("rad", "_smu_sw_init returned 0x%x", ret);
-	return ret;
-}
-
-uint32_t RAD::wrapSmuCosAllocMemory(void *param1, uint64_t param2, uint32_t param3, uint32_t *param4)
-{
-	SYSLOG("rad", "_smu_cos_alloc_memory called!");
-	SYSLOG("rad", "_smu_cos_alloc_memory: param1 = %p param2 = 0x%llx param3 = 0x%x param4 = %p", param1, param2, param3, param4);
-	auto ret = FunctionCast(wrapSmuCosAllocMemory, callbackRAD->orgSmuCosAllocMemory)(param1, param2, param3, param4);
-	SYSLOG("rad", "_smu_cos_alloc_memory returned 0x%x", ret);
-	return ret;
-}
-
-uint32_t RAD::wrapSmuInitFunctionPointerList(uint64_t param1, uint64_t param2, uint32_t param3)
-{
-	SYSLOG("rad", "_smu_init_function_pointer_list called!");
-	SYSLOG("rad", "_smu_init_function_pointer_list: param1 = 0x%llx param2 = 0x%llx param3 = 0x%x", param1, param2, param3);
-	auto ret = FunctionCast(wrapSmuInitFunctionPointerList, callbackRAD->orgSmuInitFunctionPointerList)(param1, param2, param3);
-	SYSLOG("rad", "_smu_init_function_pointer_list returned 0x%x", ret);
 	return ret;
 }
 
@@ -322,55 +282,10 @@ void RAD::wrapPopulateFirmwareDirectory(void *that)
 	}
 }
 
-uint64_t RAD::wrapGetHardwareInfo(void *that, void *param1)
-{
-	SYSLOG("rad", "getHardwareInfo called!");
-	SYSLOG("rad", "getHardwareInfo: this = %p param1 = %o", that, param1);
-	auto ret = FunctionCast(wrapGetHardwareInfo, callbackRAD->orgGetHardwareInfo)(that, param1);
-	SYSLOG("rad", "getHardwareInfo returned 0x%llx", ret);
-	return ret;
-}
-
-uint64_t RAD::wrapTtlQueryHwIpInstanceInfo(void *param1, uint32_t *param2, uint32_t *param3)
-{
-	SYSLOG("rad", "----------------------------------------------------------------------");
-	SYSLOG("rad", "_TtlQueryHwIpInstanceInfo called!");
-	SYSLOG("rad", "_TtlQueryHwIpInstanceInfo: param1 = %p param2 = %p param3 = %p", param1, param2, param3);
-	SYSLOG("rad", "_TtlQueryHwIpInstanceInfo: *param2 = 0x%x", *param2);
-	auto ret = FunctionCast(wrapTtlQueryHwIpInstanceInfo, callbackRAD->orgTtlQueryHwIpInstanceInfo)(param1, param2, param3);
-	SYSLOG("rad", "_TtlQueryHwIpInstanceInfo returned 0x%llx", ret);
-	SYSLOG("rad", "----------------------------------------------------------------------");
-	return ret;
-}
-
-bool RAD::wrapTtlIsHwAvailable(uint64_t *param1)
-{
-	DBGLOG("rad", "----------------------------------------------------------------------");
-	DBGLOG("rad", "_ttlIsHwAvailable called!");
-	DBGLOG("rad", "_ttlIsHwAvailable: param1 = %p", param1);
-	auto ret = FunctionCast(wrapTtlIsHwAvailable, callbackRAD->orgTtlIsHwAvailable)(param1);
-	DBGLOG("rad", "_ttlIsHwAvailable returned %d", ret);
-	DBGLOG("rad", "----------------------------------------------------------------------");
-	return ret;
-}
-
 bool RAD::wrapIpiSmuIsSwipExcluded()
 {
-	SYSLOG("rad", "----------------------------------------------------------------------");
 	SYSLOG("rad", "_IpiSmuIsSwipExcluded called!");
-	SYSLOG("rad", "----------------------------------------------------------------------");
 	return true;
-}
-
-uint32_t RAD::wrapDmcuGetHwVersion(uint32_t *param1)
-{
-	SYSLOG("rad", "----------------------------------------------------------------------");
-	SYSLOG("rad", "_dmcu_get_hw_version called!");
-	SYSLOG("rad", "_dmcu_get_hw_version: param1 = %p", param1);
-	auto ret = FunctionCast(wrapDmcuGetHwVersion, callbackRAD->orgDmcuGetHwVersion)(param1);
-	SYSLOG("rad", "_dmcu_get_hw_version returned 0x%x", ret);
-	SYSLOG("rad", "----------------------------------------------------------------------");
-	return ret;
 }
 
 void *RAD::wrapCreateAtomBiosProxy(void *param1)
@@ -380,72 +295,48 @@ void *RAD::wrapCreateAtomBiosProxy(void *param1)
 	SYSLOG("rad", "createAtomBiosProxy: param1 = %p", param1);
 	auto ret = FunctionCast(wrapCreateAtomBiosProxy, callbackRAD->orgCreateAtomBiosProxy)(param1);
 	SYSLOG("rad", "createAtomBiosProxy returned %p", ret);
-	SYSLOG("rad", "----------------------------------------------------------------------");
 	return ret;
 }
 
 IOReturn RAD::wrapInitializeResources(void *that)
 {
-	SYSLOG("rad", "----------------------------------------------------------------------");
 	SYSLOG("rad", "initializeResources called!");
 	SYSLOG("rad", "initializeResources: this = %p", that);
 	auto ret = FunctionCast(wrapInitializeResources, callbackRAD->orgInitializeResources)(that);
 	SYSLOG("rad", "initializeResources returned 0x%x", ret);
-	SYSLOG("rad", "----------------------------------------------------------------------");
-	return ret;
-}
-
-bool RAD::wrapVega10RegServInit(void *that, uint64_t param1, uint64_t param2, void *controller)
-{
-	
-	DBGLOG("rad", "----------------------------------------------------------------------");
-	DBGLOG("rad", "Vega10RegisterService::init called!");
-	DBGLOG("rad", "Vega10RegisterService::init: this = %p param1 = 0x%llx param2 = 0x%llx controller = %p", that, param1, param2, controller);
-	auto ret = FunctionCast(wrapVega10RegServInit, callbackRAD->orgVega10RegServInit)(that, param1, param2, controller);
-	DBGLOG("rad", "Vega10RegisterService::init returned %d", ret);
-	DBGLOG("rad", "----------------------------------------------------------------------");
 	return ret;
 }
 
 IOReturn RAD::wrapPopulateDeviceMemory(void *that, uint32_t reg)
 {
-	DBGLOG("rad", "----------------------------------------------------------------------");
 	DBGLOG("rad", "populateDeviceMemory called!");
 	DBGLOG("rad", "populateDeviceMemory: this = %p reg = 0x%x", that, reg);
 	auto ret = FunctionCast(wrapPopulateDeviceMemory, callbackRAD->orgPopulateDeviceMemory)(that, reg);
 	DBGLOG("rad", "populateDeviceMemory returned 0x%x", ret);
-	DBGLOG("rad", "----------------------------------------------------------------------");
 	return kIOReturnSuccess;
 }
 
-WRAP_SIMPLE(void *, CreateAsicInfo, "%p")
-WRAP_SIMPLE(IOReturn, PowerUpHardware, "0x%x")
-WRAP_SIMPLE(IOReturn, AsicInfoRefresh, "0x%x")
-
-bool RAD::wrapDetectPowerDown(void *that)
+void *RAD::wrapGetGpuHwConstants(uint8_t *param1)
 {
 	SYSLOG("rad", "----------------------------------------------------------------------");
-	SYSLOG("rad", "detectPowerDown called!");
-	SYSLOG("rad", "detectPowerDown: this = %p", that);
-	auto ret = FunctionCast(wrapDetectPowerDown, callbackRAD->orgDetectPowerDown)(that);
-	SYSLOG("rad", "detectPowerDown returned %d", ret);
-	SYSLOG("rad", "----------------------------------------------------------------------");
-	return ret;
-}
-
-WRAP_SIMPLE(IOReturn, InitializeAsic, "0x%x")
-WRAP_SIMPLE(IOReturn, CreateHwInterrupts, "0x%x")
-
-void *RAD::wrapGetGpuHwConstants(void *param1)
-{
-	DBGLOG("rad", "----------------------------------------------------------------------");
-	DBGLOG("rad", "_GetGpuHwConstants called!");
-	DBGLOG("rad", "_GetGpuHwConstants: param1 = %p", param1);
+	SYSLOG("rad", "_GetGpuHwConstants called!");
+	SYSLOG("rad", "_GetGpuHwConstants: param1 = %p", param1);
+	auto *asicCaps = *(uint8_t **)(param1 + 0x350);
+	SYSLOG("rad", "_GetGpuHwConstants: asicCaps = %p", asicCaps);
+	uint16_t deviceId = *(uint16_t *)(asicCaps + 8);
+	SYSLOG("rad", "_GetGpuHwConstants: deviceId = 0x%x", deviceId);
+	auto *goldenSettings = *(uint8_t **)(asicCaps + 48);
+	SYSLOG("rad", "_GetGpuHwConstants: goldenSettings = %p", goldenSettings);
+	for (size_t i = 0; i < 24; i++) {
+		SYSLOG("rad", "_GetGpuHwConstants: goldenSettings: %d:0x%x", i, goldenSettings[i]);
+	}
 	auto ret = FunctionCast(wrapGetGpuHwConstants, callbackRAD->orgGetGpuHwConstants)(param1);
-	DBGLOG("rad", "_GetGpuHwConstants returned %p", ret);
-	DBGLOG("rad", "----------------------------------------------------------------------");
+	SYSLOG("rad", "_GetGpuHwConstants returned %p", ret);
+	SYSLOG("rad", "----------------------------------------------------------------------");
 	if (!ret)
 	{
+		SYSLOG("rad", "_GetGpuHwConstants failed!");
+		IOSleep(60000);
 		panic("_GetGpuHwConstants returned ZERO value!");
 	}
 	return ret;
@@ -470,8 +361,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"__ZN23AtiVramInfoInterface_V214createVramInfoEP14AtiVBiosHelperj", createVramInfo},
 			{"__ZN13AtomBiosProxy19createAtomBiosProxyER16AtomBiosInitData", wrapCreateAtomBiosProxy, orgCreateAtomBiosProxy},
 			{"__ZN13ATIController20populateDeviceMemoryE13PCI_REG_INDEX", wrapPopulateDeviceMemory, orgPopulateDeviceMemory},
-			{"__ZN11AtiAsicInfo7refreshEv", wrapAsicInfoRefresh, orgAsicInfoRefresh},
-			{"__ZN14AtiBiosParser214initializeAsicEv", wrapInitializeAsic, orgInitializeAsic},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMDSupport symbols");
@@ -499,23 +388,17 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 		
 		KernelPatcher::RouteRequest requests[] = {
 			{"__ZN14AmdTtlServicesC2EP11IOPCIDevice", wrapAmdTtlServicesConstructor, orgAmdTtlServicesConstructor},
-			{"__ZN14AmdTtlServices10initializeEP30_TtlLibraryInitializationInput", wrapTtlInitialize, orgTtlInitialize},
 			{"_ttlDevSetSmuFwVersion", wrapTtlDevSetSmuFwVersion, orgTtlDevSetSmuFwVersion},
 			{"_IpiSetFwEntry", wrapIpiSetFwEntry, orgIpiSetFwEntry},
 			{"_ipi_smu_sw_init", wrapIpiSmuSwInit, orgIpiSmuSwInit},
 			{"_smu_sw_init", wrapSmuSwInit, orgSmuSwInit},
-			{"_smu_cos_alloc_memory", wrapSmuCosAllocMemory, orgSmuCosAllocMemory},
-			{"_smu_init_function_pointer_list", wrapSmuInitFunctionPointerList, orgSmuInitFunctionPointerList},
 			{"_smu_internal_sw_init", wrapSmuInternalSwInit, orgSmuInternalSwInit},
 			{"_smu_get_hw_version", wrapSmuGetHwVersion, orgSmuGetHwVersion},
 			{"_psp_sw_init", wrapPspSwInit, orgPspSwInit},
 			{"_gc_get_hw_version", wrapGcGetHwVersion, orgGcGetHwVersion},
 			{"_internal_cos_read_fw", wrapInternalCosReadFw, orgInternalCosReadFw},
 			{"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory, orgPopulateFirmwareDirectory},
-			{"_TtlQueryHwIpInstanceInfo", wrapTtlQueryHwIpInstanceInfo, orgTtlQueryHwIpInstanceInfo},
-			{"_ttlIsHwAvailable", wrapTtlIsHwAvailable, orgTtlIsHwAvailable},
 			{"_IpiSmuIsSwipExcluded", wrapIpiSmuIsSwipExcluded},
-			{"_dmcu_get_hw_version", wrapDmcuGetHwVersion, orgDmcuGetHwVersion},
 			{"_GetGpuHwConstants", wrapGetGpuHwConstants, orgGetGpuHwConstants},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
@@ -531,11 +414,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"__ZN18AMD10000Controller21hwInitializeFbMemSizeEv", wrapHwInitializeFbMemSize, orgHwInitializeFbMemSize},
 			{"__ZN18AMD10000Controller18hwInitializeFbBaseEv", wrapHwInitializeFbMemSize, orgHwInitializeFbMemSize},
 			{"__ZN18AMD10000Controller19initializeResourcesEv", wrapInitializeResources, orgInitializeResources},
-			{"__ZN21Vega10RegisterService4initEyyP13ATIController", wrapVega10RegServInit, orgVega10RegServInit},
-			{"__ZN24DEVICE_COMPONENT_FACTORY14createAsicInfoEP13ATIController", wrapCreateAsicInfo, orgCreateAsicInfo},
-			{"__ZN18AMD10000Controller15powerUpHardwareEv", wrapPowerUpHardware, orgPowerUpHardware},
-			{"__ZN18AMD10000Controller15detectPowerDownEv", wrapDetectPowerDown, orgDetectPowerDown},
-			{"__ZN22Vega10SharedController18createHWInterruptsEv", wrapCreateHwInterrupts, orgCreateHwInterrupts},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMD10000Controller symbols");
@@ -702,7 +580,6 @@ void RAD::processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_ad
 		{"__ZN28AMDRadeonX5000_AMDRTHardware13initializeTtlEP16_GART_PARAMETERS", wrapInitializeTtl, orgInitializeTtl},
 		{"__ZN28AMDRadeonX5000_AMDRTHardware22configureRegisterBasesEv", wrapConfRegBase, orgConfRegBase},
 		{"__ZN32AMDRadeonX5000_AMDVega10Hardware23readChipRevFromRegisterEv", wrapReadChipRev, orgReadChipRev},
-		{"__ZN29AMDRadeonX5000_AMDAccelDevice15getHardwareInfoEP24_sAMD_GET_HW_INFO_VALUES", wrapGetHardwareInfo, orgGetHardwareInfo}
 	};
 	patcher.routeMultiple(hardware.loadIndex, requests, arrsize(requests), address, size);
 	

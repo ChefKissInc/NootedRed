@@ -54,7 +54,6 @@ private:
 	mach_vm_address_t orgVega10RegServInit{}, orgPopulateDeviceMemory{};
 	mach_vm_address_t orgCreateAsicInfo{}, orgPowerUpHardware{};
 	mach_vm_address_t orgAsicInfoRefresh{}, orgCreateHwInterrupts{};
-	mach_vm_address_t orgGetGpuHwConstants{};
 	
 	/* X5000HWLibs */
 	mach_vm_address_t orgTtlInitialize{}, orgTtlDevSetSmuFwVersion{}, orgIpiSetFwEntry{};
@@ -67,6 +66,8 @@ private:
 	mach_vm_address_t orgGetHardwareInfo{}, orgTtlQueryHwIpInstanceInfo{};
 	mach_vm_address_t orgTtlIsHwAvailable{}, orgDmcuGetHwVersion{};
 	mach_vm_address_t orgDetectPowerDown{}, orgInitializeAsic{};
+	mach_vm_address_t orgGetGpuHwConstants{}, orgGcEnterRlcSafeMode{};
+	mach_vm_address_t orgMCILUpdateGfxCGPG{}, orgGcEnableGfxCgpg{};
 	/* ----------- */
 	
 	template <size_t Index>
@@ -147,40 +148,27 @@ private:
 	static uint8_t wrapReadChipRev(void *that);
 	static void *wrapCreateAtomBiosProxy(void *param1);
 	static IOReturn wrapInitializeResources(void *that);
-	static bool wrapVega10RegServInit(void *that, uint64_t param1, uint64_t param2, void *controller);
 	static IOReturn wrapPopulateDeviceMemory(void *that, uint32_t reg);
-	static void *wrapCreateAsicInfo(void *controller);
-	static IOReturn wrapPowerUpHardware(void *that);
-	static IOReturn wrapAsicInfoRefresh(void *that);
-	static bool wrapDetectPowerDown(void *that);
-	static IOReturn wrapInitializeAsic(void *that);
-	static IOReturn wrapCreateHwInterrupts(void *that);
-	static void *wrapGetGpuHwConstants(void *param1);
+	static uint64_t createVramInfo(void *helper, uint32_t offset);
 	
 	/* X5000HWLibs */
 	static void wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider);
-	static uint32_t wrapTtlInitialize(void *that, uint64_t *param1);
 	static uint64_t wrapTtlDevSetSmuFwVersion(void *tlsInstance, uint32_t *b);
 	static uint64_t wrapIpiSetFwEntry(void *tlsInstance, void *b);
 	static uint64_t wrapIpiSmuSwInit(void *tlsInstance);
 	static uint64_t wrapSmuSwInit(void *input, uint64_t *output);
-	static uint32_t wrapSmuCosAllocMemory(void *param1, uint64_t param2, uint32_t param3, uint32_t *param4);
-	static uint32_t wrapSmuInitFunctionPointerList(uint64_t param1, uint64_t param2, uint32_t param3);
 	static uint32_t wrapSmuInternalSwInit(uint64_t param1, uint64_t param2, void *param3);
 	static uint64_t wrapSmuGetHwVersion(uint64_t param1, uint32_t param2);
 	static uint64_t wrapPspSwInit(uint32_t *param1, uint32_t *param2);
 	static uint32_t wrapGcGetHwVersion(uint32_t *param1);
 	static uint32_t wrapInternalCosReadFw(uint64_t param1, uint64_t *param2);
 	static void wrapPopulateFirmwareDirectory(void *that);
-	static uint64_t wrapGetHardwareInfo(void *that, void *param1);
-	static uint64_t wrapTtlQueryHwIpInstanceInfo(void *param1, uint32_t *param2, uint32_t *param3);
-	static bool wrapTtlIsHwAvailable(uint64_t *param1);
 	static bool wrapIpiSmuIsSwipExcluded();
-	static uint32_t wrapDmcuGetHwVersion(uint32_t *param1);
+	static void *wrapGetGpuHwConstants(uint8_t *param1);
+	static uint64_t wrapMCILUpdateGfxCGPG(void *param1);
 	/* ----------- */
 	
 	void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);
-	static IntegratedVRAMInfoInterface *createVramInfo(void *helper, uint32_t offset);
 	void updateAccelConfig(size_t hwIndex, IOService *accelService, const char **accelConfig);
 	
 	static bool wrapSetProperty(IORegistryEntry *that, const char *aKey, void *bytes, unsigned length);
