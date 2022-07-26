@@ -51,23 +51,16 @@ private:
 	mach_vm_address_t orgGetState{}, orgConfRegBase{}, orgReadChipRev{};
 	mach_vm_address_t orgInitializeTtl{}, orgInitializeProjectDependentResources{};
 	mach_vm_address_t orgCreateAtomBiosProxy{}, orgInitializeResources{};
-	mach_vm_address_t orgVega10RegServInit{}, orgPopulateDeviceMemory{};
-	mach_vm_address_t orgCreateAsicInfo{}, orgPowerUpHardware{};
-	mach_vm_address_t orgAsicInfoRefresh{}, orgCreateHwInterrupts{};
+	mach_vm_address_t orgPopulateDeviceMemory{};
 	
 	/* X5000HWLibs */
-	mach_vm_address_t orgTtlInitialize{}, orgTtlDevSetSmuFwVersion{}, orgIpiSetFwEntry{};
-	mach_vm_address_t orgIpiSmuSwInit{}, orgSmuSwInit{}, orgSmuCosAllocMemory{};
-	mach_vm_address_t orgSmuInitFunctionPointerList{}, orgSmuInternalSwInit{};
+	mach_vm_address_t orgTtlDevSetSmuFwVersion{}, orgIpiSetFwEntry{};
+	mach_vm_address_t orgIpiSmuSwInit{}, orgSmuSwInit{}, orgSmuInternalSwInit{};
 	mach_vm_address_t orgSmuGetHwVersion{}, orgPspSwInit{}, orgGcGetHwVersion{};
 	mach_vm_address_t orgInternalCosReadFw{}, orgPopulateFirmwareDirectory{};
 	t_createFirmware orgCreateFirmware = nullptr;
 	t_putFirmware orgPutFirmware = nullptr;
-	mach_vm_address_t orgGetHardwareInfo{}, orgTtlQueryHwIpInstanceInfo{};
-	mach_vm_address_t orgTtlIsHwAvailable{}, orgDmcuGetHwVersion{};
-	mach_vm_address_t orgDetectPowerDown{}, orgInitializeAsic{};
-	mach_vm_address_t orgGetGpuHwConstants{}, orgGcEnterRlcSafeMode{};
-	mach_vm_address_t orgMCILUpdateGfxCGPG{}, orgGcEnableGfxCgpg{};
+	mach_vm_address_t orgGetGpuHwConstants{}, orgMCILUpdateGfxCGPG{};
 	/* ----------- */
 	
 	template <size_t Index>
