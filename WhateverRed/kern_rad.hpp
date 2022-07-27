@@ -38,6 +38,7 @@ private:
 	static RAD *callbackRAD;
 	ThreadLocal<IOService *, 8> currentPropProvider;
 	
+	mach_vm_address_t orgPanicTrapToDebugger{};
 	mach_vm_address_t orgSetProperty{}, orgGetProperty{}, orgGetConnectorsInfoV2{};
 	mach_vm_address_t orgGetConnectorsInfoV1{}, orgTranslateAtomConnectorInfoV1{};
 	mach_vm_address_t orgTranslateAtomConnectorInfoV2{}, orgATIControllerStart{};
@@ -116,6 +117,8 @@ private:
 			SYSLOG("rad", "populateAccelConfig invalid use for %lu", Index);
 		}
 	}
+	
+	static void wrapPanicTrapToDebugger(const char *panic_format_str, va_list *panic_args, unsigned int reason, void *ctx, uint64_t panic_options_mask, void *panic_data_ptr, unsigned long panic_caller);
 	
 	void process24BitOutput(KernelPatcher &patcher, KernelPatcher::KextInfo &info, mach_vm_address_t address, size_t size);
 	void processConnectorOverrides(KernelPatcher &patcher, mach_vm_address_t address, size_t size);
