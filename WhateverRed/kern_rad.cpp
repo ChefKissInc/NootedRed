@@ -17,6 +17,7 @@
 
 #include "kern_rad.hpp"
 #include "kern_fw.hpp"
+#include "kern_netdbg.hpp"
 
 #define WRAP_SIMPLE(ty, func, fmt)											\
 	ty RAD::wrap##func(void* that)											\
@@ -142,6 +143,7 @@ WRAP_SIMPLE(uint64_t, HwInitializeFbBase, "0x%llx")
 
 uint64_t RAD::wrapInitWithController(void *that, void *controller)
 {
+	NETDBG::sendData("initWithController called!");
 	SYSLOG("rad", "initWithController called!");
 	auto ret = FunctionCast(wrapInitWithController, callbackRAD->orgInitWithController)(that, controller);
 	SYSLOG("rad", "initWithController returned %llx", ret);
