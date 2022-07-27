@@ -56,7 +56,7 @@
 			<key>CFBundleIdentifier</key>
 			<string>com.apple.kext.AMDRadeonX5000</string>
 			<key>GpuDebugPolicy</key>
-			<integer>0</integer>
+			<integer>-1</integer>
 			<key>IOClass</key>
 			<string>AMDRadeonX5000_AMDVega10GraphicsAccelerator</string>
 			<key>IODVDBundleName</key>
@@ -144,6 +144,16 @@
 				<key>CAIL_DisableCailLoadUcode</key>
 				<integer>0</integer>
 				<key>CAIL_DisableJpegEngine</key>
+				<integer>0</integer>
+				<key>CAIL_DisablePowerGating</key>
+				<integer>1</integer>
+				<key>CAIL_EnableLBPWSupport</key>
+				<integer>0</integer>
+				<key>CAIL_EnablePeerDataAperture</key>
+				<integer>0</integer>
+				<key>CAIL_EnableSecureMmFwLoading</key>
+				<integer>1</integer>
+				<key>CAIL_EnableXdmaSupport</key>
 				<integer>0</integer>
 			</dict>
 		</dict>
@@ -287,7 +297,7 @@
 				<key>PP_GfxOffControl</key>
 				<integer>0</integer>
 				<key>PP_PhmUseDummyBackEnd</key>
-				<integer>0</integer>
+				<integer>1</integer>
 				<key>PP_ToolsLogSpaceSize</key>
 				<integer>524288</integer>
 			</dict>
