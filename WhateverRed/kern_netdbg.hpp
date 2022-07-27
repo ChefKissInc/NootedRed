@@ -12,7 +12,7 @@
 class NETDBG
 {
 public:
-    static bool sendData(char* data);
+    static bool sendData(const char* fmt, ...);
 };
 
 #endif /* kern_netdbg_hpp */

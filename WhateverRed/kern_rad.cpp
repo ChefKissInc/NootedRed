@@ -339,6 +339,7 @@ void *RAD::wrapGetGpuHwConstants(uint8_t *param1)
 	if (!ret)
 	{
 		SYSLOG("rad", "_GetGpuHwConstants failed!");
+		NETDBG::sendData("_GetGpuHwConstants returned ZERO value!");
 		panic("_GetGpuHwConstants returned ZERO value!");
 	}
 	return ret;
@@ -348,12 +349,12 @@ uint64_t RAD::wrapMCILUpdateGfxCGPG(void *param1)
 {
 	
 	SYSLOG("rad", "----------------------------------------------------------------------");
+	NETDBG::sendData("_Cail_MCILUpdateGfxCGPG called!");
 	SYSLOG("rad", "_Cail_MCILUpdateGfxCGPG called!");
 	SYSLOG("rad", "_Cail_MCILUpdateGfxCGPG: param1 = %p", param1);
 	auto ret = FunctionCast(wrapMCILUpdateGfxCGPG, callbackRAD->orgMCILUpdateGfxCGPG)(param1);
 	SYSLOG("rad", "_Cail_MCILUpdateGfxCGPG returned 0x%llx", ret);
-	auto *text = "Holee Sheet";
-	FileIO::writeBufferToFile("/Library/haha.txt", (void*)text, strlen(text));
+	NETDBG::sendData("_Cail_MCILUpdateGfxCGPG returned 0x%llx", ret);
 	return ret;
 }
 
