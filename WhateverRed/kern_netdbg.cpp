@@ -35,7 +35,7 @@ bool NETDBG::sendData(const char* fmt, ...)
 	socket_t socket;
 	sock_socket(AF_INET, SOCK_STREAM, 0, NULL, 0, &socket);
 	SYSLOG("rad", "sendData socket=%d", socket);
-
+	IOSleep(1000);
 	if (socket) return false;
 	
 	struct sockaddr_in info;
