@@ -104,29 +104,17 @@ void RAD::deinit()
 {
 }
 
-void RAD::wrapPanic(const char *fmt, ...)
+[[noreturn]] [[gnu::cold]] void RAD::wrapPanic(const char *fmt, ...)
 {
-	va_list args;
+	va_list args, netdbg_args;
 	va_start(args, fmt);
-	va_list panic_args;
-	va_copy(panic_args, args);
+	va_copy(netdbg_args, args);
 	NETDBG::sendData("panic: ");
-	NETDBG::sendData(fmt, args);
-	va_end(args);
+	NETDBG::sendData(fmt, netdbg_args);
+	va_end(netdbg_args);
 	IOSleep(1000);
-	FunctionCast(wrapPanic, callbackRAD->orgPanic)(fmt, panic_args);
-}
-
-void RAD::wrapKPrintf(const char *fmt, ...)
-{
-	va_list args;
-	va_start(args, fmt);
-	va_list kprintf_args;
-	va_copy(kprintf_args, args);
-	NETDBG::sendData("kprintf: ");
-	NETDBG::sendData(fmt, args);
-	va_end(args);
-	FunctionCast(wrapKPrintf, callbackRAD->orgKPrintf)(fmt, kprintf_args);
+	FunctionCast(wrapPanic, callbackRAD->orgPanic)(fmt, args);
+	while (true) {}
 }
 
 void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info)
@@ -155,7 +143,6 @@ void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info)
 		{"__ZN15IORegistryEntry11setPropertyEPKcPvj", wrapSetProperty, orgSetProperty},
 		{"__ZNK15IORegistryEntry11getPropertyEPKc", wrapGetProperty, orgGetProperty},
 		{"_panic", wrapPanic, orgPanic},
-		{"_kprintf", wrapKPrintf, orgKPrintf},
 	};
 	if (!patcher.routeMultipleLong(KernelPatcher::KernelID, requests)) {
 		panic("Failed to route kernel symbols");

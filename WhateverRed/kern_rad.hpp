@@ -38,7 +38,7 @@ private:
 	static RAD *callbackRAD;
 	ThreadLocal<IOService *, 8> currentPropProvider;
 	
-	mach_vm_address_t orgPanic{}, orgKPrintf{};
+	mach_vm_address_t orgPanic{};
 	mach_vm_address_t orgSetProperty{}, orgGetProperty{}, orgGetConnectorsInfoV2{};
 	mach_vm_address_t orgGetConnectorsInfoV1{}, orgTranslateAtomConnectorInfoV1{};
 	mach_vm_address_t orgTranslateAtomConnectorInfoV2{}, orgATIControllerStart{};
@@ -119,8 +119,7 @@ private:
 		}
 	}
 	
-	static void wrapPanic(const char *panic_format_str, ...);
-	static void wrapKPrintf(const char *fmt, ...);
+	[[noreturn]] [[gnu::cold]] static void wrapPanic(const char *panic_format_str, ...);
 	
 	void process24BitOutput(KernelPatcher &patcher, KernelPatcher::KextInfo &info, mach_vm_address_t address, size_t size);
 	void processConnectorOverrides(KernelPatcher &patcher, mach_vm_address_t address, size_t size);
