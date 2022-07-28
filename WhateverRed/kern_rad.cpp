@@ -157,7 +157,7 @@ void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info)
 		{"_panic", wrapPanic, orgPanic},
 		{"_kprintf", wrapKPrintf, orgKPrintf},
 	};
-	if (!patcher.routeMultiple(KernelPatcher::KernelID, requests)) {
+	if (!patcher.routeMultipleLong(KernelPatcher::KernelID, requests)) {
 		panic("Failed to route kernel symbols");
 	}
 }
@@ -429,7 +429,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"__ZN13AtomBiosProxy19createAtomBiosProxyER16AtomBiosInitData", wrapCreateAtomBiosProxy, orgCreateAtomBiosProxy},
 			{"__ZN13ATIController20populateDeviceMemoryE13PCI_REG_INDEX", wrapPopulateDeviceMemory, orgPopulateDeviceMemory},
 		};
-		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
+		if (!patcher.routeMultipleLong(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMDSupport symbols");
 		
 		return true;
@@ -469,7 +469,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"_GetGpuHwConstants", wrapGetGpuHwConstants, orgGetGpuHwConstants},
 			{"__ZN15AmdCailServices23queryEngineRunningStateEP17CailHwEngineQueueP22CailEngineRunningState", wrapQueryEngineRunningState, orgQueryEngineRunningState},
 		};
-		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
+		if (!patcher.routeMultipleLong(index, requests, arrsize(requests), address, size))
 			panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
 		
 		return true;
@@ -483,7 +483,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"__ZN18AMD10000Controller18hwInitializeFbBaseEv", wrapHwInitializeFbMemSize, orgHwInitializeFbMemSize},
 			{"__ZN18AMD10000Controller19initializeResourcesEv", wrapInitializeResources, orgInitializeResources},
 		};
-		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
+		if (!patcher.routeMultipleLong(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMD10000Controller symbols");
 		
 		uint8_t find[] = { 0x3d, 0x60, 0x68, 0x00, 0x00, 0x0f, 0x8c, 0x32, 0x00, 0x00, 0x00, 0x0f, 0xb7, 0x45, 0xe6, 0x3d, 0x7f, 0x68, 0x00, 0x00, 0x0f, 0x8f, 0x23, 0x00, 0x00, 0x00, 0xbf, 0x78, 0x00, 0x00, 0x00 };
@@ -576,7 +576,7 @@ void RAD::processConnectorOverrides(KernelPatcher &patcher, mach_vm_address_t ad
 		{"__ZN13ATIController5startEP9IOService", wrapATIControllerStart, orgATIControllerStart},
 		
 	};
-	patcher.routeMultiple(kextRadeonSupport.loadIndex, requests, address, size);
+	patcher.routeMultipleLong(kextRadeonSupport.loadIndex, requests, address, size);
 }
 
 uint64_t RAD::wrapConfigureDevice(void *that, IOPCIDevice *dev)
@@ -650,13 +650,19 @@ void RAD::processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_ad
 		{"__ZN32AMDRadeonX5000_AMDVega10Hardware23readChipRevFromRegisterEv", wrapReadChipRev, orgReadChipRev},
 		{"__ZN31AMDRadeonX5000_AMDGFX9PM4Engine23QueryComputeQueueIsIdleE18_eAMD_HW_RING_TYPE", wrapQueryComputeQueueIsIdle, orgQueryComputeQueueIsIdle},
 	};
-	patcher.routeMultiple(hardware.loadIndex, requests, arrsize(requests), address, size);
+	if (!patcher.routeMultipleLong(hardware.loadIndex, requests, arrsize(requests), address, size))
+	{
+		panic("Failed to route X5000 symbols");
+	}
 	
 		// Patch AppleGVA support for non-supported models
 	if (forceCodecInfo && getHWInfoProcNames[hwIndex] != nullptr)
 	{
 		KernelPatcher::RouteRequest request(getHWInfoProcNames[hwIndex], wrapGetHWInfo[hwIndex], orgGetHWInfo[hwIndex]);
-		patcher.routeMultiple(hardware.loadIndex, &request, 1, address, size);
+		if (!patcher.routeMultipleLong(hardware.loadIndex, &request, 1, address, size))
+		{
+			panic("Failed to route X5000 symbols for AppleGVA support");
+		}
 	}
 }
 
