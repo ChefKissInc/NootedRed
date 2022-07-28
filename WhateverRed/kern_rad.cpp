@@ -383,6 +383,28 @@ uint64_t RAD::wrapMCILUpdateGfxCGPG(void *param1)
 	return ret;
 }
 
+IOReturn RAD::wrapQueryEngineRunningState(void *that, void *param1, void *param2)
+{
+	NETDBG::sendData("queryEngineRunningState called!");
+	NETDBG::sendData("queryEngineRunningState: that = %p param1 = %p param2 = %p", that, param1, param2);
+	for (size_t i = 0; i < 30; i++)
+	{
+		NETDBG::sendData("queryEngineRunningState ORG: %zu:0x%x", i, ((uint8_t *)callbackRAD->orgQueryEngineRunningState)[i]);
+	}
+	auto ret = FunctionCast(wrapQueryEngineRunningState, callbackRAD->orgQueryEngineRunningState)(that, param1, param2);
+	NETDBG::sendData("queryEngineRunningState returned 0x%x", ret);
+	return ret;
+}
+
+IOReturn RAD::wrapQueryComputeQueueIsIdle(void *that, uint64_t param1)
+{
+	NETDBG::sendData("QueryComputeQueueIsIdle called!");
+	NETDBG::sendData("QueryComputeQueueIsIdle: that = %p param1 = 0x%llx", that, param1);
+	auto ret = FunctionCast(wrapQueryComputeQueueIsIdle, callbackRAD->orgQueryComputeQueueIsIdle)(that, param1);
+	NETDBG::sendData("QueryComputeQueueIsIdle returned 0x%x", ret);
+	return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
 {
 	if (kextRadeonFramebuffer.loadIndex == index)
@@ -441,6 +463,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory, orgPopulateFirmwareDirectory},
 			{"_IpiSmuIsSwipExcluded", wrapIpiSmuIsSwipExcluded},
 			{"_GetGpuHwConstants", wrapGetGpuHwConstants, orgGetGpuHwConstants},
+			{"__ZN15AmdCailServices23queryEngineRunningStateEP17CailHwEngineQueueP22CailEngineRunningState", wrapQueryEngineRunningState, orgQueryEngineRunningState},
 		};
 		if (!patcher.routeMultiple(index, requests, arrsize(requests), address, size))
 			panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
@@ -621,6 +644,7 @@ void RAD::processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_ad
 		{"__ZN28AMDRadeonX5000_AMDRTHardware13initializeTtlEP16_GART_PARAMETERS", wrapInitializeTtl, orgInitializeTtl},
 		{"__ZN28AMDRadeonX5000_AMDRTHardware22configureRegisterBasesEv", wrapConfRegBase, orgConfRegBase},
 		{"__ZN32AMDRadeonX5000_AMDVega10Hardware23readChipRevFromRegisterEv", wrapReadChipRev, orgReadChipRev},
+		{"__ZN31AMDRadeonX5000_AMDGFX9PM4Engine23QueryComputeQueueIsIdleE18_eAMD_HW_RING_TYPE", wrapQueryComputeQueueIsIdle, orgQueryComputeQueueIsIdle},
 	};
 	patcher.routeMultiple(hardware.loadIndex, requests, arrsize(requests), address, size);
 	

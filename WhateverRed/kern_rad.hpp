@@ -52,7 +52,7 @@ private:
 	mach_vm_address_t orgGetState{}, orgConfRegBase{}, orgReadChipRev{};
 	mach_vm_address_t orgInitializeTtl{}, orgInitializeProjectDependentResources{};
 	mach_vm_address_t orgCreateAtomBiosProxy{}, orgInitializeResources{};
-	mach_vm_address_t orgPopulateDeviceMemory{};
+	mach_vm_address_t orgPopulateDeviceMemory{}, orgQueryComputeQueueIsIdle{};
 	
 	/* X5000HWLibs */
 	mach_vm_address_t orgTtlDevSetSmuFwVersion{}, orgIpiSetFwEntry{};
@@ -62,6 +62,7 @@ private:
 	t_createFirmware orgCreateFirmware = nullptr;
 	t_putFirmware orgPutFirmware = nullptr;
 	mach_vm_address_t orgGetGpuHwConstants{}, orgMCILUpdateGfxCGPG{};
+	mach_vm_address_t orgQueryEngineRunningState{};
 	/* ----------- */
 	
 	template <size_t Index>
@@ -147,6 +148,7 @@ private:
 	static IOReturn wrapInitializeResources(void *that);
 	static IOReturn wrapPopulateDeviceMemory(void *that, uint32_t reg);
 	static uint64_t createVramInfo(void *helper, uint32_t offset);
+	static IOReturn wrapQueryComputeQueueIsIdle(void *that, uint64_t param1);
 	
 	/* X5000HWLibs */
 	static void wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider);
@@ -163,6 +165,7 @@ private:
 	static bool wrapIpiSmuIsSwipExcluded();
 	static void *wrapGetGpuHwConstants(uint8_t *param1);
 	static uint64_t wrapMCILUpdateGfxCGPG(void *param1);
+	static IOReturn wrapQueryEngineRunningState(void *that, void *param1, void *param2);
 	/* ----------- */
 	
 	void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);
