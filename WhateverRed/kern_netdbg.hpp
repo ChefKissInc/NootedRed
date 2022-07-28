@@ -8,11 +8,12 @@
 
 #ifndef kern_netdbg_hpp
 #define kern_netdbg_hpp
+#include <sys/types.h>
 
 class NETDBG
 {
 public:
-	__attribute__((__format__ (__printf__, 1, 2))) static bool sendData(const char* fmt, ...);
+	__attribute__((__format__ (__printf__, 1, 2))) static size_t sendData(const char* fmt, ...);
 };
 
 #endif /* kern_netdbg_hpp */
