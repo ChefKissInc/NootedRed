@@ -74,10 +74,10 @@ size_t NETDBG::sendData(const char* fmt, ...)
 		
 		SYSLOG("rad", "sendData sentLen=%d", sentLen);
 		sock_close(socket);
-		delete data;
+		delete[] data;
 		return sentLen;
 	}
 	
-	delete data;
+	delete[] data;
 	return 0;
 }
