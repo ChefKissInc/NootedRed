@@ -110,7 +110,7 @@ void RAD::wrapPanic(const char *fmt, ...)
 	va_start(args, fmt);
 	va_list panic_args;
 	va_copy(panic_args, args);
-	NETDBG::sendData("Received kernel panic: ");
+	NETDBG::sendData("panic: ");
 	NETDBG::sendData(fmt, args);
 	va_end(args);
 	IOSleep(1000);
@@ -121,10 +121,12 @@ void RAD::wrapKPrintf(const char *fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
-	NETDBG::sendData("_kprintf: ");
+	va_list kprintf_args;
+	va_copy(kprintf_args, args);
+	NETDBG::sendData("kprintf: ");
 	NETDBG::sendData(fmt, args);
 	va_end(args);
-	FunctionCast(wrapKPrintf, callbackRAD->orgKPrintf)(fmt, args);
+	FunctionCast(wrapKPrintf, callbackRAD->orgKPrintf)(fmt, kprintf_args);
 }
 
 void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info)
