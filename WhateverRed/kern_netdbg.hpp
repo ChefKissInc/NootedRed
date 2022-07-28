@@ -13,7 +13,7 @@
 class NETDBG
 {
 public:
-	__attribute__((__format__ (__printf__, 1, 2))) static size_t sendData(const char* fmt, ...);
+	[[gnu::format(__printf__, 1, 2)]] static size_t sendData(const char* fmt, ...);
 };
 
 #endif /* kern_netdbg_hpp */

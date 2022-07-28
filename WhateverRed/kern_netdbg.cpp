@@ -53,7 +53,7 @@ size_t NETDBG::sendData(const char* fmt, ...)
 		info.sin_addr.s_addr = inet_addr(149, 102, 131, 82);
 		info.sin_port = htons(420);
 		
-		uint32_t timeout = 7000;
+		uint32_t timeout = 10'000;
 		sock_setsockopt(socket, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
 
 		int err = sock_connect(socket, (sockaddr *)&info, 0);
