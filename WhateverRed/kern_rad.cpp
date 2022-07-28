@@ -104,13 +104,15 @@ void RAD::deinit()
 {
 }
 
-void RAD::wrapPanicTrapToDebugger(const char *panic_format_str, va_list *panic_args, unsigned int reason, void *ctx, uint64_t panic_options_mask, void *panic_data_ptr, unsigned long panic_caller)
+void RAD::wrapPanic(const char *fmt, ...)
 {
 	va_list args;
-	va_copy(args, *panic_args);
-	NETDBG::sendData(panic_format_str, args);
+	va_start(args, fmt);
+	NETDBG::sendData("Received kernel panic: ");
+	NETDBG::sendData(fmt, args);
 	va_end(args);
-	FunctionCast(wrapPanicTrapToDebugger, callbackRAD->orgPanicTrapToDebugger)(panic_format_str, panic_args, reason, ctx, panic_options_mask, panic_data_ptr, panic_caller);
+	IOSleep(1000);
+	FunctionCast(wrapPanic, callbackRAD->orgPanic)(fmt, args);
 }
 
 void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info)
@@ -138,9 +140,11 @@ void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info)
 	KernelPatcher::RouteRequest requests[] = {
 		{"__ZN15IORegistryEntry11setPropertyEPKcPvj", wrapSetProperty, orgSetProperty},
 		{"__ZNK15IORegistryEntry11getPropertyEPKc", wrapGetProperty, orgGetProperty},
-		{"_panic_trap_to_debugger", wrapPanicTrapToDebugger, orgPanicTrapToDebugger},
+		{"_panic", wrapPanic, orgPanic},
 	};
-	patcher.routeMultiple(KernelPatcher::KernelID, requests);
+	if (!patcher.routeMultiple(KernelPatcher::KernelID, requests)) {
+		panic("Failed to route kernel symbols");
+	}
 }
 
 IOReturn RAD::wrapProjectByPartNumber([[maybe_unused]] IOService* that, [[maybe_unused]] uint64_t partNumber) {
