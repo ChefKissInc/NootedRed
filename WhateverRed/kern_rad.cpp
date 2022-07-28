@@ -115,6 +115,16 @@ void RAD::wrapPanic(const char *fmt, ...)
 	FunctionCast(wrapPanic, callbackRAD->orgPanic)(fmt, args);
 }
 
+void RAD::wrapKPrintf(const char *fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	NETDBG::sendData("_kprintf: ");
+	NETDBG::sendData(fmt, args);
+	va_end(args);
+	FunctionCast(wrapKPrintf, callbackRAD->orgKPrintf)(fmt, args);
+}
+
 void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info)
 {
 	for (size_t i = 0; i < info->videoExternal.size(); i++)
@@ -141,6 +151,7 @@ void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info)
 		{"__ZN15IORegistryEntry11setPropertyEPKcPvj", wrapSetProperty, orgSetProperty},
 		{"__ZNK15IORegistryEntry11getPropertyEPKc", wrapGetProperty, orgGetProperty},
 		{"_panic", wrapPanic, orgPanic},
+		{"_kprintf", wrapKPrintf, orgKPrintf},
 	};
 	if (!patcher.routeMultiple(KernelPatcher::KernelID, requests)) {
 		panic("Failed to route kernel symbols");
