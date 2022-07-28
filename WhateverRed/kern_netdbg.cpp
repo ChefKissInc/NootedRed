@@ -33,10 +33,9 @@ unsigned int inet_addr(unsigned int a, unsigned int b, unsigned int c, unsigned 
 bool NETDBG::sendData(const char* fmt, ...)
 {
 	socket_t socket;
-	sock_socket(AF_INET, SOCK_STREAM, 0, NULL, 0, &socket);
+	auto ret = sock_socket(AF_INET, SOCK_STREAM, 0, NULL, 0, &socket);
 	SYSLOG("rad", "sendData socket=%d", socket);
-	IOSleep(1000);
-	if (socket) return false;
+	if (ret || !socket) return false;
 	
 	struct sockaddr_in info;
 	bzero(&info, sizeof(info));
@@ -46,7 +45,7 @@ bool NETDBG::sendData(const char* fmt, ...)
 	info.sin_addr.s_addr = inet_addr(149, 102, 131, 82);
 	info.sin_port = htons(420);
 	
-	int err = sock_connect(socket, (sockaddr *)&info, 0);
+	auto err = sock_connect(socket, (sockaddr *)&info, 0);
 	SYSLOG("rad", "sendData err=%d", err);
 	if (err == -1) {
 		sock_close(socket);
