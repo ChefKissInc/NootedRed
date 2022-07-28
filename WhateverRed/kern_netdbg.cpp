@@ -59,6 +59,7 @@ size_t NETDBG::sendData(const char* fmt, ...)
 		if (err == -1) {
 			sock_close(socket);
 			ret = 0;
+			continue;
 		}
 		
 		iovec vec { .iov_base = data, .iov_len = len };
