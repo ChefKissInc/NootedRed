@@ -108,11 +108,13 @@ void RAD::wrapPanic(const char *fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
+	va_list panic_args;
+	va_copy(panic_args, args);
 	NETDBG::sendData("Received kernel panic: ");
 	NETDBG::sendData(fmt, args);
 	va_end(args);
 	IOSleep(1000);
-	FunctionCast(wrapPanic, callbackRAD->orgPanic)(fmt, args);
+	FunctionCast(wrapPanic, callbackRAD->orgPanic)(fmt, panic_args);
 }
 
 void RAD::wrapKPrintf(const char *fmt, ...)
