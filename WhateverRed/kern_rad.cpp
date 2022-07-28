@@ -106,7 +106,10 @@ void RAD::deinit()
 
 void RAD::wrapPanicTrapToDebugger(const char *panic_format_str, va_list *panic_args, unsigned int reason, void *ctx, uint64_t panic_options_mask, void *panic_data_ptr, unsigned long panic_caller)
 {
-	NETDBG::sendData(panic_format_str, *panic_args);
+	va_list args;
+	va_copy(args, *panic_args);
+	NETDBG::sendData(panic_format_str, args);
+	va_end(args);
 	FunctionCast(wrapPanicTrapToDebugger, callbackRAD->orgPanicTrapToDebugger)(panic_format_str, panic_args, reason, ctx, panic_options_mask, panic_data_ptr, panic_caller);
 }
 
