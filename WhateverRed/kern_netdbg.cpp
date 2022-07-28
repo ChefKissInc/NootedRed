@@ -32,15 +32,14 @@ in_addr_t inet_addr(uint32_t a, uint32_t b, uint32_t c, uint32_t d)
 // https://github.com/sysprogs/BazisLib/tree/master/bzscore/KEXT
 size_t NETDBG::sendData(const char* fmt, ...)
 {
-	size_t ret = 0;
+	char *data = new char[1024];
+	va_list args;
+	va_start(args, fmt);
+	size_t len = scnprintf(data, 1024, fmt, args);
+	va_end(args);
+	
 	int retry = 5;
-	while (retry-- && !ret) {
-		char *data = new char[1024];
-		va_list args;
-		va_start(args, fmt);
-		size_t len = scnprintf(data, 1024, fmt, args);
-		va_end(args);
-		
+	while (retry--) {
 		socket_t socket = nullptr;
 		sock_socket(AF_INET, SOCK_STREAM, 0, NULL, 0, &socket);
 		SYSLOG("rad", "sendData socket=%d", socket);
@@ -54,11 +53,13 @@ size_t NETDBG::sendData(const char* fmt, ...)
 		info.sin_addr.s_addr = inet_addr(149, 102, 131, 82);
 		info.sin_port = htons(420);
 		
+		uint32_t timeout = 7000;
+		sock_setsockopt(socket, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
+
 		int err = sock_connect(socket, (sockaddr *)&info, 0);
 		SYSLOG("rad", "sendData err=%d", err);
 		if (err == -1) {
 			sock_close(socket);
-			ret = 0;
 			continue;
 		}
 		
@@ -73,8 +74,10 @@ size_t NETDBG::sendData(const char* fmt, ...)
 		
 		SYSLOG("rad", "sendData sentLen=%d", sentLen);
 		sock_close(socket);
-		ret = sentLen;
+		delete data;
+		return sentLen;
 	}
 	
-	return ret;
+	delete data;
+	return 0;
 }
