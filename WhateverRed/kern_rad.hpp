@@ -55,14 +55,12 @@ private:
 	mach_vm_address_t orgPopulateDeviceMemory{}, orgQueryComputeQueueIsIdle{};
 	
 	/* X5000HWLibs */
-	mach_vm_address_t orgTtlDevSetSmuFwVersion{}, orgIpiSetFwEntry{};
-	mach_vm_address_t orgIpiSmuSwInit{}, orgSmuSwInit{}, orgSmuInternalSwInit{};
-	mach_vm_address_t orgSmuGetHwVersion{}, orgPspSwInit{}, orgGcGetHwVersion{};
-	mach_vm_address_t orgInternalCosReadFw{}, orgPopulateFirmwareDirectory{};
+	mach_vm_address_t orgIpiSetFwEntry{}, orgIpiSmuSwInit{}, orgSmuSwInit{};
+	mach_vm_address_t orgSmuInternalSwInit{}, orgSmuGetHwVersion{}, orgPspSwInit{};
+	mach_vm_address_t orgGcGetHwVersion{}, orgInternalCosReadFw{}, orgPopulateFirmwareDirectory{};
 	t_createFirmware orgCreateFirmware = nullptr;
 	t_putFirmware orgPutFirmware = nullptr;
-	mach_vm_address_t orgGetGpuHwConstants{}, orgMCILUpdateGfxCGPG{};
-	mach_vm_address_t orgQueryEngineRunningState{};
+	mach_vm_address_t orgGetGpuHwConstants{}, orgMCILUpdateGfxCGPG{}, orgQueryEngineRunningState{};
 	/* ----------- */
 	
 	template <size_t Index>
@@ -140,18 +138,17 @@ private:
 	static bool wrapMapDoorbellMemory(void* that);
 	static IOService *wrapInitLinkToPeer(void *that, const char *matchCategoryName);
 	static uint64_t wrapGetState(void *that);
-	static uint32_t wrapInitializeTtl(void *that, void *param1);
+	static IOReturn wrapInitializeTtl(void *that, void *param1);
 	static uint64_t wrapConfRegBase(void *that);
 	static uint8_t wrapReadChipRev(void *that);
 	static void *wrapCreateAtomBiosProxy(void *param1);
 	static IOReturn wrapInitializeResources(void *that);
 	static IOReturn wrapPopulateDeviceMemory(void *that, uint32_t reg);
-	static uint64_t createVramInfo(void *helper, uint32_t offset);
+	static IntegratedVRAMInfoInterface *createVramInfo(void *helper, uint32_t offset);
 	static IOReturn wrapQueryComputeQueueIsIdle(void *that, uint64_t param1);
 	
 	/* X5000HWLibs */
 	static void wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider);
-	static uint64_t wrapTtlDevSetSmuFwVersion(void *tlsInstance, uint32_t *b);
 	static uint64_t wrapIpiSetFwEntry(void *tlsInstance, void *b);
 	static uint64_t wrapIpiSmuSwInit(void *tlsInstance);
 	static uint64_t wrapSmuSwInit(void *input, uint64_t *output);
@@ -161,7 +158,6 @@ private:
 	static uint32_t wrapGcGetHwVersion(uint32_t *param1);
 	static uint32_t wrapInternalCosReadFw(uint64_t param1, uint64_t *param2);
 	static void wrapPopulateFirmwareDirectory(void *that);
-	static bool wrapIpiSmuIsSwipExcluded();
 	static void *wrapGetGpuHwConstants(uint8_t *param1);
 	static uint64_t wrapMCILUpdateGfxCGPG(void *param1);
 	static IOReturn wrapQueryEngineRunningState(void *that, void *param1, void *param2);

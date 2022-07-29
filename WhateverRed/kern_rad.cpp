@@ -166,10 +166,23 @@ uint64_t RAD::wrapInitWithController(void *that, void *controller)
 	return ret;
 }
 
-uint64_t RAD::createVramInfo([[maybe_unused]] void *helper, [[maybe_unused]] uint32_t offset)
+IntegratedVRAMInfoInterface *RAD::createVramInfo([[maybe_unused]] void *helper, [[maybe_unused]] uint32_t offset)
 {
-	NETDBG::printf("rad: createVramInfo called! Returning fake value");
-	return 1;
+	NETDBG::printf("rad: ----------------------------------------------------------------------");
+	NETDBG::printf("rad: creating fake VRAM info, get rekt ayymd");
+	NETDBG::printf("rad: createVramInfo offset = 0x%x", offset);
+	DataTableInitInfo initInfo {
+		.helper = helper,
+		.tableOffset = offset,
+		.revision = AtiAtomDataRevision {
+			.formatRevision = 2,
+			.contentRevision = 3,
+		},
+	};
+	auto *ret = new IntegratedVRAMInfoInterface;
+	ret->init(&initInfo);
+	NETDBG::printf("rad: ----------------------------------------------------------------------");
+	return ret;
 }
 
 void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider)
@@ -184,22 +197,12 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider)
 	FunctionCast(wrapAmdTtlServicesConstructor, callbackRAD->orgAmdTtlServicesConstructor)(that, provider);
 }
 
-uint64_t RAD::wrapTtlDevSetSmuFwVersion(void *tlsInstance, uint32_t *b)
-{
-	NETDBG::printf("rad: _ttlDevSetSmuFwVersion called!");
-	NETDBG::printf("rad: _ttlDevSetSmuFwVersion: tlsInstance = %p param2 = %p", tlsInstance, b);
-	NETDBG::printf("rad: _ttlDevSetSmuFwVersion: param2 0:0x%x 1:0x%x 2:0x%x 3:0x%x 4:0x%x 5:0x%x 6:0x%x 7:0x%x", b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]);
-	auto ret = FunctionCast(wrapTtlDevSetSmuFwVersion, callbackRAD->orgTtlDevSetSmuFwVersion)(tlsInstance, b);
-	NETDBG::printf("rad: _ttlDevSetSmuFwVersion returned 0x%llx", ret);
-	return ret;
-}
-
 uint64_t RAD::wrapIpiSetFwEntry(void *tlsInstance, void *b)
 {
-	NETDBG::printf("rad: _IpiSetFwEntry called!");
-	NETDBG::printf("rad: _IpiSetFwEntry: tlsInstance = %p param2 = %p", tlsInstance, b);
+	DBGLOG("rad", "_IpiSetFwEntry called!");
+	DBGLOG("rad", "_IpiSetFwEntry: tlsInstance = %p param2 = %p", tlsInstance, b);
 	auto ret = FunctionCast(wrapIpiSetFwEntry, callbackRAD->orgIpiSetFwEntry)(tlsInstance, b);
-	NETDBG::printf("rad: _IpiSetFwEntry returned 0x%llx", ret);
+	DBGLOG("rad", "_IpiSetFwEntry returned 0x%llx", ret);
 	return ret;
 }
 
@@ -237,7 +240,17 @@ uint64_t RAD::wrapSmuGetHwVersion(uint64_t param1, uint32_t param2)
 	NETDBG::printf("rad: _smu_get_hw_version: param1 = 0x%llx param2 = 0x%x", param1, param2);
 	auto ret = FunctionCast(wrapSmuGetHwVersion, callbackRAD->orgSmuGetHwVersion)(param1, param2);
 	NETDBG::printf("rad: _smu_get_hw_version returned 0x%llx", ret);
-	return ret == 0xC || ret == 0xB ? 0x3 : ret;
+	switch (ret)
+	{
+		case 0x2:
+			return 0x1;
+		case 0xB:
+			[[fallthrough]];
+		case 0xC:
+			return 0x3;
+		default:
+			return ret;
+	}
 }
 
 uint64_t RAD::wrapPspSwInit(uint32_t *param1, uint32_t *param2)
@@ -301,12 +314,6 @@ void RAD::wrapPopulateFirmwareDirectory(void *that)
 	}
 }
 
-bool RAD::wrapIpiSmuIsSwipExcluded()
-{
-	NETDBG::printf("rad: _IpiSmuIsSwipExcluded called!");
-	return true;
-}
-
 void *RAD::wrapCreateAtomBiosProxy(void *param1)
 {
 	NETDBG::printf("rad: ----------------------------------------------------------------------");
@@ -337,21 +344,21 @@ IOReturn RAD::wrapPopulateDeviceMemory(void *that, uint32_t reg)
 
 void *RAD::wrapGetGpuHwConstants(uint8_t *param1)
 {
-	NETDBG::printf("rad: ----------------------------------------------------------------------");
-	NETDBG::printf("rad: _GetGpuHwConstants called!");
-	NETDBG::printf("rad: _GetGpuHwConstants: param1 = %p", param1);
+	DBGLOG("rad", "----------------------------------------------------------------------");
+	DBGLOG("rad", "_GetGpuHwConstants called!");
+	DBGLOG("rad", "_GetGpuHwConstants: param1 = %p", param1);
 	auto *asicCaps = *(uint8_t **)(param1 + 0x350);
-	NETDBG::printf("rad: _GetGpuHwConstants: asicCaps = %p", asicCaps);
+	DBGLOG("rad", "_GetGpuHwConstants: asicCaps = %p", asicCaps);
 	uint16_t deviceId = *(uint16_t *)(asicCaps + 8);
-	NETDBG::printf("rad: _GetGpuHwConstants: deviceId = 0x%x", deviceId);
+	DBGLOG("rad", "_GetGpuHwConstants: deviceId = 0x%x", deviceId);
 	auto *goldenSettings = *(uint8_t **)(asicCaps + 48);
-	NETDBG::printf("rad: _GetGpuHwConstants: goldenSettings = %p", goldenSettings);
+	DBGLOG("rad", "_GetGpuHwConstants: goldenSettings = %p", goldenSettings);
 	for (size_t i = 0; i < 24; i++) {
-		NETDBG::printf("rad: _GetGpuHwConstants: goldenSettings: %zu:0x%x", i, goldenSettings[i]);
+		DBGLOG("rad", "_GetGpuHwConstants: goldenSettings: %zu:0x%x", i, goldenSettings[i]);
 	}
 	auto ret = FunctionCast(wrapGetGpuHwConstants, callbackRAD->orgGetGpuHwConstants)(param1);
-	NETDBG::printf("rad: _GetGpuHwConstants returned %p", ret);
-	NETDBG::printf("rad: ----------------------------------------------------------------------");
+	DBGLOG("rad", "_GetGpuHwConstants returned %p", ret);
+	DBGLOG("rad", "----------------------------------------------------------------------");
 	if (!ret)
 	{
 		NETDBG::printf("rad: _GetGpuHwConstants failed!");
@@ -442,7 +449,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 		
 		KernelPatcher::RouteRequest requests[] = {
 			{"__ZN14AmdTtlServicesC2EP11IOPCIDevice", wrapAmdTtlServicesConstructor, orgAmdTtlServicesConstructor},
-			{"_ttlDevSetSmuFwVersion", wrapTtlDevSetSmuFwVersion, orgTtlDevSetSmuFwVersion},
 			{"_IpiSetFwEntry", wrapIpiSetFwEntry, orgIpiSetFwEntry},
 			{"_ipi_smu_sw_init", wrapIpiSmuSwInit, orgIpiSmuSwInit},
 			{"_smu_sw_init", wrapSmuSwInit, orgSmuSwInit},
@@ -452,7 +458,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"_gc_get_hw_version", wrapGcGetHwVersion, orgGcGetHwVersion},
 			{"_internal_cos_read_fw", wrapInternalCosReadFw, orgInternalCosReadFw},
 			{"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory, orgPopulateFirmwareDirectory},
-			{"_IpiSmuIsSwipExcluded", wrapIpiSmuIsSwipExcluded},
 			{"_GetGpuHwConstants", wrapGetGpuHwConstants, orgGetGpuHwConstants},
 			{"__ZN15AmdCailServices23queryEngineRunningStateEP17CailHwEngineQueueP22CailEngineRunningState", wrapQueryEngineRunningState, orgQueryEngineRunningState},
 		};
@@ -608,7 +613,7 @@ uint64_t RAD::wrapGetState(void* that)
 	return ret;
 }
 
-uint32_t RAD::wrapInitializeTtl(void *that, void *param1)
+IOReturn RAD::wrapInitializeTtl(void *that, void *param1)
 {
 	NETDBG::printf("rad: initializeTtl called!");
 	auto ret = FunctionCast(wrapInitializeTtl, callbackRAD->orgInitializeTtl)(that, param1);

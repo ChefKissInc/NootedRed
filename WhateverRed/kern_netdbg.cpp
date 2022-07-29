@@ -33,7 +33,7 @@ size_t NETDBG::nprint(char *data, size_t len)
 	while (retry--) {
 		socket_t socket = nullptr;
 		sock_socket(AF_INET, SOCK_STREAM, 0, NULL, 0, &socket);
-		SYSLOG("rad", "sendData socket=%d", socket);
+		
 		if (!socket) return false;
 		
 		struct sockaddr_in info;
@@ -44,12 +44,12 @@ size_t NETDBG::nprint(char *data, size_t len)
 		info.sin_addr.s_addr = inet_addr(149, 102, 131, 82);
 		info.sin_port = htons(420);
 		
-		uint32_t timeout = 10'000;
-		sock_setsockopt(socket, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
-
+		unsigned timeout = 5000;
+		sock_setsockopt(socket, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(unsigned));
+		
 		int err = sock_connect(socket, (sockaddr *)&info, 0);
-		SYSLOG("rad", "sendData err=%d", err);
 		if (err == -1) {
+			SYSLOG("rad", "sendData err=%d", err);
 			sock_close(socket);
 			continue;
 		}
@@ -62,8 +62,6 @@ size_t NETDBG::nprint(char *data, size_t len)
 		
 		size_t sentLen = 0;
 		sock_send(socket, &hdr, 0, &sentLen);
-		
-		SYSLOG("rad", "sendData sentLen=%d", sentLen);
 		sock_close(socket);
 		
 		return sentLen;
