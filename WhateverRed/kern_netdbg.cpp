@@ -8,8 +8,6 @@
 
 #include "kern_netdbg.hpp"
 #include <Headers/kern_api.hpp>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
 
 in_addr_t inet_addr(uint32_t a, uint32_t b, uint32_t c, uint32_t d)
@@ -28,16 +26,9 @@ in_addr_t inet_addr(uint32_t a, uint32_t b, uint32_t c, uint32_t d)
 	return ret;
 }
 
-// http://zake7749.github.io/2015/03/17/SocketProgramming/
-// https://github.com/sysprogs/BazisLib/tree/master/bzscore/KEXT
-size_t NETDBG::sendData(const char* fmt, ...)
+size_t NETDBG::nprint(char *data, size_t len)
 {
-	char *data = new char[1024];
-	va_list args;
-	va_start(args, fmt);
-	size_t len = scnprintf(data, 1024, fmt, args);
-	va_end(args);
-	
+	SYSLOG("netdbg", "message: %s", data);
 	int retry = 5;
 	while (retry--) {
 		socket_t socket = nullptr;
@@ -74,10 +65,28 @@ size_t NETDBG::sendData(const char* fmt, ...)
 		
 		SYSLOG("rad", "sendData sentLen=%d", sentLen);
 		sock_close(socket);
-		delete[] data;
+		
 		return sentLen;
 	}
 	
-	delete[] data;
 	return 0;
+}
+
+size_t NETDBG::printf(const char* fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	auto ret = NETDBG::vprintf(fmt, args);
+	va_end(args);
+	return ret;
+}
+
+size_t NETDBG::vprintf(const char *fmt, va_list args)
+{
+	char *data = new char[1024];
+	size_t len = vsnprintf(data, 1024, fmt, args);
+	
+	auto ret = NETDBG::nprint(data, len);
+	delete[] data;
+	return ret;
 }

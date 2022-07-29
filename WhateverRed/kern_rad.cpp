@@ -22,9 +22,9 @@
 #define WRAP_SIMPLE(ty, func, fmt)											\
 	ty RAD::wrap##func(void* that)											\
 	{																		\
-		SYSLOG("rad", #func " called!");									\
+		NETDBG::printf("rad: " #func " called!");							\
 		auto ret = FunctionCast(wrap##func, callbackRAD->org##func)(that);	\
-		SYSLOG("rad", #func " returned " fmt, ret);							\
+		NETDBG::printf("rad: " #func " returned " fmt, ret);				\
 		return ret;															\
 	}
 
@@ -109,8 +109,8 @@ void RAD::deinit()
 	va_list args, netdbg_args;
 	va_start(args, fmt);
 	va_copy(netdbg_args, args);
-	NETDBG::sendData("panic: ");
-	NETDBG::sendData(fmt, netdbg_args);
+	NETDBG::printf("panic: ");
+	NETDBG::vprintf(fmt, netdbg_args);
 	va_end(netdbg_args);
 	IOSleep(1000);
 	FunctionCast(wrapPanic, callbackRAD->orgPanic)(fmt, args);
@@ -159,99 +159,99 @@ WRAP_SIMPLE(uint64_t, HwInitializeFbBase, "0x%llx")
 
 uint64_t RAD::wrapInitWithController(void *that, void *controller)
 {
-	NETDBG::sendData("initWithController called!");
-	SYSLOG("rad", "initWithController called!");
+	NETDBG::printf("initWithController called!");
+	NETDBG::printf("rad: initWithController called!");
 	auto ret = FunctionCast(wrapInitWithController, callbackRAD->orgInitWithController)(that, controller);
-	SYSLOG("rad", "initWithController returned %llx", ret);
+	NETDBG::printf("rad: initWithController returned %llx", ret);
 	return ret;
 }
 
 uint64_t RAD::createVramInfo([[maybe_unused]] void *helper, [[maybe_unused]] uint32_t offset)
 {
-	SYSLOG("rad", "createVramInfo called! Returning fake value");
+	NETDBG::printf("rad: createVramInfo called! Returning fake value");
 	return 1;
 }
 
 void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider)
 {
-	SYSLOG("rad", "patching device type table");
+	NETDBG::printf("rad: patching device type table");
 	MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock);
 	*(uint32_t *)callbackRAD->orgDeviceTypeTable = provider->extendedConfigRead16(kIOPCIConfigDeviceID);
 	*((uint32_t *)callbackRAD->orgDeviceTypeTable + 1) = 6;
 	MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 	
-	SYSLOG("rad", "calling original AmdTtlServices constructor");
+	NETDBG::printf("rad: calling original AmdTtlServices constructor");
 	FunctionCast(wrapAmdTtlServicesConstructor, callbackRAD->orgAmdTtlServicesConstructor)(that, provider);
 }
 
 uint64_t RAD::wrapTtlDevSetSmuFwVersion(void *tlsInstance, uint32_t *b)
 {
-	SYSLOG("rad", "_ttlDevSetSmuFwVersion called!");
-	SYSLOG("rad", "_ttlDevSetSmuFwVersion: tlsInstance = %p param2 = %p", tlsInstance, b);
-	SYSLOG("rad", "_ttlDevSetSmuFwVersion: param2 0:0x%x 1:0x%x 2:0x%x 3:0x%x 4:0x%x 5:0x%x 6:0x%x 7:0x%x", b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]);
+	NETDBG::printf("rad: _ttlDevSetSmuFwVersion called!");
+	NETDBG::printf("rad: _ttlDevSetSmuFwVersion: tlsInstance = %p param2 = %p", tlsInstance, b);
+	NETDBG::printf("rad: _ttlDevSetSmuFwVersion: param2 0:0x%x 1:0x%x 2:0x%x 3:0x%x 4:0x%x 5:0x%x 6:0x%x 7:0x%x", b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]);
 	auto ret = FunctionCast(wrapTtlDevSetSmuFwVersion, callbackRAD->orgTtlDevSetSmuFwVersion)(tlsInstance, b);
-	SYSLOG("rad", "_ttlDevSetSmuFwVersion returned 0x%x", ret);
+	NETDBG::printf("rad: _ttlDevSetSmuFwVersion returned 0x%llx", ret);
 	return ret;
 }
 
 uint64_t RAD::wrapIpiSetFwEntry(void *tlsInstance, void *b)
 {
-	SYSLOG("rad", "_IpiSetFwEntry called!");
-	SYSLOG("rad", "_IpiSetFwEntry: tlsInstance = %p param2 = %p", tlsInstance, b);
+	NETDBG::printf("rad: _IpiSetFwEntry called!");
+	NETDBG::printf("rad: _IpiSetFwEntry: tlsInstance = %p param2 = %p", tlsInstance, b);
 	auto ret = FunctionCast(wrapIpiSetFwEntry, callbackRAD->orgIpiSetFwEntry)(tlsInstance, b);
-	SYSLOG("rad", "_IpiSetFwEntry returned 0x%x", ret);
+	NETDBG::printf("rad: _IpiSetFwEntry returned 0x%llx", ret);
 	return ret;
 }
 
 uint64_t RAD::wrapIpiSmuSwInit(void *tlsInstance)
 {
-	SYSLOG("rad", "_ipi_smu_sw_init called!");
-	SYSLOG("rad", "_ipi_smu_sw_init: tlsInstance = %p", tlsInstance);
+	NETDBG::printf("rad: _ipi_smu_sw_init called!");
+	NETDBG::printf("rad: _ipi_smu_sw_init: tlsInstance = %p", tlsInstance);
 	auto ret = FunctionCast(wrapIpiSmuSwInit, callbackRAD->orgIpiSmuSwInit)(tlsInstance);
-	SYSLOG("rad", "_ipi_smu_sw_init returned 0x%x", ret);
+	NETDBG::printf("rad: _ipi_smu_sw_init returned 0x%llx", ret);
 	return ret;
 }
 
 uint64_t RAD::wrapSmuSwInit(void *input, uint64_t *output)
 {
-	SYSLOG("rad", "_smu_sw_init called!");
-	SYSLOG("rad", "_smu_sw_init: input = %p output = %p", input, output);
+	NETDBG::printf("rad: _smu_sw_init called!");
+	NETDBG::printf("rad: _smu_sw_init: input = %p output = %p", input, output);
 	auto ret = FunctionCast(wrapSmuSwInit, callbackRAD->orgSmuSwInit)(input, output);
-	SYSLOG("rad", "_smu_sw_init: output 0:0x%llx 1:0x%llx", output[0], output[1]);
-	SYSLOG("rad", "_smu_sw_init returned 0x%x", ret);
+	NETDBG::printf("rad: _smu_sw_init: output 0:0x%llx 1:0x%llx", output[0], output[1]);
+	NETDBG::printf("rad: _smu_sw_init returned 0x%llx", ret);
 	return ret;
 }
 
 uint32_t RAD::wrapSmuInternalSwInit(uint64_t param1, uint64_t param2, void *param3)
 {
-	SYSLOG("rad", "_smu_internal_sw_init called!");
-	SYSLOG("rad", "_smu_internal_sw_init: param1 = 0x%llx param2 = 0x%llx param3 = %p", param1, param2, param3);
+	NETDBG::printf("rad: _smu_internal_sw_init called!");
+	NETDBG::printf("rad: _smu_internal_sw_init: param1 = 0x%llx param2 = 0x%llx param3 = %p", param1, param2, param3);
 	auto ret = FunctionCast(wrapSmuInternalSwInit, callbackRAD->orgSmuInternalSwInit)(param1, param2, param3);
-	SYSLOG("rad", "_smu_internal_sw_init returned 0x%x", ret);
+	NETDBG::printf("rad: _smu_internal_sw_init returned 0x%x", ret);
 	return ret;
 }
 
 uint64_t RAD::wrapSmuGetHwVersion(uint64_t param1, uint32_t param2)
 {
-	SYSLOG("rad", "_smu_get_hw_version called!");
-	SYSLOG("rad", "_smu_get_hw_version: param1 = 0x%llx param2 = 0x%x", param1, param2);
+	NETDBG::printf("rad: _smu_get_hw_version called!");
+	NETDBG::printf("rad: _smu_get_hw_version: param1 = 0x%llx param2 = 0x%x", param1, param2);
 	auto ret = FunctionCast(wrapSmuGetHwVersion, callbackRAD->orgSmuGetHwVersion)(param1, param2);
-	SYSLOG("rad", "_smu_get_hw_version returned 0x%llx", ret);
+	NETDBG::printf("rad: _smu_get_hw_version returned 0x%llx", ret);
 	return ret == 0xC || ret == 0xB ? 0x3 : ret;
 }
 
 uint64_t RAD::wrapPspSwInit(uint32_t *param1, uint32_t *param2)
 {
-	SYSLOG("rad", "_psp_sw_init called!");
-	SYSLOG("rad", "_psp_sw_init: param1 = %p param2 = %p", param1, param2);
-	SYSLOG("rad", "_psp_sw_init: param1: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x", param1[0], param1[1], param1[2], param1[3], param1[4], param1[5]);
+	NETDBG::printf("rad: _psp_sw_init called!");
+	NETDBG::printf("rad: _psp_sw_init: param1 = %p param2 = %p", param1, param2);
+	NETDBG::printf("rad: _psp_sw_init: param1: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x", param1[0], param1[1], param1[2], param1[3], param1[4], param1[5]);
 	switch (param1[3]) {
 		case 0xA:
 			[[fallthrough]];
 		case 0xB:
 			[[fallthrough]];
 		case 0xC:
-			SYSLOG("rad", "Spoofing PSP version 10/11/12 to 11");
+			NETDBG::printf("rad: Spoofing PSP version 10/11/12 to 11");
 			param1[3] = 0xB;
 			param1[4] = 0x0;
 			param1[5] = 0x0;
@@ -260,18 +260,18 @@ uint64_t RAD::wrapPspSwInit(uint32_t *param1, uint32_t *param2)
 			break;
 	}
 	auto ret = FunctionCast(wrapPspSwInit, callbackRAD->orgPspSwInit)(param1, param2);
-	SYSLOG("rad", "_psp_sw_init returned 0x%llx", ret);
+	NETDBG::printf("rad: _psp_sw_init returned 0x%llx", ret);
 	return ret;
 }
 
 uint32_t RAD::wrapGcGetHwVersion(uint32_t *param1)
 {
-	SYSLOG("rad", "_gc_get_hw_version called!");
-	SYSLOG("rad", "_gc_get_hw_version: param1 = %p", param1);
+	NETDBG::printf("rad: _gc_get_hw_version called!");
+	NETDBG::printf("rad: _gc_get_hw_version: param1 = %p", param1);
 	auto ret = FunctionCast(wrapGcGetHwVersion, callbackRAD->orgGcGetHwVersion)(param1);
-	SYSLOG("rad", "_gc_get_hw_version returned 0x%x", ret);
+	NETDBG::printf("rad: _gc_get_hw_version returned 0x%x", ret);
 	if ((ret & 0xFF0000) == 0x90000) {
-		SYSLOG("rad", "Spoofing GC version 9.x.x to 9.2.1");
+		NETDBG::printf("rad: Spoofing GC version 9.x.x to 9.2.1");
 		return 0x90201;
 	}
 	return ret;
@@ -279,23 +279,23 @@ uint32_t RAD::wrapGcGetHwVersion(uint32_t *param1)
 
 uint32_t RAD::wrapInternalCosReadFw(uint64_t param1, uint64_t *param2)
 {
-	SYSLOG("rad", "_internal_cos_read_fw called!");
-	SYSLOG("rad", "_internal_cos_read_fw: param1 = 0x%llx param2 = %p", param1, param2);
+	NETDBG::printf("rad: _internal_cos_read_fw called!");
+	NETDBG::printf("rad: _internal_cos_read_fw: param1 = 0x%llx param2 = %p", param1, param2);
 	auto ret = FunctionCast(wrapInternalCosReadFw, callbackRAD->orgInternalCosReadFw)(param1, param2);
-	SYSLOG("rad", "_internal_cos_read_fw returned 0x%x", ret);
+	NETDBG::printf("rad: _internal_cos_read_fw returned 0x%x", ret);
 	return ret;
 }
 
 void RAD::wrapPopulateFirmwareDirectory(void *that)
 {
-	SYSLOG("rad", "AMDRadeonX5000_AMDRadeonHWLibsX5000::populateFirmwareDirectory called!");
+	NETDBG::printf("rad: AMDRadeonX5000_AMDRadeonHWLibsX5000::populateFirmwareDirectory called!");
 	FunctionCast(wrapPopulateFirmwareDirectory, callbackRAD->orgPopulateFirmwareDirectory)(that);
-	SYSLOG("rad", "injecting ativvaxy_rv.dat!");
+	NETDBG::printf("rad: injecting ativvaxy_rv.dat!");
 	auto *fwDesc = getFWDescByName("ativvaxy_rv.dat");
 	
 	auto *fw = callbackRAD->orgCreateFirmware(fwDesc->getBytesNoCopy(), fwDesc->getLength(), 0x200, "ativvaxy_rv.dat");
 	auto *fwDir = *(void **)((uint8_t *)that + 0xB8);
-	SYSLOG("rad", "fwDir = %p", fwDir);
+	NETDBG::printf("rad: fwDir = %p", fwDir);
 	if (!callbackRAD->orgPutFirmware(fwDir, 6, fw)) {
 		panic("Failed to inject ativvaxy_rv.dat firmware");
 	}
@@ -303,26 +303,26 @@ void RAD::wrapPopulateFirmwareDirectory(void *that)
 
 bool RAD::wrapIpiSmuIsSwipExcluded()
 {
-	SYSLOG("rad", "_IpiSmuIsSwipExcluded called!");
+	NETDBG::printf("rad: _IpiSmuIsSwipExcluded called!");
 	return true;
 }
 
 void *RAD::wrapCreateAtomBiosProxy(void *param1)
 {
-	SYSLOG("rad", "----------------------------------------------------------------------");
-	SYSLOG("rad", "createAtomBiosProxy called!");
-	SYSLOG("rad", "createAtomBiosProxy: param1 = %p", param1);
+	NETDBG::printf("rad: ----------------------------------------------------------------------");
+	NETDBG::printf("rad: createAtomBiosProxy called!");
+	NETDBG::printf("rad: createAtomBiosProxy: param1 = %p", param1);
 	auto ret = FunctionCast(wrapCreateAtomBiosProxy, callbackRAD->orgCreateAtomBiosProxy)(param1);
-	SYSLOG("rad", "createAtomBiosProxy returned %p", ret);
+	NETDBG::printf("rad: createAtomBiosProxy returned %p", ret);
 	return ret;
 }
 
 IOReturn RAD::wrapInitializeResources(void *that)
 {
-	SYSLOG("rad", "initializeResources called!");
-	SYSLOG("rad", "initializeResources: this = %p", that);
+	NETDBG::printf("rad: initializeResources called!");
+	NETDBG::printf("rad: initializeResources: this = %p", that);
 	auto ret = FunctionCast(wrapInitializeResources, callbackRAD->orgInitializeResources)(that);
-	SYSLOG("rad", "initializeResources returned 0x%x", ret);
+	NETDBG::printf("rad: initializeResources returned 0x%x", ret);
 	return ret;
 }
 
@@ -337,25 +337,25 @@ IOReturn RAD::wrapPopulateDeviceMemory(void *that, uint32_t reg)
 
 void *RAD::wrapGetGpuHwConstants(uint8_t *param1)
 {
-	SYSLOG("rad", "----------------------------------------------------------------------");
-	SYSLOG("rad", "_GetGpuHwConstants called!");
-	SYSLOG("rad", "_GetGpuHwConstants: param1 = %p", param1);
+	NETDBG::printf("rad: ----------------------------------------------------------------------");
+	NETDBG::printf("rad: _GetGpuHwConstants called!");
+	NETDBG::printf("rad: _GetGpuHwConstants: param1 = %p", param1);
 	auto *asicCaps = *(uint8_t **)(param1 + 0x350);
-	SYSLOG("rad", "_GetGpuHwConstants: asicCaps = %p", asicCaps);
+	NETDBG::printf("rad: _GetGpuHwConstants: asicCaps = %p", asicCaps);
 	uint16_t deviceId = *(uint16_t *)(asicCaps + 8);
-	SYSLOG("rad", "_GetGpuHwConstants: deviceId = 0x%x", deviceId);
+	NETDBG::printf("rad: _GetGpuHwConstants: deviceId = 0x%x", deviceId);
 	auto *goldenSettings = *(uint8_t **)(asicCaps + 48);
-	SYSLOG("rad", "_GetGpuHwConstants: goldenSettings = %p", goldenSettings);
+	NETDBG::printf("rad: _GetGpuHwConstants: goldenSettings = %p", goldenSettings);
 	for (size_t i = 0; i < 24; i++) {
-		SYSLOG("rad", "_GetGpuHwConstants: goldenSettings: %d:0x%x", i, goldenSettings[i]);
+		NETDBG::printf("rad: _GetGpuHwConstants: goldenSettings: %zu:0x%x", i, goldenSettings[i]);
 	}
 	auto ret = FunctionCast(wrapGetGpuHwConstants, callbackRAD->orgGetGpuHwConstants)(param1);
-	SYSLOG("rad", "_GetGpuHwConstants returned %p", ret);
-	SYSLOG("rad", "----------------------------------------------------------------------");
+	NETDBG::printf("rad: _GetGpuHwConstants returned %p", ret);
+	NETDBG::printf("rad: ----------------------------------------------------------------------");
 	if (!ret)
 	{
-		SYSLOG("rad", "_GetGpuHwConstants failed!");
-		NETDBG::sendData("_GetGpuHwConstants returned ZERO value!");
+		NETDBG::printf("rad: _GetGpuHwConstants failed!");
+		NETDBG::printf("_GetGpuHwConstants returned ZERO value!");
 		panic("_GetGpuHwConstants returned ZERO value!");
 	}
 	return ret;
@@ -364,35 +364,35 @@ void *RAD::wrapGetGpuHwConstants(uint8_t *param1)
 uint64_t RAD::wrapMCILUpdateGfxCGPG(void *param1)
 {
 	
-	SYSLOG("rad", "----------------------------------------------------------------------");
-	NETDBG::sendData("_Cail_MCILUpdateGfxCGPG called!");
-	SYSLOG("rad", "_Cail_MCILUpdateGfxCGPG called!");
-	SYSLOG("rad", "_Cail_MCILUpdateGfxCGPG: param1 = %p", param1);
+	NETDBG::printf("rad: ----------------------------------------------------------------------");
+	NETDBG::printf("_Cail_MCILUpdateGfxCGPG called!");
+	NETDBG::printf("rad: _Cail_MCILUpdateGfxCGPG called!");
+	NETDBG::printf("rad: _Cail_MCILUpdateGfxCGPG: param1 = %p", param1);
 	auto ret = FunctionCast(wrapMCILUpdateGfxCGPG, callbackRAD->orgMCILUpdateGfxCGPG)(param1);
-	SYSLOG("rad", "_Cail_MCILUpdateGfxCGPG returned 0x%llx", ret);
-	NETDBG::sendData("_Cail_MCILUpdateGfxCGPG returned 0x%llx", ret);
+	NETDBG::printf("rad: _Cail_MCILUpdateGfxCGPG returned 0x%llx", ret);
+	NETDBG::printf("_Cail_MCILUpdateGfxCGPG returned 0x%llx", ret);
 	return ret;
 }
 
 IOReturn RAD::wrapQueryEngineRunningState(void *that, void *param1, void *param2)
 {
-	NETDBG::sendData("queryEngineRunningState called!");
-	NETDBG::sendData("queryEngineRunningState: that = %p param1 = %p param2 = %p", that, param1, param2);
+	NETDBG::printf("queryEngineRunningState called!");
+	NETDBG::printf("queryEngineRunningState: that = %p param1 = %p param2 = %p", that, param1, param2);
 	for (size_t i = 0; i < 30; i++)
 	{
-		NETDBG::sendData("queryEngineRunningState ORG: %zu:0x%x", i, ((uint8_t *)callbackRAD->orgQueryEngineRunningState)[i]);
+		NETDBG::printf("queryEngineRunningState ORG: %zu:0x%x", i, ((uint8_t *)callbackRAD->orgQueryEngineRunningState)[i]);
 	}
 	auto ret = FunctionCast(wrapQueryEngineRunningState, callbackRAD->orgQueryEngineRunningState)(that, param1, param2);
-	NETDBG::sendData("queryEngineRunningState returned 0x%x", ret);
+	NETDBG::printf("queryEngineRunningState returned 0x%x", ret);
 	return ret;
 }
 
 IOReturn RAD::wrapQueryComputeQueueIsIdle(void *that, uint64_t param1)
 {
-	NETDBG::sendData("QueryComputeQueueIsIdle called!");
-	NETDBG::sendData("QueryComputeQueueIsIdle: that = %p param1 = 0x%llx", that, param1);
+	NETDBG::printf("QueryComputeQueueIsIdle called!");
+	NETDBG::printf("QueryComputeQueueIsIdle: that = %p param1 = 0x%llx", that, param1);
 	auto ret = FunctionCast(wrapQueryComputeQueueIsIdle, callbackRAD->orgQueryComputeQueueIsIdle)(that, param1);
-	NETDBG::sendData("QueryComputeQueueIsIdle returned 0x%x", ret);
+	NETDBG::printf("QueryComputeQueueIsIdle returned 0x%x", ret);
 	return ret;
 }
 
@@ -517,7 +517,7 @@ void RAD::process24BitOutput(KernelPatcher &patcher, KernelPatcher::KextInfo &in
 				}
 				else
 				{
-					SYSLOG("rad", "failed to disable write protection for BITS_PER_COMPONENT");
+					NETDBG::printf("rad: failed to disable write protection for BITS_PER_COMPONENT");
 				}
 			}
 			bitsPerComponent++;
@@ -525,7 +525,7 @@ void RAD::process24BitOutput(KernelPatcher &patcher, KernelPatcher::KextInfo &in
 	}
 	else
 	{
-		SYSLOG("rad", "failed to find BITS_PER_COMPONENT");
+		NETDBG::printf("rad: failed to find BITS_PER_COMPONENT");
 		patcher.clearError();
 	}
 	
@@ -540,7 +540,7 @@ void RAD::process24BitOutput(KernelPatcher &patcher, KernelPatcher::KextInfo &in
 	patcher.applyLookupPatch(&pixelPatch);
 	if (patcher.getError() != KernelPatcher::Error::NoError)
 	{
-		SYSLOG("rad", "failed to patch RGB mask for 24-bit output");
+		NETDBG::printf("rad: failed to patch RGB mask for 24-bit output");
 		patcher.clearError();
 	}
 }
@@ -568,35 +568,38 @@ void RAD::processConnectorOverrides(KernelPatcher &patcher, mach_vm_address_t ad
 
 uint64_t RAD::wrapConfigureDevice(void *that, IOPCIDevice *dev)
 {
-	SYSLOG("rad", "configureDevice called!");
+	NETDBG::printf("rad: configureDevice called!");
 	auto ret = FunctionCast(wrapConfigureDevice, callbackRAD->orgConfigureDevice)(that, dev);
-	SYSLOG("rad", "configureDevice returned 0x%x", ret);
+	NETDBG::printf("rad: configureDevice returned 0x%llx", ret);
 	return ret;
 }
 
 IOService *RAD::wrapInitLinkToPeer(void *that, const char *matchCategoryName)
 {
-	SYSLOG("rad", "initLinkToPeer called!");
+	NETDBG::printf("rad: initLinkToPeer called!");
 	auto ret = FunctionCast(wrapInitLinkToPeer, callbackRAD->orgInitLinkToPeer)(that, matchCategoryName);
-	SYSLOG("rad", "initLinkToPeer returned 0x%x", ret);
+	NETDBG::printf("rad: initLinkToPeer returned %p", ret);
 	return ret;
 }																		\
 
-WRAP_SIMPLE(uint64_t, CreateHWHandler, "0x%x")
+WRAP_SIMPLE(uint64_t, CreateHWHandler, "0x%llx")
+
 uint64_t RAD::wrapCreateHWInterface(void *that, IOPCIDevice *dev)
 {
-	SYSLOG("rad", "createHWInterface called!");
+	NETDBG::printf("rad: createHWInterface called!");
 	auto ret = FunctionCast(wrapCreateHWInterface, callbackRAD->orgCreateHWInterface)(that, dev);
-	SYSLOG("rad", "createHWInterface returned 0x%x", ret);
+	NETDBG::printf("rad: createHWInterface returned 0x%llx", ret);
 	return ret;
 }
-WRAP_SIMPLE(uint64_t, GetHWMemory, "0x%x")
-WRAP_SIMPLE(uint64_t, GetATIChipConfigBit, "0x%x")
-WRAP_SIMPLE(uint64_t, AllocateAMDHWRegisters, "0x%x")
+
+WRAP_SIMPLE(uint64_t, GetHWMemory, "0x%llx")
+WRAP_SIMPLE(uint64_t, GetATIChipConfigBit, "0x%llx")
+WRAP_SIMPLE(uint64_t, AllocateAMDHWRegisters, "0x%llx")
 WRAP_SIMPLE(bool, SetupCAIL, "%d")
-WRAP_SIMPLE(uint64_t, InitializeHWWorkarounds, "0x%x")
-WRAP_SIMPLE(uint64_t, AllocateAMDHWAlignManager, "0x%x")
+WRAP_SIMPLE(uint64_t, InitializeHWWorkarounds, "0x%llx")
+WRAP_SIMPLE(uint64_t, AllocateAMDHWAlignManager, "0x%llx")
 WRAP_SIMPLE(bool, MapDoorbellMemory, "%d")
+
 uint64_t RAD::wrapGetState(void* that)
 {
 	DBGLOG("rad", "getState called!");
@@ -607,9 +610,9 @@ uint64_t RAD::wrapGetState(void* that)
 
 uint32_t RAD::wrapInitializeTtl(void *that, void *param1)
 {
-	SYSLOG("rad", "initializeTtl called!");
+	NETDBG::printf("rad: initializeTtl called!");
 	auto ret = FunctionCast(wrapInitializeTtl, callbackRAD->orgInitializeTtl)(that, param1);
-	SYSLOG("rad", "initializeTtl returned 0x%x", ret);
+	NETDBG::printf("rad: initializeTtl returned 0x%x", ret);
 	return ret;
 }
 
@@ -754,12 +757,12 @@ void RAD::mergeProperties(OSDictionary *props, const char *prefix, IOService *pr
 		}
 		else
 		{
-			SYSLOG("rad", "prop merge failed to iterate over properties");
+			NETDBG::printf("rad: prop merge failed to iterate over properties");
 		}
 	}
 	else
 	{
-		SYSLOG("rad", "prop merge failed to get properties");
+		NETDBG::printf("rad: prop merge failed to get properties");
 	}
 	
 	if (!strcmp(prefix, "CAIL,"))
@@ -799,7 +802,7 @@ uint32_t RAD::wrapGetConnectorsInfoV1(void *that, RADConnectors::Connector *conn
 		callbackRAD->updateConnectorsInfo(nullptr, nullptr, *props, connectors, sz);
 	}
 	else
-		SYSLOG("rad", "getConnectorsInfoV1 failed %X or undefined %d", code, props == nullptr);
+		NETDBG::printf("rad: getConnectorsInfoV1 failed %X or undefined %d", code, props == nullptr);
 	
 	return code;
 }
@@ -808,7 +811,7 @@ void RAD::updateConnectorsInfo(void *atomutils, t_getAtomObjectTableForType gett
 {
 	if (atomutils)
 	{
-		SYSLOG("rad", "getConnectorsInfo found %u connectors", *sz);
+		NETDBG::printf("rad: getConnectorsInfo found %u connectors", *sz);
 		RADConnectors::print(connectors, *sz);
 	}
 	
@@ -825,30 +828,30 @@ void RAD::updateConnectorsInfo(void *atomutils, t_getAtomObjectTableForType gett
 			if (WIOKit::getOSDataValue(ctrl, "connector-count", consCount))
 			{
 				*sz = consCount;
-				SYSLOG("rad", "getConnectorsInfo got size override to %u", *sz);
+				NETDBG::printf("rad: getConnectorsInfo got size override to %u", *sz);
 			}
 			
 			if (consPtr && consSize > 0 && *sz > 0 && RADConnectors::valid(consSize, *sz))
 			{
 				RADConnectors::copy(connectors, *sz, static_cast<const RADConnectors::Connector *>(consPtr), consSize);
-				SYSLOG("rad", "getConnectorsInfo installed %u connectors", *sz);
+				NETDBG::printf("rad: getConnectorsInfo installed %u connectors", *sz);
 				applyPropertyFixes(ctrl, *sz);
 			}
 			else
 			{
-				SYSLOG("rad", "getConnectorsInfo conoverrides have invalid size %u for %u num", consSize, *sz);
+				NETDBG::printf("rad: getConnectorsInfo conoverrides have invalid size %u for %u num", consSize, *sz);
 			}
 		}
 		else
 		{
-			SYSLOG("rad", "getConnectorsInfo conoverrides have invalid type");
+			NETDBG::printf("rad: getConnectorsInfo conoverrides have invalid type");
 		}
 	}
 	else
 	{
 		if (atomutils)
 		{
-			SYSLOG("rad", "getConnectorsInfo attempting to autofix connectors");
+			NETDBG::printf("rad: getConnectorsInfo attempting to autofix connectors");
 			uint8_t sHeader = 0, displayPathNum = 0, connectorObjectNum = 0;
 			auto baseAddr = static_cast<uint8_t *>(gettable(atomutils, AtomObjectTableType::Common, &sHeader)) - sizeof(uint32_t);
 			auto displayPaths = static_cast<AtomDisplayObjectPath *>(gettable(atomutils, AtomObjectTableType::DisplayPath, &displayPathNum));
@@ -859,7 +862,7 @@ void RAD::updateConnectorsInfo(void *atomutils, t_getAtomObjectTableForType gett
 			}
 			else
 			{
-				SYSLOG("rad", "getConnectorsInfo found different displaypaths %u and connectors %u", displayPathNum, connectorObjectNum);
+				NETDBG::printf("rad: getConnectorsInfo found different displaypaths %u and connectors %u", displayPathNum, connectorObjectNum);
 			}
 		}
 		
@@ -872,16 +875,16 @@ void RAD::updateConnectorsInfo(void *atomutils, t_getAtomObjectTableForType gett
 		{
 			senseList = static_cast<const uint8_t *>(priData->getBytesNoCopy());
 			senseNum = static_cast<uint8_t>(priData->getLength());
-			SYSLOG("rad", "getConnectorInfo found %u senses in connector-priority", senseNum);
+			NETDBG::printf("rad: getConnectorInfo found %u senses in connector-priority", senseNum);
 			reprioritiseConnectors(senseList, senseNum, connectors, *sz);
 		}
 		else
 		{
-			SYSLOG("rad", "getConnectorInfo leaving unchaged priority");
+			NETDBG::printf("rad: getConnectorInfo leaving unchaged priority");
 		}
 	}
 	
-	SYSLOG("rad", "getConnectorsInfo resulting %u connectors follow", *sz);
+	NETDBG::printf("rad: getConnectorsInfo resulting %u connectors follow", *sz);
 	RADConnectors::print(connectors, *sz);
 }
 
@@ -896,7 +899,7 @@ uint32_t RAD::wrapTranslateAtomConnectorInfoV1(void *that, RADConnectors::AtomCo
 		uint8_t sense = getSenseID(info->i2cRecord);
 		if (sense)
 		{
-			SYSLOG("rad", "translateAtomConnectorInfoV1 got sense id %02X", sense);
+			NETDBG::printf("rad: translateAtomConnectorInfoV1 got sense id %02X", sense);
 			
 				// We need to extract usGraphicObjIds from info->hpdRecord, which is of type ATOM_SRC_DST_TABLE_FOR_ONE_OBJECT:
 				// struct ATOM_SRC_DST_TABLE_FOR_ONE_OBJECT {
@@ -911,7 +914,7 @@ uint32_t RAD::wrapTranslateAtomConnectorInfoV1(void *that, RADConnectors::AtomCo
 			for (uint8_t i = 0; i < ucNumberOfSrc; i++)
 			{
 				auto usSrcObjectID = *reinterpret_cast<uint16_t *>(info->hpdRecord + sizeof(uint8_t) + i * sizeof(uint16_t));
-				SYSLOG("rad", "translateAtomConnectorInfoV1 checking %04X object id", usSrcObjectID);
+				NETDBG::printf("rad: translateAtomConnectorInfoV1 checking %04X object id", usSrcObjectID);
 				if (((usSrcObjectID & OBJECT_TYPE_MASK) >> OBJECT_TYPE_SHIFT) == GRAPH_OBJECT_TYPE_ENCODER)
 				{
 					uint8_t txmit = 0, enc = 0;
@@ -923,7 +926,7 @@ uint32_t RAD::wrapTranslateAtomConnectorInfoV1(void *that, RADConnectors::AtomCo
 		}
 		else
 		{
-			SYSLOG("rad", "translateAtomConnectorInfoV1 failed to detect sense for translated connector");
+			NETDBG::printf("rad: translateAtomConnectorInfoV1 failed to detect sense for translated connector");
 		}
 	}
 	
@@ -938,7 +941,7 @@ void RAD::autocorrectConnectors(uint8_t *baseAddr, AtomDisplayObjectPath *displa
 	{
 		if (!isEncoder(displayPaths[i].usGraphicObjIds))
 		{
-			SYSLOG("rad", "autocorrectConnectors not encoder %X at %u", displayPaths[i].usGraphicObjIds, i);
+			NETDBG::printf("rad: autocorrectConnectors not encoder %X at %u", displayPaths[i].usGraphicObjIds, i);
 			continue;
 		}
 		
@@ -951,11 +954,11 @@ void RAD::autocorrectConnectors(uint8_t *baseAddr, AtomDisplayObjectPath *displa
 		uint8_t sense = getSenseID(baseAddr + connectorObjects[i].usRecordOffset);
 		if (!sense)
 		{
-			SYSLOG("rad", "autocorrectConnectors failed to detect sense for %u connector", i);
+			NETDBG::printf("rad: autocorrectConnectors failed to detect sense for %u connector", i);
 			continue;
 		}
 		
-		SYSLOG("rad", "autocorrectConnectors found txmit %02X enc %02X sense %02X for %u connector", txmit, enc, sense, i);
+		NETDBG::printf("rad: autocorrectConnectors found txmit %02X enc %02X sense %02X for %u connector", txmit, enc, sense, i);
 		
 		autocorrectConnector(getConnectorID(displayPaths[i].usConnObjectId), sense, txmit, enc, connectors, sz);
 	}
@@ -969,7 +972,7 @@ void RAD::autocorrectConnector(uint8_t connector, uint8_t sense, uint8_t txmit, 
 			connector != CONNECTOR_OBJECT_ID_DUAL_LINK_DVI_D &&
 			connector != CONNECTOR_OBJECT_ID_LVDS)
 		{
-			SYSLOG("rad", "autocorrectConnector found unsupported connector type %02X", connector);
+			NETDBG::printf("rad: autocorrectConnector found unsupported connector type %02X", connector);
 			return;
 		}
 		
@@ -979,7 +982,7 @@ void RAD::autocorrectConnector(uint8_t connector, uint8_t sense, uint8_t txmit, 
 			{
 				if (con.transmitter != txmit && (con.transmitter & 0xCF) == con.transmitter)
 				{
-					SYSLOG("rad", "autocorrectConnector replacing txmit %02X with %02X for %u connector sense %02X",
+					NETDBG::printf("rad: autocorrectConnector replacing txmit %02X with %02X for %u connector sense %02X",
 						   con.transmitter, txmit, idx, sense);
 					con.transmitter = txmit;
 				}
@@ -1006,7 +1009,7 @@ void RAD::autocorrectConnector(uint8_t connector, uint8_t sense, uint8_t txmit, 
 		}
 	}
 	else
-		SYSLOG("rad", "autocorrectConnector use -raddvi to enable dvi autocorrection");
+		NETDBG::printf("rad: autocorrectConnector use -raddvi to enable dvi autocorrection");
 }
 
 void RAD::reprioritiseConnectors(const uint8_t *senseList, uint8_t senseNum, RADConnectors::Connector *connectors, uint8_t sz)
@@ -1037,7 +1040,7 @@ void RAD::reprioritiseConnectors(const uint8_t *senseList, uint8_t senseNum, RAD
 				{
 					if (con.sense == senseList[i])
 					{
-						SYSLOG("rad", "reprioritiseConnectors setting priority of sense %02X to %u by sense", con.sense, priCount);
+						NETDBG::printf("rad: reprioritiseConnectors setting priority of sense %02X to %u by sense", con.sense, priCount);
 						con.priority = priCount++;
 						return true;
 					}
@@ -1046,7 +1049,7 @@ void RAD::reprioritiseConnectors(const uint8_t *senseList, uint8_t senseNum, RAD
 				{
 					if (con.priority == 0 && con.type == typeList[i - senseNum])
 					{
-						SYSLOG("rad", "reprioritiseConnectors setting priority of sense %02X to %u by type", con.sense, priCount);
+						NETDBG::printf("rad: reprioritiseConnectors setting priority of sense %02X to %u by type", con.sense, priCount);
 						con.priority = priCount++;
 					}
 				}
@@ -1168,7 +1171,7 @@ uint32_t RAD::wrapGetConnectorsInfoV2(void *that, RADConnectors::Connector *conn
 	if (code == 0 && sz && props && *props)
 		callbackRAD->updateConnectorsInfo(nullptr, nullptr, *props, connectors, sz);
 	else
-		SYSLOG("rad", "getConnectorsInfoV2 failed %X or undefined %d", code, props == nullptr);
+		NETDBG::printf("rad: getConnectorsInfoV2 failed %X or undefined %d", code, props == nullptr);
 	
 	return code;
 }
@@ -1184,14 +1187,14 @@ uint32_t RAD::wrapTranslateAtomConnectorInfoV2(void *that, RADConnectors::AtomCo
 		uint8_t sense = getSenseID(info->i2cRecord);
 		if (sense)
 		{
-			SYSLOG("rad", "translateAtomConnectorInfoV2 got sense id %02X", sense);
+			NETDBG::printf("rad: translateAtomConnectorInfoV2 got sense id %02X", sense);
 			uint8_t txmit = 0, enc = 0;
 			if (getTxEnc(info->usGraphicObjIds, txmit, enc))
 				callbackRAD->autocorrectConnector(getConnectorID(info->usConnObjectId), getSenseID(info->i2cRecord), txmit, enc, connector, 1);
 		}
 		else
 		{
-			SYSLOG("rad", "translateAtomConnectorInfoV2 failed to detect sense for translated connector");
+			NETDBG::printf("rad: translateAtomConnectorInfoV2 failed to detect sense for translated connector");
 		}
 	}
 	
@@ -1200,16 +1203,16 @@ uint32_t RAD::wrapTranslateAtomConnectorInfoV2(void *that, RADConnectors::AtomCo
 
 bool RAD::wrapATIControllerStart(IOService *ctrl, IOService *provider)
 {
-	SYSLOG("rad", "starting controller " PRIKADDR, CASTKADDR(current_thread()));
+	NETDBG::printf("rad: starting controller " PRIKADDR, CASTKADDR(current_thread()));
 	if (callbackRAD->forceVesaMode)
 	{
-		SYSLOG("rad", "disabling video acceleration on request");
+		NETDBG::printf("rad: disabling video acceleration on request");
 		return false;
 	}
 	
 	callbackRAD->currentPropProvider.set(provider);
 	bool r = FunctionCast(wrapATIControllerStart, callbackRAD->orgATIControllerStart)(ctrl, provider);
-	SYSLOG("rad", "starting controller done %d " PRIKADDR, r, CASTKADDR(current_thread()));
+	NETDBG::printf("rad: starting controller done %d " PRIKADDR, r, CASTKADDR(current_thread()));
 	callbackRAD->currentPropProvider.erase();
 	
 	return r;
@@ -1217,7 +1220,7 @@ bool RAD::wrapATIControllerStart(IOService *ctrl, IOService *provider)
 
 bool RAD::doNotTestVram([[maybe_unused]] IOService * ctrl, [[maybe_unused]] uint32_t reg, [[maybe_unused]] bool retryOnFail)
 {
-	SYSLOG("rad", "TestVRAM called! Returning true");
+	NETDBG::printf("rad: TestVRAM called! Returning true");
 	return true;
 }
 
@@ -1228,7 +1231,7 @@ bool RAD::wrapNotifyLinkChange(void *atiDeviceControl, kAGDCRegisterLinkControlE
 	if (event == kAGDCValidateDetailedTiming)
 	{
 		auto cmd = static_cast<AGDCValidateDetailedTiming_t *>(eventData);
-		SYSLOG("rad", "AGDCValidateDetailedTiming %u -> %d (%u)", cmd->framebufferIndex, ret, cmd->modeStatus);
+		NETDBG::printf("rad: AGDCValidateDetailedTiming %u -> %d (%u)", cmd->framebufferIndex, ret, cmd->modeStatus);
 		if (ret == false || cmd->modeStatus < 1 || cmd->modeStatus > 3)
 		{
 			cmd->modeStatus = 2;
@@ -1245,13 +1248,13 @@ void RAD::updateGetHWInfo(IOService *accelVideoCtx, void *hwInfo)
 	accel = OSDynamicCast(IOService, accelVideoCtx->getParentEntry(gIOServicePlane));
 	if (accel == NULL)
 	{
-		SYSLOG("rad", "getHWInfo: no parent found for accelVideoCtx!");
+		NETDBG::printf("rad: getHWInfo: no parent found for accelVideoCtx!");
 		return;
 	}
 	pciDev = OSDynamicCast(IOService, accel->getParentEntry(gIOServicePlane));
 	if (pciDev == NULL)
 	{
-		SYSLOG("rad", "getHWInfo: no parent found for accel!");
+		NETDBG::printf("rad: getHWInfo: no parent found for accel!");
 		return;
 	}
 	uint16_t &org = getMember<uint16_t>(hwInfo, 0x4);
@@ -1260,6 +1263,6 @@ void RAD::updateGetHWInfo(IOService *accelVideoCtx, void *hwInfo)
 	{
 		WIOKit::getOSDataValue(pciDev, "device-id", dev);
 	}
-	SYSLOG("rad", "getHWInfo: original PID: 0x%04X, replaced PID: 0x%04X", org, dev);
+	NETDBG::printf("rad: getHWInfo: original PID: 0x%04X, replaced PID: 0x%04X", org, dev);
 	org = static_cast<uint16_t>(dev);
 }
