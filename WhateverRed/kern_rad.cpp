@@ -153,16 +153,16 @@ IOReturn RAD::wrapProjectByPartNumber([[maybe_unused]] IOService* that, [[maybe_
 	return kIOReturnNotFound;
 }
 
-WRAP_SIMPLE(uint64_t, InitializeProjectDependentResources, "0x%llx")
-WRAP_SIMPLE(uint64_t, HwInitializeFbMemSize, "0x%llx")
-WRAP_SIMPLE(uint64_t, HwInitializeFbBase, "0x%llx")
+WRAP_SIMPLE(IOReturn, InitializeProjectDependentResources, "0x%X")
+WRAP_SIMPLE(IOReturn, HwInitializeFbMemSize, "0x%X")
+WRAP_SIMPLE(IOReturn, HwInitializeFbBase, "0x%X")
 
 uint64_t RAD::wrapInitWithController(void *that, void *controller)
 {
 	NETDBG::printf("initWithController called!");
 	NETDBG::printf("rad: initWithController called!");
 	auto ret = FunctionCast(wrapInitWithController, callbackRAD->orgInitWithController)(that, controller);
-	NETDBG::printf("rad: initWithController returned %llx", ret);
+	NETDBG::printf("rad: initWithController returned %llX", ret);
 	return ret;
 }
 
@@ -170,7 +170,7 @@ IntegratedVRAMInfoInterface *RAD::createVramInfo([[maybe_unused]] void *helper, 
 {
 	NETDBG::printf("rad: ----------------------------------------------------------------------");
 	NETDBG::printf("rad: creating fake VRAM info, get rekt ayymd");
-	NETDBG::printf("rad: createVramInfo offset = 0x%x", offset);
+	NETDBG::printf("rad: createVramInfo offset = 0x%X", offset);
 	DataTableInitInfo initInfo {
 		.helper = helper,
 		.tableOffset = offset,
@@ -202,7 +202,7 @@ uint64_t RAD::wrapIpiSetFwEntry(void *tlsInstance, void *b)
 	DBGLOG("rad", "_IpiSetFwEntry called!");
 	DBGLOG("rad", "_IpiSetFwEntry: tlsInstance = %p param2 = %p", tlsInstance, b);
 	auto ret = FunctionCast(wrapIpiSetFwEntry, callbackRAD->orgIpiSetFwEntry)(tlsInstance, b);
-	DBGLOG("rad", "_IpiSetFwEntry returned 0x%llx", ret);
+	DBGLOG("rad", "_IpiSetFwEntry returned 0x%llX", ret);
 	return ret;
 }
 
@@ -211,7 +211,7 @@ uint64_t RAD::wrapIpiSmuSwInit(void *tlsInstance)
 	NETDBG::printf("rad: _ipi_smu_sw_init called!");
 	NETDBG::printf("rad: _ipi_smu_sw_init: tlsInstance = %p", tlsInstance);
 	auto ret = FunctionCast(wrapIpiSmuSwInit, callbackRAD->orgIpiSmuSwInit)(tlsInstance);
-	NETDBG::printf("rad: _ipi_smu_sw_init returned 0x%llx", ret);
+	NETDBG::printf("rad: _ipi_smu_sw_init returned 0x%llX", ret);
 	return ret;
 }
 
@@ -220,26 +220,26 @@ uint64_t RAD::wrapSmuSwInit(void *input, uint64_t *output)
 	NETDBG::printf("rad: _smu_sw_init called!");
 	NETDBG::printf("rad: _smu_sw_init: input = %p output = %p", input, output);
 	auto ret = FunctionCast(wrapSmuSwInit, callbackRAD->orgSmuSwInit)(input, output);
-	NETDBG::printf("rad: _smu_sw_init: output 0:0x%llx 1:0x%llx", output[0], output[1]);
-	NETDBG::printf("rad: _smu_sw_init returned 0x%llx", ret);
+	NETDBG::printf("rad: _smu_sw_init: output 0:0x%llX 1:0x%llX", output[0], output[1]);
+	NETDBG::printf("rad: _smu_sw_init returned 0x%llX", ret);
 	return ret;
 }
 
 uint32_t RAD::wrapSmuInternalSwInit(uint64_t param1, uint64_t param2, void *param3)
 {
 	NETDBG::printf("rad: _smu_internal_sw_init called!");
-	NETDBG::printf("rad: _smu_internal_sw_init: param1 = 0x%llx param2 = 0x%llx param3 = %p", param1, param2, param3);
+	NETDBG::printf("rad: _smu_internal_sw_init: param1 = 0x%llX param2 = 0x%llX param3 = %p", param1, param2, param3);
 	auto ret = FunctionCast(wrapSmuInternalSwInit, callbackRAD->orgSmuInternalSwInit)(param1, param2, param3);
-	NETDBG::printf("rad: _smu_internal_sw_init returned 0x%x", ret);
+	NETDBG::printf("rad: _smu_internal_sw_init returned 0x%X", ret);
 	return ret;
 }
 
 uint64_t RAD::wrapSmuGetHwVersion(uint64_t param1, uint32_t param2)
 {
 	NETDBG::printf("rad: _smu_get_hw_version called!");
-	NETDBG::printf("rad: _smu_get_hw_version: param1 = 0x%llx param2 = 0x%x", param1, param2);
+	NETDBG::printf("rad: _smu_get_hw_version: param1 = 0x%llX param2 = 0x%X", param1, param2);
 	auto ret = FunctionCast(wrapSmuGetHwVersion, callbackRAD->orgSmuGetHwVersion)(param1, param2);
-	NETDBG::printf("rad: _smu_get_hw_version returned 0x%llx", ret);
+	NETDBG::printf("rad: _smu_get_hw_version returned 0x%llX", ret);
 	switch (ret)
 	{
 		case 0x2:
@@ -257,7 +257,7 @@ uint64_t RAD::wrapPspSwInit(uint32_t *param1, uint32_t *param2)
 {
 	NETDBG::printf("rad: _psp_sw_init called!");
 	NETDBG::printf("rad: _psp_sw_init: param1 = %p param2 = %p", param1, param2);
-	NETDBG::printf("rad: _psp_sw_init: param1: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x", param1[0], param1[1], param1[2], param1[3], param1[4], param1[5]);
+	NETDBG::printf("rad: _psp_sw_init: param1: 0x%X 0x%X 0x%X 0x%X 0x%X 0x%X", param1[0], param1[1], param1[2], param1[3], param1[4], param1[5]);
 	switch (param1[3]) {
 		case 0xA:
 			[[fallthrough]];
@@ -273,7 +273,7 @@ uint64_t RAD::wrapPspSwInit(uint32_t *param1, uint32_t *param2)
 			break;
 	}
 	auto ret = FunctionCast(wrapPspSwInit, callbackRAD->orgPspSwInit)(param1, param2);
-	NETDBG::printf("rad: _psp_sw_init returned 0x%llx", ret);
+	NETDBG::printf("rad: _psp_sw_init returned 0x%llX", ret);
 	return ret;
 }
 
@@ -282,7 +282,7 @@ uint32_t RAD::wrapGcGetHwVersion(uint32_t *param1)
 	NETDBG::printf("rad: _gc_get_hw_version called!");
 	NETDBG::printf("rad: _gc_get_hw_version: param1 = %p", param1);
 	auto ret = FunctionCast(wrapGcGetHwVersion, callbackRAD->orgGcGetHwVersion)(param1);
-	NETDBG::printf("rad: _gc_get_hw_version returned 0x%x", ret);
+	NETDBG::printf("rad: _gc_get_hw_version returned 0x%X", ret);
 	if ((ret & 0xFF0000) == 0x90000) {
 		NETDBG::printf("rad: Spoofing GC version 9.x.x to 9.2.1");
 		return 0x90201;
@@ -293,9 +293,9 @@ uint32_t RAD::wrapGcGetHwVersion(uint32_t *param1)
 uint32_t RAD::wrapInternalCosReadFw(uint64_t param1, uint64_t *param2)
 {
 	NETDBG::printf("rad: _internal_cos_read_fw called!");
-	NETDBG::printf("rad: _internal_cos_read_fw: param1 = 0x%llx param2 = %p", param1, param2);
+	NETDBG::printf("rad: _internal_cos_read_fw: param1 = 0x%llX param2 = %p", param1, param2);
 	auto ret = FunctionCast(wrapInternalCosReadFw, callbackRAD->orgInternalCosReadFw)(param1, param2);
-	NETDBG::printf("rad: _internal_cos_read_fw returned 0x%x", ret);
+	NETDBG::printf("rad: _internal_cos_read_fw returned 0x%X", ret);
 	return ret;
 }
 
@@ -329,16 +329,16 @@ IOReturn RAD::wrapInitializeResources(void *that)
 	NETDBG::printf("rad: initializeResources called!");
 	NETDBG::printf("rad: initializeResources: this = %p", that);
 	auto ret = FunctionCast(wrapInitializeResources, callbackRAD->orgInitializeResources)(that);
-	NETDBG::printf("rad: initializeResources returned 0x%x", ret);
+	NETDBG::printf("rad: initializeResources returned 0x%X", ret);
 	return ret;
 }
 
 IOReturn RAD::wrapPopulateDeviceMemory(void *that, uint32_t reg)
 {
 	DBGLOG("rad", "populateDeviceMemory called!");
-	DBGLOG("rad", "populateDeviceMemory: this = %p reg = 0x%x", that, reg);
+	DBGLOG("rad", "populateDeviceMemory: this = %p reg = 0x%X", that, reg);
 	auto ret = FunctionCast(wrapPopulateDeviceMemory, callbackRAD->orgPopulateDeviceMemory)(that, reg);
-	DBGLOG("rad", "populateDeviceMemory returned 0x%x", ret);
+	DBGLOG("rad", "populateDeviceMemory returned 0x%X", ret);
 	return kIOReturnSuccess;
 }
 
@@ -350,11 +350,11 @@ void *RAD::wrapGetGpuHwConstants(uint8_t *param1)
 	auto *asicCaps = *(uint8_t **)(param1 + 0x350);
 	DBGLOG("rad", "_GetGpuHwConstants: asicCaps = %p", asicCaps);
 	uint16_t deviceId = *(uint16_t *)(asicCaps + 8);
-	DBGLOG("rad", "_GetGpuHwConstants: deviceId = 0x%x", deviceId);
+	DBGLOG("rad", "_GetGpuHwConstants: deviceId = 0x%X", deviceId);
 	auto *goldenSettings = *(uint8_t **)(asicCaps + 48);
 	DBGLOG("rad", "_GetGpuHwConstants: goldenSettings = %p", goldenSettings);
 	for (size_t i = 0; i < 24; i++) {
-		DBGLOG("rad", "_GetGpuHwConstants: goldenSettings: %zu:0x%x", i, goldenSettings[i]);
+		DBGLOG("rad", "_GetGpuHwConstants: goldenSettings: %zu:0x%X", i, goldenSettings[i]);
 	}
 	auto ret = FunctionCast(wrapGetGpuHwConstants, callbackRAD->orgGetGpuHwConstants)(param1);
 	DBGLOG("rad", "_GetGpuHwConstants returned %p", ret);
@@ -376,8 +376,8 @@ uint64_t RAD::wrapMCILUpdateGfxCGPG(void *param1)
 	NETDBG::printf("rad: _Cail_MCILUpdateGfxCGPG called!");
 	NETDBG::printf("rad: _Cail_MCILUpdateGfxCGPG: param1 = %p", param1);
 	auto ret = FunctionCast(wrapMCILUpdateGfxCGPG, callbackRAD->orgMCILUpdateGfxCGPG)(param1);
-	NETDBG::printf("rad: _Cail_MCILUpdateGfxCGPG returned 0x%llx", ret);
-	NETDBG::printf("_Cail_MCILUpdateGfxCGPG returned 0x%llx", ret);
+	NETDBG::printf("rad: _Cail_MCILUpdateGfxCGPG returned 0x%llX", ret);
+	NETDBG::printf("_Cail_MCILUpdateGfxCGPG returned 0x%llX", ret);
 	return ret;
 }
 
@@ -385,21 +385,30 @@ IOReturn RAD::wrapQueryEngineRunningState(void *that, void *param1, void *param2
 {
 	NETDBG::printf("queryEngineRunningState called!");
 	NETDBG::printf("queryEngineRunningState: that = %p param1 = %p param2 = %p", that, param1, param2);
-	for (size_t i = 0; i < 30; i++)
-	{
-		NETDBG::printf("queryEngineRunningState ORG: %zu:0x%x", i, ((uint8_t *)callbackRAD->orgQueryEngineRunningState)[i]);
-	}
+	NETDBG::printf("queryEngineRunningState: *param2 = 0x%X", *static_cast<uint32_t *>(param2));
 	auto ret = FunctionCast(wrapQueryEngineRunningState, callbackRAD->orgQueryEngineRunningState)(that, param1, param2);
-	NETDBG::printf("queryEngineRunningState returned 0x%x", ret);
+	NETDBG::printf("queryEngineRunningState: after *param2 = 0x%X", *static_cast<uint32_t *>(param2));
+	NETDBG::printf("queryEngineRunningState returned 0x%X", ret);
 	return ret;
 }
 
 IOReturn RAD::wrapQueryComputeQueueIsIdle(void *that, uint64_t param1)
 {
 	NETDBG::printf("QueryComputeQueueIsIdle called!");
-	NETDBG::printf("QueryComputeQueueIsIdle: that = %p param1 = 0x%llx", that, param1);
+	NETDBG::printf("QueryComputeQueueIsIdle: that = %p param1 = 0x%llX", that, param1);
 	auto ret = FunctionCast(wrapQueryComputeQueueIsIdle, callbackRAD->orgQueryComputeQueueIsIdle)(that, param1);
-	NETDBG::printf("QueryComputeQueueIsIdle returned 0x%x", ret);
+	NETDBG::printf("QueryComputeQueueIsIdle returned 0x%X", ret);
+	return ret;
+}
+
+uint64_t RAD::wrapCAILQueryEngineRunningState(void *param1, uint32_t *param2, uint64_t param3)
+{
+	NETDBG::printf("_CAILQueryEngineRunningState called!");
+	NETDBG::printf("_CAILQueryEngineRunningState: param1 = %p param2 = %p param3 = %llX", param1, param2, param3);
+	NETDBG::printf("_CAILQueryEngineRunningState: *param2 = 0x%X", *param2);
+	auto ret = FunctionCast(wrapCAILQueryEngineRunningState, callbackRAD->orgCAILQueryEngineRunningState)(param1, param2, param3);
+	NETDBG::printf("_CAILQueryEngineRunningState: after *param2 = 0x%X", *param2);
+	NETDBG::printf("_CAILQueryEngineRunningState returned 0x%llX", ret);
 	return ret;
 }
 
@@ -460,6 +469,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory, orgPopulateFirmwareDirectory},
 			{"_GetGpuHwConstants", wrapGetGpuHwConstants, orgGetGpuHwConstants},
 			{"__ZN15AmdCailServices23queryEngineRunningStateEP17CailHwEngineQueueP22CailEngineRunningState", wrapQueryEngineRunningState, orgQueryEngineRunningState},
+			{"_CAILQueryEngineRunningState", wrapCAILQueryEngineRunningState, orgCAILQueryEngineRunningState},
 		};
 		if (!patcher.routeMultipleLong(index, requests, arrsize(requests), address, size))
 			panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
@@ -575,7 +585,7 @@ uint64_t RAD::wrapConfigureDevice(void *that, IOPCIDevice *dev)
 {
 	NETDBG::printf("rad: configureDevice called!");
 	auto ret = FunctionCast(wrapConfigureDevice, callbackRAD->orgConfigureDevice)(that, dev);
-	NETDBG::printf("rad: configureDevice returned 0x%llx", ret);
+	NETDBG::printf("rad: configureDevice returned 0x%llX", ret);
 	return ret;
 }
 
@@ -587,29 +597,29 @@ IOService *RAD::wrapInitLinkToPeer(void *that, const char *matchCategoryName)
 	return ret;
 }																		\
 
-WRAP_SIMPLE(uint64_t, CreateHWHandler, "0x%llx")
+WRAP_SIMPLE(uint64_t, CreateHWHandler, "0x%llX")
 
 uint64_t RAD::wrapCreateHWInterface(void *that, IOPCIDevice *dev)
 {
 	NETDBG::printf("rad: createHWInterface called!");
 	auto ret = FunctionCast(wrapCreateHWInterface, callbackRAD->orgCreateHWInterface)(that, dev);
-	NETDBG::printf("rad: createHWInterface returned 0x%llx", ret);
+	NETDBG::printf("rad: createHWInterface returned 0x%llX", ret);
 	return ret;
 }
 
-WRAP_SIMPLE(uint64_t, GetHWMemory, "0x%llx")
-WRAP_SIMPLE(uint64_t, GetATIChipConfigBit, "0x%llx")
-WRAP_SIMPLE(uint64_t, AllocateAMDHWRegisters, "0x%llx")
+WRAP_SIMPLE(uint64_t, GetHWMemory, "0x%llX")
+WRAP_SIMPLE(uint64_t, GetATIChipConfigBit, "0x%llX")
+WRAP_SIMPLE(uint64_t, AllocateAMDHWRegisters, "0x%llX")
 WRAP_SIMPLE(bool, SetupCAIL, "%d")
-WRAP_SIMPLE(uint64_t, InitializeHWWorkarounds, "0x%llx")
-WRAP_SIMPLE(uint64_t, AllocateAMDHWAlignManager, "0x%llx")
+WRAP_SIMPLE(uint64_t, InitializeHWWorkarounds, "0x%llX")
+WRAP_SIMPLE(uint64_t, AllocateAMDHWAlignManager, "0x%llX")
 WRAP_SIMPLE(bool, MapDoorbellMemory, "%d")
 
 uint64_t RAD::wrapGetState(void* that)
 {
 	DBGLOG("rad", "getState called!");
 	auto ret = FunctionCast(wrapGetState, callbackRAD->orgGetState)(that);
-	DBGLOG("rad", "getState returned 0x%llx", ret);
+	DBGLOG("rad", "getState returned 0x%llX", ret);
 	return ret;
 }
 
@@ -617,11 +627,11 @@ IOReturn RAD::wrapInitializeTtl(void *that, void *param1)
 {
 	NETDBG::printf("rad: initializeTtl called!");
 	auto ret = FunctionCast(wrapInitializeTtl, callbackRAD->orgInitializeTtl)(that, param1);
-	NETDBG::printf("rad: initializeTtl returned 0x%x", ret);
+	NETDBG::printf("rad: initializeTtl returned 0x%X", ret);
 	return ret;
 }
 
-WRAP_SIMPLE(uint64_t, ConfRegBase, "0x%llx")
+WRAP_SIMPLE(uint64_t, ConfRegBase, "0x%llX")
 WRAP_SIMPLE(uint8_t, ReadChipRev, "%d")
 
 void RAD::processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size)

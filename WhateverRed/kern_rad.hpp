@@ -61,6 +61,7 @@ private:
 	t_createFirmware orgCreateFirmware = nullptr;
 	t_putFirmware orgPutFirmware = nullptr;
 	mach_vm_address_t orgGetGpuHwConstants{}, orgMCILUpdateGfxCGPG{}, orgQueryEngineRunningState{};
+	mach_vm_address_t orgCAILQueryEngineRunningState;
 	/* ----------- */
 	
 	template <size_t Index>
@@ -122,9 +123,9 @@ private:
 	void process24BitOutput(KernelPatcher &patcher, KernelPatcher::KextInfo &info, mach_vm_address_t address, size_t size);
 	void processConnectorOverrides(KernelPatcher &patcher, mach_vm_address_t address, size_t size);
 	static IOReturn wrapProjectByPartNumber(IOService* that, uint64_t partNumber);
-	static uint64_t wrapInitializeProjectDependentResources(void* that);
-	static uint64_t wrapHwInitializeFbMemSize(void* that);
-	static uint64_t wrapHwInitializeFbBase(void* that);
+	static IOReturn wrapInitializeProjectDependentResources(void* that);
+	static IOReturn wrapHwInitializeFbMemSize(void* that);
+	static IOReturn wrapHwInitializeFbBase(void* that);
 	static uint64_t wrapInitWithController(void* that, void* controller);
 	static uint64_t wrapConfigureDevice(void *that, IOPCIDevice *dev);
 	static uint64_t wrapCreateHWHandler(void* that);
@@ -161,6 +162,7 @@ private:
 	static void *wrapGetGpuHwConstants(uint8_t *param1);
 	static uint64_t wrapMCILUpdateGfxCGPG(void *param1);
 	static IOReturn wrapQueryEngineRunningState(void *that, void *param1, void *param2);
+	static uint64_t wrapCAILQueryEngineRunningState(void *param1, uint32_t *param2, uint64_t param3);
 	/* ----------- */
 	
 	void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);
