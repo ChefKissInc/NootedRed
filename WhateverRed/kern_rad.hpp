@@ -54,7 +54,7 @@ private:
 	mach_vm_address_t orgCreateAtomBiosProxy{}, orgInitializeResources{};
 	mach_vm_address_t orgPopulateDeviceMemory{}, orgQueryComputeQueueIsIdle{};
 	mach_vm_address_t orgAMDHWChannelWaitForIdle{}, orgAcceleratorPowerUpHw{};
-	mach_vm_address_t orgInitializePP{};
+	mach_vm_address_t orgInitializePP{}, orgCreatePowerPlayInterface{};
 	
 	/* X5000HWLibs */
 	mach_vm_address_t orgIpiSetFwEntry{}, orgIpiSmuSwInit{}, orgSmuSwInit{};
@@ -152,7 +152,8 @@ private:
 	static IOReturn wrapQueryComputeQueueIsIdle(void *that, uint64_t param1);
 	static bool wrapAMDHWChannelWaitForIdle(void *that, uint64_t param1);
 	static uint64_t wrapAcceleratorPowerUpHw(void *that);
-	static uint64_t wrapInitializePP(void* that);
+	static IOReturn wrapInitializePP(void* that);
+	static IOReturn wrapCreatePowerPlayInterface(void* that);
 	
 	/* X5000HWLibs */
 	static void wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider);

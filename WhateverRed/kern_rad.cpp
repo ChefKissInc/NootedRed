@@ -448,12 +448,20 @@ bool RAD::wrapAMDHWChannelWaitForIdle(void *that, uint64_t param1)
 
 WRAP_SIMPLE(uint64_t, AcceleratorPowerUpHw, "0x%llX")
 
-uint64_t RAD::wrapInitializePP(void* that)
+IOReturn RAD::wrapInitializePP(void* that)
 {
 	NETDBG::printf("rad: initializePowerPlay called!");
 	auto ret = FunctionCast(wrapInitializePP, callbackRAD->orgInitializePP)(that);
-	NETDBG::printf("rad: initializePowerPlay returned 0x%llX", ret);
-	panic("Initialise PP");
+	NETDBG::printf("rad: initializePowerPlay returned 0x%X", ret);
+	return ret;
+}
+
+IOReturn RAD::wrapCreatePowerPlayInterface(void* that)
+{
+	NETDBG::printf("rad: createPowerPlayInterface called!");
+	auto ret = FunctionCast(wrapCreatePowerPlayInterface, callbackRAD->orgCreatePowerPlayInterface)(that);
+	NETDBG::printf("rad: createPowerPlayInterface returned 0x%X", ret);
+	panic("createPowerPlayInterface");
 	return ret;
 }
 
@@ -532,6 +540,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"__ZN18AMD10000Controller18hwInitializeFbBaseEv", wrapHwInitializeFbBase, orgHwInitializeFbBase},
 			{"__ZN18AMD10000Controller19initializeResourcesEv", wrapInitializeResources, orgInitializeResources},
 			{"__ZN18AMD10000Controller19initializePowerPlayEv", wrapInitializePP, orgInitializePP},
+			{"__ZN22Vega10PowerPlayManager24createPowerPlayInterfaceEv", wrapCreatePowerPlayInterface, orgCreatePowerPlayInterface},
 		};
 		if (!patcher.routeMultipleLong(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMD10000Controller symbols");
