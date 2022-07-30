@@ -531,6 +531,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"__ZN18AMD10000Controller21hwInitializeFbMemSizeEv", wrapHwInitializeFbMemSize, orgHwInitializeFbMemSize},
 			{"__ZN18AMD10000Controller18hwInitializeFbBaseEv", wrapHwInitializeFbBase, orgHwInitializeFbBase},
 			{"__ZN18AMD10000Controller19initializeResourcesEv", wrapInitializeResources, orgInitializeResources},
+			{"__ZN18AMD10000Controller19initializePowerPlayEv", wrapInitializePP, orgInitializePP},
 		};
 		if (!patcher.routeMultipleLong(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMD10000Controller symbols");
@@ -642,7 +643,7 @@ IOService *RAD::wrapInitLinkToPeer(void *that, const char *matchCategoryName)
 	auto ret = FunctionCast(wrapInitLinkToPeer, callbackRAD->orgInitLinkToPeer)(that, matchCategoryName);
 	NETDBG::printf("rad: initLinkToPeer returned %p", ret);
 	return ret;
-}																		
+}
 
 WRAP_SIMPLE(uint64_t, CreateHWHandler, "0x%llX")
 
@@ -703,7 +704,6 @@ void RAD::processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_ad
 		{"__ZN31AMDRadeonX5000_AMDGFX9PM4Engine23QueryComputeQueueIsIdleE18_eAMD_HW_RING_TYPE", wrapQueryComputeQueueIsIdle, orgQueryComputeQueueIsIdle},
 		{"__ZN27AMDRadeonX5000_AMDHWChannel11waitForIdleEj", wrapAMDHWChannelWaitForIdle, orgAMDHWChannelWaitForIdle},
 		{"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator9powerUpHWEv", wrapAcceleratorPowerUpHw, orgAcceleratorPowerUpHw},
-		{"__ZN18AMD10000Controller19initializePowerPlayEv", wrapInitializePP, orgInitializePP},
 	};
 	if (!patcher.routeMultipleLong(hardware.loadIndex, requests, arrsize(requests), address, size))
 	{
