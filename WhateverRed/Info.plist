@@ -142,13 +142,19 @@
 			<key>cail_properties</key>
 			<dict>
 				<key>CAIL_DisableCailLoadUcode</key>
-				<integer>0</integer>
+				<integer>1</integer>
 				<key>CAIL_DisableJpegEngine</key>
 				<integer>0</integer>
 				<key>CAIL_DisablePowerGating</key>
 				<integer>1</integer>
+				<key>CAIL_EnableLBPWSupport</key>
+				<integer>0</integer>
+				<key>CAIL_EnablePeerDataAperture</key>
+				<integer>0</integer>
 				<key>CAIL_EnableSecureMmFwLoading</key>
 				<integer>1</integer>
+				<key>CAIL_EnableXdmaSupport</key>
+				<integer>0</integer>
 			</dict>
 		</dict>
 		<key>AtiGpuWrangler</key>
@@ -198,7 +204,7 @@
 				<key>CFG_CAA</key>
 				<integer>0</integer>
 				<key>CFG_FB_LIMIT</key>
-				<integer>0</integer>
+				<integer>3</integer>
 				<key>CFG_FORCEMAXDPM</key>
 				<false/>
 				<key>CFG_FORCE_MAX_DPS</key>

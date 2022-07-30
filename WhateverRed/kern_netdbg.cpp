@@ -45,6 +45,7 @@ size_t NETDBG::nprint(char *data, size_t len)
 		info.sin_port = htons(420);
 		
 		unsigned timeout = 5000;
+		sock_setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(unsigned));
 		sock_setsockopt(socket, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(unsigned));
 		
 		int err = sock_connect(socket, (sockaddr *)&info, 0);

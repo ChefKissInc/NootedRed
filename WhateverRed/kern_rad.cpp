@@ -260,11 +260,14 @@ uint64_t RAD::wrapPspSwInit(uint32_t *param1, uint32_t *param2)
 	NETDBG::printf("rad: _psp_sw_init: param1: 0x%X 0x%X 0x%X 0x%X 0x%X 0x%X", param1[0], param1[1], param1[2], param1[3], param1[4], param1[5]);
 	switch (param1[3]) {
 		case 0xA:
-			[[fallthrough]];
+			NETDBG::printf("rad: Spoofing PSP version 10 to 9");
+			param1[3] = 0x9;
+			param1[4] = 0x0;
+			param1[5] = 0x0;
 		case 0xB:
 			[[fallthrough]];
 		case 0xC:
-			NETDBG::printf("rad: Spoofing PSP version 10/11/12 to 11");
+			NETDBG::printf("rad: Spoofing PSP version 11/12 to 11");
 			param1[3] = 0xB;
 			param1[4] = 0x0;
 			param1[5] = 0x0;
@@ -384,7 +387,7 @@ uint64_t RAD::wrapMCILUpdateGfxCGPG(void *param1)
 IOReturn RAD::wrapQueryEngineRunningState(void *that, void *param1, void *param2)
 {
 	NETDBG::printf("queryEngineRunningState called!");
-	NETDBG::printf("queryEngineRunningState: that = %p param1 = %p param2 = %p", that, param1, param2);
+	NETDBG::printf("queryEngineRunningState: this = %p param1 = %p param2 = %p", that, param1, param2);
 	NETDBG::printf("queryEngineRunningState: *param2 = 0x%X", *static_cast<uint32_t *>(param2));
 	auto ret = FunctionCast(wrapQueryEngineRunningState, callbackRAD->orgQueryEngineRunningState)(that, param1, param2);
 	NETDBG::printf("queryEngineRunningState: after *param2 = 0x%X", *static_cast<uint32_t *>(param2));
@@ -395,7 +398,7 @@ IOReturn RAD::wrapQueryEngineRunningState(void *that, void *param1, void *param2
 IOReturn RAD::wrapQueryComputeQueueIsIdle(void *that, uint64_t param1)
 {
 	NETDBG::printf("QueryComputeQueueIsIdle called!");
-	NETDBG::printf("QueryComputeQueueIsIdle: that = %p param1 = 0x%llX", that, param1);
+	NETDBG::printf("QueryComputeQueueIsIdle: this = %p param1 = 0x%llX", that, param1);
 	auto ret = FunctionCast(wrapQueryComputeQueueIsIdle, callbackRAD->orgQueryComputeQueueIsIdle)(that, param1);
 	NETDBG::printf("QueryComputeQueueIsIdle returned 0x%X", ret);
 	return ret;
@@ -409,6 +412,48 @@ uint64_t RAD::wrapCAILQueryEngineRunningState(void *param1, uint32_t *param2, ui
 	auto ret = FunctionCast(wrapCAILQueryEngineRunningState, callbackRAD->orgCAILQueryEngineRunningState)(param1, param2, param3);
 	NETDBG::printf("_CAILQueryEngineRunningState: after *param2 = 0x%X", *param2);
 	NETDBG::printf("_CAILQueryEngineRunningState returned 0x%llX", ret);
+	return ret;
+}
+
+uint64_t RAD::wrapCailMonitorEngineInternalState(void *that, uint32_t param1, uint32_t *param2)
+{
+	NETDBG::printf("_CailMonitorEngineInternalState called!");
+	NETDBG::printf("_CailMonitorEngineInternalState: this = %p param1 = 0x%X param2 = %p", that, param1, param2);
+	NETDBG::printf("_CailMonitorEngineInternalState: *param2 = 0x%X", *param2);
+	auto ret = FunctionCast(wrapCailMonitorEngineInternalState, callbackRAD->orgCailMonitorEngineInternalState)(that, param1, param2);
+	NETDBG::printf("_CailMonitorEngineInternalState: after *param2 = 0x%X", *param2);
+	NETDBG::printf("_CailMonitorEngineInternalState returned 0x%llX", ret);
+	return ret;
+}
+
+uint64_t RAD::wrapCailMonitorPerformanceCounter(void *that, uint32_t *param1)
+{
+	NETDBG::printf("_CailMonitorPerformanceCounter called!");
+	NETDBG::printf("_CailMonitorPerformanceCounter: this = %p param1 = %p", that, param1);
+	NETDBG::printf("_CailMonitorPerformanceCounter: *param1 = 0x%X", *param1);
+	auto ret = FunctionCast(wrapCailMonitorPerformanceCounter, callbackRAD->orgCailMonitorPerformanceCounter)(that, param1);
+	NETDBG::printf("_CailMonitorPerformanceCounter: after *param1 = 0x%X", *param1);
+	NETDBG::printf("_CailMonitorPerformanceCounter returned 0x%llX", ret);
+	return ret;
+}
+
+bool RAD::wrapAMDHWChannelWaitForIdle(void *that, uint64_t param1)
+{
+	NETDBG::printf("AMDRadeonX5000_AMDHWChannel::waitForIdle called!");
+	NETDBG::printf("AMDRadeonX5000_AMDHWChannel::waitForIdle: this = %p param1 = 0x%llx", that, param1);
+	auto ret = FunctionCast(wrapAMDHWChannelWaitForIdle, callbackRAD->orgAMDHWChannelWaitForIdle)(that, param1);
+	NETDBG::printf("AMDRadeonX5000_AMDHWChannel::waitForIdle returned %d", ret);
+	return ret;
+}
+
+WRAP_SIMPLE(uint64_t, AcceleratorPowerUpHw, "0x%llX")
+
+uint64_t RAD::wrapInitializePP(void* that)
+{
+	NETDBG::printf("rad: initializePowerPlay called!");
+	auto ret = FunctionCast(wrapInitializePP, callbackRAD->orgInitializePP)(that);
+	NETDBG::printf("rad: initializePowerPlay returned 0x%llX", ret);
+	panic("Initialise PP");
 	return ret;
 }
 
@@ -470,6 +515,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"_GetGpuHwConstants", wrapGetGpuHwConstants, orgGetGpuHwConstants},
 			{"__ZN15AmdCailServices23queryEngineRunningStateEP17CailHwEngineQueueP22CailEngineRunningState", wrapQueryEngineRunningState, orgQueryEngineRunningState},
 			{"_CAILQueryEngineRunningState", wrapCAILQueryEngineRunningState, orgCAILQueryEngineRunningState},
+			{"_CailMonitorEngineInternalState", wrapCailMonitorEngineInternalState, orgCailMonitorEngineInternalState},
+			{"_CailMonitorPerformanceCounter", wrapCailMonitorPerformanceCounter, orgCailMonitorPerformanceCounter},
 		};
 		if (!patcher.routeMultipleLong(index, requests, arrsize(requests), address, size))
 			panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
@@ -482,7 +529,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"__ZN18AMD10000Controller23findProjectByPartNumberEP20ControllerProperties", wrapProjectByPartNumber},
 			{"__ZN18AMD10000Controller35initializeProjectDependentResourcesEv", wrapInitializeProjectDependentResources, orgInitializeProjectDependentResources},
 			{"__ZN18AMD10000Controller21hwInitializeFbMemSizeEv", wrapHwInitializeFbMemSize, orgHwInitializeFbMemSize},
-			{"__ZN18AMD10000Controller18hwInitializeFbBaseEv", wrapHwInitializeFbMemSize, orgHwInitializeFbMemSize},
+			{"__ZN18AMD10000Controller18hwInitializeFbBaseEv", wrapHwInitializeFbBase, orgHwInitializeFbBase},
 			{"__ZN18AMD10000Controller19initializeResourcesEv", wrapInitializeResources, orgInitializeResources},
 		};
 		if (!patcher.routeMultipleLong(index, requests, arrsize(requests), address, size))
@@ -595,7 +642,7 @@ IOService *RAD::wrapInitLinkToPeer(void *that, const char *matchCategoryName)
 	auto ret = FunctionCast(wrapInitLinkToPeer, callbackRAD->orgInitLinkToPeer)(that, matchCategoryName);
 	NETDBG::printf("rad: initLinkToPeer returned %p", ret);
 	return ret;
-}																		\
+}																		
 
 WRAP_SIMPLE(uint64_t, CreateHWHandler, "0x%llX")
 
@@ -623,11 +670,11 @@ uint64_t RAD::wrapGetState(void* that)
 	return ret;
 }
 
-IOReturn RAD::wrapInitializeTtl(void *that, void *param1)
+bool RAD::wrapInitializeTtl(void *that, void *param1)
 {
 	NETDBG::printf("rad: initializeTtl called!");
 	auto ret = FunctionCast(wrapInitializeTtl, callbackRAD->orgInitializeTtl)(that, param1);
-	NETDBG::printf("rad: initializeTtl returned 0x%X", ret);
+	NETDBG::printf("rad: initializeTtl returned %d", ret);
 	return ret;
 }
 
@@ -654,6 +701,9 @@ void RAD::processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_ad
 		{"__ZN28AMDRadeonX5000_AMDRTHardware22configureRegisterBasesEv", wrapConfRegBase, orgConfRegBase},
 		{"__ZN32AMDRadeonX5000_AMDVega10Hardware23readChipRevFromRegisterEv", wrapReadChipRev, orgReadChipRev},
 		{"__ZN31AMDRadeonX5000_AMDGFX9PM4Engine23QueryComputeQueueIsIdleE18_eAMD_HW_RING_TYPE", wrapQueryComputeQueueIsIdle, orgQueryComputeQueueIsIdle},
+		{"__ZN27AMDRadeonX5000_AMDHWChannel11waitForIdleEj", wrapAMDHWChannelWaitForIdle, orgAMDHWChannelWaitForIdle},
+		{"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator9powerUpHWEv", wrapAcceleratorPowerUpHw, orgAcceleratorPowerUpHw},
+		{"__ZN18AMD10000Controller19initializePowerPlayEv", wrapInitializePP, orgInitializePP},
 	};
 	if (!patcher.routeMultipleLong(hardware.loadIndex, requests, arrsize(requests), address, size))
 	{

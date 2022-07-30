@@ -53,6 +53,8 @@ private:
 	mach_vm_address_t orgInitializeTtl{}, orgInitializeProjectDependentResources{};
 	mach_vm_address_t orgCreateAtomBiosProxy{}, orgInitializeResources{};
 	mach_vm_address_t orgPopulateDeviceMemory{}, orgQueryComputeQueueIsIdle{};
+	mach_vm_address_t orgAMDHWChannelWaitForIdle{}, orgAcceleratorPowerUpHw{};
+	mach_vm_address_t orgInitializePP{};
 	
 	/* X5000HWLibs */
 	mach_vm_address_t orgIpiSetFwEntry{}, orgIpiSmuSwInit{}, orgSmuSwInit{};
@@ -61,7 +63,8 @@ private:
 	t_createFirmware orgCreateFirmware = nullptr;
 	t_putFirmware orgPutFirmware = nullptr;
 	mach_vm_address_t orgGetGpuHwConstants{}, orgMCILUpdateGfxCGPG{}, orgQueryEngineRunningState{};
-	mach_vm_address_t orgCAILQueryEngineRunningState;
+	mach_vm_address_t orgCAILQueryEngineRunningState{}, orgCailMonitorEngineInternalState{};
+	mach_vm_address_t orgCailMonitorPerformanceCounter{};
 	/* ----------- */
 	
 	template <size_t Index>
@@ -139,7 +142,7 @@ private:
 	static bool wrapMapDoorbellMemory(void* that);
 	static IOService *wrapInitLinkToPeer(void *that, const char *matchCategoryName);
 	static uint64_t wrapGetState(void *that);
-	static IOReturn wrapInitializeTtl(void *that, void *param1);
+	static bool wrapInitializeTtl(void *that, void *param1);
 	static uint64_t wrapConfRegBase(void *that);
 	static uint8_t wrapReadChipRev(void *that);
 	static void *wrapCreateAtomBiosProxy(void *param1);
@@ -147,6 +150,9 @@ private:
 	static IOReturn wrapPopulateDeviceMemory(void *that, uint32_t reg);
 	static IntegratedVRAMInfoInterface *createVramInfo(void *helper, uint32_t offset);
 	static IOReturn wrapQueryComputeQueueIsIdle(void *that, uint64_t param1);
+	static bool wrapAMDHWChannelWaitForIdle(void *that, uint64_t param1);
+	static uint64_t wrapAcceleratorPowerUpHw(void *that);
+	static uint64_t wrapInitializePP(void* that);
 	
 	/* X5000HWLibs */
 	static void wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider);
@@ -163,6 +169,8 @@ private:
 	static uint64_t wrapMCILUpdateGfxCGPG(void *param1);
 	static IOReturn wrapQueryEngineRunningState(void *that, void *param1, void *param2);
 	static uint64_t wrapCAILQueryEngineRunningState(void *param1, uint32_t *param2, uint64_t param3);
+	static uint64_t wrapCailMonitorEngineInternalState(void *that, uint32_t param1, uint32_t *param2);
+	static uint64_t wrapCailMonitorPerformanceCounter(void *that, uint32_t *param1);
 	/* ----------- */
 	
 	void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);
