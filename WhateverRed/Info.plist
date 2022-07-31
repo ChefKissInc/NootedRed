@@ -231,12 +231,6 @@
 				<integer>2</integer>
 				<key>CFG_PAA</key>
 				<integer>0</integer>
-				<key>CFG_PTPL2_CNT</key>
-				<integer>16</integer>
-				<key>CFG_PTPL2_MAX</key>
-				<integer>250</integer>
-				<key>CFG_PTPL2_MIN</key>
-				<integer>100</integer>
 				<key>CFG_PULSE_INT</key>
 				<true/>
 				<key>CFG_TRANS_WSRV</key>
@@ -280,13 +274,7 @@
 			</dict>
 			<key>aty_properties</key>
 			<dict>
-				<key>Force_Load_FalconSMUFW</key>
-				<true/>
-				<key>PP_ACDCGpioDisabled</key>
-				<integer>0</integer>
 				<key>PP_DisableClockStretcher</key>
-				<integer>1</integer>
-				<key>PP_DisablePCCLimitControl</key>
 				<integer>1</integer>
 				<key>PP_DisableULV</key>
 				<integer>1</integer>

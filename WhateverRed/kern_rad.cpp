@@ -251,10 +251,12 @@ uint64_t RAD::wrapSmuGetHwVersion(uint64_t param1, uint32_t param2)
 	switch (ret)
 	{
 		case 0x2:
+			NETDBG::printf("rad: Spoofing SMU v10 to v9");
 			return 0x1;
 		case 0xB:
 			[[fallthrough]];
 		case 0xC:
+			NETDBG::printf("rad: Spoofing SMU v11/v12 to v11");
 			return 0x3;
 		default:
 			return ret;
@@ -268,10 +270,11 @@ uint64_t RAD::wrapPspSwInit(uint32_t *param1, uint32_t *param2)
 	NETDBG::printf("rad: _psp_sw_init: param1: 0x%X 0x%X 0x%X 0x%X 0x%X 0x%X", param1[0], param1[1], param1[2], param1[3], param1[4], param1[5]);
 	switch (param1[3]) {
 		case 0xA:
-			NETDBG::printf("rad: Spoofing PSP version 10 to 9");
+			NETDBG::printf("rad: Spoofing PSP v10 to v9");
 			param1[3] = 0x9;
 			param1[4] = 0x0;
 			param1[5] = 0x0;
+			break;
 		case 0xB:
 			[[fallthrough]];
 		case 0xC:
@@ -488,6 +491,18 @@ IOReturn RAD::wrapSendRequestToAccelerator(void *that, uint32_t param1, void *pa
 
 WRAP_SIMPLE(IOReturn, PPInitialize, "0x%X")
 
+IOReturn RAD::wrapPpEnable(void *that, bool param1)
+{
+	NETDBG::printf("rad: ppEnable called!");
+	NETDBG::printf("rad: ppEnable: that = %p param1 = %d", that, param1);
+	auto ret = FunctionCast(wrapPpEnable, callbackRAD->orgPpEnable)(that, param1);
+	NETDBG::printf("rad: ppEnable returned 0x%X", ret);
+	return ret;
+}
+
+WRAP_SIMPLE(IOReturn, UpdatePowerPlay, "0x%X")
+WRAP_SIMPLE(bool, IsReady, "%d")
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
 {
 	if (kextRadeonFramebuffer.loadIndex == index)
@@ -550,6 +565,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"_CailMonitorEngineInternalState", wrapCailMonitorEngineInternalState, orgCailMonitorEngineInternalState},
 			{"_CailMonitorPerformanceCounter", wrapCailMonitorPerformanceCounter, orgCailMonitorPerformanceCounter},
 			{"_PP_Log", wrapPPLog},
+			{"__ZN20AtiPowerPlayServices8ppEnableEb", wrapPpEnable, orgPpEnable},
 		};
 		if (!patcher.routeMultipleLong(index, requests, arrsize(requests), address, size))
 			panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
@@ -567,6 +583,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"__ZN18AMD10000Controller19initializePowerPlayEv", wrapInitializePP, orgInitializePP},
 			{"__ZN22Vega10PowerPlayManager24createPowerPlayInterfaceEv", wrapCreatePowerPlayInterface, orgCreatePowerPlayInterface},
 			{"__ZN22Vega10PowerPlayManager10initializeEv", wrapPPInitialize, orgPPInitialize},
+			{"__ZN22Vega10PowerPlayManager7isReadyEv", wrapIsReady, orgIsReady},
+			{"__ZN22Vega10PowerPlayManager15updatePowerPlayEv", wrapUpdatePowerPlay, orgUpdatePowerPlay},
 		};
 		if (!patcher.routeMultipleLong(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMD10000Controller symbols");

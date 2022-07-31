@@ -56,6 +56,7 @@ private:
 	mach_vm_address_t orgAMDHWChannelWaitForIdle{}, orgAcceleratorPowerUpHw{};
 	mach_vm_address_t orgInitializePP{}, orgCreatePowerPlayInterface{};
 	mach_vm_address_t orgSendRequestToAccelerator{}, orgPPInitialize{};
+	mach_vm_address_t orgUpdatePowerPlay{}, orgIsReady{};
 	
 	/* X5000HWLibs */
 	mach_vm_address_t orgIpiSetFwEntry{}, orgIpiSmuSwInit{}, orgSmuSwInit{};
@@ -65,7 +66,7 @@ private:
 	t_putFirmware orgPutFirmware = nullptr;
 	mach_vm_address_t orgGetGpuHwConstants{}, orgMCILUpdateGfxCGPG{}, orgQueryEngineRunningState{};
 	mach_vm_address_t orgCAILQueryEngineRunningState{}, orgCailMonitorEngineInternalState{};
-	mach_vm_address_t orgCailMonitorPerformanceCounter{};
+	mach_vm_address_t orgCailMonitorPerformanceCounter{}, orgPpEnable{};
 	/* ----------- */
 	
 	template <size_t Index>
@@ -177,6 +178,9 @@ private:
 	static uint64_t wrapCailMonitorEngineInternalState(void *that, uint32_t param1, uint32_t *param2);
 	static uint64_t wrapCailMonitorPerformanceCounter(void *that, uint32_t *param1);
 	static void wrapPPLog(char *param1, char param2, char param3, char param4, char param5, char param6, char *param7);
+	static IOReturn wrapPpEnable(void *that, bool param1);
+	static IOReturn wrapUpdatePowerPlay(void *that);
+	static bool wrapIsReady(void *that);
 	/* ----------- */
 	
 	void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);
