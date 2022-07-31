@@ -55,6 +55,7 @@ private:
 	mach_vm_address_t orgPopulateDeviceMemory{}, orgQueryComputeQueueIsIdle{};
 	mach_vm_address_t orgAMDHWChannelWaitForIdle{}, orgAcceleratorPowerUpHw{};
 	mach_vm_address_t orgInitializePP{}, orgCreatePowerPlayInterface{};
+	mach_vm_address_t orgSendRequestToAccelerator{}, orgPPInitialize{};
 	
 	/* X5000HWLibs */
 	mach_vm_address_t orgIpiSetFwEntry{}, orgIpiSmuSwInit{}, orgSmuSwInit{};
@@ -122,6 +123,7 @@ private:
 	}
 	
 	[[noreturn]] [[gnu::cold]] static void wrapPanic(const char *panic_format_str, ...);
+	[[noreturn]] [[gnu::cold]] static void wrapEnterDebugger(const char *cause);
 	
 	void process24BitOutput(KernelPatcher &patcher, KernelPatcher::KextInfo &info, mach_vm_address_t address, size_t size);
 	void processConnectorOverrides(KernelPatcher &patcher, mach_vm_address_t address, size_t size);
@@ -152,8 +154,10 @@ private:
 	static IOReturn wrapQueryComputeQueueIsIdle(void *that, uint64_t param1);
 	static bool wrapAMDHWChannelWaitForIdle(void *that, uint64_t param1);
 	static uint64_t wrapAcceleratorPowerUpHw(void *that);
-	static IOReturn wrapInitializePP(void* that);
-	static IOReturn wrapCreatePowerPlayInterface(void* that);
+	static IOReturn wrapInitializePP(void *that);
+	static IOReturn wrapCreatePowerPlayInterface(void *that);
+	static IOReturn wrapSendRequestToAccelerator(void *that, uint32_t param1, void *param2,void *param3, void *param4);
+	static IOReturn wrapPPInitialize(void *that);
 	
 	/* X5000HWLibs */
 	static void wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider);
@@ -172,6 +176,7 @@ private:
 	static uint64_t wrapCAILQueryEngineRunningState(void *param1, uint32_t *param2, uint64_t param3);
 	static uint64_t wrapCailMonitorEngineInternalState(void *that, uint32_t param1, uint32_t *param2);
 	static uint64_t wrapCailMonitorPerformanceCounter(void *that, uint32_t *param1);
+	static void wrapPPLog(char *param1, char param2, char param3, char param4, char param5, char param6, char *param7);
 	/* ----------- */
 	
 	void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);

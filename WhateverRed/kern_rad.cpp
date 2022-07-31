@@ -111,10 +111,17 @@ void RAD::deinit()
 	va_copy(netdbg_args, args);
 	NETDBG::printf("panic: ");
 	NETDBG::vprintf(fmt, netdbg_args);
+	NETDBG::printf("panic: end");
 	va_end(netdbg_args);
 	IOSleep(1000);
 	FunctionCast(wrapPanic, callbackRAD->orgPanic)(fmt, args);
 	while (true) {}
+}
+
+[[noreturn]] [[gnu::cold]] void RAD::wrapEnterDebugger(const char *cause)
+{
+	NETDBG::printf("rad: Debugger requested: %s", cause);
+	panic("Debugger requested");
 }
 
 void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info)
@@ -143,6 +150,7 @@ void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info)
 		{"__ZN15IORegistryEntry11setPropertyEPKcPvj", wrapSetProperty, orgSetProperty},
 		{"__ZNK15IORegistryEntry11getPropertyEPKc", wrapGetProperty, orgGetProperty},
 		{"_panic", wrapPanic, orgPanic},
+		{"_PE_enter_debugger", wrapEnterDebugger},
 	};
 	if (!patcher.routeMultipleLong(KernelPatcher::KernelID, requests)) {
 		panic("Failed to route kernel symbols");
@@ -461,9 +469,24 @@ IOReturn RAD::wrapCreatePowerPlayInterface(void* that)
 	NETDBG::printf("rad: createPowerPlayInterface called!");
 	auto ret = FunctionCast(wrapCreatePowerPlayInterface, callbackRAD->orgCreatePowerPlayInterface)(that);
 	NETDBG::printf("rad: createPowerPlayInterface returned 0x%X", ret);
-	panic("createPowerPlayInterface");
 	return ret;
 }
+
+void RAD::wrapPPLog(char *param1, [[maybe_unused]] char param2, [[maybe_unused]] char param3, [[maybe_unused]] char param4, [[maybe_unused]] char param5, [[maybe_unused]] char param6, char *param7)
+{
+	NETDBG::printf("rad: _PP_Log: from %s: %s", param1, param7);
+}
+
+IOReturn RAD::wrapSendRequestToAccelerator(void *that, uint32_t param1, void *param2, void *param3, void *param4)
+{
+	NETDBG::printf("rad: sendRequestToAccelerator called!");
+	NETDBG::printf("rad: sendRequestToAccelerator: that = %p param1 = 0x%X param2 = %p param3 = %p param4 = %p", that, param1, param2, param3, param4);
+	auto ret = FunctionCast(wrapSendRequestToAccelerator, callbackRAD->orgSendRequestToAccelerator)(that, param1, param2, param3, param4);
+	NETDBG::printf("rad: sendRequestToAccelerator returned 0x%X", ret);
+	return ret;
+}
+
+WRAP_SIMPLE(IOReturn, PPInitialize, "0x%X")
 
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
 {
@@ -484,6 +507,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"__ZN23AtiVramInfoInterface_V214createVramInfoEP14AtiVBiosHelperj", createVramInfo},
 			{"__ZN13AtomBiosProxy19createAtomBiosProxyER16AtomBiosInitData", wrapCreateAtomBiosProxy, orgCreateAtomBiosProxy},
 			{"__ZN13ATIController20populateDeviceMemoryE13PCI_REG_INDEX", wrapPopulateDeviceMemory, orgPopulateDeviceMemory},
+			{"__ZN13ATIController24sendRequestToAcceleratorE25_eAMDAccelIOFBRequestTypePvS1_S1_", wrapSendRequestToAccelerator, orgSendRequestToAccelerator},
 		};
 		if (!patcher.routeMultipleLong(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMDSupport symbols");
@@ -525,6 +549,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"_CAILQueryEngineRunningState", wrapCAILQueryEngineRunningState, orgCAILQueryEngineRunningState},
 			{"_CailMonitorEngineInternalState", wrapCailMonitorEngineInternalState, orgCailMonitorEngineInternalState},
 			{"_CailMonitorPerformanceCounter", wrapCailMonitorPerformanceCounter, orgCailMonitorPerformanceCounter},
+			{"_PP_Log", wrapPPLog},
 		};
 		if (!patcher.routeMultipleLong(index, requests, arrsize(requests), address, size))
 			panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
@@ -541,6 +566,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"__ZN18AMD10000Controller19initializeResourcesEv", wrapInitializeResources, orgInitializeResources},
 			{"__ZN18AMD10000Controller19initializePowerPlayEv", wrapInitializePP, orgInitializePP},
 			{"__ZN22Vega10PowerPlayManager24createPowerPlayInterfaceEv", wrapCreatePowerPlayInterface, orgCreatePowerPlayInterface},
+			{"__ZN22Vega10PowerPlayManager10initializeEv", wrapPPInitialize, orgPPInitialize},
 		};
 		if (!patcher.routeMultipleLong(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMD10000Controller symbols");
