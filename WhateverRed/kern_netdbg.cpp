@@ -26,9 +26,16 @@ in_addr_t inet_addr(uint32_t a, uint32_t b, uint32_t c, uint32_t d)
 	return ret;
 }
 
+bool NETDBG::enabled = false;
+
 size_t NETDBG::nprint(char *data, size_t len)
 {
 	SYSLOG("netdbg", "message: %s", data);
+	
+	if (!enabled) {
+		return 0;
+	}
+	
 	int retry = 5;
 	while (retry--) {
 		socket_t socket = nullptr;

@@ -111,7 +111,6 @@ void RAD::deinit()
 	va_copy(netdbg_args, args);
 	NETDBG::printf("panic: ");
 	NETDBG::vprintf(fmt, netdbg_args);
-	NETDBG::printf("panic: end");
 	va_end(netdbg_args);
 	IOSleep(1000);
 	FunctionCast(wrapPanic, callbackRAD->orgPanic)(fmt, args);
@@ -122,6 +121,15 @@ void RAD::deinit()
 {
 	NETDBG::printf("rad: Debugger requested: %s", cause);
 	panic("Debugger requested");
+}
+
+void RAD::wrapIOLog(const char *fmt, ...)
+{
+	va_list args, netdbg_args;
+	va_start(args, fmt);
+	va_copy(netdbg_args, args);
+	NETDBG::vprintf(fmt, netdbg_args);
+	va_end(netdbg_args);
 }
 
 void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info)
@@ -151,6 +159,7 @@ void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info)
 		{"__ZNK15IORegistryEntry11getPropertyEPKc", wrapGetProperty, orgGetProperty},
 		{"_panic", wrapPanic, orgPanic},
 		{"_PE_enter_debugger", wrapEnterDebugger},
+		{"_IOLog", wrapIOLog},
 	};
 	if (!patcher.routeMultipleLong(KernelPatcher::KernelID, requests)) {
 		panic("Failed to route kernel symbols");
@@ -195,6 +204,7 @@ IntegratedVRAMInfoInterface *RAD::createVramInfo([[maybe_unused]] void *helper, 
 
 void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider)
 {
+	NETDBG::enabled = true;
 	NETDBG::printf("rad: patching device type table");
 	MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock);
 	*(uint32_t *)callbackRAD->orgDeviceTypeTable = provider->extendedConfigRead16(kIOPCIConfigDeviceID);
@@ -503,6 +513,27 @@ IOReturn RAD::wrapPpEnable(void *that, bool param1)
 WRAP_SIMPLE(IOReturn, UpdatePowerPlay, "0x%X")
 WRAP_SIMPLE(bool, IsReady, "%d")
 
+IOReturn RAD::wrapPpDisplayConfigChange(void *that, void *param1, void *param2)
+{
+	NETDBG::printf("rad: ppDisplayConfigChange called!");
+	NETDBG::printf("rad: ppDisplayConfigChange: this = %p param1 = %p param2 = %p", that, param1, param2);
+	auto ret = FunctionCast(wrapPpDisplayConfigChange, callbackRAD->orgPpDisplayConfigChange)(that, param1, param2);
+	NETDBG::printf("rad: ppDisplayConfigChange returned 0x%X", ret);
+	return ret;
+}
+
+uint64_t RAD::wrapPECISetupInitInfo(uint32_t *param1, uint32_t *param2)
+{
+	NETDBG::printf("rad: _PECI_SetupInitInfo called!");
+	NETDBG::printf("rad: _PECI_SetupInitInfo: param1 = %p param2 = %p", param1, param2);
+	NETDBG::printf("rad: _PECI_SetupInitInfo: *param1 = 0x%X", *param1);
+	NETDBG::printf("rad: _PECI_SetupInitInfo: param2 before: 0:0x%X 1:0x%X 2:0x%X 3:0x%X", param2[0], param2[1], param2[2], param2[3]);
+	auto ret = FunctionCast(wrapPECISetupInitInfo, callbackRAD->orgPECISetupInitInfo)(param1, param2);
+	NETDBG::printf("rad: _PECI_SetupInitInfo: param2 after: 0:0x%X 1:0x%X 2:0x%X 3:0x%X", param2[0], param2[1], param2[2], param2[3]);
+	NETDBG::printf("rad: _PECI_SetupInitInfo returned 0x%llX", ret);
+	return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
 {
 	if (kextRadeonFramebuffer.loadIndex == index)
@@ -566,6 +597,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"_CailMonitorPerformanceCounter", wrapCailMonitorPerformanceCounter, orgCailMonitorPerformanceCounter},
 			{"_PP_Log", wrapPPLog},
 			{"__ZN20AtiPowerPlayServices8ppEnableEb", wrapPpEnable, orgPpEnable},
+			{"__ZN20AtiPowerPlayServices21ppDisplayConfigChangeEP22PPDisplayConfigurationb", wrapPpDisplayConfigChange, orgPpDisplayConfigChange},
+			{"_PECI_SetupInitInfo", wrapPECISetupInitInfo, orgPECISetupInitInfo},
 		};
 		if (!patcher.routeMultipleLong(index, requests, arrsize(requests), address, size))
 			panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
