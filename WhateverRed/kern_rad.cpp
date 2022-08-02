@@ -123,15 +123,6 @@ void RAD::deinit()
 	panic("Debugger requested");
 }
 
-void RAD::wrapIOLog(const char *fmt, ...)
-{
-	va_list args, netdbg_args;
-	va_start(args, fmt);
-	va_copy(netdbg_args, args);
-	NETDBG::vprintf(fmt, netdbg_args);
-	va_end(netdbg_args);
-}
-
 void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info)
 {
 	for (size_t i = 0; i < info->videoExternal.size(); i++)
@@ -159,7 +150,6 @@ void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info)
 		{"__ZNK15IORegistryEntry11getPropertyEPKc", wrapGetProperty, orgGetProperty},
 		{"_panic", wrapPanic, orgPanic},
 		{"_PE_enter_debugger", wrapEnterDebugger},
-		{"_IOLog", wrapIOLog},
 	};
 	if (!patcher.routeMultipleLong(KernelPatcher::KernelID, requests)) {
 		panic("Failed to route kernel symbols");
@@ -534,6 +524,26 @@ uint64_t RAD::wrapPECISetupInitInfo(uint32_t *param1, uint32_t *param2)
 	return ret;
 }
 
+uint64_t RAD::wrapPECIReadRegistry(void *param1, char *key, uint64_t param3, uint64_t param4)
+{
+	NETDBG::printf("rad: _PECI_ReadRegistry called!");
+	NETDBG::printf("rad: _PECI_ReadRegistry param1 = %p key = %p param3 = 0x%llX param4 = 0x%llX", param1, key, param3, param4);
+	NETDBG::printf("rad: _PECI_ReadRegistry key is %s", key);
+	auto ret = FunctionCast(wrapPECIReadRegistry, callbackRAD->orgPECIReadRegistry)(param1, key, param3, param4);
+	NETDBG::printf("rad: _PECI_ReadRegistry returned 0x%llX", ret);
+	return ret;
+}
+
+uint64_t RAD::wrapSMUMInitialize(uint64_t param1, uint32_t *param2, uint64_t param3)
+{
+	NETDBG::printf("rad: _SMUM_Initialize called!");
+	NETDBG::printf("rad: _SMUM_Initialize: param1 = 0x%llX param2 = %p param3 = 0x%llX", param1, param2, param3);
+	auto ret = FunctionCast(wrapSMUMInitialize, callbackRAD->orgSMUMInitialize)(param1, param2, param3);
+	NETDBG::printf("rad: _SMUM_Initialize returned 0x%llX", ret);
+	IOSleep(500);
+	return 10;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
 {
 	if (kextRadeonFramebuffer.loadIndex == index)
@@ -599,6 +609,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"__ZN20AtiPowerPlayServices8ppEnableEb", wrapPpEnable, orgPpEnable},
 			{"__ZN20AtiPowerPlayServices21ppDisplayConfigChangeEP22PPDisplayConfigurationb", wrapPpDisplayConfigChange, orgPpDisplayConfigChange},
 			{"_PECI_SetupInitInfo", wrapPECISetupInitInfo, orgPECISetupInitInfo},
+			{"_PECI_ReadRegistry", wrapPECIReadRegistry, orgPECIReadRegistry},
+			{"_SMUM_Initialize", wrapSMUMInitialize, orgSMUMInitialize},
 		};
 		if (!patcher.routeMultipleLong(index, requests, arrsize(requests), address, size))
 			panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");

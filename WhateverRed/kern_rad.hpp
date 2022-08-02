@@ -68,6 +68,7 @@ private:
 	mach_vm_address_t orgCAILQueryEngineRunningState{}, orgCailMonitorEngineInternalState{};
 	mach_vm_address_t orgCailMonitorPerformanceCounter{}, orgPpEnable{};
 	mach_vm_address_t orgPpDisplayConfigChange{}, orgPECISetupInitInfo{};
+	mach_vm_address_t orgPECIReadRegistry{}, orgSMUMInitialize{};
 	/* ----------- */
 	
 	template <size_t Index>
@@ -126,7 +127,6 @@ private:
 	
 	[[noreturn]] [[gnu::cold]] static void wrapPanic(const char *panic_format_str, ...);
 	[[noreturn]] [[gnu::cold]] static void wrapEnterDebugger(const char *cause);
-	static void wrapIOLog(const char *fmt, ...);
 	
 	void process24BitOutput(KernelPatcher &patcher, KernelPatcher::KextInfo &info, mach_vm_address_t address, size_t size);
 	void processConnectorOverrides(KernelPatcher &patcher, mach_vm_address_t address, size_t size);
@@ -185,6 +185,8 @@ private:
 	static bool wrapIsReady(void *that);
 	static IOReturn wrapPpDisplayConfigChange(void *that, void *param1, void *param2);
 	static uint64_t wrapPECISetupInitInfo(uint32_t *param1, uint32_t *param2);
+	static uint64_t wrapPECIReadRegistry(void *param1, char *key, uint64_t param3, uint64_t param4);
+	static uint64_t wrapSMUMInitialize(uint64_t param1, uint32_t *param2, uint64_t param3);
 	/* ----------- */
 	
 	void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);

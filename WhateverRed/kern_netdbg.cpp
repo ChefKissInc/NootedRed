@@ -27,6 +27,7 @@ in_addr_t inet_addr(uint32_t a, uint32_t b, uint32_t c, uint32_t d)
 }
 
 bool NETDBG::enabled = false;
+socket_t NETDBG::socket = nullptr;
 
 size_t NETDBG::nprint(char *data, size_t len)
 {
@@ -36,46 +37,40 @@ size_t NETDBG::nprint(char *data, size_t len)
 		return 0;
 	}
 	
-	int retry = 5;
-	while (retry--) {
-		socket_t socket = nullptr;
+	if (!socket) {
 		sock_socket(AF_INET, SOCK_STREAM, 0, NULL, 0, &socket);
 		
-		if (!socket) return false;
+		if (!socket) return 0;
 		
-		struct sockaddr_in info;
-		bzero(&info, sizeof(info));
-		
-		info.sin_len = sizeof(sockaddr_in);
-		info.sin_family = PF_INET;
-		info.sin_addr.s_addr = inet_addr(149, 102, 131, 82);
-		info.sin_port = htons(420);
-		
-		unsigned timeout = 5000;
-		sock_setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(unsigned));
-		sock_setsockopt(socket, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(unsigned));
-		
-		int err = sock_connect(socket, (sockaddr *)&info, 0);
-		if (err == -1) {
-			SYSLOG("rad", "sendData err=%d", err);
-			sock_close(socket);
-			continue;
+		int retry = 5;
+		while (retry--) {
+			struct sockaddr_in info;
+			bzero(&info, sizeof(info));
+			
+			info.sin_len = sizeof(sockaddr_in);
+			info.sin_family = PF_INET;
+			info.sin_addr.s_addr = inet_addr(149, 102, 131, 82);
+			info.sin_port = htons(420);
+			
+			int err = sock_connect(socket, (sockaddr *)&info, 0);
+			if (err == -1) {
+				SYSLOG("netdbg", "sendData err=%d", err);
+				sock_close(socket);
+				continue;
+			}
 		}
-		
-		iovec vec { .iov_base = data, .iov_len = len };
-		msghdr hdr {
-			.msg_iov = &vec,
-			.msg_iovlen = 1,
-		};
-		
-		size_t sentLen = 0;
-		sock_send(socket, &hdr, 0, &sentLen);
-		sock_close(socket);
-		
-		return sentLen;
 	}
 	
-	return 0;
+	iovec vec { .iov_base = data, .iov_len = len };
+	msghdr hdr {
+		.msg_iov = &vec,
+		.msg_iovlen = 1,
+	};
+	
+	size_t sentLen = 0;
+	sock_send(socket, &hdr, 0, &sentLen);
+	
+	return sentLen;
 }
 
 size_t NETDBG::printf(const char* fmt, ...)
@@ -83,16 +78,19 @@ size_t NETDBG::printf(const char* fmt, ...)
 	va_list args;
 	va_start(args, fmt);
 	auto ret = NETDBG::vprintf(fmt, args);
+	NETDBG::nprint(const_cast<char *>("\n"), 1);
 	va_end(args);
 	return ret;
 }
 
 size_t NETDBG::vprintf(const char *fmt, va_list args)
 {
-	char *data = new char[1024];
+	char *data = new char[1025];
 	size_t len = vsnprintf(data, 1024, fmt, args);
 	
 	auto ret = NETDBG::nprint(data, len);
+	NETDBG::nprint(const_cast<char *>("\n"), 1);
+	
 	delete[] data;
 	return ret;
 }
