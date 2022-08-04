@@ -68,7 +68,8 @@ private:
 	mach_vm_address_t orgCAILQueryEngineRunningState{}, orgCailMonitorEngineInternalState{};
 	mach_vm_address_t orgCailMonitorPerformanceCounter{}, orgPpEnable{};
 	mach_vm_address_t orgPpDisplayConfigChange{}, orgPECISetupInitInfo{};
-	mach_vm_address_t orgPECIReadRegistry{}, orgSMUMInitialize{};
+	mach_vm_address_t orgPECIReadRegistry{}, orgSMUMInitialize{}, orgPECIRetrieveBiosDataTable{};
+	mach_vm_address_t orgSoftPowerPlayTable1761{};
 	/* ----------- */
 	
 	template <size_t Index>
@@ -179,7 +180,7 @@ private:
 	static uint64_t wrapCAILQueryEngineRunningState(void *param1, uint32_t *param2, uint64_t param3);
 	static uint64_t wrapCailMonitorEngineInternalState(void *that, uint32_t param1, uint32_t *param2);
 	static uint64_t wrapCailMonitorPerformanceCounter(void *that, uint32_t *param1);
-	static void wrapPPLog(char *param1, char param2, char param3, char param4, char param5, char param6, char *param7);
+	static void wrapPPLog(char *param1, char param2, char param3, char param4, char param5, char param6, char *param7, ...);
 	static IOReturn wrapPpEnable(void *that, bool param1);
 	static IOReturn wrapUpdatePowerPlay(void *that);
 	static bool wrapIsReady(void *that);
@@ -187,6 +188,7 @@ private:
 	static uint64_t wrapPECISetupInitInfo(uint32_t *param1, uint32_t *param2);
 	static uint64_t wrapPECIReadRegistry(void *param1, char *key, uint64_t param3, uint64_t param4);
 	static uint64_t wrapSMUMInitialize(uint64_t param1, uint32_t *param2, uint64_t param3);
+	static uint64_t wrapPECIRetrieveBiosDataTable(void *param1, uint64_t param2, uint64_t **param3);
 	/* ----------- */
 	
 	void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);

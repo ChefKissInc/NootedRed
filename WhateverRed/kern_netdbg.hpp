@@ -12,6 +12,8 @@
 #include <sys/socket.h>
 #include <cstdarg>
 
+#define NETLOG(mod, fmt, ...) NETDBG::printf(mod ": " fmt "\n", ## __VA_ARGS__)
+
 class NETDBG
 {
 public:

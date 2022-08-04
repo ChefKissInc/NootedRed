@@ -31,7 +31,7 @@ socket_t NETDBG::socket = nullptr;
 
 size_t NETDBG::nprint(char *data, size_t len)
 {
-	SYSLOG("netdbg", "message: %s", data);
+	kprintf("netdbg: message: %s", data);
 	
 	if (!enabled) {
 		return 0;
@@ -78,7 +78,6 @@ size_t NETDBG::printf(const char* fmt, ...)
 	va_list args;
 	va_start(args, fmt);
 	auto ret = NETDBG::vprintf(fmt, args);
-	NETDBG::nprint(const_cast<char *>("\n"), 1);
 	va_end(args);
 	return ret;
 }
@@ -89,7 +88,6 @@ size_t NETDBG::vprintf(const char *fmt, va_list args)
 	size_t len = vsnprintf(data, 1024, fmt, args);
 	
 	auto ret = NETDBG::nprint(data, len);
-	NETDBG::nprint(const_cast<char *>("\n"), 1);
 	
 	delete[] data;
 	return ret;
