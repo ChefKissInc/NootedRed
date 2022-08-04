@@ -166,7 +166,6 @@ WRAP_SIMPLE(IOReturn, HwInitializeFbBase, "0x%X")
 
 uint64_t RAD::wrapInitWithController(void *that, void *controller)
 {
-	NETDBG::printf("initWithController called!");
 	NETLOG("rad", "initWithController called!");
 	auto ret = FunctionCast(wrapInitWithController, callbackRAD->orgInitWithController)(that, controller);
 	NETLOG("rad", "initWithController returned %llX", ret);
@@ -376,7 +375,6 @@ void *RAD::wrapGetGpuHwConstants(uint8_t *param1)
 	if (!ret)
 	{
 		NETLOG("rad", "_GetGpuHwConstants failed!");
-		NETDBG::printf("_GetGpuHwConstants returned ZERO value!");
 		panic("_GetGpuHwConstants returned ZERO value!");
 	}
 	return ret;
@@ -386,74 +384,72 @@ uint64_t RAD::wrapMCILUpdateGfxCGPG(void *param1)
 {
 	
 	NETLOG("rad", "----------------------------------------------------------------------");
-	NETDBG::printf("_Cail_MCILUpdateGfxCGPG called!");
 	NETLOG("rad", "_Cail_MCILUpdateGfxCGPG called!");
 	NETLOG("rad", "_Cail_MCILUpdateGfxCGPG: param1 = %p", param1);
 	auto ret = FunctionCast(wrapMCILUpdateGfxCGPG, callbackRAD->orgMCILUpdateGfxCGPG)(param1);
 	NETLOG("rad", "_Cail_MCILUpdateGfxCGPG returned 0x%llX", ret);
-	NETDBG::printf("_Cail_MCILUpdateGfxCGPG returned 0x%llX", ret);
 	return ret;
 }
 
 IOReturn RAD::wrapQueryEngineRunningState(void *that, void *param1, void *param2)
 {
-	NETDBG::printf("queryEngineRunningState called!");
-	NETDBG::printf("queryEngineRunningState: this = %p param1 = %p param2 = %p", that, param1, param2);
-	NETDBG::printf("queryEngineRunningState: *param2 = 0x%X", *static_cast<uint32_t *>(param2));
+	NETLOG("rad", "queryEngineRunningState called!");
+	NETLOG("rad", "queryEngineRunningState: this = %p param1 = %p param2 = %p", that, param1, param2);
+	NETLOG("rad", "queryEngineRunningState: *param2 = 0x%X", *static_cast<uint32_t *>(param2));
 	auto ret = FunctionCast(wrapQueryEngineRunningState, callbackRAD->orgQueryEngineRunningState)(that, param1, param2);
-	NETDBG::printf("queryEngineRunningState: after *param2 = 0x%X", *static_cast<uint32_t *>(param2));
-	NETDBG::printf("queryEngineRunningState returned 0x%X", ret);
+	NETLOG("rad", "queryEngineRunningState: after *param2 = 0x%X", *static_cast<uint32_t *>(param2));
+	NETLOG("rad", "queryEngineRunningState returned 0x%X", ret);
 	return ret;
 }
 
 IOReturn RAD::wrapQueryComputeQueueIsIdle(void *that, uint64_t param1)
 {
-	NETDBG::printf("QueryComputeQueueIsIdle called!");
-	NETDBG::printf("QueryComputeQueueIsIdle: this = %p param1 = 0x%llX", that, param1);
+	NETLOG("rad", "QueryComputeQueueIsIdle called!");
+	NETLOG("rad", "QueryComputeQueueIsIdle: this = %p param1 = 0x%llX", that, param1);
 	auto ret = FunctionCast(wrapQueryComputeQueueIsIdle, callbackRAD->orgQueryComputeQueueIsIdle)(that, param1);
-	NETDBG::printf("QueryComputeQueueIsIdle returned 0x%X", ret);
+	NETLOG("rad", "QueryComputeQueueIsIdle returned 0x%X", ret);
 	return ret;
 }
 
 uint64_t RAD::wrapCAILQueryEngineRunningState(void *param1, uint32_t *param2, uint64_t param3)
 {
-	NETDBG::printf("_CAILQueryEngineRunningState called!");
-	NETDBG::printf("_CAILQueryEngineRunningState: param1 = %p param2 = %p param3 = %llX", param1, param2, param3);
-	NETDBG::printf("_CAILQueryEngineRunningState: *param2 = 0x%X", *param2);
+	NETLOG("rad", "_CAILQueryEngineRunningState called!");
+	NETLOG("rad", "_CAILQueryEngineRunningState: param1 = %p param2 = %p param3 = %llX", param1, param2, param3);
+	NETLOG("rad", "_CAILQueryEngineRunningState: *param2 = 0x%X", *param2);
 	auto ret = FunctionCast(wrapCAILQueryEngineRunningState, callbackRAD->orgCAILQueryEngineRunningState)(param1, param2, param3);
-	NETDBG::printf("_CAILQueryEngineRunningState: after *param2 = 0x%X", *param2);
-	NETDBG::printf("_CAILQueryEngineRunningState returned 0x%llX", ret);
+	NETLOG("rad", "_CAILQueryEngineRunningState: after *param2 = 0x%X", *param2);
+	NETLOG("rad", "_CAILQueryEngineRunningState returned 0x%llX", ret);
 	return ret;
 }
 
 uint64_t RAD::wrapCailMonitorEngineInternalState(void *that, uint32_t param1, uint32_t *param2)
 {
-	NETDBG::printf("_CailMonitorEngineInternalState called!");
-	NETDBG::printf("_CailMonitorEngineInternalState: this = %p param1 = 0x%X param2 = %p", that, param1, param2);
-	NETDBG::printf("_CailMonitorEngineInternalState: *param2 = 0x%X", *param2);
+	NETLOG("rad", "_CailMonitorEngineInternalState called!");
+	NETLOG("rad", "_CailMonitorEngineInternalState: this = %p param1 = 0x%X param2 = %p", that, param1, param2);
+	NETLOG("rad", "_CailMonitorEngineInternalState: *param2 = 0x%X", *param2);
 	auto ret = FunctionCast(wrapCailMonitorEngineInternalState, callbackRAD->orgCailMonitorEngineInternalState)(that, param1, param2);
-	NETDBG::printf("_CailMonitorEngineInternalState: after *param2 = 0x%X", *param2);
-	NETDBG::printf("_CailMonitorEngineInternalState returned 0x%llX", ret);
+	NETLOG("rad", "_CailMonitorEngineInternalState: after *param2 = 0x%X", *param2);
+	NETLOG("rad", "_CailMonitorEngineInternalState returned 0x%llX", ret);
 	return ret;
 }
 
 uint64_t RAD::wrapCailMonitorPerformanceCounter(void *that, uint32_t *param1)
 {
-	NETDBG::printf("_CailMonitorPerformanceCounter called!");
-	NETDBG::printf("_CailMonitorPerformanceCounter: this = %p param1 = %p", that, param1);
-	NETDBG::printf("_CailMonitorPerformanceCounter: *param1 = 0x%X", *param1);
+	NETLOG("rad", "_CailMonitorPerformanceCounter called!");
+	NETLOG("rad", "_CailMonitorPerformanceCounter: this = %p param1 = %p", that, param1);
+	NETLOG("rad", "_CailMonitorPerformanceCounter: *param1 = 0x%X", *param1);
 	auto ret = FunctionCast(wrapCailMonitorPerformanceCounter, callbackRAD->orgCailMonitorPerformanceCounter)(that, param1);
-	NETDBG::printf("_CailMonitorPerformanceCounter: after *param1 = 0x%X", *param1);
-	NETDBG::printf("_CailMonitorPerformanceCounter returned 0x%llX", ret);
+	NETLOG("rad", "_CailMonitorPerformanceCounter: after *param1 = 0x%X", *param1);
+	NETLOG("rad", "_CailMonitorPerformanceCounter returned 0x%llX", ret);
 	return ret;
 }
 
 bool RAD::wrapAMDHWChannelWaitForIdle(void *that, uint64_t param1)
 {
-	NETDBG::printf("AMDRadeonX5000_AMDHWChannel::waitForIdle called!");
-	NETDBG::printf("AMDRadeonX5000_AMDHWChannel::waitForIdle: this = %p param1 = 0x%llx", that, param1);
+	NETLOG("rad", "AMDRadeonX5000_AMDHWChannel::waitForIdle called!");
+	NETLOG("rad", "AMDRadeonX5000_AMDHWChannel::waitForIdle: this = %p param1 = 0x%llx", that, param1);
 	auto ret = FunctionCast(wrapAMDHWChannelWaitForIdle, callbackRAD->orgAMDHWChannelWaitForIdle)(that, param1);
-	NETDBG::printf("AMDRadeonX5000_AMDHWChannel::waitForIdle returned %d", ret);
+	NETLOG("rad", "AMDRadeonX5000_AMDHWChannel::waitForIdle returned %d", ret);
 	return ret;
 }
 
@@ -546,7 +542,6 @@ uint64_t RAD::wrapSMUMInitialize(uint64_t param1, uint32_t *param2, uint64_t par
 	NETLOG("rad", "_SMUM_Initialize: param1 = 0x%llX param2 = %p param3 = 0x%llX", param1, param2, param3);
 	auto ret = FunctionCast(wrapSMUMInitialize, callbackRAD->orgSMUMInitialize)(param1, param2, param3);
 	NETLOG("rad", "_SMUM_Initialize returned 0x%llX", ret);
-	IOSleep(500);
 	return 10;
 }
 
