@@ -525,6 +525,7 @@ uint64_t RAD::wrapPECISetupInitInfo(uint32_t *param1, uint32_t *param2)
 	NETLOG("rad", "_PECI_SetupInitInfo: param2 before: 0:0x%X 1:0x%X 2:0x%X 3:0x%X", param2[0], param2[1], param2[2], param2[3]);
 	auto ret = FunctionCast(wrapPECISetupInitInfo, callbackRAD->orgPECISetupInitInfo)(param1, param2);
 	NETLOG("rad", "_PECI_SetupInitInfo: param2 after: 0:0x%X 1:0x%X 2:0x%X 3:0x%X", param2[0], param2[1], param2[2], param2[3]);
+	*param2 = 0x8e;
 	NETLOG("rad", "_PECI_SetupInitInfo returned 0x%llX", ret);
 	return ret;
 }
