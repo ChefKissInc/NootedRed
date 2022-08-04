@@ -250,12 +250,11 @@ uint64_t RAD::wrapSmuGetHwVersion(uint64_t param1, uint32_t param2)
 	switch (ret)
 	{
 		case 0x2:
-			NETLOG("rad", "Spoofing SMU v10 to v9");
-			return 0x1;
+			[[fallthrough]];
 		case 0xB:
 			[[fallthrough]];
 		case 0xC:
-			NETLOG("rad", "Spoofing SMU v11/v12 to v11");
+			NETLOG("rad", "Spoofing SMU v10/v11/v12 to v11");
 			return 0x3;
 		default:
 			return ret;
@@ -269,15 +268,11 @@ uint64_t RAD::wrapPspSwInit(uint32_t *param1, uint32_t *param2)
 	NETLOG("rad", "_psp_sw_init: param1: 0x%X 0x%X 0x%X 0x%X 0x%X 0x%X", param1[0], param1[1], param1[2], param1[3], param1[4], param1[5]);
 	switch (param1[3]) {
 		case 0xA:
-			NETLOG("rad", "Spoofing PSP v10 to v9");
-			param1[3] = 0x9;
-			param1[4] = 0x0;
-			param1[5] = 0x0;
-			break;
+			[[fallthrough]];
 		case 0xB:
 			[[fallthrough]];
 		case 0xC:
-			NETLOG("rad", "Spoofing PSP version 11/12 to 11");
+			NETLOG("rad", "Spoofing PSP version v10/v11/v12 to v11");
 			param1[3] = 0xB;
 			param1[4] = 0x0;
 			param1[5] = 0x0;
@@ -542,7 +537,7 @@ uint64_t RAD::wrapSMUMInitialize(uint64_t param1, uint32_t *param2, uint64_t par
 	NETLOG("rad", "_SMUM_Initialize: param1 = 0x%llX param2 = %p param3 = 0x%llX", param1, param2, param3);
 	auto ret = FunctionCast(wrapSMUMInitialize, callbackRAD->orgSMUMInitialize)(param1, param2, param3);
 	NETLOG("rad", "_SMUM_Initialize returned 0x%llX", ret);
-	return 10;
+	return ret;
 }
 
 uint64_t RAD::wrapPECIRetrieveBiosDataTable(void *param1, uint64_t param2, uint64_t **param3)
