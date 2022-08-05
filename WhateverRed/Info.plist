@@ -147,14 +147,8 @@
 				<integer>0</integer>
 				<key>CAIL_DisablePowerGating</key>
 				<integer>1</integer>
-				<key>CAIL_EnableLBPWSupport</key>
-				<integer>0</integer>
-				<key>CAIL_EnablePeerDataAperture</key>
-				<integer>0</integer>
 				<key>CAIL_EnableSecureMmFwLoading</key>
 				<integer>1</integer>
-				<key>CAIL_EnableXdmaSupport</key>
-				<integer>0</integer>
 			</dict>
 		</dict>
 		<key>AtiGpuWrangler</key>
@@ -786,9 +780,9 @@
 				<key>PP_DisableULV</key>
 				<integer>1</integer>
 				<key>PP_EnableUploadFirmware</key>
-				<integer>0</integer>
-				<key>PP_Falcon_QuickTransition_Enable</key>
 				<integer>1</integer>
+				<key>PP_Falcon_QuickTransition_Enable</key>
+				<integer>0</integer>
 				<key>PP_GfxOffControl</key>
 				<integer>0</integer>
 				<key>PP_PhmUseDummyBackEnd</key>
