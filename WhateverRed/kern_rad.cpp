@@ -250,11 +250,12 @@ uint64_t RAD::wrapSmuGetHwVersion(uint64_t param1, uint32_t param2)
 	switch (ret)
 	{
 		case 0x2:
-			[[fallthrough]];
+			NETLOG("rad", "Spoofing SMU v10 to v9.0.1");
+			return 0x1;
 		case 0xB:
 			[[fallthrough]];
 		case 0xC:
-			NETLOG("rad", "Spoofing SMU v10/v11/v12 to v11");
+			NETLOG("rad", "Spoofing SMU v11/v12 to v11");
 			return 0x3;
 		default:
 			return ret;
@@ -549,6 +550,19 @@ uint64_t RAD::wrapPECIRetrieveBiosDataTable(void *param1, uint64_t param2, uint6
 	return ret;
 }
 
+void RAD::wrapSmuAssertion([[maybe_unused]] uint64_t param1, uint64_t param2, char *param3, char *param4, uint32_t param5, char *param6)
+{
+	if (!param2)
+	{
+		NETLOG("rad", "_smu_assertion: %s %s %d %s", param3, param4, param5, param6);
+	}
+}
+
+void RAD::wrapSmuLog([[maybe_unused]] uint64_t param1, [[maybe_unused]] uint64_t param2, [[maybe_unused]] [[maybe_unused]] uint64_t param3, [[maybe_unused]] uint64_t param4, [[maybe_unused]] uint64_t param5, [[maybe_unused]] uint64_t param6, char *param7)
+{
+	NETLOG("rad", "_smu_log: %s", param7);
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
 {
 	if (kextRadeonFramebuffer.loadIndex == index)
@@ -623,6 +637,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"_PECI_ReadRegistry", wrapPECIReadRegistry, orgPECIReadRegistry},
 			{"_SMUM_Initialize", wrapSMUMInitialize, orgSMUMInitialize},
 			{"_PECI_RetrieveBiosDataTable", wrapPECIRetrieveBiosDataTable, orgPECIRetrieveBiosDataTable},
+			{"_smu_assertion", wrapSmuAssertion},
+			{"_smu_log", wrapSmuLog},
 		};
 		if (!patcher.routeMultipleLong(index, requests, arrsize(requests), address, size))
 			panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");

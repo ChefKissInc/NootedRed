@@ -189,6 +189,8 @@ private:
 	static uint64_t wrapPECIReadRegistry(void *param1, char *key, uint64_t param3, uint64_t param4);
 	static uint64_t wrapSMUMInitialize(uint64_t param1, uint32_t *param2, uint64_t param3);
 	static uint64_t wrapPECIRetrieveBiosDataTable(void *param1, uint64_t param2, uint64_t **param3);
+	static void wrapSmuAssertion(uint64_t param1, uint64_t param2, char *param3, char *param4, uint32_t param5, char *param6);
+	static void wrapSmuLog(uint64_t param1, uint64_t param2, uint64_t param3, uint64_t param4, uint64_t param5, uint64_t param6, char *param7);
 	/* ----------- */
 	
 	void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);
