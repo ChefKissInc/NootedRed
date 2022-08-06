@@ -34,6 +34,7 @@ private:
 	using t_getHWInfo = IOReturn (*)(IOService *accelVideoCtx, void *hwInfo);
 	using t_createFirmware = void* (*)(const void *data, uint32_t size, uint32_t param3, const char *filename);
 	using t_putFirmware = bool (*)(void *that, uint32_t deviceType, void *fw);
+	using t_Vega10PowerTuneServicesConstructor = void (*)(void *that, void *param1, void *param2);
 	
 	static RAD *callbackRAD;
 	ThreadLocal<IOService *, 8> currentPropProvider;
@@ -69,7 +70,7 @@ private:
 	mach_vm_address_t orgCailMonitorPerformanceCounter{}, orgPpEnable{};
 	mach_vm_address_t orgPpDisplayConfigChange{}, orgPECISetupInitInfo{};
 	mach_vm_address_t orgPECIReadRegistry{}, orgSMUMInitialize{}, orgPECIRetrieveBiosDataTable{};
-	mach_vm_address_t orgSoftPowerPlayTable1761{};
+	t_Vega10PowerTuneServicesConstructor orgVega10PowerTuneServicesConstructor = nullptr;
 	/* ----------- */
 	
 	template <size_t Index>
@@ -162,6 +163,7 @@ private:
 	static IOReturn wrapCreatePowerPlayInterface(void *that);
 	static IOReturn wrapSendRequestToAccelerator(void *that, uint32_t param1, void *param2,void *param3, void *param4);
 	static IOReturn wrapPPInitialize(void *that);
+	static uint16_t wrapGetFamilyId();
 	
 	/* X5000HWLibs */
 	static void wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider);
@@ -191,6 +193,7 @@ private:
 	static uint64_t wrapPECIRetrieveBiosDataTable(void *param1, uint64_t param2, uint64_t **param3);
 	static void wrapSmuAssertion(uint64_t param1, uint64_t param2, char *param3, char *param4, uint32_t param5, char *param6);
 	static void wrapSmuLog(uint64_t param1, uint64_t param2, uint64_t param3, uint64_t param4, uint64_t param5, uint64_t param6, char *param7);
+	static void *wrapCreatePowerTuneServices(void *param1, void *param2);
 	/* ----------- */
 	
 	void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);

@@ -517,7 +517,6 @@ uint64_t RAD::wrapPECISetupInitInfo(uint32_t *param1, uint32_t *param2)
 	NETLOG("rad", "_PECI_SetupInitInfo: param2 before: 0:0x%X 1:0x%X 2:0x%X 3:0x%X", param2[0], param2[1], param2[2], param2[3]);
 	auto ret = FunctionCast(wrapPECISetupInitInfo, callbackRAD->orgPECISetupInitInfo)(param1, param2);
 	NETLOG("rad", "_PECI_SetupInitInfo: param2 after: 0:0x%X 1:0x%X 2:0x%X 3:0x%X", param2[0], param2[1], param2[2], param2[3]);
-	*param2 = 0x8e;
 	NETLOG("rad", "_PECI_SetupInitInfo returned 0x%llX", ret);
 	return ret;
 }
@@ -561,6 +560,20 @@ void RAD::wrapSmuAssertion([[maybe_unused]] uint64_t param1, uint64_t param2, ch
 void RAD::wrapSmuLog([[maybe_unused]] uint64_t param1, [[maybe_unused]] uint64_t param2, [[maybe_unused]] [[maybe_unused]] uint64_t param3, [[maybe_unused]] uint64_t param4, [[maybe_unused]] uint64_t param5, [[maybe_unused]] uint64_t param6, char *param7)
 {
 	NETLOG("rad", "_smu_log: %s", param7);
+}
+
+void *RAD::wrapCreatePowerTuneServices(void *param1, void *param2)
+{
+	auto *ret = IOMallocZero(0x18);
+	callbackRAD->orgVega10PowerTuneServicesConstructor(ret, param1, param2);
+	return ret;
+}
+
+uint16_t RAD::wrapGetFamilyId()
+{
+	// Usually, the value is hardcoded to 0x8d which is Vega 10
+	// So we now hard code it to Raven
+	return 0x8e;
 }
 
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size)
@@ -608,10 +621,10 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			panic("RAD: Failed to resolve AMDFirmwareDirectory::putFirmware");
 		}
 		
-		orgSoftPowerPlayTable1761 = patcher.solveSymbol(index, "_softPowerPlayTable1761");
-		if (!orgSoftPowerPlayTable1761)
+		orgVega10PowerTuneServicesConstructor = reinterpret_cast<t_Vega10PowerTuneServicesConstructor>(patcher.solveSymbol(index, "__ZN31AtiAppleVega10PowerTuneServicesC1EP11PP_InstanceP18PowerPlayCallbacks"));
+		if (!orgVega10PowerTuneServicesConstructor)
 		{
-			panic("RAD: Failed to resolve _softPowerPlayTable1761");
+			panic("RAD: Failed to resolve AtiAppleVega10PowerTuneServices constructor");
 		}
 		
 		KernelPatcher::RouteRequest requests[] = {
@@ -639,6 +652,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"_PECI_RetrieveBiosDataTable", wrapPECIRetrieveBiosDataTable, orgPECIRetrieveBiosDataTable},
 			{"_smu_assertion", wrapSmuAssertion},
 			{"_smu_log", wrapSmuLog},
+			{"__ZN25AtiApplePowerTuneServices23createPowerTuneServicesEP11PP_InstanceP18PowerPlayCallbacks", wrapCreatePowerTuneServices},
 		};
 		if (!patcher.routeMultipleLong(index, requests, arrsize(requests), address, size))
 			panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
@@ -658,6 +672,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 			{"__ZN22Vega10PowerPlayManager10initializeEv", wrapPPInitialize, orgPPInitialize},
 			{"__ZN22Vega10PowerPlayManager7isReadyEv", wrapIsReady, orgIsReady},
 			{"__ZN22Vega10PowerPlayManager15updatePowerPlayEv", wrapUpdatePowerPlay, orgUpdatePowerPlay},
+			{"__ZNK22Vega10SharedController11getFamilyIdEv", wrapGetFamilyId},
 		};
 		if (!patcher.routeMultipleLong(index, requests, arrsize(requests), address, size))
 			panic("Failed to route AMD10000Controller symbols");
