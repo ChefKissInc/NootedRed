@@ -142,11 +142,11 @@
 			<key>cail_properties</key>
 			<dict>
 				<key>CAIL_DisableCailLoadUcode</key>
-				<integer>1</integer>
+				<integer>0</integer>
 				<key>CAIL_DisableJpegEngine</key>
 				<integer>0</integer>
 				<key>CAIL_DisablePowerGating</key>
-				<integer>1</integer>
+				<integer>0</integer>
 				<key>CAIL_EnableSecureMmFwLoading</key>
 				<integer>1</integer>
 			</dict>
@@ -780,7 +780,7 @@
 				<key>PP_DisableULV</key>
 				<integer>1</integer>
 				<key>PP_EnableUploadFirmware</key>
-				<integer>1</integer>
+				<integer>0</integer>
 				<key>PP_Falcon_QuickTransition_Enable</key>
 				<integer>0</integer>
 				<key>PP_GfxOffControl</key>

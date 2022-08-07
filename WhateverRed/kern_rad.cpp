@@ -662,12 +662,86 @@ uint32_t RAD::wrapRavenGetSoc15RegisterOffset(void *info, uint32_t hwIdType,
            "_PhwRaven_GetSoc15RegisterOffset: info = %p hwIdType = 0x%X inst = "
            "0x%X seg = 0x%X off = 0x%X",
            info, hwIdType, inst, seg, off);
-    if (hwIdType == 1 && inst == 0 && seg == 0)
+    if (hwIdType == 1 && inst == 0 && seg == 0) {
+        NETLOG("rad",
+               "_PhwRaven_GetSoc15RegisterOffset fixing SOC 15 INST 0 offset");
         return 0x16200 + off;
-    else
-        return FunctionCast(wrapRavenGetSoc15RegisterOffset,
-                            callbackRAD->orgRavenGetSoc15RegisterOffset)(
+    } else {
+        auto ret = FunctionCast(wrapRavenGetSoc15RegisterOffset,
+                                callbackRAD->orgRavenGetSoc15RegisterOffset)(
             info, hwIdType, inst, seg, off);
+        NETLOG("rad", "_PhwRaven_GetSoc15RegisterOffset returned 0x%X", ret);
+        return ret;
+    }
+}
+
+uint32_t RAD::wrapRaven2GetSoc15RegisterOffset(void *info, uint32_t hwIdType,
+                                               uint32_t inst, uint32_t seg,
+                                               uint32_t off) {
+    NETLOG(
+        "rad",
+        "_PhwRaven2_GetSoc15RegisterOffset: info = %p hwIdType = 0x%X inst = "
+        "0x%X seg = 0x%X off = 0x%X",
+        info, hwIdType, inst, seg, off);
+    if (hwIdType == 1 && inst == 0 && seg == 0) {
+        NETLOG("rad", "_PhwRaven2_GetSoc15RegisterOffset fixing SOC 15 INST 0 "
+                      "SEG 0 offset");
+        return 0x16200 + off;
+    } else {
+        auto ret = FunctionCast(wrapRaven2GetSoc15RegisterOffset,
+                                callbackRAD->orgRaven2GetSoc15RegisterOffset)(
+            info, hwIdType, inst, seg, off);
+        NETLOG("rad", "_PhwRaven2_GetSoc15RegisterOffset returned 0x%X", ret);
+        return ret;
+    }
+}
+
+IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
+    NETLOG("rad", "ASIC_INFO__VEGA10::populateDeviceInfo: this = %p", that);
+    auto ret = FunctionCast(wrapPopulateDeviceInfo,
+                            callbackRAD->orgPopulateDeviceInfo)(that);
+    auto *familyId =
+        reinterpret_cast<uint32_t *>(static_cast<uint8_t *>(that) + 0x40);
+    auto *deviceId =
+        reinterpret_cast<uint32_t *>(static_cast<uint8_t *>(that) + 0x44);
+    auto *revision =
+        reinterpret_cast<uint32_t *>(static_cast<uint8_t *>(that) + 0x48);
+    auto *emulatedRevision =
+        reinterpret_cast<uint32_t *>(static_cast<uint8_t *>(that) + 0x4c);
+    NETLOG("rad", "familyId = 0x%X emulatedRevision = 0x%X", *familyId,
+           *emulatedRevision);
+    *familyId = 0x8e;
+    switch (*deviceId) {
+    case 0x15d8:
+        *emulatedRevision = *revision + 0x41;
+    case 0x15dd:
+        if (*revision >= 0x8) {
+            *emulatedRevision = *revision + 0x79;
+        }
+    default:
+        if (*revision == 1) {
+            *emulatedRevision = *revision + 0x20;
+        }
+    }
+    NETLOG("rad", "familyId = 0x%X emulatedRevision = 0x%X", *familyId,
+           *emulatedRevision);
+
+    NETLOG("rad", "ASIC_INFO__VEGA10::populateDeviceInfo returned 0x%X", ret);
+    return ret;
+}
+
+uint32_t RAD::wrapQuerySystemInfo(void *that, uint8_t *sysinfo) {
+    NETLOG("rad",
+           "AtiAppleMcilServices::querySystemInfo: this = %p sysinfo = %p",
+           that, sysinfo);
+    auto ret = FunctionCast(wrapQuerySystemInfo,
+                            callbackRAD->orgQuerySystemInfo)(that, sysinfo);
+
+    auto *sysret = reinterpret_cast<uint32_t *>(sysinfo + 0x10);
+    NETLOG("rad", "AtiAppleMcilServices::querySystemInfo: sysinfo->ret = 0x%X",
+           *sysret);
+    NETLOG("rad", "AtiAppleMcilServices::querySystemInfo returned 0x%X", ret);
+    return ret;
 }
 
 bool RAD::processKext(KernelPatcher &patcher, size_t index,
@@ -784,8 +858,13 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              "InstanceP18PowerPlayCallbacks",
              wrapCreatePowerTuneServices},
             {"_get_hw_revision", wrapGetHwRevision},
-            {"_PhwRaven2_GetSOC15RegisterOffset",
+            {"_PhwRaven_GetSOC15RegisterOffset",
              wrapRavenGetSoc15RegisterOffset, orgRavenGetSoc15RegisterOffset},
+            {"_PhwRaven2_GetSOC15RegisterOffset",
+             wrapRaven2GetSoc15RegisterOffset, orgRaven2GetSoc15RegisterOffset},
+            {"__ZN20AtiAppleMcilServices15querySystemInfoEPvP17_MCIL_SYSTEM_"
+             "INFO",
+             wrapQuerySystemInfo, orgQuerySystemInfo},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size))
@@ -820,6 +899,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             {"__ZN22Vega10PowerPlayManager15updatePowerPlayEv",
              wrapUpdatePowerPlay, orgUpdatePowerPlay},
             {"__ZNK22Vega10SharedController11getFamilyIdEv", wrapGetFamilyId},
+            {"__ZN17ASIC_INFO__VEGA1018populateDeviceInfoEv",
+             wrapPopulateDeviceInfo, orgPopulateDeviceInfo},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size))
@@ -845,37 +926,10 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
                           0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,
                           0x90, 0x90, 0xbf, 0x78, 0x00, 0x00, 0x00};
 
-        /*
-         * Patch ASIC_INFO__VEGA10::populateDeviceInfo to have correct family ID
-         * and Raven 2 revision ID
-         * This patch replaces the lines
-         * this->familyId = 0x8d;
-         * [...]
-         * this->emulatedRevision = this->revision + 0x01;
-         * with
-         * this->familyId = 0x8e;
-         * [...]
-         * this->emulatedRevision = 0x82;
-         */
-        uint8_t find2[] = {0xc7, 0x41, 0x40, 0x8d, 0x00, 0x00, 0x00, 0x8b,
-                           0x45, 0xf0, 0x25, 0xff, 0xff, 0x00, 0x00, 0x89,
-                           0x41, 0x44, 0x8b, 0x45, 0xf0, 0xc1, 0xe8, 0x18,
-                           0x83, 0xe0, 0x0f, 0x89, 0x41, 0x48, 0x8b, 0x41,
-                           0x48, 0x83, 0xc0, 0x01, 0x89, 0x41, 0x4c};
-        uint8_t repl2[] = {0xc7, 0x41, 0x40, 0x8e, 0x00, 0x00, 0x00, 0x8b,
-                           0x45, 0xf0, 0x25, 0xff, 0xff, 0x00, 0x00, 0x89,
-                           0x41, 0x44, 0x8b, 0x45, 0xf0, 0xc1, 0xe8, 0x18,
-                           0x83, 0xe0, 0x0f, 0x89, 0x41, 0x48, 0xb8, 0x82,
-                           0x00, 0x00, 0x00, 0x90, 0x89, 0x41, 0x4c};
-
-        KernelPatcher::LookupPatch patches[] = {
-            {&kextAMD10000Controller, find, repl, arrsize(find), 2},
-            {&kextAMD10000Controller, find2, repl2, arrsize(find2), 2},
-        };
-        for (auto &patch : patches) {
-            patcher.applyLookupPatch(&patch);
-            patcher.clearError();
-        }
+        KernelPatcher::LookupPatch patch{&kextAMD10000Controller, find, repl,
+                                         arrsize(find), 2};
+        patcher.applyLookupPatch(&patch);
+        patcher.clearError();
 
         return true;
     }
