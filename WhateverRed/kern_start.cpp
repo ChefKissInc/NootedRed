@@ -6,39 +6,37 @@
 //  Copyright © 2022 VisualDevelopment. All rights reserved.
 //
 
-#include <Headers/plugin_start.hpp>
 #include <Headers/kern_api.hpp>
+#include <Headers/plugin_start.hpp>
 
 #include "kern_wred.hpp"
 
 static WRed wred;
 
 static const char *bootargOff[] = {
-	"-wredoff",
+    "-wredoff",
 };
 
 static const char *bootargDebug[] = {
-	"-wreddbg",
+    "-wreddbg",
 };
 
 static const char *bootargBeta[] = {
-	"-wredbeta",
+    "-wredbeta",
 };
 
 PluginConfiguration ADDPR(config){
-	xStringify(PRODUCT_NAME),
-	parseModuleVersion(xStringify(MODULE_VERSION)),
-	LiluAPI::AllowNormal | LiluAPI::AllowInstallerRecovery | LiluAPI::AllowSafeMode,
-	bootargOff,
-	arrsize(bootargOff),
-	bootargDebug,
-	arrsize(bootargDebug),
-	bootargBeta,
-	arrsize(bootargBeta),
-	KernelVersion::Catalina,
-	KernelVersion::Monterey,
-	[]()
-	{
-		wred.init();
-	},
+    xStringify(PRODUCT_NAME),
+    parseModuleVersion(xStringify(MODULE_VERSION)),
+    LiluAPI::AllowNormal | LiluAPI::AllowInstallerRecovery |
+        LiluAPI::AllowSafeMode,
+    bootargOff,
+    arrsize(bootargOff),
+    bootargDebug,
+    arrsize(bootargDebug),
+    bootargBeta,
+    arrsize(bootargBeta),
+    KernelVersion::Catalina,
+    KernelVersion::Monterey,
+    []() { wred.init(); },
 };

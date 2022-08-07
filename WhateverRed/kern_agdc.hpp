@@ -9,7 +9,8 @@
 #ifndef kern_agdc_h
 #define kern_agdc_h
 
-// Some knowledge here comes from AppleGraphicsDeviceControlUserCommand.h from 10.9 SDK.
+// Some knowledge here comes from AppleGraphicsDeviceControlUserCommand.h
+// from 10.9 SDK.
 
 #define APPLE_GRAPHICS_DEVICE_CONTOL_VERSION 0x205
 #define APPLE_GRAPHICS_DEVICE_CONTROL_SERVICE "AppleGraphicsDeviceControl"
@@ -28,51 +29,54 @@
  * AGDCDetailedTimingInformation_t
  */
 #define _AGDC_FIELD_COPY(src, dest, x) dest->x = src->x
-#define _AGDC_CONVERT_(_src, tsrc, _dest, tdest)                \
-    do                                                          \
-    {                                                           \
-        tsrc *src = _src;                                       \
-        tdest *dest = _dest;                                    \
-        dest = dest;                                            \
-        src = src;                                              \
-        _AGDC_FIELD_COPY(src, dest, horizontalScaledInset);     \
-        _AGDC_FIELD_COPY(src, dest, verticalScaledInset);       \
-        _AGDC_FIELD_COPY(src, dest, scalerFlags);               \
-        _AGDC_FIELD_COPY(src, dest, horizontalScaled);          \
-        _AGDC_FIELD_COPY(src, dest, verticalScaled);            \
-        _AGDC_FIELD_COPY(src, dest, signalConfig);              \
-        _AGDC_FIELD_COPY(src, dest, signalLevels);              \
-        _AGDC_FIELD_COPY(src, dest, pixelClock);                \
-        _AGDC_FIELD_COPY(src, dest, minPixelClock);             \
-        _AGDC_FIELD_COPY(src, dest, maxPixelClock);             \
-        _AGDC_FIELD_COPY(src, dest, horizontalActive);          \
-        _AGDC_FIELD_COPY(src, dest, horizontalBlanking);        \
-        _AGDC_FIELD_COPY(src, dest, horizontalSyncOffset);      \
-        _AGDC_FIELD_COPY(src, dest, horizontalSyncPulseWidth);  \
-        _AGDC_FIELD_COPY(src, dest, verticalActive);            \
-        _AGDC_FIELD_COPY(src, dest, verticalBlanking);          \
-        _AGDC_FIELD_COPY(src, dest, verticalSyncOffset);        \
-        _AGDC_FIELD_COPY(src, dest, verticalSyncPulseWidth);    \
-        _AGDC_FIELD_COPY(src, dest, horizontalBorderLeft);      \
-        _AGDC_FIELD_COPY(src, dest, horizontalBorderRight);     \
-        _AGDC_FIELD_COPY(src, dest, verticalBorderTop);         \
-        _AGDC_FIELD_COPY(src, dest, verticalBorderBottom);      \
-        _AGDC_FIELD_COPY(src, dest, horizontalSyncConfig);      \
-        _AGDC_FIELD_COPY(src, dest, horizontalSyncLevel);       \
-        _AGDC_FIELD_COPY(src, dest, verticalSyncConfig);        \
-        _AGDC_FIELD_COPY(src, dest, verticalSyncLevel);         \
-        _AGDC_FIELD_COPY(src, dest, numLinks);                  \
-        _AGDC_FIELD_COPY(src, dest, verticalBlankingExtension); \
-        _AGDC_FIELD_COPY(src, dest, pixelEncoding);             \
-        _AGDC_FIELD_COPY(src, dest, bitsPerColorComponent);     \
-        _AGDC_FIELD_COPY(src, dest, colorimetry);               \
-        _AGDC_FIELD_COPY(src, dest, dynamicRange);              \
-        _AGDC_FIELD_COPY(src, dest, dscCompressedBitsPerPixel); \
-        _AGDC_FIELD_COPY(src, dest, dscSliceHeight);            \
-        _AGDC_FIELD_COPY(src, dest, dscSliceWidth);             \
+#define _AGDC_CONVERT_(_src, tsrc, _dest, tdest)                               \
+    do {                                                                       \
+        tsrc *src = _src;                                                      \
+        tdest *dest = _dest;                                                   \
+        dest = dest;                                                           \
+        src = src;                                                             \
+        _AGDC_FIELD_COPY(src, dest, horizontalScaledInset);                    \
+        _AGDC_FIELD_COPY(src, dest, verticalScaledInset);                      \
+        _AGDC_FIELD_COPY(src, dest, scalerFlags);                              \
+        _AGDC_FIELD_COPY(src, dest, horizontalScaled);                         \
+        _AGDC_FIELD_COPY(src, dest, verticalScaled);                           \
+        _AGDC_FIELD_COPY(src, dest, signalConfig);                             \
+        _AGDC_FIELD_COPY(src, dest, signalLevels);                             \
+        _AGDC_FIELD_COPY(src, dest, pixelClock);                               \
+        _AGDC_FIELD_COPY(src, dest, minPixelClock);                            \
+        _AGDC_FIELD_COPY(src, dest, maxPixelClock);                            \
+        _AGDC_FIELD_COPY(src, dest, horizontalActive);                         \
+        _AGDC_FIELD_COPY(src, dest, horizontalBlanking);                       \
+        _AGDC_FIELD_COPY(src, dest, horizontalSyncOffset);                     \
+        _AGDC_FIELD_COPY(src, dest, horizontalSyncPulseWidth);                 \
+        _AGDC_FIELD_COPY(src, dest, verticalActive);                           \
+        _AGDC_FIELD_COPY(src, dest, verticalBlanking);                         \
+        _AGDC_FIELD_COPY(src, dest, verticalSyncOffset);                       \
+        _AGDC_FIELD_COPY(src, dest, verticalSyncPulseWidth);                   \
+        _AGDC_FIELD_COPY(src, dest, horizontalBorderLeft);                     \
+        _AGDC_FIELD_COPY(src, dest, horizontalBorderRight);                    \
+        _AGDC_FIELD_COPY(src, dest, verticalBorderTop);                        \
+        _AGDC_FIELD_COPY(src, dest, verticalBorderBottom);                     \
+        _AGDC_FIELD_COPY(src, dest, horizontalSyncConfig);                     \
+        _AGDC_FIELD_COPY(src, dest, horizontalSyncLevel);                      \
+        _AGDC_FIELD_COPY(src, dest, verticalSyncConfig);                       \
+        _AGDC_FIELD_COPY(src, dest, verticalSyncLevel);                        \
+        _AGDC_FIELD_COPY(src, dest, numLinks);                                 \
+        _AGDC_FIELD_COPY(src, dest, verticalBlankingExtension);                \
+        _AGDC_FIELD_COPY(src, dest, pixelEncoding);                            \
+        _AGDC_FIELD_COPY(src, dest, bitsPerColorComponent);                    \
+        _AGDC_FIELD_COPY(src, dest, colorimetry);                              \
+        _AGDC_FIELD_COPY(src, dest, dynamicRange);                             \
+        _AGDC_FIELD_COPY(src, dest, dscCompressedBitsPerPixel);                \
+        _AGDC_FIELD_COPY(src, dest, dscSliceHeight);                           \
+        _AGDC_FIELD_COPY(src, dest, dscSliceWidth);                            \
     } while (0)
-#define CONVERT_AGDC_TO_OS_TIMING_DATA(src, dest) _AGDC_CONVERT_(src, AGDCDetailedTimingInformation_t, dest, IODetailedTimingInformationV2)
-#define CONVERT_OS_TO_AGDC_TIMING_DATA(src, dest) _AGDC_CONVERT_(src, IODetailedTimingInformationV2, dest, AGDCDetailedTimingInformation_t)
+#define CONVERT_AGDC_TO_OS_TIMING_DATA(src, dest)                              \
+    _AGDC_CONVERT_(src, AGDCDetailedTimingInformation_t, dest,                 \
+                   IODetailedTimingInformationV2)
+#define CONVERT_OS_TO_AGDC_TIMING_DATA(src, dest)                              \
+    _AGDC_CONVERT_(src, IODetailedTimingInformationV2, dest,                   \
+                   AGDCDetailedTimingInformation_t)
 
 #pragma pack(push, 1)
 
@@ -86,8 +90,7 @@
 //  0x10    -> some aux command
 //  0x40    -> something with timing
 
-enum kAGDCCommand_t
-{
+enum kAGDCCommand_t {
     kAGDCVendorInfo = 0x1,             // may be called without a WL
     kAGDCVendorEnableController = 0x2, // may be called without a WL
 
@@ -192,8 +195,7 @@ enum kAGDCCommand_t
     kAGDCPluginMetricsEFIData = 0x4121,
 };
 
-enum kAGDCVendorClass_t
-{
+enum kAGDCVendorClass_t {
     kAGDCVendorClassReserved = 0,
     kAGDCVendorClassIntegratedGPU = 1,
     kAGDCVendorClassDiscreteGPU = 2,
@@ -203,35 +205,29 @@ enum kAGDCVendorClass_t
     kAGDCVendorClassAppleGPUPowerManager = 6,  // AGPM
 };
 
-struct AGDCVendorInfo_t
-{
+struct AGDCVendorInfo_t {
     uint32_t Version;
     char VendorString[32];
     uint32_t VendorID;
     kAGDCVendorClass_t VendorClass;
 };
 
-struct AGDCVendorControllerEnable_t
-{
+struct AGDCVendorControllerEnable_t {
     uint32_t enabled;
 };
 
-struct AGDCStreamAddress_t
-{
+struct AGDCStreamAddress_t {
     uint32_t port;   // Port Number 1->n
     uint32_t stream; // 0 or MST address
 };
 
-struct AGDCGPUCapability_t
-{
-    struct
-    {
+struct AGDCGPUCapability_t {
+    struct {
         uint64_t portMap;
         uint64_t MSTPortMap;
         uint64_t ddcTransportMap;
         uint64_t auxTransportMap;
-        struct
-        {
+        struct {
             uint32_t DVI;
             uint32_t DP;
             uint32_t MST;
@@ -239,7 +235,8 @@ struct AGDCGPUCapability_t
         } numberOfStreams;
         uint32_t numberOfFramebuffers;
 
-        uint64_t _reserved[9]; // kernel is 64 bit, user is 32/64.. pointers are not safe!!!
+        uint64_t _reserved[9]; // kernel is 64 bit, user is 32/64.. pointers are
+                               // not safe!!!
 
         uint64_t _reserved_a;
         uint64_t _reserved_b;
@@ -248,36 +245,31 @@ struct AGDCGPUCapability_t
     } gpu;
 };
 
-struct AGDCStreamAssociate_t
-{
+struct AGDCStreamAssociate_t {
     int32_t id;
-    AGDCStreamAddress_t address; // for GET this is an output, otherwise both are inputs to a driver
+    AGDCStreamAddress_t address; // for GET this is an output, otherwise both
+                                 // are inputs to a driver
 };
 
-struct AGDCStreamRequest_t
-{
-    struct
-    {
-        AGDCStreamAddress_t address; // Input, a hint which ports are in the set we want to bind
+struct AGDCStreamRequest_t {
+    struct {
+        AGDCStreamAddress_t
+            address; // Input, a hint which ports are in the set we want to bind
     } link[4];
     int32_t id;      // Ouput FB
     int32_t groupID; // Output preferred groupID (if any) -1 otherwise.
 };
 
-struct AGDCStreamAccessI2C_t
-{
+struct AGDCStreamAccessI2C_t {
     AGDCStreamAddress_t address;
-    struct
-    {
+    struct {
         uint16_t device;
         uint16_t speed;
-        struct
-        {
+        struct {
             uint16_t length;
             uint8_t buffer[256];
         } write;
-        struct
-        {
+        struct {
             uint16_t length;
             uint8_t buffer[256];
         } read;
@@ -285,11 +277,9 @@ struct AGDCStreamAccessI2C_t
     } i2c;
 };
 
-struct AGDCStreamAccessI2CCapability_t
-{
+struct AGDCStreamAccessI2CCapability_t {
     AGDCStreamAddress_t address;
-    struct
-    {
+    struct {
         uint16_t width;
         uint16_t minSpeed;
         uint16_t maxSpeed;
@@ -297,15 +287,12 @@ struct AGDCStreamAccessI2CCapability_t
     } i2c;
 };
 
-struct AGDCStreamAccessAUX_t
-{
+struct AGDCStreamAccessAUX_t {
     AGDCStreamAddress_t address;
     uint32_t AuxRegister;
-    struct
-    {
+    struct {
         uint8_t size;
-        union
-        {
+        union {
             uint8_t b[16];
             uint16_t s[8];
             uint32_t l[4];
@@ -314,16 +301,14 @@ struct AGDCStreamAccessAUX_t
     } aux;
 };
 
-struct AGDCStreamGetEDID_t
-{
+struct AGDCStreamGetEDID_t {
     AGDCStreamAddress_t address;
     uint32_t block;
     uint8_t data[128]; // 128
     uint32_t status;
 };
 
-struct AGDCDetailedTimingInformation_t
-{
+struct AGDCDetailedTimingInformation_t {
     uint32_t horizontalScaledInset; // pixels
     uint32_t verticalScaledInset;   // lines
 
@@ -369,8 +354,7 @@ struct AGDCDetailedTimingInformation_t
     uint16_t dscSliceWidth;
 };
 
-struct AGDCStreamConfig_t
-{
+struct AGDCStreamConfig_t {
     int32_t id;
     AGDCStreamAddress_t address;
     AGDCDetailedTimingInformation_t timing;
@@ -378,11 +362,9 @@ struct AGDCStreamConfig_t
     uint32_t verticalOffset;
 };
 
-struct AGDCMultiLinkConfig_t
-{
+struct AGDCMultiLinkConfig_t {
     AGDCStreamConfig_t link[4];
-    struct
-    {
+    struct {
         int32_t id;
         int32_t groupID;
         AGDCStreamAddress_t address;
@@ -392,8 +374,7 @@ struct AGDCMultiLinkConfig_t
     uint32_t valid;
 };
 
-enum AGDCLinkConfigFlags_t
-{
+enum AGDCLinkConfigFlags_t {
     kAGDCLinkConfigFlag_Online = (1 << 0),
     kAGDCLinkConfigFlag_MayGroup = (1 << 1),
     kAGDCLinkConfigFlag_IsFixed = (1 << 2),
@@ -401,15 +382,13 @@ enum AGDCLinkConfigFlags_t
     kAGDCLinkConfigFlag_IsGrouped = (1 << 4),
 };
 
-enum AGDCStreamState_t
-{
+enum AGDCStreamState_t {
     kAGDCStreamStateRelease = 0,
     kAGDCStreamStateEnabled = 1,
     kAGDCStreamStateInvalid = 0x80000000,
 };
 
-struct AGDCLinkConfig_t
-{
+struct AGDCLinkConfig_t {
     int32_t id;                             // input framebuffer field
     int32_t groupID;                        // output
     uint64_t flags;                         // output, AGDCLinkConfigFlags_t
@@ -420,17 +399,20 @@ struct AGDCLinkConfig_t
 
 typedef void *AGDCLinkAvailable_t __deprecated;
 
-enum kAGDCRegisterLinkControlEvent_t
-{
+enum kAGDCRegisterLinkControlEvent_t {
     kAGDCRegisterLinkInsert = 0,
     kAGDCRegisterLinkRemove = 1,
     kAGDCRegisterLinkChange = 2,
     kAGDCRegisterLinkChangeMST = 3,
-    kAGDCRegisterLinkFramebuffer = 4, // V106+
-    // This event is handled by AppleGraphicsDevicePolicy::VendorEventHandler.
-    // The point of this event to validate the timing information, and take decision on what to do with this display.
-    // One of the examples of this event is to merge multiple display ports into one connection for 5K/6K output.
-    // Drivers should interpret modeStatus to decide on whether to continue execution, change the mode, or disable link.
+    kAGDCRegisterLinkFramebuffer =
+        4, // V106+
+           // This event is handled by
+           // AppleGraphicsDevicePolicy::VendorEventHandler. The point of this
+           // event to validate the timing information, and take decision on
+           // what to do with this display. One of the examples of this event is
+           // to merge multiple display ports into one connection for 5K/6K
+           // output. Drivers should interpret modeStatus to decide on whether
+           // to continue execution, change the mode, or disable link.
     kAGDCValidateDetailedTiming = 10,
     kAGDCRegisterLinkChangeWakeProbe = 0x80,
 };
@@ -438,22 +420,19 @@ enum kAGDCRegisterLinkControlEvent_t
 struct __deprecated AGDCGetLinkMaster_t;
 typedef AGDCGetLinkMaster_t AGDCRegisterLinkMaster_t __deprecated;
 
-struct AGDCStreamSetState_t
-{
+struct AGDCStreamSetState_t {
     AGDCStreamAddress_t address;
     AGDCStreamState_t state;
 };
 
-struct AGDCFBOnline_t
-{
+struct AGDCFBOnline_t {
     int32_t id;
     uint32_t state;
 };
 
 typedef AGDCFBOnline_t kAppleAFBOnline_t __deprecated;
 
-struct AGDCFBSetMode_t
-{
+struct AGDCFBSetMode_t {
     int32_t id;
     uint32_t modeID;
     uint32_t width;
@@ -464,8 +443,7 @@ struct AGDCFBSetMode_t
 
 typedef AGDCFBSetMode_t kAppleAFBSetMode_t __deprecated;
 
-struct AGDCEDID_t
-{
+struct AGDCEDID_t {
     int32_t id;
     uint32_t size;
     uint8_t data[2 * 128];
@@ -473,26 +451,22 @@ struct AGDCEDID_t
 
 typedef AGDCEDID_t kAppleAFBEdid_t __deprecated;
 
-struct AGDCFBInjectEvent_t
-{
+struct AGDCFBInjectEvent_t {
     int32_t id;
     uint32_t eventID;
 };
 
 typedef AGDCFBInjectEvent_t kAppleAFBinjectEvent_t __deprecated;
 
-struct AGDCFBDoControl_t
-{
+struct AGDCFBDoControl_t {
     int32_t id;
     uint64_t payload[4];
 };
 
 typedef AGDCFBDoControl_t kAppleAFBdoControl_t __deprecated;
 
-struct AGDCFBCommandPacket_t
-{
-    union
-    {
+struct AGDCFBCommandPacket_t {
+    union {
         AGDCFBOnline_t online;
         AGDCFBSetMode_t mode;
         AGDCEDID_t edid;
@@ -504,24 +478,20 @@ struct AGDCFBCommandPacket_t
 
 typedef AGDCFBCommandPacket_t kAppleAFBCommandPacket_t __deprecated;
 
-struct AGDCPMInfo_t
-{
+struct AGDCPMInfo_t {
     uint32_t NumPStates;
     uint32_t NumPowerLimits;
     uint32_t ControlType;
 };
 
-enum kAGDCPMCallbackEvent_t
-{
+enum kAGDCPMCallbackEvent_t {
     kAGDCPMUpInterruptHint = 0,
     kAGDCPMDownInterruptHint = 1,
 };
 
-struct kAGDCPMCallbackInfo_t
-{
+struct kAGDCPMCallbackInfo_t {
     uint32_t version;
-    struct
-    {
+    struct {
         uint32_t currentPState;
         uint32_t suggestedPState;
         uint32_t coreBusyness;
@@ -530,16 +500,13 @@ struct kAGDCPMCallbackInfo_t
     } gpu;
 };
 
-struct AGDCPMRegisterCallback_t
-{
+struct AGDCPMRegisterCallback_t {
     void *cookie;
-    int (*handler)(void *obj,
-                   kAGDCPMCallbackEvent_t event,
+    int (*handler)(void *obj, kAGDCPMCallbackEvent_t event,
                    kAGDCPMCallbackInfo_t *data);
 };
 
-struct AGDCValidateDetailedTiming_t
-{
+struct AGDCValidateDetailedTiming_t {
     uint32_t framebufferIndex; // IOFBDependentIndex
     AGDCDetailedTimingInformation_t timing;
     uint16_t padding1[5];
