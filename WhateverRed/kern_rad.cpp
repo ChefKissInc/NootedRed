@@ -659,48 +659,6 @@ uint32_t RAD::wrapGetHwRevision(uint32_t major, uint32_t minor,
     return (minor << 0x8) | (major << 0x10) | patch;
 }
 
-uint32_t RAD::wrapRavenGetSoc15RegisterOffset(void *info, uint32_t hwIdType,
-                                              uint32_t inst, uint32_t seg,
-                                              uint32_t off) {
-    NETLOG("rad",
-           "_PhwRaven_GetSoc15RegisterOffset: info = %p hwIdType = 0x%X inst = "
-           "0x%X seg = 0x%X off = 0x%X",
-           info, hwIdType, inst, seg, off);
-    if (hwIdType == 1 && inst == 0 && seg == 0) {
-        NETLOG("rad",
-               "_PhwRaven_GetSoc15RegisterOffset fixing SOC 15 INST 0 offset");
-        return 0x16200 + off;
-    } else {
-        auto ret = FunctionCast(wrapRavenGetSoc15RegisterOffset,
-                                callbackRAD->orgRavenGetSoc15RegisterOffset)(
-            info, hwIdType, inst, seg, off);
-        NETLOG("rad", "_PhwRaven_GetSoc15RegisterOffset returned 0x%X", ret);
-        return ret;
-    }
-}
-
-uint32_t RAD::wrapRaven2GetSoc15RegisterOffset(void *info, uint32_t hwIdType,
-                                               uint32_t inst, uint32_t seg,
-                                               uint32_t off) {
-    NETLOG(
-        "rad",
-        "_PhwRaven2_GetSoc15RegisterOffset: info = %p hwIdType = 0x%X inst = "
-        "0x%X seg = 0x%X off = 0x%X",
-        info, hwIdType, inst, seg, off);
-    if (hwIdType == 1 && inst == 0 && seg == 0) {
-        NETLOG("rad",
-               "_PhwRaven2_GetSoc15RegisterOffset fixing SOC 15 INST 0 "
-               "SEG 0 offset");
-        return 0x16200 + off;
-    } else {
-        auto ret = FunctionCast(wrapRaven2GetSoc15RegisterOffset,
-                                callbackRAD->orgRaven2GetSoc15RegisterOffset)(
-            info, hwIdType, inst, seg, off);
-        NETLOG("rad", "_PhwRaven2_GetSoc15RegisterOffset returned 0x%X", ret);
-        return ret;
-    }
-}
-
 IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
     NETLOG("rad", "ASIC_INFO__VEGA10::populateDeviceInfo: this = %p", that);
     auto ret = FunctionCast(wrapPopulateDeviceInfo,
@@ -713,7 +671,7 @@ IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
         reinterpret_cast<uint32_t *>(static_cast<uint8_t *>(that) + 0x48);
     auto *emulatedRevision =
         reinterpret_cast<uint32_t *>(static_cast<uint8_t *>(that) + 0x4c);
-    NETLOG("rad", "familyId = 0x%X emulatedRevision = 0x%X", *familyId,
+    NETLOG("rad", "before: familyId = 0x%X emulatedRevision = 0x%X", *familyId,
            *emulatedRevision);
     *familyId = 0x8e;
     switch (*deviceId) {
@@ -731,55 +689,21 @@ IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
             }
             break;
     }
-    NETLOG("rad", "familyId = 0x%X emulatedRevision = 0x%X", *familyId,
+    NETLOG("rad", "after: familyId = 0x%X emulatedRevision = 0x%X", *familyId,
            *emulatedRevision);
 
     NETLOG("rad", "ASIC_INFO__VEGA10::populateDeviceInfo returned 0x%X", ret);
     return ret;
 }
 
-uint32_t RAD::wrapQuerySystemInfo(void *that, uint8_t *sysinfo) {
-    NETLOG("rad",
-           "AtiAppleMcilServices::querySystemInfo: this = %p sysinfo = %p",
-           that, sysinfo);
-    auto ret = FunctionCast(wrapQuerySystemInfo,
-                            callbackRAD->orgQuerySystemInfo)(that, sysinfo);
-
-    auto *sysret = reinterpret_cast<uint32_t *>(sysinfo + 0x10);
-    NETLOG("rad", "AtiAppleMcilServices::querySystemInfo: sysinfo->ret = 0x%X",
-           *sysret);
-    NETLOG("rad", "AtiAppleMcilServices::querySystemInfo returned 0x%X", ret);
-    return ret;
-}
-
-uint64_t RAD::wrapSmu901CreateFuncPointers(uint8_t *fwInfo) {
-    auto ret = FunctionCast(wrapSmu901CreateFuncPointers,
-                            callbackRAD->orgSmu901CreateFuncPointers)(fwInfo);
+uint64_t RAD::wrapSmuGetFwConstants() {
     /*
-     * In _smu_9_0_1_create_function_pointer_list
-     * IP contexts hold pointers to different functionality for each version.
-     * -- DECOMPILATION --
-     * fwInfo->internal_sw_init = _smu_9_0_1_internal_sw_init;
-     * fwInfo->internal_hw_init = _smu_9_0_1_internal_hw_init;
-     * fwInfo->internal_sw_exit = _smu_9_0_1_internal_sw_exit;
-     * fwInfo->internal_hw_exit = _smu_9_0_1_internal_hw_exit;
-     * fwInfo->notify_event = _smu_9_0_1_notify_event;
-     * fwInfo->fullscreen_event = _smu_9_0_1_fullscreen_event;
-     * fwInfo->full_asic_reset = _smu_9_0_1_full_asic_reset;
-     * fwInfo->get_ucode_consts = _smu_9_0_1_get_ucode_consts;  <-- offset 0x720
-     * -- END OF DECOMPILATION --
-     * The first argument of this function is a pointer to SmuFwInfoData.
-     * Offset 0x720 into this structure is a pointer to get_ucode_consts.
-     * This function returns the UCode ID and a pointer to the SMC Firmware.
-     * It is called by _smu_get_fw_constants.
-     * By setting this function to 0, the aforementioned function skips
-     * setting the ucode constants.
-	 * According to Linux AMDGPU source code, on APUs, the System BIOS
-	 * is the one that loads the SMC Firmware, and therefore, we must
-	 * not load any firmware ourselves.
+     * According to Linux AMDGPU source code,
+     * on APUs, the System BIOS is the one that loads the SMC Firmware, and
+     * therefore, we must not load any firmware ourselves.
+     * We fix that by making _smu_get_fw_constants a no-op.
      */
-    *reinterpret_cast<void **>(fwInfo + 0x720) = nullptr;
-    return ret;
+    return 0;
 }
 
 bool RAD::processKext(KernelPatcher &patcher, size_t index,
@@ -899,15 +823,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              "InstanceP18PowerPlayCallbacks",
              wrapCreatePowerTuneServices},
             {"_get_hw_revision", wrapGetHwRevision},
-            {"_PhwRaven_GetSOC15RegisterOffset",
-             wrapRavenGetSoc15RegisterOffset, orgRavenGetSoc15RegisterOffset},
-            {"_PhwRaven2_GetSOC15RegisterOffset",
-             wrapRaven2GetSoc15RegisterOffset, orgRaven2GetSoc15RegisterOffset},
-            {"__ZN20AtiAppleMcilServices15querySystemInfoEPvP17_MCIL_SYSTEM_"
-             "INFO",
-             wrapQuerySystemInfo, orgQuerySystemInfo},
-            {"_smu_9_0_1_create_function_pointer_list",
-             wrapSmu901CreateFuncPointers, orgSmu901CreateFuncPointers},
+            {"_smu_get_fw_constants", wrapSmuGetFwConstants},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size))

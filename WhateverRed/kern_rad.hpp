@@ -74,7 +74,7 @@ class RAD {
     mach_vm_address_t orgInitializePP{}, orgCreatePowerPlayInterface{};
     mach_vm_address_t orgSendRequestToAccelerator{}, orgPPInitialize{};
     mach_vm_address_t orgUpdatePowerPlay{}, orgIsReady{};
-    mach_vm_address_t orgPopulateDeviceInfo{}, orgQuerySystemInfo{};
+    mach_vm_address_t orgPopulateDeviceInfo{};
 
     /* X5000HWLibs */
     mach_vm_address_t orgIpiSetFwEntry{}, orgIpiSmuSwInit{}, orgSmuSwInit{};
@@ -94,9 +94,6 @@ class RAD {
         orgPECIRetrieveBiosDataTable{};
     t_Vega10PowerTuneServicesConstructor orgVega10PowerTuneServicesConstructor =
         nullptr;
-    mach_vm_address_t orgRavenGetSoc15RegisterOffset{};
-    mach_vm_address_t orgRaven2GetSoc15RegisterOffset{};
-    mach_vm_address_t orgSmu901CreateFuncPointers{};
     /* ----------- */
 
     template <size_t Index>
@@ -260,17 +257,7 @@ class RAD {
     static void *wrapCreatePowerTuneServices(void *param1, void *param2);
     static uint32_t wrapGetHwRevision(uint32_t major, uint32_t minor,
                                       uint32_t patch);
-    static uint32_t wrapRavenGetSoc15RegisterOffset(void *info,
-                                                    uint32_t hwIdType,
-                                                    uint32_t inst, uint32_t seg,
-                                                    uint32_t off);
-    static uint32_t wrapRaven2GetSoc15RegisterOffset(void *info,
-                                                     uint32_t hwIdType,
-                                                     uint32_t inst,
-                                                     uint32_t seg,
-                                                     uint32_t off);
-    static uint32_t wrapQuerySystemInfo(void *that, uint8_t *sysinfo);
-    static uint64_t wrapSmu901CreateFuncPointers(uint8_t *fwInfo);
+    static uint64_t wrapSmuGetFwConstants();
     /* ----------- */
 
     void processHardwareKext(KernelPatcher &patcher, size_t hwIndex,
