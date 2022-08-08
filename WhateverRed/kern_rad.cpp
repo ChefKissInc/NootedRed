@@ -277,11 +277,16 @@ uint64_t RAD::wrapSmuGetHwVersion(uint64_t param1, uint32_t param2) {
 
 uint64_t RAD::wrapPspSwInit(uint32_t *param1, uint32_t *param2) {
     NETLOG("rad", "_psp_sw_init: param1 = %p param2 = %p", param1, param2);
-    NETLOG("rad", "_psp_sw_init: param1: 0x%X 0x%X 0x%X 0x%X 0x%X 0x%X",
+    NETLOG("rad",
+           "_psp_sw_init: param1: 0:0x%X 1:0x%X 2:0x%X 3:0x%X 4:0x%X 5:0x%X",
            param1[0], param1[1], param1[2], param1[3], param1[4], param1[5]);
     switch (param1[3]) {
         case 0xA:
-            [[fallthrough]];
+            NETLOG("rad", "Spoofing PSP version v10 to v9.0.2");
+            param1[3] = 0x9;
+            param1[4] = 0x0;
+            param1[5] = 0x2;
+            break;
         case 0xB:
             [[fallthrough]];
         case 0xC:
