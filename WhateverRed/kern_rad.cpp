@@ -714,14 +714,17 @@ IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
     switch (*deviceId) {
     case 0x15d8:
         *emulatedRevision = *revision + 0x41;
+		break;
     case 0x15dd:
         if (*revision >= 0x8) {
             *emulatedRevision = *revision + 0x79;
         }
+		break;
     default:
         if (*revision == 1) {
             *emulatedRevision = *revision + 0x20;
         }
+		break;
     }
     NETLOG("rad", "familyId = 0x%X emulatedRevision = 0x%X", *familyId,
            *emulatedRevision);
