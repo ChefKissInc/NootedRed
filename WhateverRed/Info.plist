@@ -62,7 +62,7 @@
 			<key>IODVDBundleName</key>
 			<string>AMDRadeonVADriver2</string>
 			<key>IOGVACodec</key>
-			<string>AMDVCN1</string>
+			<string>AMDU7V4</string>
 			<key>IOGVAH264EncodeCapabilities</key>
 			<dict>
 				<key>VTQualityRating</key>
