@@ -96,6 +96,7 @@ class RAD {
         nullptr;
     mach_vm_address_t orgRavenGetSoc15RegisterOffset{};
     mach_vm_address_t orgRaven2GetSoc15RegisterOffset{};
+    mach_vm_address_t orgSmu901CreateFuncPointers{};
     /* ----------- */
 
     template <size_t Index>
@@ -269,6 +270,7 @@ class RAD {
                                                      uint32_t seg,
                                                      uint32_t off);
     static uint32_t wrapQuerySystemInfo(void *that, uint8_t *sysinfo);
+    static uint64_t wrapSmu901CreateFuncPointers(uint8_t *fwInfo);
     /* ----------- */
 
     void processHardwareKext(KernelPatcher &patcher, size_t hwIndex,

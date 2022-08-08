@@ -752,6 +752,36 @@ uint32_t RAD::wrapQuerySystemInfo(void *that, uint8_t *sysinfo) {
     return ret;
 }
 
+uint64_t RAD::wrapSmu901CreateFuncPointers(uint8_t *fwInfo) {
+    auto ret = FunctionCast(wrapSmu901CreateFuncPointers,
+                            callbackRAD->orgSmu901CreateFuncPointers)(fwInfo);
+    /*
+     * In _smu_9_0_1_create_function_pointer_list
+     * IP contexts hold pointers to different functionality for each version.
+     * -- DECOMPILATION --
+     * fwInfo->internal_sw_init = _smu_9_0_1_internal_sw_init;
+     * fwInfo->internal_hw_init = _smu_9_0_1_internal_hw_init;
+     * fwInfo->internal_sw_exit = _smu_9_0_1_internal_sw_exit;
+     * fwInfo->internal_hw_exit = _smu_9_0_1_internal_hw_exit;
+     * fwInfo->notify_event = _smu_9_0_1_notify_event;
+     * fwInfo->fullscreen_event = _smu_9_0_1_fullscreen_event;
+     * fwInfo->full_asic_reset = _smu_9_0_1_full_asic_reset;
+     * fwInfo->get_ucode_consts = _smu_9_0_1_get_ucode_consts;  <-- offset 0x720
+     * -- END OF DECOMPILATION --
+     * The first argument of this function is a pointer to SmuFwInfoData.
+     * Offset 0x720 into this structure is a pointer to get_ucode_consts.
+     * This function returns the UCode ID and a pointer to the SMC Firmware.
+     * It is called by _smu_get_fw_constants.
+     * By setting this function to 0, the aforementioned function skips
+     * setting the ucode constants.
+	 * According to Linux AMDGPU source code, on APUs, the System BIOS
+	 * is the one that loads the SMC Firmware, and therefore, we must
+	 * not load any firmware ourselves.
+     */
+    *reinterpret_cast<void **>(fwInfo + 0x720) = nullptr;
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index,
                       mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
@@ -876,6 +906,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             {"__ZN20AtiAppleMcilServices15querySystemInfoEPvP17_MCIL_SYSTEM_"
              "INFO",
              wrapQuerySystemInfo, orgQuerySystemInfo},
+            {"_smu_9_0_1_create_function_pointer_list",
+             wrapSmu901CreateFuncPointers, orgSmu901CreateFuncPointers},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size))
