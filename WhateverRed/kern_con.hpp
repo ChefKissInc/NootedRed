@@ -107,22 +107,22 @@ enum ConnectorType {
  */
 inline const char *printType(uint32_t type) {
     switch (type) {
-    case ConnectorLVDS:
-        return "LVDS";
-    case ConnectorDigitalDVI:
-        return "DVI ";
-    case ConnectorSVID:
-        return "SVID";
-    case ConnectorVGA:
-        return "VGA ";
-    case ConnectorDP:
-        return "DP  ";
-    case ConnectorHDMI:
-        return "HDMI";
-    case ConnectorAnalogDVI:
-        return "ADVI";
-    default:
-        return "UNKN";
+        case ConnectorLVDS:
+            return "LVDS";
+        case ConnectorDigitalDVI:
+            return "DVI ";
+        case ConnectorSVID:
+            return "SVID";
+        case ConnectorVGA:
+            return "VGA ";
+        case ConnectorDP:
+            return "DP  ";
+        case ConnectorHDMI:
+            return "HDMI";
+        case ConnectorAnalogDVI:
+            return "ADVI";
+        default:
+            return "UNKN";
     }
 }
 
@@ -213,6 +213,6 @@ inline void copy(RADConnectors::Connector *out, uint8_t num,
         }
     }
 }
-}; // namespace RADConnectors
+};  // namespace RADConnectors
 
 #endif /* kern_con_hpp */

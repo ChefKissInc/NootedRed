@@ -21,7 +21,7 @@
 #include "kern_con.hpp"
 
 class RAD {
-  public:
+   public:
     void init();
     void deinit();
 
@@ -29,7 +29,7 @@ class RAD {
     bool processKext(KernelPatcher &patcher, size_t index,
                      mach_vm_address_t address, size_t size);
 
-  private:
+   private:
     static constexpr size_t MaxGetFrameBufferProcs = 3;
 
     using t_getAtomObjectTableForType = void *(*)(void *that,
@@ -164,8 +164,8 @@ class RAD {
         }
     }
 
-    [[noreturn]] [[gnu::cold]] static void
-    wrapPanic(const char *panic_format_str, ...);
+    [[noreturn]] [[gnu::cold]] static void wrapPanic(
+        const char *panic_format_str, ...);
     [[noreturn]] [[gnu::cold]] static void wrapEnterDebugger(const char *cause);
 
     void process24BitOutput(KernelPatcher &patcher,
@@ -263,9 +263,11 @@ class RAD {
                                                     uint32_t hwIdType,
                                                     uint32_t inst, uint32_t seg,
                                                     uint32_t off);
-    static uint32_t
-    wrapRaven2GetSoc15RegisterOffset(void *info, uint32_t hwIdType,
-                                     uint32_t inst, uint32_t seg, uint32_t off);
+    static uint32_t wrapRaven2GetSoc15RegisterOffset(void *info,
+                                                     uint32_t hwIdType,
+                                                     uint32_t inst,
+                                                     uint32_t seg,
+                                                     uint32_t off);
     static uint32_t wrapQuerySystemInfo(void *that, uint8_t *sysinfo);
     /* ----------- */
 
@@ -277,20 +279,16 @@ class RAD {
     static bool wrapSetProperty(IORegistryEntry *that, const char *aKey,
                                 void *bytes, unsigned length);
     static OSObject *wrapGetProperty(IORegistryEntry *that, const char *aKey);
-    static uint32_t
-    wrapGetConnectorsInfoV1(void *that, RADConnectors::Connector *connectors,
-                            uint8_t *sz);
-    static uint32_t
-    wrapGetConnectorsInfoV2(void *that, RADConnectors::Connector *connectors,
-                            uint8_t *sz);
-    static uint32_t
-    wrapTranslateAtomConnectorInfoV1(void *that,
-                                     RADConnectors::AtomConnectorInfo *info,
-                                     RADConnectors::Connector *connector);
-    static uint32_t
-    wrapTranslateAtomConnectorInfoV2(void *that,
-                                     RADConnectors::AtomConnectorInfo *info,
-                                     RADConnectors::Connector *connector);
+    static uint32_t wrapGetConnectorsInfoV1(
+        void *that, RADConnectors::Connector *connectors, uint8_t *sz);
+    static uint32_t wrapGetConnectorsInfoV2(
+        void *that, RADConnectors::Connector *connectors, uint8_t *sz);
+    static uint32_t wrapTranslateAtomConnectorInfoV1(
+        void *that, RADConnectors::AtomConnectorInfo *info,
+        RADConnectors::Connector *connector);
+    static uint32_t wrapTranslateAtomConnectorInfoV2(
+        void *that, RADConnectors::AtomConnectorInfo *info,
+        RADConnectors::Connector *connector);
     static bool wrapATIControllerStart(IOService *ctrl, IOService *provider);
     static bool wrapNotifyLinkChange(void *atiDeviceControl,
                                      kAGDCRegisterLinkControlEvent_t event,

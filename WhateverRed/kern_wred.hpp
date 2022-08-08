@@ -18,7 +18,7 @@ class IOFramebuffer;
 class IODisplay;
 
 class WRed {
-  public:
+   public:
     void init();
     void deinit();
 
@@ -29,7 +29,7 @@ class WRed {
     static bool getVideoArgument(DeviceInfo *info, const char *name,
                                  void *bootarg, int size);
 
-  private:
+   private:
     /**
      *  Private self instance for callbacks
      */

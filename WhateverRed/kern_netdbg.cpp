@@ -40,8 +40,7 @@ size_t NETDBG::nprint(char *data, size_t len) {
     if (!socket) {
         sock_socket(AF_INET, SOCK_STREAM, 0, NULL, 0, &socket);
 
-        if (!socket)
-            return 0;
+        if (!socket) return 0;
 
         int retry = 5;
         while (retry--) {
@@ -57,7 +56,7 @@ size_t NETDBG::nprint(char *data, size_t len) {
             if (err == -1) {
                 SYSLOG("netdbg", "nprint err=%d", err);
                 sock_close(socket);
-				socket = nullptr;
+                socket = nullptr;
                 continue;
             }
         }
@@ -71,12 +70,12 @@ size_t NETDBG::nprint(char *data, size_t len) {
 
     size_t sentLen = 0;
     int err = sock_send(socket, &hdr, 0, &sentLen);
-	if (err == -1) {
-		SYSLOG("netdbg", "nprint err=%d", err);
-		sock_close(socket);
-		socket = nullptr;
-		return 0;
-	}
+    if (err == -1) {
+        SYSLOG("netdbg", "nprint err=%d", err);
+        sock_close(socket);
+        socket = nullptr;
+        return 0;
+    }
 
     return sentLen;
 }

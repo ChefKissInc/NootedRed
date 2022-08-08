@@ -141,8 +141,7 @@ void WRed::init() {
         this);
 
     // Perform a background fix.
-    if (resetFramebuffer != FB_NONE)
-        lilu.onKextLoadForce(&kextIOGraphics);
+    if (resetFramebuffer != FB_NONE) lilu.onKextLoadForce(&kextIOGraphics);
 
     // Perform a black screen fix.
     if (graphicsDisplayPolicyMod != AGDP_NONE_SET)
@@ -200,8 +199,7 @@ void WRed::processKernel(KernelPatcher &patcher) {
 
             size_t extNum = devInfo->videoExternal.size();
             for (size_t i = 0; i < extNum; i++) {
-                if (getAgpdMod(devInfo->videoExternal[i].video))
-                    break;
+                if (getAgpdMod(devInfo->videoExternal[i].video)) break;
             }
             if (devInfo->videoBuiltin != nullptr &&
                 graphicsDisplayPolicyMod ==
@@ -394,8 +392,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index,
         }
     }
 
-    if (rad.processKext(patcher, index, address, size))
-        return;
+    if (rad.processKext(patcher, index, address, size)) return;
 }
 
 void WRed::processExternalProperties(IORegistryEntry *device, DeviceInfo *info,
@@ -464,12 +461,9 @@ void WRed::processGraphicsPolicyStr(const char *agdp) {
         graphicsDisplayPolicyMod = AGDP_NONE_SET;
     } else {
         graphicsDisplayPolicyMod = AGDP_NONE_SET;
-        if (strstr(agdp, "vit9696"))
-            graphicsDisplayPolicyMod |= AGDP_VIT9696;
-        if (strstr(agdp, "pikera"))
-            graphicsDisplayPolicyMod |= AGDP_PIKERA;
-        if (strstr(agdp, "cfgmap"))
-            graphicsDisplayPolicyMod |= AGDP_CFGMAP;
+        if (strstr(agdp, "vit9696")) graphicsDisplayPolicyMod |= AGDP_VIT9696;
+        if (strstr(agdp, "pikera")) graphicsDisplayPolicyMod |= AGDP_PIKERA;
+        if (strstr(agdp, "cfgmap")) graphicsDisplayPolicyMod |= AGDP_CFGMAP;
     }
 }
 
@@ -537,17 +531,17 @@ bool WRed::isGraphicsPolicyModRequired(DeviceInfo *info) {
     auto boardId = BaseDeviceInfo::get().boardIdentifier;
     DBGLOG("wred", "board is %s", boardId);
     const char *compatibleBoards[]{
-        "Mac-00BE6ED71E35EB86", // iMac13,1
-        "Mac-27ADBB7B4CEE8E61", // iMac14,2
-        "Mac-4B7AC7E43945597E", // MacBookPro9,1
-        "Mac-77EB7D7DAF985301", // iMac14,3
-        "Mac-C3EC7CD22292981F", // MacBookPro10,1
-        "Mac-C9CF552659EA9913", // ???
-        "Mac-F221BEC8",         // MacPro5,1 (and MacPro4,1)
-        "Mac-F221DCC8",         // iMac10,1
-        "Mac-F42C88C8",         // MacPro3,1
-        "Mac-FC02E91DDD3FA6A4", // iMac13,2
-        "Mac-2BD1B31983FE1663"  // MacBookPro11,3
+        "Mac-00BE6ED71E35EB86",  // iMac13,1
+        "Mac-27ADBB7B4CEE8E61",  // iMac14,2
+        "Mac-4B7AC7E43945597E",  // MacBookPro9,1
+        "Mac-77EB7D7DAF985301",  // iMac14,3
+        "Mac-C3EC7CD22292981F",  // MacBookPro10,1
+        "Mac-C9CF552659EA9913",  // ???
+        "Mac-F221BEC8",          // MacPro5,1 (and MacPro4,1)
+        "Mac-F221DCC8",          // iMac10,1
+        "Mac-F42C88C8",          // MacPro3,1
+        "Mac-FC02E91DDD3FA6A4",  // iMac13,2
+        "Mac-2BD1B31983FE1663"   // MacBookPro11,3
     };
     for (size_t i = 0; i < arrsize(compatibleBoards); i++) {
         if (!strcmp(compatibleBoards[i], boardId)) {
@@ -620,11 +614,9 @@ void WRed::wrapFramebufferInit(IOFramebuffer *fb) {
 
     // For whatever reason not resetting Intel framebuffer (back copy mode)
     // twice works better.
-    if (!backCopy)
-        *callbackWEG->gIOFBVerboseBootPtr = 1;
+    if (!backCopy) *callbackWEG->gIOFBVerboseBootPtr = 1;
     FunctionCast(wrapFramebufferInit, callbackWEG->orgFramebufferInit)(fb);
-    if (!backCopy)
-        *callbackWEG->gIOFBVerboseBootPtr = verboseBoot;
+    if (!backCopy) *callbackWEG->gIOFBVerboseBootPtr = verboseBoot;
 
     // Finish the framebuffer initialisation by filling with black or copying
     // the image back.
@@ -744,8 +736,7 @@ bool WRed::wrapApplePanelSetDisplay(IOService *that, IODisplay *display) {
 
 bool WRed::getVideoArgument(DeviceInfo *info, const char *name, void *bootarg,
                             int size) {
-    if (PE_parse_boot_argn(name, bootarg, size))
-        return true;
+    if (PE_parse_boot_argn(name, bootarg, size)) return true;
 
     for (size_t i = 0; i < info->videoExternal.size(); i++) {
         auto prop = OSDynamicCast(

@@ -20,12 +20,12 @@
 #include "kern_fw.hpp"
 #include "kern_netdbg.hpp"
 
-#define WRAP_SIMPLE(ty, func, fmt)                                             \
-    ty RAD::wrap##func(void *that) {                                           \
-        NETLOG("rad", "" #func " this = %p", that);                            \
-        auto ret = FunctionCast(wrap##func, callbackRAD->org##func)(that);     \
-        NETLOG("rad", "" #func " returned " fmt, ret);                         \
-        return ret;                                                            \
+#define WRAP_SIMPLE(ty, func, fmt)                                         \
+    ty RAD::wrap##func(void *that) {                                       \
+        NETLOG("rad", "" #func " this = %p", that);                        \
+        auto ret = FunctionCast(wrap##func, callbackRAD->org##func)(that); \
+        NETLOG("rad", "" #func " returned " fmt, ret);                     \
+        return ret;                                                        \
     }
 
 static const char *pathAMD10000Controller[] = {
@@ -86,8 +86,7 @@ void RAD::init() {
 
     force24BppMode = checkKernelArgument("-rad24");
 
-    if (force24BppMode)
-        lilu.onKextLoadForce(&kextRadeonFramebuffer);
+    if (force24BppMode) lilu.onKextLoadForce(&kextRadeonFramebuffer);
 
     dviSingleLink = checkKernelArgument("-raddvi");
     fixConfigName = checkKernelArgument("-radcfg");
@@ -187,11 +186,11 @@ uint64_t RAD::wrapInitWithController(void *that, void *controller) {
     return ret;
 }
 
-IntegratedVRAMInfoInterface *
-RAD::createVramInfo([[maybe_unused]] void *helper,
-                    [[maybe_unused]] uint32_t offset) {
-    NETLOG("rad", "------------------------------------------------------------"
-                  "----------");
+IntegratedVRAMInfoInterface *RAD::createVramInfo(
+    [[maybe_unused]] void *helper, [[maybe_unused]] uint32_t offset) {
+    NETLOG("rad",
+           "------------------------------------------------------------"
+           "----------");
     NETLOG("rad", "creating fake VRAM info, get rekt ayymd");
     NETLOG("rad", "createVramInfo offset = 0x%X", offset);
     DataTableInitInfo initInfo{
@@ -205,8 +204,9 @@ RAD::createVramInfo([[maybe_unused]] void *helper,
     };
     auto *ret = new IntegratedVRAMInfoInterface;
     ret->init(&initInfo);
-    NETLOG("rad", "------------------------------------------------------------"
-                  "----------");
+    NETLOG("rad",
+           "------------------------------------------------------------"
+           "----------");
     return ret;
 }
 
@@ -228,8 +228,8 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that,
 uint64_t RAD::wrapIpiSetFwEntry(void *tlsInstance, void *b) {
     DBGLOG("rad", "_IpiSetFwEntry: tlsInstance = %p param2 = %p", tlsInstance,
            b);
-    auto ret = FunctionCast(wrapIpiSetFwEntry,
-                            callbackRAD->orgIpiSetFwEntry)(tlsInstance, b);
+    auto ret = FunctionCast(wrapIpiSetFwEntry, callbackRAD->orgIpiSetFwEntry)(
+        tlsInstance, b);
     DBGLOG("rad", "_IpiSetFwEntry returned 0x%llX", ret);
     return ret;
 }
@@ -258,8 +258,8 @@ uint32_t RAD::wrapSmuInternalSwInit(uint64_t param1, uint64_t param2,
            "_smu_internal_sw_init: param1 = 0x%llX param2 = 0x%llX param3 = %p",
            param1, param2, param3);
     auto ret =
-        FunctionCast(wrapSmuInternalSwInit,
-                     callbackRAD->orgSmuInternalSwInit)(param1, param2, param3);
+        FunctionCast(wrapSmuInternalSwInit, callbackRAD->orgSmuInternalSwInit)(
+            param1, param2, param3);
     NETLOG("rad", "_smu_internal_sw_init returned 0x%X", ret);
     return ret;
 }
@@ -271,16 +271,16 @@ uint64_t RAD::wrapSmuGetHwVersion(uint64_t param1, uint32_t param2) {
                             callbackRAD->orgSmuGetHwVersion)(param1, param2);
     NETLOG("rad", "_smu_get_hw_version returned 0x%llX", ret);
     switch (ret) {
-    case 0x2:
-        NETLOG("rad", "Spoofing SMU v10 to v9.0.1");
-        return 0x1;
-    case 0xB:
-        [[fallthrough]];
-    case 0xC:
-        NETLOG("rad", "Spoofing SMU v11/v12 to v11");
-        return 0x3;
-    default:
-        return ret;
+        case 0x2:
+            NETLOG("rad", "Spoofing SMU v10 to v9.0.1");
+            return 0x1;
+        case 0xB:
+            [[fallthrough]];
+        case 0xC:
+            NETLOG("rad", "Spoofing SMU v11/v12 to v11");
+            return 0x3;
+        default:
+            return ret;
     }
 }
 
@@ -289,18 +289,18 @@ uint64_t RAD::wrapPspSwInit(uint32_t *param1, uint32_t *param2) {
     NETLOG("rad", "_psp_sw_init: param1: 0x%X 0x%X 0x%X 0x%X 0x%X 0x%X",
            param1[0], param1[1], param1[2], param1[3], param1[4], param1[5]);
     switch (param1[3]) {
-    case 0xA:
-        [[fallthrough]];
-    case 0xB:
-        [[fallthrough]];
-    case 0xC:
-        NETLOG("rad", "Spoofing PSP version v10/v11/v12 to v11");
-        param1[3] = 0xB;
-        param1[4] = 0x0;
-        param1[5] = 0x0;
-        break;
-    default:
-        break;
+        case 0xA:
+            [[fallthrough]];
+        case 0xB:
+            [[fallthrough]];
+        case 0xC:
+            NETLOG("rad", "Spoofing PSP version v10/v11/v12 to v11");
+            param1[3] = 0xB;
+            param1[4] = 0x0;
+            param1[5] = 0x0;
+            break;
+        default:
+            break;
     }
     auto ret =
         FunctionCast(wrapPspSwInit, callbackRAD->orgPspSwInit)(param1, param2);
@@ -351,8 +351,9 @@ void RAD::wrapPopulateFirmwareDirectory(void *that) {
 }
 
 void *RAD::wrapCreateAtomBiosProxy(void *param1) {
-    NETLOG("rad", "------------------------------------------------------------"
-                  "----------");
+    NETLOG("rad",
+           "------------------------------------------------------------"
+           "----------");
     NETLOG("rad", "createAtomBiosProxy: param1 = %p", param1);
     auto ret = FunctionCast(wrapCreateAtomBiosProxy,
                             callbackRAD->orgCreateAtomBiosProxy)(param1);
@@ -377,8 +378,9 @@ IOReturn RAD::wrapPopulateDeviceMemory(void *that, uint32_t reg) {
 }
 
 void *RAD::wrapGetGpuHwConstants(uint8_t *param1) {
-    DBGLOG("rad", "------------------------------------------------------------"
-                  "----------");
+    DBGLOG("rad",
+           "------------------------------------------------------------"
+           "----------");
     DBGLOG("rad", "_GetGpuHwConstants: param1 = %p", param1);
     auto *asicCaps = *(uint8_t **)(param1 + 0x350);
     DBGLOG("rad", "_GetGpuHwConstants: asicCaps = %p", asicCaps);
@@ -393,8 +395,9 @@ void *RAD::wrapGetGpuHwConstants(uint8_t *param1) {
     auto ret = FunctionCast(wrapGetGpuHwConstants,
                             callbackRAD->orgGetGpuHwConstants)(param1);
     DBGLOG("rad", "_GetGpuHwConstants returned %p", ret);
-    DBGLOG("rad", "------------------------------------------------------------"
-                  "----------");
+    DBGLOG("rad",
+           "------------------------------------------------------------"
+           "----------");
     if (!ret) {
         NETLOG("rad", "_GetGpuHwConstants failed!");
         panic("_GetGpuHwConstants returned ZERO value!");
@@ -403,8 +406,9 @@ void *RAD::wrapGetGpuHwConstants(uint8_t *param1) {
 }
 
 uint64_t RAD::wrapMCILUpdateGfxCGPG(void *param1) {
-    NETLOG("rad", "------------------------------------------------------------"
-                  "----------");
+    NETLOG("rad",
+           "------------------------------------------------------------"
+           "----------");
     NETLOG("rad", "_Cail_MCILUpdateGfxCGPG: param1 = %p", param1);
     auto ret = FunctionCast(wrapMCILUpdateGfxCGPG,
                             callbackRAD->orgMCILUpdateGfxCGPG)(param1);
@@ -684,8 +688,9 @@ uint32_t RAD::wrapRaven2GetSoc15RegisterOffset(void *info, uint32_t hwIdType,
         "0x%X seg = 0x%X off = 0x%X",
         info, hwIdType, inst, seg, off);
     if (hwIdType == 1 && inst == 0 && seg == 0) {
-        NETLOG("rad", "_PhwRaven2_GetSoc15RegisterOffset fixing SOC 15 INST 0 "
-                      "SEG 0 offset");
+        NETLOG("rad",
+               "_PhwRaven2_GetSoc15RegisterOffset fixing SOC 15 INST 0 "
+               "SEG 0 offset");
         return 0x16200 + off;
     } else {
         auto ret = FunctionCast(wrapRaven2GetSoc15RegisterOffset,
@@ -712,19 +717,19 @@ IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
            *emulatedRevision);
     *familyId = 0x8e;
     switch (*deviceId) {
-    case 0x15d8:
-        *emulatedRevision = *revision + 0x41;
-		break;
-    case 0x15dd:
-        if (*revision >= 0x8) {
-            *emulatedRevision = *revision + 0x79;
-        }
-		break;
-    default:
-        if (*revision == 1) {
-            *emulatedRevision = *revision + 0x20;
-        }
-		break;
+        case 0x15d8:
+            *emulatedRevision = *revision + 0x41;
+            break;
+        case 0x15dd:
+            if (*revision >= 0x8) {
+                *emulatedRevision = *revision + 0x79;
+            }
+            break;
+        default:
+            if (*revision == 1) {
+                *emulatedRevision = *revision + 0x20;
+            }
+            break;
     }
     NETLOG("rad", "familyId = 0x%X emulatedRevision = 0x%X", *familyId,
            *emulatedRevision);
@@ -794,9 +799,10 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
         if (!this->orgCreateFirmware) {
             panic("RAD: Failed to resolve AMDFirmware::createFirmware");
         }
-        orgPutFirmware = reinterpret_cast<t_putFirmware>(patcher.solveSymbol(
-            index, "__ZN20AMDFirmwareDirectory11putFirmwareE16_"
-                   "AMD_DEVICE_TYPEP11AMDFirmware"));
+        orgPutFirmware = reinterpret_cast<t_putFirmware>(
+            patcher.solveSymbol(index,
+                                "__ZN20AMDFirmwareDirectory11putFirmwareE16_"
+                                "AMD_DEVICE_TYPEP11AMDFirmware"));
         if (!orgPutFirmware) {
             panic("RAD: Failed to resolve AMDFirmwareDirectory::putFirmware");
         }
@@ -804,11 +810,13 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
         orgVega10PowerTuneServicesConstructor =
             reinterpret_cast<t_Vega10PowerTuneServicesConstructor>(
                 patcher.solveSymbol(
-                    index, "__ZN31AtiAppleVega10PowerTuneServicesC1EP11PP_"
-                           "InstanceP18PowerPlayCallbacks"));
+                    index,
+                    "__ZN31AtiAppleVega10PowerTuneServicesC1EP11PP_"
+                    "InstanceP18PowerPlayCallbacks"));
         if (!orgVega10PowerTuneServicesConstructor) {
-            panic("RAD: Failed to resolve AtiAppleVega10PowerTuneServices "
-                  "constructor");
+            panic(
+                "RAD: Failed to resolve AtiAppleVega10PowerTuneServices "
+                "constructor");
         }
 
         KernelPatcher::RouteRequest requests[] = {
@@ -967,8 +975,9 @@ void RAD::process24BitOutput(KernelPatcher &patcher,
                     MachInfo::setKernelWriting(false,
                                                KernelPatcher::kernelWriteLock);
                 } else {
-                    NETLOG("rad", "failed to disable write protection for "
-                                  "BITS_PER_COMPONENT");
+                    NETLOG("rad",
+                           "failed to disable write protection for "
+                           "BITS_PER_COMPONENT");
                 }
             }
             bitsPerComponent++;
@@ -1067,8 +1076,8 @@ uint64_t RAD::wrapGetState(void *that) {
 
 bool RAD::wrapInitializeTtl(void *that, void *param1) {
     NETLOG("rad", "initializeTtl this = %p", that);
-    auto ret = FunctionCast(wrapInitializeTtl,
-                            callbackRAD->orgInitializeTtl)(that, param1);
+    auto ret = FunctionCast(wrapInitializeTtl, callbackRAD->orgInitializeTtl)(
+        that, param1);
     NETLOG("rad", "initializeTtl returned %d", ret);
     return ret;
 }
@@ -1357,10 +1366,9 @@ void RAD::updateConnectorsInfo(void *atomutils,
     RADConnectors::print(connectors, *sz);
 }
 
-uint32_t
-RAD::wrapTranslateAtomConnectorInfoV1(void *that,
-                                      RADConnectors::AtomConnectorInfo *info,
-                                      RADConnectors::Connector *connector) {
+uint32_t RAD::wrapTranslateAtomConnectorInfoV1(
+    void *that, RADConnectors::AtomConnectorInfo *info,
+    RADConnectors::Connector *connector) {
     uint32_t code = FunctionCast(wrapTranslateAtomConnectorInfoV1,
                                  callbackRAD->orgTranslateAtomConnectorInfoV1)(
         that, info, connector);
@@ -1487,12 +1495,10 @@ void RAD::autocorrectConnector(uint8_t connector, uint8_t sense, uint8_t txmit,
         for (uint8_t j = 0; j < sz; j++) {
             if (isModern) {
                 auto &con = (&connectors->modern)[j];
-                if (fixTransmit(con, j, sense, txmit))
-                    break;
+                if (fixTransmit(con, j, sense, txmit)) break;
             } else {
                 auto &con = (&connectors->legacy)[j];
-                if (fixTransmit(con, j, sense, txmit))
-                    break;
+                if (fixTransmit(con, j, sense, txmit)) break;
             }
         }
     } else
@@ -1516,8 +1522,7 @@ void RAD::reprioritiseConnectors(const uint8_t *senseList, uint8_t senseNum,
         for (uint8_t j = 0; j < sz; j++) {
             auto reorder = [&](auto &con) {
                 if (i == senseNum + typeNum) {
-                    if (con.priority == 0)
-                        con.priority = priCount++;
+                    if (con.priority == 0) con.priority = priCount++;
                 } else if (i < senseNum) {
                     if (con.sense == senseList[i]) {
                         NETLOG("rad",
@@ -1593,8 +1598,8 @@ bool RAD::wrapSetProperty(IORegistryEntry *that, const char *aKey, void *bytes,
         if (*static_cast<uint32_t *>(bytes) == ' DMA' ||
             *static_cast<uint32_t *>(bytes) == ' ITA' ||
             *static_cast<uint32_t *>(bytes) == 'edaR') {
-            if (FunctionCast(wrapGetProperty,
-                             callbackRAD->orgGetProperty)(that, aKey)) {
+            if (FunctionCast(wrapGetProperty, callbackRAD->orgGetProperty)(
+                    that, aKey)) {
                 DBGLOG("rad", "SetProperty ignored setting %s to %s", aKey,
                        static_cast<char *>(bytes));
                 return true;
@@ -1604,8 +1609,8 @@ bool RAD::wrapSetProperty(IORegistryEntry *that, const char *aKey, void *bytes,
         }
     }
 
-    return FunctionCast(wrapSetProperty,
-                        callbackRAD->orgSetProperty)(that, aKey, bytes, length);
+    return FunctionCast(wrapSetProperty, callbackRAD->orgSetProperty)(
+        that, aKey, bytes, length);
 }
 
 OSObject *RAD::wrapGetProperty(IORegistryEntry *that, const char *aKey) {
@@ -1667,10 +1672,9 @@ uint32_t RAD::wrapGetConnectorsInfoV2(void *that,
     return code;
 }
 
-uint32_t
-RAD::wrapTranslateAtomConnectorInfoV2(void *that,
-                                      RADConnectors::AtomConnectorInfo *info,
-                                      RADConnectors::Connector *connector) {
+uint32_t RAD::wrapTranslateAtomConnectorInfoV2(
+    void *that, RADConnectors::AtomConnectorInfo *info,
+    RADConnectors::Connector *connector) {
     uint32_t code = FunctionCast(wrapTranslateAtomConnectorInfoV2,
                                  callbackRAD->orgTranslateAtomConnectorInfoV2)(
         that, info, connector);

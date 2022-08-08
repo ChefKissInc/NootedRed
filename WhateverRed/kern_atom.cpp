@@ -3,8 +3,7 @@
 OSDefineMetaClassAndStructors(AtiAtomTable, OSObject);
 
 bool AtiAtomTable::init(void *helper) {
-    if (!OSObject::init())
-        return false;
+    if (!OSObject::init()) return false;
 
     this->helper = helper;
 
@@ -14,8 +13,7 @@ bool AtiAtomTable::init(void *helper) {
 OSDefineMetaClassAndStructors(AtiDataTable, AtiAtomTable);
 
 bool AtiDataTable::init(DataTableInitInfo *initInfo) {
-    if (!AtiAtomTable::init(initInfo->helper))
-        return false;
+    if (!AtiAtomTable::init(initInfo->helper)) return false;
 
     this->tableOffset = initInfo->tableOffset;
     this->revision = initInfo->revision;

@@ -166,8 +166,7 @@ inline uint8_t getSenseID(uint8_t *record) {
         while (true) {
             auto h = reinterpret_cast<AtomCommonRecordHeader *>(record);
             if (h->ucRecordType == AtomRecordType::I2C) {
-                if (record[2] > 0)
-                    return (record[2] & 0xF) + 1;
+                if (record[2] > 0) return (record[2] & 0xF) + 1;
                 return 0;
             } else if (h->ucRecordType == AtomRecordType::Max) {
                 return 0;
@@ -226,22 +225,22 @@ struct DataTableInitInfo {
 class AtiAtomTable : public OSObject {
     OSDeclareDefaultStructors(AtiAtomTable);
 
-  protected:
+   protected:
     void *helper = NULL;
 
-  public:
+   public:
     virtual bool init(void *helper);
 };
 
 class AtiDataTable : public AtiAtomTable {
     OSDeclareDefaultStructors(AtiDataTable);
 
-  protected:
+   protected:
     uint32_t tableOffset = 0;
     AtiAtomDataRevision revision{};
     char *data{0};
 
-  public:
+   public:
     virtual bool init(DataTableInitInfo *initInfo);
     virtual uint32_t getMajorRevision();
     virtual uint32_t getMinorRevision();
@@ -250,7 +249,7 @@ class AtiDataTable : public AtiAtomTable {
 class IntegratedVRAMInfoInterface : public AtiDataTable {
     OSDeclareDefaultStructors(IntegratedVRAMInfoInterface);
 
-  public:
+   public:
     virtual void debugVramInfo();
 };
 
