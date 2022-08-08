@@ -225,15 +225,6 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that,
                  callbackRAD->orgAmdTtlServicesConstructor)(that, provider);
 }
 
-uint64_t RAD::wrapIpiSetFwEntry(void *tlsInstance, void *b) {
-    DBGLOG("rad", "_IpiSetFwEntry: tlsInstance = %p param2 = %p", tlsInstance,
-           b);
-    auto ret = FunctionCast(wrapIpiSetFwEntry, callbackRAD->orgIpiSetFwEntry)(
-        tlsInstance, b);
-    DBGLOG("rad", "_IpiSetFwEntry returned 0x%llX", ret);
-    return ret;
-}
-
 uint64_t RAD::wrapIpiSmuSwInit(void *tlsInstance) {
     NETLOG("rad", "_ipi_smu_sw_init: tlsInstance = %p", tlsInstance);
     auto ret = FunctionCast(wrapIpiSmuSwInit,
@@ -776,7 +767,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
         KernelPatcher::RouteRequest requests[] = {
             {"__ZN14AmdTtlServicesC2EP11IOPCIDevice",
              wrapAmdTtlServicesConstructor, orgAmdTtlServicesConstructor},
-            {"_IpiSetFwEntry", wrapIpiSetFwEntry, orgIpiSetFwEntry},
             {"_ipi_smu_sw_init", wrapIpiSmuSwInit, orgIpiSmuSwInit},
             {"_smu_sw_init", wrapSmuSwInit, orgSmuSwInit},
             {"_smu_internal_sw_init", wrapSmuInternalSwInit,

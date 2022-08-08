@@ -77,7 +77,7 @@ class RAD {
     mach_vm_address_t orgPopulateDeviceInfo{};
 
     /* X5000HWLibs */
-    mach_vm_address_t orgIpiSetFwEntry{}, orgIpiSmuSwInit{}, orgSmuSwInit{};
+    mach_vm_address_t orgIpiSmuSwInit{}, orgSmuSwInit{};
     mach_vm_address_t orgSmuInternalSwInit{}, orgSmuGetHwVersion{},
         orgPspSwInit{};
     mach_vm_address_t orgGcGetHwVersion{}, orgInternalCosReadFw{},
@@ -213,7 +213,6 @@ class RAD {
     /* X5000HWLibs */
     static void wrapAmdTtlServicesConstructor(IOService *that,
                                               IOPCIDevice *provider);
-    static uint64_t wrapIpiSetFwEntry(void *tlsInstance, void *b);
     static uint64_t wrapIpiSmuSwInit(void *tlsInstance);
     static uint64_t wrapSmuSwInit(void *input, uint64_t *output);
     static uint32_t wrapSmuInternalSwInit(uint64_t param1, uint64_t param2,
