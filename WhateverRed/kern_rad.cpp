@@ -702,6 +702,8 @@ uint64_t RAD::wrapSmuGetFwConstants() {
     return 0;
 }
 
+static bool ttlDevIsVega10Device() { return true; }
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index,
                       mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
@@ -819,6 +821,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              wrapCreatePowerTuneServices},
             {"_get_hw_revision", wrapGetHwRevision},
             {"_smu_get_fw_constants", wrapSmuGetFwConstants},
+            {"_ttlDevIsVega10Device", ttlDevIsVega10Device},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size))
@@ -879,7 +882,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
                           0x90, 0x90, 0x90, 0x0f, 0xb7, 0x45, 0xe6, 0x90,
                           0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,
                           0x90, 0x90, 0xbf, 0x78, 0x00, 0x00, 0x00};
-
         KernelPatcher::LookupPatch patch{&kextAMD10000Controller, find, repl,
                                          arrsize(find), 2};
         patcher.applyLookupPatch(&patch);
