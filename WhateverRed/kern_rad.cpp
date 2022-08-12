@@ -704,14 +704,14 @@ uint64_t RAD::wrapSmuGetFwConstants() {
 
 static bool ttlDevIsVega10Device() { return true; }
 
-static uint64_t smu901InternalHwInit () {
-	/*
-	 * This is _smu_9_0_1_internal_hw_init.
-	 * The original function waits for the firmware to be loaded,
-	 * which in the Linux AMDGPU code is smu9_is_smc_ram_running.
-	 * SMU 10 doesn't do this, therefore, we just return 0.
-	 */
-	return 0;
+static uint64_t smu901InternalHwInit() {
+    /*
+     * This is _smu_9_0_1_internal_hw_init.
+     * The original function waits for the firmware to be loaded,
+     * which in the Linux AMDGPU code is smu9_is_smc_ram_running.
+     * SMU 10 doesn't do this, therefore, we just return 0.
+     */
+    return 0;
 }
 
 bool RAD::processKext(KernelPatcher &patcher, size_t index,
@@ -832,7 +832,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             {"_get_hw_revision", wrapGetHwRevision},
             {"_smu_get_fw_constants", wrapSmuGetFwConstants},
             {"_ttlDevIsVega10Device", ttlDevIsVega10Device},
-			{"_smu_9_0_1_internal_hw_init", smu901InternalHwInit},
+            {"_smu_9_0_1_internal_hw_init", smu901InternalHwInit},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size))
