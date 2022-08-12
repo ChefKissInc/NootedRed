@@ -171,8 +171,7 @@ class RAD {
                             mach_vm_address_t address, size_t size);
     void processConnectorOverrides(KernelPatcher &patcher,
                                    mach_vm_address_t address, size_t size);
-    static IOReturn wrapProjectByPartNumber(IOService *that,
-                                            uint64_t partNumber);
+    static IOReturn wrapProjectByPartNumber();
     static IOReturn wrapInitializeProjectDependentResources(void *that);
     static IOReturn wrapHwInitializeFbMemSize(void *that);
     static IOReturn wrapHwInitializeFbBase(void *that);
@@ -257,6 +256,8 @@ class RAD {
     static uint32_t wrapGetHwRevision(uint32_t major, uint32_t minor,
                                       uint32_t patch);
     static uint64_t wrapSmuGetFwConstants();
+    static bool wrapTtlDevIsVega10Device();
+    static uint64_t wrapSmu901InternalHwInit();
     /* ----------- */
 
     void processHardwareKext(KernelPatcher &patcher, size_t hwIndex,

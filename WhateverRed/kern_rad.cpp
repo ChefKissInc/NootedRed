@@ -123,7 +123,9 @@ void RAD::deinit() {}
     va_end(netdbg_args);
     IOSleep(1000);
     FunctionCast(wrapPanic, callbackRAD->orgPanic)(fmt, args);
+    va_end(args);
     while (true) {
+        asm volatile("hlt");
     }
 }
 
@@ -168,10 +170,7 @@ void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info) {
     }
 }
 
-IOReturn RAD::wrapProjectByPartNumber([[maybe_unused]] IOService *that,
-                                      [[maybe_unused]] uint64_t partNumber) {
-    return kIOReturnNotFound;
-}
+IOReturn RAD::wrapProjectByPartNumber() { return kIOReturnNotFound; }
 
 WRAP_SIMPLE(IOReturn, InitializeProjectDependentResources, "0x%X")
 WRAP_SIMPLE(IOReturn, HwInitializeFbMemSize, "0x%X")
@@ -702,9 +701,14 @@ uint64_t RAD::wrapSmuGetFwConstants() {
     return 0;
 }
 
-static bool ttlDevIsVega10Device() { return true; }
+bool RAD::wrapTtlDevIsVega10Device() {
+    /*
+     * AMD iGPUs are Vega 10 based.
+     */
+    return true;
+}
 
-static uint64_t smu901InternalHwInit() {
+uint64_t RAD::wrapSmu901InternalHwInit() {
     /*
      * This is _smu_9_0_1_internal_hw_init.
      * The original function waits for the firmware to be loaded,
@@ -831,8 +835,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              wrapCreatePowerTuneServices},
             {"_get_hw_revision", wrapGetHwRevision},
             {"_smu_get_fw_constants", wrapSmuGetFwConstants},
-            {"_ttlDevIsVega10Device", ttlDevIsVega10Device},
-            {"_smu_9_0_1_internal_hw_init", smu901InternalHwInit},
+            {"_ttlDevIsVega10Device", wrapTtlDevIsVega10Device},
+            {"_smu_9_0_1_internal_hw_init", wrapSmu901InternalHwInit},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size))
