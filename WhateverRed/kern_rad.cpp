@@ -827,6 +827,21 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
                                        address, size))
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
 
+        /*
+         * Patch for _smu_9_0_1_full_asic_reset
+         * This function performs a full ASIC reset.
+         * The patch corrects the sent message to 0x1E;
+         * the original code sends 0x3B, which is wrong for SMU 10.
+         */
+        uint8_t find[] = {0x55, 0x48, 0x89, 0xe5, 0x8b, 0x56, 0x04, 0xbe, 0x3b,
+                          0x00, 0x00, 0x00, 0x5d, 0xe9, 0x51, 0xfe, 0xff, 0xff};
+        uint8_t repl[] = {0x55, 0x48, 0x89, 0xe5, 0x8b, 0x56, 0x04, 0xbe, 0x1e,
+                          0x00, 0x00, 0x00, 0x5d, 0xe9, 0x51, 0xfe, 0xff, 0xff};
+        KernelPatcher::LookupPatch patch{&kextRadeonX5000HWLibs, find, repl,
+                                         arrsize(find), 2};
+        patcher.applyLookupPatch(&patch);
+        patcher.clearError();
+
         return true;
     } else if (kextAMD10000Controller.loadIndex == index) {
         DBGLOG("rad", "Hooking AMD10000Controller");

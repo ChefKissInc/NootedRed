@@ -789,6 +789,8 @@
 				<integer>0</integer>
 				<key>PP_ToolsLogSpaceSize</key>
 				<integer>524288</integer>
+				<key>PP_WaitOnRegisterTimeout</key>
+				<integer>2000</integer>
 			</dict>
 		</dict>
 		<key>com.VisualDevelopment.WhateverRed</key>
