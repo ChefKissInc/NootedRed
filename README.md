@@ -12,6 +12,8 @@ Unfortunately, due to the complexity of such drivers, extended support for non-e
 
 The aforementioned requirement may be bypassed in a later stage by, for example, injecting the kext via the OpenCore Kext injection.
 
+Star for a cookie 🍪
+
 Honourable mention:
 
 [@NyanCatTW1](https://github.com/NyanCatTW1) for helping with the Reverse Engineering and understanding of the AMDGPU logic, and his Ghidra RedMetaClassAnalyzer script, which has made the entire process way painless by automagically discovering C++ v-tables for classes.
