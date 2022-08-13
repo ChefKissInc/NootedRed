@@ -706,6 +706,21 @@ void RAD::wrapMCILDebugPrint(uint32_t level_max, char *fmt, uint64_t param3,
         level_max, fmt, param3, param4, param5, level);
 }
 
+uint64_t RAD::wrapPspAsdLoad(void *pspData) {
+    /*
+     * Hack: Add custom param 4 and 5 (pointer to firmware and size)
+     * aka RCX and R8 registers
+     * Complementary to _psp_asd_load patch-set.
+     */
+    auto org =
+        reinterpret_cast<uint64_t (*)(void *, uint64_t, uint64_t, const void *,
+                                      size_t)>(callbackRAD->orgPspAsdLoad);
+    auto fw = getFWDescByName("raven_asd.bin");
+    auto ret = org(pspData, 0, 0, fw->getBytesNoCopy(), fw->getLength());
+    NETLOG("rad", "_psp_asd_load returned 0x%llX", ret);
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index,
                       mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
@@ -825,25 +840,75 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             {"__ZN14AmdTtlServices13cosDebugPrintEPKcz", wrapCosDebugPrint,
              orgCosDebugPrint},
             {"_MCILDebugPrint", wrapMCILDebugPrint, orgMCILDebugPrint},
+            {"_psp_asd_load", wrapPspAsdLoad, orgPspAsdLoad},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size))
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
 
-        /*
-         * Patch for _smu_9_0_1_full_asic_reset
-         * This function performs a full ASIC reset.
-         * The patch corrects the sent message to 0x1E;
-         * the original code sends 0x3B, which is wrong for SMU 10.
-         */
         uint8_t find[] = {0x55, 0x48, 0x89, 0xe5, 0x8b, 0x56, 0x04, 0xbe, 0x3b,
                           0x00, 0x00, 0x00, 0x5d, 0xe9, 0x51, 0xfe, 0xff, 0xff};
         uint8_t repl[] = {0x55, 0x48, 0x89, 0xe5, 0x8b, 0x56, 0x04, 0xbe, 0x1e,
                           0x00, 0x00, 0x00, 0x5d, 0xe9, 0x51, 0xfe, 0xff, 0xff};
-        KernelPatcher::LookupPatch patch{&kextRadeonX5000HWLibs, find, repl,
-                                         arrsize(find), 2};
-        patcher.applyLookupPatch(&patch);
-        patcher.clearError();
+
+        uint8_t find_load_asd_pt1[] = {0x0f, 0x85, 0x83, 0x00, 0x00, 0x00, 0x48,
+                                       0x8d, 0x35, 0xf7, 0x93, 0xf4, 0x00, 0xba,
+                                       0x00, 0xc1, 0x02, 0x00, 0x4c, 0x89, 0xff,
+                                       0xe8, 0xf2, 0xa6, 0x56, 0x02};
+        uint8_t repl_load_asd_pt1[] = {0x0f, 0x85, 0x83, 0x00, 0x00, 0x00, 0x48,
+                                       0x8b, 0xf1, 0x4c, 0x89, 0xc2, 0x90, 0x90,
+                                       0x90, 0x90, 0x90, 0x90, 0x4c, 0x89, 0xff,
+                                       0xe8, 0xf2, 0xa6, 0x56, 0x02};
+        uint8_t find_load_asd_pt2[] = {0x44, 0x89, 0x66, 0x08, 0x48, 0xc7, 0x46,
+                                       0x0c, 0x00, 0xc1, 0x02, 0x00, 0x48, 0xc7,
+                                       0x46, 0x14, 0x00, 0x00, 0x00, 0x00};
+        uint8_t repl_load_asd_pt2[] = {0x44, 0x89, 0x66, 0x08, 0x4c, 0x89, 0x84,
+                                       0x26, 0x0c, 0x00, 0x00, 0x00, 0x48, 0xc7,
+                                       0x46, 0x14, 0x00, 0x00, 0x00, 0x00};
+        KernelPatcher::LookupPatch patches[] = {
+            /*
+             * Patch for _smu_9_0_1_full_asic_reset
+             * This function performs a full ASIC reset.
+             * The patch corrects the sent message to 0x1E;
+             * the original code sends 0x3B, which is wrong for SMU 10.
+             */
+            {&kextRadeonX5000HWLibs, find, repl, arrsize(find), 2},
+            /*
+             * Patches for _psp_asd_load.
+             * _psp_asd_load loads a hardcoded ASD firmware binary
+             * included in the kext as _psp_asd_bin.
+             * The copied data isn't in a table, it is a single
+             * binary copied over to the PSP private memory.
+             * We can't replicate such logic in any AMDGPU kext function,
+             * as the memory accesses to GPU data is inaccessible
+             * from external kexts, therefore, we have to do a hack.
+             * The hack is very straight forward; we have replaced the
+             * assembly that loads hardcoded values from
+             *     lea rsi, [_psp_asd_bin]
+             *     mov edx, 0x2c100
+             *     mov rdi, r15
+             *     call _memcpy
+             * to
+             *     mov rsi, rcx
+             *     mov rdx, r8
+             *     mov rdi, r15
+             *     call _memcpy
+             * so that it gets the pointer and size from parameter 4 and 5.
+             * Register choice was because the parameter 2 and 3 registers
+             * get overwritten before this call to memcpy
+             * The hack we came up with looks like terrible practice,
+             * but this will have to do.
+             * Pain.
+             */
+            {&kextRadeonX5000HWLibs, find_load_asd_pt1, repl_load_asd_pt1,
+             arrsize(find_load_asd_pt1), 2},
+            {&kextRadeonX5000HWLibs, find_load_asd_pt2, repl_load_asd_pt2,
+             arrsize(find_load_asd_pt2), 2},
+        };
+        for (auto &patch : patches) {
+            patcher.applyLookupPatch(&patch);
+            patcher.clearError();
+        }
 
         return true;
     } else if (kextAMD10000Controller.loadIndex == index) {
