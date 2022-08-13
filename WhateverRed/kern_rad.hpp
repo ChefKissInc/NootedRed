@@ -94,6 +94,7 @@ class RAD {
         orgPECIRetrieveBiosDataTable{};
     t_Vega10PowerTuneServicesConstructor orgVega10PowerTuneServicesConstructor =
         nullptr;
+    mach_vm_address_t orgCosDebugPrint{};
     /* ----------- */
 
     template <size_t Index>
@@ -233,8 +234,6 @@ class RAD {
                                                        uint32_t *param2);
     static uint64_t wrapCailMonitorPerformanceCounter(void *that,
                                                       uint32_t *param1);
-    static void wrapPPLog(char *param1, char param2, char param3, char param4,
-                          char param5, char param6, char *param7, ...);
     static IOReturn wrapPpEnable(void *that, bool param1);
     static IOReturn wrapUpdatePowerPlay(void *that);
     static bool wrapIsReady(void *that);
@@ -247,17 +246,16 @@ class RAD {
                                        uint64_t param3);
     static uint64_t wrapPECIRetrieveBiosDataTable(void *param1, uint64_t param2,
                                                   uint64_t **param3);
-    static void wrapSmuAssertion(uint64_t param1, uint64_t param2, char *param3,
-                                 char *param4, uint32_t param5, char *param6);
-    static void wrapSmuLog(uint64_t param1, uint64_t param2, uint64_t param3,
-                           uint64_t param4, uint64_t param5, uint64_t param6,
-                           char *param7);
     static void *wrapCreatePowerTuneServices(void *param1, void *param2);
     static uint32_t wrapGetHwRevision(uint32_t major, uint32_t minor,
                                       uint32_t patch);
     static uint64_t wrapSmuGetFwConstants();
     static bool wrapTtlDevIsVega10Device();
     static uint64_t wrapSmu901InternalHwInit();
+    static void wrapCosDebugPrint(char *fmt, ...);
+    static void wrapMCILDebugPrint(uint32_t level_max, char *fmt,
+                                   uint64_t param3, uint64_t param4,
+                                   uint64_t param5, uint level);
     /* ----------- */
 
     void processHardwareKext(KernelPatcher &patcher, size_t hwIndex,

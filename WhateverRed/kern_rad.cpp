@@ -511,19 +511,6 @@ IOReturn RAD::wrapCreatePowerPlayInterface(void *that) {
     return ret;
 }
 
-void RAD::wrapPPLog(char *source, char param2, char param3, char param4,
-                    char param5, char param6, char *fmt, ...) {
-    NETLOG("rad",
-           "_PP_Log: source = %p param2 = 0x%X param3 = 0x%X param4 = 0x%X "
-           "param5 = 0x%X param6 = 0x%X fmt = %p",
-           source, param2, param3, param4, param5, param6, fmt);
-    va_list args;
-    va_start(args, fmt);
-    NETDBG::printf("rad: _PP_Log: from %s: ", source);
-    NETDBG::vprintf(fmt, args);
-    va_end(args);
-}
-
 IOReturn RAD::wrapSendRequestToAccelerator(void *that, uint32_t param1,
                                            void *param2, void *param3,
                                            void *param4) {
@@ -617,24 +604,6 @@ uint64_t RAD::wrapPECIRetrieveBiosDataTable(void *param1, uint64_t param2,
     return ret;
 }
 
-void RAD::wrapSmuAssertion([[maybe_unused]] uint64_t param1, uint64_t param2,
-                           char *param3, char *param4, uint32_t param5,
-                           char *param6) {
-    if (!param2) {
-        NETLOG("rad", "_smu_assertion: %s %s %d %s", param3, param4, param5,
-               param6);
-    }
-}
-
-void RAD::wrapSmuLog([[maybe_unused]] uint64_t param1,
-                     [[maybe_unused]] uint64_t param2,
-                     [[maybe_unused]] [[maybe_unused]] uint64_t param3,
-                     [[maybe_unused]] uint64_t param4,
-                     [[maybe_unused]] uint64_t param5,
-                     [[maybe_unused]] uint64_t param6, char *param7) {
-    NETLOG("rad", "_smu_log: %s", param7);
-}
-
 void *RAD::wrapCreatePowerTuneServices(void *param1, void *param2) {
     auto *ret = IOMallocZero(0x18);
     callbackRAD->orgVega10PowerTuneServicesConstructor(ret, param1, param2);
@@ -716,6 +685,22 @@ uint64_t RAD::wrapSmu901InternalHwInit() {
      * SMU 10 doesn't do this, therefore, we just return 0.
      */
     return 0;
+}
+
+void RAD::wrapCosDebugPrint(char *fmt, ...) {
+    NETDBG::printf("AMD TTL COS: ");
+    va_list args, netdbg_args;
+    va_start(args, fmt);
+    va_copy(netdbg_args, args);
+    NETDBG::vprintf(fmt, netdbg_args);
+    va_end(netdbg_args);
+    va_end(args);
+}
+
+void RAD::wrapMCILDebugPrint(uint32_t level_max, char *fmt, uint64_t param3,
+                             uint64_t param4, uint64_t param5, uint level) {
+    NETDBG::printf("_MCILDebugPrint PARAM1 = 0x%X: ", level_max);
+    NETDBG::printf(fmt, param3, param4, param5, level);
 }
 
 bool RAD::processKext(KernelPatcher &patcher, size_t index,
@@ -814,7 +799,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             {"_CailMonitorPerformanceCounter",
              wrapCailMonitorPerformanceCounter,
              orgCailMonitorPerformanceCounter},
-            {"_PP_Log", wrapPPLog},
             {"__ZN20AtiPowerPlayServices8ppEnableEb", wrapPpEnable,
              orgPpEnable},
             {"__"
@@ -828,8 +812,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             {"_SMUM_Initialize", wrapSMUMInitialize, orgSMUMInitialize},
             {"_PECI_RetrieveBiosDataTable", wrapPECIRetrieveBiosDataTable,
              orgPECIRetrieveBiosDataTable},
-            {"_smu_assertion", wrapSmuAssertion},
-            {"_smu_log", wrapSmuLog},
             {"__ZN25AtiApplePowerTuneServices23createPowerTuneServicesEP11PP_"
              "InstanceP18PowerPlayCallbacks",
              wrapCreatePowerTuneServices},
@@ -837,6 +819,9 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             {"_smu_get_fw_constants", wrapSmuGetFwConstants},
             {"_ttlDevIsVega10Device", wrapTtlDevIsVega10Device},
             {"_smu_9_0_1_internal_hw_init", wrapSmu901InternalHwInit},
+            {"__ZN14AmdTtlServices13cosDebugPrintEPKcz", wrapCosDebugPrint,
+             orgCosDebugPrint},
+            {"_MCILDebugPrint", wrapMCILDebugPrint},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size))
