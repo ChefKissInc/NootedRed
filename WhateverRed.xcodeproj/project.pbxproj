@@ -47,8 +47,8 @@
 		408F201C288AC552002EEC15 /* ativvaxy_rv.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = ativvaxy_rv.dat; sourceTree = "<group>"; };
 		408F201E288ACBB0002EEC15 /* kern_fw.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_fw.hpp; sourceTree = "<group>"; };
 		408F201F288ACBE6002EEC15 /* kern_fw.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_fw.cpp; sourceTree = "<group>"; };
-		40AFC4AF28A7992600FA23E9 /* raven_asd.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_asd.bin; sourceTree = "<group>"; };
-		40AFC4B028A841B500FA23E9 /* raven_ta.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_ta.bin; sourceTree = "<group>"; };
+		40AFC4B128A8639700FA23E9 /* raven_dtm.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_dtm.bin; sourceTree = "<group>"; };
+		40AFC4B228A866BE00FA23E9 /* raven_asd.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_asd.bin; sourceTree = "<group>"; };
 		6CBEB3C428911DCF0063B877 /* kern_netdbg.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_netdbg.cpp; sourceTree = "<group>"; };
 		6CBEB3C528911DCF0063B877 /* kern_netdbg.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_netdbg.hpp; sourceTree = "<group>"; };
 		CE405EBA1E49DD7100AA0B3D /* kern_compression.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_compression.hpp; sourceTree = "<group>"; };
@@ -129,8 +129,8 @@
 		408F201A288AC068002EEC15 /* Firmware */ = {
 			isa = PBXGroup;
 			children = (
-				40AFC4B028A841B500FA23E9 /* raven_ta.bin */,
-				40AFC4AF28A7992600FA23E9 /* raven_asd.bin */,
+				40AFC4B228A866BE00FA23E9 /* raven_asd.bin */,
+				40AFC4B128A8639700FA23E9 /* raven_dtm.bin */,
 				408F201C288AC552002EEC15 /* ativvaxy_rv.dat */,
 			);
 			path = Firmware;

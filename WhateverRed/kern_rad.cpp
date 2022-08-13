@@ -733,13 +733,13 @@ uint64_t RAD::wrapPspDtmLoad(void *pspData) {
     /*
      * Same idea as _psp_asd_load
      */
-    NETLOG("rad", "injecting raven_ta.bin!");
+    NETLOG("rad", "injecting raven_dtm.bin!");
     auto org =
         reinterpret_cast<uint64_t (*)(void *, uint64_t, uint64_t, const void *,
                                       size_t)>(callbackRAD->orgPspDtmLoad);
-    auto fw = getFWDescByName("raven_ta.bin");
+    auto fw = getFWDescByName("raven_dtm.bin");
     if (!fw) {
-        panic("Somehow raven_ta.bin is missing");
+        panic("Somehow raven_dtm.bin is missing");
     }
     auto ret = org(pspData, 0, 0, fw->getBytesNoCopy(), fw->getLength());
     NETLOG("rad", "_psp_dtm_load returned 0x%llX", ret);
