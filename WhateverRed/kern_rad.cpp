@@ -694,6 +694,7 @@ void RAD::wrapCosDebugPrint(char *fmt, ...) {
     va_copy(netdbg_args, args);
     NETDBG::vprintf(fmt, netdbg_args);
     va_end(netdbg_args);
+    FunctionCast(wrapCosDebugPrint, callbackRAD->orgCosDebugPrint)(fmt, args);
     va_end(args);
 }
 
@@ -701,6 +702,8 @@ void RAD::wrapMCILDebugPrint(uint32_t level_max, char *fmt, uint64_t param3,
                              uint64_t param4, uint64_t param5, uint level) {
     NETDBG::printf("_MCILDebugPrint PARAM1 = 0x%X: ", level_max);
     NETDBG::printf(fmt, param3, param4, param5, level);
+    FunctionCast(wrapMCILDebugPrint, callbackRAD->orgMCILDebugPrint)(
+        level_max, fmt, param3, param4, param5, level);
 }
 
 bool RAD::processKext(KernelPatcher &patcher, size_t index,
@@ -821,7 +824,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             {"_smu_9_0_1_internal_hw_init", wrapSmu901InternalHwInit},
             {"__ZN14AmdTtlServices13cosDebugPrintEPKcz", wrapCosDebugPrint,
              orgCosDebugPrint},
-            {"_MCILDebugPrint", wrapMCILDebugPrint},
+            {"_MCILDebugPrint", wrapMCILDebugPrint, orgMCILDebugPrint},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size))

@@ -94,7 +94,7 @@ class RAD {
         orgPECIRetrieveBiosDataTable{};
     t_Vega10PowerTuneServicesConstructor orgVega10PowerTuneServicesConstructor =
         nullptr;
-    mach_vm_address_t orgCosDebugPrint{};
+    mach_vm_address_t orgCosDebugPrint{}, orgMCILDebugPrint{};
     /* ----------- */
 
     template <size_t Index>
