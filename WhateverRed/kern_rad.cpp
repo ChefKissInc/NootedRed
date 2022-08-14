@@ -334,19 +334,29 @@ void RAD::wrapPopulateFirmwareDirectory(void *that) {
                  callbackRAD->orgPopulateFirmwareDirectory)(that);
     NETLOG("rad", "injecting ativvaxy_rv.dat!");
     auto *fwDesc = getFWDescByName("ativvaxy_rv.dat");
+	auto *fwDescBackdoor = getFWDescByName("atidmcub_0.dat");
     if (!fwDesc) {
         panic("Somehow ativvaxy_rv.dat is missing");
     }
+	if (!fwDescBackdoor) {
+		panic("Somehow atidmcub_0.dat is missing");
+	}
 
     auto *fw = callbackRAD->orgCreateFirmware(fwDesc->getBytesNoCopy(),
                                               fwDesc->getLength(), 0x200,
                                               "ativvaxy_rv.dat");
+	auto *fwBackdoor = callbackRAD->orgCreateFirmware(fwDesc->getBytesNoCopy(),
+											  fwDesc->getLength(), 0x200,
+											  "atidmcub_0.dat");
     auto *fwDir =
         *reinterpret_cast<void **>(static_cast<uint8_t *>(that) + 0xB8);
     NETLOG("rad", "fwDir = %p", fwDir);
     if (!callbackRAD->orgPutFirmware(fwDir, 6, fw)) {
         panic("Failed to inject ativvaxy_rv.dat firmware");
     }
+	if (!callbackRAD->orgPutFirmware(fwDir, 6, fwBackdoor)) {
+		panic("Failed to inject atidmcub_0.dat firmware");
+	}
 }
 
 void *RAD::wrapCreateAtomBiosProxy(void *param1) {

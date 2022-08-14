@@ -43,6 +43,7 @@
 		1C748C2E1C21952C0024EED2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1C9CB7AE1C789FF500231E41 /* kern_rad.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = kern_rad.cpp; sourceTree = "<group>"; };
 		1C9CB7AF1C789FF500231E41 /* kern_rad.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = kern_rad.hpp; sourceTree = "<group>"; };
+		402D48C228A8903C0064644D /* atidmcub_0.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = atidmcub_0.dat; sourceTree = "<group>"; };
 		4088D17828837284001ECF4B /* kern_atom.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_atom.cpp; sourceTree = "<group>"; };
 		408F201C288AC552002EEC15 /* ativvaxy_rv.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = ativvaxy_rv.dat; sourceTree = "<group>"; };
 		408F201E288ACBB0002EEC15 /* kern_fw.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_fw.hpp; sourceTree = "<group>"; };
@@ -132,6 +133,7 @@
 				40AFC4B228A866BE00FA23E9 /* raven_asd.bin */,
 				40AFC4B128A8639700FA23E9 /* raven_dtm.bin */,
 				408F201C288AC552002EEC15 /* ativvaxy_rv.dat */,
+				402D48C228A8903C0064644D /* atidmcub_0.dat */,
 			);
 			path = Firmware;
 			sourceTree = "<group>";
