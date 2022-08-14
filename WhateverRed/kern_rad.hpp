@@ -62,8 +62,7 @@ class RAD {
     mach_vm_address_t orgAllocateAMDHWRegisters{}, orgSetupCAIL{},
         orgInitializeHWWorkarounds{};
     mach_vm_address_t orgAllocateAMDHWAlignManager{}, orgMapDoorbellMemory{};
-    mach_vm_address_t orgHwInitializeFbMemSize{}, orgHwInitializeFbBase{},
-        orgInitWithController{};
+    mach_vm_address_t orgInitWithController{};
     mach_vm_address_t orgDeviceTypeTable{}, orgAmdTtlServicesConstructor{};
     mach_vm_address_t orgGetState{}, orgConfRegBase{}, orgReadChipRev{};
     mach_vm_address_t orgInitializeTtl{},
@@ -177,8 +176,6 @@ class RAD {
                                    mach_vm_address_t address, size_t size);
     static IOReturn wrapProjectByPartNumber();
     static IOReturn wrapInitializeProjectDependentResources(void *that);
-    static IOReturn wrapHwInitializeFbMemSize(void *that);
-    static IOReturn wrapHwInitializeFbBase(void *that);
     static uint64_t wrapInitWithController(void *that, void *controller);
     static uint64_t wrapConfigureDevice(void *that, IOPCIDevice *dev);
     static uint64_t wrapCreateHWHandler(void *that);

@@ -173,8 +173,6 @@ void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info) {
 IOReturn RAD::wrapProjectByPartNumber() { return kIOReturnNotFound; }
 
 WRAP_SIMPLE(IOReturn, InitializeProjectDependentResources, "0x%X")
-WRAP_SIMPLE(IOReturn, HwInitializeFbMemSize, "0x%X")
-WRAP_SIMPLE(IOReturn, HwInitializeFbBase, "0x%X")
 
 uint64_t RAD::wrapInitWithController(void *that, void *controller) {
     NETLOG("rad", "initWithController this = %p", that);
@@ -1026,10 +1024,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             {"__ZN18AMD10000Controller35initializeProjectDependentResourcesEv",
              wrapInitializeProjectDependentResources,
              orgInitializeProjectDependentResources},
-            {"__ZN18AMD10000Controller21hwInitializeFbMemSizeEv",
-             wrapHwInitializeFbMemSize, orgHwInitializeFbMemSize},
-            {"__ZN18AMD10000Controller18hwInitializeFbBaseEv",
-             wrapHwInitializeFbBase, orgHwInitializeFbBase},
             {"__ZN18AMD10000Controller19initializeResourcesEv",
              wrapInitializeResources, orgInitializeResources},
             {"__ZN18AMD10000Controller19initializePowerPlayEv",
