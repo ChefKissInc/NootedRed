@@ -763,6 +763,7 @@ uint64_t RAD::wrapPspPowerPlaySupported() {
      * We have chosen to just force reply that it is not supported
      * to avoid it getting loaded at all.
      */
+    NETLOG("rad", "_psp_powerplay_is_supported called!");
     return 4;
 }
 
@@ -787,6 +788,17 @@ void RAD::wrapCosReleasePrintVaList(void *ttl, char *header, char *fmt,
     va_end(netdbg_args);
     FunctionCast(wrapCosReleasePrintVaList,
                  callbackRAD->orgCosReleasePrintVaList)(ttl, header, fmt, args);
+}
+
+uint64_t RAD::wrapPspXgmiIsSupport() {
+    NETLOG("rad", "_psp_xgmi_is_support called!");
+    return 0;
+}
+
+uint64_t RAD::wrapPspXgmiLoad(uint8_t *pspData) {
+    NETLOG("rad", "_psp_xgmi_load called!");
+    *reinterpret_cast<bool *>(pspData + 0x3021) = true;
+    return 0;
 }
 
 bool RAD::processKext(KernelPatcher &patcher, size_t index,
@@ -917,6 +929,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             {"__ZN14AmdTtlServices21cosReleasePrintVaListEPvPKcS2_P13__va_list_"
              "tag",
              wrapCosReleasePrintVaList, orgCosReleasePrintVaList},
+            {"_psp_xgmi_is_support", wrapPspXgmiIsSupport},
+            {"_psp_xgmi_load", wrapPspXgmiLoad},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size))
