@@ -334,11 +334,15 @@ void RAD::wrapPopulateFirmwareDirectory(void *that) {
                  callbackRAD->orgPopulateFirmwareDirectory)(that);
     NETLOG("rad", "injecting ativvaxy_rv.dat!");
     auto *fwDesc = getFWDescByName("ativvaxy_rv.dat");
+    if (!fwDesc) {
+        panic("Somehow ativvaxy_rv.dat is missing");
+    }
 
     auto *fw = callbackRAD->orgCreateFirmware(fwDesc->getBytesNoCopy(),
                                               fwDesc->getLength(), 0x200,
                                               "ativvaxy_rv.dat");
-    auto *fwDir = *(void **)((uint8_t *)that + 0xB8);
+    auto *fwDir =
+        *reinterpret_cast<void **>(static_cast<uint8_t *>(that) + 0xB8);
     NETLOG("rad", "fwDir = %p", fwDir);
     if (!callbackRAD->orgPutFirmware(fwDir, 6, fw)) {
         panic("Failed to inject ativvaxy_rv.dat firmware");
@@ -712,12 +716,33 @@ uint64_t RAD::wrapPspAsdLoad(void *pspData) {
      * aka RCX and R8 registers
      * Complementary to _psp_asd_load patch-set.
      */
+    NETLOG("rad", "injecting raven_asd.bin!");
     auto org =
         reinterpret_cast<uint64_t (*)(void *, uint64_t, uint64_t, const void *,
                                       size_t)>(callbackRAD->orgPspAsdLoad);
     auto fw = getFWDescByName("raven_asd.bin");
+    if (!fw) {
+        panic("Somehow raven_asd.bin is missing");
+    }
     auto ret = org(pspData, 0, 0, fw->getBytesNoCopy(), fw->getLength());
     NETLOG("rad", "_psp_asd_load returned 0x%llX", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapPspDtmLoad(void *pspData) {
+    /*
+     * Same idea as _psp_asd_load
+     */
+    NETLOG("rad", "injecting raven_dtm.bin!");
+    auto org =
+        reinterpret_cast<uint64_t (*)(void *, uint64_t, uint64_t, const void *,
+                                      size_t)>(callbackRAD->orgPspDtmLoad);
+    auto fw = getFWDescByName("raven_dtm.bin");
+    if (!fw) {
+        panic("Somehow raven_dtm.bin is missing");
+    }
+    auto ret = org(pspData, 0, 0, fw->getBytesNoCopy(), fw->getLength());
+    NETLOG("rad", "_psp_dtm_load returned 0x%llX", ret);
     return ret;
 }
 
@@ -841,15 +866,18 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              orgCosDebugPrint},
             {"_MCILDebugPrint", wrapMCILDebugPrint, orgMCILDebugPrint},
             {"_psp_asd_load", wrapPspAsdLoad, orgPspAsdLoad},
+            {"_psp_dtm_load", wrapPspDtmLoad, orgPspDtmLoad},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size))
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
 
-        uint8_t find[] = {0x55, 0x48, 0x89, 0xe5, 0x8b, 0x56, 0x04, 0xbe, 0x3b,
-                          0x00, 0x00, 0x00, 0x5d, 0xe9, 0x51, 0xfe, 0xff, 0xff};
-        uint8_t repl[] = {0x55, 0x48, 0x89, 0xe5, 0x8b, 0x56, 0x04, 0xbe, 0x1e,
-                          0x00, 0x00, 0x00, 0x5d, 0xe9, 0x51, 0xfe, 0xff, 0xff};
+        uint8_t find_asic_reset[] = {0x55, 0x48, 0x89, 0xe5, 0x8b, 0x56,
+                                     0x04, 0xbe, 0x3b, 0x00, 0x00, 0x00,
+                                     0x5d, 0xe9, 0x51, 0xfe, 0xff, 0xff};
+        uint8_t repl_asic_reset[] = {0x55, 0x48, 0x89, 0xe5, 0x8b, 0x56,
+                                     0x04, 0xbe, 0x1e, 0x00, 0x00, 0x00,
+                                     0x5d, 0xe9, 0x51, 0xfe, 0xff, 0xff};
 
         uint8_t find_load_asd_pt1[] = {0x0f, 0x85, 0x83, 0x00, 0x00, 0x00, 0x48,
                                        0x8d, 0x35, 0xf7, 0x93, 0xf4, 0x00, 0xba,
@@ -865,6 +893,20 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
         uint8_t repl_load_asd_pt2[] = {0x44, 0x89, 0x66, 0x08, 0x4c, 0x89, 0x84,
                                        0x26, 0x0c, 0x00, 0x00, 0x00, 0x48, 0xc7,
                                        0x46, 0x14, 0x00, 0x00, 0x00, 0x00};
+        uint8_t find_load_dtm_pt1[] = {
+            0x48, 0x8b, 0xbb, 0xf8, 0x0a, 0x00, 0x00, 0x48, 0x8d, 0x35, 0x47,
+            0x4f, 0xf7, 0x00, 0xba, 0x00, 0x21, 0x00, 0x00, 0xe8, 0x45, 0xa1,
+            0x56, 0x02, 0x48, 0x8d, 0xb5, 0x70, 0xfc, 0xff, 0xff};
+        uint8_t repl_load_dtm_pt1[] = {
+            0x48, 0x8b, 0xbb, 0xf8, 0x0a, 0x00, 0x00, 0x48, 0x8b, 0xf1, 0x49,
+            0x8b, 0xd0, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0xe8, 0x45, 0xa1,
+            0x56, 0x02, 0x48, 0x8d, 0xb5, 0x70, 0xfc, 0xff, 0xff};
+        uint8_t find_load_dtm_pt2[] = {0x44, 0x89, 0x76, 0x08, 0xc7, 0x46,
+                                       0x0c, 0x00, 0x21, 0x00, 0x00, 0x48,
+                                       0x8b, 0x83, 0xb8, 0x2d, 0x00, 0x00};
+        uint8_t repl_load_dtm_pt2[] = {0x44, 0x89, 0x76, 0x08, 0x44, 0x89,
+                                       0x86, 0x0c, 0x00, 0x00, 0x00, 0x48,
+                                       0x8b, 0x83, 0xb8, 0x2d, 0x00, 0x00};
         KernelPatcher::LookupPatch patches[] = {
             /*
              * Patch for _smu_9_0_1_full_asic_reset
@@ -872,7 +914,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              * The patch corrects the sent message to 0x1E;
              * the original code sends 0x3B, which is wrong for SMU 10.
              */
-            {&kextRadeonX5000HWLibs, find, repl, arrsize(find), 2},
+            {&kextRadeonX5000HWLibs, find_asic_reset, repl_asic_reset,
+             arrsize(find_asic_reset), 2},
             /*
              * Patches for _psp_asd_load.
              * _psp_asd_load loads a hardcoded ASD firmware binary
@@ -904,6 +947,14 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              arrsize(find_load_asd_pt1), 2},
             {&kextRadeonX5000HWLibs, find_load_asd_pt2, repl_load_asd_pt2,
              arrsize(find_load_asd_pt2), 2},
+            /*
+             * Patches for _psp_dtm_load.
+             * Same idea as _psp_asd_load.
+             */
+            {&kextRadeonX5000HWLibs, find_load_dtm_pt1, repl_load_dtm_pt1,
+             arrsize(find_load_dtm_pt1), 2},
+            {&kextRadeonX5000HWLibs, find_load_dtm_pt2, repl_load_dtm_pt2,
+             arrsize(find_load_dtm_pt2), 2},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
@@ -949,8 +1000,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
         /*
          * Patch for DEVICE_COMPONENT_FACTORY::createAsicInfo
          * Eliminates if statement to allow creation of ASIC Info.
-         * The Device ID for the iGPUs is usually not within the 0x6000 range.
-         * For example, 0x15d8 is the Device ID for a Picasso iGPU.
+         * The device ID for the iGPUs is not within the 0x6000 range.
+         * For example, 0x15d8 is the device ID for a Picasso iGPU.
          * if ((0x685f < deviceId) && (deviceId < 0x6880)) {
          * 	asic_info = new ASIC_INFO__VEGA10{};
          * }
