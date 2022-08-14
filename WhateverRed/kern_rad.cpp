@@ -308,8 +308,8 @@ uint32_t RAD::wrapGcGetHwVersion(uint32_t *param1) {
     auto ret = FunctionCast(wrapGcGetHwVersion,
                             callbackRAD->orgGcGetHwVersion)(param1);
     NETLOG("rad", "_gc_get_hw_version returned 0x%X", ret);
-    if ((ret & 0xFF0000) == 0x90000) {
-        NETLOG("rad", "Spoofing GC version 9.x.x to 9.2.1");
+    if ((ret & 0xFFFF00) == 0x90200) {
+        NETLOG("rad", "Spoofing GC version 9.2.x to 9.2.1");
         return 0x90201;
     }
     return ret;
