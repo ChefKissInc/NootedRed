@@ -95,7 +95,9 @@ class RAD {
     t_Vega10PowerTuneServicesConstructor orgVega10PowerTuneServicesConstructor =
         nullptr;
     mach_vm_address_t orgCosDebugPrint{}, orgMCILDebugPrint{};
-    mach_vm_address_t orgPspAsdLoad{}, orgPspDtmLoad{};
+    mach_vm_address_t orgPspAsdLoad{}, orgPspDtmLoad{},
+        orgCosDebugPrintVaList{};
+    mach_vm_address_t orgCosReleasePrintVaList{};
     /* ----------- */
 
     template <size_t Index>
@@ -260,6 +262,10 @@ class RAD {
     static uint64_t wrapPspAsdLoad(void *pspData);
     static uint64_t wrapPspDtmLoad(void *pspData);
     static uint64_t wrapPspPowerPlaySupported();
+    static void wrapCosDebugPrintVaList(void *ttl, char *header, char *fmt,
+                                        va_list args);
+    static void wrapCosReleasePrintVaList(void *ttl, char *header, char *fmt,
+                                          va_list args);
     /* ----------- */
 
     void processHardwareKext(KernelPatcher &patcher, size_t hwIndex,

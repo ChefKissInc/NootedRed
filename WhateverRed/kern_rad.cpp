@@ -768,6 +768,29 @@ uint64_t RAD::wrapPspPowerPlaySupported() {
     return 4;
 }
 
+void RAD::wrapCosDebugPrintVaList(void *ttl, char *header, char *fmt,
+                                  va_list args) {
+    NETDBG::printf("AMD TTL COS: %s ", header);
+    va_list netdbg_args;
+    va_copy(netdbg_args, args);
+    NETDBG::vprintf(fmt, netdbg_args);
+    NETDBG::printf("\n");
+    va_end(netdbg_args);
+    FunctionCast(wrapCosDebugPrintVaList, callbackRAD->orgCosDebugPrintVaList)(
+        ttl, header, fmt, args);
+}
+
+void RAD::wrapCosReleasePrintVaList(void *ttl, char *header, char *fmt,
+                                    va_list args) {
+    NETDBG::printf("AMD TTL COS: %s ", header);
+    va_list netdbg_args;
+    va_copy(netdbg_args, args);
+    NETDBG::vprintf(fmt, netdbg_args);
+    va_end(netdbg_args);
+    FunctionCast(wrapCosReleasePrintVaList,
+                 callbackRAD->orgCosReleasePrintVaList)(ttl, header, fmt, args);
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index,
                       mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
@@ -890,6 +913,12 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             {"_psp_asd_load", wrapPspAsdLoad, orgPspAsdLoad},
             {"_psp_dtm_load", wrapPspDtmLoad, orgPspDtmLoad},
             {"_psp_powerplay_is_supported", wrapPspPowerPlaySupported},
+            {"__ZN14AmdTtlServices19cosDebugPrintVaListEPvPKcS2_P13__va_list_"
+             "tag",
+             wrapCosDebugPrintVaList, orgCosDebugPrintVaList},
+            {"__ZN14AmdTtlServices21cosReleasePrintVaListEPvPKcS2_P13__va_list_"
+             "tag",
+             wrapCosReleasePrintVaList, orgCosReleasePrintVaList},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size))
