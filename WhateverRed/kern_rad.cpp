@@ -743,7 +743,7 @@ uint64_t RAD::wrapPspDtmLoad(void *pspData) {
     }
     auto ret = org(pspData, 0, 0, fw->getBytesNoCopy(), fw->getLength());
     NETLOG("rad", "_psp_dtm_load returned 0x%llX", ret);
-    return ret;
+    return 0;
 }
 
 bool RAD::processKext(KernelPatcher &patcher, size_t index,
