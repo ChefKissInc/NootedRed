@@ -334,29 +334,28 @@ void RAD::wrapPopulateFirmwareDirectory(void *that) {
                  callbackRAD->orgPopulateFirmwareDirectory)(that);
     NETLOG("rad", "injecting ativvaxy_rv.dat!");
     auto *fwDesc = getFWDescByName("ativvaxy_rv.dat");
-	auto *fwDescBackdoor = getFWDescByName("atidmcub_0.dat");
+    auto *fwDescBackdoor = getFWDescByName("atidmcub_0.dat");
     if (!fwDesc) {
         panic("Somehow ativvaxy_rv.dat is missing");
     }
-	if (!fwDescBackdoor) {
-		panic("Somehow atidmcub_0.dat is missing");
-	}
+    if (!fwDescBackdoor) {
+        panic("Somehow atidmcub_0.dat is missing");
+    }
 
     auto *fw = callbackRAD->orgCreateFirmware(fwDesc->getBytesNoCopy(),
                                               fwDesc->getLength(), 0x200,
                                               "ativvaxy_rv.dat");
-	auto *fwBackdoor = callbackRAD->orgCreateFirmware(fwDesc->getBytesNoCopy(),
-											  fwDesc->getLength(), 0x200,
-											  "atidmcub_0.dat");
+    auto *fwBackdoor = callbackRAD->orgCreateFirmware(
+        fwDesc->getBytesNoCopy(), fwDesc->getLength(), 0x200, "atidmcub_0.dat");
     auto *fwDir =
         *reinterpret_cast<void **>(static_cast<uint8_t *>(that) + 0xB8);
     NETLOG("rad", "fwDir = %p", fwDir);
     if (!callbackRAD->orgPutFirmware(fwDir, 6, fw)) {
         panic("Failed to inject ativvaxy_rv.dat firmware");
     }
-	if (!callbackRAD->orgPutFirmware(fwDir, 6, fwBackdoor)) {
-		panic("Failed to inject atidmcub_0.dat firmware");
-	}
+    if (!callbackRAD->orgPutFirmware(fwDir, 6, fwBackdoor)) {
+        panic("Failed to inject atidmcub_0.dat firmware");
+    }
 }
 
 void *RAD::wrapCreateAtomBiosProxy(void *param1) {
@@ -762,7 +761,7 @@ uint64_t RAD::wrapPspPowerPlaySupported() {
      * Linux does not have it. Is this a NSA backdoor or what?
      * Haha, anyway, it looks like it is some powerplay most likely
      * apple-specific Trusted Application that enables some
-	 * "AC Timing Feature".
+     * "AC Timing Feature".
      * We have chosen to just force reply that it is not supported
      * to avoid it getting loaded at all.
      */
@@ -890,7 +889,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             {"_MCILDebugPrint", wrapMCILDebugPrint, orgMCILDebugPrint},
             {"_psp_asd_load", wrapPspAsdLoad, orgPspAsdLoad},
             {"_psp_dtm_load", wrapPspDtmLoad, orgPspDtmLoad},
-			{"_psp_powerplay_is_supported", wrapPspPowerPlaySupported},
+            {"_psp_powerplay_is_supported", wrapPspPowerPlaySupported},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size))
