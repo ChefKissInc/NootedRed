@@ -746,6 +746,19 @@ uint64_t RAD::wrapPspDtmLoad(void *pspData) {
     return 0;
 }
 
+uint64_t RAD::wrapPspPowerPlaySupported() {
+    /*
+     * We don't know what this PSP TEE Trusted Application does.
+     * Linux does not have it. Is this a NSA backdoor or what?
+     * Haha, anyway, it looks like it is some powerplay most likely
+     * apple-specific Trusted Application that enables some
+	 * "AC Timing Feature".
+     * We have chosen to just force reply that it is not supported
+     * to avoid it getting loaded at all.
+     */
+    return 4;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index,
                       mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
@@ -867,6 +880,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             {"_MCILDebugPrint", wrapMCILDebugPrint, orgMCILDebugPrint},
             {"_psp_asd_load", wrapPspAsdLoad, orgPspAsdLoad},
             {"_psp_dtm_load", wrapPspDtmLoad, orgPspDtmLoad},
+			{"_psp_powerplay_is_supported", wrapPspPowerPlaySupported},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size))

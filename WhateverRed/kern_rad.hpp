@@ -259,6 +259,7 @@ class RAD {
                                    uint64_t param5, uint level);
     static uint64_t wrapPspAsdLoad(void *pspData);
     static uint64_t wrapPspDtmLoad(void *pspData);
+    static uint64_t wrapPspPowerPlaySupported();
     /* ----------- */
 
     void processHardwareKext(KernelPatcher &patcher, size_t hwIndex,
