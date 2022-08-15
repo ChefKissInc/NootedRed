@@ -228,7 +228,7 @@ class RAD {
     static uint64_t wrapPspSwInit(uint32_t *param1, uint32_t *param2);
     static uint32_t wrapGcGetHwVersion(uint32_t *param1);
     static uint32_t wrapInternalCosReadFw(uint64_t param1, uint64_t *param2);
-    static void wrapPopulateFirmwareDirectory(void *that);
+    static void wrapPopulateFirmwareDirectory(uint64_t that);
     static uint64_t wrapMCILUpdateGfxCGPG(void *param1);
     static IOReturn wrapQueryEngineRunningState(void *that, void *param1,
                                                 void *param2);

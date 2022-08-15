@@ -326,11 +326,11 @@ uint32_t RAD::wrapInternalCosReadFw(uint64_t param1, uint64_t *param2) {
     return ret;
 }
 
-void RAD::wrapPopulateFirmwareDirectory(void *that) {
+void RAD::wrapPopulateFirmwareDirectory(uint64_t that) {
     NETLOG(
         "rad",
         "AMDRadeonX6000_AMDRadeonHWLibsX6000::populateFirmwareDirectory this "
-        "= %p",
+        "= 0x%llX",
         that);
     FunctionCast(wrapPopulateFirmwareDirectory,
                  callbackRAD->orgPopulateFirmwareDirectory)(that);
@@ -350,7 +350,7 @@ void RAD::wrapPopulateFirmwareDirectory(void *that) {
     auto *fwBackdoor = callbackRAD->orgCreateFirmware(
         fwDesc->getBytesNoCopy(), fwDesc->getLength(), 0x200, "atidmcub_0.dat");
     auto *fwDir =
-        *reinterpret_cast<void **>(static_cast<uint8_t *>(that) + 0xB8);
+        *reinterpret_cast<void **>(that + 0xB8);
     NETLOG("rad", "fwDir = %p", fwDir);
     if (!callbackRAD->orgPutFirmware(fwDir, 1, fw)) {
         panic("Failed to inject ativvaxy_rv.dat firmware");
@@ -752,13 +752,13 @@ void RAD::wrapCosReleasePrintVaList(void *ttl, char *header, char *fmt,
 
 uint32_t RAD::wrapGetVideoMemoryType(void *that) {
     NETLOG("rad",
-           "AMDRadeonX6000_AmdBiosParserHelper::getVideoMemoryType: this = %p",
+           "getVideoMemoryType: this = %p",
            that);
     auto ret = FunctionCast(wrapGetVideoMemoryType,
                             callbackRAD->orgGetVideoMemoryType)(that);
     NETLOG(
         "rad",
-        "AMDRadeonX6000_AmdBiosParserHelper::getVideoMemoryType returned 0x%X",
+        "getVideoMemoryType returned 0x%X",
         ret);
     return ret != 0 ? ret : 4;
 }
@@ -766,12 +766,12 @@ uint32_t RAD::wrapGetVideoMemoryType(void *that) {
 uint32_t RAD::wrapGetVideoMemoryBitWidth(void *that) {
     NETLOG(
         "rad",
-        "AMDRadeonX6000_AmdBiosParserHelper::getVideoMemoryBitWidth: this = %p",
+        "getVideoMemoryBitWidth: this = %p",
         that);
     auto ret = FunctionCast(wrapGetVideoMemoryBitWidth,
                             callbackRAD->orgGetVideoMemoryBitWidth)(that);
     NETLOG("rad",
-           "AMDRadeonX6000_AmdBiosParserHelper::getVideoMemoryBitWidth "
+           "getVideoMemoryBitWidth "
            "returned 0x%X",
            ret);
     return ret != 0 ? ret : 64;
@@ -796,7 +796,7 @@ IntegratedVRAMInfoInterface *RAD::wrapCreateVramInfo(void *fwHelper,
 }
 
 IOReturn RAD::wrapPopulateVramInfo(void *that, void *param1) {
-    NETLOG("rad", "createVramInfo: this = %p param1 = %p", that, param1);
+    NETLOG("rad", "populateVramInfo: this = %p param1 = %p", that, param1);
     return kIOReturnSuccess;
 }
 
