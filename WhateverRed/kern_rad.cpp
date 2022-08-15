@@ -622,7 +622,7 @@ uint32_t RAD::wrapGetHwRevision(uint32_t major, uint32_t minor,
 
 IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
     NETLOG("rad",
-           "AMDRadeonX6000_AmdAsicInfoNavi21::populateDeviceInfo: this = %p",
+           "AMDRadeonX6000_AmdAsicInfoNavi::populateDeviceInfo: this = %p",
            that);
     auto ret = FunctionCast(wrapPopulateDeviceInfo,
                             callbackRAD->orgPopulateDeviceInfo)(that);
@@ -656,7 +656,7 @@ IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
            *emulatedRevision);
 
     NETLOG("rad",
-           "AMDRadeonX6000_AmdAsicInfoNavi21::populateDeviceInfo returned 0x%X",
+           "AMDRadeonX6000_AmdAsicInfoNavi::populateDeviceInfo returned 0x%X",
            ret);
     return ret;
 }
@@ -770,25 +770,14 @@ void RAD::wrapCosDebugPrintVaList(void *ttl, char *header, char *fmt,
 }
 
 void RAD::wrapCosReleasePrintVaList(void *ttl, char *header, char *fmt,
-                                    va_list args) {
-    NETDBG::printf("AMD TTL COS: %s ", header);
-    va_list netdbg_args;
-    va_copy(netdbg_args, args);
-    NETDBG::vprintf(fmt, netdbg_args);
-    va_end(netdbg_args);
-    FunctionCast(wrapCosReleasePrintVaList,
-                 callbackRAD->orgCosReleasePrintVaList)(ttl, header, fmt, args);
-}
-
-uint64_t RAD::wrapPspXgmiIsSupport() {
-    NETLOG("rad", "_psp_xgmi_is_support called!");
-    return 0;
-}
-
-uint64_t RAD::wrapPspXgmiLoad(uint8_t *pspData) {
-    NETLOG("rad", "_psp_xgmi_load called!");
-    *reinterpret_cast<bool *>(pspData + 0x3021) = true;
-    return 0;
+									va_list args) {
+	NETDBG::printf("AMD TTL COS: %s ", header);
+	va_list netdbg_args;
+	va_copy(netdbg_args, args);
+	NETDBG::vprintf(fmt, netdbg_args);
+	va_end(netdbg_args);
+	FunctionCast(wrapCosReleasePrintVaList,
+				 callbackRAD->orgCosReleasePrintVaList)(ttl, header, fmt, args);
 }
 
 uint32_t RAD::wrapGetVideoMemoryType(void *that) {
@@ -967,8 +956,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             {"__ZN14AmdTtlServices21cosReleasePrintVaListEPvPKcS2_P13__va_list_"
              "tag",
              wrapCosReleasePrintVaList, orgCosReleasePrintVaList},
-            {"_psp_xgmi_is_support", wrapPspXgmiIsSupport},
-            {"_psp_xgmi_load", wrapPspXgmiLoad},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size))
@@ -1077,7 +1064,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              wrapPopulateVramInfo},
             {"__ZNK26AMDRadeonX6000_AmdAsicInfo11getFamilyIdEv",
              wrapGetFamilyId},
-            {"__ZN31AMDRadeonX6000_AmdAsicInfoNavi218populateDeviceInfoEv",
+            {"__ZN30AMDRadeonX6000_AmdAsicInfoNavi18populateDeviceInfoEv",
              wrapPopulateDeviceInfo, orgPopulateDeviceInfo},
         };
 

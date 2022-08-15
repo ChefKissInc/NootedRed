@@ -271,8 +271,6 @@ class RAD {
                                         va_list args);
     static void wrapCosReleasePrintVaList(void *ttl, char *header, char *fmt,
                                           va_list args);
-    static uint64_t wrapPspXgmiIsSupport();
-    static uint64_t wrapPspXgmiLoad(uint8_t *pspData);
     /* ----------- */
 
     void processHardwareKext(KernelPatcher &patcher, size_t hwIndex,
