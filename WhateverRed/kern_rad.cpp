@@ -634,8 +634,10 @@ IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
         reinterpret_cast<uint32_t *>(static_cast<uint8_t *>(that) + 0x68);
     auto *emulatedRevision =
         reinterpret_cast<uint32_t *>(static_cast<uint8_t *>(that) + 0x6c);
-    NETLOG("rad", "0x%x | before: familyId = 0x%X emulatedRevision = 0x%X",
-           *deviceId, *familyId, *emulatedRevision);
+    NETLOG("rad",
+           "before: familyId = 0x%X deviceId = 0x%X revision = 0x%X "
+           "emulatedRevision = 0x%X",
+           *familyId, *deviceId, *revision, *emulatedRevision);
     *familyId = 0x8e;
     switch (*deviceId) {
         case 0x15d8:

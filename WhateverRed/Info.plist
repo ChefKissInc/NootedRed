@@ -75,7 +75,7 @@
 			<key>CFBundleIdentifier</key>
 			<string>com.apple.kext.AMDRadeonX6000</string>
 			<key>GPUDCCDisplayable</key>
-			<true/>
+			<false/>
 			<key>GPUDebugNullClientMask</key>
 			<integer>0</integer>
 			<key>GpuDebugPolicy</key>
@@ -162,12 +162,8 @@
 			<string>0.0.0.0.0</string>
 			<key>IOVARendererID</key>
 			<integer>16908288</integer>
-			<key>ResNoAllocPaging</key>
-			<integer>0</integer>
 			<key>SWIP_properties</key>
 			<dict>
-				<key>EnableGDDR6MemoryTraining</key>
-				<integer>0</integer>
 				<key>EnableSwVCNFWLoading</key>
 				<integer>0</integer>
 				<key>EnableVCNFWLog</key>
@@ -178,7 +174,7 @@
 		</dict>
 		<key>AMDRadeonNavi10Controller</key>
 		<dict>
-			<key>ATY,Belknap</key>
+			<key>ATY,Adder</key>
 			<dict>
 				<key>aty_config</key>
 				<dict>
@@ -187,9 +183,9 @@
 					<key>CFG_PTPL2_CNT</key>
 					<integer>16</integer>
 					<key>CFG_PTPL2_MAX</key>
-					<integer>300</integer>
+					<integer>250</integer>
 					<key>CFG_PTPL2_MIN</key>
-					<integer>120</integer>
+					<integer>100</integer>
 				</dict>
 				<key>aty_properties</key>
 				<dict>
@@ -199,64 +195,63 @@
 					<integer>16383</integer>
 					<key>PP_DisableDIDT</key>
 					<integer>0</integer>
-					<key>PP_GfxOffControl</key>
-					<integer>1</integer>
 					<key>PP_PhmUseDummyBackEnd</key>
 					<integer>0</integer>
-					<key>PP_Run_DcBTC</key>
-					<integer>0</integer>
 					<key>PP_WorkLoadPolicyMask</key>
-					<integer>16</integer>
+					<integer>32</integer>
+					<key>SMU_ActivityMonitorTable</key>
+					<data>
+					AAQABAIA6AMAAAEAAAAAAAAAAADQAQEAMP7+
+					/wAAAAAABAAAAgDoAwAAAQAAAAAAAAAAANAB
+					AQA45v//AAAAAAAAAAAAAAAAAAAAAAAAAAAA
+					AAAAAAAAAAAAAAAAAAAAEAkFAAFkPAAAAAAA
+					AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+					AA==
+					</data>
 					<key>SMU_DisallowedFeatures</key>
-					<integer>224014029030020</integer>
+					<integer>64</integer>
 				</dict>
 			</dict>
-			<key>ATY,Carswell</key>
+			<key>ATY,Ikaheka</key>
 			<dict>
 				<key>aty_config</key>
 				<dict>
+					<key>CFG_LINK_BUILT_IN_MAP</key>
+					<integer>3</integer>
 					<key>CFG_NO_PP</key>
 					<false/>
 					<key>CFG_PTPL2_CNT</key>
 					<integer>16</integer>
 					<key>CFG_PTPL2_MAX</key>
-					<integer>200</integer>
+					<integer>130</integer>
 					<key>CFG_PTPL2_MIN</key>
-					<integer>80</integer>
-					<key>PM_PWR_GEMINI_BGT</key>
-					<integer>400</integer>
+					<integer>50</integer>
 				</dict>
 				<key>aty_properties</key>
 				<dict>
-					<key>DalEarlyTps1Pattern</key>
-					<integer>1</integer>
+					<key>DalExtraDelayBacklightOff</key>
+					<integer>25</integer>
 					<key>PP_DiDtSQStallPatternOverride</key>
 					<integer>16383</integer>
 					<key>PP_DisableDIDT</key>
 					<integer>0</integer>
 					<key>PP_GfxOffControl</key>
-					<integer>1</integer>
+					<integer>0</integer>
 					<key>PP_PhmUseDummyBackEnd</key>
 					<integer>0</integer>
 					<key>PP_WorkLoadPolicyMask</key>
-					<integer>16</integer>
+					<integer>32</integer>
+					<key>SMU_ActivityMonitorTable</key>
+					<data>
+					AAAAAgIF6AMAAAAAAAAAAAAAAAAAAAEAAAD/
+					/wAAAAAAAAACAgroAwAAAQAAAAAAAAAAAAAA
+					AAAAAAAAAAD2/wAAAAAABQAAAAAAAAAAAAAA
+					AAAAAAAAAAAAAAAAAAAAAAAAABkyPAAFAAAA
+					AQAAAAAAAAAAAAAAfnAAAAAAAAAgAQYAMGkA
+					AA==
+					</data>
 					<key>SMU_DisallowedFeatures</key>
-					<integer>505489005740676</integer>
-				</dict>
-			</dict>
-			<key>ATY,Deepbay</key>
-			<dict>
-				<key>aty_config</key>
-				<dict>
-					<key>CFG_NO_HDCP</key>
-					<true/>
-				</dict>
-				<key>aty_properties</key>
-				<dict>
-					<key>PP_GfxOffControl</key>
-					<integer>1</integer>
-					<key>PP_PhmUseDummyBackEnd</key>
-					<integer>0</integer>
+					<integer>3012184920132</integer>
 				</dict>
 			</dict>
 			<key>CFBundleIdentifier</key>
@@ -270,7 +265,7 @@
 			<key>IOPCITunnelCompatible</key>
 			<true/>
 			<key>IOProbeScore</key>
-			<integer>1000</integer>
+			<integer>6000</integer>
 			<key>IOPropertyMatch</key>
 			<dict>
 				<key>LoadController</key>
@@ -297,8 +292,6 @@
 				<integer>1</integer>
 				<key>DalDisableLTTPR</key>
 				<integer>1</integer>
-				<key>DalEnablePspFwLoad</key>
-				<integer>0</integer>
 				<key>DalSkipDetectionLT</key>
 				<integer>1</integer>
 				<key>PP_DisableClockStretcher</key>
@@ -310,7 +303,7 @@
 				<key>PP_Falcon_QuickTransition_Enable</key>
 				<integer>1</integer>
 				<key>PP_GfxOffControl</key>
-				<integer>1</integer>
+				<integer>0</integer>
 				<key>PP_PhmUseDummyBackEnd</key>
 				<integer>0</integer>
 				<key>PP_ToolsLogSpaceSize</key>
