@@ -592,26 +592,23 @@ uint32_t RAD::wrapGetHwRevision(uint32_t major, uint32_t minor,
     return (minor << 0x8) | (major << 0x10) | patch;
 }
 
-IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
+IOReturn RAD::wrapPopulateDeviceInfo(uint64_t that) {
     NETLOG("rad",
-           "AMDRadeonX6000_AmdAsicInfoNavi::populateDeviceInfo: this = %p",
+           "AMDRadeonX6000_AmdAsicInfoNavi::populateDeviceInfo: this = 0x%llX",
            that);
     auto ret = FunctionCast(wrapPopulateDeviceInfo,
                             callbackRAD->orgPopulateDeviceInfo)(that);
-    auto *familyId =
-        reinterpret_cast<uint32_t *>(static_cast<uint8_t *>(that) + 0x60);
-    auto *deviceId =
-        reinterpret_cast<uint32_t *>(static_cast<uint8_t *>(that) + 0x64);
-    auto *revision =
-        reinterpret_cast<uint32_t *>(static_cast<uint8_t *>(that) + 0x68);
-    auto *emulatedRevision =
-        reinterpret_cast<uint32_t *>(static_cast<uint8_t *>(that) + 0x6c);
+    auto *pciDev = *reinterpret_cast<IOPCIDevice **>(that + 0x18);
+    auto *familyId = reinterpret_cast<uint32_t *>(that + 0x60);
+    auto *deviceId = reinterpret_cast<uint32_t *>(that + 0x64);
+    auto *revision = reinterpret_cast<uint32_t *>(that + 0x68);
+    auto *emulatedRevision = reinterpret_cast<uint32_t *>(that + 0x6c);
     NETLOG("rad",
            "before: familyId = 0x%X deviceId = 0x%X revision = 0x%X "
            "emulatedRevision = 0x%X",
            *familyId, *deviceId, *revision, *emulatedRevision);
     *familyId = 0x8e;
-    switch (*deviceId) {
+    switch (pciDev->configRead16(kIOPCIConfigDeviceID)) {
         case 0x15d8:
             *emulatedRevision = *revision + 0x41;
             break;
@@ -628,7 +625,6 @@ IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
     }
     NETLOG("rad", "after: familyId = 0x%X emulatedRevision = 0x%X", *familyId,
            *emulatedRevision);
-
     NETLOG("rad",
            "AMDRadeonX6000_AmdAsicInfoNavi::populateDeviceInfo returned 0x%X",
            ret);

@@ -209,7 +209,7 @@ class RAD {
 
     /* X6000Framebuffer */
     static uint16_t wrapGetFamilyId();
-    static IOReturn wrapPopulateDeviceInfo(void *that);
+    static IOReturn wrapPopulateDeviceInfo(uint64_t that);
     static uint32_t wrapGetVideoMemoryType(void *that);
     static uint32_t wrapGetVideoMemoryBitWidth(void *that);
     static IntegratedVRAMInfoInterface *wrapCreateVramInfo(
