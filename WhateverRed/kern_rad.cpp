@@ -1068,12 +1068,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              wrapPopulateDeviceInfo, orgPopulateDeviceInfo},
         };
 
-        uint8_t find_destructor[] = {0x48, 0x8b, 0xbb, 0x88, 0x00,
-                                     0x00, 0x00, 0x48, 0x85, 0xff,
-                                     0x74, 0x11, 0x48, 0x8b, 0x07};
-        uint8_t repl_destructor[] = {0x48, 0x8b, 0xbb, 0x88, 0x00,
-                                     0x00, 0x00, 0x90, 0x90, 0x90,
-                                     0x90, 0x90, 0x48, 0x8b, 0x07};
         uint8_t find_null_check[] = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00,
                                      0x48, 0x85, 0xc0, 0x0f, 0x84, 0xa1, 0x00,
                                      0x00, 0x00, 0x48, 0x8b, 0x7b, 0x18};
@@ -1081,8 +1075,10 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
                                      0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,
                                      0x90, 0x90, 0x48, 0x8b, 0x7b, 0x18};
         KernelPatcher::LookupPatch patches[] = {
-            {&kextRadeonX6000Framebuffer, find_destructor, repl_destructor,
-             arrsize(find_destructor), 2},
+			/*
+			 * Neutralise PSP Firmware Info creation null check
+			 * to proceed with Controller Core Services initialisation.
+			 */
             {&kextRadeonX6000Framebuffer, find_null_check, repl_null_check,
              arrsize(find_null_check), 2},
         };
