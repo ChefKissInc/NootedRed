@@ -349,8 +349,7 @@ void RAD::wrapPopulateFirmwareDirectory(uint64_t that) {
                                               "ativvaxy_rv.dat");
     auto *fwBackdoor = callbackRAD->orgCreateFirmware(
         fwDesc->getBytesNoCopy(), fwDesc->getLength(), 0x200, "atidmcub_0.dat");
-    auto *fwDir =
-        *reinterpret_cast<void **>(that + 0xB8);
+    auto *fwDir = *reinterpret_cast<void **>(that + 0xB8);
     NETLOG("rad", "fwDir = %p", fwDir);
     if (!callbackRAD->orgPutFirmware(fwDir, 1, fw)) {
         panic("Failed to inject ativvaxy_rv.dat firmware");
@@ -751,23 +750,15 @@ void RAD::wrapCosReleasePrintVaList(void *ttl, char *header, char *fmt,
 }
 
 uint32_t RAD::wrapGetVideoMemoryType(void *that) {
-    NETLOG("rad",
-           "getVideoMemoryType: this = %p",
-           that);
+    NETLOG("rad", "getVideoMemoryType: this = %p", that);
     auto ret = FunctionCast(wrapGetVideoMemoryType,
                             callbackRAD->orgGetVideoMemoryType)(that);
-    NETLOG(
-        "rad",
-        "getVideoMemoryType returned 0x%X",
-        ret);
+    NETLOG("rad", "getVideoMemoryType returned 0x%X", ret);
     return ret != 0 ? ret : 4;
 }
 
 uint32_t RAD::wrapGetVideoMemoryBitWidth(void *that) {
-    NETLOG(
-        "rad",
-        "getVideoMemoryBitWidth: this = %p",
-        that);
+    NETLOG("rad", "getVideoMemoryBitWidth: this = %p", that);
     auto ret = FunctionCast(wrapGetVideoMemoryBitWidth,
                             callbackRAD->orgGetVideoMemoryBitWidth)(that);
     NETLOG("rad",
