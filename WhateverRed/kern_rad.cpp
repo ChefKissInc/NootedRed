@@ -28,39 +28,43 @@
         return ret;                                                        \
     }
 
-static const char *pathAMD10000Controller[] = {
-    "/System/Library/Extensions/AMD10000Controller.kext/Contents/MacOS/"
-    "AMD10000Controller"};
 static const char *pathFramebuffer[] = {
     "/System/Library/Extensions/AMDFramebuffer.kext/Contents/MacOS/"
     "AMDFramebuffer"};
 static const char *pathSupport[] = {
     "/System/Library/Extensions/AMDSupport.kext/Contents/MacOS/AMDSupport"};
-static const char *pathRadeonX5000[] = {
-    "/System/Library/Extensions/AMDRadeonX5000.kext/Contents/MacOS/"
-    "AMDRadeonX5000"};
-static const char *pathRadeonX5000HWLibs[] = {
-    "/System/Library/Extensions/AMDRadeonX5000HWServices.kext/Contents/PlugIns/"
-    "AMDRadeonX5000HWLibs.kext/Contents/MacOS/AMDRadeonX5000HWLibs",
+static const char *pathRadeonX6000[] = {
+    "/System/Library/Extensions/AMDRadeonX6000.kext/Contents/MacOS/"
+    "AMDRadeonX6000"};
+static const char *pathRadeonX6000HWLibs[] = {
+    "/System/Library/Extensions/AMDRadeonX6000HWServices.kext/Contents/PlugIns/"
+    "AMDRadeonX6000HWLibs.kext/Contents/MacOS/AMDRadeonX6000HWLibs",
 };
+static const char *pathRadeonX6000Framebuffer[] = {
+    "/System/Library/Extensions/AMDRadeonX6000Framebuffer.kext/Contents/MacOS/"
+    "AMDRadeonX6000Framebuffer"};
 
-static KernelPatcher::KextInfo kextAMD10000Controller{
-    "com.apple.kext.AMD10000Controller", pathAMD10000Controller, 1, {}, {},
-    KernelPatcher::KextInfo::Unloaded};
 static KernelPatcher::KextInfo kextRadeonFramebuffer{
     "com.apple.kext.AMDFramebuffer",  pathFramebuffer, 1, {}, {},
     KernelPatcher::KextInfo::Unloaded};
 static KernelPatcher::KextInfo kextRadeonSupport{
     "com.apple.kext.AMDSupport",      pathSupport, 1, {}, {},
     KernelPatcher::KextInfo::Unloaded};
-static KernelPatcher::KextInfo kextRadeonX5000HWLibs{
-    "com.apple.kext.AMDRadeonX5000HWLibs", pathRadeonX5000HWLibs, 1, {}, {},
+static KernelPatcher::KextInfo kextRadeonX6000HWLibs{
+    "com.apple.kext.AMDRadeonX6000HWLibs", pathRadeonX6000HWLibs, 1, {}, {},
+    KernelPatcher::KextInfo::Unloaded};
+static KernelPatcher::KextInfo kextRadeonX6000Framebuffer{
+    "com.apple.kext.AMDRadeonX6000Framebuffer",
+    pathRadeonX6000Framebuffer,
+    1,
+    {},
+    {},
     KernelPatcher::KextInfo::Unloaded};
 
 static KernelPatcher::KextInfo kextRadeonHardware[] = {
-    {"com.apple.kext.AMDRadeonX5000",
-     pathRadeonX5000,
-     arrsize(pathRadeonX5000),
+    {"com.apple.kext.AMDRadeonX6000",
+     pathRadeonX6000,
+     arrsize(pathRadeonX6000),
      {},
      {},
      KernelPatcher::KextInfo::Unloaded},
@@ -93,9 +97,9 @@ void RAD::init() {
     forceVesaMode = checkKernelArgument("-radvesa");
     forceCodecInfo = checkKernelArgument("-radcodec");
 
-    lilu.onKextLoadForce(&kextAMD10000Controller);
+    lilu.onKextLoadForce(&kextRadeonX6000Framebuffer);
     lilu.onKextLoadForce(&kextRadeonSupport);
-    lilu.onKextLoadForce(&kextRadeonX5000HWLibs);
+    lilu.onKextLoadForce(&kextRadeonX6000HWLibs);
 
     initHardwareKextMods();
 
@@ -214,7 +218,7 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that,
     MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock);
     *(uint32_t *)callbackRAD->orgDeviceTypeTable =
         provider->extendedConfigRead16(kIOPCIConfigDeviceID);
-    *((uint32_t *)callbackRAD->orgDeviceTypeTable + 1) = 6;
+    *((uint32_t *)callbackRAD->orgDeviceTypeTable + 1) = 1;
     MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
     NETLOG("rad", "calling original AmdTtlServices constructor");
@@ -325,7 +329,7 @@ uint32_t RAD::wrapInternalCosReadFw(uint64_t param1, uint64_t *param2) {
 void RAD::wrapPopulateFirmwareDirectory(void *that) {
     NETLOG(
         "rad",
-        "AMDRadeonX5000_AMDRadeonHWLibsX5000::populateFirmwareDirectory this "
+        "AMDRadeonX6000_AMDRadeonHWLibsX6000::populateFirmwareDirectory this "
         "= %p",
         that);
     FunctionCast(wrapPopulateFirmwareDirectory,
@@ -348,10 +352,10 @@ void RAD::wrapPopulateFirmwareDirectory(void *that) {
     auto *fwDir =
         *reinterpret_cast<void **>(static_cast<uint8_t *>(that) + 0xB8);
     NETLOG("rad", "fwDir = %p", fwDir);
-    if (!callbackRAD->orgPutFirmware(fwDir, 6, fw)) {
+    if (!callbackRAD->orgPutFirmware(fwDir, 1, fw)) {
         panic("Failed to inject ativvaxy_rv.dat firmware");
     }
-    if (!callbackRAD->orgPutFirmware(fwDir, 6, fwBackdoor)) {
+    if (!callbackRAD->orgPutFirmware(fwDir, 1, fwBackdoor)) {
         panic("Failed to inject atidmcub_0.dat firmware");
     }
 }
@@ -495,32 +499,16 @@ uint64_t RAD::wrapCailMonitorPerformanceCounter(void *that, uint32_t *param1) {
 bool RAD::wrapAMDHWChannelWaitForIdle(void *that, uint64_t param1) {
     NETLOG(
         "rad",
-        "AMDRadeonX5000_AMDHWChannel::waitForIdle: this = %p param1 = 0x%llx",
+        "AMDRadeonX6000_AMDHWChannel::waitForIdle: this = %p param1 = 0x%llx",
         that, param1);
     auto ret =
         FunctionCast(wrapAMDHWChannelWaitForIdle,
                      callbackRAD->orgAMDHWChannelWaitForIdle)(that, param1);
-    NETLOG("rad", "AMDRadeonX5000_AMDHWChannel::waitForIdle returned %d", ret);
+    NETLOG("rad", "AMDRadeonX6000_AMDHWChannel::waitForIdle returned %d", ret);
     return ret;
 }
 
 WRAP_SIMPLE(uint64_t, AcceleratorPowerUpHw, "0x%llX")
-
-IOReturn RAD::wrapInitializePP(void *that) {
-    NETLOG("rad", "initializePowerPlay this = %p", that);
-    auto ret =
-        FunctionCast(wrapInitializePP, callbackRAD->orgInitializePP)(that);
-    NETLOG("rad", "initializePowerPlay returned 0x%X", ret);
-    return ret;
-}
-
-IOReturn RAD::wrapCreatePowerPlayInterface(void *that) {
-    NETLOG("rad", "createPowerPlayInterface this = %p", that);
-    auto ret = FunctionCast(wrapCreatePowerPlayInterface,
-                            callbackRAD->orgCreatePowerPlayInterface)(that);
-    NETLOG("rad", "createPowerPlayInterface returned 0x%X", ret);
-    return ret;
-}
 
 IOReturn RAD::wrapSendRequestToAccelerator(void *that, uint32_t param1,
                                            void *param2, void *param3,
@@ -536,8 +524,6 @@ IOReturn RAD::wrapSendRequestToAccelerator(void *that, uint32_t param1,
     NETLOG("rad", "sendRequestToAccelerator returned 0x%X", ret);
     return ret;
 }
-
-WRAP_SIMPLE(IOReturn, PPInitialize, "0x%X")
 
 IOReturn RAD::wrapPpEnable(void *that, bool param1) {
     NETLOG("rad", "ppEnable: this = %p param1 = %d", that, param1);
@@ -635,19 +621,21 @@ uint32_t RAD::wrapGetHwRevision(uint32_t major, uint32_t minor,
 }
 
 IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
-    NETLOG("rad", "ASIC_INFO__VEGA10::populateDeviceInfo: this = %p", that);
+    NETLOG("rad",
+           "AMDRadeonX6000_AmdAsicInfoNavi21::populateDeviceInfo: this = %p",
+           that);
     auto ret = FunctionCast(wrapPopulateDeviceInfo,
                             callbackRAD->orgPopulateDeviceInfo)(that);
     auto *familyId =
-        reinterpret_cast<uint32_t *>(static_cast<uint8_t *>(that) + 0x40);
+        reinterpret_cast<uint32_t *>(static_cast<uint8_t *>(that) + 0x60);
     auto *deviceId =
-        reinterpret_cast<uint32_t *>(static_cast<uint8_t *>(that) + 0x44);
+        reinterpret_cast<uint32_t *>(static_cast<uint8_t *>(that) + 0x64);
     auto *revision =
-        reinterpret_cast<uint32_t *>(static_cast<uint8_t *>(that) + 0x48);
+        reinterpret_cast<uint32_t *>(static_cast<uint8_t *>(that) + 0x68);
     auto *emulatedRevision =
-        reinterpret_cast<uint32_t *>(static_cast<uint8_t *>(that) + 0x4c);
-    NETLOG("rad", "before: familyId = 0x%X emulatedRevision = 0x%X", *familyId,
-           *emulatedRevision);
+        reinterpret_cast<uint32_t *>(static_cast<uint8_t *>(that) + 0x6c);
+    NETLOG("rad", "0x%x | before: familyId = 0x%X emulatedRevision = 0x%X",
+           *deviceId, *familyId, *emulatedRevision);
     *familyId = 0x8e;
     switch (*deviceId) {
         case 0x15d8:
@@ -667,7 +655,9 @@ IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
     NETLOG("rad", "after: familyId = 0x%X emulatedRevision = 0x%X", *familyId,
            *emulatedRevision);
 
-    NETLOG("rad", "ASIC_INFO__VEGA10::populateDeviceInfo returned 0x%X", ret);
+    NETLOG("rad",
+           "AMDRadeonX6000_AmdAsicInfoNavi21::populateDeviceInfo returned 0x%X",
+           ret);
     return ret;
 }
 
@@ -801,6 +791,56 @@ uint64_t RAD::wrapPspXgmiLoad(uint8_t *pspData) {
     return 0;
 }
 
+uint32_t RAD::wrapGetVideoMemoryType(void *that) {
+    NETLOG("rad",
+           "AMDRadeonX6000_AmdBiosParserHelper::getVideoMemoryType: this = %p",
+           that);
+    auto ret = FunctionCast(wrapGetVideoMemoryType,
+                            callbackRAD->orgGetVideoMemoryType)(that);
+    NETLOG(
+        "rad",
+        "AMDRadeonX6000_AmdBiosParserHelper::getVideoMemoryType returned 0x%X",
+        ret);
+    return ret != 0 ? ret : 4;
+}
+
+uint32_t RAD::wrapGetVideoMemoryBitWidth(void *that) {
+    NETLOG(
+        "rad",
+        "AMDRadeonX6000_AmdBiosParserHelper::getVideoMemoryBitWidth: this = %p",
+        that);
+    auto ret = FunctionCast(wrapGetVideoMemoryBitWidth,
+                            callbackRAD->orgGetVideoMemoryBitWidth)(that);
+    NETLOG("rad",
+           "AMDRadeonX6000_AmdBiosParserHelper::getVideoMemoryBitWidth "
+           "returned 0x%X",
+           ret);
+    return ret != 0 ? ret : 64;
+}
+
+IntegratedVRAMInfoInterface *RAD::wrapCreateVramInfo(void *fwHelper,
+                                                     uint32_t tableOffset) {
+    NETLOG("rad", "createVramInfo: fwHelper = %p tableOffset = 0x%x", fwHelper,
+           tableOffset);
+    DataTableInitInfo initInfo{
+        .helper = fwHelper,
+        .tableOffset = tableOffset,
+        .revision =
+            AtiAtomDataRevision{
+                .formatRevision = 2,
+                .contentRevision = 3,
+            },
+    };
+    auto *ret = new IntegratedVRAMInfoInterface;
+    ret->init(&initInfo);
+    return ret;
+}
+
+IOReturn RAD::wrapPopulateVramInfo(void *that, void *param1) {
+    NETLOG("rad", "createVramInfo: this = %p param1 = %p", that, param1);
+    return kIOReturnSuccess;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index,
                       mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
@@ -835,7 +875,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             panic("Failed to route AMDSupport symbols");
 
         return true;
-    } else if (kextRadeonX5000HWLibs.loadIndex == index) {
+    } else if (kextRadeonX6000HWLibs.loadIndex == index) {
         DBGLOG("rad", "resolving device type table");
         orgDeviceTypeTable =
             patcher.solveSymbol(index, "__ZL15deviceTypeTable");
@@ -880,14 +920,13 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             {"_gc_get_hw_version", wrapGcGetHwVersion, orgGcGetHwVersion},
             {"_internal_cos_read_fw", wrapInternalCosReadFw,
              orgInternalCosReadFw},
-            {"__ZN35AMDRadeonX5000_"
-             "AMDRadeonHWLibsX500025populateFirmwareDirectoryEv",
+            {"__ZN35AMDRadeonX6000_"
+             "AMDRadeonHWLibsX600025populateFirmwareDirectoryEv",
              wrapPopulateFirmwareDirectory, orgPopulateFirmwareDirectory},
             {"_GetGpuHwConstants", wrapGetGpuHwConstants, orgGetGpuHwConstants},
             {"__"
              "ZN15AmdCailServices23queryEngineRunningStateEP17CailHwEngineQueue"
-             "P22C"
-             "ailEngineRunningState",
+             "P22CailEngineRunningState",
              wrapQueryEngineRunningState, orgQueryEngineRunningState},
             {"_CAILQueryEngineRunningState", wrapCAILQueryEngineRunningState,
              orgCAILQueryEngineRunningState},
@@ -901,8 +940,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              orgPpEnable},
             {"__"
              "ZN20AtiPowerPlayServices21ppDisplayConfigChangeEP22PPDisplayConfi"
-             "gura"
-             "tionb",
+             "gurationb",
              wrapPpDisplayConfigChange, orgPpDisplayConfigChange},
             {"_PECI_SetupInitInfo", wrapPECISetupInitInfo,
              orgPECISetupInitInfo},
@@ -934,7 +972,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size))
-            panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
+            panic("RAD: Failed to route AMDRadeonX6000HWLibs symbols");
 
         uint8_t find_asic_reset[] = {0x55, 0x48, 0x89, 0xe5, 0x8b, 0x56,
                                      0x04, 0xbe, 0x3b, 0x00, 0x00, 0x00,
@@ -978,7 +1016,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              * The patch corrects the sent message to 0x1E;
              * the original code sends 0x3B, which is wrong for SMU 10.
              */
-            {&kextRadeonX5000HWLibs, find_asic_reset, repl_asic_reset,
+            {&kextRadeonX6000HWLibs, find_asic_reset, repl_asic_reset,
              arrsize(find_asic_reset), 2},
             /*
              * Patches for _psp_asd_load.
@@ -1007,17 +1045,17 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              * but this will have to do.
              * Pain.
              */
-            {&kextRadeonX5000HWLibs, find_load_asd_pt1, repl_load_asd_pt1,
+            {&kextRadeonX6000HWLibs, find_load_asd_pt1, repl_load_asd_pt1,
              arrsize(find_load_asd_pt1), 2},
-            {&kextRadeonX5000HWLibs, find_load_asd_pt2, repl_load_asd_pt2,
+            {&kextRadeonX6000HWLibs, find_load_asd_pt2, repl_load_asd_pt2,
              arrsize(find_load_asd_pt2), 2},
             /*
              * Patches for _psp_dtm_load.
              * Same idea as _psp_asd_load.
              */
-            {&kextRadeonX5000HWLibs, find_load_dtm_pt1, repl_load_dtm_pt1,
+            {&kextRadeonX6000HWLibs, find_load_dtm_pt1, repl_load_dtm_pt1,
              arrsize(find_load_dtm_pt1), 2},
-            {&kextRadeonX5000HWLibs, find_load_dtm_pt2, repl_load_dtm_pt2,
+            {&kextRadeonX6000HWLibs, find_load_dtm_pt2, repl_load_dtm_pt2,
              arrsize(find_load_dtm_pt2), 2},
         };
         for (auto &patch : patches) {
@@ -1026,60 +1064,50 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
         }
 
         return true;
-    } else if (kextAMD10000Controller.loadIndex == index) {
-        DBGLOG("rad", "Hooking AMD10000Controller");
-
+    } else if (kextRadeonX6000Framebuffer.loadIndex == index) {
         KernelPatcher::RouteRequest requests[] = {
-            {"__"
-             "ZN18AMD10000Controller23findProjectByPartNumberEP20ControllerProp"
-             "erti"
-             "es",
-             wrapProjectByPartNumber},
-            {"__ZN18AMD10000Controller35initializeProjectDependentResourcesEv",
-             wrapInitializeProjectDependentResources,
-             orgInitializeProjectDependentResources},
-            {"__ZN18AMD10000Controller19initializeResourcesEv",
-             wrapInitializeResources, orgInitializeResources},
-            {"__ZN18AMD10000Controller19initializePowerPlayEv",
-             wrapInitializePP, orgInitializePP},
-            {"__ZN22Vega10PowerPlayManager24createPowerPlayInterfaceEv",
-             wrapCreatePowerPlayInterface, orgCreatePowerPlayInterface},
-            {"__ZN22Vega10PowerPlayManager10initializeEv", wrapPPInitialize,
-             orgPPInitialize},
-            {"__ZN22Vega10PowerPlayManager7isReadyEv", wrapIsReady, orgIsReady},
-            {"__ZN22Vega10PowerPlayManager15updatePowerPlayEv",
-             wrapUpdatePowerPlay, orgUpdatePowerPlay},
-            {"__ZNK22Vega10SharedController11getFamilyIdEv", wrapGetFamilyId},
-            {"__ZN17ASIC_INFO__VEGA1018populateDeviceInfoEv",
+            {"__ZNK34AMDRadeonX6000_AmdBiosParserHelper18getVideoMemoryTypeEv",
+             wrapGetVideoMemoryType, orgGetVideoMemoryType},
+            {"__ZNK34AMDRadeonX6000_"
+             "AmdBiosParserHelper22getVideoMemoryBitWidthEv",
+             wrapGetVideoMemoryBitWidth, orgGetVideoMemoryBitWidth},
+            {"__ZN15AmdAtomVramInfo14createVramInfoEP15AmdAtomFwHelperj",
+             wrapCreateVramInfo},
+            {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo",
+             wrapPopulateVramInfo},
+            {"__ZNK26AMDRadeonX6000_AmdAsicInfo11getFamilyIdEv",
+             wrapGetFamilyId},
+            {"__ZN31AMDRadeonX6000_AmdAsicInfoNavi218populateDeviceInfoEv",
              wrapPopulateDeviceInfo, orgPopulateDeviceInfo},
         };
-        if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
-                                       address, size))
-            panic("Failed to route AMD10000Controller symbols");
 
-        /*
-         * Patch for DEVICE_COMPONENT_FACTORY::createAsicInfo
-         * Eliminates if statement to allow creation of ASIC Info.
-         * The device ID for the iGPUs is not within the 0x6000 range.
-         * For example, 0x15d8 is the device ID for a Picasso iGPU.
-         * if ((0x685f < deviceId) && (deviceId < 0x6880)) {
-         * 	asic_info = new ASIC_INFO__VEGA10{};
-         * }
-         * The condition above fails, and 0 is returned as a fallback,
-         * breaking initialisation.
-         */
-        uint8_t find[] = {0x3d, 0x60, 0x68, 0x00, 0x00, 0x0f, 0x8c, 0x32,
-                          0x00, 0x00, 0x00, 0x0f, 0xb7, 0x45, 0xe6, 0x3d,
-                          0x7f, 0x68, 0x00, 0x00, 0x0f, 0x8f, 0x23, 0x00,
-                          0x00, 0x00, 0xbf, 0x78, 0x00, 0x00, 0x00};
-        uint8_t repl[] = {0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,
-                          0x90, 0x90, 0x90, 0x0f, 0xb7, 0x45, 0xe6, 0x90,
-                          0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,
-                          0x90, 0x90, 0xbf, 0x78, 0x00, 0x00, 0x00};
-        KernelPatcher::LookupPatch patch{&kextAMD10000Controller, find, repl,
-                                         arrsize(find), 2};
-        patcher.applyLookupPatch(&patch);
-        patcher.clearError();
+        uint8_t find_destructor[] = {0x48, 0x8b, 0xbb, 0x88, 0x00,
+                                     0x00, 0x00, 0x48, 0x85, 0xff,
+                                     0x74, 0x11, 0x48, 0x8b, 0x07};
+        uint8_t repl_destructor[] = {0x48, 0x8b, 0xbb, 0x88, 0x00,
+                                     0x00, 0x00, 0x90, 0x90, 0x90,
+                                     0x90, 0x90, 0x48, 0x8b, 0x07};
+        uint8_t find_null_check[] = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00,
+                                     0x48, 0x85, 0xc0, 0x0f, 0x84, 0xa1, 0x00,
+                                     0x00, 0x00, 0x48, 0x8b, 0x7b, 0x18};
+        uint8_t repl_null_check[] = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00,
+                                     0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,
+                                     0x90, 0x90, 0x48, 0x8b, 0x7b, 0x18};
+        KernelPatcher::LookupPatch patches[] = {
+            {&kextRadeonX6000Framebuffer, find_destructor, repl_destructor,
+             arrsize(find_destructor), 2},
+            {&kextRadeonX6000Framebuffer, find_null_check, repl_null_check,
+             arrsize(find_null_check), 2},
+        };
+        for (auto &patch : patches) {
+            patcher.applyLookupPatch(&patch);
+            patcher.clearError();
+        }
+
+        if (!patcher.routeMultiple(index, requests, arrsize(requests), address,
+                                   size)) {
+            panic("RAD: Failed to route AMDRadeonX6000Framebuffer symbols");
+        }
 
         return true;
     }
@@ -1229,49 +1257,48 @@ void RAD::processHardwareKext(KernelPatcher &patcher, size_t hwIndex,
     auto &hardware = kextRadeonHardware[hwIndex];
 
     KernelPatcher::RouteRequest requests[] = {
-        {"__ZN37AMDRadeonX5000_"
+        {"__ZN37AMDRadeonX6000_"
          "AMDGraphicsAccelerator15configureDeviceEP11IOPCIDevice",
          wrapConfigureDevice, orgConfigureDevice},
-        {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator14initLinkToPeerEPKc",
+        {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator14initLinkToPeerEPKc",
          wrapInitLinkToPeer, orgInitLinkToPeer},
-        {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator15createHWHandlerEv",
+        {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator15createHWHandlerEv",
          wrapCreateHWHandler, orgCreateHWHandler},
-        {"__ZN37AMDRadeonX5000_"
+        {"__ZN37AMDRadeonX6000_"
          "AMDGraphicsAccelerator17createHWInterfaceEP11IOPCIDevice",
          wrapCreateHWInterface, orgCreateHWInterface},
-        {"__ZN26AMDRadeonX5000_AMDHardware11getHWMemoryEv", wrapGetHWMemory,
+        {"__ZN26AMDRadeonX6000_AMDHardware11getHWMemoryEv", wrapGetHWMemory,
          orgGetHWMemory},
-        {"__ZN32AMDRadeonX5000_AMDVega10Hardware19getATIChipConfigBitEv",
+        {"__ZN32AMDRadeonX6000_AMDNavi10Hardware19getATIChipConfigBitEv",
          wrapGetATIChipConfigBit, orgGetATIChipConfigBit},
-        {"__ZN26AMDRadeonX5000_AMDHardware22allocateAMDHWRegistersEv",
+        {"__ZN26AMDRadeonX6000_AMDHardware22allocateAMDHWRegistersEv",
          wrapAllocateAMDHWRegisters, orgAllocateAMDHWRegisters},
-        {"__ZN30AMDRadeonX5000_AMDGFX9Hardware23initializeHWWorkaroundsEv",
+        {"__ZN31AMDRadeonX6000_AMDGFX10Hardware23initializeHWWorkaroundsEv",
          wrapInitializeHWWorkarounds, orgInitializeHWWorkarounds},
-        {"__ZN30AMDRadeonX5000_AMDGFX9Hardware25allocateAMDHWAlignManagerEv",
+        {"__ZN31AMDRadeonX6000_AMDGFX10Hardware25allocateAMDHWAlignManagerEv",
          wrapAllocateAMDHWAlignManager, orgAllocateAMDHWAlignManager},
-        {"__ZN26AMDRadeonX5000_AMDHardware17mapDoorbellMemoryEv",
+        {"__ZN26AMDRadeonX6000_AMDHardware17mapDoorbellMemoryEv",
          wrapMapDoorbellMemory, orgMapDoorbellMemory},
-        {"__ZN27AMDRadeonX5000_AMDHWHandler8getStateEv", wrapGetState,
+        {"__ZN27AMDRadeonX6000_AMDHWHandler8getStateEv", wrapGetState,
          orgGetState},
-        {"__ZN28AMDRadeonX5000_AMDRTHardware13initializeTtlEP16_GART_"
+        {"__ZN28AMDRadeonX6000_AMDRTHardware13initializeTtlEP16_GART_"
          "PARAMETERS",
          wrapInitializeTtl, orgInitializeTtl},
-        {"__ZN28AMDRadeonX5000_AMDRTHardware22configureRegisterBasesEv",
+        {"__ZN28AMDRadeonX6000_AMDRTHardware22configureRegisterBasesEv",
          wrapConfRegBase, orgConfRegBase},
-        {"__ZN32AMDRadeonX5000_AMDVega10Hardware23readChipRevFromRegisterEv",
+        {"__ZN32AMDRadeonX6000_AMDNavi10Hardware23readChipRevFromRegisterEv",
          wrapReadChipRev, orgReadChipRev},
-        {"__ZN31AMDRadeonX5000_AMDGFX9PM4Engine23QueryComputeQueueIsIdleE18_"
-         "eAMD_"
-         "HW_RING_TYPE",
+        {"__ZN32AMDRadeonX6000_AMDGFX10PM4Engine23QueryComputeQueueIsIdleE18_"
+         "eAMD_HW_RING_TYPE",
          wrapQueryComputeQueueIsIdle, orgQueryComputeQueueIsIdle},
-        {"__ZN27AMDRadeonX5000_AMDHWChannel11waitForIdleEj",
+        {"__ZN27AMDRadeonX6000_AMDHWChannel11waitForIdleEj",
          wrapAMDHWChannelWaitForIdle, orgAMDHWChannelWaitForIdle},
-        {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator9powerUpHWEv",
+        {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator9powerUpHWEv",
          wrapAcceleratorPowerUpHw, orgAcceleratorPowerUpHw},
     };
     if (!patcher.routeMultipleLong(hardware.loadIndex, requests,
                                    arrsize(requests), address, size)) {
-        panic("Failed to route X5000 symbols");
+        panic("Failed to route X6000 symbols");
     }
 
     // Patch AppleGVA support for non-supported models
@@ -1281,7 +1308,7 @@ void RAD::processHardwareKext(KernelPatcher &patcher, size_t hwIndex,
                                             orgGetHWInfo[hwIndex]);
         if (!patcher.routeMultipleLong(hardware.loadIndex, &request, 1, address,
                                        size)) {
-            panic("Failed to route X5000 symbols for AppleGVA support");
+            panic("Failed to route X6000 symbols for AppleGVA support");
         }
     }
 }

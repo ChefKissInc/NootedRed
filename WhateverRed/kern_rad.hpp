@@ -70,10 +70,13 @@ class RAD {
     mach_vm_address_t orgCreateAtomBiosProxy{}, orgInitializeResources{};
     mach_vm_address_t orgPopulateDeviceMemory{}, orgQueryComputeQueueIsIdle{};
     mach_vm_address_t orgAMDHWChannelWaitForIdle{}, orgAcceleratorPowerUpHw{};
-    mach_vm_address_t orgInitializePP{}, orgCreatePowerPlayInterface{};
-    mach_vm_address_t orgSendRequestToAccelerator{}, orgPPInitialize{};
+    mach_vm_address_t orgSendRequestToAccelerator{};
     mach_vm_address_t orgUpdatePowerPlay{}, orgIsReady{};
+
+    /* X6000Framebuffer */
     mach_vm_address_t orgPopulateDeviceInfo{};
+    mach_vm_address_t orgGetVideoMemoryType{}, orgGetVideoMemoryBitWidth{};
+    /* ---------------- */
 
     /* X5000HWLibs */
     mach_vm_address_t orgIpiSmuSwInit{}, orgSmuSwInit{};
@@ -201,16 +204,21 @@ class RAD {
     static IOReturn wrapQueryComputeQueueIsIdle(void *that, uint64_t param1);
     static bool wrapAMDHWChannelWaitForIdle(void *that, uint64_t param1);
     static uint64_t wrapAcceleratorPowerUpHw(void *that);
-    static IOReturn wrapInitializePP(void *that);
-    static IOReturn wrapCreatePowerPlayInterface(void *that);
     static IOReturn wrapSendRequestToAccelerator(void *that, uint32_t param1,
                                                  void *param2, void *param3,
                                                  void *param4);
-    static IOReturn wrapPPInitialize(void *that);
+
+    /* X6000Framebuffer */
     static uint16_t wrapGetFamilyId();
     static IOReturn wrapPopulateDeviceInfo(void *that);
+    static uint32_t wrapGetVideoMemoryType(void *that);
+    static uint32_t wrapGetVideoMemoryBitWidth(void *that);
+    static IntegratedVRAMInfoInterface *wrapCreateVramInfo(
+        void *fwHelper, uint32_t tableOffset);
+    static IOReturn wrapPopulateVramInfo(void *that, void *param1);
+    /* ---------------- */
 
-    /* X5000HWLibs */
+    /* X6000HWLibs */
     static void wrapAmdTtlServicesConstructor(IOService *that,
                                               IOPCIDevice *provider);
     static uint64_t wrapIpiSmuSwInit(void *tlsInstance);
