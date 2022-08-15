@@ -770,14 +770,14 @@ void RAD::wrapCosDebugPrintVaList(void *ttl, char *header, char *fmt,
 }
 
 void RAD::wrapCosReleasePrintVaList(void *ttl, char *header, char *fmt,
-									va_list args) {
-	NETDBG::printf("AMD TTL COS: %s ", header);
-	va_list netdbg_args;
-	va_copy(netdbg_args, args);
-	NETDBG::vprintf(fmt, netdbg_args);
-	va_end(netdbg_args);
-	FunctionCast(wrapCosReleasePrintVaList,
-				 callbackRAD->orgCosReleasePrintVaList)(ttl, header, fmt, args);
+                                    va_list args) {
+    NETDBG::printf("AMD TTL COS: %s ", header);
+    va_list netdbg_args;
+    va_copy(netdbg_args, args);
+    NETDBG::vprintf(fmt, netdbg_args);
+    va_end(netdbg_args);
+    FunctionCast(wrapCosReleasePrintVaList,
+                 callbackRAD->orgCosReleasePrintVaList)(ttl, header, fmt, args);
 }
 
 uint32_t RAD::wrapGetVideoMemoryType(void *that) {
@@ -1074,18 +1074,15 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
         uint8_t repl_null_check[] = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00,
                                      0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,
                                      0x90, 0x90, 0x48, 0x8b, 0x7b, 0x18};
-        KernelPatcher::LookupPatch patches[] = {
-			/*
-			 * Neutralise PSP Firmware Info creation null check
-			 * to proceed with Controller Core Services initialisation.
-			 */
-            {&kextRadeonX6000Framebuffer, find_null_check, repl_null_check,
-             arrsize(find_null_check), 2},
-        };
-        for (auto &patch : patches) {
-            patcher.applyLookupPatch(&patch);
-            patcher.clearError();
-        }
+        /*
+         * Neutralise PSP Firmware Info creation null check
+         * to proceed with Controller Core Services initialisation.
+         */
+        KernelPatcher::LookupPatch patch = {&kextRadeonX6000Framebuffer,
+                                            find_null_check, repl_null_check,
+                                            arrsize(find_null_check), 2};
+        patcher.applyLookupPatch(&patch);
+        patcher.clearError();
 
         if (!patcher.routeMultiple(index, requests, arrsize(requests), address,
                                    size)) {
