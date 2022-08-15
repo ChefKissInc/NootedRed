@@ -86,8 +86,7 @@ class RAD {
         orgPopulateFirmwareDirectory{};
     t_createFirmware orgCreateFirmware = nullptr;
     t_putFirmware orgPutFirmware = nullptr;
-    mach_vm_address_t orgGetGpuHwConstants{}, orgMCILUpdateGfxCGPG{},
-        orgQueryEngineRunningState{};
+    mach_vm_address_t orgMCILUpdateGfxCGPG{}, orgQueryEngineRunningState{};
     mach_vm_address_t orgCAILQueryEngineRunningState{},
         orgCailMonitorEngineInternalState{};
     mach_vm_address_t orgCailMonitorPerformanceCounter{}, orgPpEnable{};
@@ -230,7 +229,6 @@ class RAD {
     static uint32_t wrapGcGetHwVersion(uint32_t *param1);
     static uint32_t wrapInternalCosReadFw(uint64_t param1, uint64_t *param2);
     static void wrapPopulateFirmwareDirectory(void *that);
-    static void *wrapGetGpuHwConstants(uint8_t *param1);
     static uint64_t wrapMCILUpdateGfxCGPG(void *param1);
     static IOReturn wrapQueryEngineRunningState(void *that, void *param1,
                                                 void *param2);

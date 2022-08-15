@@ -387,34 +387,6 @@ IOReturn RAD::wrapPopulateDeviceMemory(void *that, uint32_t reg) {
     return kIOReturnSuccess;
 }
 
-void *RAD::wrapGetGpuHwConstants(uint8_t *param1) {
-    DBGLOG("rad",
-           "------------------------------------------------------------"
-           "----------");
-    DBGLOG("rad", "_GetGpuHwConstants: param1 = %p", param1);
-    auto *asicCaps = *(uint8_t **)(param1 + 0x350);
-    DBGLOG("rad", "_GetGpuHwConstants: asicCaps = %p", asicCaps);
-    uint16_t deviceId = *(uint16_t *)(asicCaps + 8);
-    DBGLOG("rad", "_GetGpuHwConstants: deviceId = 0x%X", deviceId);
-    auto *goldenSettings = *(uint8_t **)(asicCaps + 48);
-    DBGLOG("rad", "_GetGpuHwConstants: goldenSettings = %p", goldenSettings);
-    for (size_t i = 0; i < 24; i++) {
-        DBGLOG("rad", "_GetGpuHwConstants: goldenSettings: %zu:0x%X", i,
-               goldenSettings[i]);
-    }
-    auto ret = FunctionCast(wrapGetGpuHwConstants,
-                            callbackRAD->orgGetGpuHwConstants)(param1);
-    DBGLOG("rad", "_GetGpuHwConstants returned %p", ret);
-    DBGLOG("rad",
-           "------------------------------------------------------------"
-           "----------");
-    if (!ret) {
-        NETLOG("rad", "_GetGpuHwConstants failed!");
-        panic("_GetGpuHwConstants returned ZERO value!");
-    }
-    return ret;
-}
-
 uint64_t RAD::wrapMCILUpdateGfxCGPG(void *param1) {
     NETLOG("rad",
            "------------------------------------------------------------"
@@ -914,7 +886,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             {"__ZN35AMDRadeonX6000_"
              "AMDRadeonHWLibsX600025populateFirmwareDirectoryEv",
              wrapPopulateFirmwareDirectory, orgPopulateFirmwareDirectory},
-            {"_GetGpuHwConstants", wrapGetGpuHwConstants, orgGetGpuHwConstants},
             {"__"
              "ZN15AmdCailServices23queryEngineRunningStateEP17CailHwEngineQueue"
              "P22CailEngineRunningState",
