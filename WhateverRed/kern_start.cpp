@@ -37,6 +37,6 @@ PluginConfiguration ADDPR(config){
     bootargBeta,
     arrsize(bootargBeta),
     KernelVersion::Catalina,
-    KernelVersion::Monterey,
+    KernelVersion::Ventura,
     []() { wred.init(); },
 };

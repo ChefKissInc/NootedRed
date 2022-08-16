@@ -20,14 +20,6 @@
 #include "kern_fw.hpp"
 #include "kern_netdbg.hpp"
 
-#define WRAP_SIMPLE(ty, func, fmt)                                         \
-    ty RAD::wrap##func(void *that) {                                       \
-        NETLOG("rad", "" #func " this = %p", that);                        \
-        auto ret = FunctionCast(wrap##func, callbackRAD->org##func)(that); \
-        NETLOG("rad", "" #func " returned " fmt, ret);                     \
-        return ret;                                                        \
-    }
-
 static const char *pathFramebuffer[] = {
     "/System/Library/Extensions/AMDFramebuffer.kext/Contents/MacOS/"
     "AMDFramebuffer"};
@@ -176,43 +168,6 @@ void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info) {
     }
 }
 
-IOReturn RAD::wrapProjectByPartNumber() { return kIOReturnNotFound; }
-
-WRAP_SIMPLE(IOReturn, InitializeProjectDependentResources, "0x%X")
-
-uint64_t RAD::wrapInitWithController(void *that, void *controller) {
-    NETLOG("rad", "initWithController this = %p", that);
-    auto ret =
-        FunctionCast(wrapInitWithController,
-                     callbackRAD->orgInitWithController)(that, controller);
-    NETLOG("rad", "initWithController returned %llX", ret);
-    return ret;
-}
-
-IntegratedVRAMInfoInterface *RAD::createVramInfo(
-    [[maybe_unused]] void *helper, [[maybe_unused]] uint32_t offset) {
-    NETLOG("rad",
-           "------------------------------------------------------------"
-           "----------");
-    NETLOG("rad", "creating fake VRAM info, get rekt ayymd");
-    NETLOG("rad", "createVramInfo offset = 0x%X", offset);
-    DataTableInitInfo initInfo{
-        .helper = helper,
-        .tableOffset = offset,
-        .revision =
-            AtiAtomDataRevision{
-                .formatRevision = 2,
-                .contentRevision = 3,
-            },
-    };
-    auto *ret = new IntegratedVRAMInfoInterface;
-    ret->init(&initInfo);
-    NETLOG("rad",
-           "------------------------------------------------------------"
-           "----------");
-    return ret;
-}
-
 void RAD::wrapAmdTtlServicesConstructor(IOService *that,
                                         IOPCIDevice *provider) {
     NETDBG::enabled = true;
@@ -312,11 +267,16 @@ uint32_t RAD::wrapGcGetHwVersion(uint32_t *param1) {
     auto ret = FunctionCast(wrapGcGetHwVersion,
                             callbackRAD->orgGcGetHwVersion)(param1);
     NETLOG("rad", "_gc_get_hw_version returned 0x%X", ret);
-    if ((ret & 0xFFFF00) == 0x90200) {
-        NETLOG("rad", "Spoofing GC version 9.2.x to 9.2.1");
-        return 0x90201;
+    switch (ret & 0xFFFF00) {
+        case 0x90100:
+            NETLOG("rad", "Spoofing GC version 9.1.x to 9.0.1");
+            return 0x90001;
+        case 0x90200:
+            NETLOG("rad", "Spoofing GC version 9.2.x to 9.2.1");
+            return 0x90201;
+        default:
+            return ret;
     }
-    return ret;
 }
 
 uint32_t RAD::wrapInternalCosReadFw(uint64_t param1, uint64_t *param2) {
@@ -369,14 +329,6 @@ void *RAD::wrapCreateAtomBiosProxy(void *param1) {
     auto ret = FunctionCast(wrapCreateAtomBiosProxy,
                             callbackRAD->orgCreateAtomBiosProxy)(param1);
     NETLOG("rad", "createAtomBiosProxy returned %p", ret);
-    return ret;
-}
-
-IOReturn RAD::wrapInitializeResources(void *that) {
-    NETLOG("rad", "initializeResources this = %p", that);
-    auto ret = FunctionCast(wrapInitializeResources,
-                            callbackRAD->orgInitializeResources)(that);
-    NETLOG("rad", "initializeResources returned 0x%X", ret);
     return ret;
 }
 
@@ -481,42 +433,11 @@ bool RAD::wrapAMDHWChannelWaitForIdle(void *that, uint64_t param1) {
     return ret;
 }
 
-WRAP_SIMPLE(uint64_t, AcceleratorPowerUpHw, "0x%llX")
-
-IOReturn RAD::wrapSendRequestToAccelerator(void *that, uint32_t param1,
-                                           void *param2, void *param3,
-                                           void *param4) {
-    NETLOG(
-        "rad",
-        "sendRequestToAccelerator: that = %p param1 = 0x%X param2 = %p param3 "
-        "= %p param4 = %p",
-        that, param1, param2, param3, param4);
-    auto ret = FunctionCast(wrapSendRequestToAccelerator,
-                            callbackRAD->orgSendRequestToAccelerator)(
-        that, param1, param2, param3, param4);
-    NETLOG("rad", "sendRequestToAccelerator returned 0x%X", ret);
-    return ret;
-}
-
 IOReturn RAD::wrapPpEnable(void *that, bool param1) {
     NETLOG("rad", "ppEnable: this = %p param1 = %d", that, param1);
     auto ret =
         FunctionCast(wrapPpEnable, callbackRAD->orgPpEnable)(that, param1);
     NETLOG("rad", "ppEnable returned 0x%X", ret);
-    return ret;
-}
-
-WRAP_SIMPLE(IOReturn, UpdatePowerPlay, "0x%X")
-WRAP_SIMPLE(bool, IsReady, "%d")
-
-IOReturn RAD::wrapPpDisplayConfigChange(void *that, void *param1,
-                                        void *param2) {
-    NETLOG("rad", "ppDisplayConfigChange: this = %p param1 = %p param2 = %p",
-           that, param1, param2);
-    auto ret = FunctionCast(wrapPpDisplayConfigChange,
-                            callbackRAD->orgPpDisplayConfigChange)(that, param1,
-                                                                   param2);
-    NETLOG("rad", "ppDisplayConfigChange returned 0x%X", ret);
     return ret;
 }
 
@@ -575,6 +496,8 @@ uint64_t RAD::wrapPECIRetrieveBiosDataTable(void *param1, uint64_t param2,
 }
 
 void *RAD::wrapCreatePowerTuneServices(void *param1, void *param2) {
+    NETLOG("rad", "createPowerTuneServices: param1 = %p param2 = %p", param1,
+           param2);
     auto *ret = IOMallocZero(0x18);
     callbackRAD->orgVega10PowerTuneServicesConstructor(ret, param1, param2);
     return ret;
@@ -621,6 +544,8 @@ IOReturn RAD::wrapPopulateDeviceInfo(uint64_t that) {
         default:
             if (*revision == 1) {
                 *emulatedRevision = *revision + 0x20;
+            } else {
+                *emulatedRevision = *revision + 0x10;
             }
             break;
     }
@@ -678,56 +603,6 @@ void RAD::wrapMCILDebugPrint(uint32_t level_max, char *fmt, uint64_t param3,
         level_max, fmt, param3, param4, param5, level);
 }
 
-uint64_t RAD::wrapPspAsdLoad(void *pspData) {
-    /*
-     * Hack: Add custom param 4 and 5 (pointer to firmware and size)
-     * aka RCX and R8 registers
-     * Complementary to _psp_asd_load patch-set.
-     */
-    NETLOG("rad", "injecting raven_asd.bin!");
-    auto org =
-        reinterpret_cast<uint64_t (*)(void *, uint64_t, uint64_t, const void *,
-                                      size_t)>(callbackRAD->orgPspAsdLoad);
-    auto fw = getFWDescByName("raven_asd.bin");
-    if (!fw) {
-        panic("Somehow raven_asd.bin is missing");
-    }
-    auto ret = org(pspData, 0, 0, fw->getBytesNoCopy(), fw->getLength());
-    NETLOG("rad", "_psp_asd_load returned 0x%llX", ret);
-    return ret;
-}
-
-uint64_t RAD::wrapPspDtmLoad(void *pspData) {
-    /*
-     * Same idea as _psp_asd_load
-     */
-    NETLOG("rad", "injecting raven_dtm.bin!");
-    auto org =
-        reinterpret_cast<uint64_t (*)(void *, uint64_t, uint64_t, const void *,
-                                      size_t)>(callbackRAD->orgPspDtmLoad);
-    auto fw = getFWDescByName("raven_dtm.bin");
-    if (!fw) {
-        panic("Somehow raven_dtm.bin is missing");
-    }
-    auto ret = org(pspData, 0, 0, fw->getBytesNoCopy(), fw->getLength());
-    NETLOG("rad", "_psp_dtm_load returned 0x%llX", ret);
-    return 0;
-}
-
-uint64_t RAD::wrapPspPowerPlaySupported() {
-    /*
-     * We don't know what this PSP TEE Trusted Application does.
-     * Linux does not have it. Is this a NSA backdoor or what?
-     * Haha, anyway, it looks like it is some powerplay most likely
-     * apple-specific Trusted Application that enables some
-     * "AC Timing Feature".
-     * We have chosen to just force reply that it is not supported
-     * to avoid it getting loaded at all.
-     */
-    NETLOG("rad", "_psp_powerplay_is_supported called!");
-    return 4;
-}
-
 void RAD::wrapCosDebugPrintVaList(void *ttl, char *header, char *fmt,
                                   va_list args) {
     NETDBG::printf("AMD TTL COS: %s ", header);
@@ -770,24 +645,6 @@ uint32_t RAD::wrapGetVideoMemoryBitWidth(void *that) {
     return ret != 0 ? ret : 64;
 }
 
-IntegratedVRAMInfoInterface *RAD::wrapCreateVramInfo(void *fwHelper,
-                                                     uint32_t tableOffset) {
-    NETLOG("rad", "createVramInfo: fwHelper = %p tableOffset = 0x%x", fwHelper,
-           tableOffset);
-    DataTableInitInfo initInfo{
-        .helper = fwHelper,
-        .tableOffset = tableOffset,
-        .revision =
-            AtiAtomDataRevision{
-                .formatRevision = 2,
-                .contentRevision = 3,
-            },
-    };
-    auto *ret = new IntegratedVRAMInfoInterface;
-    ret->init(&initInfo);
-    return ret;
-}
-
 IOReturn RAD::wrapPopulateVramInfo(void *that, void *param1) {
     NETLOG("rad", "populateVramInfo: this = %p param1 = %p", that, param1);
     return kIOReturnSuccess;
@@ -803,6 +660,8 @@ uint64_t RAD::wrapIsAsicCapEnabled(void *that, uint32_t cap) {
      */
     NETLOG("rad", "isAsicCapEnabled: that = %p cap = 0x%X", that, cap);
     switch (cap) {
+        case 0x134:
+            [[fallthrough]];
         case 0x148:
             NETLOG("rad", "isAsicCapEnabled: returning true");
             return true;
@@ -810,6 +669,86 @@ uint64_t RAD::wrapIsAsicCapEnabled(void *that, uint32_t cap) {
             NETLOG("rad", "isAsicCapEnabled: returning false");
             return false;
     }
+}
+
+uint32_t RAD::wrapDcePanelCntlHwInit(void *panel_cntl) {
+    callbackRAD->panelCntlPtr = panel_cntl;
+    callbackRAD
+        ->updatePwmMaxBrightnessFromInternalDisplay();  // read max brightness
+                                                        // value from IOReg
+    uint32_t ret = FunctionCast(wrapDcePanelCntlHwInit,
+                                callbackRAD->orgDcePanelCntlHwInit)(panel_cntl);
+    return ret;
+}
+
+IOReturn RAD::wrapAMDRadeonX6000AmdRadeonFramebufferSetAttribute(
+    IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
+    uintptr_t value) {
+    auto ret = FunctionCast(
+        wrapAMDRadeonX6000AmdRadeonFramebufferSetAttribute,
+        callbackRAD->orgAMDRadeonX6000AmdRadeonFramebufferSetAttribute)(
+        framebuffer, connectIndex, attribute, value);
+    if (attribute != (UInt32)'bklt') {
+        return ret;
+    }
+
+    if (callbackRAD->maxPwmBacklightLvl == 0) {
+        NETLOG("rad",
+               "wrapAMDRadeonX6000AmdRadeonFramebufferSetAttribute zero "
+               "maxPwmBacklightLvl");
+        return 0;
+    }
+
+    if (callbackRAD->panelCntlPtr == nullptr) {
+        NETLOG("rad",
+               "wrapAMDRadeonX6000AmdRadeonFramebufferSetAttribute null panel "
+               "cntl");
+        return 0;
+    }
+
+    if (callbackRAD->orgDceDriverSetBacklight == nullptr) {
+        NETLOG("rad",
+               "wrapAMDRadeonX6000AmdRadeonFramebufferSetAttribute null "
+               "orgDcLinkSetBacklightLevel");
+        return 0;
+    }
+
+    // set the backlight of AMD navi10 driver
+    callbackRAD->curPwmBacklightLvl = (uint32_t)value;
+    uint32_t btlper =
+        callbackRAD->curPwmBacklightLvl * 100 / callbackRAD->maxPwmBacklightLvl;
+    uint32_t pwmval = 0;
+    if (btlper >= 100) {
+        // This is from the dmcu_set_backlight_level function of Linux source
+        // ...
+        // if (backlight_pwm_u16_16 & 0x10000)
+        // 	   backlight_8_bit = 0xFF;
+        // else
+        // 	   backlight_8_bit = (backlight_pwm_u16_16 >> 8) & 0xFF;
+        // ...
+        // The max brightness should have 0x10000 bit set
+        pwmval = 0x1FF00;
+    } else {
+        pwmval = ((btlper * 0xFF) / 100) << 8U;
+    }
+
+    callbackRAD->orgDceDriverSetBacklight(callbackRAD->panelCntlPtr, pwmval);
+    return 0;
+}
+
+IOReturn RAD::wrapAMDRadeonX6000AmdRadeonFramebufferGetAttribute(
+    IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
+    uintptr_t *value) {
+    IOReturn ret = FunctionCast(
+        wrapAMDRadeonX6000AmdRadeonFramebufferGetAttribute,
+        callbackRAD->orgAMDRadeonX6000AmdRadeonFramebufferGetAttribute)(
+        framebuffer, connectIndex, attribute, value);
+    if (attribute == (UInt32)'bklt') {
+        // enable the backlight feature of AMD navi10 driver
+        *value = callbackRAD->curPwmBacklightLvl;
+        ret = 0;
+    }
+    return ret;
 }
 
 bool RAD::processKext(KernelPatcher &patcher, size_t index,
@@ -829,17 +768,12 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              "Even"
              "t_tmj",
              wrapNotifyLinkChange, orgNotifyLinkChange},
-            {"__ZN11AtiAsicInfo18initWithControllerEP13ATIController",
-             wrapInitWithController, orgInitWithController},
             {"__ZN23AtiVramInfoInterface_V214createVramInfoEP14AtiVBiosHelperj",
              createVramInfo},
             {"__ZN13AtomBiosProxy19createAtomBiosProxyER16AtomBiosInitData",
              wrapCreateAtomBiosProxy, orgCreateAtomBiosProxy},
             {"__ZN13ATIController20populateDeviceMemoryE13PCI_REG_INDEX",
              wrapPopulateDeviceMemory, orgPopulateDeviceMemory},
-            {"__ZN13ATIController24sendRequestToAcceleratorE25_"
-             "eAMDAccelIOFBRequestTypePvS1_S1_",
-             wrapSendRequestToAccelerator, orgSendRequestToAccelerator},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size))
@@ -908,10 +842,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              orgCailMonitorPerformanceCounter},
             {"__ZN20AtiPowerPlayServices8ppEnableEb", wrapPpEnable,
              orgPpEnable},
-            {"__"
-             "ZN20AtiPowerPlayServices21ppDisplayConfigChangeEP22PPDisplayConfi"
-             "gurationb",
-             wrapPpDisplayConfigChange, orgPpDisplayConfigChange},
             {"_PECI_SetupInitInfo", wrapPECISetupInitInfo,
              orgPECISetupInitInfo},
             {"_PECI_ReadRegistry", wrapPECIReadRegistry, orgPECIReadRegistry},
@@ -928,15 +858,14 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             {"__ZN14AmdTtlServices13cosDebugPrintEPKcz", wrapCosDebugPrint,
              orgCosDebugPrint},
             {"_MCILDebugPrint", wrapMCILDebugPrint, orgMCILDebugPrint},
-            {"_psp_asd_load", wrapPspAsdLoad, orgPspAsdLoad},
-            {"_psp_dtm_load", wrapPspDtmLoad, orgPspDtmLoad},
-            {"_psp_powerplay_is_supported", wrapPspPowerPlaySupported},
             {"__ZN14AmdTtlServices19cosDebugPrintVaListEPvPKcS2_P13__va_list_"
              "tag",
              wrapCosDebugPrintVaList, orgCosDebugPrintVaList},
             {"__ZN14AmdTtlServices21cosReleasePrintVaListEPvPKcS2_P13__va_list_"
              "tag",
              wrapCosReleasePrintVaList, orgCosReleasePrintVaList},
+            {"__ZN20AtiAppleCailServices16isAsicCapEnabledEPvm",
+             wrapIsAsicCapEnabled},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size))
@@ -1033,7 +962,24 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
 
         return true;
     } else if (kextRadeonX6000Framebuffer.loadIndex == index) {
+        orgDceDriverSetBacklight = reinterpret_cast<t_DceDriverSetBacklight>(
+            patcher.solveSymbol(index, "_dce_driver_set_backlight"));
+        if (patcher.getError() != KernelPatcher::Error::NoError) {
+            SYSLOG("rad", "Unable to resolve _dce_driver_set_backlight");
+            patcher.clearError();
+        }
+
         KernelPatcher::RouteRequest requests[] = {
+            {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit,
+             orgDcePanelCntlHwInit},
+            {"__ZN35AMDRadeonX6000_"
+             "AmdRadeonFramebuffer25setAttributeForConnectionEijm",
+             wrapAMDRadeonX6000AmdRadeonFramebufferSetAttribute,
+             orgAMDRadeonX6000AmdRadeonFramebufferSetAttribute},
+            {"__ZN35AMDRadeonX6000_"
+             "AmdRadeonFramebuffer25getAttributeForConnectionEijPm",
+             wrapAMDRadeonX6000AmdRadeonFramebufferGetAttribute,
+             orgAMDRadeonX6000AmdRadeonFramebufferGetAttribute},
             {"__ZNK34AMDRadeonX6000_AmdBiosParserHelper18getVideoMemoryTypeEv",
              wrapGetVideoMemoryType, orgGetVideoMemoryType},
             {"__ZNK34AMDRadeonX6000_"
@@ -1139,63 +1085,19 @@ void RAD::processConnectorOverrides(KernelPatcher &patcher,
          wrapGetConnectorsInfoV1, orgGetConnectorsInfoV1},
         {"__ZN14AtiBiosParser216getConnectorInfoEP13ConnectorInfoRh",
          wrapGetConnectorsInfoV2, orgGetConnectorsInfoV2},
-        {
-            "__"
-            "ZN14AtiBiosParser126translateAtomConnectorInfoERN30AtiObjectInfoTa"
-            "bl"
-            "eInterface_V117AtomConnectorInfoER13ConnectorInfo",
-            wrapTranslateAtomConnectorInfoV1,
-            orgTranslateAtomConnectorInfoV1,
-        },
-        {
-            "__"
-            "ZN14AtiBiosParser226translateAtomConnectorInfoERN30AtiObjectInfoTa"
-            "bl"
-            "eInterface_V217AtomConnectorInfoER13ConnectorInfo",
-            wrapTranslateAtomConnectorInfoV2,
-            orgTranslateAtomConnectorInfoV2,
-        },
+        {"__"
+         "ZN14AtiBiosParser126translateAtomConnectorInfoERN30AtiObjectInfoTable"
+         "Interface_V117AtomConnectorInfoER13ConnectorInfo",
+         wrapTranslateAtomConnectorInfoV1, orgTranslateAtomConnectorInfoV1},
+        {"__"
+         "ZN14AtiBiosParser226translateAtomConnectorInfoERN30AtiObjectInfoTable"
+         "Interface_V217AtomConnectorInfoER13ConnectorInfo",
+         wrapTranslateAtomConnectorInfoV2, orgTranslateAtomConnectorInfoV2},
         {"__ZN13ATIController5startEP9IOService", wrapATIControllerStart,
          orgATIControllerStart},
-
     };
-    patcher.routeMultipleLong(kextRadeonSupport.loadIndex, requests, address,
-                              size);
+    patcher.routeMultiple(kextRadeonSupport.loadIndex, requests, address, size);
 }
-
-uint64_t RAD::wrapConfigureDevice(void *that, IOPCIDevice *dev) {
-    NETLOG("rad", "configureDevice this = %p", that);
-    auto ret = FunctionCast(wrapConfigureDevice,
-                            callbackRAD->orgConfigureDevice)(that, dev);
-    NETLOG("rad", "configureDevice returned 0x%llX", ret);
-    return ret;
-}
-
-IOService *RAD::wrapInitLinkToPeer(void *that, const char *matchCategoryName) {
-    NETLOG("rad", "initLinkToPeer this = %p", that);
-    auto ret = FunctionCast(wrapInitLinkToPeer, callbackRAD->orgInitLinkToPeer)(
-        that, matchCategoryName);
-    NETLOG("rad", "initLinkToPeer returned %p", ret);
-    return ret;
-}
-
-WRAP_SIMPLE(uint64_t, CreateHWHandler, "0x%llX")
-
-uint64_t RAD::wrapCreateHWInterface(void *that, IOPCIDevice *dev) {
-    NETLOG("rad", "createHWInterface this = %p", that);
-    auto ret = FunctionCast(wrapCreateHWInterface,
-                            callbackRAD->orgCreateHWInterface)(that, dev);
-    NETLOG("rad", "createHWInterface returned 0x%llX", ret);
-    return ret;
-}
-
-WRAP_SIMPLE(uint64_t, GetHWMemory, "0x%llX")
-WRAP_SIMPLE(uint64_t, GetATIChipConfigBit, "0x%llX")
-WRAP_SIMPLE(uint64_t, AllocateAMDHWRegisters, "0x%llX")
-WRAP_SIMPLE(bool, SetupCAIL, "%d")
-WRAP_SIMPLE(uint64_t, InitializeHWWorkarounds, "0x%llX")
-WRAP_SIMPLE(uint64_t, AllocateAMDHWAlignManager, "0x%llX")
-WRAP_SIMPLE(bool, MapDoorbellMemory, "%d")
 
 uint64_t RAD::wrapGetState(void *that) {
     DBGLOG("rad", "getState this = %p", that);
@@ -1212,52 +1114,21 @@ bool RAD::wrapInitializeTtl(void *that, void *param1) {
     return ret;
 }
 
-WRAP_SIMPLE(uint64_t, ConfRegBase, "0x%llX")
-WRAP_SIMPLE(uint8_t, ReadChipRev, "%d")
-
 void RAD::processHardwareKext(KernelPatcher &patcher, size_t hwIndex,
                               mach_vm_address_t address, size_t size) {
     auto &hardware = kextRadeonHardware[hwIndex];
 
     KernelPatcher::RouteRequest requests[] = {
-        {"__ZN37AMDRadeonX6000_"
-         "AMDGraphicsAccelerator15configureDeviceEP11IOPCIDevice",
-         wrapConfigureDevice, orgConfigureDevice},
-        {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator14initLinkToPeerEPKc",
-         wrapInitLinkToPeer, orgInitLinkToPeer},
-        {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator15createHWHandlerEv",
-         wrapCreateHWHandler, orgCreateHWHandler},
-        {"__ZN37AMDRadeonX6000_"
-         "AMDGraphicsAccelerator17createHWInterfaceEP11IOPCIDevice",
-         wrapCreateHWInterface, orgCreateHWInterface},
-        {"__ZN26AMDRadeonX6000_AMDHardware11getHWMemoryEv", wrapGetHWMemory,
-         orgGetHWMemory},
-        {"__ZN32AMDRadeonX6000_AMDNavi10Hardware19getATIChipConfigBitEv",
-         wrapGetATIChipConfigBit, orgGetATIChipConfigBit},
-        {"__ZN26AMDRadeonX6000_AMDHardware22allocateAMDHWRegistersEv",
-         wrapAllocateAMDHWRegisters, orgAllocateAMDHWRegisters},
-        {"__ZN31AMDRadeonX6000_AMDGFX10Hardware23initializeHWWorkaroundsEv",
-         wrapInitializeHWWorkarounds, orgInitializeHWWorkarounds},
-        {"__ZN31AMDRadeonX6000_AMDGFX10Hardware25allocateAMDHWAlignManagerEv",
-         wrapAllocateAMDHWAlignManager, orgAllocateAMDHWAlignManager},
-        {"__ZN26AMDRadeonX6000_AMDHardware17mapDoorbellMemoryEv",
-         wrapMapDoorbellMemory, orgMapDoorbellMemory},
         {"__ZN27AMDRadeonX6000_AMDHWHandler8getStateEv", wrapGetState,
          orgGetState},
         {"__ZN28AMDRadeonX6000_AMDRTHardware13initializeTtlEP16_GART_"
          "PARAMETERS",
          wrapInitializeTtl, orgInitializeTtl},
-        {"__ZN28AMDRadeonX6000_AMDRTHardware22configureRegisterBasesEv",
-         wrapConfRegBase, orgConfRegBase},
-        {"__ZN32AMDRadeonX6000_AMDNavi10Hardware23readChipRevFromRegisterEv",
-         wrapReadChipRev, orgReadChipRev},
         {"__ZN32AMDRadeonX6000_AMDGFX10PM4Engine23QueryComputeQueueIsIdleE18_"
          "eAMD_HW_RING_TYPE",
          wrapQueryComputeQueueIsIdle, orgQueryComputeQueueIsIdle},
         {"__ZN27AMDRadeonX6000_AMDHWChannel11waitForIdleEj",
          wrapAMDHWChannelWaitForIdle, orgAMDHWChannelWaitForIdle},
-        {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator9powerUpHWEv",
-         wrapAcceleratorPowerUpHw, orgAcceleratorPowerUpHw},
     };
     if (!patcher.routeMultipleLong(hardware.loadIndex, requests,
                                    arrsize(requests), address, size)) {

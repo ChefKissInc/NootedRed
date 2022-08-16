@@ -55,25 +55,25 @@ class RAD {
         orgATIControllerStart{};
     mach_vm_address_t orgNotifyLinkChange{}, orgPopulateAccelConfig[1]{},
         orgGetHWInfo[1]{};
-    mach_vm_address_t orgConfigureDevice{}, orgInitLinkToPeer{},
-        orgCreateHWHandler{};
-    mach_vm_address_t orgCreateHWInterface{}, orgGetHWMemory{},
-        orgGetATIChipConfigBit{};
-    mach_vm_address_t orgAllocateAMDHWRegisters{}, orgSetupCAIL{},
-        orgInitializeHWWorkarounds{};
     mach_vm_address_t orgAllocateAMDHWAlignManager{}, orgMapDoorbellMemory{};
-    mach_vm_address_t orgInitWithController{};
     mach_vm_address_t orgDeviceTypeTable{}, orgAmdTtlServicesConstructor{};
-    mach_vm_address_t orgGetState{}, orgConfRegBase{}, orgReadChipRev{};
-    mach_vm_address_t orgInitializeTtl{},
-        orgInitializeProjectDependentResources{};
-    mach_vm_address_t orgCreateAtomBiosProxy{}, orgInitializeResources{};
+    mach_vm_address_t orgGetState{}, orgInitializeTtl{};
+    mach_vm_address_t orgCreateAtomBiosProxy{};
     mach_vm_address_t orgPopulateDeviceMemory{}, orgQueryComputeQueueIsIdle{};
     mach_vm_address_t orgAMDHWChannelWaitForIdle{}, orgAcceleratorPowerUpHw{};
     mach_vm_address_t orgSendRequestToAccelerator{};
-    mach_vm_address_t orgUpdatePowerPlay{}, orgIsReady{};
 
     /* X6000Framebuffer */
+    uint32_t curPwmBacklightLvl = 0;
+    uint32_t maxPwmBacklightLvl = 0xff7b;
+    void *panelCntlPtr = NULL;
+    void updatePwmMaxBrightnessFromInternalDisplay();
+    using t_DceDriverSetBacklight = void (*)(void *panel_cntl,
+                                             uint32_t backlight_pwm_u16_16);
+    t_DceDriverSetBacklight orgDceDriverSetBacklight{nullptr};
+    mach_vm_address_t orgDcePanelCntlHwInit{};
+    mach_vm_address_t orgAMDRadeonX6000AmdRadeonFramebufferSetAttribute{};
+    mach_vm_address_t orgAMDRadeonX6000AmdRadeonFramebufferGetAttribute{};
     mach_vm_address_t orgPopulateDeviceInfo{};
     mach_vm_address_t orgGetVideoMemoryType{}, orgGetVideoMemoryBitWidth{};
     /* ---------------- */
@@ -96,8 +96,7 @@ class RAD {
     t_Vega10PowerTuneServicesConstructor orgVega10PowerTuneServicesConstructor =
         nullptr;
     mach_vm_address_t orgCosDebugPrint{}, orgMCILDebugPrint{};
-    mach_vm_address_t orgPspAsdLoad{}, orgPspDtmLoad{},
-        orgCosDebugPrintVaList{};
+    mach_vm_address_t orgCosDebugPrintVaList{};
     mach_vm_address_t orgCosReleasePrintVaList{};
     /* ----------- */
 
@@ -176,38 +175,23 @@ class RAD {
                             mach_vm_address_t address, size_t size);
     void processConnectorOverrides(KernelPatcher &patcher,
                                    mach_vm_address_t address, size_t size);
-    static IOReturn wrapProjectByPartNumber();
-    static IOReturn wrapInitializeProjectDependentResources(void *that);
-    static uint64_t wrapInitWithController(void *that, void *controller);
-    static uint64_t wrapConfigureDevice(void *that, IOPCIDevice *dev);
-    static uint64_t wrapCreateHWHandler(void *that);
-    static uint64_t wrapCreateHWInterface(void *that, IOPCIDevice *dev);
-    static uint64_t wrapGetHWMemory(void *that);
-    static uint64_t wrapGetATIChipConfigBit(void *that);
-    static uint64_t wrapAllocateAMDHWRegisters(void *that);
-    static bool wrapSetupCAIL(void *that);
-    static uint64_t wrapInitializeHWWorkarounds(void *that);
-    static uint64_t wrapAllocateAMDHWAlignManager(void *that);
-    static bool wrapMapDoorbellMemory(void *that);
-    static IOService *wrapInitLinkToPeer(void *that,
-                                         const char *matchCategoryName);
     static uint64_t wrapGetState(void *that);
     static bool wrapInitializeTtl(void *that, void *param1);
-    static uint64_t wrapConfRegBase(void *that);
-    static uint8_t wrapReadChipRev(void *that);
     static void *wrapCreateAtomBiosProxy(void *param1);
-    static IOReturn wrapInitializeResources(void *that);
     static IOReturn wrapPopulateDeviceMemory(void *that, uint32_t reg);
     static IntegratedVRAMInfoInterface *createVramInfo(void *helper,
                                                        uint32_t offset);
     static IOReturn wrapQueryComputeQueueIsIdle(void *that, uint64_t param1);
     static bool wrapAMDHWChannelWaitForIdle(void *that, uint64_t param1);
-    static uint64_t wrapAcceleratorPowerUpHw(void *that);
-    static IOReturn wrapSendRequestToAccelerator(void *that, uint32_t param1,
-                                                 void *param2, void *param3,
-                                                 void *param4);
 
     /* X6000Framebuffer */
+    static uint32_t wrapDcePanelCntlHwInit(void *panel_cntl);
+    static IOReturn wrapAMDRadeonX6000AmdRadeonFramebufferSetAttribute(
+        IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
+        uintptr_t value);
+    static IOReturn wrapAMDRadeonX6000AmdRadeonFramebufferGetAttribute(
+        IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
+        uintptr_t *value);
     static uint16_t wrapGetFamilyId();
     static IOReturn wrapPopulateDeviceInfo(uint64_t that);
     static uint32_t wrapGetVideoMemoryType(void *that);
@@ -243,8 +227,6 @@ class RAD {
     static IOReturn wrapPpEnable(void *that, bool param1);
     static IOReturn wrapUpdatePowerPlay(void *that);
     static bool wrapIsReady(void *that);
-    static IOReturn wrapPpDisplayConfigChange(void *that, void *param1,
-                                              void *param2);
     static uint64_t wrapPECISetupInitInfo(uint32_t *param1, uint32_t *param2);
     static uint64_t wrapPECIReadRegistry(void *param1, char *key,
                                          uint64_t param3, uint64_t param4);
@@ -262,9 +244,6 @@ class RAD {
     static void wrapMCILDebugPrint(uint32_t level_max, char *fmt,
                                    uint64_t param3, uint64_t param4,
                                    uint64_t param5, uint level);
-    static uint64_t wrapPspAsdLoad(void *pspData);
-    static uint64_t wrapPspDtmLoad(void *pspData);
-    static uint64_t wrapPspPowerPlaySupported();
     static void wrapCosDebugPrintVaList(void *ttl, char *header, char *fmt,
                                         va_list args);
     static void wrapCosReleasePrintVaList(void *ttl, char *header, char *fmt,
