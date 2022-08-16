@@ -781,7 +781,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
 
         return true;
     } else if (kextRadeonX6000HWLibs.loadIndex == index) {
-        DBGLOG("rad", "resolving device type table");
         orgDeviceTypeTable =
             patcher.solveSymbol(index, "__ZL15deviceTypeTable");
         if (!orgDeviceTypeTable) {
@@ -878,87 +877,17 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
                                      0x04, 0xbe, 0x1e, 0x00, 0x00, 0x00,
                                      0x5d, 0xe9, 0x51, 0xfe, 0xff, 0xff};
 
-        uint8_t find_load_asd_pt1[] = {0x0f, 0x85, 0x83, 0x00, 0x00, 0x00, 0x48,
-                                       0x8d, 0x35, 0xf7, 0x93, 0xf4, 0x00, 0xba,
-                                       0x00, 0xc1, 0x02, 0x00, 0x4c, 0x89, 0xff,
-                                       0xe8, 0xf2, 0xa6, 0x56, 0x02};
-        uint8_t repl_load_asd_pt1[] = {0x0f, 0x85, 0x83, 0x00, 0x00, 0x00, 0x48,
-                                       0x8b, 0xf1, 0x4c, 0x89, 0xc2, 0x90, 0x90,
-                                       0x90, 0x90, 0x90, 0x90, 0x4c, 0x89, 0xff,
-                                       0xe8, 0xf2, 0xa6, 0x56, 0x02};
-        uint8_t find_load_asd_pt2[] = {0x44, 0x89, 0x66, 0x08, 0x48, 0xc7, 0x46,
-                                       0x0c, 0x00, 0xc1, 0x02, 0x00, 0x48, 0xc7,
-                                       0x46, 0x14, 0x00, 0x00, 0x00, 0x00};
-        uint8_t repl_load_asd_pt2[] = {0x44, 0x89, 0x66, 0x08, 0x4c, 0x89, 0x84,
-                                       0x26, 0x0c, 0x00, 0x00, 0x00, 0x48, 0xc7,
-                                       0x46, 0x14, 0x00, 0x00, 0x00, 0x00};
-        uint8_t find_load_dtm_pt1[] = {
-            0x48, 0x8b, 0xbb, 0xf8, 0x0a, 0x00, 0x00, 0x48, 0x8d, 0x35, 0x47,
-            0x4f, 0xf7, 0x00, 0xba, 0x00, 0x21, 0x00, 0x00, 0xe8, 0x45, 0xa1,
-            0x56, 0x02, 0x48, 0x8d, 0xb5, 0x70, 0xfc, 0xff, 0xff};
-        uint8_t repl_load_dtm_pt1[] = {
-            0x48, 0x8b, 0xbb, 0xf8, 0x0a, 0x00, 0x00, 0x48, 0x8b, 0xf1, 0x49,
-            0x8b, 0xd0, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0xe8, 0x45, 0xa1,
-            0x56, 0x02, 0x48, 0x8d, 0xb5, 0x70, 0xfc, 0xff, 0xff};
-        uint8_t find_load_dtm_pt2[] = {0x44, 0x89, 0x76, 0x08, 0xc7, 0x46,
-                                       0x0c, 0x00, 0x21, 0x00, 0x00, 0x48,
-                                       0x8b, 0x83, 0xb8, 0x2d, 0x00, 0x00};
-        uint8_t repl_load_dtm_pt2[] = {0x44, 0x89, 0x76, 0x08, 0x44, 0x89,
-                                       0x86, 0x0c, 0x00, 0x00, 0x00, 0x48,
-                                       0x8b, 0x83, 0xb8, 0x2d, 0x00, 0x00};
-        KernelPatcher::LookupPatch patches[] = {
-            /*
-             * Patch for _smu_9_0_1_full_asic_reset
-             * This function performs a full ASIC reset.
-             * The patch corrects the sent message to 0x1E;
-             * the original code sends 0x3B, which is wrong for SMU 10.
-             */
-            {&kextRadeonX6000HWLibs, find_asic_reset, repl_asic_reset,
-             arrsize(find_asic_reset), 2},
-            /*
-             * Patches for _psp_asd_load.
-             * _psp_asd_load loads a hardcoded ASD firmware binary
-             * included in the kext as _psp_asd_bin.
-             * The copied data isn't in a table, it is a single
-             * binary copied over to the PSP private memory.
-             * We can't replicate such logic in any AMDGPU kext function,
-             * as the memory accesses to GPU data is inaccessible
-             * from external kexts, therefore, we have to do a hack.
-             * The hack is very straight forward; we have replaced the
-             * assembly that loads hardcoded values from
-             *     lea rsi, [_psp_asd_bin]
-             *     mov edx, 0x2c100
-             *     mov rdi, r15
-             *     call _memcpy
-             * to
-             *     mov rsi, rcx
-             *     mov rdx, r8
-             *     mov rdi, r15
-             *     call _memcpy
-             * so that it gets the pointer and size from parameter 4 and 5.
-             * Register choice was because the parameter 2 and 3 registers
-             * get overwritten before this call to memcpy
-             * The hack we came up with looks like terrible practice,
-             * but this will have to do.
-             * Pain.
-             */
-            {&kextRadeonX6000HWLibs, find_load_asd_pt1, repl_load_asd_pt1,
-             arrsize(find_load_asd_pt1), 2},
-            {&kextRadeonX6000HWLibs, find_load_asd_pt2, repl_load_asd_pt2,
-             arrsize(find_load_asd_pt2), 2},
-            /*
-             * Patches for _psp_dtm_load.
-             * Same idea as _psp_asd_load.
-             */
-            {&kextRadeonX6000HWLibs, find_load_dtm_pt1, repl_load_dtm_pt1,
-             arrsize(find_load_dtm_pt1), 2},
-            {&kextRadeonX6000HWLibs, find_load_dtm_pt2, repl_load_dtm_pt2,
-             arrsize(find_load_dtm_pt2), 2},
-        };
-        for (auto &patch : patches) {
-            patcher.applyLookupPatch(&patch);
-            patcher.clearError();
-        }
+        /*
+         * Patch for _smu_9_0_1_full_asic_reset
+         * This function performs a full ASIC reset.
+         * The patch corrects the sent message to 0x1E;
+         * the original code sends 0x3B, which is wrong for SMU 10.
+         */
+        KernelPatcher::LookupPatch patch = {&kextRadeonX6000HWLibs,
+                                            find_asic_reset, repl_asic_reset,
+                                            arrsize(find_asic_reset), 2};
+        patcher.applyLookupPatch(&patch);
+        patcher.clearError();
 
         return true;
     } else if (kextRadeonX6000Framebuffer.loadIndex == index) {
