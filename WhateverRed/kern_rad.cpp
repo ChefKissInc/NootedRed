@@ -296,12 +296,11 @@ void RAD::wrapPopulateFirmwareDirectory(uint64_t that) {
         that);
     FunctionCast(wrapPopulateFirmwareDirectory,
                  callbackRAD->orgPopulateFirmwareDirectory)(that);
-    NETLOG("rad", "injecting ativvaxy_rv.dat!");
     auto *fwDesc = getFWDescByName("ativvaxy_rv.dat");
-    auto *fwDescBackdoor = getFWDescByName("atidmcub_0.dat");
     if (!fwDesc) {
         panic("Somehow ativvaxy_rv.dat is missing");
     }
+    auto *fwDescBackdoor = getFWDescByName("atidmcub_0.dat");
     if (!fwDescBackdoor) {
         panic("Somehow atidmcub_0.dat is missing");
     }
@@ -313,9 +312,11 @@ void RAD::wrapPopulateFirmwareDirectory(uint64_t that) {
         fwDesc->getBytesNoCopy(), fwDesc->getLength(), 0x200, "atidmcub_0.dat");
     auto *fwDir = *reinterpret_cast<void **>(that + 0xB8);
     NETLOG("rad", "fwDir = %p", fwDir);
+    NETLOG("rad", "inserting ativvaxy_rv.dat!");
     if (!callbackRAD->orgPutFirmware(fwDir, 1, fw)) {
         panic("Failed to inject ativvaxy_rv.dat firmware");
     }
+    NETLOG("rad", "inserting atidmcub_0.dat!");
     if (!callbackRAD->orgPutFirmware(fwDir, 1, fwBackdoor)) {
         panic("Failed to inject atidmcub_0.dat firmware");
     }
@@ -660,8 +661,6 @@ uint64_t RAD::wrapIsAsicCapEnabled(void *that, uint32_t cap) {
      */
     NETLOG("rad", "isAsicCapEnabled: that = %p cap = 0x%X", that, cap);
     switch (cap) {
-        case 0x134:
-            [[fallthrough]];
         case 0x148:
             NETLOG("rad", "isAsicCapEnabled: returning true");
             return true;
