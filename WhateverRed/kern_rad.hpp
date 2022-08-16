@@ -46,7 +46,7 @@ class RAD {
     static RAD *callbackRAD;
     ThreadLocal<IOService *, 8> currentPropProvider;
 
-    mach_vm_address_t orgPanic{};
+	mach_vm_address_t orgPanic{}, orgEnterDebugger{};
     mach_vm_address_t orgSetProperty{}, orgGetProperty{},
         orgGetConnectorsInfoV2{};
     mach_vm_address_t orgGetConnectorsInfoV1{},

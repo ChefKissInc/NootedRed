@@ -127,15 +127,15 @@ void RAD::deinit() {}
     va_end(netdbg_args);
     IOSleep(1000);
     FunctionCast(wrapPanic, callbackRAD->orgPanic)(fmt, args);
-    va_end(args);
-    while (true) {
-        asm volatile("hlt");
-    }
+	PE_enter_debugger("Panic Fallback");
+	for (;;) { asm volatile ("hlt"); }
 }
 
 [[noreturn]] [[gnu::cold]] void RAD::wrapEnterDebugger(const char *cause) {
     NETLOG("rad", "Debugger requested: %s", cause);
-    panic("Debugger requested");
+	IOSleep(1000);
+	FunctionCast(wrapEnterDebugger, callbackRAD->orgEnterDebugger)(cause);
+	panic("Debugger call somehow returned");
 }
 
 void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info) {
