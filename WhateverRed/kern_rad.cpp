@@ -671,6 +671,69 @@ uint64_t RAD::wrapIsAsicCapEnabled(void *that, uint32_t cap) {
     }
 }
 
+void RAD::updatePwmMaxBrightnessFromInternalDisplay() {
+    OSDictionary *matching =
+        IOService::serviceMatching("AppleBacklightDisplay");
+    if (matching == nullptr) {
+        NETLOG(
+            "rad",
+            "isRadeonX6000WiredToInternalDisplay null AppleBacklightDisplay");
+        return;
+    }
+
+    OSIterator *iter = IOService::getMatchingServices(matching);
+    if (iter == nullptr) {
+        NETLOG("rad", "isRadeonX6000WiredToInternalDisplay null matching");
+        matching->release();
+        return;
+    }
+
+    IORegistryEntry *display =
+        OSDynamicCast(IORegistryEntry, iter->getNextObject());
+    if (display == nullptr) {
+        NETLOG("rad", "isRadeonX6000WiredToInternalDisplay null display");
+        iter->release();
+        matching->release();
+        return;
+    }
+
+    OSDictionary *iodispparm = OSDynamicCast(
+        OSDictionary, display->getProperty("IODisplayParameters"));
+    if (iodispparm == nullptr) {
+        NETLOG("rad",
+               "isRadeonX6000WiredToInternalDisplay null IODisplayParameters");
+        iter->release();
+        matching->release();
+        return;
+    }
+
+    OSDictionary *linearbri =
+        OSDynamicCast(OSDictionary, iodispparm->getObject("linear-brightness"));
+    if (linearbri == nullptr) {
+        NETLOG("rad",
+               "isRadeonX6000WiredToInternalDisplay null linear-brightness");
+        iter->release();
+        matching->release();
+        return;
+    }
+
+    OSNumber *maxbri = OSDynamicCast(OSNumber, linearbri->getObject("max"));
+    if (maxbri == nullptr) {
+        NETLOG("rad", "isRadeonX6000WiredToInternalDisplay null max");
+        iter->release();
+        matching->release();
+        return;
+    }
+
+    callbackRAD->maxPwmBacklightLvl = maxbri->unsigned32BitValue();
+    NETLOG("rad",
+           "updatePwmMaxBrightnessFromInternalDisplay get max brightness: 0x%x",
+           callbackRAD->maxPwmBacklightLvl);
+
+    iter->release();
+    matching->release();
+}
+
 uint32_t RAD::wrapDcePanelCntlHwInit(void *panel_cntl) {
     callbackRAD->panelCntlPtr = panel_cntl;
     callbackRAD
@@ -768,8 +831,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              "Even"
              "t_tmj",
              wrapNotifyLinkChange, orgNotifyLinkChange},
-            {"__ZN23AtiVramInfoInterface_V214createVramInfoEP14AtiVBiosHelperj",
-             createVramInfo},
             {"__ZN13AtomBiosProxy19createAtomBiosProxyER16AtomBiosInitData",
              wrapCreateAtomBiosProxy, orgCreateAtomBiosProxy},
             {"__ZN13ATIController20populateDeviceMemoryE13PCI_REG_INDEX",
@@ -914,8 +975,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             {"__ZNK34AMDRadeonX6000_"
              "AmdBiosParserHelper22getVideoMemoryBitWidthEv",
              wrapGetVideoMemoryBitWidth, orgGetVideoMemoryBitWidth},
-            {"__ZN15AmdAtomVramInfo14createVramInfoEP15AmdAtomFwHelperj",
-             wrapCreateVramInfo},
             {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo",
              wrapPopulateVramInfo},
             {"__ZNK26AMDRadeonX6000_AmdAsicInfo11getFamilyIdEv",
@@ -926,21 +985,38 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              wrapIsAsicCapEnabled},
         };
 
-        uint8_t find_null_check[] = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00,
-                                     0x48, 0x85, 0xc0, 0x0f, 0x84, 0xa1, 0x00,
-                                     0x00, 0x00, 0x48, 0x8b, 0x7b, 0x18};
-        uint8_t repl_null_check[] = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00,
-                                     0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,
-                                     0x90, 0x90, 0x48, 0x8b, 0x7b, 0x18};
-        /*
-         * Neutralise PSP Firmware Info creation null check
-         * to proceed with Controller Core Services initialisation.
-         */
-        KernelPatcher::LookupPatch patch = {&kextRadeonX6000Framebuffer,
-                                            find_null_check, repl_null_check,
-                                            arrsize(find_null_check), 2};
-        patcher.applyLookupPatch(&patch);
-        patcher.clearError();
+        uint8_t find_null_check1[] = {0x48, 0x89, 0x83, 0x90, 0x00, 0x00, 0x00,
+                                      0x48, 0x85, 0xc0, 0x0f, 0x84, 0x89, 0x00,
+                                      0x00, 0x00, 0x48, 0x8b, 0x7b, 0x18};
+        uint8_t repl_null_check1[] = {0x48, 0x89, 0x83, 0x90, 0x00, 0x00, 0x00,
+                                      0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,
+                                      0x90, 0x90, 0x48, 0x8b, 0x7b, 0x18};
+
+        uint8_t find_null_check2[] = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00,
+                                      0x48, 0x85, 0xc0, 0x0f, 0x84, 0xa1, 0x00,
+                                      0x00, 0x00, 0x48, 0x8b, 0x7b, 0x18};
+        uint8_t repl_null_check2[] = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00,
+                                      0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,
+                                      0x90, 0x90, 0x48, 0x8b, 0x7b, 0x18};
+
+        KernelPatcher::LookupPatch patches[] = {
+            /*
+             * Neutralise VRAM Info creation null check
+             * to proceed with Controller Core Services initialisation.
+             */
+            {&kextRadeonX6000Framebuffer, find_null_check1, repl_null_check1,
+             arrsize(find_null_check1), 2},
+            /*
+             * Neutralise PSP Firmware Info creation null check
+             * to proceed with Controller Core Services initialisation.
+             */
+            {&kextRadeonX6000Framebuffer, find_null_check2, repl_null_check2,
+             arrsize(find_null_check2), 2},
+        };
+        for (auto &patch : patches) {
+            patcher.applyLookupPatch(&patch);
+            patcher.clearError();
+        }
 
         if (!patcher.routeMultiple(index, requests, arrsize(requests), address,
                                    size)) {

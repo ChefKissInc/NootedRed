@@ -196,8 +196,6 @@ class RAD {
     static IOReturn wrapPopulateDeviceInfo(uint64_t that);
     static uint32_t wrapGetVideoMemoryType(void *that);
     static uint32_t wrapGetVideoMemoryBitWidth(void *that);
-    static IntegratedVRAMInfoInterface *wrapCreateVramInfo(
-        void *fwHelper, uint32_t tableOffset);
     static IOReturn wrapPopulateVramInfo(void *that, void *param1);
     /* ---------------- */
 
