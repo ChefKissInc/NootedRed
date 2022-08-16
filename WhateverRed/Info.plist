@@ -167,7 +167,7 @@
 				<key>EnableSwVCNFWLoading</key>
 				<integer>0</integer>
 				<key>EnableVCNFWLog</key>
-				<integer>1</integer>
+				<integer>0</integer>
 			</dict>
 			<key>cail_properties</key>
 			<dict/>
@@ -345,11 +345,11 @@
 			<key>aty_properties</key>
 			<dict>
 				<key>DalDisableDisplayID2</key>
-				<integer>0</integer>
+				<integer>1</integer>
 				<key>DalDisableLTTPR</key>
-				<integer>0</integer>
+				<integer>1</integer>
 				<key>DalSkipDetectionLT</key>
-				<integer>0</integer>
+				<integer>1</integer>
 				<key>PP_DisableClockStretcher</key>
 				<integer>1</integer>
 				<key>PP_DisableULV</key>
