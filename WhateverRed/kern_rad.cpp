@@ -127,15 +127,17 @@ void RAD::deinit() {}
     va_end(netdbg_args);
     IOSleep(1000);
     FunctionCast(wrapPanic, callbackRAD->orgPanic)(fmt, args);
-	PE_enter_debugger("Panic Fallback");
-	for (;;) { asm volatile ("hlt"); }
+    PE_enter_debugger("Panic Fallback");
+    for (;;) {
+        asm volatile("hlt");
+    }
 }
 
 [[noreturn]] [[gnu::cold]] void RAD::wrapEnterDebugger(const char *cause) {
     NETLOG("rad", "Debugger requested: %s", cause);
-	IOSleep(1000);
-	FunctionCast(wrapEnterDebugger, callbackRAD->orgEnterDebugger)(cause);
-	panic("Debugger call somehow returned");
+    IOSleep(1000);
+    FunctionCast(wrapEnterDebugger, callbackRAD->orgEnterDebugger)(cause);
+    panic("Debugger call somehow returned");
 }
 
 void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info) {
@@ -791,6 +793,25 @@ IOReturn RAD::wrapPopulateVramInfo(void *that, void *param1) {
     return kIOReturnSuccess;
 }
 
+uint64_t RAD::wrapIsAsicCapEnabled(void *that, uint32_t cap) {
+    /*
+     * The AMD kexts have no ASIC Capabilities for iGPUs,
+     * so the logic fails to query for capabilities, therefore
+     * all capabilities return false, and the wrong logic is used.
+     * From our RE efforts, we have found that for 0x148 it needs
+     * to return true.
+     */
+    NETLOG("rad", "isAsicCapEnabled: that = %p cap = 0x%X", that, cap);
+    switch (cap) {
+        case 0x148:
+            NETLOG("rad", "isAsicCapEnabled: returning true");
+            return true;
+        default:
+            NETLOG("rad", "isAsicCapEnabled: returning false");
+            return false;
+    }
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index,
                       mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
@@ -1026,6 +1047,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              wrapGetFamilyId},
             {"__ZN30AMDRadeonX6000_AmdAsicInfoNavi18populateDeviceInfoEv",
              wrapPopulateDeviceInfo, orgPopulateDeviceInfo},
+            {"__ZN20AmdAppleCailServices16isAsicCapEnabledEPvm",
+             wrapIsAsicCapEnabled},
         };
 
         uint8_t find_null_check[] = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00,

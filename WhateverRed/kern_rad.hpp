@@ -46,7 +46,7 @@ class RAD {
     static RAD *callbackRAD;
     ThreadLocal<IOService *, 8> currentPropProvider;
 
-	mach_vm_address_t orgPanic{}, orgEnterDebugger{};
+    mach_vm_address_t orgPanic{}, orgEnterDebugger{};
     mach_vm_address_t orgSetProperty{}, orgGetProperty{},
         orgGetConnectorsInfoV2{};
     mach_vm_address_t orgGetConnectorsInfoV1{},
@@ -269,6 +269,7 @@ class RAD {
                                         va_list args);
     static void wrapCosReleasePrintVaList(void *ttl, char *header, char *fmt,
                                           va_list args);
+    static uint64_t wrapIsAsicCapEnabled(void *that, uint32_t cap);
     /* ----------- */
 
     void processHardwareKext(KernelPatcher &patcher, size_t hwIndex,
