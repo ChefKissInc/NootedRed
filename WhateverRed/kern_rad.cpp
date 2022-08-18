@@ -839,6 +839,20 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
                                        address, size))
             panic("Failed to route AMDSupport symbols");
 
+        /*
+         * Neutralises VRAM Info Null Check
+         */
+        uint8_t find[] = {0x48, 0x89, 0x83, 0x18, 0x01, 0x00, 0x00,
+                          0x31, 0xc0, 0x48, 0x85, 0xc9, 0x75, 0x3e,
+                          0x48, 0x8d, 0x3d, 0xa4, 0xe2, 0x01, 0x00};
+        uint8_t repl[] = {0x48, 0x89, 0x83, 0x18, 0x01, 0x00, 0x00,
+                          0x31, 0xc0, 0x48, 0x85, 0xc9, 0x74, 0x3e,
+                          0x48, 0x8d, 0x3d, 0xa4, 0xe2, 0x01, 0x00};
+        KernelPatcher::LookupPatch patch{&kextRadeonSupport, find, repl,
+                                         arrsize(find), 2};
+        patcher.applyLookupPatch(&patch);
+        patcher.clearError();
+
         return true;
     } else if (kextRadeonX6000HWLibs.loadIndex == index) {
         orgDeviceTypeTable =
