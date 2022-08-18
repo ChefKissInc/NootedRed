@@ -497,7 +497,7 @@ IOReturn RAD::wrapPopulateDeviceInfo(uint64_t that) {
     auto ret = FunctionCast(wrapPopulateDeviceInfo,
                             callbackRAD->orgPopulateDeviceInfo)(that);
     auto *pciDev = *reinterpret_cast<IOPCIDevice **>(that + 0x18);
-    auto *familyId = reinterpret_cast<uint32_t *>(that + 0x64);
+    auto *familyId = reinterpret_cast<uint32_t *>(that + 0x44);
     auto deviceId = pciDev->configRead16(kIOPCIConfigDeviceID);
     auto *revision = reinterpret_cast<uint32_t *>(that + 0x48);
     auto *emulatedRevision = reinterpret_cast<uint32_t *>(that + 0x4c) +
