@@ -11,7 +11,6 @@
 		1C748C2D1C21952C0024EED2 /* kern_start.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C748C2C1C21952C0024EED2 /* kern_start.cpp */; };
 		1C9CB7B01C789FF500231E41 /* kern_rad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C9CB7AE1C789FF500231E41 /* kern_rad.cpp */; };
 		1C9CB7B11C789FF500231E41 /* kern_rad.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 1C9CB7AF1C789FF500231E41 /* kern_rad.hpp */; };
-		4088D17928837284001ECF4B /* kern_atom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4088D17828837284001ECF4B /* kern_atom.cpp */; };
 		408F2020288ACBE6002EEC15 /* kern_fw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 408F201F288ACBE6002EEC15 /* kern_fw.cpp */; };
 		6CBEB3C628911DCF0063B877 /* kern_netdbg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6CBEB3C428911DCF0063B877 /* kern_netdbg.cpp */; };
 		6CBEB3C728911DD00063B877 /* kern_netdbg.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 6CBEB3C528911DCF0063B877 /* kern_netdbg.hpp */; };
@@ -44,7 +43,6 @@
 		1C9CB7AE1C789FF500231E41 /* kern_rad.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = kern_rad.cpp; sourceTree = "<group>"; };
 		1C9CB7AF1C789FF500231E41 /* kern_rad.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = kern_rad.hpp; sourceTree = "<group>"; };
 		402D48C228A8903C0064644D /* atidmcub_0.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = atidmcub_0.dat; sourceTree = "<group>"; };
-		4088D17828837284001ECF4B /* kern_atom.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_atom.cpp; sourceTree = "<group>"; };
 		408F201C288AC552002EEC15 /* ativvaxy_rv.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = ativvaxy_rv.dat; sourceTree = "<group>"; };
 		408F201E288ACBB0002EEC15 /* kern_fw.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_fw.hpp; sourceTree = "<group>"; };
 		408F201F288ACBE6002EEC15 /* kern_fw.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_fw.cpp; sourceTree = "<group>"; };
@@ -116,7 +114,6 @@
 				CEA03B5D20EE825A00BA842F /* kern_wred.hpp */,
 				1C748C2E1C21952C0024EED2 /* Info.plist */,
 				198893C128085E2000C02A16 /* kern_model.cpp */,
-				4088D17828837284001ECF4B /* kern_atom.cpp */,
 				408F201E288ACBB0002EEC15 /* kern_fw.hpp */,
 				408F201F288ACBE6002EEC15 /* kern_fw.cpp */,
 				6CBEB3C428911DCF0063B877 /* kern_netdbg.cpp */,
@@ -295,7 +292,6 @@
 				1C9CB7B01C789FF500231E41 /* kern_rad.cpp in Sources */,
 				CEA03B5E20EE825A00BA842F /* kern_wred.cpp in Sources */,
 				6CBEB3C628911DCF0063B877 /* kern_netdbg.cpp in Sources */,
-				4088D17928837284001ECF4B /* kern_atom.cpp in Sources */,
 				CE405ED91E4A080700AA0B3D /* plugin_start.cpp in Sources */,
 				198893C228085E2000C02A16 /* kern_model.cpp in Sources */,
 				1C748C2D1C21952C0024EED2 /* kern_start.cpp in Sources */,

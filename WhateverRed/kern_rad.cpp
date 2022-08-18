@@ -173,9 +173,70 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that,
     NETDBG::enabled = true;
     NETLOG("rad", "patching device type table");
     MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock);
-    *(uint32_t *)callbackRAD->orgDeviceTypeTable =
-        provider->extendedConfigRead16(kIOPCIConfigDeviceID);
+    auto deviceId = provider->extendedConfigRead16(kIOPCIConfigDeviceID);
+    auto revision = provider->extendedConfigRead16(kIOPCIConfigRevisionID);
+    *(uint32_t *)callbackRAD->orgDeviceTypeTable = deviceId;
     *((uint32_t *)callbackRAD->orgDeviceTypeTable + 1) = 1;
+    NETLOG("rad", "locating Init Caps entry");
+    CailInitAsicCapEntry *initCaps = nullptr;
+    for (size_t i = 0; i < 789; i++) {
+        auto *temp = callbackRAD->orgAsicInitCapsTable + i;
+        if (temp->familyId == 0x8e && temp->deviceId == deviceId) {
+            initCaps = temp;
+            break;
+        }
+    }
+    if (!initCaps) {
+        panic("rad: Failed to find Init Caps entry for device ID 0x%X",
+              deviceId);
+    }
+    callbackRAD->orgAsicCapsTable->familyId =
+        callbackRAD->orgAsicCapsTableHWLibs->familyId = 0x8e;
+    callbackRAD->orgAsicCapsTable->deviceId =
+        callbackRAD->orgAsicCapsTableHWLibs->deviceId =
+            static_cast<uint32_t>(initCaps->deviceId);
+    callbackRAD->orgAsicCapsTable->revision =
+        callbackRAD->orgAsicCapsTableHWLibs->revision = revision;
+    callbackRAD->orgAsicCapsTable->pciRev =
+        callbackRAD->orgAsicCapsTableHWLibs->pciRev = 0xFFFFFFFF;
+    switch (deviceId) {
+        case 0x15d8:
+            callbackRAD->orgAsicCapsTable->emulatedRev =
+                callbackRAD->orgAsicCapsTableHWLibs->emulatedRev =
+                    revision + 0x41;
+            break;
+        case 0x15dd:
+            if (revision >= 0x8) {
+                callbackRAD->orgAsicCapsTable->emulatedRev =
+                    callbackRAD->orgAsicCapsTableHWLibs->emulatedRev =
+                        revision + 0x79;
+            }
+            break;
+        case 0x15E7:
+            [[fallthrough]];
+        case 0x164C:
+            [[fallthrough]];
+        case 0x1636:
+            [[fallthrough]];
+        case 0x1638:
+            callbackRAD->orgAsicCapsTable->emulatedRev =
+                callbackRAD->orgAsicCapsTableHWLibs->emulatedRev =
+                    revision + 0x91;
+            break;
+        default:
+            if (revision == 1) {
+                callbackRAD->orgAsicCapsTable->emulatedRev =
+                    callbackRAD->orgAsicCapsTableHWLibs->emulatedRev =
+                        revision + 0x20;
+            } else {
+                callbackRAD->orgAsicCapsTable->emulatedRev =
+                    callbackRAD->orgAsicCapsTableHWLibs->emulatedRev =
+                        revision + 0x10;
+            }
+            break;
+    }
+    memmove(callbackRAD->orgAsicCapsTable->caps, initCaps->caps, 0x40);
+    memmove(callbackRAD->orgAsicCapsTableHWLibs->caps, initCaps->caps, 0x40);
     MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
     NETLOG("rad", "calling original AmdTtlServices constructor");
@@ -660,25 +721,6 @@ IOReturn RAD::wrapPopulateVramInfo(void *that, void *param1) {
     return kIOReturnSuccess;
 }
 
-uint64_t RAD::wrapIsAsicCapEnabled(void *that, uint32_t cap) {
-    /*
-     * The AMD kexts have no ASIC Capabilities for iGPUs,
-     * so the logic fails to query for capabilities, therefore
-     * all capabilities return false, and the wrong logic is used.
-     * From our RE efforts, we have found that for 0x148 it needs
-     * to return true.
-     */
-    NETLOG("rad", "isAsicCapEnabled: that = %p cap = 0x%X", that, cap);
-    switch (cap) {
-        case 0x148:
-            NETLOG("rad", "isAsicCapEnabled: returning true");
-            return true;
-        default:
-            NETLOG("rad", "isAsicCapEnabled: returning false");
-            return false;
-    }
-}
-
 void RAD::updatePwmMaxBrightnessFromInternalDisplay() {
     OSDictionary *matching =
         IOService::serviceMatching("AppleBacklightDisplay");
@@ -747,8 +789,10 @@ uint32_t RAD::wrapDcePanelCntlHwInit(void *panel_cntl) {
     callbackRAD
         ->updatePwmMaxBrightnessFromInternalDisplay();  // read max brightness
                                                         // value from IOReg
+    NETLOG("rad", "dcePanelCntlHwInit: panel_cntl = %p", panel_cntl);
     uint32_t ret = FunctionCast(wrapDcePanelCntlHwInit,
                                 callbackRAD->orgDcePanelCntlHwInit)(panel_cntl);
+    NETLOG("rad", "dcePanelCntlHwInit returned 0x%X", ret);
     return ret;
 }
 
@@ -895,6 +939,17 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
                 "constructor");
         }
 
+        orgAsicCapsTableHWLibs = reinterpret_cast<CailAsicCapEntry *>(
+            patcher.solveSymbol(index, "__ZL20CAIL_ASIC_CAPS_TABLE"));
+        if (!orgAsicCapsTableHWLibs) {
+            panic("Failed to resolve HWLibs CAIL_ASIC_CAPS_TABLE");
+        }
+        orgAsicInitCapsTable = reinterpret_cast<CailInitAsicCapEntry *>(
+            patcher.solveSymbol(index, "_CAILAsicCapsInitTable"));
+        if (!orgAsicInitCapsTable) {
+            panic("Failed to resolve _CAILAsicCapsInitTable");
+        }
+
         KernelPatcher::RouteRequest requests[] = {
             {"__ZN14AmdTtlServicesC2EP11IOPCIDevice",
              wrapAmdTtlServicesConstructor, orgAmdTtlServicesConstructor},
@@ -946,8 +1001,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             {"__ZN14AmdTtlServices21cosReleasePrintVaListEPvPKcS2_P13__va_list_"
              "tag",
              wrapCosReleasePrintVaList, orgCosReleasePrintVaList},
-            {"__ZN20AtiAppleCailServices16isAsicCapEnabledEPvm",
-             wrapIsAsicCapEnabled},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size))
@@ -981,6 +1034,12 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             patcher.clearError();
         }
 
+        orgAsicCapsTable = reinterpret_cast<CailAsicCapEntry *>(
+            patcher.solveSymbol(index, "__ZL20CAIL_ASIC_CAPS_TABLE"));
+        if (!orgAsicCapsTable) {
+            panic("Failed to resolve CAIL_ASIC_CAPS_TABLE");
+        }
+
         KernelPatcher::RouteRequest requests[] = {
             {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit,
              orgDcePanelCntlHwInit},
@@ -1003,8 +1062,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              wrapGetFamilyId},
             {"__ZN30AMDRadeonX6000_AmdAsicInfoNavi18populateDeviceInfoEv",
              wrapPopulateDeviceInfo, orgPopulateDeviceInfo},
-            {"__ZN20AmdAppleCailServices16isAsicCapEnabledEPvm",
-             wrapIsAsicCapEnabled},
         };
 
         uint8_t find_null_check1[] = {0x48, 0x89, 0x83, 0x90, 0x00, 0x00, 0x00,

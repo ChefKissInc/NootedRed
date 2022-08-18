@@ -76,6 +76,8 @@ class RAD {
     mach_vm_address_t orgAMDRadeonX6000AmdRadeonFramebufferGetAttribute{};
     mach_vm_address_t orgPopulateDeviceInfo{};
     mach_vm_address_t orgGetVideoMemoryType{}, orgGetVideoMemoryBitWidth{};
+    /// Max 517 Entries
+    CailAsicCapEntry *orgAsicCapsTable = nullptr;
     /* ---------------- */
 
     /* X5000HWLibs */
@@ -98,6 +100,10 @@ class RAD {
     mach_vm_address_t orgCosDebugPrint{}, orgMCILDebugPrint{};
     mach_vm_address_t orgCosDebugPrintVaList{};
     mach_vm_address_t orgCosReleasePrintVaList{};
+    /// Max 517 Entries
+    CailAsicCapEntry *orgAsicCapsTableHWLibs = nullptr;
+    /// Max 789 entries
+    CailInitAsicCapEntry *orgAsicInitCapsTable = nullptr;
     /* ----------- */
 
     template <size_t Index>
@@ -179,8 +185,6 @@ class RAD {
     static bool wrapInitializeTtl(void *that, void *param1);
     static void *wrapCreateAtomBiosProxy(void *param1);
     static IOReturn wrapPopulateDeviceMemory(void *that, uint32_t reg);
-    static IntegratedVRAMInfoInterface *createVramInfo(void *helper,
-                                                       uint32_t offset);
     static IOReturn wrapQueryComputeQueueIsIdle(void *that, uint64_t param1);
     static bool wrapAMDHWChannelWaitForIdle(void *that, uint64_t param1);
 
@@ -246,7 +250,6 @@ class RAD {
                                         va_list args);
     static void wrapCosReleasePrintVaList(void *ttl, char *header, char *fmt,
                                           va_list args);
-    static uint64_t wrapIsAsicCapEnabled(void *that, uint32_t cap);
     /* ----------- */
 
     void processHardwareKext(KernelPatcher &patcher, size_t hwIndex,
