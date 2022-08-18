@@ -40,7 +40,7 @@
 			<key>IOMatchCategory</key>
 			<string>AMDRadeonX6000HWServices</string>
 			<key>IOPCIMatch</key>
-			<string>0x15DD1002 0x15D81002 0x164C1002 0x16361002</string>
+			<string>0x15DD1002 0x15D81002 0x15E71002 0x164C1002 0x16381002 0x16361002</string>
 			<key>IOPCITunnelCompatible</key>
 			<true/>
 			<key>IOProbeScore</key>
@@ -62,7 +62,7 @@
 			<key>IOMatchCategory</key>
 			<string>IOFramebuffer</string>
 			<key>IOPCIMatch</key>
-			<string>0x15DD1002 0x15D81002 0x164C1002 0x16361002</string>
+			<string>0x15DD1002 0x15D81002 0x15E71002 0x164C1002 0x16381002 0x16361002</string>
 			<key>IOPCITunnelCompatible</key>
 			<true/>
 			<key>IOProbeScore</key>
@@ -148,7 +148,7 @@
 			<key>IOMatchCategory</key>
 			<string>IOAccelerator</string>
 			<key>IOPCIMatch</key>
-			<string>0x15DD1002 0x15D81002 0x164C1002 0x16361002</string>
+			<string>0x15DD1002 0x15D81002 0x15E71002 0x164C1002 0x16381002 0x16361002</string>
 			<key>IOPCITunnelCompatible</key>
 			<true/>
 			<key>IOPropertyMatch</key>
@@ -261,7 +261,7 @@
 			<key>IOMatchCategory</key>
 			<string>ATIFramebuffer</string>
 			<key>IOPCIMatch</key>
-			<string>0x15DD1002 0x15D81002 0x164C1002 0x16361002</string>
+			<string>0x15DD1002 0x15D81002 0x15E71002 0x164C1002 0x16381002 0x16361002</string>
 			<key>IOPCITunnelCompatible</key>
 			<true/>
 			<key>IOProbeScore</key>
