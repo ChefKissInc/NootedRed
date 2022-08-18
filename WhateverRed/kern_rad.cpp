@@ -169,10 +169,12 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that,
     NETDBG::enabled = true;
     NETLOG("rad", "patching device type table");
     WIOKit::renameDevice(provider, "GFX0");
-    MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock);
+	if (MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS) {
+		panic("Failed to enable kernel writing.");
+	}
     auto deviceId = provider->extendedConfigRead16(kIOPCIConfigDeviceID);
-    callbackRAD->orgDeviceTypeTable[0] = deviceId;
-    callbackRAD->orgDeviceTypeTable[1] = 6;
+    *callbackRAD->orgDeviceTypeTable = deviceId;
+    *(callbackRAD->orgDeviceTypeTable + 1) = 6;
     MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
     NETLOG("rad", "calling original AmdTtlServices constructor");
@@ -236,10 +238,8 @@ uint64_t RAD::wrapPspSwInit(uint32_t *param1, uint32_t *param2) {
            "_psp_sw_init: param1: 0:0x%X 1:0x%X 2:0x%X 3:0x%X 4:0x%X 5:0x%X",
            param1[0], param1[1], param1[2], param1[3], param1[4], param1[5]);
     switch (param1[3]) {
-        case 0x9:
-            [[fallthrough]];
         case 0xA:
-            NETLOG("rad", "Spoofing PSP version v9.x.x/v10.x.x to v9.0.2");
+            NETLOG("rad", "Spoofing PSP version v10.x.x to v9.0.2");
             param1[3] = 0x9;
             param1[4] = 0x0;
             param1[5] = 0x2;
@@ -508,7 +508,9 @@ IOReturn RAD::wrapPopulateDeviceInfo(uint64_t that) {
            deviceId, *revision, *emulatedRevision);
     *familyId = 0x8e;
     NETLOG("rad", "locating Init Caps entry");
-    MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock);
+	if (MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS) {
+		panic("Failed to enable kernel writing");
+	}
     CailInitAsicCapEntry *initCaps = nullptr;
     for (size_t i = 0; i < 789; i++) {
         auto *temp = callbackRAD->orgAsicInitCapsTable + i;
