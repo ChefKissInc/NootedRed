@@ -185,23 +185,13 @@ class RAD {
     static IOReturn wrapQueryComputeQueueIsIdle(void *that, uint64_t param1);
     static bool wrapAMDHWChannelWaitForIdle(void *that, uint64_t param1);
 
-    /* X6000Framebuffer */
-    static uint32_t wrapDcePanelCntlHwInit(void *panel_cntl);
-    static IOReturn wrapAMDRadeonX6000AmdRadeonFramebufferSetAttribute(
-        IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
-        uintptr_t value);
-    static IOReturn wrapAMDRadeonX6000AmdRadeonFramebufferGetAttribute(
-        IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
-        uintptr_t *value);
+    static uint16_t emulatedRevisionOff(uint16_t revision, uint16_t deviceId);
+    /* AMD10000Controller */
     static uint16_t wrapGetFamilyId();
-    static uint16_t wrapGetEnumeratedRevision(uint64_t that);
     static IOReturn wrapPopulateDeviceInfo(uint64_t that);
-    static uint32_t wrapGetVideoMemoryType(void *that);
-    static uint32_t wrapGetVideoMemoryBitWidth(void *that);
-    static IOReturn wrapPopulateVramInfo(void *that, void *param1);
     /* ---------------- */
 
-    /* X6000HWLibs */
+    /* X5000HWLibs */
     static void wrapAmdTtlServicesConstructor(IOService *that,
                                               IOPCIDevice *provider);
     static uint64_t wrapIpiSmuSwInit(void *tlsInstance);
