@@ -172,7 +172,7 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that,
     MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock);
     auto deviceId = provider->extendedConfigRead16(kIOPCIConfigDeviceID);
     callbackRAD->orgDeviceTypeTable[0] = deviceId;
-    callbackRAD->orgDeviceTypeTable[1] = 1;
+    callbackRAD->orgDeviceTypeTable[1] = 6;
     MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
     NETLOG("rad", "calling original AmdTtlServices constructor");
@@ -314,11 +314,11 @@ void RAD::wrapPopulateFirmwareDirectory(uint64_t that) {
     auto *fwDir = *reinterpret_cast<void **>(that + 0xB8);
     NETLOG("rad", "fwDir = %p", fwDir);
     NETLOG("rad", "inserting ativvaxy_rv.dat!");
-    if (!callbackRAD->orgPutFirmware(fwDir, 1, fw)) {
+    if (!callbackRAD->orgPutFirmware(fwDir, 6, fw)) {
         panic("Failed to inject ativvaxy_rv.dat firmware");
     }
     NETLOG("rad", "inserting atidmcub_0.dat!");
-    if (!callbackRAD->orgPutFirmware(fwDir, 1, fwBackdoor)) {
+    if (!callbackRAD->orgPutFirmware(fwDir, 6, fwBackdoor)) {
         panic("Failed to inject atidmcub_0.dat firmware");
     }
 }
