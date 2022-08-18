@@ -277,8 +277,6 @@
 			<dict>
 				<key>CFG_CORRECT_BLPT</key>
 				<true/>
-				<key>CFG_NO_HDCP</key>
-				<false/>
 				<key>CFG_TRANS_WSRV</key>
 				<true/>
 				<key>CFG_UFL_CHK</key>
@@ -291,7 +289,7 @@
 			<key>aty_properties</key>
 			<dict>
 				<key>DalDisableDisplayID2</key>
-				<integer>0</integer>
+				<integer>1</integer>
 				<key>DalDisableLTTPR</key>
 				<integer>1</integer>
 				<key>DalSkipDetectionLT</key>
