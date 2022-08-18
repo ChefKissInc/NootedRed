@@ -496,11 +496,11 @@ IOReturn RAD::wrapPopulateDeviceInfo(uint64_t that) {
            that);
     auto ret = FunctionCast(wrapPopulateDeviceInfo,
                             callbackRAD->orgPopulateDeviceInfo)(that);
-    auto *familyId = reinterpret_cast<uint32_t *>(that + 0x60);
-    auto deviceId = (*reinterpret_cast<IOPCIDevice **>(that + 0x18))
-                        ->configRead16(kIOPCIConfigDeviceID);
-    auto *revision = reinterpret_cast<uint32_t *>(that + 0x68);
-    auto *emulatedRevision = reinterpret_cast<uint32_t *>(that + 0x6c) +
+    auto *pciDev = *reinterpret_cast<IOPCIDevice **>(that + 0x18);
+    auto *familyId = reinterpret_cast<uint32_t *>(that + 0x64);
+    auto deviceId = pciDev->configRead16(kIOPCIConfigDeviceID);
+    auto *revision = reinterpret_cast<uint32_t *>(that + 0x48);
+    auto *emulatedRevision = reinterpret_cast<uint32_t *>(that + 0x4c) +
                              emulatedRevisionOff(*revision, deviceId);
     NETLOG("rad",
            "deviceId = 0x%X revision = 0x%X "

@@ -62,19 +62,8 @@ class RAD {
     mach_vm_address_t orgPopulateDeviceMemory{}, orgQueryComputeQueueIsIdle{};
     mach_vm_address_t orgAMDHWChannelWaitForIdle{};
 
-    /* X6000Framebuffer */
-    uint32_t curPwmBacklightLvl = 0;
-    uint32_t maxPwmBacklightLvl = 0xff7b;
-    void *panelCntlPtr = NULL;
-    void updatePwmMaxBrightnessFromInternalDisplay();
-    using t_DceDriverSetBacklight = void (*)(void *panel_cntl,
-                                             uint32_t backlight_pwm_u16_16);
-    t_DceDriverSetBacklight orgDceDriverSetBacklight{nullptr};
-    mach_vm_address_t orgDcePanelCntlHwInit{};
-    mach_vm_address_t orgAMDRadeonX6000AmdRadeonFramebufferSetAttribute{};
-    mach_vm_address_t orgAMDRadeonX6000AmdRadeonFramebufferGetAttribute{};
+    /* AMD10000Controller */
     mach_vm_address_t orgPopulateDeviceInfo{};
-    mach_vm_address_t orgGetVideoMemoryType{}, orgGetVideoMemoryBitWidth{};
     /// Max 517 Entries
     CailAsicCapEntry *orgAsicCapsTable = nullptr;
     /* ---------------- */
@@ -91,7 +80,7 @@ class RAD {
     mach_vm_address_t orgCAILQueryEngineRunningState{},
         orgCailMonitorEngineInternalState{};
     mach_vm_address_t orgCailMonitorPerformanceCounter{};
-    mach_vm_address_t orgSMUMInitialize{}, orgPECIRetrieveBiosDataTable{};
+    mach_vm_address_t orgSMUMInitialize{};
     t_Vega10PowerTuneServicesConstructor orgVega10PowerTuneServicesConstructor =
         nullptr;
     mach_vm_address_t orgCosDebugPrint{}, orgMCILDebugPrint{};
