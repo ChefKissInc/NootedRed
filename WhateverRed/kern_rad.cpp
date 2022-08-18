@@ -169,9 +169,10 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that,
     NETDBG::enabled = true;
     NETLOG("rad", "patching device type table");
     WIOKit::renameDevice(provider, "GFX0");
-	if (MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS) {
-		panic("Failed to enable kernel writing.");
-	}
+    if (MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) !=
+        KERN_SUCCESS) {
+        panic("Failed to enable kernel writing.");
+    }
     auto deviceId = provider->extendedConfigRead16(kIOPCIConfigDeviceID);
     *callbackRAD->orgDeviceTypeTable = deviceId;
     *(callbackRAD->orgDeviceTypeTable + 1) = 6;
@@ -508,9 +509,10 @@ IOReturn RAD::wrapPopulateDeviceInfo(uint64_t that) {
            deviceId, *revision, *emulatedRevision);
     *familyId = 0x8e;
     NETLOG("rad", "locating Init Caps entry");
-	if (MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS) {
-		panic("Failed to enable kernel writing");
-	}
+    if (MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) !=
+        KERN_SUCCESS) {
+        panic("Failed to enable kernel writing");
+    }
     CailInitAsicCapEntry *initCaps = nullptr;
     for (size_t i = 0; i < 789; i++) {
         auto *temp = callbackRAD->orgAsicInitCapsTable + i;
