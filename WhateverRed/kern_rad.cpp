@@ -172,6 +172,7 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that,
                                         IOPCIDevice *provider) {
     NETDBG::enabled = true;
     NETLOG("rad", "patching device type table");
+	WIOKit::renameDevice(provider, "GFX0");
     MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock);
     auto deviceId = provider->extendedConfigRead16(kIOPCIConfigDeviceID);
     auto revision = provider->extendedConfigRead16(kIOPCIConfigRevisionID);
