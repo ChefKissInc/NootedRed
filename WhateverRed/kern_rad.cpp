@@ -1042,7 +1042,9 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              wrapGetFamilyId},
             {"__ZN30AMDRadeonX6000_AmdAsicInfoNavi18populateDeviceInfoEv",
              wrapPopulateDeviceInfo, orgPopulateDeviceInfo},
-        };
+            {"__ZNK32AMDRadeonX6000_"
+             "AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv",
+             wrapGetEnumeratedRevision}};
 
         uint8_t find_null_check1[] = {0x48, 0x89, 0x83, 0x90, 0x00, 0x00, 0x00,
                                       0x48, 0x85, 0xc0, 0x0f, 0x84, 0x89, 0x00,
