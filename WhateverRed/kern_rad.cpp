@@ -333,8 +333,10 @@ uint32_t RAD::wrapGcGetHwVersion(uint32_t *param1) {
         case 0x90100:
             NETLOG("rad", "Spoofing GC version 9.1.x to 9.0.1");
             return 0x90001;
+		case 0x90300:
+			[[fallthrough]];
         case 0x90200:
-            NETLOG("rad", "Spoofing GC version 9.2.x to 9.2.1");
+            NETLOG("rad", "Spoofing GC version 9.3.x/9.2.x to 9.2.1");
             return 0x90201;
         default:
             return ret;
