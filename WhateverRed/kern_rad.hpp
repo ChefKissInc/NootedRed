@@ -91,8 +91,7 @@ class RAD {
     mach_vm_address_t orgCAILQueryEngineRunningState{},
         orgCailMonitorEngineInternalState{};
     mach_vm_address_t orgCailMonitorPerformanceCounter{};
-    mach_vm_address_t orgSMUMInitialize{},
-        orgPECIRetrieveBiosDataTable{};
+    mach_vm_address_t orgSMUMInitialize{}, orgPECIRetrieveBiosDataTable{};
     t_Vega10PowerTuneServicesConstructor orgVega10PowerTuneServicesConstructor =
         nullptr;
     mach_vm_address_t orgCosDebugPrint{}, orgMCILDebugPrint{};
