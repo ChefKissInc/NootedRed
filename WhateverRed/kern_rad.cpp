@@ -648,7 +648,7 @@ bool RAD::wrapTtlDevIsVega10Device() {
     return true;
 }
 
-uint64_t RAD::wrapSmu901InternalHwInit() {
+uint64_t RAD::wrapSmuInternalHwInit() {
     /*
      * This is _smu_9_0_1_internal_hw_init.
      * The original function waits for the firmware to be loaded,
@@ -994,7 +994,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             {"_get_hw_revision", wrapGetHwRevision},
             {"_smu_get_fw_constants", wrapSmuGetFwConstants},
             {"_ttlDevIsVega10Device", wrapTtlDevIsVega10Device},
-            {"_smu_9_0_1_internal_hw_init", wrapSmu901InternalHwInit},
+            {"_smu_9_0_1_internal_hw_init", wrapSmuInternalHwInit},
+			{"_smu_11_0_internal_hw_init", wrapSmuInternalHwInit},
             {"__ZN14AmdTtlServices13cosDebugPrintEPKcz", wrapCosDebugPrint,
              orgCosDebugPrint},
             {"_MCILDebugPrint", wrapMCILDebugPrint, orgMCILDebugPrint},
@@ -1351,9 +1352,11 @@ void RAD::applyPropertyFixes(IOService *service, uint32_t connectorNum) {
 uint32_t RAD::wrapGetConnectorsInfoV1(void *that,
                                       RADConnectors::Connector *connectors,
                                       uint8_t *sz) {
+	NETLOG("rad", "getConnectorsInfoV1: that = %p connectors = %p sz = %p", that, connectors, sz);
     uint32_t code =
         FunctionCast(wrapGetConnectorsInfoV1,
                      callbackRAD->orgGetConnectorsInfoV1)(that, connectors, sz);
+	NETLOG("rad", "getConnectorsInfoV1 returned 0x%X", code);
     auto props = callbackRAD->currentPropProvider.get();
 
     if (code == 0 && sz && props && *props) {
@@ -1744,9 +1747,11 @@ OSObject *RAD::wrapGetProperty(IORegistryEntry *that, const char *aKey) {
 uint32_t RAD::wrapGetConnectorsInfoV2(void *that,
                                       RADConnectors::Connector *connectors,
                                       uint8_t *sz) {
+	NETLOG("rad", "getConnectorsInfoV2: that = %p connectors = %p sz = %p", that, connectors, sz);
     uint32_t code =
         FunctionCast(wrapGetConnectorsInfoV2,
                      callbackRAD->orgGetConnectorsInfoV2)(that, connectors, sz);
+	NETLOG("rad", "getConnectorsInfoV2 returned 0x%X", code);
     auto props = callbackRAD->currentPropProvider.get();
 
     if (code == 0 && sz && props && *props)

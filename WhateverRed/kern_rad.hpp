@@ -241,7 +241,7 @@ class RAD {
                                       uint32_t patch);
     static uint64_t wrapSmuGetFwConstants();
     static bool wrapTtlDevIsVega10Device();
-    static uint64_t wrapSmu901InternalHwInit();
+    static uint64_t wrapSmuInternalHwInit();
     static void wrapCosDebugPrint(char *fmt, ...);
     static void wrapMCILDebugPrint(uint32_t level_max, char *fmt,
                                    uint64_t param3, uint64_t param4,
