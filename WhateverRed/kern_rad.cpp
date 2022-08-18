@@ -177,34 +177,6 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that,
     auto deviceId = provider->extendedConfigRead16(kIOPCIConfigDeviceID);
     callbackRAD->orgDeviceTypeTable[0] = deviceId;
     callbackRAD->orgDeviceTypeTable[1] = 1;
-    NETLOG("rad", "locating Init Caps entry");
-    CailInitAsicCapEntry *initCaps = nullptr;
-    for (size_t i = 0; i < 789; i++) {
-        auto *temp = callbackRAD->orgAsicInitCapsTable + i;
-        if (temp->familyId == 0x8e && temp->deviceId == deviceId &&
-            temp->emulatedRev == callbackRAD->emulatedRevision) {
-            initCaps = temp;
-            break;
-        }
-    }
-    if (!initCaps) {
-        panic("rad: Failed to find Init Caps entry for device ID 0x%X",
-              deviceId);
-    }
-    callbackRAD->orgAsicCapsTable->familyId =
-        callbackRAD->orgAsicCapsTableHWLibs->familyId = 0x8e;
-    callbackRAD->orgAsicCapsTable->deviceId =
-        callbackRAD->orgAsicCapsTableHWLibs->deviceId =
-            static_cast<uint32_t>(initCaps->deviceId);
-    callbackRAD->orgAsicCapsTable->revision =
-        callbackRAD->orgAsicCapsTableHWLibs->revision = callbackRAD->revision;
-    callbackRAD->orgAsicCapsTable->pciRev =
-        callbackRAD->orgAsicCapsTableHWLibs->pciRev = 0xFFFFFFFF;
-    callbackRAD->orgAsicCapsTable->emulatedRev =
-        callbackRAD->orgAsicCapsTableHWLibs->emulatedRev =
-            callbackRAD->emulatedRevision;
-    memmove(callbackRAD->orgAsicCapsTable->caps, initCaps->caps, 0x40);
-    memmove(callbackRAD->orgAsicCapsTableHWLibs->caps, initCaps->caps, 0x40);
     MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
     NETLOG("rad", "calling original AmdTtlServices constructor");
@@ -592,16 +564,43 @@ IOReturn RAD::wrapPopulateDeviceInfo(uint64_t that) {
     auto ret = FunctionCast(wrapPopulateDeviceInfo,
                             callbackRAD->orgPopulateDeviceInfo)(that);
     auto *familyId = reinterpret_cast<uint32_t *>(that + 0x60);
-    auto *deviceId = reinterpret_cast<uint32_t *>(that + 0x64);
+    auto deviceId = (*reinterpret_cast<IOPCIDevice **>(that + 0x18))
+                        ->configRead16(kIOPCIConfigDeviceID);
     auto *revision = reinterpret_cast<uint32_t *>(that + 0x68);
     auto *emulatedRevision = reinterpret_cast<uint32_t *>(that + 0x6c);
     NETLOG("rad",
            "deviceId = 0x%X revision = 0x%X "
            "emulatedRevision = 0x%X",
-           *deviceId, *revision, *emulatedRevision);
+           deviceId, *revision, *emulatedRevision);
     *familyId = 0x8e;
-    callbackRAD->revision = *revision;
-    callbackRAD->emulatedRevision = *emulatedRevision;
+    NETLOG("rad", "locating Init Caps entry");
+    MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock);
+    CailInitAsicCapEntry *initCaps = nullptr;
+    for (size_t i = 0; i < 789; i++) {
+        auto *temp = callbackRAD->orgAsicInitCapsTable + i;
+        if (temp->familyId == 0x8e && temp->deviceId == deviceId &&
+            temp->emulatedRev == *emulatedRevision) {
+            initCaps = temp;
+            break;
+        }
+    }
+    if (!initCaps) {
+        panic("rad: Failed to find Init Caps entry for device ID 0x%X",
+              deviceId);
+    }
+    callbackRAD->orgAsicCapsTable->familyId =
+        callbackRAD->orgAsicCapsTableHWLibs->familyId = 0x8e;
+    callbackRAD->orgAsicCapsTable->deviceId =
+        callbackRAD->orgAsicCapsTableHWLibs->deviceId = deviceId;
+    callbackRAD->orgAsicCapsTable->revision =
+        callbackRAD->orgAsicCapsTableHWLibs->revision = *revision;
+    callbackRAD->orgAsicCapsTable->pciRev =
+        callbackRAD->orgAsicCapsTableHWLibs->pciRev = 0xFFFFFFFF;
+    callbackRAD->orgAsicCapsTable->emulatedRev =
+        callbackRAD->orgAsicCapsTableHWLibs->emulatedRev = *emulatedRevision;
+    memmove(callbackRAD->orgAsicCapsTable->caps, initCaps->caps, 0x40);
+    memmove(callbackRAD->orgAsicCapsTableHWLibs->caps, initCaps->caps, 0x40);
+    MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
     NETLOG("rad",
            "AMDRadeonX6000_AmdAsicInfoNavi::populateDeviceInfo returned 0x%X",
            ret);
