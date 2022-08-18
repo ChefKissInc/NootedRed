@@ -439,44 +439,6 @@ bool RAD::wrapAMDHWChannelWaitForIdle(void *that, uint64_t param1) {
     return ret;
 }
 
-IOReturn RAD::wrapPpEnable(void *that, bool param1) {
-    NETLOG("rad", "ppEnable: this = %p param1 = %d", that, param1);
-    auto ret =
-        FunctionCast(wrapPpEnable, callbackRAD->orgPpEnable)(that, param1);
-    NETLOG("rad", "ppEnable returned 0x%X", ret);
-    return ret;
-}
-
-uint64_t RAD::wrapPECISetupInitInfo(uint32_t *param1, uint32_t *param2) {
-    NETLOG("rad", "_PECI_SetupInitInfo: param1 = %p param2 = %p", param1,
-           param2);
-    NETLOG("rad", "_PECI_SetupInitInfo: *param1 = 0x%X", *param1);
-    NETLOG("rad",
-           "_PECI_SetupInitInfo: param2 before: 0:0x%X 1:0x%X 2:0x%X 3:0x%X",
-           param2[0], param2[1], param2[2], param2[3]);
-    auto ret = FunctionCast(wrapPECISetupInitInfo,
-                            callbackRAD->orgPECISetupInitInfo)(param1, param2);
-    NETLOG("rad",
-           "_PECI_SetupInitInfo: param2 after: 0:0x%X 1:0x%X 2:0x%X 3:0x%X",
-           param2[0], param2[1], param2[2], param2[3]);
-    NETLOG("rad", "_PECI_SetupInitInfo returned 0x%llX", ret);
-    return ret;
-}
-
-uint64_t RAD::wrapPECIReadRegistry(void *param1, char *key, uint64_t param3,
-                                   uint64_t param4) {
-    NETLOG("rad",
-           "_PECI_ReadRegistry param1 = %p key = %p param3 = 0x%llX param4 = "
-           "0x%llX",
-           param1, key, param3, param4);
-    NETLOG("rad", "_PECI_ReadRegistry key is %s", key);
-    auto ret =
-        FunctionCast(wrapPECIReadRegistry, callbackRAD->orgPECIReadRegistry)(
-            param1, key, param3, param4);
-    NETLOG("rad", "_PECI_ReadRegistry returned 0x%llX", ret);
-    return ret;
-}
-
 uint64_t RAD::wrapSMUMInitialize(uint64_t param1, uint32_t *param2,
                                  uint64_t param3) {
     NETLOG("rad",
@@ -485,19 +447,6 @@ uint64_t RAD::wrapSMUMInitialize(uint64_t param1, uint32_t *param2,
     auto ret = FunctionCast(wrapSMUMInitialize, callbackRAD->orgSMUMInitialize)(
         param1, param2, param3);
     NETLOG("rad", "_SMUM_Initialize returned 0x%llX", ret);
-    return ret;
-}
-
-uint64_t RAD::wrapPECIRetrieveBiosDataTable(void *param1, uint64_t param2,
-                                            uint64_t **param3) {
-    NETLOG(
-        "rad",
-        "_PECI_RetrieveBiosDataTable: param1 = %p param2 = 0x%llX param3 = %p",
-        param1, param2, param3);
-    auto ret = FunctionCast(wrapPECIRetrieveBiosDataTable,
-                            callbackRAD->orgPECIRetrieveBiosDataTable)(
-        param1, param2, param3);
-    NETLOG("rad", "_PECI_RetrieveBiosDataTable returned 0x%llX", ret);
     return ret;
 }
 
@@ -511,19 +460,17 @@ void *RAD::wrapCreatePowerTuneServices(void *param1, void *param2) {
 
 uint16_t RAD::wrapGetFamilyId() {
     /*
-     * Usually, the value is hardcoded to 0x8d which is Vega 10
-     * So we now hard code it to Raven/Renoir
+     * This function is hardcoded to return 0x8f which is Navi
+     * So we now hard code it to return 0x8e, which is Raven/Renoir
      */
     return 0x8e;
 }
 
 uint16_t RAD::wrapGetEnumeratedRevision(uint64_t that) {
     /*
-     * __ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv
-     * It returns a number that is added to the revision to make
-     * the emulated revision.
+     * AMDRadeonX6000_AmdAsicInfoNavi10::getEnumeratedRevisionNumber
+     * Emulated Revision = Revision + Enumerated Revision.
      */
-
     auto *pciDev = *reinterpret_cast<IOPCIDevice **>(that + 0x18);
     auto *revision = reinterpret_cast<uint32_t *>(that + 0x68);
     switch (pciDev->configRead16(kIOPCIConfigDeviceID)) {
@@ -548,13 +495,6 @@ uint16_t RAD::wrapGetEnumeratedRevision(uint64_t that) {
             }
             return 0x10;
     }
-}
-
-uint32_t RAD::wrapGetHwRevision(uint32_t major, uint32_t minor,
-                                uint32_t patch) {
-    NETLOG("rad", "_get_hw_revision: minor = 0x%X major = 0x%X patch = 0x%X",
-           minor, major, patch);
-    return (minor << 0x8) | (major << 0x10) | patch;
 }
 
 IOReturn RAD::wrapPopulateDeviceInfo(uint64_t that) {
@@ -956,18 +896,10 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             {"_CailMonitorPerformanceCounter",
              wrapCailMonitorPerformanceCounter,
              orgCailMonitorPerformanceCounter},
-            {"__ZN20AtiPowerPlayServices8ppEnableEb", wrapPpEnable,
-             orgPpEnable},
-            {"_PECI_SetupInitInfo", wrapPECISetupInitInfo,
-             orgPECISetupInitInfo},
-            {"_PECI_ReadRegistry", wrapPECIReadRegistry, orgPECIReadRegistry},
             {"_SMUM_Initialize", wrapSMUMInitialize, orgSMUMInitialize},
-            {"_PECI_RetrieveBiosDataTable", wrapPECIRetrieveBiosDataTable,
-             orgPECIRetrieveBiosDataTable},
             {"__ZN25AtiApplePowerTuneServices23createPowerTuneServicesEP11PP_"
              "InstanceP18PowerPlayCallbacks",
              wrapCreatePowerTuneServices},
-            {"_get_hw_revision", wrapGetHwRevision},
             {"_smu_get_fw_constants", wrapSmuGetFwConstants},
             {"_ttlDevIsVega10Device", wrapTtlDevIsVega10Device},
             {"_smu_9_0_1_internal_hw_init", wrapSmuInternalHwInit},
