@@ -55,13 +55,11 @@ class RAD {
         orgATIControllerStart{};
     mach_vm_address_t orgNotifyLinkChange{}, orgPopulateAccelConfig[1]{},
         orgGetHWInfo[1]{};
-    mach_vm_address_t orgAllocateAMDHWAlignManager{}, orgMapDoorbellMemory{};
     mach_vm_address_t orgDeviceTypeTable{}, orgAmdTtlServicesConstructor{};
     mach_vm_address_t orgGetState{}, orgInitializeTtl{};
     mach_vm_address_t orgCreateAtomBiosProxy{};
     mach_vm_address_t orgPopulateDeviceMemory{}, orgQueryComputeQueueIsIdle{};
-    mach_vm_address_t orgAMDHWChannelWaitForIdle{}, orgAcceleratorPowerUpHw{};
-    mach_vm_address_t orgSendRequestToAccelerator{};
+    mach_vm_address_t orgAMDHWChannelWaitForIdle{};
 
     /* X6000Framebuffer */
     uint32_t curPwmBacklightLvl = 0;
@@ -92,7 +90,7 @@ class RAD {
     mach_vm_address_t orgCAILQueryEngineRunningState{},
         orgCailMonitorEngineInternalState{};
     mach_vm_address_t orgCailMonitorPerformanceCounter{}, orgPpEnable{};
-    mach_vm_address_t orgPpDisplayConfigChange{}, orgPECISetupInitInfo{};
+    mach_vm_address_t orgPECISetupInitInfo{};
     mach_vm_address_t orgPECIReadRegistry{}, orgSMUMInitialize{},
         orgPECIRetrieveBiosDataTable{};
     t_Vega10PowerTuneServicesConstructor orgVega10PowerTuneServicesConstructor =
@@ -197,6 +195,7 @@ class RAD {
         IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
         uintptr_t *value);
     static uint16_t wrapGetFamilyId();
+    static uint16_t wrapGetEnumeratedRevision(uint64_t that);
     static IOReturn wrapPopulateDeviceInfo(uint64_t that);
     static uint32_t wrapGetVideoMemoryType(void *that);
     static uint32_t wrapGetVideoMemoryBitWidth(void *that);
@@ -227,8 +226,6 @@ class RAD {
     static uint64_t wrapCailMonitorPerformanceCounter(void *that,
                                                       uint32_t *param1);
     static IOReturn wrapPpEnable(void *that, bool param1);
-    static IOReturn wrapUpdatePowerPlay(void *that);
-    static bool wrapIsReady(void *that);
     static uint64_t wrapPECISetupInitInfo(uint32_t *param1, uint32_t *param2);
     static uint64_t wrapPECIReadRegistry(void *param1, char *key,
                                          uint64_t param3, uint64_t param4);

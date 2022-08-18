@@ -172,7 +172,7 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that,
                                         IOPCIDevice *provider) {
     NETDBG::enabled = true;
     NETLOG("rad", "patching device type table");
-	WIOKit::renameDevice(provider, "GFX0");
+    WIOKit::renameDevice(provider, "GFX0");
     MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock);
     auto deviceId = provider->extendedConfigRead16(kIOPCIConfigDeviceID);
     auto revision = provider->extendedConfigRead16(kIOPCIConfigRevisionID);
@@ -335,8 +335,8 @@ uint32_t RAD::wrapGcGetHwVersion(uint32_t *param1) {
         case 0x90100:
             NETLOG("rad", "Spoofing GC version 9.1.x to 9.0.1");
             return 0x90001;
-		case 0x90300:
-			[[fallthrough]];
+        case 0x90300:
+            [[fallthrough]];
         case 0x90200:
             NETLOG("rad", "Spoofing GC version 9.3.x/9.2.x to 9.2.1");
             return 0x90201;
@@ -571,9 +571,44 @@ void *RAD::wrapCreatePowerTuneServices(void *param1, void *param2) {
 }
 
 uint16_t RAD::wrapGetFamilyId() {
-    // Usually, the value is hardcoded to 0x8d which is Vega 10
-    // So we now hard code it to Raven
+    /*
+     * Usually, the value is hardcoded to 0x8d which is Vega 10
+     * So we now hard code it to Raven/Renoir
+     */
     return 0x8e;
+}
+
+uint16_t RAD::wrapGetEnumeratedRevision(uint64_t that) {
+    /*
+     * __ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv
+     * It returns a number that is added to the revision to make
+     * the emulated revision.
+     */
+
+    auto *pciDev = *reinterpret_cast<IOPCIDevice **>(that + 0x18);
+    auto *revision = reinterpret_cast<uint32_t *>(that + 0x68);
+    switch (pciDev->configRead16(kIOPCIConfigDeviceID)) {
+        case 0x15d8:
+            return 0x41;
+        case 0x15dd:
+            if (*revision >= 0x8) {
+                return 0x79;
+            }
+            return 0x10;
+        case 0x15E7:
+            [[fallthrough]];
+        case 0x164C:
+            [[fallthrough]];
+        case 0x1636:
+            [[fallthrough]];
+        case 0x1638:
+            return 0x91;
+        default:
+            if (*revision == 1) {
+                return 0x20;
+            }
+            return 0x10;
+    }
 }
 
 uint32_t RAD::wrapGetHwRevision(uint32_t major, uint32_t minor,
@@ -589,7 +624,6 @@ IOReturn RAD::wrapPopulateDeviceInfo(uint64_t that) {
            that);
     auto ret = FunctionCast(wrapPopulateDeviceInfo,
                             callbackRAD->orgPopulateDeviceInfo)(that);
-    auto *pciDev = *reinterpret_cast<IOPCIDevice **>(that + 0x18);
     auto *familyId = reinterpret_cast<uint32_t *>(that + 0x60);
     auto *deviceId = reinterpret_cast<uint32_t *>(that + 0x64);
     auto *revision = reinterpret_cast<uint32_t *>(that + 0x68);
@@ -599,32 +633,6 @@ IOReturn RAD::wrapPopulateDeviceInfo(uint64_t that) {
            "emulatedRevision = 0x%X",
            *familyId, *deviceId, *revision, *emulatedRevision);
     *familyId = 0x8e;
-    switch (pciDev->configRead16(kIOPCIConfigDeviceID)) {
-        case 0x15d8:
-            *emulatedRevision = *revision + 0x41;
-            break;
-        case 0x15dd:
-            if (*revision >= 0x8) {
-                *emulatedRevision = *revision + 0x79;
-            }
-            break;
-        case 0x15E7:
-            [[fallthrough]];
-        case 0x164C:
-            [[fallthrough]];
-        case 0x1636:
-            [[fallthrough]];
-        case 0x1638:
-            *emulatedRevision = *revision + 0x91;
-            break;
-        default:
-            if (*revision == 1) {
-                *emulatedRevision = *revision + 0x20;
-            } else {
-                *emulatedRevision = *revision + 0x10;
-            }
-            break;
-    }
     NETLOG("rad", "after: familyId = 0x%X emulatedRevision = 0x%X", *familyId,
            *emulatedRevision);
     NETLOG("rad",
@@ -997,7 +1005,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             {"_smu_get_fw_constants", wrapSmuGetFwConstants},
             {"_ttlDevIsVega10Device", wrapTtlDevIsVega10Device},
             {"_smu_9_0_1_internal_hw_init", wrapSmuInternalHwInit},
-			{"_smu_11_0_internal_hw_init", wrapSmuInternalHwInit},
+            {"_smu_11_0_internal_hw_init", wrapSmuInternalHwInit},
             {"__ZN14AmdTtlServices13cosDebugPrintEPKcz", wrapCosDebugPrint,
              orgCosDebugPrint},
             {"_MCILDebugPrint", wrapMCILDebugPrint, orgMCILDebugPrint},
@@ -1083,9 +1091,13 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
         uint8_t repl_null_check2[] = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00,
                                       0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,
                                       0x90, 0x90, 0x48, 0x8b, 0x7b, 0x18};
-		
-		uint8_t find_null_check3[] = { 0x48, 0x83, 0xbb, 0x90, 0x00, 0x00, 0x00, 0x00, 0x0f, 0x84, 0x90, 0x00, 0x00, 0x00, 0x49, 0x89, 0xf7, 0xba, 0x60, 0x00, 0x00, 0x00 };
-		uint8_t repl_null_check3[] = { 0x48, 0x83, 0xbb, 0x90, 0x00, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x49, 0x89, 0xf7, 0xba, 0x60, 0x00, 0x00, 0x00 };
+
+        uint8_t find_null_check3[] = {
+            0x48, 0x83, 0xbb, 0x90, 0x00, 0x00, 0x00, 0x00, 0x0f, 0x84, 0x90,
+            0x00, 0x00, 0x00, 0x49, 0x89, 0xf7, 0xba, 0x60, 0x00, 0x00, 0x00};
+        uint8_t repl_null_check3[] = {
+            0x48, 0x83, 0xbb, 0x90, 0x00, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90,
+            0x90, 0x90, 0x90, 0x49, 0x89, 0xf7, 0xba, 0x60, 0x00, 0x00, 0x00};
 
         KernelPatcher::LookupPatch patches[] = {
             /*
@@ -1100,11 +1112,12 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              */
             {&kextRadeonX6000Framebuffer, find_null_check2, repl_null_check2,
              arrsize(find_null_check2), 2},
-			/*
-			 * Neutralise VRAM Info null check for AmdAtomFwServices::getFirmwareInfo.
-			 */
-			{&kextRadeonX6000Framebuffer, find_null_check3, repl_null_check3,
-			 arrsize(find_null_check3), 2},
+            /*
+             * Neutralise VRAM Info null check for
+             * AmdAtomFwServices::getFirmwareInfo.
+             */
+            {&kextRadeonX6000Framebuffer, find_null_check3, repl_null_check3,
+             arrsize(find_null_check3), 2},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
@@ -1362,11 +1375,12 @@ void RAD::applyPropertyFixes(IOService *service, uint32_t connectorNum) {
 uint32_t RAD::wrapGetConnectorsInfoV1(void *that,
                                       RADConnectors::Connector *connectors,
                                       uint8_t *sz) {
-	NETLOG("rad", "getConnectorsInfoV1: that = %p connectors = %p sz = %p", that, connectors, sz);
+    NETLOG("rad", "getConnectorsInfoV1: that = %p connectors = %p sz = %p",
+           that, connectors, sz);
     uint32_t code =
         FunctionCast(wrapGetConnectorsInfoV1,
                      callbackRAD->orgGetConnectorsInfoV1)(that, connectors, sz);
-	NETLOG("rad", "getConnectorsInfoV1 returned 0x%X", code);
+    NETLOG("rad", "getConnectorsInfoV1 returned 0x%X", code);
     auto props = callbackRAD->currentPropProvider.get();
 
     if (code == 0 && sz && props && *props) {
@@ -1757,11 +1771,12 @@ OSObject *RAD::wrapGetProperty(IORegistryEntry *that, const char *aKey) {
 uint32_t RAD::wrapGetConnectorsInfoV2(void *that,
                                       RADConnectors::Connector *connectors,
                                       uint8_t *sz) {
-	NETLOG("rad", "getConnectorsInfoV2: that = %p connectors = %p sz = %p", that, connectors, sz);
+    NETLOG("rad", "getConnectorsInfoV2: that = %p connectors = %p sz = %p",
+           that, connectors, sz);
     uint32_t code =
         FunctionCast(wrapGetConnectorsInfoV2,
                      callbackRAD->orgGetConnectorsInfoV2)(that, connectors, sz);
-	NETLOG("rad", "getConnectorsInfoV2 returned 0x%X", code);
+    NETLOG("rad", "getConnectorsInfoV2 returned 0x%X", code);
     auto props = callbackRAD->currentPropProvider.get();
 
     if (code == 0 && sz && props && *props)
