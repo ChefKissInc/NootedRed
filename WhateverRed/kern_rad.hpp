@@ -55,7 +55,8 @@ class RAD {
         orgATIControllerStart{};
     mach_vm_address_t orgNotifyLinkChange{}, orgPopulateAccelConfig[1]{},
         orgGetHWInfo[1]{};
-    mach_vm_address_t orgDeviceTypeTable{}, orgAmdTtlServicesConstructor{};
+    uint32_t *orgDeviceTypeTable = nullptr;
+    mach_vm_address_t orgAmdTtlServicesConstructor{};
     mach_vm_address_t orgGetState{}, orgInitializeTtl{};
     mach_vm_address_t orgCreateAtomBiosProxy{};
     mach_vm_address_t orgPopulateDeviceMemory{}, orgQueryComputeQueueIsIdle{};

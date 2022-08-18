@@ -176,8 +176,8 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that,
     MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock);
     auto deviceId = provider->extendedConfigRead16(kIOPCIConfigDeviceID);
     auto revision = provider->extendedConfigRead16(kIOPCIConfigRevisionID);
-    *(uint32_t *)callbackRAD->orgDeviceTypeTable = deviceId;
-    *((uint32_t *)callbackRAD->orgDeviceTypeTable + 1) = 1;
+    callbackRAD->orgDeviceTypeTable[0] = deviceId;
+    callbackRAD->orgDeviceTypeTable[1] = 1;
     NETLOG("rad", "locating Init Caps entry");
     CailInitAsicCapEntry *initCaps = nullptr;
     for (size_t i = 0; i < 789; i++) {
@@ -921,8 +921,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
 
         return true;
     } else if (kextRadeonX6000HWLibs.loadIndex == index) {
-        orgDeviceTypeTable =
-            patcher.solveSymbol(index, "__ZL15deviceTypeTable");
+        orgDeviceTypeTable = reinterpret_cast<uint32_t *>(
+            patcher.solveSymbol(index, "__ZL15deviceTypeTable"));
         if (!orgDeviceTypeTable) {
             panic("RAD: Failed to resolve device type table");
         }
