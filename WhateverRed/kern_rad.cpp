@@ -542,6 +542,15 @@ IOReturn RAD::wrapPopulateDeviceInfo(uint64_t that) {
                 *emulatedRevision = *revision + 0x79;
             }
             break;
+        case 0x15E7:
+            [[fallthrough]];
+        case 0x164C:
+            [[fallthrough]];
+        case 0x1636:
+            [[fallthrough]];
+        case 0x1638:
+            *emulatedRevision = *revision + 0x91;
+            break;
         default:
             if (*revision == 1) {
                 *emulatedRevision = *revision + 0x20;
