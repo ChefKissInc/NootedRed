@@ -522,18 +522,12 @@ IOReturn RAD::wrapPopulateDeviceInfo(uint64_t that) {
         panic("rad: Failed to find Init Caps entry for device ID 0x%X",
               deviceId);
     }
-    callbackRAD->orgAsicCapsTable->familyId =
-        callbackRAD->orgAsicCapsTableHWLibs->familyId = 0x8e;
-    callbackRAD->orgAsicCapsTable->deviceId =
-        callbackRAD->orgAsicCapsTableHWLibs->deviceId = deviceId;
-    callbackRAD->orgAsicCapsTable->revision =
-        callbackRAD->orgAsicCapsTableHWLibs->revision = *revision;
-    callbackRAD->orgAsicCapsTable->pciRev =
-        callbackRAD->orgAsicCapsTableHWLibs->pciRev = 0xFFFFFFFF;
-    callbackRAD->orgAsicCapsTable->emulatedRev =
-        callbackRAD->orgAsicCapsTableHWLibs->emulatedRev = *emulatedRevision;
+    callbackRAD->orgAsicCapsTable->familyId = 0x8e;
+    callbackRAD->orgAsicCapsTable->deviceId = deviceId;
+    callbackRAD->orgAsicCapsTable->revision = *revision;
+    callbackRAD->orgAsicCapsTable->pciRev = 0xFFFFFFFF;
+    callbackRAD->orgAsicCapsTable->emulatedRev = *emulatedRevision;
     memmove(callbackRAD->orgAsicCapsTable->caps, initCaps->caps, 0x40);
-    memmove(callbackRAD->orgAsicCapsTableHWLibs->caps, initCaps->caps, 0x40);
     MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
     NETLOG("rad",
            "AMDRadeonX5000_AmdAsicInfoNavi::populateDeviceInfo returned 0x%X",
@@ -683,10 +677,10 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
                 "constructor");
         }
 
-        orgAsicCapsTableHWLibs = reinterpret_cast<CailAsicCapEntry *>(
+        orgAsicCapsTable = reinterpret_cast<CailAsicCapEntry *>(
             patcher.solveSymbol(index, "__ZL20CAIL_ASIC_CAPS_TABLE"));
-        if (!orgAsicCapsTableHWLibs) {
-            panic("Failed to resolve HWLibs CAIL_ASIC_CAPS_TABLE");
+        if (!orgAsicCapsTable) {
+            panic("Failed to resolve CAIL_ASIC_CAPS_TABLE");
         }
         orgAsicInitCapsTable = reinterpret_cast<CailInitAsicCapEntry *>(
             patcher.solveSymbol(index, "_CAILAsicCapsInitTable"));

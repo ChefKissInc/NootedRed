@@ -64,8 +64,6 @@ class RAD {
 
     /* AMD10000Controller */
     mach_vm_address_t orgPopulateDeviceInfo{};
-    /// Max 517 Entries
-    CailAsicCapEntry *orgAsicCapsTable = nullptr;
     /* ---------------- */
 
     /* X5000HWLibs */
@@ -87,7 +85,7 @@ class RAD {
     mach_vm_address_t orgCosDebugPrintVaList{};
     mach_vm_address_t orgCosReleasePrintVaList{};
     /// Max 517 Entries
-    CailAsicCapEntry *orgAsicCapsTableHWLibs = nullptr;
+    CailAsicCapEntry *orgAsicCapsTable = nullptr;
     /// Max 789 entries
     CailInitAsicCapEntry *orgAsicInitCapsTable = nullptr;
     /* ----------- */
