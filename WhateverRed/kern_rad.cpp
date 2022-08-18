@@ -502,7 +502,7 @@ IOReturn RAD::wrapPopulateDeviceInfo(uint64_t that) {
     auto deviceId = pciDev->configRead16(kIOPCIConfigDeviceID);
     auto *revision = reinterpret_cast<uint32_t *>(that + 0x48);
     auto *emulatedRevision = reinterpret_cast<uint32_t *>(that + 0x4c);
-	*emulatedRevision = *revision + emulatedRevisionOff(*revision, deviceId);
+    *emulatedRevision = *revision + emulatedRevisionOff(*revision, deviceId);
     NETLOG("rad",
            "deviceId = 0x%X revision = 0x%X "
            "emulatedRevision = 0x%X",
