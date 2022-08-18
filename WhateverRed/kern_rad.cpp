@@ -175,14 +175,14 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that,
     WIOKit::renameDevice(provider, "GFX0");
     MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock);
     auto deviceId = provider->extendedConfigRead16(kIOPCIConfigDeviceID);
-    auto revision = provider->extendedConfigRead16(kIOPCIConfigRevisionID);
     callbackRAD->orgDeviceTypeTable[0] = deviceId;
     callbackRAD->orgDeviceTypeTable[1] = 1;
     NETLOG("rad", "locating Init Caps entry");
     CailInitAsicCapEntry *initCaps = nullptr;
     for (size_t i = 0; i < 789; i++) {
         auto *temp = callbackRAD->orgAsicInitCapsTable + i;
-        if (temp->familyId == 0x8e && temp->deviceId == deviceId) {
+        if (temp->familyId == 0x8e && temp->deviceId == deviceId &&
+            temp->emulatedRev == callbackRAD->emulatedRevision) {
             initCaps = temp;
             break;
         }
@@ -197,45 +197,12 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that,
         callbackRAD->orgAsicCapsTableHWLibs->deviceId =
             static_cast<uint32_t>(initCaps->deviceId);
     callbackRAD->orgAsicCapsTable->revision =
-        callbackRAD->orgAsicCapsTableHWLibs->revision = revision;
+        callbackRAD->orgAsicCapsTableHWLibs->revision = callbackRAD->revision;
     callbackRAD->orgAsicCapsTable->pciRev =
         callbackRAD->orgAsicCapsTableHWLibs->pciRev = 0xFFFFFFFF;
-    switch (deviceId) {
-        case 0x15d8:
-            callbackRAD->orgAsicCapsTable->emulatedRev =
-                callbackRAD->orgAsicCapsTableHWLibs->emulatedRev =
-                    revision + 0x41;
-            break;
-        case 0x15dd:
-            if (revision >= 0x8) {
-                callbackRAD->orgAsicCapsTable->emulatedRev =
-                    callbackRAD->orgAsicCapsTableHWLibs->emulatedRev =
-                        revision + 0x79;
-            }
-            break;
-        case 0x15E7:
-            [[fallthrough]];
-        case 0x164C:
-            [[fallthrough]];
-        case 0x1636:
-            [[fallthrough]];
-        case 0x1638:
-            callbackRAD->orgAsicCapsTable->emulatedRev =
-                callbackRAD->orgAsicCapsTableHWLibs->emulatedRev =
-                    revision + 0x91;
-            break;
-        default:
-            if (revision == 1) {
-                callbackRAD->orgAsicCapsTable->emulatedRev =
-                    callbackRAD->orgAsicCapsTableHWLibs->emulatedRev =
-                        revision + 0x20;
-            } else {
-                callbackRAD->orgAsicCapsTable->emulatedRev =
-                    callbackRAD->orgAsicCapsTableHWLibs->emulatedRev =
-                        revision + 0x10;
-            }
-            break;
-    }
+    callbackRAD->orgAsicCapsTable->emulatedRev =
+        callbackRAD->orgAsicCapsTableHWLibs->emulatedRev =
+            callbackRAD->emulatedRevision;
     memmove(callbackRAD->orgAsicCapsTable->caps, initCaps->caps, 0x40);
     memmove(callbackRAD->orgAsicCapsTableHWLibs->caps, initCaps->caps, 0x40);
     MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
@@ -629,12 +596,12 @@ IOReturn RAD::wrapPopulateDeviceInfo(uint64_t that) {
     auto *revision = reinterpret_cast<uint32_t *>(that + 0x68);
     auto *emulatedRevision = reinterpret_cast<uint32_t *>(that + 0x6c);
     NETLOG("rad",
-           "before: familyId = 0x%X deviceId = 0x%X revision = 0x%X "
+           "deviceId = 0x%X revision = 0x%X "
            "emulatedRevision = 0x%X",
-           *familyId, *deviceId, *revision, *emulatedRevision);
+           *deviceId, *revision, *emulatedRevision);
     *familyId = 0x8e;
-    NETLOG("rad", "after: familyId = 0x%X emulatedRevision = 0x%X", *familyId,
-           *emulatedRevision);
+    callbackRAD->revision = *revision;
+    callbackRAD->emulatedRevision = *emulatedRevision;
     NETLOG("rad",
            "AMDRadeonX6000_AmdAsicInfoNavi::populateDeviceInfo returned 0x%X",
            ret);

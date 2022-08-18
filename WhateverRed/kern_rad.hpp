@@ -65,6 +65,7 @@ class RAD {
     /* X6000Framebuffer */
     uint32_t curPwmBacklightLvl = 0;
     uint32_t maxPwmBacklightLvl = 0xff7b;
+    uint32_t revision = 0, emulatedRevision = 0;
     void *panelCntlPtr = NULL;
     void updatePwmMaxBrightnessFromInternalDisplay();
     using t_DceDriverSetBacklight = void (*)(void *panel_cntl,
