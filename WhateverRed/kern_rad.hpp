@@ -104,6 +104,7 @@ class RAD {
     mach_vm_address_t orgGetHWEngine{};
     mach_vm_address_t orgCreateAccelChannels{};
     mach_vm_address_t orgGetHWCapabilities{};
+    mach_vm_address_t orgSetupAndInitializeHWCapabilities{};
 
     bool force24BppMode = false;
     bool dviSingleLink = false;
@@ -199,8 +200,7 @@ class RAD {
      */
     static bool wrapAllocateHWEngines(uint64_t that);
     static void *wrapGetHWEngine(void *that, uint32_t engineType);
-    static uint32_t wrapCreateAccelChannels(void *that, uint32_t param1);
-    static void *wrapGetHWCapabilities(void *that);
+    static void wrapSetupAndInitializeHWCapabilities(uint64_t that);
 
     void processHardwareKext(KernelPatcher &patcher, size_t hwIndex,
                              mach_vm_address_t address, size_t size);
@@ -224,12 +224,6 @@ class RAD {
                                      void *eventData, uint32_t eventFlags);
     static bool doNotTestVram(IOService *ctrl, uint32_t reg, bool retryOnFail);
     static void updateGetHWInfo(IOService *accelVideoCtx, void *hwInfo);
-
-    mach_vm_address_t orgCallPlatformFunctionFromDrvr{};
-    static uint32_t wrapCallPlatformFunctionFromDrvr(void *that,
-                                                     uint32_t param1,
-                                                     void *param2, void *param3,
-                                                     void *param4);
 };
 
 #endif /* kern_rad_hpp */

@@ -592,31 +592,6 @@ bool RAD::wrapAllocateHWEngines(uint64_t that) {
     return true;
 }
 
-uint32_t RAD::wrapCallPlatformFunctionFromDrvr(void *that, uint32_t param1,
-                                               void *param2, void *param3,
-                                               void *param4) {
-    NETLOG("rad",
-           "\n\n---------------------------------------------------------------"
-           "-------\n\n");
-    NETLOG("rad",
-           "callPlatformFunctionFromDrvr: this = %p param1 = 0x%X param2 = %p "
-           "param3 = %p param4 = %p",
-           that, param1, param2, param3, param4);
-
-    if (param1 == 0xb) {
-        panic("Accelerator is being unregist ered!");
-    }
-
-    auto ret = FunctionCast(wrapCallPlatformFunctionFromDrvr,
-                            callbackRAD->orgCallPlatformFunctionFromDrvr)(
-        that, param1, param2, param3, param4);
-    NETLOG("rad", "callPlatformFunctionFromDrvr returned 0x%X", ret);
-    NETLOG("rad",
-           "\n\n---------------------------------------------------------------"
-           "-------\n\n");
-    return ret;
-}
-
 void *RAD::wrapGetHWEngine(void *that, uint32_t engineType) {
     NETLOG("rad",
            "\n\n---------------------------------------------------------------"
@@ -631,32 +606,11 @@ void *RAD::wrapGetHWEngine(void *that, uint32_t engineType) {
     return ret;
 }
 
-uint32_t RAD::wrapCreateAccelChannels(void *that, uint32_t param1) {
-    NETLOG("rad",
-           "\n\n---------------------------------------------------------------"
-           "-------\n\n");
-    NETLOG("rad", "createAccelChannels: this = %p param1 = 0x%X", that, param1);
-    auto ret = FunctionCast(wrapCreateAccelChannels,
-                            callbackRAD->orgCreateAccelChannels)(that, param1);
-    NETLOG("rad", "createAccelChannels returned 0x%X", ret);
-    NETLOG("rad",
-           "\n\n---------------------------------------------------------------"
-           "-------\n\n");
-    return ret;
-}
-
-void *RAD::wrapGetHWCapabilities(void *that) {
-    NETLOG("rad",
-           "\n\n---------------------------------------------------------------"
-           "-------\n\n");
-    NETLOG("rad", "getHWCapabilities: this = %p", that);
-    auto ret = FunctionCast(wrapGetHWCapabilities,
-                            callbackRAD->orgGetHWCapabilities)(that);
-    NETLOG("rad", "getHWCapabilities returned %p", ret);
-    NETLOG("rad",
-           "\n\n---------------------------------------------------------------"
-           "-------\n\n");
-    return ret;
+void RAD::wrapSetupAndInitializeHWCapabilities(uint64_t that) {
+    FunctionCast(wrapSetupAndInitializeHWCapabilities,
+                 callbackRAD->orgSetupAndInitializeHWCapabilities)(that);
+    *reinterpret_cast<uint32_t *>(that + 0xAC) = 0x1;
+    *reinterpret_cast<uint32_t *>(that + 0xAF) = 0x100001;
 }
 
 bool RAD::processKext(KernelPatcher &patcher, size_t index,
@@ -680,9 +634,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              wrapCreateAtomBiosProxy, orgCreateAtomBiosProxy},
             {"__ZN13ATIController20populateDeviceMemoryE13PCI_REG_INDEX",
              wrapPopulateDeviceMemory, orgPopulateDeviceMemory},
-            {"__ZN13ATIController28callPlatformFunctionFromDrvrE25_"
-             "eAMDAccelIOFBRequestTypePvS1_S1_",
-             wrapCallPlatformFunctionFromDrvr, orgCallPlatformFunctionFromDrvr},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size)) {
@@ -854,11 +805,9 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             {"__ZN26AMDRadeonX5000_AMDHardware11getHWEngineE20_eAMD_HW_ENGINE_"
              "TYPE",
              wrapGetHWEngine, orgGetHWEngine},
-            {"__ZN37AMDRadeonX5000_"
-             "AMDGraphicsAccelerator19createAccelChannelsEb",
-             wrapCreateAccelChannels, orgCreateAccelChannels},
-            {"__ZN26AMDRadeonX5000_AMDHardware17getHWCapabilitiesEv",
-             wrapGetHWCapabilities, orgGetHWCapabilities},
+            {"__ZN32AMDRadeonX5000_"
+             "AMDVega20Hardware32setupAndInitializeHWCapabilitiesEv",
+             wrapSetupAndInitializeHWCapabilities},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size)) {
