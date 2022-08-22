@@ -3,7 +3,7 @@
 //  WhateverRed
 //
 //  Created by Nyan Cat on 7/27/22.
-//  Copyright © 2022 VisualDevelopment. All rights reserved.
+//  Copyright © 2022 ChefKiss Inc. All rights reserved.
 //
 
 #include "kern_netdbg.hpp"

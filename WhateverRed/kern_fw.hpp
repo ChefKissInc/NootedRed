@@ -3,7 +3,7 @@
 //  WhateverRed
 //
 //  Created by Visual on 22/7/22.
-//  Copyright © 2022 VisualDevelopment. All rights reserved.
+//  Copyright © 2022 ChefKiss Inc. All rights reserved.
 //
 
 #ifndef kern_fw_h

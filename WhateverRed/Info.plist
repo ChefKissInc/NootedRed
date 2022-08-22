@@ -815,7 +815,7 @@
 			<key>IOProviderClass</key>
 			<string>IOPCIDevice</string>
 		</dict>
-		<key>com.VisualDevelopment.WhateverRed</key>
+		<key>com.ChefKissInc.WhateverRed</key>
 		<dict>
 			<key>CFBundleIdentifier</key>
 			<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>

@@ -3,7 +3,6 @@
 //  WhateverRed
 //
 //  Copyright © 2017 vit9696. All rights reserved.
-//  Copyright © 2022 VisualDevelopment. All rights reserved.
 //
 
 #ifndef kern_agdc_h

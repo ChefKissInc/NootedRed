@@ -11,6 +11,7 @@
 		1C748C2D1C21952C0024EED2 /* kern_start.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C748C2C1C21952C0024EED2 /* kern_start.cpp */; };
 		1C9CB7B01C789FF500231E41 /* kern_rad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C9CB7AE1C789FF500231E41 /* kern_rad.cpp */; };
 		1C9CB7B11C789FF500231E41 /* kern_rad.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 1C9CB7AF1C789FF500231E41 /* kern_rad.hpp */; };
+		407E8D0328B37678001F75A2 /* libkmodc++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 407E8D0228B3766B001F75A2 /* libkmodc++.a */; };
 		408F2020288ACBE6002EEC15 /* kern_fw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 408F201F288ACBE6002EEC15 /* kern_fw.cpp */; };
 		6CBEB3C628911DCF0063B877 /* kern_netdbg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6CBEB3C428911DCF0063B877 /* kern_netdbg.cpp */; };
 		6CBEB3C728911DD00063B877 /* kern_netdbg.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 6CBEB3C528911DCF0063B877 /* kern_netdbg.hpp */; };
@@ -43,6 +44,7 @@
 		1C9CB7AE1C789FF500231E41 /* kern_rad.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = kern_rad.cpp; sourceTree = "<group>"; };
 		1C9CB7AF1C789FF500231E41 /* kern_rad.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = kern_rad.hpp; sourceTree = "<group>"; };
 		402D48C228A8903C0064644D /* atidmcub_0.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = atidmcub_0.dat; sourceTree = "<group>"; };
+		407E8D0228B3766B001F75A2 /* libkmodc++.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libkmodc++.a"; path = "usr/lib/libkmodc++.a"; sourceTree = SDKROOT; };
 		408F201C288AC552002EEC15 /* ativvaxy_rv.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = ativvaxy_rv.dat; sourceTree = "<group>"; };
 		408F201E288ACBB0002EEC15 /* kern_fw.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_fw.hpp; sourceTree = "<group>"; };
 		408F201F288ACBE6002EEC15 /* kern_fw.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_fw.cpp; sourceTree = "<group>"; };
@@ -74,6 +76,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				407E8D0328B37678001F75A2 /* libkmodc++.a in Frameworks */,
 				CE8DA0832517C41A008C44E8 /* libkmod.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -172,6 +175,7 @@
 		CE8DA0812517C41A008C44E8 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				407E8D0228B3766B001F75A2 /* libkmodc++.a */,
 				CE8DA0822517C41A008C44E8 /* libkmod.a */,
 			);
 			name = Frameworks;
@@ -451,7 +455,7 @@
 					"$(PROJECT_DIR)/MacKernelSDK/Library/x86_64",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MODULE_NAME = com.VisualDevelopment.WhateverRed;
+				MODULE_NAME = com.ChefKissInc.WhateverRed;
 				MODULE_START = "$(PRODUCT_NAME)_kern_start";
 				MODULE_STOP = "$(PRODUCT_NAME)_kern_stop";
 				MODULE_VERSION = 1.0.0;
@@ -504,7 +508,7 @@
 				);
 				LLVM_LTO = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MODULE_NAME = com.VisualDevelopment.WhateverRed;
+				MODULE_NAME = com.ChefKissInc.WhateverRed;
 				MODULE_START = "$(PRODUCT_NAME)_kern_start";
 				MODULE_STOP = "$(PRODUCT_NAME)_kern_stop";
 				MODULE_VERSION = 1.0.0;
@@ -616,7 +620,7 @@
 					"$(PROJECT_DIR)/MacKernelSDK/Library/x86_64",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MODULE_NAME = com.VisualDevelopment.WhateverRed;
+				MODULE_NAME = com.ChefKissInc.WhateverRed;
 				MODULE_START = "$(PRODUCT_NAME)_kern_start";
 				MODULE_STOP = "$(PRODUCT_NAME)_kern_stop";
 				MODULE_VERSION = 1.0.0;
