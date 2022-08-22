@@ -749,6 +749,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
                                        address, size)) {
             panic("RAD: Failed to route X5000 symbols");
         }
+
+        return true;
     }
 
     return false;
