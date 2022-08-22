@@ -226,6 +226,9 @@ class RAD {
                                                      uint32_t param1,
                                                      void *param2, void *param3,
                                                      void *param4);
+
+    mach_vm_address_t orgCreateAccelChannels{};
+    static uint32_t wrapCreateAccelChannels(void* that, uint32_t param1);
 };
 
 #endif /* kern_rad_hpp */
