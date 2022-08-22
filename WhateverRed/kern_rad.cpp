@@ -607,10 +607,12 @@ void *RAD::wrapGetHWEngine(void *that, uint32_t engineType) {
 }
 
 void RAD::wrapSetupAndInitializeHWCapabilities(uint64_t that) {
+    NETLOG("rad", "wrapSetupAndInitializeCapabilities: that = 0x%llX", that);
     FunctionCast(wrapSetupAndInitializeHWCapabilities,
                  callbackRAD->orgSetupAndInitializeHWCapabilities)(that);
     *reinterpret_cast<uint32_t *>(that + 0xAC) = 0x1;
     *reinterpret_cast<uint32_t *>(that + 0xAF) = 0x100001;
+    NETLOG("rad", "wrapSetupAndInitializeCapabilities: done");
 }
 
 bool RAD::processKext(KernelPatcher &patcher, size_t index,
@@ -807,7 +809,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              wrapGetHWEngine, orgGetHWEngine},
             {"__ZN32AMDRadeonX5000_"
              "AMDVega20Hardware32setupAndInitializeHWCapabilitiesEv",
-             wrapSetupAndInitializeHWCapabilities},
+             wrapSetupAndInitializeHWCapabilities,
+             orgSetupAndInitializeHWCapabilities},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size)) {
