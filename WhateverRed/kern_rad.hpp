@@ -101,6 +101,7 @@ class RAD {
     t_HWEngineConstructor orgGFX9PM4EngineConstructor = nullptr;
     t_HWEngineNew orgGFX9SDMAEngineNew = nullptr;
     t_HWEngineConstructor orgGFX9SDMAEngineConstructor = nullptr;
+    mach_vm_address_t orgGetHWEngine{};
 
     bool force24BppMode = false;
     bool dviSingleLink = false;
@@ -195,6 +196,7 @@ class RAD {
      * X5000
      */
     static bool wrapAllocateHWEngines(uint64_t that);
+    static void *wrapGetHWEngine(void *that, uint32_t engineType);
 
     void processHardwareKext(KernelPatcher &patcher, size_t hwIndex,
                              mach_vm_address_t address, size_t size);
@@ -224,9 +226,6 @@ class RAD {
                                                      uint32_t param1,
                                                      void *param2, void *param3,
                                                      void *param4);
-
-    mach_vm_address_t orgGetHWEngine{};
-    static void *wrapGetHWEngine(void *that, uint32_t engineType);
 };
 
 #endif /* kern_rad_hpp */

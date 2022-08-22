@@ -11,7 +11,6 @@
 		1C748C2D1C21952C0024EED2 /* kern_start.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C748C2C1C21952C0024EED2 /* kern_start.cpp */; };
 		1C9CB7B01C789FF500231E41 /* kern_rad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C9CB7AE1C789FF500231E41 /* kern_rad.cpp */; };
 		1C9CB7B11C789FF500231E41 /* kern_rad.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 1C9CB7AF1C789FF500231E41 /* kern_rad.hpp */; };
-		407E8D0328B37678001F75A2 /* libkmodc++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 407E8D0228B3766B001F75A2 /* libkmodc++.a */; };
 		408F2020288ACBE6002EEC15 /* kern_fw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 408F201F288ACBE6002EEC15 /* kern_fw.cpp */; };
 		6CBEB3C628911DCF0063B877 /* kern_netdbg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6CBEB3C428911DCF0063B877 /* kern_netdbg.cpp */; };
 		6CBEB3C728911DD00063B877 /* kern_netdbg.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 6CBEB3C528911DCF0063B877 /* kern_netdbg.hpp */; };
@@ -76,7 +75,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				407E8D0328B37678001F75A2 /* libkmodc++.a in Frameworks */,
 				CE8DA0832517C41A008C44E8 /* libkmod.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

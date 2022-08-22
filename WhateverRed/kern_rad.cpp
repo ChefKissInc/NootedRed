@@ -570,6 +570,9 @@ bool RAD::wrapGFX10AcceleratorStart() {
 
 bool RAD::wrapAllocateHWEngines(uint64_t that) {
     NETLOG("rad", "allocateHWEngines: this = 0x%llX", that);
+    auto *vtable = *reinterpret_cast<uint64_t **>(that);
+    vtable[0x62] = callbackRAD->orgGetHWEngine;
+
     auto *pm4Engine = callbackRAD->orgGFX9PM4EngineNew(0x1e8);
     callbackRAD->orgGFX9PM4EngineConstructor(pm4Engine);
     *reinterpret_cast<void **>(that + 0x3b8) = pm4Engine;
@@ -799,7 +802,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEnginenwEm",
              orgGFX9SDMAEngineNew},
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngineC1Ev",
-             orgGFX9SDMAEngineConstructor}};
+             orgGFX9SDMAEngineConstructor},
+        };
         if (!patcher.solveMultiple(index, solveRequests, arrsize(solveRequests),
                                    address, size)) {
             panic("RAD: Failed to resolve AMDRadeonX5000 symbols");
