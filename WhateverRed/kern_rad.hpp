@@ -224,6 +224,9 @@ class RAD {
                                                      uint32_t param1,
                                                      void *param2, void *param3,
                                                      void *param4);
+
+    mach_vm_address_t orgGetHWEngine{};
+    static void* wrapGetHWEngine(void* that, uint32_t engineType);
 };
 
 #endif /* kern_rad_hpp */

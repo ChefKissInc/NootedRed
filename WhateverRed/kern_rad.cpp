@@ -614,6 +614,16 @@ uint32_t RAD::wrapCallPlatformFunctionFromDrvr(void *that, uint32_t param1,
     return ret;
 }
 
+void* RAD::wrapGetHWEngine(void* that, uint32_t engineType)
+{
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "getHWEngine: this = %p engineType = 0x%X", that, engineType);
+    auto ret = FunctionCast(wrapGetHWEngine, callbackRAD->orgGetHWEngine)(that, engineType);
+    NETLOG("rad", "getHWEngine returned %p", ret);
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index,
                       mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
@@ -842,6 +852,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              wrapAMDHWChannelWaitForIdle, orgAMDHWChannelWaitForIdle},
             {"__ZN32AMDRadeonX5000_AMDVega20Hardware17allocateHWEnginesEv",
              wrapAllocateHWEngines},
+            {"__ZN26AMDRadeonX5000_AMDHardware11getHWEngineE20_eAMD_HW_ENGINE_TYPE", wrapGetHWEngine, orgGetHWEngine},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size)) {
