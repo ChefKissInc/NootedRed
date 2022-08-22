@@ -589,6 +589,21 @@ bool RAD::wrapAllocateHWEngines(uint64_t that) {
     return true;
 }
 
+uint32_t RAD::wrapCallPlatformFunctionFromDrvr(void* that, uint32_t param1, void* param2, void* param3, void* param4)
+{
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "callPlatformFunctionFromDrvr: this = %p param1 = 0x%X param2 = %p param3 = %p param4 = %p", that, param1, param2, param3, param4);
+
+    if (param1 == 0xb) {
+      panic("Accelerator is being unregist ered!")
+    }
+
+    auto ret = FunctionCast(wrapCallPlatformFunctionFromDrvr, callbackRAD->orgCallPlatformFunctionFromDrvr)(that, param1, param2, param3, param4);
+    NETLOG("rad", "callPlatformFunctionFromDrvr returned 0x%X", ret);
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index,
                       mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
@@ -610,6 +625,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              wrapCreateAtomBiosProxy, orgCreateAtomBiosProxy},
             {"__ZN13ATIController20populateDeviceMemoryE13PCI_REG_INDEX",
              wrapPopulateDeviceMemory, orgPopulateDeviceMemory},
+            {"__ZN13ATIController28callPlatformFunctionFromDrvrE25_eAMDAccelIOFBRequestTypePvS1_S1_", wrapCallPlatformFunctionFromDrvr, orgCallPlatformFunctionFromDrvr},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size))

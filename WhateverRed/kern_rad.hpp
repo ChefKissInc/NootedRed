@@ -218,6 +218,9 @@ class RAD {
                                      void *eventData, uint32_t eventFlags);
     static bool doNotTestVram(IOService *ctrl, uint32_t reg, bool retryOnFail);
     static void updateGetHWInfo(IOService *accelVideoCtx, void *hwInfo);
+
+    mach_vm_address_t orgCallPlatformFunctionFromDrvr{};
+    static uint32_t wrapCallPlatformFunctionFromDrvr(void* that, uint32_t param1, void* param2, void* param3, void* param4);
 };
 
 #endif /* kern_rad_hpp */
