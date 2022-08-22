@@ -229,6 +229,9 @@ class RAD {
 
     mach_vm_address_t orgCreateAccelChannels{};
     static uint32_t wrapCreateAccelChannels(void* that, uint32_t param1);
+
+    mach_vm_address_t orgGetHWCapabilities{};
+    static void* wrapGetHWCapabilities(void* that);
 };
 
 #endif /* kern_rad_hpp */
