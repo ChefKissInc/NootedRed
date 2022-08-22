@@ -58,7 +58,7 @@
 			<key>GPUDebugNullClientMask</key>
 			<integer>0</integer>
 			<key>GpuDebugPolicy</key>
-			<integer>0</integer>
+			<integer>-1</integer>
 			<key>IOClass</key>
 			<string>AMDRadeonX5000_AMDVega20GraphicsAccelerator</string>
 			<key>IODVDBundleName</key>
@@ -144,6 +144,8 @@
 			<key>cail_properties</key>
 			<dict>
 				<key>CAIL_DisableCailLoadUcode</key>
+				<integer>1</integer>
+				<key>CAIL_DisablePowerGating</key>
 				<integer>1</integer>
 				<key>CAIL_EnableAspmL0s</key>
 				<integer>0</integer>
