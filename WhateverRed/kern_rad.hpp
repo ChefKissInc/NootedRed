@@ -102,6 +102,8 @@ class RAD {
     t_HWEngineNew orgGFX9SDMAEngineNew = nullptr;
     t_HWEngineConstructor orgGFX9SDMAEngineConstructor = nullptr;
     mach_vm_address_t orgGetHWEngine{};
+    mach_vm_address_t orgCreateAccelChannels{};
+    mach_vm_address_t orgGetHWCapabilities{};
 
     bool force24BppMode = false;
     bool dviSingleLink = false;
@@ -197,6 +199,8 @@ class RAD {
      */
     static bool wrapAllocateHWEngines(uint64_t that);
     static void *wrapGetHWEngine(void *that, uint32_t engineType);
+    static uint32_t wrapCreateAccelChannels(void *that, uint32_t param1);
+    static void *wrapGetHWCapabilities(void *that);
 
     void processHardwareKext(KernelPatcher &patcher, size_t hwIndex,
                              mach_vm_address_t address, size_t size);
@@ -226,12 +230,6 @@ class RAD {
                                                      uint32_t param1,
                                                      void *param2, void *param3,
                                                      void *param4);
-
-    mach_vm_address_t orgCreateAccelChannels{};
-    static uint32_t wrapCreateAccelChannels(void* that, uint32_t param1);
-
-    mach_vm_address_t orgGetHWCapabilities{};
-    static void* wrapGetHWCapabilities(void* that);
 };
 
 #endif /* kern_rad_hpp */

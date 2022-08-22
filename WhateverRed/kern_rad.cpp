@@ -571,6 +571,7 @@ bool RAD::wrapGFX10AcceleratorStart() {
 bool RAD::wrapAllocateHWEngines(uint64_t that) {
     NETLOG("rad", "allocateHWEngines: this = 0x%llX", that);
     auto *vtable = *reinterpret_cast<uint64_t **>(that);
+    vtable[0x2B] = callbackRAD->orgGetHWCapabilities;
     vtable[0x62] = callbackRAD->orgGetHWEngine;
 
     auto *pm4Engine = callbackRAD->orgGFX9PM4EngineNew(0x1e8);
@@ -631,23 +632,31 @@ void *RAD::wrapGetHWEngine(void *that, uint32_t engineType) {
     return ret;
 }
 
-uint32_t RAD::wrapCreateAccelChannels(void* that, uint32_t param1)
-{
-    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+uint32_t RAD::wrapCreateAccelChannels(void *that, uint32_t param1) {
+    NETLOG("rad",
+           "\n\n---------------------------------------------------------------"
+           "-------\n\n");
     NETLOG("rad", "createAccelChannels: this = %p param1 = 0x%X", that, param1);
-    auto ret = FunctionCast(wrapCreateAccelChannels, callbackRAD->orgCreateAccelChannels)(that, param1);
+    auto ret = FunctionCast(wrapCreateAccelChannels,
+                            callbackRAD->orgCreateAccelChannels)(that, param1);
     NETLOG("rad", "createAccelChannels returned 0x%X", ret);
-    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad",
+           "\n\n---------------------------------------------------------------"
+           "-------\n\n");
     return ret;
 }
 
-void* RAD::wrapGetHWCapabilities(void* that)
-{
-    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+void *RAD::wrapGetHWCapabilities(void *that) {
+    NETLOG("rad",
+           "\n\n---------------------------------------------------------------"
+           "-------\n\n");
     NETLOG("rad", "getHWCapabilities: this = %p", that);
-    auto ret = FunctionCast(wrapGetHWCapabilities, callbackRAD->orgGetHWCapabilities)(that);
+    auto ret = FunctionCast(wrapGetHWCapabilities,
+                            callbackRAD->orgGetHWCapabilities)(that);
     NETLOG("rad", "getHWCapabilities returned %p", ret);
-    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad",
+           "\n\n---------------------------------------------------------------"
+           "-------\n\n");
     return ret;
 }
 
@@ -846,8 +855,11 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             {"__ZN26AMDRadeonX5000_AMDHardware11getHWEngineE20_eAMD_HW_ENGINE_"
              "TYPE",
              wrapGetHWEngine, orgGetHWEngine},
-            {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator19createAccelChannelsEb", wrapCreateAccelChannels, orgCreateAccelChannels},
-            {"__ZN26AMDRadeonX5000_AMDHardware17getHWCapabilitiesEv", wrapGetHWCapabilities, orgGetHWCapabilities},
+            {"__ZN37AMDRadeonX5000_"
+             "AMDGraphicsAccelerator19createAccelChannelsEb",
+             wrapCreateAccelChannels, orgCreateAccelChannels},
+            {"__ZN26AMDRadeonX5000_AMDHardware17getHWCapabilitiesEv",
+             wrapGetHWCapabilities, orgGetHWCapabilities},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size)) {
