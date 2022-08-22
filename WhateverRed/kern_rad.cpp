@@ -393,12 +393,12 @@ void *RAD::wrapCreatePowerTuneServices(void *param1, void *param2) {
     NETLOG("rad", "createPowerTuneServices: param1 = %p param2 = %p", param1,
            param2);
     auto *ret = IOMallocZero(0x18);
-    callbackRAD->orgVega10PowerTuneServicesConstructor(ret, param1, param2);
+    callbackRAD->orgVega10PowerTuneConstructor(ret, param1, param2);
     return ret;
 }
 
 uint16_t RAD::wrapGetFamilyId() {
-    /*
+    /**
      * This function is hardcoded to return 0x8f which is Navi
      * So we now hard code it to return 0x8e, which is Raven/Renoir
      */
@@ -406,7 +406,7 @@ uint16_t RAD::wrapGetFamilyId() {
 }
 
 static uint16_t emulatedRevisionOff(uint16_t revision, uint16_t deviceId) {
-    /*
+    /**
      * Emulated Revision = Revision + Enumerated Revision.
      */
     switch (deviceId) {
@@ -482,7 +482,7 @@ IOReturn RAD::wrapPopulateDeviceInfo(uint64_t that) {
 }
 
 uint64_t RAD::wrapSmuGetFwConstants() {
-    /*
+    /**
      * According to Linux AMDGPU source code,
      * on APUs, the System BIOS is the one that loads the SMC Firmware, and
      * therefore, we must not load any firmware ourselves.
@@ -492,14 +492,14 @@ uint64_t RAD::wrapSmuGetFwConstants() {
 }
 
 bool RAD::wrapTtlDevIsVega10Device() {
-    /*
+    /**
      * AMD iGPUs are Vega 10 based.
      */
     return true;
 }
 
 uint64_t RAD::wrapSmuInternalHwInit() {
-    /*
+    /**
      * This is _smu_9_0_1_internal_hw_init.
      * The original function waits for the firmware to be loaded,
      * which in the Linux AMDGPU code is smu9_is_smc_ram_running.
@@ -576,7 +576,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
                                        address, size))
             panic("RAD: Failed to route AMDSupport symbols");
 
-        /*
+        /**
          * Neutralises VRAM Info Null Check
          */
         uint8_t find[] = {0x48, 0x89, 0x83, 0x18, 0x01, 0x00, 0x00,
@@ -611,13 +611,12 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             panic("RAD: Failed to resolve AMDFirmwareDirectory::putFirmware");
         }
 
-        orgVega10PowerTuneServicesConstructor =
-            reinterpret_cast<t_Vega10PowerTuneServicesConstructor>(
-                patcher.solveSymbol(
-                    index,
-                    "__ZN31AtiAppleVega10PowerTuneServicesC1EP11PP_"
-                    "InstanceP18PowerPlayCallbacks"));
-        if (!orgVega10PowerTuneServicesConstructor) {
+        orgVega10PowerTuneConstructor =
+            reinterpret_cast<t_Vega10PowerTuneConstructor>(patcher.solveSymbol(
+                index,
+                "__ZN31AtiAppleVega10PowerTuneServicesC1EP11PP_"
+                "InstanceP18PowerPlayCallbacks"));
+        if (!orgVega10PowerTuneConstructor) {
             panic(
                 "RAD: Failed to resolve AtiAppleVega10PowerTuneServices "
                 "constructor");
@@ -690,7 +689,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
                                      0x04, 0xbe, 0x1e, 0x00, 0x00, 0x00,
                                      0x5d, 0xe9, 0x51, 0xfe, 0xff, 0xff};
 
-        /*
+        /**
          * Patch for _smu_9_0_1_full_asic_reset
          * This function performs a full ASIC reset.
          * The patch corrects the sent message to 0x1E;
@@ -715,7 +714,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
                                        address, size))
             panic("RAD: Failed to route AMD10000Controller symbols");
 
-        /*
+        /**
          * Patch for DEVICE_COMPONENT_FACTORY::createAsicInfo
          * Eliminates if statement to allow creation of ASIC Info.
          * Uses Vega 20 branch.

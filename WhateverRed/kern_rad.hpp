@@ -39,9 +39,8 @@ class RAD {
     using t_createFirmware = void *(*)(const void *data, uint32_t size,
                                        uint32_t param3, const char *filename);
     using t_putFirmware = bool (*)(void *that, uint32_t deviceType, void *fw);
-    using t_Vega10PowerTuneServicesConstructor = void (*)(void *that,
-                                                          void *param1,
-                                                          void *param2);
+    using t_Vega10PowerTuneConstructor = void (*)(void *that, void *param1,
+                                                  void *param2);
 
     static RAD *callbackRAD;
     ThreadLocal<IOService *, 8> currentPropProvider;
@@ -61,33 +60,31 @@ class RAD {
     mach_vm_address_t orgPopulateDeviceMemory{}, orgQueryComputeQueueIsIdle{};
     mach_vm_address_t orgAMDHWChannelWaitForIdle{};
 
-    /* AMD10000Controller */
+    /**
+     * AMD10000Controller
+     */
     mach_vm_address_t orgPopulateDeviceInfo{};
-    /* ---------------- */
 
-    /* X5000HWLibs */
+    /**
+     * X5000HWLibs
+     */
     mach_vm_address_t orgIpiSmuSwInit{}, orgSmuSwInit{};
-    mach_vm_address_t orgSmuInternalSwInit{}, orgSmuGetHwVersion{},
-        orgPspSwInit{};
-    mach_vm_address_t orgGcGetHwVersion{}, orgInternalCosReadFw{},
-        orgPopulateFirmwareDirectory{};
+    mach_vm_address_t orgSmuInternalSwInit{}, orgSmuGetHwVersion{};
+    mach_vm_address_t orgPspSwInit{}, orgGcGetHwVersion{};
+    mach_vm_address_t orgInternalCosReadFw{}, orgPopulateFirmwareDirectory{};
     t_createFirmware orgCreateFirmware = nullptr;
     t_putFirmware orgPutFirmware = nullptr;
     mach_vm_address_t orgMCILUpdateGfxCGPG{}, orgQueryEngineRunningState{};
-    mach_vm_address_t orgCAILQueryEngineRunningState{},
-        orgCailMonitorEngineInternalState{};
+    mach_vm_address_t orgCAILQueryEngineRunningState{};
+    mach_vm_address_t orgCailMonitorEngineInternalState{};
     mach_vm_address_t orgCailMonitorPerformanceCounter{};
     mach_vm_address_t orgSMUMInitialize{};
-    t_Vega10PowerTuneServicesConstructor orgVega10PowerTuneServicesConstructor =
-        nullptr;
+    t_Vega10PowerTuneConstructor orgVega10PowerTuneConstructor = nullptr;
     mach_vm_address_t orgCosDebugPrint{}, orgMCILDebugPrint{};
     mach_vm_address_t orgCosDebugPrintVaList{};
     mach_vm_address_t orgCosReleasePrintVaList{};
-    /// Max 517 Entries
     CailAsicCapEntry *orgAsicCapsTable = nullptr;
-    /// Max 789 entries
     CailInitAsicCapEntry *orgAsicInitCapsTable = nullptr;
-    /* ----------- */
 
     bool force24BppMode = false;
     bool dviSingleLink = false;
@@ -126,13 +123,16 @@ class RAD {
     static IOReturn wrapPopulateDeviceMemory(void *that, uint32_t reg);
     static IOReturn wrapQueryComputeQueueIsIdle(void *that, uint64_t param1);
     static bool wrapAMDHWChannelWaitForIdle(void *that, uint64_t param1);
-	
-    /* AMD10000Controller */
+
+    /**
+     * AMD10000Controller
+     */
     static uint16_t wrapGetFamilyId();
     static IOReturn wrapPopulateDeviceInfo(uint64_t that);
-    /* ---------------- */
 
-    /* X5000HWLibs */
+    /**
+     * X5000HWLibs
+     */
     static void wrapAmdTtlServicesConstructor(IOService *that,
                                               IOPCIDevice *provider);
     static uint64_t wrapIpiSmuSwInit(void *tlsInstance);
@@ -169,7 +169,6 @@ class RAD {
                                         va_list args);
     static void wrapCosReleasePrintVaList(void *ttl, char *header, char *fmt,
                                           va_list args);
-    /* ----------- */
 
     void processHardwareKext(KernelPatcher &patcher, size_t hwIndex,
                              mach_vm_address_t address, size_t size);
