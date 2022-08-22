@@ -610,7 +610,7 @@ void RAD::wrapSetupAndInitializeHWCapabilities(uint64_t that) {
     NETLOG("rad", "wrapSetupAndInitializeCapabilities: that = 0x%llX", that);
     FunctionCast(wrapSetupAndInitializeHWCapabilities,
                  callbackRAD->orgSetupAndInitializeHWCapabilities)(that);
-    *reinterpret_cast<uint32_t *>(that + 0xAC) = 0x1;
+    *reinterpret_cast<uint32_t *>(that + 0xAC) = 0x0;
     *reinterpret_cast<uint32_t *>(that + 0xAF) = 0x100001;
     NETLOG("rad", "wrapSetupAndInitializeCapabilities: done");
 }
