@@ -614,13 +614,17 @@ uint32_t RAD::wrapCallPlatformFunctionFromDrvr(void *that, uint32_t param1,
     return ret;
 }
 
-void* RAD::wrapGetHWEngine(void* that, uint32_t engineType)
-{
-    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+void *RAD::wrapGetHWEngine(void *that, uint32_t engineType) {
+    NETLOG("rad",
+           "\n\n---------------------------------------------------------------"
+           "-------\n\n");
     NETLOG("rad", "getHWEngine: this = %p engineType = 0x%X", that, engineType);
-    auto ret = FunctionCast(wrapGetHWEngine, callbackRAD->orgGetHWEngine)(that, engineType);
+    auto ret = FunctionCast(wrapGetHWEngine, callbackRAD->orgGetHWEngine)(
+        that, engineType);
     NETLOG("rad", "getHWEngine returned %p", ret);
-    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad",
+           "\n\n---------------------------------------------------------------"
+           "-------\n\n");
     return ret;
 }
 
@@ -650,8 +654,9 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              wrapCallPlatformFunctionFromDrvr, orgCallPlatformFunctionFromDrvr},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
-                                       address, size))
+                                       address, size)) {
             panic("RAD: Failed to route AMDSupport symbols");
+        }
 
         /**
          * Neutralises VRAM Info Null Check
@@ -669,45 +674,21 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
 
         return true;
     } else if (kextRadeonX5000HWLibs.loadIndex == index) {
-        orgDeviceTypeTable = reinterpret_cast<uint32_t *>(
-            patcher.solveSymbol(index, "__ZL15deviceTypeTable"));
-        if (!orgDeviceTypeTable) {
-            panic("RAD: Failed to resolve device type table");
-        }
-        orgCreateFirmware =
-            reinterpret_cast<t_createFirmware>(patcher.solveSymbol(
-                index, "__ZN11AMDFirmware14createFirmwareEPhjjPKc"));
-        if (!this->orgCreateFirmware) {
-            panic("RAD: Failed to resolve AMDFirmware::createFirmware");
-        }
-        orgPutFirmware = reinterpret_cast<t_putFirmware>(
-            patcher.solveSymbol(index,
-                                "__ZN20AMDFirmwareDirectory11putFirmwareE16_"
-                                "AMD_DEVICE_TYPEP11AMDFirmware"));
-        if (!orgPutFirmware) {
-            panic("RAD: Failed to resolve AMDFirmwareDirectory::putFirmware");
-        }
-
-        orgVega10PowerTuneConstructor =
-            reinterpret_cast<t_Vega10PowerTuneConstructor>(patcher.solveSymbol(
-                index,
-                "__ZN31AtiAppleVega10PowerTuneServicesC1EP11PP_"
-                "InstanceP18PowerPlayCallbacks"));
-        if (!orgVega10PowerTuneConstructor) {
-            panic(
-                "RAD: Failed to resolve AtiAppleVega10PowerTuneServices "
-                "constructor");
-        }
-
-        orgAsicCapsTable = reinterpret_cast<CailAsicCapEntry *>(
-            patcher.solveSymbol(index, "__ZL20CAIL_ASIC_CAPS_TABLE"));
-        if (!orgAsicCapsTable) {
-            panic("Failed to resolve CAIL_ASIC_CAPS_TABLE");
-        }
-        orgAsicInitCapsTable = reinterpret_cast<CailInitAsicCapEntry *>(
-            patcher.solveSymbol(index, "_CAILAsicCapsInitTable"));
-        if (!orgAsicInitCapsTable) {
-            panic("Failed to resolve _CAILAsicCapsInitTable");
+        KernelPatcher::SolveRequest solveRequests[] = {
+            {"__ZL15deviceTypeTable", orgDeviceTypeTable},
+            {"__ZN11AMDFirmware14createFirmwareEPhjjPKc", orgCreateFirmware},
+            {"__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_"
+             "TYPEP11AMDFirmware",
+             orgPutFirmware},
+            {"__ZN31AtiAppleVega10PowerTuneServicesC1EP11PP_"
+             "InstanceP18PowerPlayCallbacks",
+             orgVega10PowerTuneConstructor},
+            {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable},
+            {"_CAILAsicCapsInitTable", orgAsicInitCapsTable},
+        };
+        if (!patcher.solveMultiple(index, solveRequests, arrsize(solveRequests),
+                                   address, size)) {
+            panic("RAD: Failed to resolve AMDRadeonX5000HWLibs symbols");
         }
 
         KernelPatcher::RouteRequest requests[] = {
@@ -756,8 +737,9 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              wrapCosReleasePrintVaList, orgCosReleasePrintVaList},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
-                                       address, size))
+                                       address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
+        }
 
         uint8_t find_asic_reset[] = {0x55, 0x48, 0x89, 0xe5, 0x8b, 0x56,
                                      0x04, 0xbe, 0x3b, 0x00, 0x00, 0x00,
@@ -788,8 +770,9 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              wrapPopulateDeviceInfo, orgPopulateDeviceInfo},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
-                                       address, size))
+                                       address, size)) {
             panic("RAD: Failed to route AMD10000Controller symbols");
+        }
 
         /**
          * Patch for DEVICE_COMPONENT_FACTORY::createAsicInfo
@@ -809,33 +792,17 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
 
         return true;
     } else if (kextRadeonX5000.loadIndex == index) {
-        orgGFX9PM4EngineNew =
-            reinterpret_cast<t_HWEngineNew>(patcher.solveSymbol(
-                index, "__ZN31AMDRadeonX5000_AMDGFX9PM4EnginenwEm"));
-        if (patcher.getError() != KernelPatcher::Error::NoError) {
-            panic(
-                "Failed to resolve AMDRadeonX5000_AMDGFX9PM4Engine operator "
-                "new");
-        }
-        orgGFX9PM4EngineConstructor =
-            reinterpret_cast<t_HWEngineConstructor>(patcher.solveSymbol(
-                index, "__ZN31AMDRadeonX5000_AMDGFX9PM4EngineC1Ev"));
-        if (patcher.getError() != KernelPatcher::Error::NoError) {
-            panic("Failed to resolve AMDRadeonX5000_AMDGFX9PM4Engine()");
-        }
-        orgGFX9SDMAEngineNew =
-            reinterpret_cast<t_HWEngineNew>(patcher.solveSymbol(
-                index, "__ZN32AMDRadeonX5000_AMDGFX9SDMAEnginenwEm"));
-        if (patcher.getError() != KernelPatcher::Error::NoError) {
-            panic(
-                "Failed to resolve AMDRadeonX5000_AMDGFX9SDMAEngine operator "
-                "new");
-        }
-        orgGFX9SDMAEngineConstructor =
-            reinterpret_cast<t_HWEngineConstructor>(patcher.solveSymbol(
-                index, "__ZN32AMDRadeonX5000_AMDGFX9SDMAEngineC1Ev"));
-        if (patcher.getError() != KernelPatcher::Error::NoError) {
-            panic("Failed to resolve AMDRadeonX5000_AMDGFX9SDMAEngine()");
+        KernelPatcher::SolveRequest solveRequests[] = {
+            {"__ZN31AMDRadeonX5000_AMDGFX9PM4EnginenwEm", orgGFX9PM4EngineNew},
+            {"__ZN31AMDRadeonX5000_AMDGFX9PM4EngineC1Ev",
+             orgGFX9PM4EngineConstructor},
+            {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEnginenwEm",
+             orgGFX9SDMAEngineNew},
+            {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngineC1Ev",
+             orgGFX9SDMAEngineConstructor}};
+        if (!patcher.solveMultiple(index, solveRequests, arrsize(solveRequests),
+                                   address, size)) {
+            panic("RAD: Failed to resolve AMDRadeonX5000 symbols");
         }
 
         KernelPatcher::RouteRequest requests[] = {
@@ -852,7 +819,9 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              wrapAMDHWChannelWaitForIdle, orgAMDHWChannelWaitForIdle},
             {"__ZN32AMDRadeonX5000_AMDVega20Hardware17allocateHWEnginesEv",
              wrapAllocateHWEngines},
-            {"__ZN26AMDRadeonX5000_AMDHardware11getHWEngineE20_eAMD_HW_ENGINE_TYPE", wrapGetHWEngine, orgGetHWEngine},
+            {"__ZN26AMDRadeonX5000_AMDHardware11getHWEngineE20_eAMD_HW_ENGINE_"
+             "TYPE",
+             wrapGetHWEngine, orgGetHWEngine},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size)) {
@@ -861,19 +830,14 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
 
         return true;
     } else if (kextRadeonX6000.loadIndex == index) {
-        orgGFX10VCN2EngineNew =
-            reinterpret_cast<t_HWEngineNew>(patcher.solveSymbol(
-                index, "__ZN30AMDRadeonX6000_AMDVCN2HWEnginenwEm"));
-        if (patcher.getError() != KernelPatcher::Error::NoError) {
-            panic(
-                "Failed to resolve AMDRadeonX6000_AMDVCN2HWEngine operator "
-                "new");
-        }
-        orgGFX10VCN2EngineConstructor =
-            reinterpret_cast<t_HWEngineConstructor>(patcher.solveSymbol(
-                index, "__ZN30AMDRadeonX6000_AMDVCN2HWEngineC1Ev"));
-        if (patcher.getError() != KernelPatcher::Error::NoError) {
-            panic("Failed to resolve AMDRadeonX6000_AMDVCN2HWEngine()");
+        KernelPatcher::SolveRequest solveRequests[] = {
+            {"__ZN30AMDRadeonX6000_AMDVCN2HWEnginenwEm", orgGFX10VCN2EngineNew},
+            {"__ZN30AMDRadeonX6000_AMDVCN2HWEngineC1Ev",
+             orgGFX10VCN2EngineConstructor},
+        };
+        if (!patcher.solveMultiple(index, solveRequests, arrsize(solveRequests),
+                                   address, size)) {
+            panic("RAD: Failed to resolve AMDRadeonX6000 symbols");
         }
 
         KernelPatcher::RouteRequest requests[] = {
