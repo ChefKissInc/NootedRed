@@ -220,7 +220,10 @@ class RAD {
     static void updateGetHWInfo(IOService *accelVideoCtx, void *hwInfo);
 
     mach_vm_address_t orgCallPlatformFunctionFromDrvr{};
-    static uint32_t wrapCallPlatformFunctionFromDrvr(void* that, uint32_t param1, void* param2, void* param3, void* param4);
+    static uint32_t wrapCallPlatformFunctionFromDrvr(void *that,
+                                                     uint32_t param1,
+                                                     void *param2, void *param3,
+                                                     void *param4);
 };
 
 #endif /* kern_rad_hpp */
