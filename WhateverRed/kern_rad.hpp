@@ -46,7 +46,6 @@ class RAD {
     static RAD *callbackRAD;
     ThreadLocal<IOService *, 8> currentPropProvider;
 
-    mach_vm_address_t orgPanic{}, orgEnterDebugger{};
     mach_vm_address_t orgSetProperty{}, orgGetProperty{},
         orgGetConnectorsInfoV2{};
     mach_vm_address_t orgGetConnectorsInfoV1{},
@@ -115,10 +114,6 @@ class RAD {
     void reprioritiseConnectors(const uint8_t *senseList, uint8_t senseNum,
                                 RADConnectors::Connector *connectors,
                                 uint8_t sz);
-
-    [[noreturn]] [[gnu::cold]] static void wrapPanic(
-        const char *panic_format_str, ...);
-    [[noreturn]] [[gnu::cold]] static void wrapEnterDebugger(const char *cause);
 
     void process24BitOutput(KernelPatcher &patcher,
                             KernelPatcher::KextInfo &info,

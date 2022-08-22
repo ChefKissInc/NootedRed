@@ -100,36 +100,12 @@ void RAD::init() {
 
 void RAD::deinit() {}
 
-[[noreturn]] [[gnu::cold]] void RAD::wrapPanic(const char *fmt, ...) {
-    va_list args, netdbg_args;
-    va_start(args, fmt);
-    va_copy(netdbg_args, args);
-    NETDBG::printf("panic: ");
-    NETDBG::vprintf(fmt, netdbg_args);
-    va_end(netdbg_args);
-    IOSleep(1000);
-    FunctionCast(wrapPanic, callbackRAD->orgPanic)(fmt, args);
-    PE_enter_debugger("Panic Fallback");
-    for (;;) {
-        asm volatile("hlt");
-    }
-}
-
-[[noreturn]] [[gnu::cold]] void RAD::wrapEnterDebugger(const char *cause) {
-    NETLOG("rad", "Debugger requested: %s", cause);
-    IOSleep(1000);
-    FunctionCast(wrapEnterDebugger, callbackRAD->orgEnterDebugger)(cause);
-    panic("Debugger call somehow returned");
-}
-
 void RAD::processKernel(KernelPatcher &patcher) {
     KernelPatcher::RouteRequest requests[] = {
         {"__ZN15IORegistryEntry11setPropertyEPKcPvj", wrapSetProperty,
          orgSetProperty},
         {"__ZNK15IORegistryEntry11getPropertyEPKc", wrapGetProperty,
          orgGetProperty},
-        {"_panic", wrapPanic, orgPanic},
-        {"_PE_enter_debugger", wrapEnterDebugger},
     };
     if (!patcher.routeMultipleLong(KernelPatcher::KernelID, requests)) {
         panic("RAD: Failed to route kernel symbols");
