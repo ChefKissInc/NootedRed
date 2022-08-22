@@ -41,6 +41,8 @@ class RAD {
     using t_putFirmware = bool (*)(void *that, uint32_t deviceType, void *fw);
     using t_Vega10PowerTuneConstructor = void (*)(void *that, void *param1,
                                                   void *param2);
+    using t_HWEngineConstructor = void (*)(void *that);
+    using t_HWEngineNew = void *(*)(size_t size);
 
     static RAD *callbackRAD;
     ThreadLocal<IOService *, 8> currentPropProvider;
@@ -85,6 +87,20 @@ class RAD {
     mach_vm_address_t orgCosReleasePrintVaList{};
     CailAsicCapEntry *orgAsicCapsTable = nullptr;
     CailInitAsicCapEntry *orgAsicInitCapsTable = nullptr;
+
+    /**
+     * X6000
+     */
+    t_HWEngineNew orgGFX10VCN2EngineNew = nullptr;
+    t_HWEngineConstructor orgGFX10VCN2EngineConstructor = nullptr;
+
+    /**
+     * X5000
+     */
+    t_HWEngineNew orgGFX9PM4EngineNew = nullptr;
+    t_HWEngineConstructor orgGFX9PM4EngineConstructor = nullptr;
+    t_HWEngineNew orgGFX9SDMAEngineNew = nullptr;
+    t_HWEngineConstructor orgGFX9SDMAEngineConstructor = nullptr;
 
     bool force24BppMode = false;
     bool dviSingleLink = false;
@@ -169,6 +185,16 @@ class RAD {
                                         va_list args);
     static void wrapCosReleasePrintVaList(void *ttl, char *header, char *fmt,
                                           va_list args);
+
+    /**
+     * X6000
+     */
+    static bool wrapGFX10AcceleratorStart();
+
+    /**
+     * X5000
+     */
+    static bool wrapAllocateHWEngines(uint64_t that);
 
     void processHardwareKext(KernelPatcher &patcher, size_t hwIndex,
                              mach_vm_address_t address, size_t size);

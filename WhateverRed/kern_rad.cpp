@@ -25,6 +25,9 @@ static const char *pathFramebuffer =
     "AMDFramebuffer";
 static const char *pathSupport =
     "/System/Library/Extensions/AMDSupport.kext/Contents/MacOS/AMDSupport";
+static const char *pathRadeonX6000 =
+    "/System/Library/Extensions/AMDRadeonX6000.kext/Contents/MacOS/"
+    "AMDRadeonX6000";
 static const char *pathRadeonX5000HWLibs =
     "/System/Library/Extensions/AMDRadeonX5000HWServices.kext/Contents/PlugIns/"
     "AMDRadeonX5000HWLibs.kext/Contents/MacOS/AMDRadeonX5000HWLibs";
@@ -53,6 +56,10 @@ static KernelPatcher::KextInfo kextAMD10000Controller{
 };
 static KernelPatcher::KextInfo kextRadeonX5000{
     "com.apple.kext.AMDRadeonX5000",   &pathRadeonX5000, 1, {}, {},
+    KernelPatcher::KextInfo::Unloaded,
+};
+static KernelPatcher::KextInfo kextRadeonX6000 = {
+    "com.apple.kext.AMDRadeonX6000",   &pathRadeonX6000, 1, {}, {},
     KernelPatcher::KextInfo::Unloaded,
 };
 
@@ -84,6 +91,7 @@ void RAD::init() {
     lilu.onKextLoadForce(&kextRadeonSupport);
     lilu.onKextLoadForce(&kextRadeonX5000HWLibs);
     lilu.onKextLoadForce(&kextRadeonX5000);
+    lilu.onKextLoadForce(&kextRadeonX6000);
 
     // FIXME: autodetect?
     uint32_t powerGatingMask = 0;
@@ -550,6 +558,37 @@ void RAD::wrapCosReleasePrintVaList(void *ttl, char *header, char *fmt,
                  callbackRAD->orgCosReleasePrintVaList)(ttl, header, fmt, args);
 }
 
+bool RAD::wrapGFX10AcceleratorStart() {
+    /*
+     * The Info.plist contains a personality for the
+     * AMD X6000 Accelerator, but we don't want it to do
+     * anything. We have it there only so it force-loads
+     * the kext and we can resolve the symbols we need.
+     */
+    return true;
+}
+
+bool RAD::wrapAllocateHWEngines(uint64_t that) {
+    NETLOG("rad", "allocateHWEngines: this = 0x%llX", that);
+    auto *pm4Engine = callbackRAD->orgGFX9PM4EngineNew(0x1e8);
+    callbackRAD->orgGFX9PM4EngineConstructor(pm4Engine);
+    *reinterpret_cast<void **>(that + 0x3b8) = pm4Engine;
+
+    auto *sdmaEngine = callbackRAD->orgGFX9SDMAEngineNew(0x128);
+    callbackRAD->orgGFX9SDMAEngineConstructor(sdmaEngine);
+    *reinterpret_cast<void **>(that + 0x3c0) = sdmaEngine;
+
+    auto *sdma1Engine = callbackRAD->orgGFX9SDMAEngineNew(0x128);
+    callbackRAD->orgGFX9SDMAEngineConstructor(sdma1Engine);
+    *reinterpret_cast<void **>(that + 0x3c8) = sdma1Engine;
+
+    auto *vcn2Engine = callbackRAD->orgGFX10VCN2EngineNew(0x198);
+    callbackRAD->orgGFX10VCN2EngineConstructor(vcn2Engine);
+    *reinterpret_cast<void **>(that + 0x3f8) = vcn2Engine;
+    NETLOG("rad", "allocateHWEngines: returning true");
+    return true;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index,
                       mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
@@ -732,6 +771,35 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
 
         return true;
     } else if (kextRadeonX5000.loadIndex == index) {
+        orgGFX9PM4EngineNew =
+            reinterpret_cast<t_HWEngineNew>(patcher.solveSymbol(
+                index, "__ZN31AMDRadeonX5000_AMDGFX9PM4EnginenwEm"));
+        if (patcher.getError() != KernelPatcher::Error::NoError) {
+            panic(
+                "Failed to resolve AMDRadeonX5000_AMDGFX9PM4Engine operator "
+                "new");
+        }
+        orgGFX9PM4EngineConstructor =
+            reinterpret_cast<t_HWEngineConstructor>(patcher.solveSymbol(
+                index, "__ZN31AMDRadeonX5000_AMDGFX9PM4EngineC1Ev"));
+        if (patcher.getError() != KernelPatcher::Error::NoError) {
+            panic("Failed to resolve AMDRadeonX5000_AMDGFX9PM4Engine()");
+        }
+        orgGFX9SDMAEngineNew =
+            reinterpret_cast<t_HWEngineNew>(patcher.solveSymbol(
+                index, "__ZN32AMDRadeonX5000_AMDGFX9SDMAEnginenwEm"));
+        if (patcher.getError() != KernelPatcher::Error::NoError) {
+            panic(
+                "Failed to resolve AMDRadeonX5000_AMDGFX9SDMAEngine operator "
+                "new");
+        }
+        orgGFX9SDMAEngineConstructor =
+            reinterpret_cast<t_HWEngineConstructor>(patcher.solveSymbol(
+                index, "__ZN32AMDRadeonX5000_AMDGFX9SDMAEngineC1Ev"));
+        if (patcher.getError() != KernelPatcher::Error::NoError) {
+            panic("Failed to resolve AMDRadeonX5000_AMDGFX9SDMAEngine()");
+        }
+
         KernelPatcher::RouteRequest requests[] = {
             {"__ZN27AMDRadeonX5000_AMDHWHandler8getStateEv", wrapGetState,
              orgGetState},
@@ -744,10 +812,38 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              wrapQueryComputeQueueIsIdle, orgQueryComputeQueueIsIdle},
             {"__ZN27AMDRadeonX5000_AMDHWChannel11waitForIdleEj",
              wrapAMDHWChannelWaitForIdle, orgAMDHWChannelWaitForIdle},
+            {"__ZN32AMDRadeonX5000_AMDVega20Hardware17allocateHWEnginesEv",
+             wrapAllocateHWEngines},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size)) {
-            panic("RAD: Failed to route X5000 symbols");
+            panic("RAD: Failed to route AMDRadeonX5000 symbols");
+        }
+
+        return true;
+    } else if (kextRadeonX6000.loadIndex == index) {
+        orgGFX10VCN2EngineNew =
+            reinterpret_cast<t_HWEngineNew>(patcher.solveSymbol(
+                index, "__ZN30AMDRadeonX6000_AMDVCN2HWEnginenwEm"));
+        if (patcher.getError() != KernelPatcher::Error::NoError) {
+            panic(
+                "Failed to resolve AMDRadeonX6000_AMDVCN2HWEngine operator "
+                "new");
+        }
+        orgGFX10VCN2EngineConstructor =
+            reinterpret_cast<t_HWEngineConstructor>(patcher.solveSymbol(
+                index, "__ZN30AMDRadeonX6000_AMDVCN2HWEngineC1Ev"));
+        if (patcher.getError() != KernelPatcher::Error::NoError) {
+            panic("Failed to resolve AMDRadeonX6000_AMDVCN2HWEngine()");
+        }
+
+        KernelPatcher::RouteRequest requests[] = {
+            {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator5startEP9IOService",
+             wrapGFX10AcceleratorStart},
+        };
+        if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
+                                       address, size)) {
+            panic("RAD: Failed to route AMDRadeonX6000 symbols");
         }
 
         return true;
