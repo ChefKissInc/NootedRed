@@ -20,42 +20,40 @@
 #include "kern_fw.hpp"
 #include "kern_netdbg.hpp"
 
-static const char *pathFramebuffer[] = {
+static const char *pathFramebuffer =
     "/System/Library/Extensions/AMDFramebuffer.kext/Contents/MacOS/"
-    "AMDFramebuffer"};
-static const char *pathSupport[] = {
-    "/System/Library/Extensions/AMDSupport.kext/Contents/MacOS/AMDSupport"};
-static const char *pathRadeonX5000[] = {
-    "/System/Library/Extensions/AMDRadeonX5000.kext/Contents/MacOS/"
-    "AMDRadeonX5000"};
-static const char *pathRadeonX5000HWLibs[] = {
+    "AMDFramebuffer";
+static const char *pathSupport =
+    "/System/Library/Extensions/AMDSupport.kext/Contents/MacOS/AMDSupport";
+static const char *pathRadeonX5000HWLibs =
     "/System/Library/Extensions/AMDRadeonX5000HWServices.kext/Contents/PlugIns/"
-    "AMDRadeonX5000HWLibs.kext/Contents/MacOS/AMDRadeonX5000HWLibs",
-};
-static const char *pathAMD10000Controller[] = {
+    "AMDRadeonX5000HWLibs.kext/Contents/MacOS/AMDRadeonX5000HWLibs";
+static const char *pathRadeonX5000 =
+    "/System/Library/Extensions/AMDRadeonX5000.kext/Contents/MacOS/"
+    "AMDRadeonX5000";
+static const char *pathAMD10000Controller =
     "/System/Library/Extensions/AMD10000Controller.kext/Contents/MacOS/"
-    "AMD10000Controller"};
+    "AMD10000Controller";
 
 static KernelPatcher::KextInfo kextRadeonFramebuffer{
-    "com.apple.kext.AMDFramebuffer",  pathFramebuffer, 1, {}, {},
-    KernelPatcher::KextInfo::Unloaded};
+    "com.apple.kext.AMDFramebuffer",   &pathFramebuffer, 1, {}, {},
+    KernelPatcher::KextInfo::Unloaded,
+};
 static KernelPatcher::KextInfo kextRadeonSupport{
-    "com.apple.kext.AMDSupport",      pathSupport, 1, {}, {},
-    KernelPatcher::KextInfo::Unloaded};
+    "com.apple.kext.AMDSupport",       &pathSupport, 1, {}, {},
+    KernelPatcher::KextInfo::Unloaded,
+};
 static KernelPatcher::KextInfo kextRadeonX5000HWLibs{
-    "com.apple.kext.AMDRadeonX5000HWLibs", pathRadeonX5000HWLibs, 1, {}, {},
-    KernelPatcher::KextInfo::Unloaded};
+    "com.apple.kext.AMDRadeonX5000HWLibs", &pathRadeonX5000HWLibs, 1, {}, {},
+    KernelPatcher::KextInfo::Unloaded,
+};
 static KernelPatcher::KextInfo kextAMD10000Controller{
-    "com.apple.kext.AMD10000Controller", pathAMD10000Controller, 1, {}, {},
-    KernelPatcher::KextInfo::Unloaded};
-
-static KernelPatcher::KextInfo kextRadeonHardware[] = {
-    {"com.apple.kext.AMDRadeonX5000",
-     pathRadeonX5000,
-     arrsize(pathRadeonX5000),
-     {},
-     {},
-     KernelPatcher::KextInfo::Unloaded},
+    "com.apple.kext.AMD10000Controller", &pathAMD10000Controller, 1, {}, {},
+    KernelPatcher::KextInfo::Unloaded,
+};
+static KernelPatcher::KextInfo kextRadeonX5000{
+    "com.apple.kext.AMDRadeonX5000",   &pathRadeonX5000, 1, {}, {},
+    KernelPatcher::KextInfo::Unloaded,
 };
 
 /**
@@ -81,15 +79,11 @@ void RAD::init() {
     if (force24BppMode) lilu.onKextLoadForce(&kextRadeonFramebuffer);
 
     dviSingleLink = checkKernelArgument("-raddvi");
-    fixConfigName = checkKernelArgument("-radcfg");
-    forceVesaMode = checkKernelArgument("-radvesa");
-    forceCodecInfo = checkKernelArgument("-radcodec");
 
     lilu.onKextLoadForce(&kextAMD10000Controller);
     lilu.onKextLoadForce(&kextRadeonSupport);
     lilu.onKextLoadForce(&kextRadeonX5000HWLibs);
-
-    initHardwareKextMods();
+    lilu.onKextLoadForce(&kextRadeonX5000);
 
     // FIXME: autodetect?
     uint32_t powerGatingMask = 0;
@@ -128,29 +122,7 @@ void RAD::deinit() {}
     panic("Debugger call somehow returned");
 }
 
-void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info) {
-    for (size_t i = 0; i < info->videoExternal.size(); i++) {
-        if (info->videoExternal[i].vendor == WIOKit::VendorID::ATIAMD) {
-            if (info->videoExternal[i].video->getProperty("enable-gva-support"))
-                enableGvaSupport = true;
-
-            auto smufw =
-                OSDynamicCast(OSData, info->videoExternal[i].video->getProperty(
-                                          "Force_Load_FalconSMUFW"));
-            if (smufw && smufw->getLength() == 1) {
-                info->videoExternal[i].video->setProperty(
-                    "Force_Load_FalconSMUFW",
-                    *static_cast<const uint8_t *>(smufw->getBytesNoCopy())
-                        ? kOSBooleanTrue
-                        : kOSBooleanFalse);
-            }
-        }
-    }
-
-    int gva;
-    if (PE_parse_boot_argn("radgva", &gva, sizeof(gva)))
-        enableGvaSupport = gva != 0;
-
+void RAD::processKernel(KernelPatcher &patcher) {
     KernelPatcher::RouteRequest requests[] = {
         {"__ZN15IORegistryEntry11setPropertyEPKcPvj", wrapSetProperty,
          orgSetProperty},
@@ -160,7 +132,7 @@ void RAD::processKernel(KernelPatcher &patcher, DeviceInfo *info) {
         {"_PE_enter_debugger", wrapEnterDebugger},
     };
     if (!patcher.routeMultipleLong(KernelPatcher::KernelID, requests)) {
-        panic("Failed to route kernel symbols");
+        panic("RAD: Failed to route kernel symbols");
     }
 }
 
@@ -325,9 +297,6 @@ void RAD::wrapPopulateFirmwareDirectory(uint64_t that) {
 }
 
 void *RAD::wrapCreateAtomBiosProxy(void *param1) {
-    NETLOG("rad",
-           "------------------------------------------------------------"
-           "----------");
     NETLOG("rad", "createAtomBiosProxy: param1 = %p", param1);
     auto ret = FunctionCast(wrapCreateAtomBiosProxy,
                             callbackRAD->orgCreateAtomBiosProxy)(param1);
@@ -344,9 +313,6 @@ IOReturn RAD::wrapPopulateDeviceMemory(void *that, uint32_t reg) {
 }
 
 uint64_t RAD::wrapMCILUpdateGfxCGPG(void *param1) {
-    NETLOG("rad",
-           "------------------------------------------------------------"
-           "----------");
     NETLOG("rad", "_Cail_MCILUpdateGfxCGPG: param1 = %p", param1);
     auto ret = FunctionCast(wrapMCILUpdateGfxCGPG,
                             callbackRAD->orgMCILUpdateGfxCGPG)(param1);
@@ -463,7 +429,7 @@ uint16_t RAD::wrapGetFamilyId() {
     return 0x8e;
 }
 
-uint16_t RAD::emulatedRevisionOff(uint16_t revision, uint16_t deviceId) {
+static uint16_t emulatedRevisionOff(uint16_t revision, uint16_t deviceId) {
     /*
      * Emulated Revision = Revision + Enumerated Revision.
      */
@@ -632,7 +598,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size))
-            panic("Failed to route AMDSupport symbols");
+            panic("RAD: Failed to route AMDSupport symbols");
 
         /*
          * Neutralises VRAM Info Null Check
@@ -771,7 +737,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size))
-            panic("Failed to route AMD10000Controller symbols");
+            panic("RAD: Failed to route AMD10000Controller symbols");
 
         /*
          * Patch for DEVICE_COMPONENT_FACTORY::createAsicInfo
@@ -790,20 +756,27 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
         patcher.clearError();
 
         return true;
-    }
-
-    for (size_t i = 0; i < maxHardwareKexts; i++) {
-        if (kextRadeonHardware[i].loadIndex == index) {
-            processHardwareKext(patcher, i, address, size);
-            return true;
+    } else if (kextRadeonX5000.loadIndex == index) {
+        KernelPatcher::RouteRequest requests[] = {
+            {"__ZN27AMDRadeonX5000_AMDHWHandler8getStateEv", wrapGetState,
+             orgGetState},
+            {"__ZN28AMDRadeonX5000_AMDRTHardware13initializeTtlEP16_GART_"
+             "PARAMETERS",
+             wrapInitializeTtl, orgInitializeTtl},
+            {"__ZN31AMDRadeonX5000_"
+             "AMDGFX9PM4Engine23QueryComputeQueueIsIdleE18_"
+             "eAMD_HW_RING_TYPE",
+             wrapQueryComputeQueueIsIdle, orgQueryComputeQueueIsIdle},
+            {"__ZN27AMDRadeonX5000_AMDHWChannel11waitForIdleEj",
+             wrapAMDHWChannelWaitForIdle, orgAMDHWChannelWaitForIdle},
+        };
+        if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
+                                       address, size)) {
+            panic("RAD: Failed to route X5000 symbols");
         }
     }
 
     return false;
-}
-
-void RAD::initHardwareKextMods() {
-    lilu.onKextLoadForce(kextRadeonHardware, maxHardwareKexts);
 }
 
 void RAD::process24BitOutput(KernelPatcher &patcher,
@@ -883,39 +856,6 @@ bool RAD::wrapInitializeTtl(void *that, void *param1) {
         that, param1);
     NETLOG("rad", "initializeTtl returned %d", ret);
     return ret;
-}
-
-void RAD::processHardwareKext(KernelPatcher &patcher, size_t hwIndex,
-                              mach_vm_address_t address, size_t size) {
-    auto &hardware = kextRadeonHardware[hwIndex];
-
-    KernelPatcher::RouteRequest requests[] = {
-        {"__ZN27AMDRadeonX5000_AMDHWHandler8getStateEv", wrapGetState,
-         orgGetState},
-        {"__ZN28AMDRadeonX5000_AMDRTHardware13initializeTtlEP16_GART_"
-         "PARAMETERS",
-         wrapInitializeTtl, orgInitializeTtl},
-        {"__ZN31AMDRadeonX5000_AMDGFX9PM4Engine23QueryComputeQueueIsIdleE18_"
-         "eAMD_HW_RING_TYPE",
-         wrapQueryComputeQueueIsIdle, orgQueryComputeQueueIsIdle},
-        {"__ZN27AMDRadeonX5000_AMDHWChannel11waitForIdleEj",
-         wrapAMDHWChannelWaitForIdle, orgAMDHWChannelWaitForIdle},
-    };
-    if (!patcher.routeMultipleLong(hardware.loadIndex, requests,
-                                   arrsize(requests), address, size)) {
-        panic("Failed to route X5000 symbols");
-    }
-
-    // Patch AppleGVA support for non-supported models
-    if (forceCodecInfo && getHWInfoProcNames[hwIndex] != nullptr) {
-        KernelPatcher::RouteRequest request(getHWInfoProcNames[hwIndex],
-                                            wrapGetHWInfo[hwIndex],
-                                            orgGetHWInfo[hwIndex]);
-        if (!patcher.routeMultipleLong(hardware.loadIndex, &request, 1, address,
-                                       size)) {
-            panic("Failed to route X5000 symbols for AppleGVA support");
-        }
-    }
 }
 
 void RAD::mergeProperty(OSDictionary *props, const char *name,
@@ -1329,39 +1269,6 @@ void RAD::reprioritiseConnectors(const uint8_t *senseList, uint8_t senseNum,
     }
 }
 
-void RAD::updateAccelConfig([[maybe_unused]] size_t hwIndex,
-                            IOService *accelService, const char **accelConfig) {
-    if (accelService && accelConfig) {
-        if (fixConfigName) {
-            auto gpuService = accelService->getParentEntry(gIOServicePlane);
-
-            if (gpuService) {
-                auto model =
-                    OSDynamicCast(OSData, gpuService->getProperty("model"));
-                if (model) {
-                    auto modelStr =
-                        static_cast<const char *>(model->getBytesNoCopy());
-                    if (modelStr) {
-                        if (modelStr[0] == 'A' &&
-                            ((modelStr[1] == 'M' && modelStr[2] == 'D') ||
-                             (modelStr[1] == 'T' && modelStr[2] == 'I')) &&
-                            modelStr[3] == ' ')
-                            modelStr += 4;
-
-                        DBGLOG("rad", "updateAccelConfig found gpu model %s",
-                               modelStr);
-                        *accelConfig = modelStr;
-                    } else
-                        DBGLOG("rad", "updateAccelConfig found null gpu model");
-                } else
-                    DBGLOG("rad", "updateAccelConfig failed to find gpu model");
-            } else
-                DBGLOG("rad",
-                       "updateAccelConfig failed to find accelerator parent");
-        }
-    }
-}
-
 bool RAD::wrapSetProperty(IORegistryEntry *that, const char *aKey, void *bytes,
                           unsigned length) {
     if (length > 10 && aKey &&
@@ -1480,10 +1387,6 @@ uint32_t RAD::wrapTranslateAtomConnectorInfoV2(
 
 bool RAD::wrapATIControllerStart(IOService *ctrl, IOService *provider) {
     NETLOG("rad", "starting controller " PRIKADDR, CASTKADDR(current_thread()));
-    if (callbackRAD->forceVesaMode) {
-        NETLOG("rad", "disabling video acceleration on request");
-        return false;
-    }
 
     callbackRAD->currentPropProvider.set(provider);
     bool r = FunctionCast(wrapATIControllerStart,

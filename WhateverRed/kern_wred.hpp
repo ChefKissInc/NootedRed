@@ -22,18 +22,11 @@ class WRed {
     void init();
     void deinit();
 
-    /**
-     *  Get overridable boot argument from kernel args (priority) and GPU
-     * properties
-     */
-    static bool getVideoArgument(DeviceInfo *info, const char *name,
-                                 void *bootarg, int size);
-
    private:
     /**
      *  Private self instance for callbacks
      */
-    static WRed *callbackWEG;
+    static WRed *callbackWRED;
 
     /**
      *  Radeon GPU fixes instance
@@ -60,48 +53,6 @@ class WRed {
      *  Framebuffer distortion fix mode
      */
     uint32_t resetFramebuffer{FB_DETECT};
-
-    /**
-     *  APPLBKL_OFF     disables AppleBacklight patches.
-     *  APPLBKL_ON      enforces AppleBacklight patches.
-     *  APPLBKL_DETECT  enables AppleBacklight patches for IGPU-only non-Apple
-     * setups. APPLBKL_NAVI10  enables AppleBacklight patches for AMD Navi10 PWM
-     * backlight control.
-     */
-    enum BacklightPatchMode {
-        APPLBKL_OFF = 0,
-        APPLBKL_ON = 1,
-        APPLBKL_DETECT = 2,
-        APPLBKL_NAVI10 = 3
-    };
-
-    /**
-     *  applbkl boot-arg controlled AppleBacklight kext patch
-     */
-    uint32_t appleBacklightPatch{APPLBKL_DETECT};
-
-    /**
-     *  applbkl custom device name if any
-     */
-    OSData *appleBacklightCustomName{nullptr};
-
-    /**
-     *  applbkl custom device data if any
-     */
-    OSData *appleBacklightCustomData{nullptr};
-
-    /**
-     *  Backlight panel data format
-     */
-    struct ApplePanelData {
-        const char *deviceName;
-        uint8_t deviceData[36];
-    };
-
-    /**
-     *  Backlight panel data
-     */
-    static ApplePanelData appleBacklightData[];
 
     /**
      *  Console info structure, taken from osfmk/console/video_console.h
@@ -149,16 +100,6 @@ class WRed {
      *  Original AppleGraphicsDevicePolicy start handler
      */
     mach_vm_address_t orgGraphicsPolicyStart{0};
-
-    /**
-     *  Original AppleIntelPanel set display handler
-     */
-    mach_vm_address_t orgApplePanelSetDisplay{0};
-
-    /**
-     *  vinfo presence status
-     */
-    bool applePanelDisplaySet{false};
 
     /**
      *  vinfo presence status
@@ -301,12 +242,6 @@ class WRed {
     static void wrapFramebufferInit(IOFramebuffer *fb);
 
     /**
-     *  wrapper for function that only return zero
-     *
-     */
-    static size_t wrapFunctionReturnZero();
-
-    /**
      *  AppleGraphicsDevicePolicy start wrapper used for black screen fixes in
      * AGDP_CFGMAP mode
      *
@@ -316,16 +251,6 @@ class WRed {
      *  @return agdp start status
      */
     static bool wrapGraphicsPolicyStart(IOService *that, IOService *provider);
-
-    /**
-     *  AppleIntelPanel start wrapper used for extra panel injection
-     *
-     *  @param that      backlight panel instance
-     *  @param display  backlight panel display
-     *
-     *  @return backlight panel start status
-     */
-    static bool wrapApplePanelSetDisplay(IOService *that, IODisplay *display);
 };
 
 #endif /* kern_weg_hpp */

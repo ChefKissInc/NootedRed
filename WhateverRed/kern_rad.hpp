@@ -25,7 +25,7 @@ class RAD {
     void init();
     void deinit();
 
-    void processKernel(KernelPatcher &patcher, DeviceInfo *info);
+    void processKernel(KernelPatcher &patcher);
     bool processKext(KernelPatcher &patcher, size_t index,
                      mach_vm_address_t address, size_t size);
 
@@ -90,36 +90,9 @@ class RAD {
     CailInitAsicCapEntry *orgAsicInitCapsTable = nullptr;
     /* ----------- */
 
-    template <size_t Index>
-    static IOReturn populateGetHWInfo(IOService *accelVideoCtx, void *hwInfo) {
-        if (callbackRAD->orgGetHWInfo[Index]) {
-            int ret = FunctionCast(populateGetHWInfo<Index>,
-                                   callbackRAD->orgGetHWInfo[Index])(
-                accelVideoCtx, hwInfo);
-            callbackRAD->updateGetHWInfo(accelVideoCtx, hwInfo);
-            return ret;
-        } else
-            SYSLOG("rad", "populateGetHWInfo invalid use for %lu", Index);
-
-        return kIOReturnInvalid;
-    }
-
-    t_getHWInfo wrapGetHWInfo[1] = {populateGetHWInfo<0>};
-
-    const char *getHWInfoProcNames[1] = {
-        "__ZN35AMDRadeonX5000_AMDAccelVideoContext9getHWInfoEP13sHardwareInfo",
-    };
-
     bool force24BppMode = false;
     bool dviSingleLink = false;
 
-    bool fixConfigName = false;
-    bool enableGvaSupport = false;
-    bool forceVesaMode = false;
-    bool forceCodecInfo = false;
-    size_t maxHardwareKexts = 1;
-
-    void initHardwareKextMods();
     void mergeProperty(OSDictionary *props, const char *name, OSObject *value);
     void mergeProperties(OSDictionary *props, const char *prefix,
                          IOService *provider);
@@ -143,19 +116,6 @@ class RAD {
                                 RADConnectors::Connector *connectors,
                                 uint8_t sz);
 
-    template <size_t Index>
-    static void populateAccelConfig(IOService *accelService,
-                                    const char **accelConfig) {
-        if (callbackRAD->orgPopulateAccelConfig[Index]) {
-            FunctionCast(populateAccelConfig<Index>,
-                         callbackRAD->orgPopulateAccelConfig[Index])(
-                accelService, accelConfig);
-            callbackRAD->updateAccelConfig(Index, accelService, accelConfig);
-        } else {
-            SYSLOG("rad", "populateAccelConfig invalid use for %lu", Index);
-        }
-    }
-
     [[noreturn]] [[gnu::cold]] static void wrapPanic(
         const char *panic_format_str, ...);
     [[noreturn]] [[gnu::cold]] static void wrapEnterDebugger(const char *cause);
@@ -171,8 +131,7 @@ class RAD {
     static IOReturn wrapPopulateDeviceMemory(void *that, uint32_t reg);
     static IOReturn wrapQueryComputeQueueIsIdle(void *that, uint64_t param1);
     static bool wrapAMDHWChannelWaitForIdle(void *that, uint64_t param1);
-
-    static uint16_t emulatedRevisionOff(uint16_t revision, uint16_t deviceId);
+	
     /* AMD10000Controller */
     static uint16_t wrapGetFamilyId();
     static IOReturn wrapPopulateDeviceInfo(uint64_t that);
@@ -219,8 +178,6 @@ class RAD {
 
     void processHardwareKext(KernelPatcher &patcher, size_t hwIndex,
                              mach_vm_address_t address, size_t size);
-    void updateAccelConfig(size_t hwIndex, IOService *accelService,
-                           const char **accelConfig);
 
     static bool wrapSetProperty(IORegistryEntry *that, const char *aKey,
                                 void *bytes, unsigned length);

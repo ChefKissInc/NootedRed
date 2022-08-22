@@ -27,12 +27,6 @@ static const char *pathIOGraphics[] = {
 static const char *pathAGDPolicy[] = {
     "/System/Library/Extensions/AppleGraphicsControl.kext/Contents/PlugIns/"
     "AppleGraphicsDevicePolicy.kext/Contents/MacOS/AppleGraphicsDevicePolicy"};
-static const char *pathBacklight[] = {
-    "/System/Library/Extensions/AppleBacklight.kext/Contents/MacOS/"
-    "AppleBacklight"};
-static const char *pathMCCSControl[] = {
-    "/System/Library/Extensions/AppleMCCSControl.kext/Contents/MacOS/"
-    "AppleMCCSControl"};
 
 static KernelPatcher::KextInfo kextIOGraphics{
     "com.apple.iokit.IOGraphicsFamily",
@@ -50,58 +44,11 @@ static KernelPatcher::KextInfo kextAGDPolicy{
     {},
     KernelPatcher::KextInfo::Unloaded,
 };
-// Note: initially marked as reloadable, but I doubt it needs to be.
-static KernelPatcher::KextInfo kextBacklight{
-    "com.apple.driver.AppleBacklight",
-    pathBacklight,
-    arrsize(pathBacklight),
-    {true},
-    {},
-    KernelPatcher::KextInfo::Unloaded,
-};
-static KernelPatcher::KextInfo kextMCCSControl{
-    "com.apple.driver.AppleMCCSControl",
-    pathMCCSControl,
-    arrsize(pathMCCSControl),
-    {true},
-    {},
-    KernelPatcher::KextInfo::Unloaded,
-};
 
-WRed::ApplePanelData WRed::appleBacklightData[]{
-    {"F14Txxxx",
-     {0x00, 0x11, 0x00, 0x00, 0x00, 0x34, 0x00, 0x52, 0x00, 0x73, 0x00, 0x94,
-      0x00, 0xBE, 0x00, 0xFA, 0x01, 0x36, 0x01, 0x72, 0x01, 0xC5, 0x02, 0x2F,
-      0x02, 0xB9, 0x03, 0x60, 0x04, 0x1A, 0x05, 0x0A, 0x06, 0x0E, 0x07, 0x10}},
-    {"F15Txxxx",
-     {0x00, 0x11, 0x00, 0x00, 0x00, 0x36, 0x00, 0x54, 0x00, 0x7D, 0x00, 0xB2,
-      0x00, 0xF5, 0x01, 0x49, 0x01, 0xB1, 0x02, 0x2B, 0x02, 0xB8, 0x03, 0x59,
-      0x04, 0x13, 0x04, 0xEC, 0x05, 0xF3, 0x07, 0x34, 0x08, 0xAF, 0x0A, 0xD9}},
-    {"F16Txxxx",
-     {0x00, 0x11, 0x00, 0x00, 0x00, 0x18, 0x00, 0x27, 0x00, 0x3A, 0x00, 0x52,
-      0x00, 0x71, 0x00, 0x96, 0x00, 0xC4, 0x00, 0xFC, 0x01, 0x40, 0x01, 0x93,
-      0x01, 0xF6, 0x02, 0x6E, 0x02, 0xFE, 0x03, 0xAA, 0x04, 0x78, 0x05, 0x6C}},
-    {"F17Txxxx",
-     {0x00, 0x11, 0x00, 0x00, 0x00, 0x1F, 0x00, 0x34, 0x00, 0x4F, 0x00, 0x71,
-      0x00, 0x9B, 0x00, 0xCF, 0x01, 0x0E, 0x01, 0x5D, 0x01, 0xBB, 0x02, 0x2F,
-      0x02, 0xB9, 0x03, 0x60, 0x04, 0x29, 0x05, 0x1E, 0x06, 0x44, 0x07, 0xA1}},
-    {"F18Txxxx",
-     {0x00, 0x11, 0x00, 0x00, 0x00, 0x53, 0x00, 0x8C, 0x00, 0xD5, 0x01, 0x31,
-      0x01, 0xA2, 0x02, 0x2E, 0x02, 0xD8, 0x03, 0xAE, 0x04, 0xAC, 0x05, 0xE5,
-      0x07, 0x59, 0x09, 0x1C, 0x0B, 0x3B, 0x0D, 0xD0, 0x10, 0xEA, 0x14, 0x99}},
-    {"F19Txxxx",
-     {0x00, 0x11, 0x00, 0x00, 0x02, 0x8F, 0x03, 0x53, 0x04, 0x5A, 0x05, 0xA1,
-      0x07, 0xAE, 0x0A, 0x3D, 0x0E, 0x14, 0x13, 0x74, 0x1A, 0x5E, 0x24, 0x18,
-      0x31, 0xA9, 0x44, 0x59, 0x5E, 0x76, 0x83, 0x11, 0xB6, 0xC7, 0xFF, 0x7B}},
-    {"F24Txxxx",
-     {0x00, 0x11, 0x00, 0x01, 0x00, 0x34, 0x00, 0x52, 0x00, 0x73, 0x00, 0x94,
-      0x00, 0xBE, 0x00, 0xFA, 0x01, 0x36, 0x01, 0x72, 0x01, 0xC5, 0x02, 0x2F,
-      0x02, 0xB9, 0x03, 0x60, 0x04, 0x1A, 0x05, 0x0A, 0x06, 0x0E, 0x07, 0x10}}};
-
-WRed *WRed::callbackWEG;
+WRed *WRed::callbackWRED = nullptr;
 
 void WRed::init() {
-    callbackWEG = this;
+    callbackWRED = this;
 
     // Background init fix is only necessary on 10.10 and newer.
     // Former boot-arg name is igfxrst.
@@ -146,16 +93,6 @@ void WRed::init() {
     // Perform a black screen fix.
     if (graphicsDisplayPolicyMod != AGDP_NONE_SET)
         lilu.onKextLoad(&kextAGDPolicy);
-
-    // Disable backlight patches if asked specifically.
-    PE_parse_boot_argn("applbkl", &appleBacklightPatch,
-                       sizeof(appleBacklightPatch));
-    if (appleBacklightPatch != APPLBKL_OFF) {
-        lilu.onKextLoad(&kextBacklight);
-    }
-    if (appleBacklightPatch == APPLBKL_NAVI10) {
-        lilu.onKextLoadForce(&kextMCCSControl);
-    }
 
     rad.init();
 }
@@ -207,104 +144,7 @@ void WRed::processKernel(KernelPatcher &patcher) {
                 getAgpdMod(devInfo->videoBuiltin);
         }
 
-        // Do not inject properties unless non-Apple
-        size_t extNum = devInfo->videoExternal.size();
-        if (devInfo->firmwareVendor != DeviceInfo::FirmwareVendor::Apple) {
-            DBGLOG("wred", "non-apple-fw proceeding with devprops %d",
-                   graphicsDisplayPolicyMod);
-
-            if (appleBacklightPatch == APPLBKL_DETECT &&
-                devInfo->videoBuiltin != nullptr)
-                WIOKit::getOSDataValue(devInfo->videoBuiltin, "applbkl",
-                                       appleBacklightPatch);
-
-            if (appleBacklightCustomName == nullptr &&
-                devInfo->videoBuiltin != nullptr) {
-                appleBacklightCustomName = OSDynamicCast(
-                    OSData, devInfo->videoBuiltin->getProperty("applbkl-name"));
-                appleBacklightCustomData = OSDynamicCast(
-                    OSData, devInfo->videoBuiltin->getProperty("applbkl-data"));
-                if (appleBacklightCustomName == nullptr ||
-                    appleBacklightCustomData == nullptr)
-                    appleBacklightCustomName = appleBacklightCustomData =
-                        nullptr;
-            }
-
-            for (size_t i = 0; i < extNum; i++) {
-                auto &v = devInfo->videoExternal[i];
-                processExternalProperties(v.video, devInfo, v.vendor);
-
-                // Assume that AMD GPU is the boot display.
-                if (v.vendor == WIOKit::VendorID::ATIAMD &&
-                    resetFramebuffer == FB_DETECT)
-                    resetFramebuffer = FB_ZEROFILL;
-
-                if (appleBacklightPatch == APPLBKL_DETECT)
-                    WIOKit::getOSDataValue(v.video, "applbkl",
-                                           appleBacklightPatch);
-
-                if (appleBacklightCustomName == nullptr) {
-                    appleBacklightCustomName = OSDynamicCast(
-                        OSData, v.video->getProperty("applbkl-name"));
-                    appleBacklightCustomData = OSDynamicCast(
-                        OSData, v.video->getProperty("applbkl-data"));
-                    if (appleBacklightCustomName == nullptr ||
-                        appleBacklightCustomData == nullptr)
-                        appleBacklightCustomName = appleBacklightCustomData =
-                            nullptr;
-                }
-            }
-
-            // Note, disabled Optimus will make videoExternal 0, so this case
-            // checks for active IGPU only.
-            DBGLOG("wred", "resulting applbkl value is %d",
-                   appleBacklightPatch);
-            if (appleBacklightPatch == APPLBKL_OFF ||
-                (appleBacklightPatch == APPLBKL_DETECT &&
-                 (devInfo->videoBuiltin == nullptr || extNum > 0))) {
-                // Either a builtin IGPU is not available, or some external GPU
-                // is available.
-                kextBacklight.switchOff();
-            }
-
-            if ((graphicsDisplayPolicyMod & AGDP_DETECT) &&
-                isGraphicsPolicyModRequired(devInfo))
-                graphicsDisplayPolicyMod =
-                    AGDP_VIT9696 | AGDP_PIKERA | AGDP_SET;
-        } else {
-            if (appleBacklightPatch != APPLBKL_ON) {
-                // Do not patch AppleBacklight on Apple HW, unless forced.
-                kextBacklight.switchOff();
-            }
-
-            // Support legacy -wegtree argument.
-            bool rebuidTree = checkKernelArgument("-wegtree");
-
-            // Support device properties.
-            if (!rebuidTree && devInfo->videoBuiltin)
-                rebuidTree = devInfo->videoBuiltin->getProperty(
-                                 "rebuild-device-tree") != nullptr;
-
-            for (size_t i = 0; !rebuidTree && i < extNum; i++)
-                rebuidTree = devInfo->videoExternal[i].video->getProperty(
-                                 "rebuild-device-tree") != nullptr;
-
-            // Override with modern wegtree argument.
-            int tree;
-            if (PE_parse_boot_argn("wegtree", &tree, sizeof(tree)))
-                rebuidTree = tree != 0;
-
-            if (rebuidTree) {
-                DBGLOG("wred", "apple-fw proceeding with devprops by request");
-
-                for (size_t i = 0; i < extNum; i++) {
-                    auto &v = devInfo->videoExternal[i];
-                    processExternalProperties(v.video, devInfo, v.vendor);
-                }
-            }
-        }
-
-        rad.processKernel(patcher, devInfo);
+        rad.processKernel(patcher);
 
         DeviceInfo::deleter(devInfo);
     }
@@ -342,8 +182,6 @@ void WRed::processKernel(KernelPatcher &patcher) {
     }
 }
 
-size_t WRed::wrapFunctionReturnZero() { return 0; }
-
 void WRed::processKext(KernelPatcher &patcher, size_t index,
                        mach_vm_address_t address, size_t size) {
     if (kextIOGraphics.loadIndex == index) {
@@ -359,37 +197,9 @@ void WRed::processKext(KernelPatcher &patcher, size_t index,
             patcher.clearError();
         }
         return;
-    }
-
-    if (kextMCCSControl.loadIndex == index) {
-        KernelPatcher::RouteRequest request[] = {
-            {"__ZN25AppleMCCSControlGibraltar5probeEP9IOServicePi",
-             wrapFunctionReturnZero},
-            {"__ZN21AppleMCCSControlCello5probeEP9IOServicePi",
-             wrapFunctionReturnZero},
-        };
-        patcher.routeMultiple(index, request, address, size);
-        return;
-    }
-
-    if (kextAGDPolicy.loadIndex == index) {
+    } else if (kextAGDPolicy.loadIndex == index) {
         processGraphicsPolicyMods(patcher, address, size);
         return;
-    }
-
-    if (kextBacklight.loadIndex == index) {
-        KernelPatcher::RouteRequest request(
-            "__ZN15AppleIntelPanel10setDisplayEP9IODisplay",
-            wrapApplePanelSetDisplay, orgApplePanelSetDisplay);
-        if (patcher.routeMultiple(kextBacklight.loadIndex, &request, 1, address,
-                                  size)) {
-            const uint8_t find[] = {"F%uT%04x"};
-            const uint8_t replace[] = {"F%uTxxxx"};
-            KernelPatcher::LookupPatch patch = {&kextBacklight, find, replace,
-                                                sizeof(find), 1};
-            DBGLOG("wred", "applying backlight patch");
-            patcher.applyLookupPatch(&patch);
-        }
     }
 
     if (rad.processKext(patcher, index, address, size)) return;
@@ -554,11 +364,11 @@ bool WRed::isGraphicsPolicyModRequired(DeviceInfo *info) {
 }
 
 void WRed::wrapFramebufferInit(IOFramebuffer *fb) {
-    bool backCopy = callbackWEG->gotConsoleVinfo &&
-                    callbackWEG->resetFramebuffer == FB_COPY;
-    bool zeroFill = callbackWEG->gotConsoleVinfo &&
-                    callbackWEG->resetFramebuffer == FB_ZEROFILL;
-    auto &info = callbackWEG->consoleVinfo;
+    bool backCopy = callbackWRED->gotConsoleVinfo &&
+                    callbackWRED->resetFramebuffer == FB_COPY;
+    bool zeroFill = callbackWRED->gotConsoleVinfo &&
+                    callbackWRED->resetFramebuffer == FB_ZEROFILL;
+    auto &info = callbackWRED->consoleVinfo;
 
     // Copy back usually happens in a separate call to frameBufferInit
     // Furthermore, v_baseaddr may not be available on subsequent calls, so we
@@ -566,10 +376,10 @@ void WRed::wrapFramebufferInit(IOFramebuffer *fb) {
     if (backCopy && info.v_baseaddr) {
         // Note, this buffer is left allocated and never freed, yet there
         // actually is no way to free it.
-        callbackWEG->consoleBuffer =
+        callbackWRED->consoleBuffer =
             Buffer::create<uint8_t>(info.v_rowbytes * info.v_height);
-        if (callbackWEG->consoleBuffer)
-            lilu_os_memcpy(callbackWEG->consoleBuffer,
+        if (callbackWRED->consoleBuffer)
+            lilu_os_memcpy(callbackWRED->consoleBuffer,
                            reinterpret_cast<uint8_t *>(info.v_baseaddr),
                            info.v_rowbytes * info.v_height);
         else
@@ -578,9 +388,9 @@ void WRed::wrapFramebufferInit(IOFramebuffer *fb) {
         info.v_baseaddr = 0;
     }
 
-    uint8_t verboseBoot = *callbackWEG->gIOFBVerboseBootPtr;
+    uint8_t verboseBoot = *callbackWRED->gIOFBVerboseBootPtr;
     // For back copy we need a console buffer and no verbose
-    backCopy = backCopy && callbackWEG->consoleBuffer && !verboseBoot;
+    backCopy = backCopy && callbackWRED->consoleBuffer && !verboseBoot;
 
     // Now check if the resolution and parameters match
     if (backCopy || zeroFill) {
@@ -614,14 +424,14 @@ void WRed::wrapFramebufferInit(IOFramebuffer *fb) {
 
     // For whatever reason not resetting Intel framebuffer (back copy mode)
     // twice works better.
-    if (!backCopy) *callbackWEG->gIOFBVerboseBootPtr = 1;
-    FunctionCast(wrapFramebufferInit, callbackWEG->orgFramebufferInit)(fb);
-    if (!backCopy) *callbackWEG->gIOFBVerboseBootPtr = verboseBoot;
+    if (!backCopy) *callbackWRED->gIOFBVerboseBootPtr = 1;
+    FunctionCast(wrapFramebufferInit, callbackWRED->orgFramebufferInit)(fb);
+    if (!backCopy) *callbackWRED->gIOFBVerboseBootPtr = verboseBoot;
 
     // Finish the framebuffer initialisation by filling with black or copying
     // the image back.
     if (FramebufferViewer::getVramMap(fb)) {
-        auto src = reinterpret_cast<uint8_t *>(callbackWEG->consoleBuffer);
+        auto src = reinterpret_cast<uint8_t *>(callbackWRED->consoleBuffer);
         auto dst = reinterpret_cast<uint8_t *>(
             FramebufferViewer::getVramMap(fb)->getVirtualAddress());
         if (backCopy) {
@@ -666,101 +476,8 @@ bool WRed::wrapGraphicsPolicyStart(IOService *that, IOService *provider) {
 
     bool result =
         FunctionCast(wrapGraphicsPolicyStart,
-                     callbackWEG->orgGraphicsPolicyStart)(that, provider);
+                     callbackWRED->orgGraphicsPolicyStart)(that, provider);
     DBGLOG("wred", "agdp start returned %d", result);
 
     return result;
-}
-
-bool WRed::wrapApplePanelSetDisplay(IOService *that, IODisplay *display) {
-    if (!callbackWEG->applePanelDisplaySet) {
-        callbackWEG->applePanelDisplaySet = true;
-        auto panels =
-            OSDynamicCast(OSDictionary, that->getProperty("ApplePanels"));
-        if (panels) {
-            auto rawPanels = panels->copyCollection();
-            panels = OSDynamicCast(OSDictionary, rawPanels);
-
-            if (panels) {
-                const char *customName = nullptr;
-                if (callbackWEG->appleBacklightCustomName != nullptr) {
-                    auto length =
-                        callbackWEG->appleBacklightCustomName->getLength();
-                    const char *customNameBytes = static_cast<const char *>(
-                        callbackWEG->appleBacklightCustomName
-                            ->getBytesNoCopy());
-                    if (length > 0 && customNameBytes[length - 1] == '\0')
-                        customName = customNameBytes;
-                }
-
-                for (auto &entry : appleBacklightData) {
-                    if (customName != nullptr &&
-                        strcmp(customName, entry.deviceName) == 0) {
-                        panels->setObject(
-                            entry.deviceName,
-                            callbackWEG->appleBacklightCustomData);
-                        DBGLOG("wred", "using custom panel data for %s device",
-                               entry.deviceName);
-                    } else {
-                        auto pd = OSData::withBytes(entry.deviceData,
-                                                    sizeof(entry.deviceData));
-                        if (pd) {
-                            panels->setObject(entry.deviceName, pd);
-                            // No release required by current AppleBacklight
-                            // implementation.
-                        } else {
-                            SYSLOG("wred",
-                                   "panel start cannot allocate %s data",
-                                   entry.deviceName);
-                        }
-                    }
-                }
-                that->setProperty("ApplePanels", panels);
-            }
-
-            if (rawPanels) {
-                rawPanels->release();
-            }
-        } else {
-            SYSLOG("wred", "panel start has no panels");
-        }
-    }
-
-    bool result =
-        FunctionCast(wrapApplePanelSetDisplay,
-                     callbackWEG->orgApplePanelSetDisplay)(that, display);
-    DBGLOG("wred", "panel display set returned %d", result);
-
-    return result;
-}
-
-bool WRed::getVideoArgument(DeviceInfo *info, const char *name, void *bootarg,
-                            int size) {
-    if (PE_parse_boot_argn(name, bootarg, size)) return true;
-
-    for (size_t i = 0; i < info->videoExternal.size(); i++) {
-        auto prop = OSDynamicCast(
-            OSData, info->videoExternal[i].video->getProperty(name));
-        auto propSize = prop ? prop->getLength() : 0;
-        if (propSize > 0 && propSize <= size) {
-            lilu_os_memcpy(bootarg, prop->getBytesNoCopy(), propSize);
-            memset(static_cast<uint8_t *>(bootarg) + propSize, 0,
-                   size - propSize);
-            return true;
-        }
-    }
-
-    if (info->videoBuiltin) {
-        auto prop =
-            OSDynamicCast(OSData, info->videoBuiltin->getProperty(name));
-        auto propSize = prop ? prop->getLength() : 0;
-        if (propSize > 0 && propSize <= size) {
-            lilu_os_memcpy(bootarg, prop->getBytesNoCopy(), propSize);
-            memset(static_cast<uint8_t *>(bootarg) + propSize, 0,
-                   size - propSize);
-            return true;
-        }
-    }
-
-    return false;
 }
