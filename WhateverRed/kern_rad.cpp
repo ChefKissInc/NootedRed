@@ -570,9 +570,8 @@ bool RAD::wrapGFX10AcceleratorStart() {
 
 bool RAD::wrapAllocateHWEngines(uint64_t that) {
     NETLOG("rad", "allocateHWEngines: this = 0x%llX", that);
-    auto *vtable = *reinterpret_cast<uint64_t **>(that);
-    vtable[0x2B] = callbackRAD->orgGetHWCapabilities;
-    vtable[0x62] = callbackRAD->orgGetHWEngine;
+    auto *vtable = *reinterpret_cast<mach_vm_address_t **>(that);
+    vtable[0x62] = reinterpret_cast<mach_vm_address_t>(wrapGetHWEngine);
 
     auto *pm4Engine = callbackRAD->orgGFX9PM4EngineNew(0x1e8);
     callbackRAD->orgGFX9PM4EngineConstructor(pm4Engine);
