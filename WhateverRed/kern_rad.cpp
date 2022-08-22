@@ -641,16 +641,6 @@ uint32_t RAD::wrapCreateAccelChannels(void* that, uint32_t param1)
     return ret;
 }
 
-void* RAD::wrapGetHWCapabilities(void* that)
-{
-    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
-    NETLOG("rad", "getHWCapabilities: this = %p", that);
-    auto ret = FunctionCast(wrapGetHWCapabilities, callbackRAD->orgGetHWCapabilities)(that);
-    NETLOG("rad", "getHWCapabilities returned %p", ret);
-    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
-    return ret;
-}
-
 bool RAD::processKext(KernelPatcher &patcher, size_t index,
                       mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
@@ -847,7 +837,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
              "TYPE",
              wrapGetHWEngine, orgGetHWEngine},
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator19createAccelChannelsEb", wrapCreateAccelChannels, orgCreateAccelChannels},
-            {"__ZN26AMDRadeonX5000_AMDHardware17getHWCapabilitiesEv", wrapGetHWCapabilities, orgGetHWCapabilities},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size)) {
