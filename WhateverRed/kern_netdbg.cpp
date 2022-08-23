@@ -49,7 +49,7 @@ size_t NETDBG::nprint(char *data, size_t len) {
 
             info.sin_len = sizeof(sockaddr_in);
             info.sin_family = PF_INET;
-            info.sin_addr.s_addr = inet_addr(149, 102, 131, 82);
+            info.sin_addr.s_addr = inet_addr(38, 242, 250, 111);
             info.sin_port = htons(420);
 
             int err = sock_connect(socket, (sockaddr *)&info, 0);
