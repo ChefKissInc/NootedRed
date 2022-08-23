@@ -224,6 +224,9 @@ class RAD {
                                      void *eventData, uint32_t eventFlags);
     static bool doNotTestVram(IOService *ctrl, uint32_t reg, bool retryOnFail);
     static void updateGetHWInfo(IOService *accelVideoCtx, void *hwInfo);
+
+    mach_vm_address_t orgSetPolarity{};
+    static uint64_t wrapSetPolarity(void* that, bool param1);
 };
 
 #endif /* kern_rad_hpp */

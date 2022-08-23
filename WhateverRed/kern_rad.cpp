@@ -615,6 +615,14 @@ void RAD::wrapSetupAndInitializeHWCapabilities(uint64_t that) {
     NETLOG("rad", "wrapSetupAndInitializeCapabilities: done");
 }
 
+uint64_t RAD::wrapSetPolarity(void* that, bool param1)
+{
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "setPolarity: this = %p param1 = %d", that, param1);
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    return 0;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index,
                       mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
@@ -752,6 +760,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index,
             {"__ZNK22Vega10SharedController11getFamilyIdEv", wrapGetFamilyId},
             {"__ZN17ASIC_INFO__VEGA2018populateDeviceInfoEv",
              wrapPopulateDeviceInfo, orgPopulateDeviceInfo},
+            {"__ZN22Vega10HotPlugInterrupt11setPolarityEb", wrapSetPolarity, orgSetPolarity},
         };
         if (!patcher.routeMultipleLong(index, requests, arrsize(requests),
                                        address, size)) {
