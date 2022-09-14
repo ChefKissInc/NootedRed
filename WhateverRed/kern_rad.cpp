@@ -597,6 +597,13 @@ uint64_t RAD::wrapSetPolarity(void *that, bool param1) {
     return 0;
 }
 
+void RAD::wrapDumpASICHangStateCold(uint64_t param1) {
+    NETLOG("rad", "dumpASICHangStateCold: param1 = 0x%llX", param1);
+    IOSleep(3600000);
+    FunctionCast(wrapDumpASICHangStateCold, callbackRAD->orgDumpASICHangStateCold)(param1);
+    NETLOG("rad", "dumpASICHangStateCold finished");
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -744,6 +751,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN26AMDRadeonX5000_AMDHardware11getHWEngineE20_eAMD_HW_ENGINE_TYPE", wrapGetHWEngine, orgGetHWEngine},
             {"__ZN32AMDRadeonX5000_AMDVega20Hardware32setupAndInitializeHWCapabilitiesEv",
                 wrapSetupAndInitializeHWCapabilities, orgSetupAndInitializeHWCapabilities},
+            {"__ZN26AMDRadeonX5000_AMDHardware17dumpASICHangStateEb.cold.1", wrapDumpASICHangStateCold,
+                orgDumpASICHangStateCold},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
