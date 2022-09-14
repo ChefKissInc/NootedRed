@@ -31,15 +31,14 @@ socket_t NETDBG::socket = nullptr;
 size_t NETDBG::nprint(char *data, size_t len) {
     kprintf("netdbg: message: %s", data);
 
-    if (!enabled) { return 0; }
-
-    if (!socket) {
-        sock_socket(AF_INET, SOCK_STREAM, 0, NULL, 0, &socket);
-
-        if (!socket) return 0;
-
+    if (!enabled) {
+        return 0;
+    } else if (!socket) {
         int retry = 5;
         while (retry--) {
+            if (!socket) { sock_socket(AF_INET, SOCK_STREAM, 0, NULL, 0, &socket); }
+            if (!socket) { continue; }
+
             struct sockaddr_in info;
             bzero(&info, sizeof(info));
 
@@ -55,6 +54,11 @@ size_t NETDBG::nprint(char *data, size_t len) {
                 socket = nullptr;
                 continue;
             }
+        }
+
+        if (!socket || !retry) {
+            socket = nullptr;
+            return 0;
         }
     }
 
