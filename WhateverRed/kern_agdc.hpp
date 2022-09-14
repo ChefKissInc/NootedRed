@@ -7,16 +7,17 @@
 
 #ifndef kern_agdc_h
 #define kern_agdc_h
+#include <cstdint>
 
 // Some knowledge here comes from AppleGraphicsDeviceControlUserCommand.h
 // from 10.9 SDK.
 
-#define APPLE_GRAPHICS_DEVICE_CONTOL_VERSION 0x205
+#define APPLE_GRAPHICS_DEVICE_CONTOL_VERSION  0x205
 #define APPLE_GRAPHICS_DEVICE_CONTROL_SERVICE "AppleGraphicsDeviceControl"
 
-#define ATTRIBUTE_ONLINE '!off'
-#define ATTRIBUTE_SETMODE 'mset'
-#define ATTRIBUTE_SETEDID 'edid'
+#define ATTRIBUTE_ONLINE    '!off'
+#define ATTRIBUTE_SETMODE   'mset'
+#define ATTRIBUTE_SETEDID   'edid'
 #define ATTRIBUTE_DOCONTROL 'dctl'
 
 #define kAGDCVendorCmdFlag (1 << 31)
@@ -70,12 +71,10 @@
         _AGDC_FIELD_COPY(src, dest, dscSliceHeight);            \
         _AGDC_FIELD_COPY(src, dest, dscSliceWidth);             \
     } while (0)
-#define CONVERT_AGDC_TO_OS_TIMING_DATA(src, dest)              \
-    _AGDC_CONVERT_(src, AGDCDetailedTimingInformation_t, dest, \
-                   IODetailedTimingInformationV2)
-#define CONVERT_OS_TO_AGDC_TIMING_DATA(src, dest)            \
-    _AGDC_CONVERT_(src, IODetailedTimingInformationV2, dest, \
-                   AGDCDetailedTimingInformation_t)
+#define CONVERT_AGDC_TO_OS_TIMING_DATA(src, dest) \
+    _AGDC_CONVERT_(src, AGDCDetailedTimingInformation_t, dest, IODetailedTimingInformationV2)
+#define CONVERT_OS_TO_AGDC_TIMING_DATA(src, dest) \
+    _AGDC_CONVERT_(src, IODetailedTimingInformationV2, dest, AGDCDetailedTimingInformation_t)
 
 #pragma pack(push, 1)
 
@@ -90,8 +89,8 @@
 //  0x40    -> something with timing
 
 enum kAGDCCommand_t {
-    kAGDCVendorInfo = 0x1,              // may be called without a WL
-    kAGDCVendorEnableController = 0x2,  // may be called without a WL
+    kAGDCVendorInfo = 0x1,                // may be called without a WL
+    kAGDCVendorEnableController = 0x2,    // may be called without a WL
 
     // 0x100 - 0x1ff PM = Power Management
     kAGDCPMInfo = 0x100,
@@ -142,7 +141,7 @@ enum kAGDCCommand_t {
     kAGDCDiagnoseGetDevicePropertySize = 0x975,
     kAGDCDiagnoseGetDeviceProperties = 0x976,
 
-    kAGDCGPUCapability = 0x980,  // may be called without a WL
+    kAGDCGPUCapability = 0x980,    // may be called without a WL
     kAGDCStreamAssociate = 0x981,
     kAGDCStreamRequest = 0x982,
     kAGDCStreamAccessI2C = 0x983,
@@ -200,8 +199,8 @@ enum kAGDCVendorClass_t {
     kAGDCVendorClassDiscreteGPU = 2,
     kAGDCVendorClassOtherHW = 3,
     kAGDCVendorClassOtherSW = 4,
-    kAGDCVendorClassAppleGPUPolicyManager = 5,  // AGDCPolicy
-    kAGDCVendorClassAppleGPUPowerManager = 6,   // AGPM
+    kAGDCVendorClassAppleGPUPolicyManager = 5,    // AGDCPolicy
+    kAGDCVendorClassAppleGPUPowerManager = 6,     // AGPM
 };
 
 struct AGDCVendorInfo_t {
@@ -216,8 +215,8 @@ struct AGDCVendorControllerEnable_t {
 };
 
 struct AGDCStreamAddress_t {
-    uint32_t port;    // Port Number 1->n
-    uint32_t stream;  // 0 or MST address
+    uint32_t port;      // Port Number 1->n
+    uint32_t stream;    // 0 or MST address
 };
 
 struct AGDCGPUCapability_t {
@@ -234,8 +233,8 @@ struct AGDCGPUCapability_t {
         } numberOfStreams;
         uint32_t numberOfFramebuffers;
 
-        uint64_t _reserved[9];  // kernel is 64 bit, user is 32/64.. pointers
-                                // are not safe!!!
+        uint64_t _reserved[9];    // kernel is 64 bit, user is 32/64.. pointers
+                                  // are not safe!!!
 
         uint64_t _reserved_a;
         uint64_t _reserved_b;
@@ -246,17 +245,17 @@ struct AGDCGPUCapability_t {
 
 struct AGDCStreamAssociate_t {
     int32_t id;
-    AGDCStreamAddress_t address;  // for GET this is an output, otherwise both
-                                  // are inputs to a driver
+    AGDCStreamAddress_t address;    // for GET this is an output, otherwise both
+                                    // are inputs to a driver
 };
 
 struct AGDCStreamRequest_t {
     struct {
-        AGDCStreamAddress_t address;  // Input, a hint which ports are in the
-                                      // set we want to bind
+        AGDCStreamAddress_t address;    // Input, a hint which ports are in the
+                                        // set we want to bind
     } link[4];
-    int32_t id;       // Ouput FB
-    int32_t groupID;  // Output preferred groupID (if any) -1 otherwise.
+    int32_t id;         // Ouput FB
+    int32_t groupID;    // Output preferred groupID (if any) -1 otherwise.
 };
 
 struct AGDCStreamAccessI2C_t {
@@ -303,13 +302,13 @@ struct AGDCStreamAccessAUX_t {
 struct AGDCStreamGetEDID_t {
     AGDCStreamAddress_t address;
     uint32_t block;
-    uint8_t data[128];  // 128
+    uint8_t data[128];    // 128
     uint32_t status;
 };
 
 struct AGDCDetailedTimingInformation_t {
-    uint32_t horizontalScaledInset;  // pixels
-    uint32_t verticalScaledInset;    // lines
+    uint32_t horizontalScaledInset;    // pixels
+    uint32_t verticalScaledInset;      // lines
 
     uint32_t scalerFlags;
     uint32_t horizontalScaled;
@@ -318,30 +317,30 @@ struct AGDCDetailedTimingInformation_t {
     uint32_t signalConfig;
     uint32_t signalLevels;
 
-    uint64_t pixelClock;  // Hz
+    uint64_t pixelClock;    // Hz
 
-    uint64_t minPixelClock;  // Hz - With error what is slowest actual clock
-    uint64_t maxPixelClock;  // Hz - With error what is fasted actual clock
+    uint64_t minPixelClock;    // Hz - With error what is slowest actual clock
+    uint64_t maxPixelClock;    // Hz - With error what is fasted actual clock
 
-    uint32_t horizontalActive;          // pixels
-    uint32_t horizontalBlanking;        // pixels
-    uint32_t horizontalSyncOffset;      // pixels
-    uint32_t horizontalSyncPulseWidth;  // pixels
+    uint32_t horizontalActive;            // pixels
+    uint32_t horizontalBlanking;          // pixels
+    uint32_t horizontalSyncOffset;        // pixels
+    uint32_t horizontalSyncPulseWidth;    // pixels
 
-    uint32_t verticalActive;          // lines
-    uint32_t verticalBlanking;        // lines
-    uint32_t verticalSyncOffset;      // lines
-    uint32_t verticalSyncPulseWidth;  // lines
+    uint32_t verticalActive;            // lines
+    uint32_t verticalBlanking;          // lines
+    uint32_t verticalSyncOffset;        // lines
+    uint32_t verticalSyncPulseWidth;    // lines
 
-    uint32_t horizontalBorderLeft;   // pixels
-    uint32_t horizontalBorderRight;  // pixels
-    uint32_t verticalBorderTop;      // lines
-    uint32_t verticalBorderBottom;   // lines
+    uint32_t horizontalBorderLeft;     // pixels
+    uint32_t horizontalBorderRight;    // pixels
+    uint32_t verticalBorderTop;        // lines
+    uint32_t verticalBorderBottom;     // lines
 
     uint32_t horizontalSyncConfig;
-    uint32_t horizontalSyncLevel;  // Future use (init to 0)
+    uint32_t horizontalSyncLevel;    // Future use (init to 0)
     uint32_t verticalSyncConfig;
-    uint32_t verticalSyncLevel;  // Future use (init to 0)
+    uint32_t verticalSyncLevel;    // Future use (init to 0)
     uint32_t numLinks;
     uint32_t verticalBlankingExtension;
     uint16_t pixelEncoding;
@@ -388,12 +387,12 @@ enum AGDCStreamState_t {
 };
 
 struct AGDCLinkConfig_t {
-    int32_t id;                              // input framebuffer field
-    int32_t groupID;                         // output
-    uint64_t flags;                          // output, AGDCLinkConfigFlags_t
-    AGDCDetailedTimingInformation_t timing;  // output, DetailedTiming
-    AGDCStreamAddress_t address;             // output, encoded PortNumber
-    AGDCStreamState_t state;                 // output
+    int32_t id;                                // input framebuffer field
+    int32_t groupID;                           // output
+    uint64_t flags;                            // output, AGDCLinkConfigFlags_t
+    AGDCDetailedTimingInformation_t timing;    // output, DetailedTiming
+    AGDCStreamAddress_t address;               // output, encoded PortNumber
+    AGDCStreamState_t state;                   // output
 };
 
 typedef void *AGDCLinkAvailable_t __deprecated;
@@ -403,15 +402,14 @@ enum kAGDCRegisterLinkControlEvent_t {
     kAGDCRegisterLinkRemove = 1,
     kAGDCRegisterLinkChange = 2,
     kAGDCRegisterLinkChangeMST = 3,
-    kAGDCRegisterLinkFramebuffer =
-        4,  // V106+
-            // This event is handled by
-            // AppleGraphicsDevicePolicy::VendorEventHandler. The point of this
-            // event to validate the timing information, and take decision on
-            // what to do with this display. One of the examples of this event
-            // is to merge multiple display ports into one connection for 5K/6K
-            // output. Drivers should interpret modeStatus to decide on whether
-            // to continue execution, change the mode, or disable link.
+    kAGDCRegisterLinkFramebuffer = 4,    // V106+
+                                         // This event is handled by
+                                         // AppleGraphicsDevicePolicy::VendorEventHandler. The point of this
+                                         // event to validate the timing information, and take decision on
+                                         // what to do with this display. One of the examples of this event
+                                         // is to merge multiple display ports into one connection for 5K/6K
+                                         // output. Drivers should interpret modeStatus to decide on whether
+                                         // to continue execution, change the mode, or disable link.
     kAGDCValidateDetailedTiming = 10,
     kAGDCRegisterLinkChangeWakeProbe = 0x80,
 };
@@ -501,18 +499,17 @@ struct kAGDCPMCallbackInfo_t {
 
 struct AGDCPMRegisterCallback_t {
     void *cookie;
-    int (*handler)(void *obj, kAGDCPMCallbackEvent_t event,
-                   kAGDCPMCallbackInfo_t *data);
+    int (*handler)(void *obj, kAGDCPMCallbackEvent_t event, kAGDCPMCallbackInfo_t *data);
 };
 
 struct AGDCValidateDetailedTiming_t {
-    uint32_t framebufferIndex;  // IOFBDependentIndex
+    uint32_t framebufferIndex;    // IOFBDependentIndex
     AGDCDetailedTimingInformation_t timing;
     uint16_t padding1[5];
-    void *cfgInfo;  // AppleGraphicsDevicePolicy configuration
+    void *cfgInfo;    // AppleGraphicsDevicePolicy configuration
     int32_t frequency;
     uint16_t padding2[6];
-    uint32_t modeStatus;  // 1 - invalid, 2 - success, 3 - change timing
+    uint32_t modeStatus;    // 1 - invalid, 2 - success, 3 - change timing
     uint16_t padding3[2];
 };
 

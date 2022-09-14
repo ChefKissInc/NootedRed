@@ -9,20 +9,19 @@
 #ifndef kern_weg_hpp
 #define kern_weg_hpp
 
+#include "kern_rad.hpp"
 #include <Headers/kern_devinfo.hpp>
 #include <Headers/kern_iokit.hpp>
-
-#include "kern_rad.hpp"
 
 class IOFramebuffer;
 class IODisplay;
 
 class WRed {
-   public:
+    public:
     void init();
     void deinit();
 
-   private:
+    private:
     /**
      *  Private self instance for callbacks
      */
@@ -40,19 +39,12 @@ class WRed {
      *  FB_ZEROFILL erases screen content (default on AMD).
      *  FB_NONE     does nothing.
      */
-    enum FramebufferFixMode {
-        FB_DETECT = 0,
-        FB_RESET = 1,
-        FB_COPY = 2,
-        FB_ZEROFILL = 3,
-        FB_NONE = 4,
-        FB_TOTAL = 5
-    };
+    enum FramebufferFixMode { FB_DETECT = 0, FB_RESET = 1, FB_COPY = 2, FB_ZEROFILL = 3, FB_NONE = 4, FB_TOTAL = 5 };
 
     /**
      *  Framebuffer distortion fix mode
      */
-    uint32_t resetFramebuffer{FB_DETECT};
+    uint32_t resetFramebuffer {FB_DETECT};
 
     /**
      *  Console info structure, taken from osfmk/console/video_console.h
@@ -79,66 +71,66 @@ class WRed {
     /**
      *  Loaded vinfo
      */
-    vc_info consoleVinfo{};
+    vc_info consoleVinfo {};
 
     /**
      *  Console buffer backcopy
      */
-    uint8_t *consoleBuffer{nullptr};
+    uint8_t *consoleBuffer {nullptr};
 
     /**
      *  Original IOGraphics framebuffer init handler
      */
-    mach_vm_address_t orgFramebufferInit{};
+    mach_vm_address_t orgFramebufferInit {};
 
     /**
      *  Verbose boot global variable pointer
      */
-    uint8_t *gIOFBVerboseBootPtr{nullptr};
+    uint8_t *gIOFBVerboseBootPtr {nullptr};
 
     /**
      *  Original AppleGraphicsDevicePolicy start handler
      */
-    mach_vm_address_t orgGraphicsPolicyStart{0};
+    mach_vm_address_t orgGraphicsPolicyStart {0};
 
     /**
      *  vinfo presence status
      */
-    bool gotConsoleVinfo{false};
+    bool gotConsoleVinfo {false};
 
     /**
      *  Device identification spoofing for IGPU
      */
-    bool hasIgpuSpoof{false};
+    bool hasIgpuSpoof {false};
 
     /**
      *  Device identification spoofing for GFX0
      */
-    bool hasGfxSpoof{false};
+    bool hasGfxSpoof {false};
 
     /**
      *  Maximum GFX naming index (due to ACPI name restrictions)
      */
-    static constexpr uint8_t MaxExternalGfxIndex{9};
+    static constexpr uint8_t MaxExternalGfxIndex {9};
 
     /**
      *  GPU index used for GFXx naming in IORegistry
      *  Must be single digits (i.e. 0~9 inclusive).
      */
-    uint8_t currentExternalGfxIndex{0};
+    uint8_t currentExternalGfxIndex {0};
 
     /**
      *  Maximum GFX slot naming index
      *  Should be 1~4 to display properly in NVIDIA panel.
      *  However, we permit more to match external GFX naming.
      */
-    static constexpr uint8_t MaxExternalSlotIndex{10};
+    static constexpr uint8_t MaxExternalSlotIndex {10};
 
     /**
      *  GPU index used for AAPL,slot-name naming in IORegistry
      *  Should be 1~4 to display properly in NVIDIA panel.
      */
-    uint8_t currentExternalSlotIndex{1};
+    uint8_t currentExternalSlotIndex {1};
 
     /**
      *  AppleGraphicsDisplayPolicy modifications if applicable.
@@ -164,7 +156,7 @@ class WRed {
     /**
      *  Current AppleGraphicsDisplayPolicy modifications.
      */
-    int graphicsDisplayPolicyMod{AGDP_DETECT};
+    int graphicsDisplayPolicyMod {AGDP_DETECT};
 
     /**
      *  Apply pre-kext patches and setup the configuration
@@ -181,8 +173,7 @@ class WRed {
      *  @param address kinfo load address
      *  @param size    kinfo memory size
      */
-    void processKext(KernelPatcher &patcher, size_t index,
-                     mach_vm_address_t address, size_t size);
+    void processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size);
 
     /**
      *  Apply external GPU properties and renamings
@@ -190,8 +181,7 @@ class WRed {
      *  @param device  GFX0 device
      *  @param info    device information
      */
-    void processExternalProperties(IORegistryEntry *device, DeviceInfo *info,
-                                   uint32_t vendor);
+    void processExternalProperties(IORegistryEntry *device, DeviceInfo *info, uint32_t vendor);
 
     /**
      *  Parse AppleGraphicsDevicePolicy (AGDP) patch configuration
@@ -209,8 +199,7 @@ class WRed {
      *  @param address agdp load address
      *  @param size    agdp memory size
      */
-    void processGraphicsPolicyMods(KernelPatcher &patcher,
-                                   mach_vm_address_t address, size_t size);
+    void processGraphicsPolicyMods(KernelPatcher &patcher, mach_vm_address_t address, size_t size);
 
     /**
      *  Check whether the graphics policy modification patches are required
@@ -231,8 +220,7 @@ class WRed {
      *
      *  @return autodetected GPU name or nullptr
      */
-    const char *getRadeonModel(uint16_t dev, uint16_t rev, uint16_t subven,
-                               uint16_t sub);
+    const char *getRadeonModel(uint16_t dev, uint16_t rev, uint16_t subven, uint16_t sub);
 
     /**
      *  IOFramebuffer initialisation wrapper used for screen distortion fixes

@@ -39,3 +39,4 @@ DerivedData/
 **/xcshareddata/WorkspaceSettings.xcsettings
 /Lilu.kext
 /WhateverRed/kern_fw.cpp
+.vscode/

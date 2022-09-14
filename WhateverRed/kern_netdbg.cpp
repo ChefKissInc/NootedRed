@@ -7,10 +7,8 @@
 //
 
 #include "kern_netdbg.hpp"
-
-#include <netinet/in.h>
-
 #include <Headers/kern_api.hpp>
+#include <netinet/in.h>
 
 in_addr_t inet_addr(uint32_t a, uint32_t b, uint32_t c, uint32_t d) {
     auto ret = d;
@@ -33,9 +31,7 @@ socket_t NETDBG::socket = nullptr;
 size_t NETDBG::nprint(char *data, size_t len) {
     kprintf("netdbg: message: %s", data);
 
-    if (!enabled) {
-        return 0;
-    }
+    if (!enabled) { return 0; }
 
     if (!socket) {
         sock_socket(AF_INET, SOCK_STREAM, 0, NULL, 0, &socket);
@@ -62,8 +58,8 @@ size_t NETDBG::nprint(char *data, size_t len) {
         }
     }
 
-    iovec vec{.iov_base = data, .iov_len = len};
-    msghdr hdr{
+    iovec vec {.iov_base = data, .iov_len = len};
+    msghdr hdr {
         .msg_iov = &vec,
         .msg_iovlen = 1,
     };

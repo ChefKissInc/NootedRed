@@ -25,13 +25,12 @@ enum class AtomObjectTableType : uint8_t {
 };
 
 struct AtomDisplayObjectPath {
-    uint16_t usDeviceTag;    /* supported device  */
-    uint16_t usSize;         /* the size of ATOM_DISPLAY_OBJECT_PATH */
-    uint16_t usConnObjectId; /* Connector Object ID  */
-    uint16_t usGPUObjectId;  /* GPU ID  */
-    uint16_t
-        usGraphicObjIds; /* 1st Encoder Obj source from GPU to last Graphic
-                                                  Obj destinate to connector. */
+    uint16_t usDeviceTag;     /* supported device  */
+    uint16_t usSize;          /* the size of ATOM_DISPLAY_OBJECT_PATH */
+    uint16_t usConnObjectId;  /* Connector Object ID  */
+    uint16_t usGPUObjectId;   /* GPU ID  */
+    uint16_t usGraphicObjIds; /* 1st Encoder Obj source from GPU to last Graphic
+                                                       Obj destinate to connector. */
 };
 
 struct AtomConnectorObject {
@@ -54,8 +53,7 @@ enum {
     ENCODER_OBJECT_ID_SI170B = 0x08,
     ENCODER_OBJECT_ID_CH7303 = 0x09,
     ENCODER_OBJECT_ID_CH7301 = 0x0A,
-    ENCODER_OBJECT_ID_INTERNAL_DVO1 =
-        0x0B, /* This belongs to Radeon Class Display Hardware */
+    ENCODER_OBJECT_ID_INTERNAL_DVO1 = 0x0B, /* This belongs to Radeon Class Display Hardware */
     ENCODER_OBJECT_ID_EXTERNAL_SDVOA = 0x0C,
     ENCODER_OBJECT_ID_EXTERNAL_SDVOB = 0x0D,
     ENCODER_OBJECT_ID_TITFP513 = 0x0E,
@@ -67,10 +65,9 @@ enum {
     ENCODER_OBJECT_ID_INTERNAL_KLDSCP_TMDS1 = 0x13,
     ENCODER_OBJECT_ID_INTERNAL_KLDSCP_DVO1 = 0x14,
     ENCODER_OBJECT_ID_INTERNAL_KLDSCP_DAC1 = 0x15,
-    ENCODER_OBJECT_ID_INTERNAL_KLDSCP_DAC2 =
-        0x16,                       /* Shared with CV/TV and CRT */
-    ENCODER_OBJECT_ID_SI178 = 0X17, /* External TMDS (dual link, no HDCP.) */
-    ENCODER_OBJECT_ID_MVPU_FPGA = 0x18, /* MVPU FPGA chip */
+    ENCODER_OBJECT_ID_INTERNAL_KLDSCP_DAC2 = 0x16, /* Shared with CV/TV and CRT */
+    ENCODER_OBJECT_ID_SI178 = 0X17,                /* External TMDS (dual link, no HDCP.) */
+    ENCODER_OBJECT_ID_MVPU_FPGA = 0x18,            /* MVPU FPGA chip */
     ENCODER_OBJECT_ID_INTERNAL_DDI = 0x19,
     ENCODER_OBJECT_ID_VT1625 = 0x1A,
     ENCODER_OBJECT_ID_HDMI_SI1932 = 0x1B,
@@ -139,8 +136,7 @@ static constexpr uint16_t OBJECT_TYPE_SHIFT = 0x0C;
  *  @return true one success
  */
 inline bool isEncoder(uint16_t objid) {
-    return ((objid & OBJECT_TYPE_MASK) >> OBJECT_TYPE_SHIFT) ==
-           GRAPH_OBJECT_TYPE_ENCODER;
+    return ((objid & OBJECT_TYPE_MASK) >> OBJECT_TYPE_SHIFT) == GRAPH_OBJECT_TYPE_ENCODER;
 }
 
 /**
@@ -150,9 +146,7 @@ inline bool isEncoder(uint16_t objid) {
  *
  *  @return connector id
  */
-inline uint8_t getConnectorID(uint16_t objid) {
-    return static_cast<uint8_t>(objid);
-}
+inline uint8_t getConnectorID(uint16_t objid) { return static_cast<uint8_t>(objid); }
 
 /**
  *  Retrieve sense ID
@@ -196,8 +190,7 @@ inline bool getTxEnc(uint16_t usGraphicObjIds, uint8_t &txmit, uint8_t &enc) {
     if (encoder == ENCODER_OBJECT_ID_INTERNAL_UNIPHY) {
         txmit = extra ? 0x20 : 0x10;
         enc = extra;
-    } else if (encoder == ENCODER_OBJECT_ID_INTERNAL_UNIPHY1 ||
-               encoder == ENCODER_OBJECT_ID_INTERNAL_KLDSCP_DAC1) {
+    } else if (encoder == ENCODER_OBJECT_ID_INTERNAL_UNIPHY1 || encoder == ENCODER_OBJECT_ID_INTERNAL_KLDSCP_DAC1) {
         txmit = extra ? 0x21 : 0x11;
         enc = 2 + extra;
         // Apple also has ENCODER_OBJECT_ID_INTERNAL_KLDSCP_LVTMA here
@@ -205,8 +198,7 @@ inline bool getTxEnc(uint16_t usGraphicObjIds, uint8_t &txmit, uint8_t &enc) {
         txmit = extra ? 0x22 : 0x12;
         enc = 4 + extra;
     } else {
-        DBGLOG("atom", "getTxEnc found unsupported encoder %02X objid %04X",
-               encoder, usGraphicObjIds);
+        DBGLOG("atom", "getTxEnc found unsupported encoder %02X objid %04X", encoder, usGraphicObjIds);
         return false;
     }
 
