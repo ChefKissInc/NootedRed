@@ -550,7 +550,7 @@ bool RAD::wrapGFX10AcceleratorStart() {
      * anything. We have it there only so it force-loads
      * the kext and we can resolve the symbols we need.
      */
-    return true;
+    return false;
 }
 
 bool RAD::wrapAllocateHWEngines(uint64_t that) {

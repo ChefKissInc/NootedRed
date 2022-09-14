@@ -143,16 +143,6 @@
 			<integer>16908288</integer>
 			<key>cail_properties</key>
 			<dict>
-				<key>CAIL_DisableCailLoadUcode</key>
-				<integer>1</integer>
-				<key>CAIL_DisablePowerGating</key>
-				<integer>1</integer>
-				<key>CAIL_EnableAspmL0s</key>
-				<integer>0</integer>
-				<key>CAIL_EnableAspmL1</key>
-				<integer>0</integer>
-				<key>CAIL_EnableAspmSWL1</key>
-				<integer>0</integer>
 				<key>CAIL_EnableSecureMmFwLoading</key>
 				<integer>1</integer>
 			</dict>
@@ -804,11 +794,13 @@
 			<key>IOClass</key>
 			<string>AMDRadeonX6000_AMDNavi10GraphicsAccelerator</string>
 			<key>IOMatchCategory</key>
-			<string>TimAppleSucksLmfao</string>
+			<string>IOAccelerator</string>
 			<key>IOPCIMatch</key>
 			<string>0x15DD1002 0x15D81002 0x15E71002 0x164C1002 0x16381002 0x16361002</string>
 			<key>IOPCITunnelCompatible</key>
 			<true/>
+			<key>IOProbeScore</key>
+			<integer>1</integer>
 			<key>IOPropertyMatch</key>
 			<dict>
 				<key>LoadAccelerator</key>
