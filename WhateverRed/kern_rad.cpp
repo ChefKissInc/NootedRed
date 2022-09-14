@@ -522,13 +522,9 @@ bool RAD::wrapAllocateHWEngines(uint64_t that) {
 }
 
 void *RAD::wrapGetHWEngine(void *that, uint32_t engineType) {
-    NETLOG("rad", "\n\n---------------------------------------------------------------"
-                  "-------\n\n");
     NETLOG("rad", "getHWEngine: this = %p engineType = 0x%X", that, engineType);
     auto ret = FunctionCast(wrapGetHWEngine, callbackRAD->orgGetHWEngine)(that, engineType);
     NETLOG("rad", "getHWEngine returned %p", ret);
-    NETLOG("rad", "\n\n---------------------------------------------------------------"
-                  "-------\n\n");
     return ret;
 }
 
@@ -541,11 +537,7 @@ void RAD::wrapSetupAndInitializeHWCapabilities(uint64_t that) {
 }
 
 uint64_t RAD::wrapSetPolarity(void *that, bool param1) {
-    NETLOG("rad", "\n\n---------------------------------------------------------------"
-                  "-------\n\n");
     NETLOG("rad", "setPolarity: this = %p param1 = %d", that, param1);
-    NETLOG("rad", "\n\n---------------------------------------------------------------"
-                  "-------\n\n");
     return 0;
 }
 
@@ -559,17 +551,14 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 
         KernelPatcher::RouteRequest requests[] = {
             {"__ZN13ATIController8TestVRAME13PCI_REG_INDEXb", doNotTestVram},
-            {"__"
-             "ZN16AtiDeviceControl16notifyLinkChangeE31kAGDCRegisterLinkControl"
-             "Even"
-             "t_tmj",
-                wrapNotifyLinkChange, orgNotifyLinkChange},
+            {"__ZN16AtiDeviceControl16notifyLinkChangeE31kAGDCRegisterLinkControlEvent_tmj", wrapNotifyLinkChange,
+                orgNotifyLinkChange},
             {"__ZN13AtomBiosProxy19createAtomBiosProxyER16AtomBiosInitData", wrapCreateAtomBiosProxy,
                 orgCreateAtomBiosProxy},
             {"__ZN13ATIController20populateDeviceMemoryE13PCI_REG_INDEX", wrapPopulateDeviceMemory,
                 orgPopulateDeviceMemory},
         };
-        if (!patcher.routeMultipleLong(index, requests, arrsize(requests), address, size)) {
+        if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDSupport symbols");
         }
 
@@ -589,16 +578,13 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZL15deviceTypeTable", orgDeviceTypeTable},
             {"__ZN11AMDFirmware14createFirmwareEPhjjPKc", orgCreateFirmware},
-            {"__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_"
-             "TYPEP11AMDFirmware",
-                orgPutFirmware},
-            {"__ZN31AtiAppleVega10PowerTuneServicesC1EP11PP_"
-             "InstanceP18PowerPlayCallbacks",
+            {"__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware", orgPutFirmware},
+            {"__ZN31AtiAppleVega10PowerTuneServicesC1EP11PP_InstanceP18PowerPlayCallbacks",
                 orgVega10PowerTuneConstructor},
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable},
             {"_CAILAsicCapsInitTable", orgAsicInitCapsTable},
         };
-        if (!patcher.solveMultiple(index, solveRequests, arrsize(solveRequests), address, size)) {
+        if (!patcher.solveMultiple(index, solveRequests, address, size)) {
             panic("RAD: Failed to resolve AMDRadeonX5000HWLibs symbols");
         }
 
@@ -611,19 +597,15 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_psp_sw_init", wrapPspSwInit, orgPspSwInit},
             {"_gc_get_hw_version", wrapGcGetHwVersion, orgGcGetHwVersion},
             {"_internal_cos_read_fw", wrapInternalCosReadFw, orgInternalCosReadFw},
-            {"__ZN35AMDRadeonX5000_"
-             "AMDRadeonHWLibsX500025populateFirmwareDirectoryEv",
-                wrapPopulateFirmwareDirectory, orgPopulateFirmwareDirectory},
-            {"__"
-             "ZN15AmdCailServices23queryEngineRunningStateEP17CailHwEngineQueue"
-             "P22CailEngineRunningState",
+            {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory,
+                orgPopulateFirmwareDirectory},
+            {"__ZN15AmdCailServices23queryEngineRunningStateEP17CailHwEngineQueueP22CailEngineRunningState",
                 wrapQueryEngineRunningState, orgQueryEngineRunningState},
             {"_CAILQueryEngineRunningState", wrapCAILQueryEngineRunningState, orgCAILQueryEngineRunningState},
             {"_CailMonitorEngineInternalState", wrapCailMonitorEngineInternalState, orgCailMonitorEngineInternalState},
             {"_CailMonitorPerformanceCounter", wrapCailMonitorPerformanceCounter, orgCailMonitorPerformanceCounter},
             {"_SMUM_Initialize", wrapSMUMInitialize, orgSMUMInitialize},
-            {"__ZN25AtiApplePowerTuneServices23createPowerTuneServicesEP11PP_"
-             "InstanceP18PowerPlayCallbacks",
+            {"__ZN25AtiApplePowerTuneServices23createPowerTuneServicesEP11PP_InstanceP18PowerPlayCallbacks",
                 wrapCreatePowerTuneServices},
             {"_smu_get_fw_constants", wrapSmuGetFwConstants},
             {"_ttlDevIsVega10Device", wrapTtlDevIsVega10Device},
@@ -631,14 +613,12 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_smu_11_0_internal_hw_init", wrapSmuInternalHwInit},
             {"__ZN14AmdTtlServices13cosDebugPrintEPKcz", wrapCosDebugPrint, orgCosDebugPrint},
             {"_MCILDebugPrint", wrapMCILDebugPrint, orgMCILDebugPrint},
-            {"__ZN14AmdTtlServices19cosDebugPrintVaListEPvPKcS2_P13__va_list_"
-             "tag",
-                wrapCosDebugPrintVaList, orgCosDebugPrintVaList},
-            {"__ZN14AmdTtlServices21cosReleasePrintVaListEPvPKcS2_P13__va_list_"
-             "tag",
-                wrapCosReleasePrintVaList, orgCosReleasePrintVaList},
+            {"__ZN14AmdTtlServices19cosDebugPrintVaListEPvPKcS2_P13__va_list_tag", wrapCosDebugPrintVaList,
+                orgCosDebugPrintVaList},
+            {"__ZN14AmdTtlServices21cosReleasePrintVaListEPvPKcS2_P13__va_list_tag", wrapCosReleasePrintVaList,
+                orgCosReleasePrintVaList},
         };
-        if (!patcher.routeMultipleLong(index, requests, arrsize(requests), address, size)) {
+        if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
         }
 
@@ -667,7 +647,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN17ASIC_INFO__VEGA2018populateDeviceInfoEv", wrapPopulateDeviceInfo, orgPopulateDeviceInfo},
             {"__ZN22Vega10HotPlugInterrupt11setPolarityEb", wrapSetPolarity, orgSetPolarity},
         };
-        if (!patcher.routeMultipleLong(index, requests, arrsize(requests), address, size)) {
+        if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMD10000Controller symbols");
         }
 
@@ -692,30 +672,24 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEnginenwEm", orgGFX9SDMAEngineNew},
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngineC1Ev", orgGFX9SDMAEngineConstructor},
         };
-        if (!patcher.solveMultiple(index, solveRequests, arrsize(solveRequests), address, size)) {
+        if (!patcher.solveMultiple(index, solveRequests, address, size)) {
             panic("RAD: Failed to resolve AMDRadeonX5000 symbols");
         }
 
         KernelPatcher::RouteRequest requests[] = {
             {"__ZN27AMDRadeonX5000_AMDHWHandler8getStateEv", wrapGetState, orgGetState},
-            {"__ZN28AMDRadeonX5000_AMDRTHardware13initializeTtlEP16_GART_"
-             "PARAMETERS",
-                wrapInitializeTtl, orgInitializeTtl},
-            {"__ZN31AMDRadeonX5000_"
-             "AMDGFX9PM4Engine23QueryComputeQueueIsIdleE18_"
-             "eAMD_HW_RING_TYPE",
+            {"__ZN28AMDRadeonX5000_AMDRTHardware13initializeTtlEP16_GART_PARAMETERS", wrapInitializeTtl,
+                orgInitializeTtl},
+            {"__ZN31AMDRadeonX5000_AMDGFX9PM4Engine23QueryComputeQueueIsIdleE18_eAMD_HW_RING_TYPE",
                 wrapQueryComputeQueueIsIdle, orgQueryComputeQueueIsIdle},
             {"__ZN27AMDRadeonX5000_AMDHWChannel11waitForIdleEj", wrapAMDHWChannelWaitForIdle,
                 orgAMDHWChannelWaitForIdle},
             {"__ZN32AMDRadeonX5000_AMDVega20Hardware17allocateHWEnginesEv", wrapAllocateHWEngines},
-            {"__ZN26AMDRadeonX5000_AMDHardware11getHWEngineE20_eAMD_HW_ENGINE_"
-             "TYPE",
-                wrapGetHWEngine, orgGetHWEngine},
-            {"__ZN32AMDRadeonX5000_"
-             "AMDVega20Hardware32setupAndInitializeHWCapabilitiesEv",
+            {"__ZN26AMDRadeonX5000_AMDHardware11getHWEngineE20_eAMD_HW_ENGINE_TYPE", wrapGetHWEngine, orgGetHWEngine},
+            {"__ZN32AMDRadeonX5000_AMDVega20Hardware32setupAndInitializeHWCapabilitiesEv",
                 wrapSetupAndInitializeHWCapabilities, orgSetupAndInitializeHWCapabilities},
         };
-        if (!patcher.routeMultipleLong(index, requests, arrsize(requests), address, size)) {
+        if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
         }
 
@@ -725,14 +699,14 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN30AMDRadeonX6000_AMDVCN2HWEnginenwEm", orgGFX10VCN2EngineNew},
             {"__ZN30AMDRadeonX6000_AMDVCN2HWEngineC1Ev", orgGFX10VCN2EngineConstructor},
         };
-        if (!patcher.solveMultiple(index, solveRequests, arrsize(solveRequests), address, size)) {
+        if (!patcher.solveMultiple(index, solveRequests, address, size)) {
             panic("RAD: Failed to resolve AMDRadeonX6000 symbols");
         }
 
         KernelPatcher::RouteRequest requests[] = {
             {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator5startEP9IOService", wrapGFX10AcceleratorStart},
         };
-        if (!patcher.routeMultipleLong(index, requests, arrsize(requests), address, size)) {
+        if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX6000 symbols");
         }
 
