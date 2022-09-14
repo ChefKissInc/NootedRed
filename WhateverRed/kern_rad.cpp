@@ -14,8 +14,8 @@
 #include <Headers/kern_devinfo.hpp>
 #include <Headers/kern_file.hpp>
 #include <Headers/kern_iokit.hpp>
-#include <IOKit/IOPlatformExpert.h>
 #include <IOKit/IOService.h>
+#include <IOKit/acpi/IOACPIPlatformExpert.h>
 
 static const char *pathFramebuffer = "/System/Library/Extensions/AMDFramebuffer.kext/Contents/MacOS/"
                                      "AMDFramebuffer";
@@ -125,7 +125,9 @@ void RAD::init() {
     }
 }
 
-void RAD::deinit() {}
+void RAD::deinit() {
+    if (this->vbiosData) { vbiosData->release(); }
+}
 
 void RAD::processKernel(KernelPatcher &patcher) {
     KernelPatcher::RouteRequest requests[] = {
@@ -134,6 +136,41 @@ void RAD::processKernel(KernelPatcher &patcher) {
     };
     if (!patcher.routeMultipleLong(KernelPatcher::KernelID, requests)) { panic("RAD: Failed to route kernel symbols"); }
 }
+
+#pragma pack(push, 1)
+struct VFCT {
+    char signature[4];
+    uint32_t length;
+    uint8_t revision;
+    uint8_t checksum;
+    char oemId[6];
+    char oemTableId[8];
+    uint32_t oemRevision;
+    char creatorId[4];
+    uint32_t creatorRevision;
+    char tableUUID[16];
+    uint32_t vbiosImageOffset;
+    uint32_t lib1ImageOffset;
+    uint32_t reserved[4];
+};
+
+struct GOPVideoBIOSHeader {
+    uint32_t pciBus;
+    uint32_t pciDevice;
+    uint32_t pciFunction;
+    uint16_t vendorID;
+    uint16_t deviceID;
+    uint16_t ssvId;
+    uint16_t ssId;
+    uint32_t revision;
+    uint32_t imageLength;
+};
+#pragma pack(pop)
+
+// Hack
+class AppleACPIPlatformExpert : IOACPIPlatformExpert {
+    friend class RAD;
+};
 
 void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider) {
     NETDBG::enabled = true;
@@ -146,6 +183,31 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider) 
     *callbackRAD->orgDeviceTypeTable = deviceId;
     *(callbackRAD->orgDeviceTypeTable + 1) = 6;
     MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
+    if (provider->getProperty("ATY,bin_image")) {
+        NETLOG("rad", "VBIOS overridden using device property");
+    } else {
+        NETLOG("rad", "Automagically getting VBIOS from VFCT table");
+        auto *expert = reinterpret_cast<AppleACPIPlatformExpert *>(provider->getPlatform());
+        PANIC_COND(!expert, "rad", "Failed to get AppleACPIPlatformExpert");
+
+        auto *vfctData = expert->getACPITableData("VFCT", 0);
+        PANIC_COND(!vfctData, "rad", "Failed to get VFCT from AppleACPIPlatformExpert");
+
+        auto *vfct = static_cast<const VFCT *>(vfctData->getBytesNoCopy());
+        PANIC_COND(!vfct, "rad", "VFCT OSData::getBytesNoCopy returned null");
+
+        auto *vbiosContent = static_cast<const GOPVideoBIOSHeader *>(
+            vfctData->getBytesNoCopy(vfct->vbiosImageOffset, sizeof(GOPVideoBIOSHeader)));
+        PANIC_COND(!vfct->vbiosImageOffset || !vbiosContent, "rad", "No VBIOS contained in VFCT table");
+
+        auto *vbiosPtr =
+            vfctData->getBytesNoCopy(vfct->vbiosImageOffset + sizeof(GOPVideoBIOSHeader), vbiosContent->imageLength);
+        PANIC_COND(!vbiosPtr, "rad", "Bad VFCT: Offset + Size not within buffer boundaries");
+
+        callbackRAD->vbiosData = OSData::withBytes(vbiosPtr, vbiosContent->imageLength);
+        PANIC_COND(!callbackRAD->vbiosData, "rad", "OSData::withBytes failed");
+        provider->setProperty("ATY,bin_image", callbackRAD->vbiosData);
+    }
 
     NETLOG("rad", "calling original AmdTtlServices constructor");
     FunctionCast(wrapAmdTtlServicesConstructor, callbackRAD->orgAmdTtlServicesConstructor)(that, provider);
@@ -244,10 +306,7 @@ uint32_t RAD::wrapInternalCosReadFw(uint64_t param1, uint64_t *param2) {
 }
 
 void RAD::wrapPopulateFirmwareDirectory(uint64_t that) {
-    NETLOG("rad",
-        "AMDRadeonX5000_AMDRadeonHWLibsX5000::populateFirmwareDirectory this "
-        "= 0x%llX",
-        that);
+    NETLOG("rad", "AMDRadeonX5000_AMDRadeonHWLibsX5000::populateFirmwareDirectory this = 0x%llX", that);
     FunctionCast(wrapPopulateFirmwareDirectory, callbackRAD->orgPopulateFirmwareDirectory)(that);
     auto *fwDesc = getFWDescByName("ativvaxy_rv.dat");
     if (!fwDesc) { panic("Somehow ativvaxy_rv.dat is missing"); }
@@ -394,10 +453,7 @@ IOReturn RAD::wrapPopulateDeviceInfo(uint64_t that) {
     auto *revision = reinterpret_cast<uint32_t *>(that + 0x48);
     auto *emulatedRevision = reinterpret_cast<uint32_t *>(that + 0x4c);
     *emulatedRevision = *revision + emulatedRevisionOff(*revision, deviceId);
-    NETLOG("rad",
-        "deviceId = 0x%X revision = 0x%X "
-        "emulatedRevision = 0x%X",
-        deviceId, *revision, *emulatedRevision);
+    NETLOG("rad", "deviceId = 0x%X revision = 0x%X emulatedRevision = 0x%X", deviceId, *revision, *emulatedRevision);
     *familyId = 0x8e;
     NETLOG("rad", "locating Init Caps entry");
     if (MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS) {

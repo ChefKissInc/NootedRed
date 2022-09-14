@@ -39,6 +39,7 @@ class RAD {
 
     static RAD *callbackRAD;
     ThreadLocal<IOService *, 8> currentPropProvider;
+    OSData *vbiosData = nullptr;
 
     mach_vm_address_t orgSetProperty {}, orgGetProperty {}, orgGetConnectorsInfoV2 {};
     mach_vm_address_t orgGetConnectorsInfoV1 {}, orgTranslateAtomConnectorInfoV1 {};
