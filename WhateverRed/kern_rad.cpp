@@ -697,16 +697,32 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
         uint8_t repl_asic_reset[] = {0x55, 0x48, 0x89, 0xe5, 0x8b, 0x56, 0x04, 0xbe, 0x1e, 0x00, 0x00, 0x00, 0x5d, 0xe9,
             0x51, 0xfe, 0xff, 0xff};
 
-        /**
-         * Patch for _smu_9_0_1_full_asic_reset
-         * This function performs a full ASIC reset.
-         * The patch corrects the sent message to 0x1E;
-         * the original code sends 0x3B, which is wrong for SMU 10.
-         */
-        KernelPatcher::LookupPatch patch = {&kextRadeonX5000HWLibs, find_asic_reset, repl_asic_reset,
-            arrsize(find_asic_reset), 2};
-        patcher.applyLookupPatch(&patch);
-        patcher.clearError();
+        uint8_t find_phm_uselegacystatemanager[] = {0x48, 0x89, 0xe5, 0x8b, 0x4f, 0x08, 0x83, 0xc1, 0x92, 0x83, 0xf9,
+            0x20, 0x77, 0x21, 0xb8, 0x01, 0x00, 0x00, 0x00};
+        uint8_t repl_phm_uselegacystatemanager[] = {0x48, 0x89, 0xe5, 0x8b, 0x4f, 0x08, 0x83, 0xc1, 0x92, 0x83, 0xf9,
+            0x20, 0xeb, 0x21, 0xb8, 0x01, 0x00, 0x00, 0x00};
+
+        KernelPatcher::LookupPatch patches[] = {
+            /**
+             * Patch for _smu_9_0_1_full_asic_reset
+             * This function performs a full ASIC reset.
+             * The patch corrects the sent message to 0x1E;
+             * the original code sends 0x3B, which is wrong for SMU 10.
+             */
+            {&kextRadeonX5000HWLibs, find_asic_reset, repl_asic_reset, arrsize(find_asic_reset), 2},
+            /**
+             * Patch for _phm_use_legacy_state_manager
+             * This function checks if the legacy state manager should be used.
+             * Because the family ID for Raven is 0x8e, the subtraction of 0x6e
+             * results in 0x20, and the result is not less than 0x20, it returns true.
+             */
+            {&kextRadeonX5000HWLibs, find_phm_uselegacystatemanager, repl_phm_uselegacystatemanager,
+                arrsize(find_phm_uselegacystatemanager), 2},
+        };
+        for (auto &patch : patches) {
+            patcher.applyLookupPatch(&patch);
+            patcher.clearError();
+        }
 
         return true;
     } else if (kextAMD10000Controller.loadIndex == index) {
