@@ -604,12 +604,12 @@ bool RAD::wrapPM4EnginePowerUp(void *that) {
     auto *buf = (char *)IOMallocZero(0x100000);
     auto *bufPtr = buf;
     size_t size = 0xfffff;
-    callbackRAD->orgWriteDiagnosisReport(that, &bufPtr, &size);
+    callbackRAD->orgWriteDiagnosisReport(getMember<void *>(that, 0x18), &bufPtr, &size);
     NETLOG("rad", "PM4EnginePowerUp before: %s", buf);
     auto ret = FunctionCast(wrapPM4EnginePowerUp, callbackRAD->orgPM4EnginePowerUp)(that);
     bufPtr = buf;
     size = 0xfffff;
-    callbackRAD->orgWriteDiagnosisReport(that, &bufPtr, &size);
+    callbackRAD->orgWriteDiagnosisReport(getMember<void *>(that, 0x18), &bufPtr, &size);
     NETLOG("rad", "PM4EnginePowerUp after: %s", buf);
     delete[] buf;
     NETLOG("rad", "PM4EnginePowerUp returned %d", ret);
@@ -779,7 +779,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN31AMDRadeonX5000_AMDGFX9PM4EngineC1Ev", orgGFX9PM4EngineConstructor},
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEnginenwEm", orgGFX9SDMAEngineNew},
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngineC1Ev", orgGFX9SDMAEngineConstructor},
-            {"__ZN29AMDRadeonX5000_AMDPM4HWEngine20writeDiagnosisReportERPcRj", orgWriteDiagnosisReport},
+            {"__ZN26AMDRadeonX5000_AMDHardware20writeDiagnosisReportERPcRj", orgWriteDiagnosisReport},
         };
         if (!patcher.solveMultiple(index, solveRequests, address, size)) {
             panic("RAD: Failed to resolve AMDRadeonX5000 symbols");
