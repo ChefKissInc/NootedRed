@@ -89,8 +89,8 @@ size_t NETDBG::printf(const char *fmt, ...) {
 }
 
 size_t NETDBG::vprintf(const char *fmt, va_list args) {
-    char *data = new char[1025];
-    size_t len = vsnprintf(data, 1024, fmt, args);
+    char *data = new char[2048];
+    size_t len = vsnprintf(data, 2047, fmt, args);
 
     auto ret = NETDBG::nprint(data, len);
 
