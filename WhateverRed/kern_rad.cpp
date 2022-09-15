@@ -601,18 +601,15 @@ void RAD::wrapSetupAndInitializeHWCapabilities(uint64_t that) {
 
 bool RAD::wrapPM4EnginePowerUp(void *that) {
     NETLOG("rad", "PM4EnginePowerUp: this = %p", that);
+    auto ret = FunctionCast(wrapPM4EnginePowerUp, callbackRAD->orgPM4EnginePowerUp)(that);
+    NETLOG("rad", "PM4EnginePowerUp returned %d", ret);
     auto *buf = (char *)IOMallocZero(0x100000);
     auto *bufPtr = buf;
     size_t size = 0xfffff;
-    callbackRAD->orgWriteDiagnosisReport(getMember<void *>(that, 0x18), &bufPtr, &size);
-    NETLOG("rad", "PM4EnginePowerUp before: %s", buf);
-    auto ret = FunctionCast(wrapPM4EnginePowerUp, callbackRAD->orgPM4EnginePowerUp)(that);
-    bufPtr = buf;
-    size = 0xfffff;
-    callbackRAD->orgWriteDiagnosisReport(getMember<void *>(that, 0x18), &bufPtr, &size);
-    NETLOG("rad", "PM4EnginePowerUp after: %s", buf);
-    delete[] buf;
-    NETLOG("rad", "PM4EnginePowerUp returned %d", ret);
+    callbackRAD->orgWriteDiagnosisReport(callbackRAD->callbackAccelerator, &bufPtr, &size);
+    NETDBG::nprint(buf, strnlen(buf, 0xfffff));
+    NETDBG::nprint("\n", 1);
+    IOFree(buf, 0x100000);
     return ret;
 }
 
@@ -626,6 +623,7 @@ void RAD::wrapDumpASICHangStateCold(uint64_t param1) {
 bool RAD::wrapAccelStart(void *that, IOService *provider) {
     NETLOG("rad", "----------------------------------------------------------------------");
     NETLOG("rad", "accelStart: this = %p provider = %p", that, provider);
+    callbackRAD->callbackAccelerator = that;
     auto ret = FunctionCast(wrapAccelStart, callbackRAD->orgAccelStart)(that, provider);
     NETLOG("rad", "accelStart returned %d", ret);
     NETLOG("rad", "----------------------------------------------------------------------");
@@ -779,7 +777,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN31AMDRadeonX5000_AMDGFX9PM4EngineC1Ev", orgGFX9PM4EngineConstructor},
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEnginenwEm", orgGFX9SDMAEngineNew},
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngineC1Ev", orgGFX9SDMAEngineConstructor},
-            {"__ZN26AMDRadeonX5000_AMDHardware20writeDiagnosisReportERPcRj", orgWriteDiagnosisReport},
+            {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator20writeDiagnosisReportERPcRj", orgWriteDiagnosisReport},
         };
         if (!patcher.solveMultiple(index, solveRequests, address, size)) {
             panic("RAD: Failed to resolve AMDRadeonX5000 symbols");

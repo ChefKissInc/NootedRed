@@ -191,6 +191,7 @@ class RAD {
     static void wrapDumpASICHangStateCold(uint64_t param1);
 
     mach_vm_address_t orgAccelStart {};
+    void *callbackAccelerator = nullptr;
     static bool wrapAccelStart(void *that, IOService *provider);
     using t_writeDiagnosisReport = void (*)(void *that, char **buf, size_t *size);
     t_writeDiagnosisReport orgWriteDiagnosisReport = nullptr;
