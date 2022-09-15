@@ -462,7 +462,19 @@ IOReturn RAD::wrapPopulateDeviceInfo(uint64_t that) {
             break;
         }
     }
-    if (!initCaps) { panic("rad: Failed to find Init Caps entry for device ID 0x%X", deviceId); }
+    if (!initCaps) {
+        NETLOG("rad", "Warning! Using Fallback Init Caps mechanism");
+        for (size_t i = 0; i < 789; i++) {
+            auto *temp = callbackRAD->orgAsicInitCapsTable + i;
+            if (temp->familyId == 0x8e && temp->deviceId == deviceId &&
+                (temp->emulatedRev >= emulatedRevisionOff(*revision, deviceId) ||
+                    temp->emulatedRev <= *emulatedRevision)) {
+                initCaps = temp;
+                break;
+            }
+        }
+        if (!initCaps) { panic("rad: Failed to find Init Caps entry for device ID 0x%X", deviceId); }
+    }
     callbackRAD->orgAsicCapsTable->familyId = 0x8e;
     callbackRAD->orgAsicCapsTable->deviceId = deviceId;
     callbackRAD->orgAsicCapsTable->revision = *revision;
