@@ -184,11 +184,16 @@ class RAD {
     static bool doNotTestVram(IOService *ctrl, uint32_t reg, bool retryOnFail);
     static void updateGetHWInfo(IOService *accelVideoCtx, void *hwInfo);
 
-    mach_vm_address_t orgSetPolarity {};
-    static uint64_t wrapSetPolarity(void *that, bool param1);
+    mach_vm_address_t orgPM4EnginePowerUp {};
+    static bool wrapPM4EnginePowerUp(void *that);
 
     mach_vm_address_t orgDumpASICHangStateCold {};
     static void wrapDumpASICHangStateCold(uint64_t param1);
+
+    mach_vm_address_t orgAccelStart {};
+    static bool wrapAccelStart(void *that, IOService *provider);
+    using t_writeDiagnosisReport = void (*)(void *that, char **buf, size_t *size);
+    t_writeDiagnosisReport orgWriteDiagnosisReport = nullptr;
 };
 
 #endif /* kern_rad_hpp */

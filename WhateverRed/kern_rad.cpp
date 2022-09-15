@@ -599,9 +599,21 @@ void RAD::wrapSetupAndInitializeHWCapabilities(uint64_t that) {
     NETLOG("rad", "wrapSetupAndInitializeCapabilities: done");
 }
 
-uint64_t RAD::wrapSetPolarity(void *that, bool param1) {
-    NETLOG("rad", "setPolarity: this = %p param1 = %d", that, param1);
-    return 0;
+bool RAD::wrapPM4EnginePowerUp(void *that) {
+    NETLOG("rad", "PM4EnginePowerUp: this = %p", that);
+    auto *buf = (char *)IOMallocZero(0x100000);
+    auto *bufPtr = buf;
+    size_t size = 0xfffff;
+    callbackRAD->orgWriteDiagnosisReport(that, &bufPtr, &size);
+    NETLOG("rad", "PM4EnginePowerUp before: %s", buf);
+    auto ret = FunctionCast(wrapPM4EnginePowerUp, callbackRAD->orgPM4EnginePowerUp)(that);
+    bufPtr = buf;
+    size = 0xfffff;
+    callbackRAD->orgWriteDiagnosisReport(that, &bufPtr, &size);
+    NETLOG("rad", "PM4EnginePowerUp after: %s", buf);
+    delete[] buf;
+    NETLOG("rad", "PM4EnginePowerUp returned %d", ret);
+    return ret;
 }
 
 void RAD::wrapDumpASICHangStateCold(uint64_t param1) {
@@ -609,6 +621,15 @@ void RAD::wrapDumpASICHangStateCold(uint64_t param1) {
     IOSleep(3600000);
     FunctionCast(wrapDumpASICHangStateCold, callbackRAD->orgDumpASICHangStateCold)(param1);
     NETLOG("rad", "dumpASICHangStateCold finished");
+}
+
+bool RAD::wrapAccelStart(void *that, IOService *provider) {
+    NETLOG("rad", "----------------------------------------------------------------------");
+    NETLOG("rad", "accelStart: this = %p provider = %p", that, provider);
+    auto ret = FunctionCast(wrapAccelStart, callbackRAD->orgAccelStart)(that, provider);
+    NETLOG("rad", "accelStart returned %d", ret);
+    NETLOG("rad", "----------------------------------------------------------------------");
+    return ret;
 }
 
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
@@ -730,8 +751,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 
         KernelPatcher::RouteRequest requests[] = {
             {"__ZNK22Vega10SharedController11getFamilyIdEv", wrapGetFamilyId},
-            {"__ZN17ASIC_INFO__VEGA2018populateDeviceInfoEv", wrapPopulateDeviceInfo, orgPopulateDeviceInfo},
-            {"__ZN22Vega10HotPlugInterrupt11setPolarityEb", wrapSetPolarity, orgSetPolarity},
+            {"__ZN17ASIC_INFO__VEGA1218populateDeviceInfoEv", wrapPopulateDeviceInfo, orgPopulateDeviceInfo},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMD10000Controller symbols");
@@ -740,12 +760,14 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
         /**
          * Patch for DEVICE_COMPONENT_FACTORY::createAsicInfo
          * Eliminates if statement to allow creation of ASIC Info.
-         * Uses Vega 20 branch.
+         * Uses Vega 12 branch.
          */
-        uint8_t find[] = {0x0f, 0x8c, 0x32, 0x00, 0x00, 0x00, 0x0f, 0xb7, 0x45, 0xe6, 0x3d, 0xbf, 0x66, 0x00, 0x00,
-            0x0f, 0x8f, 0x23, 0x00, 0x00, 0x00};
-        uint8_t repl[] = {0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x0f, 0xb7, 0x45, 0xe6, 0x3d, 0xbf, 0x66, 0x00, 0x00,
-            0x90, 0x90, 0x90, 0x90, 0x90, 0x90};
+        uint8_t find[] = {0x81, 0xf9, 0xa0, 0x66, 0x00, 0x00, 0x0f, 0x8c, 0x32, 0x00, 0x00, 0x00, 0x0f, 0xb7, 0x45,
+            0xe6, 0x3d, 0xbf, 0x66, 0x00, 0x00, 0x0f, 0x8f, 0x23, 0x00, 0x00, 0x00, 0xbf, 0x90, 0x00, 0x00, 0x00, 0xe8,
+            0x2e, 0x3d, 0xff, 0xff};
+        uint8_t repl[] = {0x81, 0xf9, 0xa0, 0x66, 0x00, 0x00, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x0f, 0xb7, 0x45,
+            0xe6, 0x3d, 0xbf, 0x66, 0x00, 0x00, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0xbf, 0x90, 0x00, 0x00, 0x00, 0xe8,
+            0x2e, 0x3d, 0xff, 0xff};
         KernelPatcher::LookupPatch patch {&kextAMD10000Controller, find, repl, arrsize(find), 2};
         patcher.applyLookupPatch(&patch);
         patcher.clearError();
@@ -757,6 +779,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN31AMDRadeonX5000_AMDGFX9PM4EngineC1Ev", orgGFX9PM4EngineConstructor},
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEnginenwEm", orgGFX9SDMAEngineNew},
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngineC1Ev", orgGFX9SDMAEngineConstructor},
+            {"__ZN29AMDRadeonX5000_AMDPM4HWEngine20writeDiagnosisReportERPcRj", orgWriteDiagnosisReport},
         };
         if (!patcher.solveMultiple(index, solveRequests, address, size)) {
             panic("RAD: Failed to resolve AMDRadeonX5000 symbols");
@@ -770,12 +793,14 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 wrapQueryComputeQueueIsIdle, orgQueryComputeQueueIsIdle},
             {"__ZN27AMDRadeonX5000_AMDHWChannel11waitForIdleEj", wrapAMDHWChannelWaitForIdle,
                 orgAMDHWChannelWaitForIdle},
-            {"__ZN32AMDRadeonX5000_AMDVega20Hardware17allocateHWEnginesEv", wrapAllocateHWEngines},
+            {"__ZN32AMDRadeonX5000_AMDVega12Hardware17allocateHWEnginesEv", wrapAllocateHWEngines},
             {"__ZN26AMDRadeonX5000_AMDHardware11getHWEngineE20_eAMD_HW_ENGINE_TYPE", wrapGetHWEngine, orgGetHWEngine},
-            {"__ZN32AMDRadeonX5000_AMDVega20Hardware32setupAndInitializeHWCapabilitiesEv",
+            {"__ZN32AMDRadeonX5000_AMDVega12Hardware32setupAndInitializeHWCapabilitiesEv",
                 wrapSetupAndInitializeHWCapabilities, orgSetupAndInitializeHWCapabilities},
+            {"__ZN31AMDRadeonX5000_AMDGFX9PM4Engine7powerUpEv", wrapPM4EnginePowerUp, orgPM4EnginePowerUp},
             {"__ZN26AMDRadeonX5000_AMDHardware17dumpASICHangStateEb.cold.1", wrapDumpASICHangStateCold,
                 orgDumpASICHangStateCold},
+            {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator5startEP9IOService", wrapAccelStart, orgAccelStart},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
