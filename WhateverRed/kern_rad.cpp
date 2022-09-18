@@ -642,6 +642,25 @@ uint64_t RAD::wrapGFX10RTRingGetHead(void *that) {
     return ret;
 }
 
+uint64_t RAD::wrapHwRegRead(void *that, uint64_t addr) {
+    auto ret = FunctionCast(wrapHwRegRead, callbackRAD->orgHwRegRead)(that, addr);
+
+    if (addr == 0x21C0) {
+        NETLOG("rad", "hwRegRead: this = %p addr = 0x%llX", that, addr);
+        NETLOG("rad", "hwRegRead: Read to register 0x21C0 returned 0x%llX", ret);
+    }
+    return ret;
+}
+
+uint64_t RAD::wrapHwRegWrite(void *that, uint64_t addr, uint64_t val) {
+    if (addr == 0x21C0) {
+        NETLOG("rad", "hwRegWrite: this = %p addr = 0x%llX val = 0x%llX", that, addr, val);
+        NETLOG("rad", "hwRegWrite: Write to register 0x21C0 with value 0x%llX", val);
+    }
+    auto ret = FunctionCast(wrapHwRegWrite, callbackRAD->orgHwRegWrite)(that, addr, val);
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -811,6 +830,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 orgDumpASICHangStateCold},
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator5startEP9IOService", wrapAccelStart, orgAccelStart},
             {"__ZN24AMDRadeonX5000_AMDRTRing7getHeadEv", wrapGFX9RTRingGetHead, orgGFX9RTRingGetHead},
+            {"__ZN29AMDRadeonX5000_AMDHWRegisters4readEj", wrapHwRegRead, orgHwRegRead},
+            {"__ZN29AMDRadeonX5000_AMDHWRegisters5writeEjj", wrapHwRegWrite, orgHwRegWrite},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");

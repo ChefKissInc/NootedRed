@@ -200,6 +200,12 @@ class RAD {
 
     mach_vm_address_t orgGFX10RTRingGetHead {};
     static uint64_t wrapGFX10RTRingGetHead(void *that);
+
+    mach_vm_address_t orgHwRegRead {};
+    static uint64_t wrapHwRegRead(void *that, uint64_t addr);
+
+    mach_vm_address_t orgHwRegWrite {};
+    static uint64_t wrapHwRegWrite(void *that, uint64_t addr, uint64_t val);
 };
 
 #endif /* kern_rad_hpp */
