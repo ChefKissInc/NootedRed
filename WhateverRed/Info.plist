@@ -149,6 +149,8 @@
 				<integer>0</integer>
 				<key>CAIL_DisableJpegEngine</key>
 				<integer>0</integer>
+				<key>CAIL_DisablePowerGating</key>
+				<integer>1</integer>
 				<key>CAIL_EnableLBPWSupport</key>
 				<integer>0</integer>
 				<key>CAIL_EnablePeerDataAperture</key>
