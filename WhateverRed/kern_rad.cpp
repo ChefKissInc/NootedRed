@@ -603,6 +603,7 @@ bool RAD::wrapPM4EnginePowerUp(void *that) {
     NETDBG::nprint(buf, strnlen(buf, 0xfffff));
     NETDBG::printf("\n");
     IOFree(buf, 0x100000);
+    NETLOG("rad", "PM4EnginePowerUp done");
     IOSleep(3600000);
     return ret;
 }
@@ -644,20 +645,15 @@ uint64_t RAD::wrapGFX10RTRingGetHead(void *that) {
 
 uint64_t RAD::wrapHwRegRead(void *that, uint64_t addr) {
     auto ret = FunctionCast(wrapHwRegRead, callbackRAD->orgHwRegRead)(that, addr);
-
-    if (addr == 0x21C0) {
-        NETLOG("rad", "hwRegRead: this = %p addr = 0x%llX", that, addr);
-        NETLOG("rad", "hwRegRead: Read to register 0x21C0 returned 0x%llX", ret);
-    }
+    NETLOG("rad", "hwRegRead: this = %p addr = 0x%llX", that, addr);
+    NETLOG("rad", "hwRegRead returned 0x%llX", ret);
     return ret;
 }
 
 uint64_t RAD::wrapHwRegWrite(void *that, uint64_t addr, uint64_t val) {
-    if (addr == 0x21C0) {
-        NETLOG("rad", "hwRegWrite: this = %p addr = 0x%llX val = 0x%llX", that, addr, val);
-        NETLOG("rad", "hwRegWrite: Write to register 0x21C0 with value 0x%llX", val);
-    }
+    NETLOG("rad", "hwRegWrite: this = %p addr = 0x%llX val = 0x%llX", that, addr, val);
     auto ret = FunctionCast(wrapHwRegWrite, callbackRAD->orgHwRegWrite)(that, addr, val);
+    NETLOG("rad", "hwRegWrite returned 0x%llX", ret);
     return ret;
 }
 
