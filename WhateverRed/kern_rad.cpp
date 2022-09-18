@@ -610,6 +610,7 @@ bool RAD::wrapPM4EnginePowerUp(void *that) {
     NETDBG::nprint(buf, strnlen(buf, 0xfffff));
     NETDBG::printf("\n");
     IOFree(buf, 0x100000);
+    IOSleep(3600000);
     return ret;
 }
 
@@ -627,6 +628,26 @@ bool RAD::wrapAccelStart(void *that, IOService *provider) {
     auto ret = FunctionCast(wrapAccelStart, callbackRAD->orgAccelStart)(that, provider);
     NETLOG("rad", "accelStart returned %d", ret);
     NETLOG("rad", "----------------------------------------------------------------------");
+    return ret;
+}
+
+uint64_t RAD::wrapGFX9RTRingGetHead(void *that) {
+    NETLOG("rad", "GFX9RTRingGetHead: this = %p", that);
+    auto ret = FunctionCast(wrapGFX9RTRingGetHead, callbackRAD->orgGFX9RTRingGetHead)(that);
+    NETLOG("rad", "GFX9RTRingGetHead returned 0x%llX", ret);
+    NETLOG("rad", "RTRing->field_0x54 = 0x%X", getMember<uint32_t>(that, 0x54));
+    NETLOG("rad", "RTRing->field_0x74 = 0x%X", getMember<uint32_t>(that, 0x74));
+    NETLOG("rad", "RTRing->field_0x8c = 0x%X", getMember<uint32_t>(that, 0x8c));
+    return ret;
+}
+
+uint64_t RAD::wrapGFX10RTRingGetHead(void *that) {
+    NETLOG("rad", "GFX10RTRingGetHead: this = %p", that);
+    auto ret = FunctionCast(wrapGFX10RTRingGetHead, callbackRAD->orgGFX10RTRingGetHead)(that);
+    NETLOG("rad", "GFX10RTRingGetHead returned 0x%llX", ret);
+    NETLOG("rad", "RTRing->field_0x54 = 0x%X", getMember<uint32_t>(that, 0x54));
+    NETLOG("rad", "RTRing->field_0x74 = 0x%X", getMember<uint32_t>(that, 0x74));
+    NETLOG("rad", "RTRing->field_0x8c = 0x%X", getMember<uint32_t>(that, 0x8c));
     return ret;
 }
 
@@ -799,6 +820,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN26AMDRadeonX5000_AMDHardware17dumpASICHangStateEb.cold.1", wrapDumpASICHangStateCold,
                 orgDumpASICHangStateCold},
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator5startEP9IOService", wrapAccelStart, orgAccelStart},
+            {"__ZN24AMDRadeonX5000_AMDRTRing7getHeadEv", wrapGFX9RTRingGetHead, orgGFX9RTRingGetHead},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
@@ -816,6 +838,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 
         KernelPatcher::RouteRequest requests[] = {
             {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator5startEP9IOService", wrapGFX10AcceleratorStart},
+            {"__ZN24AMDRadeonX6000_AMDRTRing7getHeadEv", wrapGFX10RTRingGetHead, orgGFX10RTRingGetHead},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX6000 symbols");
@@ -1072,7 +1095,9 @@ void RAD::mergeProperties(OSDictionary *props, const char *prefix, IOService *pr
                 if (name && propname->getLength() > prefixlen && !strncmp(name, prefix, prefixlen)) {
                     auto prop = dict->getObject(propname);
                     if (prop) mergeProperty(props, name + prefixlen, prop);
-                    else { DBGLOG("rad", "prop %s was not merged due to no value", name); }
+                    else {
+                        DBGLOG("rad", "prop %s was not merged due to no value", name);
+                    }
                 } else {
                     DBGLOG("rad", "prop %s does not match %s prefix", safeString(name), prefix);
                 }

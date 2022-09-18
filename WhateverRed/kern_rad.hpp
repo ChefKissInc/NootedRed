@@ -195,6 +195,12 @@ class RAD {
     static bool wrapAccelStart(void *that, IOService *provider);
     using t_writeDiagnosisReport = void (*)(void *that, char **buf, size_t *size);
     t_writeDiagnosisReport orgWriteDiagnosisReport = nullptr;
+
+    mach_vm_address_t orgGFX9RTRingGetHead {};
+    static uint64_t wrapGFX9RTRingGetHead(void *that);
+
+    mach_vm_address_t orgGFX10RTRingGetHead {};
+    static uint64_t wrapGFX10RTRingGetHead(void *that);
 };
 
 #endif /* kern_rad_hpp */
