@@ -496,18 +496,11 @@ uint64_t RAD::wrapSmuGetFwConstants() {
     return 0;
 }
 
-bool RAD::wrapTtlDevIsVega10Device() {
-    /**
-     * AMD iGPUs are Vega 10 based.
-     */
-    return true;
-}
-
 uint64_t RAD::wrapSmuInternalHwInit() {
     /**
-     * This is _smu_9_0_1_internal_hw_init.
+     * This is `_smu_9_0_1_internal_hw_init`.
      * The original function waits for the firmware to be loaded,
-     * which in the Linux AMDGPU code is smu9_is_smc_ram_running.
+     * which in the Linux AMDGPU code is `smu9_is_smc_ram_running`.
      * SMU 10 doesn't do this, therefore, we just return 0.
      */
     return 0;
@@ -551,8 +544,8 @@ void RAD::wrapCosReleasePrintVaList(void *ttl, char *header, char *fmt, va_list 
 }
 
 bool RAD::wrapGFX10AcceleratorStart() {
-    /*
-     * The Info.plist contains a personality for the
+    /**
+     * The `Info.plist` contains a personality for the
      * AMD X6000 Accelerator, but we don't want it to do
      * anything. We have it there only so it force-loads
      * the kext and we can resolve the symbols we need.
@@ -622,12 +615,10 @@ void RAD::wrapDumpASICHangStateCold(uint64_t param1) {
 }
 
 bool RAD::wrapAccelStart(void *that, IOService *provider) {
-    NETLOG("rad", "----------------------------------------------------------------------");
     NETLOG("rad", "accelStart: this = %p provider = %p", that, provider);
     callbackRAD->callbackAccelerator = that;
     auto ret = FunctionCast(wrapAccelStart, callbackRAD->orgAccelStart)(that, provider);
     NETLOG("rad", "accelStart returned %d", ret);
-    NETLOG("rad", "----------------------------------------------------------------------");
     return ret;
 }
 
@@ -718,7 +709,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN25AtiApplePowerTuneServices23createPowerTuneServicesEP11PP_InstanceP18PowerPlayCallbacks",
                 wrapCreatePowerTuneServices},
             {"_smu_get_fw_constants", wrapSmuGetFwConstants},
-            // {"_ttlDevIsVega10Device", wrapTtlDevIsVega10Device},
             {"_smu_9_0_1_internal_hw_init", wrapSmuInternalHwInit},
             {"_smu_11_0_internal_hw_init", wrapSmuInternalHwInit},
             {"__ZN14AmdTtlServices13cosDebugPrintEPKcz", wrapCosDebugPrint, orgCosDebugPrint},

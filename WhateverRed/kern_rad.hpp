@@ -148,7 +148,6 @@ class RAD {
     static uint64_t wrapSMUMInitialize(uint64_t param1, uint32_t *param2, uint64_t param3);
     static void *wrapCreatePowerTuneServices(void *param1, void *param2);
     static uint64_t wrapSmuGetFwConstants();
-    static bool wrapTtlDevIsVega10Device();
     static uint64_t wrapSmuInternalHwInit();
     static void wrapCosDebugPrint(char *fmt, ...);
     static void wrapMCILDebugPrint(uint32_t level_max, char *fmt, uint64_t param3, uint64_t param4, uint64_t param5,
