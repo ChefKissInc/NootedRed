@@ -697,7 +697,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN25AtiApplePowerTuneServices23createPowerTuneServicesEP11PP_InstanceP18PowerPlayCallbacks",
                 wrapCreatePowerTuneServices},
             {"_smu_get_fw_constants", wrapSmuGetFwConstants},
-            {"_ttlDevIsVega10Device", wrapTtlDevIsVega10Device},
+            // {"_ttlDevIsVega10Device", wrapTtlDevIsVega10Device},
             {"_smu_9_0_1_internal_hw_init", wrapSmuInternalHwInit},
             {"_smu_11_0_internal_hw_init", wrapSmuInternalHwInit},
             {"__ZN14AmdTtlServices13cosDebugPrintEPKcz", wrapCosDebugPrint, orgCosDebugPrint},
