@@ -40,3 +40,6 @@ DerivedData/
 /Lilu.kext
 /WhateverRed/kern_fw.cpp
 .vscode/
+.cache/
+CompilationDatabase/
+compile_commands.json
