@@ -608,7 +608,7 @@ bool RAD::wrapPM4EnginePowerUp(void *that) {
     size_t size = 0xfffff;
     callbackRAD->orgWriteDiagnosisReport(callbackRAD->callbackAccelerator, &bufPtr, &size);
     NETDBG::nprint(buf, strnlen(buf, 0xfffff));
-    NETDBG::nprint("\n", 1);
+    NETDBG::printf("\n");
     IOFree(buf, 0x100000);
     return ret;
 }
