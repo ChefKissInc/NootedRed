@@ -657,6 +657,16 @@ uint64_t RAD::wrapHwRegWrite(void *that, uint64_t addr, uint64_t val) {
     return ret;
 }
 
+bool RAD::wrapCailInitCSBCommandBuffer(void* cailData) {
+    panic("__AMDSucksAtCoding");
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "_CailInitCSBCommandBuffer: cailData = %p", cailData);
+    auto ret = FunctionCast(wrapCailInitCSBCommandBuffier, callbackRAD->orgCailInitCSBCommandBuffer)(cailData);
+    NETLOG("rad", "_CailInitCSBCommandBuffer returned %d", ret);
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -732,6 +742,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 orgCosDebugPrintVaList},
             {"__ZN14AmdTtlServices21cosReleasePrintVaListEPvPKcS2_P13__va_list_tag", wrapCosReleasePrintVaList,
                 orgCosReleasePrintVaList},
+            {"_CailInitCSBCommandBuffer", wrapCailInitCSBCommandBuffer, orgCailInitCSBCommandBuffer},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
