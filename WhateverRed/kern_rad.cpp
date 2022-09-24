@@ -657,11 +657,11 @@ uint64_t RAD::wrapHwRegWrite(void *that, uint64_t addr, uint64_t val) {
     return ret;
 }
 
-bool RAD::wrapCailInitCSBCommandBuffer(void* cailData) {
+bool RAD::wrapCailInitCSBCommandBuffer(void *cailData) {
     panic("__AMDSucksAtCoding");
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     NETLOG("rad", "_CailInitCSBCommandBuffer: cailData = %p", cailData);
-    auto ret = FunctionCast(wrapCailInitCSBCommandBuffier, callbackRAD->orgCailInitCSBCommandBuffer)(cailData);
+    auto ret = FunctionCast(wrapCailInitCSBCommandBuffer, callbackRAD->orgCailInitCSBCommandBuffer)(cailData);
     NETLOG("rad", "_CailInitCSBCommandBuffer returned %d", ret);
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     return ret;
@@ -1113,9 +1113,7 @@ void RAD::mergeProperties(OSDictionary *props, const char *prefix, IOService *pr
                 if (name && propname->getLength() > prefixlen && !strncmp(name, prefix, prefixlen)) {
                     auto prop = dict->getObject(propname);
                     if (prop) mergeProperty(props, name + prefixlen, prop);
-                    else {
-                        DBGLOG("rad", "prop %s was not merged due to no value", name);
-                    }
+                    else { DBGLOG("rad", "prop %s was not merged due to no value", name); }
                 } else {
                     DBGLOG("rad", "prop %s does not match %s prefix", safeString(name), prefix);
                 }
