@@ -758,7 +758,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             0x8d, 0x3d, 0xa4, 0xe2, 0x01, 0x00};
         uint8_t repl[] = {0x48, 0x89, 0x83, 0x18, 0x01, 0x00, 0x00, 0x31, 0xc0, 0x48, 0x85, 0xc9, 0x74, 0x3e, 0x48,
             0x8d, 0x3d, 0xa4, 0xe2, 0x01, 0x00};
-        KernelPatcher::LookupPatch patch {&kextRadeonSupport, find, repl, arrsize(find), 2};
+        KernelPatcher::LookupPatch patch {&kextRadeonSupport, find, repl, arrsize(find), 1};
         patcher.applyLookupPatch(&patch);
         patcher.clearError();
 
@@ -830,7 +830,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
              * The patch corrects the sent message to 0x1E;
              * the original code sends 0x3B, which is wrong for SMU 10.
              */
-            {&kextRadeonX5000HWLibs, find_asic_reset, repl_asic_reset, arrsize(find_asic_reset), 2},
+            {&kextRadeonX5000HWLibs, find_asic_reset, repl_asic_reset, arrsize(find_asic_reset), 1},
             /**
              * Patch for _phm_use_legacy_state_manager
              * This function checks if the legacy state manager should be used.
@@ -838,7 +838,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
              * results in 0x20, and the result is not less than 0x20, it returns true.
              */
             {&kextRadeonX5000HWLibs, find_phm_uselegacystatemanager, repl_phm_uselegacystatemanager,
-                arrsize(find_phm_uselegacystatemanager), 2},
+                arrsize(find_phm_uselegacystatemanager), 1},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
@@ -868,7 +868,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
         uint8_t repl[] = {0x81, 0xf9, 0xa0, 0x66, 0x00, 0x00, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x0f, 0xb7, 0x45,
             0xe6, 0x3d, 0xbf, 0x66, 0x00, 0x00, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0xbf, 0x90, 0x00, 0x00, 0x00, 0xe8,
             0x2e, 0x3d, 0xff, 0xff};
-        KernelPatcher::LookupPatch patch {&kextAMD10000Controller, find, repl, arrsize(find), 2};
+        KernelPatcher::LookupPatch patch {&kextAMD10000Controller, find, repl, arrsize(find), 1};
         patcher.applyLookupPatch(&patch);
         patcher.clearError();
 
@@ -907,6 +907,22 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
+        }
+
+        uint8_t find_gfx9vmm_postInit[] = {0x48, 0x8b, 0x30, 0xe8, 0x11, 0x67, 0x2d, 0x00, 0x48, 0x8b, 0x08, 0x48, 0x89,
+            0xc7};
+        uint8_t repl_gfx9vmm_postInit[] = {0x48, 0x8b, 0x30, 0x66, 0x90, 0x66, 0x90, 0x90, 0x48, 0x8b, 0x08, 0x48, 0x89,
+            0xc7};
+
+        KernelPatcher::LookupPatch patches[] = {
+            /**
+             * `AMDRadeonX5000_AMDGFX9VMM::postInit`
+             */
+            {&kextRadeonX5000, find_gfx9vmm_postInit, repl_gfx9vmm_postInit, arrsize(find_gfx9vmm_postInit), 1},
+        };
+        for (auto &patch : patches) {
+            patcher.applyLookupPatch(&patch);
+            patcher.clearError();
         }
 
         return true;
@@ -1006,54 +1022,54 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             /**
              * Mismatched VTable Call to getScheduler.
              */
-            {&kextRadeonX6000, find_hwchannel_init1, repl_hwchannel_init1, arrsize(find_hwchannel_init1), 2},
+            {&kextRadeonX6000, find_hwchannel_init1, repl_hwchannel_init1, arrsize(find_hwchannel_init1), 1},
             /**
              * Mismatched VTable Calls to getGpuDebugPolicy.
              */
-            {&kextRadeonX6000, find_hwchannel_init2, repl_hwchannel_init2, arrsize(find_hwchannel_init2), 2},
+            {&kextRadeonX6000, find_hwchannel_init2, repl_hwchannel_init2, arrsize(find_hwchannel_init2), 1},
             /**
              * VTable Call to signalGPUWorkSubmitted.
              * Doesn't exist on X5000, but looks like it isn't necessary,
              * so we just NO-OP it.
              */
             {&kextRadeonX6000, find_hwchannel_submitCommandBuffer, repl_hwchannel_submitCommandBuffer,
-                arrsize(find_hwchannel_submitCommandBuffer), 2},
+                arrsize(find_hwchannel_submitCommandBuffer), 1},
             /**
              * Mismatched VTable Call to isDeviceValid.
              */
             {&kextRadeonX6000, find_hwchannel_waitForHwStamp, repl_hwchannel_waitForHwStamp,
-                arrsize(find_hwchannel_waitForHwStamp), 2},
+                arrsize(find_hwchannel_waitForHwStamp), 1},
             /**
              * Mismatched VTable Call to getScheduler.
              */
-            {&kextRadeonX6000, find_hwchannel_reset, repl_hwchannel_reset, arrsize(find_hwchannel_reset), 2},
+            {&kextRadeonX6000, find_hwchannel_reset, repl_hwchannel_reset, arrsize(find_hwchannel_reset), 1},
             /**
              * Mismatched VTable Calls to getScheduler.
              */
             {&kextRadeonX6000, find_hwchannel_timestampUpdated1, repl_hwchannel_timestampUpdated1,
-                arrsize(find_hwchannel_timestampUpdated1), 2},
+                arrsize(find_hwchannel_timestampUpdated1), 1},
             {&kextRadeonX6000, find_hwchannel_timestampUpdated2, repl_hwchannel_timestampUpdated2,
-                arrsize(find_hwchannel_timestampUpdated2), 2},
+                arrsize(find_hwchannel_timestampUpdated2), 1},
             /**
              * Mismatched VTable Call to isDeviceValid.
              */
             {&kextRadeonX6000, find_hwchannel_enableTimestampInterrupt, repl_hwchannel_enableTimestampInterrupt,
-                arrsize(find_hwchannel_enableTimestampInterrupt), 2},
+                arrsize(find_hwchannel_enableTimestampInterrupt), 1},
             /**
              * Mismatched VTable Call to getScheduler.
              */
             {&kextRadeonX6000, find_hwchannel_writeDiagnosisReport, repl_hwchannel_writeDiagnosisReport,
-                arrsize(find_hwchannel_writeDiagnosisReport), 2},
+                arrsize(find_hwchannel_writeDiagnosisReport), 1},
             /**
              * Mismatched VTable Call to isDeviceValid.
              */
             {&kextRadeonX6000, find_setupAndInitializeHWCapabilities_pt1, repl_setupAndInitializeHWCapabilities_pt1,
-                arrsize(find_setupAndInitializeHWCapabilities_pt1), 2},
+                arrsize(find_setupAndInitializeHWCapabilities_pt1), 1},
             /**
              * Remove call to TTL.
              */
             {&kextRadeonX6000, find_setupAndInitializeHWCapabilities_pt2, repl_setupAndInitializeHWCapabilities_pt2,
-                arrsize(find_setupAndInitializeHWCapabilities_pt2), 2},
+                arrsize(find_setupAndInitializeHWCapabilities_pt2), 1},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
