@@ -757,12 +757,10 @@ uint32_t RAD::wrapPspHdcpLoad(void *pspData) {
 }
 
 void RAD::wrapAccelDisplayPipeWriteDiagnosisReport(void *that) {
-    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     NETLOG("rad", "AccelDisplayPipeWriteDiagnosisReport: this = %p", that);
     // FunctionCast(wrapAccelDisplayPipeWriteDiagnosisReport,
     // callbackRAD->orgAccelDisplayPipeWriteDiagnosisReport)(that);
     NETLOG("rad", "AccelDisplayPipeWriteDiagnosisReport finished");
-    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
 }
 
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
