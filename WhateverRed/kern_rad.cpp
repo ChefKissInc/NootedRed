@@ -763,6 +763,79 @@ void RAD::wrapAccelDisplayPipeWriteDiagnosisReport(void *that) {
     NETLOG("rad", "AccelDisplayPipeWriteDiagnosisReport finished");
 }
 
+uint64_t RAD::wrapSetMemoryAllocationsEnabled(void* that, uint64_t param1) {
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "setMemoryAllocationsEnabled: this = %p param1 = 0x%llX", that, param1);
+    auto ret = FunctionCast(wrapSetMemoryAllocationsEnabled, callbackRAD->orgSetMemoryAllocationsEnabled)(that, param1);
+    NETLOG("rad", "setMemoryAllocationsEnabled returned 0x%llX", ret);
+    NETLOG("rad", "field_0x20=%llX field_0x28=%llX field_0x30=%llX", getMember<uint64_t>(that, 0x20), getMember<uint64_t>(that, 0x28), getMember<uint64_t>(that, 0x30));
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    return ret;
+}
+
+uint64_t RAD::wrapGetEventMachine(void* that) {
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "getEventMachine: this = %p", that);
+    auto ret = FunctionCast(wrapGetEventMachine, callbackRAD->orgGetEventMachine)(that);
+    NETLOG("rad", "getEventMachine returned 0x%llX", ret);
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    return ret;
+}
+
+uint64_t RAD::wrapGetVMUpdateChannel(void* that) {
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "getVMUpdateChannel: this = %p", that);
+    auto ret = FunctionCast(wrapGetVMUpdateChannel, callbackRAD->orgGetVMUpdateChannel)(that);
+    NETLOG("rad", "getVMUpdateChannel returned 0x%llX", ret);
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    return ret;
+}
+
+uint64_t RAD::wrapCreateVMCommandBufferPool(void* that, void* param1, uint64_t param2, uint64_t param3) {
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "createVMCommandBufferPool: this = %p param1 = %p param2 = 0x%llX param3 = 0x%llX", that, param1, param2, param3);
+    auto ret = FunctionCast(wrapCreateVMCommandBufferPool, callbackRAD->orgCreateVMCommandBufferPool)(that, param1, param2, param3);
+    NETLOG("rad", "createVMCommandBufferPool returned 0x%llX", ret);
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    return ret;
+}
+
+uint64_t RAD::wrapPoolGetChannel(void* that) {
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "poolGetChannel: this = %p", that);
+    auto ret = FunctionCast(wrapPoolGetChannel, callbackRAD->orgPoolGetChannel)(that);
+    NETLOG("rad", "poolGetChannel returned 0x%llX", ret);
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    return ret;
+}
+
+uint64_t RAD::wrapAccelGetHWChannel(void* that) {
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "accelGetHWChannel: this = %p", that);
+    auto ret = FunctionCast(wrapAccelGetHWChannel, callbackRAD->orgAccelGetHWChannel)(that);
+    NETLOG("rad", "accelGetHWChannel returned 0x%llX", ret);
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    return ret;
+}
+
+uint64_t RAD::wrapCreateAccelChannels(void* that, uint64_t param1) {
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "createAccelChannels: this = %p param1 = 0x%llX", that, param1);
+    auto ret = FunctionCast(wrapCreateAccelChannels, callbackRAD->orgCreateAccelChannels)(that, param1);
+    NETLOG("rad", "createAccelChannels returned 0x%llX", ret);
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    return ret;
+}
+
+uint64_t RAD::wrapPopulateAccelConfig(void* that, void* param1) {
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "populateAccelConfig: this = %p param1 = %p", that, param1);
+    auto ret = FunctionCast(wrapPopulateAccelConfig, callbackRAD->orgPopulateAccelConfig)(that, param1);
+    NETLOG("rad", "populateAccelConfig returned 0x%llX", ret);
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -977,6 +1050,14 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN29AMDRadeonX5000_AMDHWRegisters5writeEjj", wrapHwRegWrite, orgHwRegWrite},
             {"__ZN34AMDRadeonX5000_AMDAccelDisplayPipe20writeDiagnosisReportERPcRj",
                 wrapAccelDisplayPipeWriteDiagnosisReport, orgAccelDisplayPipeWriteDiagnosisReport},
+            {"__ZN23AMDRadeonX5000_AMDHWVMM27setMemoryAllocationsEnabledEb", wrapSetMemoryAllocationsEnabled, orgSetMemoryAllocationsEnabled},
+            {"__ZN27AMDRadeonX5000_AMDHWHandler15getEventMachineEv", wrapGetEventMachine, orgGetEventMachine},
+            {"__ZN27AMDRadeonX5000_AMDHWHandler18getVMUpdateChannelEv", wrapGetVMUpdateChannel, orgGetVMUpdateChannel},
+            {"__ZN27AMDRadeonX5000_AMDHWHandler25createVMCommandBufferPoolEP30AMDRadeonX5000_AMDAccelChanneljj", wrapCreateVMCommandBufferPool, orgCreateVMCommandBufferPool},
+            {"__ZN35AMDRadeonX5000_AMDCommandBufferPool10getChannelEv", wrapPoolGetChannel, orgPoolGetChannel},
+            {"__ZN30AMDRadeonX5000_AMDAccelChannel12getHWChannelEv", wrapAccelGetHWChannel, orgAccelGetHWChannel},
+            {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator19createAccelChannelsEb", wrapCreateAccelChannels, orgCreateAccelChannels},
+            {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator19populateAccelConfigEP13IOAccelConfig", wrapPopulateAccelConfig, orgPopulateAccelConfig},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");

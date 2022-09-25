@@ -223,6 +223,30 @@ class RAD {
 
     mach_vm_address_t orgAccelDisplayPipeWriteDiagnosisReport {};
     static void wrapAccelDisplayPipeWriteDiagnosisReport(void *that);
+
+    mach_vm_address_t orgSetMemoryAllocationsEnabled{};
+    static uint64_t wrapSetMemoryAllocationsEnabled(void* that, uint64_t param1);
+
+    mach_vm_address_t orgGetEventMachine{};
+    static uint64_t wrapGetEventMachine(void* that);
+
+    mach_vm_address_t orgGetVMUpdateChannel{};
+    static uint64_t wrapGetVMUpdateChannel(void* that);
+
+    mach_vm_address_t orgCreateVMCommandBufferPool{};
+    static uint64_t wrapCreateVMCommandBufferPool(void* that, void* param1, uint64_t param2, uint64_t param3);
+
+    mach_vm_address_t orgPoolGetChannel{};
+    static uint64_t wrapPoolGetChannel(void* that);
+
+    mach_vm_address_t orgAccelGetHWChannel{};
+    static uint64_t wrapAccelGetHWChannel(void* that);
+
+    mach_vm_address_t orgCreateAccelChannels{};
+    static uint64_t wrapCreateAccelChannels(void* that, uint64_t param1);
+
+    mach_vm_address_t orgPopulateAccelConfig{};
+    static uint64_t wrapPopulateAccelConfig(void* that, void* param1);
 };
 
 #endif /* kern_rad_hpp */
