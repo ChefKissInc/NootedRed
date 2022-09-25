@@ -796,7 +796,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware", orgPutFirmware},
             {"__ZN31AtiAppleVega10PowerTuneServicesC1EP11PP_InstanceP18PowerPlayCallbacks",
                 orgVega10PowerTuneConstructor},
-            {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable},
+            {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTableHWLibs},
             {"_CAILAsicCapsInitTable", orgAsicInitCapsTable},
         };
         if (!patcher.solveMultiple(index, solveRequests, address, size)) {
