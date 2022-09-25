@@ -77,7 +77,7 @@ class RAD {
     mach_vm_address_t orgCosReleasePrintVaList {};
     CailAsicCapEntry *orgAsicCapsTable = nullptr;
     CailInitAsicCapEntry *orgAsicInitCapsTable = nullptr;
-        mach_vm_address_t orgPspAsdLoad {};
+    mach_vm_address_t orgPspAsdLoad {};
     mach_vm_address_t orgPspDtmLoad {};
     mach_vm_address_t orgPspHdcpLoad {};
 

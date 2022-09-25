@@ -996,6 +996,11 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
         uint8_t repl_hwchannel_writeDiagnosisReport[] = {0x49, 0x8b, 0x7c, 0x24, 0x18, 0x48, 0x8b, 0x07, 0xff, 0x90,
             0xc0, 0x03, 0x00, 0x00, 0x49, 0x8b, 0xb4, 0x24, 0xc8, 0x00, 0x00, 0x00, 0xb9, 0x01, 0x00, 0x00, 0x00};
 
+        uint8_t find_setupAndInitializeHWCapabilities[] = {0x4c, 0x89, 0xf7, 0xff, 0x90, 0xa0, 0x02, 0x00, 0x00, 0x84,
+            0xc0, 0x0f, 0x84, 0x6e, 0x02, 0x00, 0x00};
+        uint8_t repl_setupAndInitializeHWCapabilities[] = {0x4c, 0x89, 0xf7, 0xff, 0x90, 0x98, 0x02, 0x00, 0x00, 0x84,
+            0xc0, 0x0f, 0x84, 0x6e, 0x02, 0x00, 0x00};
+
         /**
          * HWEngine/HWChannel call HWInterface virtual methods.
          * The X5000 HWInterface virtual table offsets are
@@ -1044,6 +1049,11 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
              */
             {&kextRadeonX6000, find_hwchannel_writeDiagnosisReport, repl_hwchannel_writeDiagnosisReport,
                 arrsize(find_hwchannel_writeDiagnosisReport), 2},
+            /**
+             * Mismatched VTable Call to isDeviceValid.
+             */
+            {&kextRadeonX6000, find_setupAndInitializeHWCapabilities, repl_setupAndInitializeHWCapabilities,
+                arrsize(find_setupAndInitializeHWCapabilities), 2},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
@@ -1190,9 +1200,7 @@ void RAD::mergeProperties(OSDictionary *props, const char *prefix, IOService *pr
                 if (name && propname->getLength() > prefixlen && !strncmp(name, prefix, prefixlen)) {
                     auto prop = dict->getObject(propname);
                     if (prop) mergeProperty(props, name + prefixlen, prop);
-                    else {
-                        DBGLOG("rad", "prop %s was not merged due to no value", name);
-                    }
+                    else { DBGLOG("rad", "prop %s was not merged due to no value", name); }
                 } else {
                     DBGLOG("rad", "prop %s does not match %s prefix", safeString(name), prefix);
                 }
