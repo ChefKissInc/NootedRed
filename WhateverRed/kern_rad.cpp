@@ -649,8 +649,8 @@ uint64_t RAD::wrapGFX10RTRingGetHead(void *that) {
 }
 
 uint64_t RAD::wrapHwRegRead(void *that, uint64_t addr) {
-    auto ret = FunctionCast(wrapHwRegRead, callbackRAD->orgHwRegRead)(that, addr);
     NETLOG("rad", "hwRegRead: this = %p addr = 0x%llX", that, addr);
+    auto ret = FunctionCast(wrapHwRegRead, callbackRAD->orgHwRegRead)(that, addr);
     NETLOG("rad", "hwRegRead returned 0x%llX", ret);
     return ret;
 }
@@ -659,15 +659,6 @@ uint64_t RAD::wrapHwRegWrite(void *that, uint64_t addr, uint64_t val) {
     NETLOG("rad", "hwRegWrite: this = %p addr = 0x%llX val = 0x%llX", that, addr, val);
     auto ret = FunctionCast(wrapHwRegWrite, callbackRAD->orgHwRegWrite)(that, addr, val);
     NETLOG("rad", "hwRegWrite returned 0x%llX", ret);
-    return ret;
-}
-
-bool RAD::wrapCailInitCSBCommandBuffer(void *cailData) {
-    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
-    NETLOG("rad", "_CailInitCSBCommandBuffer: cailData = %p", cailData);
-    auto ret = FunctionCast(wrapCailInitCSBCommandBuffer, callbackRAD->orgCailInitCSBCommandBuffer)(cailData);
-    NETLOG("rad", "_CailInitCSBCommandBuffer returned %d", ret);
-    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     return ret;
 }
 
@@ -814,7 +805,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 orgCosDebugPrintVaList},
             {"__ZN14AmdTtlServices21cosReleasePrintVaListEPvPKcS2_P13__va_list_tag", wrapCosReleasePrintVaList,
                 orgCosReleasePrintVaList},
-            {"_CailInitCSBCommandBuffer", wrapCailInitCSBCommandBuffer, orgCailInitCSBCommandBuffer},
             {"_psp_asd_load", wrapPspAsdLoad, orgPspAsdLoad},
             {"_psp_dtm_load", wrapPspDtmLoad, orgPspDtmLoad},
             {"_psp_hdcp_load", wrapPspHdcpLoad, orgPspHdcpLoad},

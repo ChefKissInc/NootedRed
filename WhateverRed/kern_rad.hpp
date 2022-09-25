@@ -214,9 +214,6 @@ class RAD {
 
     mach_vm_address_t orgHwRegWrite {};
     static uint64_t wrapHwRegWrite(void *that, uint64_t addr, uint64_t val);
-
-    mach_vm_address_t orgCailInitCSBCommandBuffer {};
-    static bool wrapCailInitCSBCommandBuffer(void *cailData);
 };
 
 #endif /* kern_rad_hpp */
