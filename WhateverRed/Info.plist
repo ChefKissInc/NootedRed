@@ -142,7 +142,10 @@
 			<key>IOVARendererID</key>
 			<integer>16908288</integer>
 			<key>cail_properties</key>
-			<dict/>
+			<dict>
+				<key>CAIL_DisablePowerGating</key>
+				<integer>1</integer>
+			</dict>
 		</dict>
 		<key>AtiGpuWrangler</key>
 		<dict>
@@ -266,7 +269,7 @@
 				<key>PP_EnableUploadFirmware</key>
 				<integer>0</integer>
 				<key>PP_Falcon_QuickTransition_Enable</key>
-				<integer>0</integer>
+				<integer>1</integer>
 				<key>PP_GfxOffControl</key>
 				<integer>0</integer>
 				<key>PP_PhmUseDummyBackEnd</key>
