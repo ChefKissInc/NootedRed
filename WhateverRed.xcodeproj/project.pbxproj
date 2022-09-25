@@ -42,9 +42,15 @@
 		1C748C2E1C21952C0024EED2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1C9CB7AE1C789FF500231E41 /* kern_rad.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = kern_rad.cpp; sourceTree = "<group>"; };
 		1C9CB7AF1C789FF500231E41 /* kern_rad.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = kern_rad.hpp; sourceTree = "<group>"; };
-		402D48C228A8903C0064644D /* atidmcub_0.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = atidmcub_0.dat; sourceTree = "<group>"; };
-		407E8D0228B3766B001F75A2 /* libkmodc++.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libkmodc++.a"; path = "usr/lib/libkmodc++.a"; sourceTree = SDKROOT; };
-		408F201C288AC552002EEC15 /* ativvaxy_rv.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = ativvaxy_rv.dat; sourceTree = "<group>"; };
+		402AB9A728C7840B00A55F4F /* raven_dtm.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_dtm.bin; sourceTree = "<group>"; };
+		402AB9A828C7840B00A55F4F /* renoir_dtm.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_dtm.bin; sourceTree = "<group>"; };
+		402AB9A928C7850B00A55F4F /* raven_asd.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_asd.bin; sourceTree = "<group>"; };
+		402AB9AA28C7850B00A55F4F /* renoir_asd.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_asd.bin; sourceTree = "<group>"; };
+		402AB9AC28C7863400A55F4F /* raven_vcn.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_vcn.bin; sourceTree = "<group>"; };
+		402AB9AD28C7863400A55F4F /* renoir_vcn.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_vcn.bin; sourceTree = "<group>"; };
+		402AB9AF28C78D5800A55F4F /* raven_hdcp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_hdcp.bin; sourceTree = "<group>"; };
+		402AB9B028C78D5800A55F4F /* renoir_hdcp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_hdcp.bin; sourceTree = "<group>"; };
+		402D48C228A8903C0064644D /* renoir_dmcub.bin */ = {isa = PBXFileReference; lastKnownFileType = file; path = renoir_dmcub.bin; sourceTree = "<group>"; };
 		408F201E288ACBB0002EEC15 /* kern_fw.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_fw.hpp; sourceTree = "<group>"; };
 		408F201F288ACBE6002EEC15 /* kern_fw.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_fw.cpp; sourceTree = "<group>"; };
 		6CBEB3C428911DCF0063B877 /* kern_netdbg.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_netdbg.cpp; sourceTree = "<group>"; };
@@ -105,20 +111,20 @@
 			isa = PBXGroup;
 			children = (
 				408F201A288AC068002EEC15 /* Firmware */,
-				1C748C2C1C21952C0024EED2 /* kern_start.cpp */,
+				1C748C2E1C21952C0024EED2 /* Info.plist */,
 				CEC0863524331E9B00F5B701 /* kern_agdc.hpp */,
 				CEB402A71F181D8300716912 /* kern_atom.hpp */,
 				CEB402A41F17F5C400716912 /* kern_con.hpp */,
-				1C9CB7AE1C789FF500231E41 /* kern_rad.cpp */,
-				1C9CB7AF1C789FF500231E41 /* kern_rad.hpp */,
-				CEA03B5C20EE825A00BA842F /* kern_wred.cpp */,
-				CEA03B5D20EE825A00BA842F /* kern_wred.hpp */,
-				1C748C2E1C21952C0024EED2 /* Info.plist */,
-				198893C128085E2000C02A16 /* kern_model.cpp */,
-				408F201E288ACBB0002EEC15 /* kern_fw.hpp */,
 				408F201F288ACBE6002EEC15 /* kern_fw.cpp */,
+				408F201E288ACBB0002EEC15 /* kern_fw.hpp */,
+				198893C128085E2000C02A16 /* kern_model.cpp */,
 				6CBEB3C428911DCF0063B877 /* kern_netdbg.cpp */,
 				6CBEB3C528911DCF0063B877 /* kern_netdbg.hpp */,
+				1C9CB7AE1C789FF500231E41 /* kern_rad.cpp */,
+				1C9CB7AF1C789FF500231E41 /* kern_rad.hpp */,
+				1C748C2C1C21952C0024EED2 /* kern_start.cpp */,
+				CEA03B5C20EE825A00BA842F /* kern_wred.cpp */,
+				CEA03B5D20EE825A00BA842F /* kern_wred.hpp */,
 			);
 			path = WhateverRed;
 			sourceTree = "<group>";
@@ -126,8 +132,15 @@
 		408F201A288AC068002EEC15 /* Firmware */ = {
 			isa = PBXGroup;
 			children = (
-				408F201C288AC552002EEC15 /* ativvaxy_rv.dat */,
-				402D48C228A8903C0064644D /* atidmcub_0.dat */,
+				402AB9A928C7850B00A55F4F /* raven_asd.bin */,
+				402AB9A728C7840B00A55F4F /* raven_dtm.bin */,
+				402AB9AF28C78D5800A55F4F /* raven_hdcp.bin */,
+				402AB9AC28C7863400A55F4F /* raven_vcn.bin */,
+				402AB9AA28C7850B00A55F4F /* renoir_asd.bin */,
+				402D48C228A8903C0064644D /* renoir_dmcub.bin */,
+				402AB9A828C7840B00A55F4F /* renoir_dtm.bin */,
+				402AB9B028C78D5800A55F4F /* renoir_hdcp.bin */,
+				402AB9AD28C7863400A55F4F /* renoir_vcn.bin */,
 			);
 			path = Firmware;
 			sourceTree = "<group>";
@@ -173,7 +186,6 @@
 		CE8DA0812517C41A008C44E8 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				407E8D0228B3766B001F75A2 /* libkmodc++.a */,
 				CE8DA0822517C41A008C44E8 /* libkmod.a */,
 			);
 			name = Frameworks;
@@ -453,7 +465,7 @@
 					"$(PROJECT_DIR)/MacKernelSDK/Library/x86_64",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MODULE_NAME = com.ChefKissInc.WhateverRed;
+				MODULE_NAME = com.VisualDevelopment.WhateverRed;
 				MODULE_START = "$(PRODUCT_NAME)_kern_start";
 				MODULE_STOP = "$(PRODUCT_NAME)_kern_stop";
 				MODULE_VERSION = 1.0.0;
@@ -506,7 +518,7 @@
 				);
 				LLVM_LTO = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MODULE_NAME = com.ChefKissInc.WhateverRed;
+				MODULE_NAME = com.VisualDevelopment.WhateverRed;
 				MODULE_START = "$(PRODUCT_NAME)_kern_start";
 				MODULE_STOP = "$(PRODUCT_NAME)_kern_stop";
 				MODULE_VERSION = 1.0.0;
@@ -618,7 +630,7 @@
 					"$(PROJECT_DIR)/MacKernelSDK/Library/x86_64",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MODULE_NAME = com.ChefKissInc.WhateverRed;
+				MODULE_NAME = com.VisualDevelopment.WhateverRed;
 				MODULE_START = "$(PRODUCT_NAME)_kern_start";
 				MODULE_STOP = "$(PRODUCT_NAME)_kern_stop";
 				MODULE_VERSION = 1.0.0;

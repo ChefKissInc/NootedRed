@@ -303,17 +303,25 @@ uint32_t RAD::wrapInternalCosReadFw(uint64_t param1, uint64_t *param2) {
 void RAD::wrapPopulateFirmwareDirectory(void *that) {
     NETLOG("rad", "AMDRadeonX5000_AMDRadeonHWLibsX5000::populateFirmwareDirectory this = %p", that);
     FunctionCast(wrapPopulateFirmwareDirectory, callbackRAD->orgPopulateFirmwareDirectory)(that);
-    auto *fwDesc = getFWDescByName("ativvaxy_rv.dat");
-    if (!fwDesc) { panic("Somehow ativvaxy_rv.dat is missing"); }
-    auto *fwDescBackdoor = getFWDescByName("atidmcub_0.dat");
-    if (!fwDescBackdoor) { panic("Somehow atidmcub_0.dat is missing"); }
+    auto *chipName = getChipName();
+    auto *filename = new char[128];
+    snprintf(filename, 128, "%s_vcn.bin", chipName);
+    auto *targetFilename = !strcmp(chipName, "renoir") ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
+    NETLOG("rad", "%s => %s", filename, targetFilename);
 
-    auto *fw = callbackRAD->orgCreateFirmware(fwDesc->getBytesNoCopy(), fwDesc->getLength(), 0x200, "ativvaxy_rv.dat");
+    auto *fwDesc = getFWDescByName(filename);
+    PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+    delete[] filename;
+    auto *fwDescBackdoor = getFWDescByName("renoir_dmcub.bin");
+    PANIC_COND(!fwDescBackdoor, "rad", "Somehow renoir_dmcub.bin is missing");
+    NETLOG("rad", "renoir_dmcub.bin => atidmcub_0.dat");
+
+    auto *fw = callbackRAD->orgCreateFirmware(fwDesc->getBytesNoCopy(), fwDesc->getLength(), 0x200, targetFilename);
     auto *fwBackdoor =
         callbackRAD->orgCreateFirmware(fwDesc->getBytesNoCopy(), fwDesc->getLength(), 0x200, "atidmcub_0.dat");
     auto *&fwDir = getMember<void *>(that, 0xB8);
     NETLOG("rad", "fwDir = %p", fwDir);
-    NETLOG("rad", "inserting ativvaxy_rv.dat!");
+    NETLOG("rad", "inserting %s!", targetFilename);
     if (!callbackRAD->orgPutFirmware(fwDir, 6, fw)) { panic("Failed to inject ativvaxy_rv.dat firmware"); }
     NETLOG("rad", "inserting atidmcub_0.dat!");
     if (!callbackRAD->orgPutFirmware(fwDir, 6, fwBackdoor)) { panic("Failed to inject atidmcub_0.dat firmware"); }
@@ -663,6 +671,74 @@ bool RAD::wrapCailInitCSBCommandBuffer(void *cailData) {
     return ret;
 }
 
+const char *RAD::getChipName() {
+    switch (callbackRAD->orgDeviceTypeTable[0]) {
+        case 0x15E7:
+            [[fallthrough]];
+        case 0x164C:
+            [[fallthrough]];
+        case 0x1636:
+            [[fallthrough]];
+        case 0x1638:
+            return "renoir";
+        default:
+            return "raven";
+    }
+}
+
+uint32_t RAD::wrapPspAsdLoad(void *pspData) {
+    /**
+     * Hack: Add custom param 4 and 5 (pointer to firmware and size)
+     * aka RCX and R8 registers
+     * Complementary to `_psp_asd_load` patch-set.
+     */
+    auto *filename = new char[128];
+    snprintf(filename, 128, "%s_asd.bin", getChipName());
+    NETLOG("rad", "injecting %s!", filename);
+    auto *org =
+        reinterpret_cast<uint32_t (*)(void *, uint64_t, uint64_t, const void *, size_t)>(callbackRAD->orgPspAsdLoad);
+    auto *fw = getFWDescByName(filename);
+    PANIC_COND(!fw, "rad", "Somehow %s is missing", filename);
+    delete[] filename;
+    auto ret = org(pspData, 0, 0, fw->getBytesNoCopy(), fw->getLength());
+    NETLOG("rad", "_psp_asd_load returned 0x%X", ret);
+    return ret;
+}
+
+uint32_t RAD::wrapPspDtmLoad(void *pspData) {
+    /**
+     * Same idea as `_psp_asd_load`.
+     */
+    auto *filename = new char[128];
+    snprintf(filename, 128, "%s_dtm.bin", getChipName());
+    NETLOG("rad", "injecting %s!", filename);
+    auto *org =
+        reinterpret_cast<uint32_t (*)(void *, uint64_t, uint64_t, const void *, size_t)>(callbackRAD->orgPspDtmLoad);
+    auto *fw = getFWDescByName(filename);
+    PANIC_COND(!fw, "rad", "Somehow %s is missing", filename);
+    delete[] filename;
+    auto ret = org(pspData, 0, 0, fw->getBytesNoCopy(), fw->getLength());
+    NETLOG("rad", "_psp_dtm_load returned 0x%X", ret);
+    return 0;
+}
+
+uint32_t RAD::wrapPspHdcpLoad(void *pspData) {
+    /**
+     * Same idea as `_psp_asd_load`.
+     */
+    auto *filename = new char[128];
+    snprintf(filename, 128, "%s_hdcp.bin", getChipName());
+    NETLOG("rad", "injecting %s!", filename);
+    auto *org =
+        reinterpret_cast<uint32_t (*)(void *, uint64_t, uint64_t, const void *, size_t)>(callbackRAD->orgPspHdcpLoad);
+    auto *fw = getFWDescByName(filename);
+    PANIC_COND(!fw, "rad", "Somehow %s is missing", filename);
+    delete[] filename;
+    auto ret = org(pspData, 0, 0, fw->getBytesNoCopy(), fw->getLength());
+    NETLOG("rad", "_psp_hdcp_load returned 0x%X", ret);
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -739,6 +815,9 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN14AmdTtlServices21cosReleasePrintVaListEPvPKcS2_P13__va_list_tag", wrapCosReleasePrintVaList,
                 orgCosReleasePrintVaList},
             {"_CailInitCSBCommandBuffer", wrapCailInitCSBCommandBuffer, orgCailInitCSBCommandBuffer},
+            {"_psp_asd_load", wrapPspAsdLoad, orgPspAsdLoad},
+            {"_psp_dtm_load", wrapPspDtmLoad, orgPspDtmLoad},
+            {"_psp_hdcp_load", wrapPspHdcpLoad, orgPspHdcpLoad},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
@@ -1111,7 +1190,9 @@ void RAD::mergeProperties(OSDictionary *props, const char *prefix, IOService *pr
                 if (name && propname->getLength() > prefixlen && !strncmp(name, prefix, prefixlen)) {
                     auto prop = dict->getObject(propname);
                     if (prop) mergeProperty(props, name + prefixlen, prop);
-                    else { DBGLOG("rad", "prop %s was not merged due to no value", name); }
+                    else {
+                        DBGLOG("rad", "prop %s was not merged due to no value", name);
+                    }
                 } else {
                     DBGLOG("rad", "prop %s does not match %s prefix", safeString(name), prefix);
                 }

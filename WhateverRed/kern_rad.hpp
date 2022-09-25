@@ -77,6 +77,9 @@ class RAD {
     mach_vm_address_t orgCosReleasePrintVaList {};
     CailAsicCapEntry *orgAsicCapsTable = nullptr;
     CailInitAsicCapEntry *orgAsicInitCapsTable = nullptr;
+        mach_vm_address_t orgPspAsdLoad {};
+    mach_vm_address_t orgPspDtmLoad {};
+    mach_vm_address_t orgPspHdcpLoad {};
 
     /**
      * X6000
@@ -155,6 +158,10 @@ class RAD {
         uint level);
     static void wrapCosDebugPrintVaList(void *ttl, char *header, char *fmt, va_list args);
     static void wrapCosReleasePrintVaList(void *ttl, char *header, char *fmt, va_list args);
+    static const char *getChipName();
+    static uint32_t wrapPspAsdLoad(void *pspData);
+    static uint32_t wrapPspDtmLoad(void *pspData);
+    static uint32_t wrapPspHdcpLoad(void *pspData);
 
     /**
      * X6000
