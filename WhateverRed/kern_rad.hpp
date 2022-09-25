@@ -44,7 +44,7 @@ class RAD {
     mach_vm_address_t orgSetProperty {}, orgGetProperty {}, orgGetConnectorsInfoV2 {};
     mach_vm_address_t orgGetConnectorsInfoV1 {}, orgTranslateAtomConnectorInfoV1 {};
     mach_vm_address_t orgTranslateAtomConnectorInfoV2 {}, orgATIControllerStart {};
-    mach_vm_address_t orgNotifyLinkChange {}, orgPopulateAccelConfig[1] {}, orgGetHWInfo[1] {};
+    mach_vm_address_t orgNotifyLinkChange {}, orgGetHWInfo[1] {};
     uint32_t *orgDeviceTypeTable = nullptr;
     mach_vm_address_t orgAmdTtlServicesConstructor {};
     mach_vm_address_t orgGetState {}, orgInitializeTtl {};
