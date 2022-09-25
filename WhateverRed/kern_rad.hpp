@@ -83,6 +83,7 @@ class RAD {
      */
     t_HWEngineNew orgGFX10VCN2EngineNew = nullptr;
     t_HWEngineConstructor orgGFX10VCN2EngineConstructor = nullptr;
+    mach_vm_address_t orgGFX10SetupAndInitializeHWCapabilities {};
 
     /**
      * X5000
@@ -126,7 +127,7 @@ class RAD {
      * AMD10000Controller
      */
     static uint16_t wrapGetFamilyId();
-    static IOReturn wrapPopulateDeviceInfo(uint64_t that);
+    static IOReturn wrapPopulateDeviceInfo(void *that);
 
     /**
      * X5000HWLibs
@@ -139,7 +140,7 @@ class RAD {
     static uint64_t wrapPspSwInit(uint32_t *param1, uint32_t *param2);
     static uint32_t wrapGcGetHwVersion(uint32_t *param1);
     static uint32_t wrapInternalCosReadFw(uint64_t param1, uint64_t *param2);
-    static void wrapPopulateFirmwareDirectory(uint64_t that);
+    static void wrapPopulateFirmwareDirectory(void *that);
     static uint64_t wrapMCILUpdateGfxCGPG(void *param1);
     static IOReturn wrapQueryEngineRunningState(void *that, void *param1, void *param2);
     static uint64_t wrapCAILQueryEngineRunningState(void *param1, uint32_t *param2, uint64_t param3);
@@ -163,9 +164,9 @@ class RAD {
     /**
      * X5000
      */
-    static bool wrapAllocateHWEngines(uint64_t that);
+    static bool wrapAllocateHWEngines(void *that);
     static void *wrapGetHWEngine(void *that, uint32_t engineType);
-    static void wrapSetupAndInitializeHWCapabilities(uint64_t that);
+    static void wrapSetupAndInitializeHWCapabilities(void *that);
 
     void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);
 

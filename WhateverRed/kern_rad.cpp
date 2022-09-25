@@ -300,8 +300,8 @@ uint32_t RAD::wrapInternalCosReadFw(uint64_t param1, uint64_t *param2) {
     return ret;
 }
 
-void RAD::wrapPopulateFirmwareDirectory(uint64_t that) {
-    NETLOG("rad", "AMDRadeonX5000_AMDRadeonHWLibsX5000::populateFirmwareDirectory this = 0x%llX", that);
+void RAD::wrapPopulateFirmwareDirectory(void *that) {
+    NETLOG("rad", "AMDRadeonX5000_AMDRadeonHWLibsX5000::populateFirmwareDirectory this = %p", that);
     FunctionCast(wrapPopulateFirmwareDirectory, callbackRAD->orgPopulateFirmwareDirectory)(that);
     auto *fwDesc = getFWDescByName("ativvaxy_rv.dat");
     if (!fwDesc) { panic("Somehow ativvaxy_rv.dat is missing"); }
@@ -311,7 +311,7 @@ void RAD::wrapPopulateFirmwareDirectory(uint64_t that) {
     auto *fw = callbackRAD->orgCreateFirmware(fwDesc->getBytesNoCopy(), fwDesc->getLength(), 0x200, "ativvaxy_rv.dat");
     auto *fwBackdoor =
         callbackRAD->orgCreateFirmware(fwDesc->getBytesNoCopy(), fwDesc->getLength(), 0x200, "atidmcub_0.dat");
-    auto *fwDir = *reinterpret_cast<void **>(that + 0xB8);
+    auto *&fwDir = getMember<void *>(that, 0xB8);
     NETLOG("rad", "fwDir = %p", fwDir);
     NETLOG("rad", "inserting ativvaxy_rv.dat!");
     if (!callbackRAD->orgPutFirmware(fwDir, 6, fw)) { panic("Failed to inject ativvaxy_rv.dat firmware"); }
@@ -439,17 +439,16 @@ static uint16_t emulatedRevisionOff(uint16_t revision, uint16_t deviceId) {
     }
 }
 
-IOReturn RAD::wrapPopulateDeviceInfo(uint64_t that) {
-    NETLOG("rad", "AMDRadeonX5000_AmdAsicInfoNavi::populateDeviceInfo: this = 0x%llX", that);
+IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
+    NETLOG("rad", "AMDRadeonX5000_AmdAsicInfoNavi::populateDeviceInfo: this = %p", that);
     auto ret = FunctionCast(wrapPopulateDeviceInfo, callbackRAD->orgPopulateDeviceInfo)(that);
-    auto *pciDev = *reinterpret_cast<IOPCIDevice **>(that + 0x18);
-    auto *familyId = reinterpret_cast<uint32_t *>(that + 0x44);
-    auto deviceId = pciDev->configRead16(kIOPCIConfigDeviceID);
-    auto *revision = reinterpret_cast<uint32_t *>(that + 0x48);
-    auto *emulatedRevision = reinterpret_cast<uint32_t *>(that + 0x4c);
-    *emulatedRevision = *revision + emulatedRevisionOff(*revision, deviceId);
-    NETLOG("rad", "deviceId = 0x%X revision = 0x%X emulatedRevision = 0x%X", deviceId, *revision, *emulatedRevision);
-    *familyId = 0x8e;
+    auto &familyId = getMember<uint32_t>(that, 0x44);
+    auto deviceId = getMember<IOPCIDevice *>(that, 0x18)->configRead16(kIOPCIConfigDeviceID);
+    auto &revision = getMember<uint32_t>(that, 0x48);
+    auto &emulatedRevision = getMember<uint32_t>(that, 0x4c);
+    emulatedRevision = revision + emulatedRevisionOff(revision, deviceId);
+    NETLOG("rad", "deviceId = 0x%X revision = 0x%X emulatedRevision = 0x%X", deviceId, revision, emulatedRevision);
+    familyId = 0x8e;
     NETLOG("rad", "locating Init Caps entry");
     if (MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS) {
         panic("Failed to enable kernel writing");
@@ -457,7 +456,7 @@ IOReturn RAD::wrapPopulateDeviceInfo(uint64_t that) {
     CailInitAsicCapEntry *initCaps = nullptr;
     for (size_t i = 0; i < 789; i++) {
         auto *temp = callbackRAD->orgAsicInitCapsTable + i;
-        if (temp->familyId == 0x8e && temp->deviceId == deviceId && temp->emulatedRev == *emulatedRevision) {
+        if (temp->familyId == 0x8e && temp->deviceId == deviceId && temp->emulatedRev == emulatedRevision) {
             initCaps = temp;
             break;
         }
@@ -467,8 +466,8 @@ IOReturn RAD::wrapPopulateDeviceInfo(uint64_t that) {
         for (size_t i = 0; i < 789; i++) {
             auto *temp = callbackRAD->orgAsicInitCapsTable + i;
             if (temp->familyId == 0x8e && temp->deviceId == deviceId &&
-                (temp->emulatedRev >= emulatedRevisionOff(*revision, deviceId) ||
-                    temp->emulatedRev <= *emulatedRevision)) {
+                (temp->emulatedRev >= emulatedRevisionOff(revision, deviceId) ||
+                    temp->emulatedRev <= emulatedRevision)) {
                 initCaps = temp;
                 break;
             }
@@ -477,9 +476,9 @@ IOReturn RAD::wrapPopulateDeviceInfo(uint64_t that) {
     }
     callbackRAD->orgAsicCapsTable->familyId = 0x8e;
     callbackRAD->orgAsicCapsTable->deviceId = deviceId;
-    callbackRAD->orgAsicCapsTable->revision = *revision;
+    callbackRAD->orgAsicCapsTable->revision = revision;
     callbackRAD->orgAsicCapsTable->pciRev = 0xFFFFFFFF;
-    callbackRAD->orgAsicCapsTable->emulatedRev = *emulatedRevision;
+    callbackRAD->orgAsicCapsTable->emulatedRev = emulatedRevision;
     memmove(callbackRAD->orgAsicCapsTable->caps, initCaps->caps, 0x40);
     MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
     NETLOG("rad", "AMDRadeonX5000_AmdAsicInfoNavi::populateDeviceInfo returned 0x%X", ret);
@@ -553,26 +552,26 @@ bool RAD::wrapGFX10AcceleratorStart() {
     return false;
 }
 
-bool RAD::wrapAllocateHWEngines(uint64_t that) {
-    NETLOG("rad", "allocateHWEngines: this = 0x%llX", that);
-    auto *vtable = *reinterpret_cast<mach_vm_address_t **>(that);
+bool RAD::wrapAllocateHWEngines(void *that) {
+    NETLOG("rad", "allocateHWEngines: this = %p", that);
+    auto *&vtable = getMember<mach_vm_address_t *>(that, 0);
     vtable[0x62] = reinterpret_cast<mach_vm_address_t>(wrapGetHWEngine);
 
     auto *pm4Engine = callbackRAD->orgGFX9PM4EngineNew(0x1e8);
     callbackRAD->orgGFX9PM4EngineConstructor(pm4Engine);
-    *reinterpret_cast<void **>(that + 0x3b8) = pm4Engine;
+    getMember<void *>(that, 0x3b8) = pm4Engine;
 
     auto *sdmaEngine = callbackRAD->orgGFX9SDMAEngineNew(0x128);
     callbackRAD->orgGFX9SDMAEngineConstructor(sdmaEngine);
-    *reinterpret_cast<void **>(that + 0x3c0) = sdmaEngine;
+    getMember<void *>(that, 0x3c0) = sdmaEngine;
 
     auto *sdma1Engine = callbackRAD->orgGFX9SDMAEngineNew(0x128);
     callbackRAD->orgGFX9SDMAEngineConstructor(sdma1Engine);
-    *reinterpret_cast<void **>(that + 0x3c8) = sdma1Engine;
+    getMember<void *>(that, 0x3c8) = sdma1Engine;
 
     auto *vcn2Engine = callbackRAD->orgGFX10VCN2EngineNew(0x198);
     callbackRAD->orgGFX10VCN2EngineConstructor(vcn2Engine);
-    *reinterpret_cast<void **>(that + 0x3f8) = vcn2Engine;
+    getMember<void *>(that, 0x3f8) = vcn2Engine;
     NETLOG("rad", "allocateHWEngines: returning true");
     return true;
 }
@@ -584,11 +583,10 @@ void *RAD::wrapGetHWEngine(void *that, uint32_t engineType) {
     return ret;
 }
 
-void RAD::wrapSetupAndInitializeHWCapabilities(uint64_t that) {
-    NETLOG("rad", "wrapSetupAndInitializeCapabilities: that = 0x%llX", that);
+void RAD::wrapSetupAndInitializeHWCapabilities(void *that) {
+    NETLOG("rad", "wrapSetupAndInitializeCapabilities: this = %p", that);
     FunctionCast(wrapSetupAndInitializeHWCapabilities, callbackRAD->orgSetupAndInitializeHWCapabilities)(that);
-    *reinterpret_cast<uint32_t *>(that + 0xAC) = 0x0;
-    *reinterpret_cast<uint32_t *>(that + 0xAF) = 0x100001;
+    FunctionCast(wrapSetupAndInitializeHWCapabilities, callbackRAD->orgGFX10SetupAndInitializeHWCapabilities)(that);
     NETLOG("rad", "wrapSetupAndInitializeCapabilities: done");
 }
 
@@ -604,7 +602,6 @@ bool RAD::wrapPM4EnginePowerUp(void *that) {
     NETDBG::printf("\n");
     IOFree(buf, 0x100000);
     NETLOG("rad", "PM4EnginePowerUp done");
-    IOSleep(3600000);
     return ret;
 }
 
@@ -658,7 +655,6 @@ uint64_t RAD::wrapHwRegWrite(void *that, uint64_t addr, uint64_t val) {
 }
 
 bool RAD::wrapCailInitCSBCommandBuffer(void *cailData) {
-    panic("__AMDSucksAtCoding");
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     NETLOG("rad", "_CailInitCSBCommandBuffer: cailData = %p", cailData);
     auto ret = FunctionCast(wrapCailInitCSBCommandBuffer, callbackRAD->orgCailInitCSBCommandBuffer)(cailData);
@@ -849,6 +845,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZN30AMDRadeonX6000_AMDVCN2HWEnginenwEm", orgGFX10VCN2EngineNew},
             {"__ZN30AMDRadeonX6000_AMDVCN2HWEngineC1Ev", orgGFX10VCN2EngineConstructor},
+            {"__ZN32AMDRadeonX6000_AMDNavi10Hardware32setupAndInitializeHWCapabilitiesEv",
+                orgGFX10SetupAndInitializeHWCapabilities},
         };
         if (!patcher.solveMultiple(index, solveRequests, address, size)) {
             panic("RAD: Failed to resolve AMDRadeonX6000 symbols");
@@ -1149,7 +1147,7 @@ void RAD::applyPropertyFixes(IOService *service, uint32_t connectorNum) {
 }
 
 uint32_t RAD::wrapGetConnectorsInfoV1(void *that, RADConnectors::Connector *connectors, uint8_t *sz) {
-    NETLOG("rad", "getConnectorsInfoV1: that = %p connectors = %p sz = %p", that, connectors, sz);
+    NETLOG("rad", "getConnectorsInfoV1: this = %p connectors = %p sz = %p", that, connectors, sz);
     uint32_t code = FunctionCast(wrapGetConnectorsInfoV1, callbackRAD->orgGetConnectorsInfoV1)(that, connectors, sz);
     NETLOG("rad", "getConnectorsInfoV1 returned 0x%X", code);
     auto props = callbackRAD->currentPropProvider.get();
@@ -1446,7 +1444,7 @@ OSObject *RAD::wrapGetProperty(IORegistryEntry *that, const char *aKey) {
 }
 
 uint32_t RAD::wrapGetConnectorsInfoV2(void *that, RADConnectors::Connector *connectors, uint8_t *sz) {
-    NETLOG("rad", "getConnectorsInfoV2: that = %p connectors = %p sz = %p", that, connectors, sz);
+    NETLOG("rad", "getConnectorsInfoV2: this = %p connectors = %p sz = %p", that, connectors, sz);
     uint32_t code = FunctionCast(wrapGetConnectorsInfoV2, callbackRAD->orgGetConnectorsInfoV2)(that, connectors, sz);
     NETLOG("rad", "getConnectorsInfoV2 returned 0x%X", code);
     auto props = callbackRAD->currentPropProvider.get();
