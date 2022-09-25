@@ -220,6 +220,9 @@ class RAD {
 
     mach_vm_address_t orgHwRegWrite {};
     static uint64_t wrapHwRegWrite(void *that, uint64_t addr, uint64_t val);
+
+    mach_vm_address_t orgAccelDisplayPipeWriteDiagnosisReport {};
+    static void wrapAccelDisplayPipeWriteDiagnosisReport(void *that);
 };
 
 #endif /* kern_rad_hpp */

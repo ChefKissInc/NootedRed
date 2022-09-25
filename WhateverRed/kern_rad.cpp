@@ -756,6 +756,15 @@ uint32_t RAD::wrapPspHdcpLoad(void *pspData) {
     return ret;
 }
 
+void RAD::wrapAccelDisplayPipeWriteDiagnosisReport(void *that) {
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "AccelDisplayPipeWriteDiagnosisReport: this = %p", that);
+    // FunctionCast(wrapAccelDisplayPipeWriteDiagnosisReport,
+    // callbackRAD->orgAccelDisplayPipeWriteDiagnosisReport)(that);
+    NETLOG("rad", "AccelDisplayPipeWriteDiagnosisReport finished");
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -968,6 +977,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN24AMDRadeonX5000_AMDRTRing7getHeadEv", wrapGFX9RTRingGetHead, orgGFX9RTRingGetHead},
             {"__ZN29AMDRadeonX5000_AMDHWRegisters4readEj", wrapHwRegRead, orgHwRegRead},
             {"__ZN29AMDRadeonX5000_AMDHWRegisters5writeEjj", wrapHwRegWrite, orgHwRegWrite},
+            {"__ZN34AMDRadeonX5000_AMDAccelDisplayPipe20writeDiagnosisReportERPcRj",
+                wrapAccelDisplayPipeWriteDiagnosisReport, orgAccelDisplayPipeWriteDiagnosisReport},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
@@ -982,7 +993,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             /**
              * `AMDRadeonX5000_AMDGFX9VMM::postInit`
              */
-            {&kextRadeonX5000, find_gfx9vmm_postInit, repl_gfx9vmm_postInit, arrsize(find_gfx9vmm_postInit), 1},
+            {&kextRadeonX5000, find_gfx9vmm_postInit, repl_gfx9vmm_postInit, arrsize(find_gfx9vmm_postInit), 2},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
