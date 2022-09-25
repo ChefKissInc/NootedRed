@@ -53,9 +53,11 @@ class RAD {
     mach_vm_address_t orgAMDHWChannelWaitForIdle {};
 
     /**
-     * AMD10000Controller
+     * X6000Framebuffer
      */
     mach_vm_address_t orgPopulateDeviceInfo {};
+    mach_vm_address_t orgGetVideoMemoryType {}, orgGetVideoMemoryBitWidth {};
+    CailAsicCapEntry *orgAsicCapsTable = nullptr;
 
     /**
      * X5000HWLibs
@@ -75,7 +77,7 @@ class RAD {
     mach_vm_address_t orgCosDebugPrint {}, orgMCILDebugPrint {};
     mach_vm_address_t orgCosDebugPrintVaList {};
     mach_vm_address_t orgCosReleasePrintVaList {};
-    CailAsicCapEntry *orgAsicCapsTable = nullptr;
+    CailAsicCapEntry *orgAsicCapsTableHWLibs = nullptr;
     CailInitAsicCapEntry *orgAsicInitCapsTable = nullptr;
     mach_vm_address_t orgPspAsdLoad {};
     mach_vm_address_t orgPspDtmLoad {};
@@ -127,10 +129,14 @@ class RAD {
     static bool wrapAMDHWChannelWaitForIdle(void *that, uint64_t param1);
 
     /**
-     * AMD10000Controller
+     * X6000Framebuffer
      */
     static uint16_t wrapGetFamilyId();
     static IOReturn wrapPopulateDeviceInfo(void *that);
+    static uint16_t wrapGetEnumeratedRevision(void *that);
+    static uint32_t wrapGetVideoMemoryType(void *that);
+    static uint32_t wrapGetVideoMemoryBitWidth(void *that);
+    static IOReturn wrapPopulateVramInfo(void *that, void *param1);
 
     /**
      * X5000HWLibs

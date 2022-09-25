@@ -26,8 +26,9 @@ static const char *pathRadeonX5000HWLibs = "/System/Library/Extensions/AMDRadeon
                                            "AMDRadeonX5000HWLibs.kext/Contents/MacOS/AMDRadeonX5000HWLibs";
 static const char *pathRadeonX5000 = "/System/Library/Extensions/AMDRadeonX5000.kext/Contents/MacOS/"
                                      "AMDRadeonX5000";
-static const char *pathAMD10000Controller = "/System/Library/Extensions/AMD10000Controller.kext/Contents/MacOS/"
-                                            "AMD10000Controller";
+static const char *pathRadeonX6000Framebuffer =
+    "/System/Library/Extensions/AMDRadeonX6000Framebuffer.kext/Contents/MacOS/"
+    "AMDRadeonX6000Framebuffer";
 
 static KernelPatcher::KextInfo kextRadeonFramebuffer {
     "com.apple.kext.AMDFramebuffer",
@@ -53,9 +54,9 @@ static KernelPatcher::KextInfo kextRadeonX5000HWLibs {
     {},
     KernelPatcher::KextInfo::Unloaded,
 };
-static KernelPatcher::KextInfo kextAMD10000Controller {
-    "com.apple.kext.AMD10000Controller",
-    &pathAMD10000Controller,
+static KernelPatcher::KextInfo kextRadeonX6000Framebuffer {
+    "com.apple.kext.AMDRadeonX6000Framebuffer",
+    &pathRadeonX6000Framebuffer,
     1,
     {},
     {},
@@ -106,7 +107,7 @@ void RAD::init() {
 
     dviSingleLink = checkKernelArgument("-raddvi");
 
-    lilu.onKextLoadForce(&kextAMD10000Controller);
+    lilu.onKextLoadForce(&kextRadeonX6000Framebuffer);
     lilu.onKextLoadForce(&kextRadeonSupport);
     lilu.onKextLoadForce(&kextRadeonX5000HWLibs);
     lilu.onKextLoadForce(&kextRadeonX5000);
@@ -423,11 +424,14 @@ uint16_t RAD::wrapGetFamilyId() {
     return 0x8e;
 }
 
-static uint16_t emulatedRevisionOff(uint16_t revision, uint16_t deviceId) {
+uint16_t RAD::wrapGetEnumeratedRevision(void *that) {
     /**
+     * `AMDRadeonX6000_AmdAsicInfoNavi10::getEnumeratedRevisionNumber`
      * Emulated Revision = Revision + Enumerated Revision.
      */
-    switch (deviceId) {
+    auto *&pciDev = getMember<IOPCIDevice *>(that, 0x18);
+    auto &revision = getMember<uint32_t>(that, 0x68);
+    switch (pciDev->configRead16(kIOPCIConfigDeviceID)) {
         case 0x15d8:
             return 0x41;
         case 0x15dd:
@@ -448,19 +452,19 @@ static uint16_t emulatedRevisionOff(uint16_t revision, uint16_t deviceId) {
 }
 
 IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
-    NETLOG("rad", "AMDRadeonX5000_AmdAsicInfoNavi::populateDeviceInfo: this = %p", that);
+    NETLOG("rad", "AMDRadeonX6000_AmdAsicInfoNavi::populateDeviceInfo: this = %p", that);
     auto ret = FunctionCast(wrapPopulateDeviceInfo, callbackRAD->orgPopulateDeviceInfo)(that);
-    auto &familyId = getMember<uint32_t>(that, 0x44);
+    auto &familyId = getMember<uint32_t>(that, 0x60);
     auto deviceId = getMember<IOPCIDevice *>(that, 0x18)->configRead16(kIOPCIConfigDeviceID);
-    auto &revision = getMember<uint32_t>(that, 0x48);
-    auto &emulatedRevision = getMember<uint32_t>(that, 0x4c);
-    emulatedRevision = revision + emulatedRevisionOff(revision, deviceId);
-    NETLOG("rad", "deviceId = 0x%X revision = 0x%X emulatedRevision = 0x%X", deviceId, revision, emulatedRevision);
+    auto &revision = getMember<uint32_t>(that, 0x68);
+    auto &emulatedRevision = getMember<uint32_t>(that, 0x6c);
+    NETLOG("rad",
+        "deviceId = 0x%X revision = 0x%X "
+        "emulatedRevision = 0x%X",
+        deviceId, revision, emulatedRevision);
     familyId = 0x8e;
     NETLOG("rad", "locating Init Caps entry");
-    if (MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS) {
-        panic("Failed to enable kernel writing");
-    }
+    MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock);
     CailInitAsicCapEntry *initCaps = nullptr;
     for (size_t i = 0; i < 789; i++) {
         auto *temp = callbackRAD->orgAsicInitCapsTable + i;
@@ -474,22 +478,22 @@ IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
         for (size_t i = 0; i < 789; i++) {
             auto *temp = callbackRAD->orgAsicInitCapsTable + i;
             if (temp->familyId == 0x8e && temp->deviceId == deviceId &&
-                (temp->emulatedRev >= emulatedRevisionOff(revision, deviceId) ||
-                    temp->emulatedRev <= emulatedRevision)) {
+                (temp->emulatedRev >= wrapGetEnumeratedRevision(that) || temp->emulatedRev <= emulatedRevision)) {
                 initCaps = temp;
                 break;
             }
         }
         if (!initCaps) { panic("rad: Failed to find Init Caps entry for device ID 0x%X", deviceId); }
     }
-    callbackRAD->orgAsicCapsTable->familyId = 0x8e;
-    callbackRAD->orgAsicCapsTable->deviceId = deviceId;
-    callbackRAD->orgAsicCapsTable->revision = revision;
-    callbackRAD->orgAsicCapsTable->pciRev = 0xFFFFFFFF;
-    callbackRAD->orgAsicCapsTable->emulatedRev = emulatedRevision;
+    callbackRAD->orgAsicCapsTable->familyId = callbackRAD->orgAsicCapsTableHWLibs->familyId = 0x8e;
+    callbackRAD->orgAsicCapsTable->deviceId = callbackRAD->orgAsicCapsTableHWLibs->deviceId = deviceId;
+    callbackRAD->orgAsicCapsTable->revision = callbackRAD->orgAsicCapsTableHWLibs->revision = revision;
+    callbackRAD->orgAsicCapsTable->pciRev = callbackRAD->orgAsicCapsTableHWLibs->pciRev = 0xFFFFFFFF;
+    callbackRAD->orgAsicCapsTable->emulatedRev = callbackRAD->orgAsicCapsTableHWLibs->emulatedRev = emulatedRevision;
     memmove(callbackRAD->orgAsicCapsTable->caps, initCaps->caps, 0x40);
+    memmove(callbackRAD->orgAsicCapsTableHWLibs->caps, initCaps->caps, 0x40);
     MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
-    NETLOG("rad", "AMDRadeonX5000_AmdAsicInfoNavi::populateDeviceInfo returned 0x%X", ret);
+    NETLOG("rad", "AMDRadeonX6000_AmdAsicInfoNavi::populateDeviceInfo returned 0x%X", ret);
     return ret;
 }
 
@@ -548,6 +552,28 @@ void RAD::wrapCosReleasePrintVaList(void *ttl, char *header, char *fmt, va_list 
     NETDBG::vprintf(fmt, netdbg_args);
     va_end(netdbg_args);
     FunctionCast(wrapCosReleasePrintVaList, callbackRAD->orgCosReleasePrintVaList)(ttl, header, fmt, args);
+}
+
+uint32_t RAD::wrapGetVideoMemoryType(void *that) {
+    NETLOG("rad", "getVideoMemoryType: this = %p", that);
+    auto ret = FunctionCast(wrapGetVideoMemoryType, callbackRAD->orgGetVideoMemoryType)(that);
+    NETLOG("rad", "getVideoMemoryType returned 0x%X", ret);
+    return ret != 0 ? ret : 4;
+}
+
+uint32_t RAD::wrapGetVideoMemoryBitWidth(void *that) {
+    NETLOG("rad", "getVideoMemoryBitWidth: this = %p", that);
+    auto ret = FunctionCast(wrapGetVideoMemoryBitWidth, callbackRAD->orgGetVideoMemoryBitWidth)(that);
+    NETLOG("rad",
+        "getVideoMemoryBitWidth "
+        "returned 0x%X",
+        ret);
+    return ret != 0 ? ret : 64;
+}
+
+IOReturn RAD::wrapPopulateVramInfo(void *that, void *param1) {
+    NETLOG("rad", "populateVramInfo: this = %p param1 = %p", that, param1);
+    return kIOReturnSuccess;
 }
 
 bool RAD::wrapGFX10AcceleratorStart() {
@@ -846,31 +872,69 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
         }
 
         return true;
-    } else if (kextAMD10000Controller.loadIndex == index) {
-        DBGLOG("rad", "Hooking AMD10000Controller");
-
-        KernelPatcher::RouteRequest requests[] = {
-            {"__ZNK22Vega10SharedController11getFamilyIdEv", wrapGetFamilyId},
-            {"__ZN17ASIC_INFO__VEGA1218populateDeviceInfoEv", wrapPopulateDeviceInfo, orgPopulateDeviceInfo},
+    } else if (kextRadeonX6000Framebuffer.loadIndex == index) {
+        KernelPatcher::SolveRequest solveRequests[] = {
+            {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable},
         };
-        if (!patcher.routeMultipleLong(index, requests, address, size)) {
-            panic("RAD: Failed to route AMD10000Controller symbols");
+        if (!patcher.solveMultiple(index, solveRequests, address, size, true)) {
+            panic("RAD: Failed to resolve AMDRadeonX6000Framebuffer symbols");
         }
 
-        /**
-         * Patch for DEVICE_COMPONENT_FACTORY::createAsicInfo
-         * Eliminates if statement to allow creation of ASIC Info.
-         * Uses Vega 12 branch.
-         */
-        uint8_t find[] = {0x81, 0xf9, 0xa0, 0x66, 0x00, 0x00, 0x0f, 0x8c, 0x32, 0x00, 0x00, 0x00, 0x0f, 0xb7, 0x45,
-            0xe6, 0x3d, 0xbf, 0x66, 0x00, 0x00, 0x0f, 0x8f, 0x23, 0x00, 0x00, 0x00, 0xbf, 0x90, 0x00, 0x00, 0x00, 0xe8,
-            0x2e, 0x3d, 0xff, 0xff};
-        uint8_t repl[] = {0x81, 0xf9, 0xa0, 0x66, 0x00, 0x00, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x0f, 0xb7, 0x45,
-            0xe6, 0x3d, 0xbf, 0x66, 0x00, 0x00, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0xbf, 0x90, 0x00, 0x00, 0x00, 0xe8,
-            0x2e, 0x3d, 0xff, 0xff};
-        KernelPatcher::LookupPatch patch {&kextAMD10000Controller, find, repl, arrsize(find), 1};
-        patcher.applyLookupPatch(&patch);
-        patcher.clearError();
+        KernelPatcher::RouteRequest requests[] = {
+            {"__ZNK34AMDRadeonX6000_AmdBiosParserHelper18getVideoMemoryTypeEv", wrapGetVideoMemoryType,
+                orgGetVideoMemoryType},
+            {"__ZNK34AMDRadeonX6000_AmdBiosParserHelper22getVideoMemoryBitWidthEv", wrapGetVideoMemoryBitWidth,
+                orgGetVideoMemoryBitWidth},
+            {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", wrapPopulateVramInfo},
+            {"__ZNK26AMDRadeonX6000_AmdAsicInfo11getFamilyIdEv", wrapGetFamilyId},
+            {"__ZN30AMDRadeonX6000_AmdAsicInfoNavi18populateDeviceInfoEv", wrapPopulateDeviceInfo,
+                orgPopulateDeviceInfo},
+            {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
+        };
+
+        if (!patcher.routeMultiple(index, requests, address, size, true)) {
+            panic("RAD: Failed to route AMDRadeonX6000Framebuffer symbols");
+        }
+
+        uint8_t find_null_check1[] = {0x48, 0x89, 0x83, 0x90, 0x00, 0x00, 0x00, 0x48, 0x85, 0xc0, 0x0f, 0x84, 0x89,
+            0x00, 0x00, 0x00, 0x48, 0x8b, 0x7b, 0x18};
+        uint8_t repl_null_check1[] = {0x48, 0x89, 0x83, 0x90, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,
+            0x90, 0x90, 0x90, 0x48, 0x8b, 0x7b, 0x18};
+        static_assert(arrsize(find_null_check1) == arrsize(repl_null_check1), "Find/replace patch size mismatch");
+
+        uint8_t find_null_check2[] = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00, 0x48, 0x85, 0xc0, 0x0f, 0x84, 0xa1,
+            0x00, 0x00, 0x00, 0x48, 0x8b, 0x7b, 0x18};
+        uint8_t repl_null_check2[] = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,
+            0x90, 0x90, 0x90, 0x48, 0x8b, 0x7b, 0x18};
+        static_assert(arrsize(find_null_check2) == arrsize(repl_null_check2), "Find/replace patch size mismatch");
+
+        uint8_t find_null_check3[] = {0x48, 0x83, 0xbb, 0x90, 0x00, 0x00, 0x00, 0x00, 0x0f, 0x84, 0x90, 0x00, 0x00,
+            0x00, 0x49, 0x89, 0xf7, 0xba, 0x60, 0x00, 0x00, 0x00};
+        uint8_t repl_null_check3[] = {0x48, 0x83, 0xbb, 0x90, 0x00, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90, 0x90, 0x90,
+            0x90, 0x49, 0x89, 0xf7, 0xba, 0x60, 0x00, 0x00, 0x00};
+        static_assert(arrsize(find_null_check3) == arrsize(repl_null_check3), "Find/replace patch size mismatch");
+
+        KernelPatcher::LookupPatch patches[] = {
+            /**
+             * Neutralise VRAM Info creation null check
+             * to proceed with Controller Core Services initialisation.
+             */
+            {&kextRadeonX6000Framebuffer, find_null_check1, repl_null_check1, arrsize(find_null_check1), 2},
+            /**
+             * Neutralise PSP Firmware Info creation null check
+             * to proceed with Controller Core Services initialisation.
+             */
+            {&kextRadeonX6000Framebuffer, find_null_check2, repl_null_check2, arrsize(find_null_check2), 2},
+            /**
+             * Neutralise VRAM Info null check inside
+             * `AmdAtomFwServices::getFirmwareInfo`.
+             */
+            {&kextRadeonX6000Framebuffer, find_null_check3, repl_null_check3, arrsize(find_null_check3), 2},
+        };
+        for (auto &patch : patches) {
+            patcher.applyLookupPatch(&patch);
+            patcher.clearError();
+        }
 
         return true;
     } else if (kextRadeonX5000.loadIndex == index) {
