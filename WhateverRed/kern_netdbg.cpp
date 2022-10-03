@@ -43,7 +43,7 @@ size_t NETDBG::nprint(char *data, size_t len) {
         port = htons(p);
     }
 
-    if (!ip_addr || !port) { panic("NETDBG: Invalid IP and/or Port specified"); }
+    if (!ip_addr || !port) { kprintf("netdbg: Invalid IP and/or Port specified"); }
 
     socket_t socket = nullptr;
     int retry = 5;
