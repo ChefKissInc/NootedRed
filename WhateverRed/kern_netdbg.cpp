@@ -33,6 +33,7 @@ size_t NETDBG::nprint(char *data, size_t len) {
     kprintf("netdbg: message: %s", data);
 
     if (!enabled) { return 0; }
+
     if (!ip_addr || !port) {
         uint32_t b[4] = {0};
         uint32_t p = 0;
@@ -40,13 +41,9 @@ size_t NETDBG::nprint(char *data, size_t len) {
         ip_addr = inet_addr(b[0], b[1], b[2], b[3]);
         sscanf(PE_boot_args(), "netdbg_port=%d", &p);
         port = htons(p);
-
-        if (!ip_addr || !port) {
-            kprintf("netdbg: invalid ip and/or port specified, disabling");
-            enabled = false;
-            return 0;
-        }
     }
+
+    if (!ip_addr || !port) { panic("NETDBG: Invalid IP and/or Port specified"); }
 
     socket_t socket = nullptr;
     int retry = 5;
@@ -71,8 +68,9 @@ size_t NETDBG::nprint(char *data, size_t len) {
         }
     }
 
-    if (!socket || !retry) {
-        socket = nullptr;
+    if (!socket || (!retry && !socket)) { return 0; }
+    if (!retry) {
+        sock_close(socket);
         return 0;
     }
 
@@ -87,9 +85,9 @@ size_t NETDBG::nprint(char *data, size_t len) {
     if (err == -1) {
         SYSLOG("netdbg", "nprint err=%d", err);
         sock_close(socket);
-        socket = nullptr;
         return 0;
     }
+    sock_close(socket);
 
     return sentLen;
 }
