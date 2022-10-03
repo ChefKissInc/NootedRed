@@ -17,7 +17,6 @@
 class NETDBG {
     public:
     static bool enabled;
-    static socket_t socket;
     static in_addr_t ip_addr;
     static uint32_t port;
     static size_t nprint(char *data, size_t len);
