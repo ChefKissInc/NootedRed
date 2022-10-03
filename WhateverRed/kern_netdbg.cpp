@@ -34,19 +34,13 @@ size_t NETDBG::nprint(char *data, size_t len) {
 
     if (!enabled) { return 0; }
     if (!ip_addr || !port) {
-        char ip_str[16] = {0};
-        char port_str[6] = {0};
-        if (!PE_parse_boot_argn("netdbg_ip", &ip_str, 15) || !PE_parse_boot_argn("netdbg_port", &port_str, 5)) {
-            kprintf("netdbg: no ip and/or port specified, disabling");
-            enabled = false;
-            return 0;
-        }
         uint32_t b[4] = {0};
-        sscanf(ip_str, "%d.%d.%d.%d", b, b + 1, b + 2, b + 3);
         uint32_t p = 0;
-        sscanf(port_str, "%d", &p);
+        sscanf(PE_boot_args(), "netdbg_ip=%d.%d.%d.%d", b, b + 1, b + 2, b + 3);
         ip_addr = inet_addr(b[0], b[1], b[2], b[3]);
+        sscanf(PE_boot_args(), "netdbg_port=%d", &p);
         port = htons(p);
+
         if (!ip_addr || !port) {
             kprintf("netdbg: invalid ip and/or port specified, disabling");
             enabled = false;
