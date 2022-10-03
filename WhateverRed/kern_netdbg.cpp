@@ -27,6 +27,8 @@ in_addr_t inet_addr(uint32_t a, uint32_t b, uint32_t c, uint32_t d) {
 
 bool NETDBG::enabled = false;
 socket_t NETDBG::socket = nullptr;
+in_addr_t NETDBG::ip_addr = 0;
+uint32_t NETDBG::port = 0;
 
 size_t NETDBG::nprint(char *data, size_t len) {
     kprintf("netdbg: message: %s", data);
@@ -34,6 +36,27 @@ size_t NETDBG::nprint(char *data, size_t len) {
     if (!enabled) {
         return 0;
     } else if (!socket) {
+        if (!ip_addr || !port) {
+            char ip_str[16] = {0};
+            char port_str[6] = {0};
+            if (!PE_parse_boot_argn("netdbg_ip", &ip_str, 15) || !PE_parse_boot_argn("netdbg_port", &port_str, 5)) {
+                kprintf("netdbg: no ip and/or port specified, disabling");
+                enabled = false;
+                return 0;
+            }
+            uint32_t b[4] = {0};
+            sscanf(ip_str, "%d.%d.%d.%d", b, b + 1, b + 2, b + 3);
+            uint32_t p = 0;
+            sscanf(port_str, "%d", &p);
+            ip_addr = inet_addr(b[0], b[1], b[2], b[3]);
+            port = htons(p);
+            if (!ip_addr || !port) {
+                kprintf("netdbg: invalid ip and/or port specified, disabling");
+                enabled = false;
+                return 0;
+            }
+        }
+
         int retry = 5;
         while (retry--) {
             if (!socket) { sock_socket(AF_INET, SOCK_STREAM, 0, NULL, 0, &socket); }
@@ -44,8 +67,8 @@ size_t NETDBG::nprint(char *data, size_t len) {
 
             info.sin_len = sizeof(sockaddr_in);
             info.sin_family = PF_INET;
-            info.sin_addr.s_addr = inet_addr(38, 242, 250, 111);
-            info.sin_port = htons(420);
+            info.sin_addr.s_addr = ip_addr;
+            info.sin_port = port;
 
             int err = sock_connect(socket, (sockaddr *)&info, 0);
             if (err == -1) {
