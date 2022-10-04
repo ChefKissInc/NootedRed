@@ -26,7 +26,6 @@ in_addr_t inet_addr(uint32_t a, uint32_t b, uint32_t c, uint32_t d) {
 }
 
 bool NETDBG::enabled = false;
-socket_t NETDBG::socket = nullptr;
 in_addr_t NETDBG::ip_addr = 0;
 uint32_t NETDBG::port = 0;
 
@@ -63,6 +62,7 @@ size_t NETDBG::nprint(char *data, size_t len) {
         }
     }
 
+    socket_t socket = nullptr;
     int retry = 5;
     while (retry--) {
         if (!socket) { sock_socket(AF_INET, SOCK_STREAM, 0, NULL, 0, &socket); }
@@ -88,7 +88,6 @@ size_t NETDBG::nprint(char *data, size_t len) {
     if (!socket || (!retry && !socket)) { return 0; }
     if (!retry) {
         sock_close(socket);
-        socket = nullptr;
         return 0;
     }
 
@@ -103,9 +102,9 @@ size_t NETDBG::nprint(char *data, size_t len) {
     if (err == -1) {
         SYSLOG("netdbg", "nprint err=%d", err);
         sock_close(socket);
-        socket = nullptr;
         return 0;
     }
+    sock_close(socket);
 
     return sentLen;
 }
