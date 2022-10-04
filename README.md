@@ -2,6 +2,16 @@
 
 AMD iGPU [Lilu](https://github.com/acidanthera/Lilu) plug-in.
 
+## !! IMPORTANT
+
+**THIS KEXT CONTAINS REMOTE DEBUGGING VIA CUSTOM SERVICE. YOU MUST SPECIFY IP AND PORT OR DISABLE AS DESCRIBED BELOW.**
+
+Specify NetDbg IP and Port via `netdbg_ip_X` and `netdbg_port` boot args.
+
+Where `X` is IP part, i.e IP `1.2.3.4` becomes `netdbg_ip_1=1` `netdbg_ip_2=2` `netdbg_ip_3=3` `netdbg_ip_4=4`.
+
+Pass `-netdbg_disable` to disable NetDbg.
+
 The WhateverRed kext is licensed under BSD-3.
 
 This kext is currently under active research and development. It is not functional, but in a close state to such.
@@ -11,8 +21,6 @@ This kext is currently aimed to enable AMD iGPU support for Renoir/Raven(2) and 
 Unfortunately, due to the complexity of such drivers, extended support for non-existent logic is not possible. Therefore, you are (currently) required to use Catalina to Big Sur (recommended) as it appears Monterey has removed the logic for the iGPUs.
 
 The aforementioned requirement may be bypassed in a later stage by, for example, injecting the kext via the OpenCore Kext injection.
-
-Specify NETDBG IP and Port via `netdbg_ip` and `netdbg_port` boot args.
 
 Honourable mention:
 
