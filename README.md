@@ -4,7 +4,11 @@ AMD iGPU [Lilu](https://github.com/acidanthera/Lilu) plug-in.
 
 ## !! IMPORTANT
 
-**THIS KEXT CONTAINS REMOTE DEBUGGING VIA CUSTOM SERVICE. YOU MUST SPECIFY IP AND PORT OR DISABLE AS DESCRIBED BELOW.**
+**THIS KEXT CONTAINS REMOTE DEBUGGING VIA CUSTOM NETDBG LOGGING SERVICE. YOU MUST SPECIFY IP AND PORT OR DISABLE AS DESCRIBED BELOW.**
+
+WhateverRed NetDbg is a custom TCP logger developed by project owner [@ChefKissInc](https://github.com/ChefKissInc).
+
+You can find the source code [here](https://github.com/NootInc/WhateverRed-NETDBG)
 
 Specify NetDbg IP and Port via `netdbg_ip_X` and `netdbg_port` boot args.
 
