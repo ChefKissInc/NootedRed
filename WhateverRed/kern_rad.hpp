@@ -247,14 +247,15 @@ class RAD {
     mach_vm_address_t orgPopulateAccelConfig {};
     static uint64_t wrapPopulateAccelConfig(void *that, void *param1);
 
-    mach_vm_address_t orgPowerUpHW{};
-    static uint64_t wrapPowerUpHW(void* that);
+    mach_vm_address_t orgPowerUpHW {};
+    static uint64_t wrapPowerUpHW(void *that);
 
-    mach_vm_address_t orgHWsetMemoryAllocationsEnabled{};
-    static void wrapHWsetMemoryAllocationsEnabled(void* that, bool param1);
+    mach_vm_address_t orgHWsetMemoryAllocationsEnabled {};
+    static void wrapHWsetMemoryAllocationsEnabled(void *that, bool param1);
 
-    mach_vm_address_t orgAccelCallPlatformFunction{};
-    static uint64_t wrapAccelCallPlatformFunction(void* param1, uint64_t param2, void* param3, void* param4, void* param5, void* param6, void* param7);
+    mach_vm_address_t orgAccelCallPlatformFunction {};
+    static uint64_t wrapAccelCallPlatformFunction(void *param1, uint64_t param2, void *param3, void *param4,
+        void *param5, void *param6, void *param7);
 };
 
 #endif /* kern_rad_hpp */

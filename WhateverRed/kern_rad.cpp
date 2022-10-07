@@ -627,15 +627,14 @@ void RAD::wrapSetupAndInitializeHWCapabilities(void *that) {
 bool RAD::wrapPM4EnginePowerUp(void *that) {
     NETLOG("rad", "PM4EnginePowerUp: this = %p", that);
     auto ret = FunctionCast(wrapPM4EnginePowerUp, callbackRAD->orgPM4EnginePowerUp)(that);
+    // auto *buf = (char *)IOMallocZero(0x100000);
+    // auto *bufPtr = buf;
+    // size_t size = 0xfffff;
+    // callbackRAD->orgWriteDiagnosisReport(callbackRAD->callbackAccelerator, &bufPtr, &size);
+    // NETDBG::nprint(buf, strnlen(buf, 0xfffff));
+    // NETDBG::printf("\n");
+    // IOFree(buf, 0x100000);
     NETLOG("rad", "PM4EnginePowerUp returned %d", ret);
-    auto *buf = (char *)IOMallocZero(0x100000);
-    auto *bufPtr = buf;
-    size_t size = 0xfffff;
-    callbackRAD->orgWriteDiagnosisReport(callbackRAD->callbackAccelerator, &bufPtr, &size);
-    NETDBG::nprint(buf, strnlen(buf, 0xfffff));
-    NETDBG::printf("\n");
-    IOFree(buf, 0x100000);
-    NETLOG("rad", "PM4EnginePowerUp done");
     return ret;
 }
 
@@ -823,7 +822,7 @@ uint64_t RAD::wrapPopulateAccelConfig(void *that, void *param1) {
     return ret;
 }
 
-uint64_t RAD::wrapPowerUpHW(void* that) {
+uint64_t RAD::wrapPowerUpHW(void *that) {
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     NETLOG("rad", "powerUpHW: this = %p", that);
     auto ret = FunctionCast(wrapPowerUpHW, callbackRAD->orgPowerUpHW)(that);
@@ -832,7 +831,7 @@ uint64_t RAD::wrapPowerUpHW(void* that) {
     return ret;
 }
 
-void RAD::wrapHWsetMemoryAllocationsEnabled(void* that, bool param1) {
+void RAD::wrapHWsetMemoryAllocationsEnabled(void *that, bool param1) {
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     NETLOG("rad", "HWsetMemoryAllocationsEnabled: this = %p param1 = %d", that, param1);
     FunctionCast(wrapHWsetMemoryAllocationsEnabled, callbackRAD->orgHWsetMemoryAllocationsEnabled)(that, param1);
@@ -840,11 +839,16 @@ void RAD::wrapHWsetMemoryAllocationsEnabled(void* that, bool param1) {
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
 }
 
-uint64_t RAD::wrapAccelCallPlatformFunction(void* param1, uint64_t param2, void* param3, void* param4, void* param5, void* param6, void* param7) {
+uint64_t RAD::wrapAccelCallPlatformFunction(void *param1, uint64_t param2, void *param3, void *param4, void *param5,
+    void *param6, void *param7) {
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
-    NETLOG("rad", "accelCallPlatformFunction: param1 = %p param2 = 0x%llX param3 = %p param4 = %p param5 = %p param6 = %p param7 = %p", param1, param2, param3, param4, param5, param6, param7);
-    auto ret = FunctionCast(wrapAccelCallPlatformFunction, callbackRAD->orgAccelCallPlatformFunction)(param1, param2, param3, param4, param5, param6, param7);
-    NETLOG("rad", "*param4 = %X", *(uint*)param4);
+    NETLOG("rad",
+        "accelCallPlatformFunction: param1 = %p param2 = 0x%llX param3 = %p param4 = %p param5 = %p param6 = %p param7 "
+        "= %p",
+        param1, param2, param3, param4, param5, param6, param7);
+    auto ret = FunctionCast(wrapAccelCallPlatformFunction, callbackRAD->orgAccelCallPlatformFunction)(param1, param2,
+        param3, param4, param5, param6, param7);
+    NETLOG("rad", "*param4 = %X", *(uint *)param4);
     NETLOG("rad", "accelCallPlatformFunction returned 0x%llX", ret);
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     return ret;
@@ -1077,8 +1081,10 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator19populateAccelConfigEP13IOAccelConfig",
                 wrapPopulateAccelConfig, orgPopulateAccelConfig},
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator9powerUpHWEv", wrapPowerUpHW, orgPowerUpHW},
-            {"__ZN26AMDRadeonX5000_AMDHardware27setMemoryAllocationsEnabledEb", wrapHWsetMemoryAllocationsEnabled, orgHWsetMemoryAllocationsEnabled},
-            {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator20callPlatformFunctionEPK8OSSymbolbPvS3_S3_S3_", wrapAccelCallPlatformFunction, orgAccelCallPlatformFunction},
+            {"__ZN26AMDRadeonX5000_AMDHardware27setMemoryAllocationsEnabledEb", wrapHWsetMemoryAllocationsEnabled,
+                orgHWsetMemoryAllocationsEnabled},
+            {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator20callPlatformFunctionEPK8OSSymbolbPvS3_S3_S3_",
+                wrapAccelCallPlatformFunction, orgAccelCallPlatformFunction},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
