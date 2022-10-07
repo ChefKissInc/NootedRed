@@ -1110,22 +1110,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
         }
 
-        uint8_t find_gfx9vmm_postInit[] = {0x48, 0x8b, 0x30, 0xe8, 0x11, 0x67, 0x2d, 0x00, 0x48, 0x8b, 0x08, 0x48, 0x89,
-            0xc7};
-        uint8_t repl_gfx9vmm_postInit[] = {0x48, 0x8b, 0x30, 0x66, 0x90, 0x66, 0x90, 0x90, 0x48, 0x8b, 0x08, 0x48, 0x89,
-            0xc7};
-
-        KernelPatcher::LookupPatch patches[] = {
-            /**
-             * `AMDRadeonX5000_AMDGFX9VMM::postInit`
-             */
-            {&kextRadeonX5000, find_gfx9vmm_postInit, repl_gfx9vmm_postInit, arrsize(find_gfx9vmm_postInit), 2},
-        };
-        for (auto &patch : patches) {
-            patcher.applyLookupPatch(&patch);
-            patcher.clearError();
-        }
-
         return true;
     } else if (kextRadeonX6000.loadIndex == index) {
         KernelPatcher::SolveRequest solveRequests[] = {
