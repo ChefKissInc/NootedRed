@@ -863,20 +863,16 @@ uint64_t RAD::wrapCreateBltMgr(void *that) {
 }
 
 bool RAD::wrapPowerUpHWEngines(void *that) {
-    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     NETLOG("rad", "powerUpHWEngines: this = %p", that);
     auto ret = FunctionCast(wrapPowerUpHWEngines, callbackRAD->orgPowerUpHWEngines)(that);
     NETLOG("rad", "powerUpHWEngines returned %d", ret);
-    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     return ret;
 }
 
 bool RAD::wrapStartHWEngines(void *that) {
-    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     NETLOG("rad", "startHWEngines: this = %p", that);
     auto ret = FunctionCast(wrapStartHWEngines, callbackRAD->orgStartHWEngines)(that);
     NETLOG("rad", "startHWEngines returned %d", ret);
-    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     return ret;
 }
 
