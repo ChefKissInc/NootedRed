@@ -823,25 +823,20 @@ uint64_t RAD::wrapPopulateAccelConfig(void *that, void *param1) {
 }
 
 uint64_t RAD::wrapPowerUpHW(void *that) {
-    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     NETLOG("rad", "powerUpHW: this = %p", that);
     auto ret = FunctionCast(wrapPowerUpHW, callbackRAD->orgPowerUpHW)(that);
     NETLOG("rad", "powerUpHW returned 0x%llX", ret);
-    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     return ret;
 }
 
 void RAD::wrapHWsetMemoryAllocationsEnabled(void *that, bool param1) {
-    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     NETLOG("rad", "HWsetMemoryAllocationsEnabled: this = %p param1 = %d", that, param1);
     FunctionCast(wrapHWsetMemoryAllocationsEnabled, callbackRAD->orgHWsetMemoryAllocationsEnabled)(that, param1);
     NETLOG("rad", "HWsetMemoryAllocationsEnabled finished");
-    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
 }
 
 uint64_t RAD::wrapAccelCallPlatformFunction(void *param1, uint64_t param2, void *param3, void *param4, void *param5,
     void *param6, void *param7) {
-    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     NETLOG("rad",
         "accelCallPlatformFunction: param1 = %p param2 = 0x%llX param3 = %p param4 = %p param5 = %p param6 = %p param7 "
         "= %p",
@@ -850,25 +845,20 @@ uint64_t RAD::wrapAccelCallPlatformFunction(void *param1, uint64_t param2, void 
         param3, param4, param5, param6, param7);
     NETLOG("rad", "*param4 = %X", *(uint *)param4);
     NETLOG("rad", "accelCallPlatformFunction returned 0x%llX", ret);
-    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     return ret;
 }
 
 uint64_t RAD::wrapVega10PowerUp(void *that) {
-    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     NETLOG("rad", "Vega10PowerUp: this = %p", that);
     auto ret = FunctionCast(wrapVega10PowerUp, callbackRAD->orgVega10PowerUp)(that);
     NETLOG("rad", "Vega10PowerUp returned 0x%llX", ret);
-    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     return ret;
 }
 
 uint64_t RAD::wrapCreateBltMgr(void *that) {
-    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     NETLOG("rad", "createBltMgr: this = %p", that);
     auto ret = FunctionCast(wrapCreateBltMgr, callbackRAD->orgCreateBltMgr)(that);
     NETLOG("rad", "createBltMgr returned 0x%llX", ret);
-    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     return ret;
 }
 
