@@ -863,6 +863,15 @@ uint64_t RAD::wrapVega12PowerUp(void* that) {
     return ret;
 }
 
+uint64_t RAD::wrapCreateBltMgr(void*(void* that) {
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "createBltMgr(void*: this = %p", that);
+    auto ret = FunctionCast(wrapCreateBltMgr(void*, callbackRAD->orgCreateBltMgr(void*)(that);
+    NETLOG("rad", "createBltMgr(void* returned 0x%llX", ret);
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -1095,6 +1104,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator20callPlatformFunctionEPK8OSSymbolbPvS3_S3_S3_",
                 wrapAccelCallPlatformFunction, orgAccelCallPlatformFunction},
             {"__ZN32AMDRadeonX5000_AMDVega12Hardware7powerUpEv", wrapVega12PowerUp, orgVega12PowerUp},
+            {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator12createBltMgrEv", wrapCreateBltMgr(void*, orgCreateBltMgr(void*},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");

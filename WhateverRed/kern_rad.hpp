@@ -259,6 +259,9 @@ class RAD {
 
     mach_vm_address_t orgVega12PowerUp{};
     static uint64_t wrapVega12PowerUp(void* that);
+
+    mach_vm_address_t orgCreateBltMgr(void*{};
+    static uint64_t wrapCreateBltMgr(void*(void* that);
 };
 
 #endif /* kern_rad_hpp */
