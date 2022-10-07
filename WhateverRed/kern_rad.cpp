@@ -844,6 +844,7 @@ uint64_t RAD::wrapAccelCallPlatformFunction(void* param1, uint64_t param2, void*
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     NETLOG("rad", "accelCallPlatformFunction: param1 = %p param2 = 0x%llX param3 = %p param4 = %p param5 = %p param6 = %p param7 = %p", param1, param2, param3, param4, param5, param6, param7);
     auto ret = FunctionCast(wrapAccelCallPlatformFunction, callbackRAD->orgAccelCallPlatformFunction)(param1, param2, param3, param4, param5, param6, param7);
+    NETLOG("rad", "*param4 = %X", *param4);
     NETLOG("rad", "accelCallPlatformFunction returned 0x%llX", ret);
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     return ret;
