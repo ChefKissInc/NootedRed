@@ -848,10 +848,10 @@ uint64_t RAD::wrapAccelCallPlatformFunction(void *param1, uint64_t param2, void 
     return ret;
 }
 
-bool RAD::wrapVega20PowerUp(void *that) {
-    NETLOG("rad", "Vega20PowerUp: this = %p", that);
-    auto ret = FunctionCast(wrapVega20PowerUp, callbackRAD->orgVega20PowerUp)(that);
-    NETLOG("rad", "Vega20PowerUp returned %d", ret);
+bool RAD::wrapVega10PowerUp(void *that) {
+    NETLOG("rad", "Vega10PowerUp: this = %p", that);
+    auto ret = FunctionCast(wrapVega10PowerUp, callbackRAD->orgVega10PowerUp)(that);
+    NETLOG("rad", "Vega10PowerUp returned %d", ret);
     return ret;
 }
 
@@ -1064,9 +1064,9 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 wrapQueryComputeQueueIsIdle, orgQueryComputeQueueIsIdle},
             {"__ZN27AMDRadeonX5000_AMDHWChannel11waitForIdleEj", wrapAMDHWChannelWaitForIdle,
                 orgAMDHWChannelWaitForIdle},
-            {"__ZN32AMDRadeonX5000_AMDVega20Hardware17allocateHWEnginesEv", wrapAllocateHWEngines},
+            {"__ZN32AMDRadeonX5000_AMDVega10Hardware17allocateHWEnginesEv", wrapAllocateHWEngines},
             {"__ZN26AMDRadeonX5000_AMDHardware11getHWEngineE20_eAMD_HW_ENGINE_TYPE", wrapGetHWEngine, orgGetHWEngine},
-            {"__ZN32AMDRadeonX5000_AMDVega20Hardware32setupAndInitializeHWCapabilitiesEv",
+            {"__ZN32AMDRadeonX5000_AMDVega10Hardware32setupAndInitializeHWCapabilitiesEv",
                 wrapSetupAndInitializeHWCapabilities, orgSetupAndInitializeHWCapabilities},
             {"__ZN31AMDRadeonX5000_AMDGFX9PM4Engine7powerUpEv", wrapPM4EnginePowerUp, orgPM4EnginePowerUp},
             {"__ZN26AMDRadeonX5000_AMDHardware17dumpASICHangStateEb.cold.1", wrapDumpASICHangStateCold,
@@ -1094,7 +1094,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 orgHWsetMemoryAllocationsEnabled},
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator20callPlatformFunctionEPK8OSSymbolbPvS3_S3_S3_",
                 wrapAccelCallPlatformFunction, orgAccelCallPlatformFunction},
-            {"__ZN32AMDRadeonX5000_AMDVega20Hardware7powerUpEv", wrapVega20PowerUp, orgVega20PowerUp},
+            {"__ZN32AMDRadeonX5000_AMDVega10Hardware7powerUpEv", wrapVega10PowerUp, orgVega10PowerUp},
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator12createBltMgrEv", wrapCreateBltMgr, orgCreateBltMgr},
             {"__ZN26AMDRadeonX5000_AMDHardware16powerUpHWEnginesEv", wrapPowerUpHWEngines, orgPowerUpHWEngines},
             {"__ZN26AMDRadeonX5000_AMDHardware14startHWEnginesEv", wrapStartHWEngines, orgStartHWEngines},
