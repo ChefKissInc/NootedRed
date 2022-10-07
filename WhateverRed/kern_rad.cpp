@@ -822,10 +822,10 @@ uint64_t RAD::wrapPopulateAccelConfig(void *that, void *param1) {
     return ret;
 }
 
-uint64_t RAD::wrapPowerUpHW(void *that) {
+bool RAD::wrapPowerUpHW(void *that) {
     NETLOG("rad", "powerUpHW: this = %p", that);
     auto ret = FunctionCast(wrapPowerUpHW, callbackRAD->orgPowerUpHW)(that);
-    NETLOG("rad", "powerUpHW returned 0x%llX", ret);
+    NETLOG("rad", "powerUpHW returned %d", ret);
     return ret;
 }
 
@@ -848,10 +848,10 @@ uint64_t RAD::wrapAccelCallPlatformFunction(void *param1, uint64_t param2, void 
     return ret;
 }
 
-uint64_t RAD::wrapVega10PowerUp(void *that) {
+bool RAD::wrapVega10PowerUp(void *that) {
     NETLOG("rad", "Vega10PowerUp: this = %p", that);
     auto ret = FunctionCast(wrapVega10PowerUp, callbackRAD->orgVega10PowerUp)(that);
-    NETLOG("rad", "Vega10PowerUp returned 0x%llX", ret);
+    NETLOG("rad", "Vega10PowerUp returned %d", ret);
     return ret;
 }
 

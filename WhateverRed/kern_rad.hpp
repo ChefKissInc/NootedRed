@@ -248,7 +248,7 @@ class RAD {
     static uint64_t wrapPopulateAccelConfig(void *that, void *param1);
 
     mach_vm_address_t orgPowerUpHW {};
-    static uint64_t wrapPowerUpHW(void *that);
+    static bool wrapPowerUpHW(void *that);
 
     mach_vm_address_t orgHWsetMemoryAllocationsEnabled {};
     static void wrapHWsetMemoryAllocationsEnabled(void *that, bool param1);
@@ -258,7 +258,7 @@ class RAD {
         void *param5, void *param6, void *param7);
 
     mach_vm_address_t orgVega10PowerUp {};
-    static uint64_t wrapVega10PowerUp(void *that);
+    static bool wrapVega10PowerUp(void *that);
 
     mach_vm_address_t orgCreateBltMgr {};
     static uint64_t wrapCreateBltMgr(void *that);
