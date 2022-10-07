@@ -862,6 +862,24 @@ uint64_t RAD::wrapCreateBltMgr(void *that) {
     return ret;
 }
 
+bool RAD::wrapPowerUpHWEngines(void *that) {
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "powerUpHWEngines: this = %p", that);
+    auto ret = FunctionCast(wrapPowerUpHWEngines, callbackRAD->orgPowerUpHWEngines)(that);
+    NETLOG("rad", "powerUpHWEngines returned %d", ret);
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    return ret;
+}
+
+bool RAD::wrapStartHWEngines(void *that) {
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "startHWEngines: this = %p", that);
+    auto ret = FunctionCast(wrapStartHWEngines, callbackRAD->orgStartHWEngines)(that);
+    NETLOG("rad", "startHWEngines returned %d", ret);
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -1082,6 +1100,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 wrapAccelCallPlatformFunction, orgAccelCallPlatformFunction},
             {"__ZN32AMDRadeonX5000_AMDVega20Hardware7powerUpEv", wrapVega20PowerUp, orgVega20PowerUp},
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator12createBltMgrEv", wrapCreateBltMgr, orgCreateBltMgr},
+            {"__ZN26AMDRadeonX5000_AMDHardware16powerUpHWEnginesEv", wrapPowerUpHWEngines, orgPowerUpHWEngines},
+            {"__ZN26AMDRadeonX5000_AMDHardware14startHWEnginesEv", wrapStartHWEngines, orgStartHWEngines},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");

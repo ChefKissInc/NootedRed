@@ -262,6 +262,12 @@ class RAD {
 
     mach_vm_address_t orgCreateBltMgr {};
     static uint64_t wrapCreateBltMgr(void *that);
+
+    mach_vm_address_t orgPowerUpHWEngines {};
+    static bool wrapPowerUpHWEngines(void *that);
+
+    mach_vm_address_t orgStartHWEngines {};
+    static bool wrapStartHWEngines(void *that);
 };
 
 #endif /* kern_rad_hpp */
