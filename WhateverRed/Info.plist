@@ -210,7 +210,7 @@
 				<integer>16</integer>
 			</dict>
 		</dict>
-		<key>AMDVega10GraphicsAccelerator</key>
+		<key>AMDVega20GraphicsAccelerator</key>
 		<dict>
 			<key>CFBundleIdentifier</key>
 			<string>com.apple.kext.AMDRadeonX5000</string>
@@ -219,7 +219,7 @@
 			<key>GpuDebugPolicy</key>
 			<integer>-1</integer>
 			<key>IOClass</key>
-			<string>AMDRadeonX5000_AMDVega10GraphicsAccelerator</string>
+			<string>AMDRadeonX5000_AMDVega20GraphicsAccelerator</string>
 			<key>IODVDBundleName</key>
 			<string>AMDRadeonVADriver2</string>
 			<key>IOGVACodec</key>
@@ -302,8 +302,16 @@
 			<integer>16908288</integer>
 			<key>cail_properties</key>
 			<dict>
+				<key>CAIL_DisableCailLoadUcode</key>
+				<integer>1</integer>
 				<key>CAIL_DisablePowerGating</key>
 				<integer>1</integer>
+				<key>CAIL_EnableAspmL0s</key>
+				<integer>0</integer>
+				<key>CAIL_EnableAspmL1</key>
+				<integer>0</integer>
+				<key>CAIL_EnableAspmSWL1</key>
+				<integer>0</integer>
 				<key>CAIL_EnableSecureMmFwLoading</key>
 				<integer>1</integer>
 			</dict>
