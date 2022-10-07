@@ -823,6 +823,32 @@ uint64_t RAD::wrapPopulateAccelConfig(void *that, void *param1) {
     return ret;
 }
 
+uint64_t RAD::wrapPowerUpHW(void* that) {
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "powerUpHW: this = %p", that);
+    auto ret = FunctionCast(wrapPowerUpHW, callbackRAD->orgPowerUpHW)(that);
+    NETLOG("rad", "powerUpHW returned 0x%llX", ret);
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    return ret;
+}
+
+void RAD::wrapHWsetMemoryAllocationsEnabled(void* that, bool param1) {
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "HWsetMemoryAllocationsEnabled: this = %p param1 = %d", that, param1);
+    FunctionCast(wrapHWsetMemoryAllocationsEnabled, callbackRAD->orgHWsetMemoryAllocationsEnabled)(that, param1);
+    NETLOG("rad", "HWsetMemoryAllocationsEnabled finished");
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+}
+
+uint64_t RAD::wrapAccelCallPlatformFunction(void* param1, uint64_t param2, void* param3, void* param4, void* param5, void* param6, void* param7) {
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "accelCallPlatformFunction: param1 = %p param2 = 0x%llX param3 = %p param4 = %p param5 = %p param6 = %p param7 = %p", param1, param2, param3, param4, param5, param6, param7);
+    auto ret = FunctionCast(wrapAccelCallPlatformFunction, callbackRAD->orgAccelCallPlatformFunction)(param1, param2, param3, param4, param5, param6, param7);
+    NETLOG("rad", "accelCallPlatformFunction returned 0x%llX", ret);
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -1049,6 +1075,9 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 orgCreateAccelChannels},
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator19populateAccelConfigEP13IOAccelConfig",
                 wrapPopulateAccelConfig, orgPopulateAccelConfig},
+            {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator9powerUpHWEv", wrapPowerUpHW, orgPowerUpHW},
+            {"__ZN26AMDRadeonX5000_AMDHardware27setMemoryAllocationsEnabledEb", wrapHWsetMemoryAllocationsEnabled, orgHWsetMemoryAllocationsEnabled},
+            {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator20callPlatformFunctionEPK8OSSymbolbPvS3_S3_S3_", wrapAccelCallPlatformFunction, orgAccelCallPlatformFunction},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
