@@ -854,11 +854,11 @@ uint64_t RAD::wrapAccelCallPlatformFunction(void *param1, uint64_t param2, void 
     return ret;
 }
 
-uint64_t RAD::wrapVega12PowerUp(void *that) {
+uint64_t RAD::wrapVega10PowerUp(void *that) {
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
-    NETLOG("rad", "Vega12PowerUp: this = %p", that);
-    auto ret = FunctionCast(wrapVega12PowerUp, callbackRAD->orgVega12PowerUp)(that);
-    NETLOG("rad", "Vega12PowerUp returned 0x%llX", ret);
+    NETLOG("rad", "Vega10PowerUp: this = %p", that);
+    auto ret = FunctionCast(wrapVega10PowerUp, callbackRAD->orgVega10PowerUp)(that);
+    NETLOG("rad", "Vega10PowerUp returned 0x%llX", ret);
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     return ret;
 }
@@ -1103,7 +1103,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 orgHWsetMemoryAllocationsEnabled},
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator20callPlatformFunctionEPK8OSSymbolbPvS3_S3_S3_",
                 wrapAccelCallPlatformFunction, orgAccelCallPlatformFunction},
-            {"__ZN32AMDRadeonX5000_AMDVega12Hardware7powerUpEv", wrapVega12PowerUp, orgVega12PowerUp},
+            {"__ZN32AMDRadeonX5000_AMDVega10Hardware7powerUpEv", wrapVega10PowerUp, orgVega10PowerUp},
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator12createBltMgrEv", wrapCreateBltMgr, orgCreateBltMgr},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {

@@ -26,6 +26,8 @@
 		<string>AMDRadeonX5000GLDriver.bundle</string>
 		<string>AMDRadeonX5000MTLDriver.bundle</string>
 		<string>AMDRawCounterPlugin.bundle</string>
+		<string>AMDRadeonX6000Shared.bundle</string>
+		<string>AMDShared.bundle</string>
 	</array>
 	<key>IOKitPersonalities</key>
 	<dict>
@@ -48,6 +50,23 @@
 				<key>LoadHWServices</key>
 				<true/>
 			</dict>
+			<key>IOProviderClass</key>
+			<string>IOPCIDevice</string>
+		</dict>
+		<key>AMDGPUWrangler</key>
+		<dict>
+			<key>CFBundleIdentifier</key>
+			<string>com.apple.kext.AMDRadeonX6000Framebuffer</string>
+			<key>IOClass</key>
+			<string>AMDRadeonX6000_AmdGpuWrangler</string>
+			<key>IOMatchCategory</key>
+			<string>IOFramebuffer</string>
+			<key>IOPCIMatch</key>
+			<string>0x73101002 0x73121002 0x73181002 0x73191002 0x731A1002 0x731B1002 0x731F1002 0x73BF1002 0x73601002 0x73621002 0x73401002 0x73411002 0x73431002 0x73471002 0x734F1002 0x73A01002 0x73A21002 0x73A31002 0x73AB1002 0x73AE1002 0x73BF1002</string>
+			<key>IOPCITunnelCompatible</key>
+			<true/>
+			<key>IOProbeScore</key>
+			<integer>60000</integer>
 			<key>IOProviderClass</key>
 			<string>IOPCIDevice</string>
 		</dict>
@@ -288,23 +307,6 @@
 				<key>CAIL_EnableSecureMmFwLoading</key>
 				<integer>1</integer>
 			</dict>
-		</dict>
-		<key>AtiGpuWrangler</key>
-		<dict>
-			<key>CFBundleIdentifier</key>
-			<string>com.apple.kext.AMD10000Controller</string>
-			<key>IOClass</key>
-			<string>AMD10000ControllerWrangler</string>
-			<key>IOMatchCategory</key>
-			<string>IOFramebuffer</string>
-			<key>IOPCIMatch</key>
-			<string>0x15DD1002 0x15D81002 0x15E71002 0x164C1002 0x16381002 0x16361002</string>
-			<key>IOPCITunnelCompatible</key>
-			<true/>
-			<key>IOProbeScore</key>
-			<integer>65050</integer>
-			<key>IOProviderClass</key>
-			<string>IOPCIDevice</string>
 		</dict>
 		<key>Force load GFX 10</key>
 		<dict>

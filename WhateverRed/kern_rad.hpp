@@ -257,8 +257,8 @@ class RAD {
     static uint64_t wrapAccelCallPlatformFunction(void *param1, uint64_t param2, void *param3, void *param4,
         void *param5, void *param6, void *param7);
 
-    mach_vm_address_t orgVega12PowerUp {};
-    static uint64_t wrapVega12PowerUp(void *that);
+    mach_vm_address_t orgVega10PowerUp {};
+    static uint64_t wrapVega10PowerUp(void *that);
 
     mach_vm_address_t orgCreateBltMgr {};
     static uint64_t wrapCreateBltMgr(void *that);
