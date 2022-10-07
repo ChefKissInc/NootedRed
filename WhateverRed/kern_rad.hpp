@@ -256,6 +256,9 @@ class RAD {
     mach_vm_address_t orgAccelCallPlatformFunction {};
     static uint64_t wrapAccelCallPlatformFunction(void *param1, uint64_t param2, void *param3, void *param4,
         void *param5, void *param6, void *param7);
+
+    mach_vm_address_t orgVega12PowerUp{};
+    static uint64_t wrapVega12PowerUp(void* that);
 };
 
 #endif /* kern_rad_hpp */
