@@ -872,9 +872,8 @@ bool RAD::wrapPowerUpHWEngines(void *that) {
 bool RAD::wrapStartHWEngines(void *that) {
     NETLOG("rad", "startHWEngines: this = %p", that);
     auto ret = FunctionCast(wrapStartHWEngines, callbackRAD->orgStartHWEngines)(that);
-    NETLOG("rad", "startHWEngines returned %d", ret);
-    IOSleep(3600000);
-    return ret;
+    NETLOG("rad", "startHWEngines returned %d. Returning true anyways", ret);
+    return true;
 }
 
 uint64_t RAD::wrapMicroEngineControlLoadMicrocode(void *that, void *param1) {
