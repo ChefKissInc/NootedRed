@@ -929,7 +929,7 @@ void RAD::wrapCailMCILTrace2(void *that) {
     FunctionCast(wrapCailMCILTrace2, callbackRAD->orgCailMCILTrace2)(that);
 }
 
-uint64_t RAD::wrapGreenlandLoadRlcUcode(void* param1) {
+uint64_t RAD::wrapGreenlandLoadRlcUcode(void *param1) {
     NETLOG("rad", "----------------------------------------------------------------------");
     NETLOG("rad", "_greenland_load_rlc_ucode: param1 = %p", param1);
     auto ret = FunctionCast(wrapGreenlandLoadRlcUcode, callbackRAD->orgGreenlandLoadRlcUcode)(param1);
@@ -938,21 +938,20 @@ uint64_t RAD::wrapGreenlandLoadRlcUcode(void* param1) {
     return ret;
 }
 
-uint64_t RAD::wrapGreenlandMicroEngineControl(void* param1, uint64_t param2, void* param3) {
+uint64_t RAD::wrapGreenlandMicroEngineControl(void *param1, uint64_t param2, void *param3) {
     NETLOG("rad", "----------------------------------------------------------------------");
     NETLOG("rad", "_greenland_micro_engine_control: param1 = %p param2 = 0x%llX param3 = %p", param1, param2, param3);
-    auto ret = FunctionCast(wrapGreenlandMicroEngineControl, callbackRAD->orgGreenlandMicroEngineControl)(param1, param2, param3);
+    auto ret = FunctionCast(wrapGreenlandMicroEngineControl, callbackRAD->orgGreenlandMicroEngineControl)(param1,
+        param2, param3);
     NETLOG("rad", "_greenland_micro_engine_control returned 0x%llX", ret);
     NETLOG("rad", "----------------------------------------------------------------------");
     return ret;
 }
 
-uint64_t RAD::wrapSdmaMicroEngineControl(void* param1, void* param2, void* param3) {
+uint64_t RAD::wrapSdmaMicroEngineControl(void *param1, void *param2, void *param3) {
     NETLOG("rad", "----------------------------------------------------------------------");
     NETLOG("rad", "_sdma_micro_engine_control: param1 = %p param2 = %p param3 = %p", param1, param2, param3);
-    for (int i = 0; i < 0x70; i += 4) {
-        NETLOG("rad", "param2->field_0x%X = %X", i, getMember<uint32_t>(param2, i));
-    }
+    for (int i = 0; i < 0x70; i += 4) { NETLOG("rad", "param2->field_0x%X = %X", i, getMember<uint32_t>(param2, i)); }
     auto ret = FunctionCast(wrapSdmaMicroEngineControl, callbackRAD->orgSdmaMicroEngineControl)(param1, param2, param3);
     NETLOG("rad", "_sdma_micro_engine_control returned 0x%llX", ret);
     NETLOG("rad", "----------------------------------------------------------------------");
@@ -1060,9 +1059,14 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             0x51, 0xfe, 0xff, 0xff};
         static_assert(arrsize(find_asic_reset) == arrsize(repl_asic_reset), "Find/replace patch size mismatch");
 
-        uint8_t find_sdma_micro_engine_control[] = { 0xeb, 0x69, 0x41, 0x81, 0xbe, 0x90, 0x01, 0x00, 0x00, 0x8d, 0x00, 0x00, 0x00, 0x0f, 0x85, 0x80, 0x01, 0x00, 0x00, 0x41, 0x8b, 0x86, 0x9c, 0x01, 0x00, 0x00, 0x31, 0xff, 0xbe, 0x01, 0x00, 0x00, 0x00, 0x83, 0xf8, 0x14, 0x0f, 0x82, 0xe4, 0x02, 0x00, 0x00 };
-        uint8_t repl_sdma_micro_engine_control[] = { 0xeb, 0x69, 0x41, 0x81, 0xbe, 0x90, 0x01, 0x00, 0x00, 0x8e, 0x00, 0x00, 0x00, 0x0f, 0x85, 0x80, 0x01, 0x00, 0x00, 0x41, 0x8b, 0x86, 0x9c, 0x01, 0x00, 0x00, 0x31, 0xff, 0xbe, 0x01, 0x00, 0x00, 0x00, 0x83, 0xf8, 0xff, 0x0f, 0x82, 0xe4, 0x02, 0x00, 0x00 };
-        static_assert(arrsize(find_sdma_micro_engine_control) == arrsize(repl_sdma_micro_engine_control), "Find/replace patch size mismatch");
+        uint8_t find_sdma_micro_engine_control[] = {0xeb, 0x69, 0x41, 0x81, 0xbe, 0x90, 0x01, 0x00, 0x00, 0x8d, 0x00,
+            0x00, 0x00, 0x0f, 0x85, 0x80, 0x01, 0x00, 0x00, 0x41, 0x8b, 0x86, 0x9c, 0x01, 0x00, 0x00, 0x31, 0xff, 0xbe,
+            0x01, 0x00, 0x00, 0x00, 0x83, 0xf8, 0x14, 0x0f, 0x82, 0xe4, 0x02, 0x00, 0x00};
+        uint8_t repl_sdma_micro_engine_control[] = {0xeb, 0x69, 0x41, 0x81, 0xbe, 0x90, 0x01, 0x00, 0x00, 0x8e, 0x00,
+            0x00, 0x00, 0x0f, 0x85, 0x80, 0x01, 0x00, 0x00, 0x41, 0x8b, 0x86, 0x9c, 0x01, 0x00, 0x00, 0x31, 0xff, 0xbe,
+            0x01, 0x00, 0x00, 0x00, 0x83, 0xf8, 0xff, 0x0f, 0x82, 0xe4, 0x02, 0x00, 0x00};
+        static_assert(arrsize(find_sdma_micro_engine_control) == arrsize(repl_sdma_micro_engine_control),
+            "Find/replace patch size mismatch");
 
         KernelPatcher::LookupPatch patches[] = {
             /**
@@ -1074,10 +1078,11 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {&kextRadeonX5000HWLibs, find_asic_reset, repl_asic_reset, arrsize(find_asic_reset), 2},
             /**
              * Patch for `_sdma_micro_engine_control`
-             * This function checks for familyId and emulatedRev, and returns 2 (Not supported) if they are not Vega-based.
-             * The patch makes sure the checks do pass.
+             * This function checks for familyId and emulatedRev, and returns 2 (Not supported) if they are not
+             * Vega-based. The patch makes sure the checks do pass.
              */
-            {&kextRadeonX5000HWLibs, find_sdma_micro_engine_control, repl_sdma_micro_engine_control, arrsize(find_sdma_micro_engine_control), 2},
+            {&kextRadeonX5000HWLibs, find_sdma_micro_engine_control, repl_sdma_micro_engine_control,
+                arrsize(find_sdma_micro_engine_control), 2},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
