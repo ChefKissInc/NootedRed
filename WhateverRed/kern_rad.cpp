@@ -946,6 +946,16 @@ uint64_t RAD::wrapSdmaMicroEngineControl(void *param1, void *param2, void *param
     return ret;
 }
 
+bool RAD::wrapWaitForHwStamp(void* that, uint64_t param1) {
+    NETLOG("rad", "----------------------------------------------------------------------");
+    NETLOG("rad", "waitForHwStamp: this = %p param1 = 0x%llX", that, param1);
+    auto ret = FunctionCast(wrapWaitForHwStamp, callbackRAD->orgWaitForHwStamp)(that, param1);
+    NETLOG("rad", "waitForHwStamp returned %d", ret);
+    if (ret) panic("Timeout waiting for timestamp");
+    NETLOG("rad", "----------------------------------------------------------------------");
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -1200,6 +1210,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN26AMDRadeonX5000_AMDHardware14startHWEnginesEv", wrapStartHWEngines, orgStartHWEngines},
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngine5startEv", wrapSdmaEngineStart, orgSdmaEngineStart},
             {"__ZN24AMDRadeonX5000_AMDRTRing6enableEv", wrapRtRingEnable, orgRtRingEnable},
+            {"__ZN27AMDRadeonX5000_AMDHWChannel14waitForHwStampEj", wrapWaitForHwStamp, orgWaitForHwStamp},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
