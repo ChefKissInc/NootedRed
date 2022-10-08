@@ -878,6 +878,51 @@ bool RAD::wrapStartHWEngines(void *that) {
     return ret;
 }
 
+uint64_t RAD::wrapMicroEngineControlLoadMicrocode(void* that, void* param1) {
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "microEngineControlLoadMicrocode: this = %p param1 = %p", that, param1);
+    auto ret = FunctionCast(wrapMicroEngineControlLoadMicrocode, callbackRAD->orgMicroEngineControlLoadMicrocode)(that, param1);
+    NETLOG("rad", "microEngineControlLoadMicrocode returned 0x%llX", ret);
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    return ret;
+}
+
+uint64_t RAD::wrapMicroEngineControlInitializeEngine(void* that, void* param1, void* param2) {
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "microEngineControlInitializeEngine: this = %p param1 = %p param2 = %p", that, param1, param2);
+    auto ret = FunctionCast(wrapMicroEngineControlInitializeEngine, callbackRAD->orgMicroEngineControlInitializeEngine)(that, param1, param2);
+    NETLOG("rad", "microEngineControlInitializeEngine returned 0x%llX", ret);
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    return ret;
+}
+
+uint64_t RAD::wrapMicroEngineControlStartEngine(void* that, void* param1) {
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "microEngineControlStartEngine: this = %p param1 = %p", that, param1);
+    auto ret = FunctionCast(wrapMicroEngineControlStartEngine, callbackRAD->orgMicroEngineControlStartEngine)(that, param1);
+    NETLOG("rad", "microEngineControlStartEngine returned 0x%llX", ret);
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    return ret;
+}
+
+bool RAD::wrapSdmaEngineStart(void* that) {
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "sdmaEngineStart: this = %p", that);
+    auto ret = FunctionCast(wrapSdmaEngineStart, callbackRAD->orgSdmaEngineStart)(that);
+    NETLOG("rad", "sdmaEngineStart returned %d", ret);
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    return ret;
+}
+
+uint64_t RAD::wrapRtRingEnable(void* that) {
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "rtRingEnable: this = %p", that);
+    auto ret = FunctionCast(wrapRtRingEnable, callbackRAD->orgRtRingEnable)(that);
+    NETLOG("rad", "rtRingEnable returned 0x%llX", ret);
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -956,6 +1001,9 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_psp_asd_load", wrapPspAsdLoad, orgPspAsdLoad},
             {"_psp_dtm_load", wrapPspDtmLoad, orgPspDtmLoad},
             {"_psp_hdcp_load", wrapPspHdcpLoad, orgPspHdcpLoad},
+            {"__ZN15AmdCailServices31microEngineControlLoadMicrocodeEP17CailHwEngineQueue", wrapMicroEngineControlLoadMicrocode, orgMicroEngineControlLoadMicrocode},
+            {"__ZN15AmdCailServices34microEngineControlInitializeEngineEP17CailHwEngineQueueP21_CailInitializeEngine", wrapMicroEngineControlInitializeEngine, orgMicroEngineControlInitializeEngine},
+            {"__ZN15AmdCailServices29microEngineControlStartEngineEP17CailHwEngineQueue", wrapMicroEngineControlStartEngine, orgMicroEngineControlStartEngine},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
@@ -1100,6 +1148,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator12createBltMgrEv", wrapCreateBltMgr, orgCreateBltMgr},
             {"__ZN26AMDRadeonX5000_AMDHardware16powerUpHWEnginesEv", wrapPowerUpHWEngines, orgPowerUpHWEngines},
             {"__ZN26AMDRadeonX5000_AMDHardware14startHWEnginesEv", wrapStartHWEngines, orgStartHWEngines},
+            {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngine5startEv", wrapSdmaEngineStart, orgSdmaEngineStart},
+            {"__ZN24AMDRadeonX5000_AMDRTRing6enableEv", wrapRtRingEnable, orgRtRingEnable},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
