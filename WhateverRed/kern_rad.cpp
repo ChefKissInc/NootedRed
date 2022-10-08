@@ -1076,7 +1076,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             /**
              * Patch for `_sdma_micro_engine_control`
              * This function checks for familyId and emulatedRev, and returns 2 (Not supported) if they are not Vega-based.
-             * The patch makes sure the checks always pass.
+             * The patch makes sure the checks do pass.
              */
             {&kextRadeonX5000HWLibs, find_sdma_micro_engine_control, repl_sdma_micro_engine_control, arrsize(find_sdma_micro_engine_control), 2},
         };
