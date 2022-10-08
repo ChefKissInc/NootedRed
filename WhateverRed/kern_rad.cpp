@@ -595,7 +595,6 @@ bool RAD::wrapAllocateHWEngines(void *that) {
     callbackRAD->orgGFX9PM4EngineConstructor(pm4Engine);
     getMember<void *>(that, 0x3b8) = pm4Engine;
 
-    /*
     auto *sdmaEngine = callbackRAD->orgGFX9SDMAEngineNew(0x128);
     callbackRAD->orgGFX9SDMAEngineConstructor(sdmaEngine);
     getMember<void *>(that, 0x3c0) = sdmaEngine;
@@ -603,7 +602,6 @@ bool RAD::wrapAllocateHWEngines(void *that) {
     auto *sdma1Engine = callbackRAD->orgGFX9SDMAEngineNew(0x128);
     callbackRAD->orgGFX9SDMAEngineConstructor(sdma1Engine);
     getMember<void *>(that, 0x3c8) = sdma1Engine;
-    */
 
     auto *vcn2Engine = callbackRAD->orgGFX10VCN2EngineNew(0x198);
     callbackRAD->orgGFX10VCN2EngineConstructor(vcn2Engine);
