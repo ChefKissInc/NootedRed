@@ -269,29 +269,29 @@ class RAD {
     mach_vm_address_t orgStartHWEngines {};
     static bool wrapStartHWEngines(void *that);
 
-    mach_vm_address_t orgMicroEngineControlLoadMicrocode{};
-    static uint64_t wrapMicroEngineControlLoadMicrocode(void* that, void* param1);
+    mach_vm_address_t orgMicroEngineControlLoadMicrocode {};
+    static uint64_t wrapMicroEngineControlLoadMicrocode(void *that, void *param1);
 
-    mach_vm_address_t orgMicroEngineControlInitializeEngine{};
-    static uint64_t wrapMicroEngineControlInitializeEngine(void* that, void* param1, void* param2);
+    mach_vm_address_t orgMicroEngineControlInitializeEngine {};
+    static uint64_t wrapMicroEngineControlInitializeEngine(void *that, void *param1, void *param2);
 
-    mach_vm_address_t orgMicroEngineControlStartEngine{};
-    static uint64_t wrapMicroEngineControlStartEngine(void* that, void* param1);
+    mach_vm_address_t orgMicroEngineControlStartEngine {};
+    static uint64_t wrapMicroEngineControlStartEngine(void *that, void *param1);
 
-    mach_vm_address_t orgSdmaEngineStart{};
-    static bool wrapSdmaEngineStart(void* that);
+    mach_vm_address_t orgSdmaEngineStart {};
+    static bool wrapSdmaEngineStart(void *that);
 
-    mach_vm_address_t orgRtRingEnable{};
-    static uint64_t wrapRtRingEnable(void* that);
+    mach_vm_address_t orgRtRingEnable {};
+    static uint64_t wrapRtRingEnable(void *that);
 
-    mach_vm_address_t orgCailMCILTrace0{};
-    static void wrapCailMCILTrace0(void* that);
+    mach_vm_address_t orgCailMCILTrace0 {};
+    static void wrapCailMCILTrace0(void *that);
 
-    mach_vm_address_t orgCailMCILTrace1{};
-    static void wrapCailMCILTrace1(void* that);
+    mach_vm_address_t orgCailMCILTrace1 {};
+    static void wrapCailMCILTrace1(void *that);
 
-    mach_vm_address_t orgCailMCILTrace0{};
-    static void wrapCailMCILTrace0(void* that);
+    mach_vm_address_t orgCailMCILTrace0 {};
+    static void wrapCailMCILTrace0(void *that);
 };
 
 #endif /* kern_rad_hpp */

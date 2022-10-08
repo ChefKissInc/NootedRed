@@ -877,34 +877,37 @@ bool RAD::wrapStartHWEngines(void *that) {
     return ret;
 }
 
-uint64_t RAD::wrapMicroEngineControlLoadMicrocode(void* that, void* param1) {
+uint64_t RAD::wrapMicroEngineControlLoadMicrocode(void *that, void *param1) {
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     NETLOG("rad", "microEngineControlLoadMicrocode: this = %p param1 = %p", that, param1);
-    auto ret = FunctionCast(wrapMicroEngineControlLoadMicrocode, callbackRAD->orgMicroEngineControlLoadMicrocode)(that, param1);
+    auto ret = FunctionCast(wrapMicroEngineControlLoadMicrocode, callbackRAD->orgMicroEngineControlLoadMicrocode)(that,
+        param1);
     NETLOG("rad", "microEngineControlLoadMicrocode returned 0x%llX", ret);
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     return ret;
 }
 
-uint64_t RAD::wrapMicroEngineControlInitializeEngine(void* that, void* param1, void* param2) {
+uint64_t RAD::wrapMicroEngineControlInitializeEngine(void *that, void *param1, void *param2) {
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     NETLOG("rad", "microEngineControlInitializeEngine: this = %p param1 = %p param2 = %p", that, param1, param2);
-    auto ret = FunctionCast(wrapMicroEngineControlInitializeEngine, callbackRAD->orgMicroEngineControlInitializeEngine)(that, param1, param2);
+    auto ret = FunctionCast(wrapMicroEngineControlInitializeEngine,
+        callbackRAD->orgMicroEngineControlInitializeEngine)(that, param1, param2);
     NETLOG("rad", "microEngineControlInitializeEngine returned 0x%llX", ret);
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     return ret;
 }
 
-uint64_t RAD::wrapMicroEngineControlStartEngine(void* that, void* param1) {
+uint64_t RAD::wrapMicroEngineControlStartEngine(void *that, void *param1) {
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     NETLOG("rad", "microEngineControlStartEngine: this = %p param1 = %p", that, param1);
-    auto ret = FunctionCast(wrapMicroEngineControlStartEngine, callbackRAD->orgMicroEngineControlStartEngine)(that, param1);
+    auto ret =
+        FunctionCast(wrapMicroEngineControlStartEngine, callbackRAD->orgMicroEngineControlStartEngine)(that, param1);
     NETLOG("rad", "microEngineControlStartEngine returned 0x%llX", ret);
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     return ret;
 }
 
-bool RAD::wrapSdmaEngineStart(void* that) {
+bool RAD::wrapSdmaEngineStart(void *that) {
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     NETLOG("rad", "sdmaEngineStart: this = %p", that);
     auto ret = FunctionCast(wrapSdmaEngineStart, callbackRAD->orgSdmaEngineStart)(that);
@@ -913,7 +916,7 @@ bool RAD::wrapSdmaEngineStart(void* that) {
     return ret;
 }
 
-uint64_t RAD::wrapRtRingEnable(void* that) {
+uint64_t RAD::wrapRtRingEnable(void *that) {
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     NETLOG("rad", "rtRingEnable: this = %p", that);
     auto ret = FunctionCast(wrapRtRingEnable, callbackRAD->orgRtRingEnable)(that);
@@ -922,7 +925,7 @@ uint64_t RAD::wrapRtRingEnable(void* that) {
     return ret;
 }
 
-void RAD::wrapCailMCILTrace0(void* that) {
+void RAD::wrapCailMCILTrace0(void *that) {
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     NETLOG("rad", "_Cail_MCILTrace0: this = %p", that);
     FunctionCast(wrapCailMCILTrace0, callbackRAD->orgCailMCILTrace0)(that);
@@ -930,7 +933,7 @@ void RAD::wrapCailMCILTrace0(void* that) {
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
 }
 
-void RAD::wrapCailMCILTrace1(void* that) {
+void RAD::wrapCailMCILTrace1(void *that) {
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     NETLOG("rad", "_Cail_MCILTrace1: this = %p", that);
     FunctionCast(wrapCailMCILTrace1, callbackRAD->orgCailMCILTrace1)(that);
@@ -938,7 +941,7 @@ void RAD::wrapCailMCILTrace1(void* that) {
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
 }
 
-void RAD::wrapCailMCILTrace0(void* that) {
+void RAD::wrapCailMCILTrace0(void *that) {
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
     NETLOG("rad", "_Cail_MCILTrace0: this = %p", that);
     FunctionCast(wrapCailMCILTrace0, callbackRAD->orgCailMCILTrace0)(that);
@@ -1024,9 +1027,12 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_psp_asd_load", wrapPspAsdLoad, orgPspAsdLoad},
             {"_psp_dtm_load", wrapPspDtmLoad, orgPspDtmLoad},
             {"_psp_hdcp_load", wrapPspHdcpLoad, orgPspHdcpLoad},
-            {"__ZN15AmdCailServices31microEngineControlLoadMicrocodeEP17CailHwEngineQueue", wrapMicroEngineControlLoadMicrocode, orgMicroEngineControlLoadMicrocode},
-            {"__ZN15AmdCailServices34microEngineControlInitializeEngineEP17CailHwEngineQueueP21_CailInitializeEngine", wrapMicroEngineControlInitializeEngine, orgMicroEngineControlInitializeEngine},
-            {"__ZN15AmdCailServices29microEngineControlStartEngineEP17CailHwEngineQueue", wrapMicroEngineControlStartEngine, orgMicroEngineControlStartEngine},
+            {"__ZN15AmdCailServices31microEngineControlLoadMicrocodeEP17CailHwEngineQueue",
+                wrapMicroEngineControlLoadMicrocode, orgMicroEngineControlLoadMicrocode},
+            {"__ZN15AmdCailServices34microEngineControlInitializeEngineEP17CailHwEngineQueueP21_CailInitializeEngine",
+                wrapMicroEngineControlInitializeEngine, orgMicroEngineControlInitializeEngine},
+            {"__ZN15AmdCailServices29microEngineControlStartEngineEP17CailHwEngineQueue",
+                wrapMicroEngineControlStartEngine, orgMicroEngineControlStartEngine},
             {"_Cail_MCILTrace0", wrapCailMCILTrace0, orgCailMCILTrace0},
             {"_Cail_MCILTrace1", wrapCailMCILTrace1, orgCailMCILTrace1},
             {"_Cail_MCILTrace2", wrapCailMCILTrace0, orgCailMCILTrace0},
