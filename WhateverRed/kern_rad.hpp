@@ -298,6 +298,9 @@ class RAD {
 
     mach_vm_address_t orgGreenlandMicroEngineControl{};
     static uint64_t wrapGreenlandMicroEngineControl(void* param1, uint64_t param2, void* param3);
+
+    mach_vm_address_t orgSdmaMicroEngineControl{};
+    static uint64_t wrapSdmaMicroEngineControl(void* param1, void* param2, void* param3);
 };
 
 #endif /* kern_rad_hpp */

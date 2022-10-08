@@ -948,6 +948,18 @@ uint64_t RAD::wrapGreenlandMicroEngineControl(void* param1, uint64_t param2, voi
     return ret;
 }
 
+uint64_t RAD::wrapSdmaMicroEngineControl(void* param1, void* param2, void* param3) {
+    NETLOG("rad", "----------------------------------------------------------------------");
+    NETLOG("rad", "_sdma_micro_engine_control: param1 = %p param2 = %p param3 = %p", param1, param2, param3);
+    for (int i = 0; i < 0x70; i += 4) {
+        NETLOG("rad", "param2->field_0x%X = %X", i, getMember<uint32_t>(param2, i));
+    }
+    auto ret = FunctionCast(wrapSdmaMicroEngineControl, callbackRAD->orgSdmaMicroEngineControl)(param1, param2, param3);
+    NETLOG("rad", "_sdma_micro_engine_control returned 0x%llX", ret);
+    NETLOG("rad", "----------------------------------------------------------------------");
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -1037,6 +1049,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_Cail_MCILTrace2", wrapCailMCILTrace0, orgCailMCILTrace0},
             {"_greenland_load_rlc_ucode", wrapGreenlandLoadRlcUcode, orgGreenlandLoadRlcUcode},
             {"_greenland_micro_engine_control", wrapGreenlandMicroEngineControl, orgGreenlandMicroEngineControl},
+            {"_sdma_micro_engine_control", wrapSdmaMicroEngineControl, orgSdmaMicroEngineControl},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
