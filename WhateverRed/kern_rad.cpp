@@ -941,11 +941,11 @@ void RAD::wrapCailMCILTrace1(void *that) {
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
 }
 
-void RAD::wrapCailMCILTrace0(void *that) {
+void RAD::wrapCailMCILTrace2(void *that) {
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
-    NETLOG("rad", "_Cail_MCILTrace0: this = %p", that);
-    FunctionCast(wrapCailMCILTrace0, callbackRAD->orgCailMCILTrace0)(that);
-    NETLOG("rad", "_Cail_MCILTrace0 finished");
+    NETLOG("rad", "_Cail_MCILTrace2: this = %p", that);
+    FunctionCast(wrapCailMCILTrace2, callbackRAD->orgCailMCILTrace2)(that);
+    NETLOG("rad", "_Cail_MCILTrace2 finished");
     NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
 }
 
