@@ -302,10 +302,18 @@
 			<integer>16908288</integer>
 			<key>cail_properties</key>
 			<dict>
-				<key>CAIL_DisablePowerGating</key>
+				<key>CAIL_DisableCailLoadUcode</key>
 				<integer>1</integer>
+				<key>CAIL_DisableJpegEngine</key>
+				<integer>0</integer>
+				<key>CAIL_EnableLBPWSupport</key>
+				<integer>0</integer>
+				<key>CAIL_EnablePeerDataAperture</key>
+				<integer>0</integer>
 				<key>CAIL_EnableSecureMmFwLoading</key>
 				<integer>1</integer>
+				<key>CAIL_EnableXdmaSupport</key>
+				<integer>0</integer>
 			</dict>
 		</dict>
 		<key>Force load GFX 10</key>
