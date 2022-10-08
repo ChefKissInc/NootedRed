@@ -922,6 +922,30 @@ uint64_t RAD::wrapRtRingEnable(void* that) {
     return ret;
 }
 
+void RAD::wrapCailMCILTrace0(void* that) {
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "_Cail_MCILTrace0: this = %p", that);
+    FunctionCast(wrapCailMCILTrace0, callbackRAD->orgCailMCILTrace0)(that);
+    NETLOG("rad", "_Cail_MCILTrace0 finished");
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+}
+
+void RAD::wrapCailMCILTrace1(void* that) {
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "_Cail_MCILTrace1: this = %p", that);
+    FunctionCast(wrapCailMCILTrace1, callbackRAD->orgCailMCILTrace1)(that);
+    NETLOG("rad", "_Cail_MCILTrace1 finished");
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+}
+
+void RAD::wrapCailMCILTrace0(void* that) {
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+    NETLOG("rad", "_Cail_MCILTrace0: this = %p", that);
+    FunctionCast(wrapCailMCILTrace0, callbackRAD->orgCailMCILTrace0)(that);
+    NETLOG("rad", "_Cail_MCILTrace0 finished");
+    NETLOG("rad", "\n\n----------------------------------------------------------------------\n\n");
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -1003,6 +1027,9 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN15AmdCailServices31microEngineControlLoadMicrocodeEP17CailHwEngineQueue", wrapMicroEngineControlLoadMicrocode, orgMicroEngineControlLoadMicrocode},
             {"__ZN15AmdCailServices34microEngineControlInitializeEngineEP17CailHwEngineQueueP21_CailInitializeEngine", wrapMicroEngineControlInitializeEngine, orgMicroEngineControlInitializeEngine},
             {"__ZN15AmdCailServices29microEngineControlStartEngineEP17CailHwEngineQueue", wrapMicroEngineControlStartEngine, orgMicroEngineControlStartEngine},
+            {"_Cail_MCILTrace0", wrapCailMCILTrace0, orgCailMCILTrace0},
+            {"_Cail_MCILTrace1", wrapCailMCILTrace1, orgCailMCILTrace1},
+            {"_Cail_MCILTrace2", wrapCailMCILTrace0, orgCailMCILTrace0},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");

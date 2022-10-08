@@ -283,6 +283,15 @@ class RAD {
 
     mach_vm_address_t orgRtRingEnable{};
     static uint64_t wrapRtRingEnable(void* that);
+
+    mach_vm_address_t orgCailMCILTrace0{};
+    static void wrapCailMCILTrace0(void* that);
+
+    mach_vm_address_t orgCailMCILTrace1{};
+    static void wrapCailMCILTrace1(void* that);
+
+    mach_vm_address_t orgCailMCILTrace0{};
+    static void wrapCailMCILTrace0(void* that);
 };
 
 #endif /* kern_rad_hpp */
