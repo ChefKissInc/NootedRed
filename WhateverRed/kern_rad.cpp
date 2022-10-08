@@ -599,10 +599,6 @@ bool RAD::wrapAllocateHWEngines(void *that) {
     callbackRAD->orgGFX9SDMAEngineConstructor(sdmaEngine);
     getMember<void *>(that, 0x3c0) = sdmaEngine;
 
-    auto *sdma1Engine = callbackRAD->orgGFX9SDMAEngineNew(0x128);
-    callbackRAD->orgGFX9SDMAEngineConstructor(sdma1Engine);
-    getMember<void *>(that, 0x3c8) = sdma1Engine;
-
     auto *vcn2Engine = callbackRAD->orgGFX10VCN2EngineNew(0x198);
     callbackRAD->orgGFX10VCN2EngineConstructor(vcn2Engine);
     getMember<void *>(that, 0x3f8) = vcn2Engine;
@@ -627,13 +623,6 @@ void RAD::wrapSetupAndInitializeHWCapabilities(void *that) {
 bool RAD::wrapPM4EnginePowerUp(void *that) {
     NETLOG("rad", "PM4EnginePowerUp: this = %p", that);
     auto ret = FunctionCast(wrapPM4EnginePowerUp, callbackRAD->orgPM4EnginePowerUp)(that);
-    // auto *buf = (char *)IOMallocZero(0x100000);
-    // auto *bufPtr = buf;
-    // size_t size = 0xfffff;
-    // callbackRAD->orgWriteDiagnosisReport(callbackRAD->callbackAccelerator, &bufPtr, &size);
-    // NETDBG::nprint(buf, strnlen(buf, 0xfffff));
-    // NETDBG::printf("\n");
-    // IOFree(buf, 0x100000);
     NETLOG("rad", "PM4EnginePowerUp returned %d", ret);
     return ret;
 }
@@ -1019,7 +1008,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN15AmdCailServices23queryEngineRunningStateEP17CailHwEngineQueueP22CailEngineRunningState",
                 wrapQueryEngineRunningState, orgQueryEngineRunningState},
             // {"_CAILQueryEngineRunningState", wrapCAILQueryEngineRunningState, orgCAILQueryEngineRunningState},
-            // {"_CailMonitorEngineInternalState", wrapCailMonitorEngineInternalState, orgCailMonitorEngineInternalState},
+            // {"_CailMonitorEngineInternalState", wrapCailMonitorEngineInternalState,
+            // orgCailMonitorEngineInternalState},
             {"_CailMonitorPerformanceCounter", wrapCailMonitorPerformanceCounter, orgCailMonitorPerformanceCounter},
             {"_SMUM_Initialize", wrapSMUMInitialize, orgSMUMInitialize},
             {"__ZN25AtiApplePowerTuneServices23createPowerTuneServicesEP11PP_InstanceP18PowerPlayCallbacks",
@@ -1215,6 +1205,15 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
         }
+
+        uint8_t find_createAccelChannels[] = {0x74, 0x54, 0x48, 0xff, 0xc1, 0x48, 0x83, 0xf9, 0x03, 0x0f, 0x85, 0x66,
+            0xfe, 0xff, 0xff};
+        uint8_t repl_createAccelChannels[] = {0x74, 0x54, 0x48, 0xff, 0xc1, 0x48, 0x83, 0xf9, 0x02, 0x0f, 0x85, 0x66,
+            0xfe, 0xff, 0xff};
+        KernelPatcher::LookupPatch patch {&kextRadeonX5000, find_createAccelChannels, repl_createAccelChannels,
+            arrsize(find_createAccelChannels), 2};
+        patcher.applyLookupPatch(&patch);
+        patcher.clearError();
 
         return true;
     } else if (kextRadeonX6000.loadIndex == index) {
