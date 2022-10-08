@@ -292,6 +292,12 @@ class RAD {
 
     mach_vm_address_t orgCailMCILTrace2 {};
     static void wrapCailMCILTrace2(void *that);
+
+    mach_vm_address_t orgGreenlandLoadRlcUcode{};
+    static uint64_t wrapGreenlandLoadRlcUcode(void* param1);
+
+    mach_vm_address_t orgGreenlandMicroEngineControl{};
+    static uint64_t wrapGreenlandMicroEngineControl(void* param1, uint64_t param2, void* param3);
 };
 
 #endif /* kern_rad_hpp */

@@ -930,6 +930,24 @@ void RAD::wrapCailMCILTrace2(void *that) {
     FunctionCast(wrapCailMCILTrace2, callbackRAD->orgCailMCILTrace2)(that);
 }
 
+uint64_t RAD::wrapGreenlandLoadRlcUcode(void* param1) {
+    NETLOG("rad", "----------------------------------------------------------------------");
+    NETLOG("rad", "_greenland_load_rlc_ucode: param1 = %p", param1);
+    auto ret = FunctionCast(wrapGreenlandLoadRlcUcode, callbackRAD->orgGreenlandLoadRlcUcode)(param1);
+    NETLOG("rad", "_greenland_load_rlc_ucode returned 0x%llX", ret);
+    NETLOG("rad", "----------------------------------------------------------------------");
+    return ret;
+}
+
+uint64_t RAD::wrapGreenlandMicroEngineControl(void* param1, uint64_t param2, void* param3) {
+    NETLOG("rad", "----------------------------------------------------------------------");
+    NETLOG("rad", "_greenland_micro_engine_control: param1 = %p param2 = 0x%llX param3 = %p", param1, param2, param3);
+    auto ret = FunctionCast(wrapGreenlandMicroEngineControl, callbackRAD->orgGreenlandMicroEngineControl)(param1, param2, param3);
+    NETLOG("rad", "_greenland_micro_engine_control returned 0x%llX", ret);
+    NETLOG("rad", "----------------------------------------------------------------------");
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -1017,6 +1035,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_Cail_MCILTrace0", wrapCailMCILTrace0, orgCailMCILTrace0},
             {"_Cail_MCILTrace1", wrapCailMCILTrace1, orgCailMCILTrace1},
             {"_Cail_MCILTrace2", wrapCailMCILTrace0, orgCailMCILTrace0},
+            {"_greenland_load_rlc_ucode", wrapGreenlandLoadRlcUcode, orgGreenlandLoadRlcUcode},
+            {"_greenland_micro_engine_control", wrapGreenlandMicroEngineControl, orgGreenlandMicroEngineControl},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
