@@ -1059,15 +1059,26 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             0x51, 0xfe, 0xff, 0xff};
         uint8_t repl_asic_reset[] = {0x55, 0x48, 0x89, 0xe5, 0x8b, 0x56, 0x04, 0xbe, 0x1e, 0x00, 0x00, 0x00, 0x5d, 0xe9,
             0x51, 0xfe, 0xff, 0xff};
+        static_assert(arrsize(find_asic_reset) == arrsize(repl_asic_reset), "Find/replace patch size mismatch");
+
+        uint8_t find_sdma_micro_engine_control[] = { 0xeb, 0x69, 0x41, 0x81, 0xbe, 0x90, 0x01, 0x00, 0x00, 0x8d, 0x00, 0x00, 0x00, 0x0f, 0x85, 0x80, 0x01, 0x00, 0x00, 0x41, 0x8b, 0x86, 0x9c, 0x01, 0x00, 0x00, 0x31, 0xff, 0xbe, 0x01, 0x00, 0x00, 0x00, 0x83, 0xf8, 0x14, 0x0f, 0x82, 0xe4, 0x02, 0x00, 0x00 };
+        uint8_t repl_sdma_micro_engine_control[] = { 0xeb, 0x69, 0x41, 0x81, 0xbe, 0x90, 0x01, 0x00, 0x00, 0x8e, 0x00, 0x00, 0x00, 0x0f, 0x85, 0x80, 0x01, 0x00, 0x00, 0x41, 0x8b, 0x86, 0x9c, 0x01, 0x00, 0x00, 0x31, 0xff, 0xbe, 0x01, 0x00, 0x00, 0x00, 0x83, 0xf8, 0xff, 0x0f, 0x82, 0xe4, 0x02, 0x00, 0x00 };
+        static_assert(arrsize(find_sdma_micro_engine_control) == arrsize(repl_sdma_micro_engine_control), "Find/replace patch size mismatch");
 
         KernelPatcher::LookupPatch patches[] = {
             /**
-             * Patch for _smu_9_0_1_full_asic_reset
+             * Patch for `_smu_9_0_1_full_asic_reset`
              * This function performs a full ASIC reset.
-             * The patch corrects the sent message to 0x1E;
-             * the original code sends 0x3B, which is wrong for SMU 10.
+             * The patch corrects the sent message to `0x1E`;
+             * the original code sends `0x3B`, which is wrong for SMU 10.
              */
-            {&kextRadeonX5000HWLibs, find_asic_reset, repl_asic_reset, arrsize(find_asic_reset), 1},
+            {&kextRadeonX5000HWLibs, find_asic_reset, repl_asic_reset, arrsize(find_asic_reset), 2},
+            /**
+             * Patch for `_sdma_micro_engine_control`
+             * This function checks for familyId and emulatedRev, and returns 2 (Not supported) if they are not Vega-based.
+             * The patch makes sure the checks always pass.
+             */
+            {&kextRadeonX5000HWLibs, find_sdma_micro_engine_control, repl_sdma_micro_engine_control, arrsize(find_sdma_micro_engine_control), 2},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
