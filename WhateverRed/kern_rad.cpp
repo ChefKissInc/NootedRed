@@ -956,6 +956,15 @@ bool RAD::wrapWaitForHwStamp(void *that, uint64_t param1) {
     return ret;
 }
 
+uint64_t RAD::wrapRTGetHWChannel(void* that, uint32_t param1, uint32_t param2, uint32_t param3) {
+    NETLOG("rad", "----------------------------------------------------------------------");
+    NETLOG("rad", "RTGetHWChannel: this = %p param1 = 0x%X param2 = 0x%X param3 = 0x%X", that, param1, param2, param3);
+    auto ret = FunctionCast(wrapRTGetHWChannel, callbackRAD->orgRTGetHWChannel)(that, param1, param2, param3);
+    NETLOG("rad", "RTGetHWChannel returned 0x%llX", ret);
+    NETLOG("rad", "----------------------------------------------------------------------");
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -1211,6 +1220,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngine5startEv", wrapSdmaEngineStart, orgSdmaEngineStart},
             {"__ZN24AMDRadeonX5000_AMDRTRing6enableEv", wrapRtRingEnable, orgRtRingEnable},
             {"__ZN27AMDRadeonX5000_AMDHWChannel14waitForHwStampEj", wrapWaitForHwStamp, orgWaitForHwStamp},
+            {"__ZN28AMDRadeonX5000_AMDRTHardware12getHWChannelE18_eAMD_CHANNEL_TYPE11SS_PRIORITYj", wrapRTGetHWChannel, orgRTGetHWChannel},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
