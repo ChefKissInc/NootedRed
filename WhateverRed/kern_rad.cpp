@@ -951,7 +951,7 @@ bool RAD::wrapWaitForHwStamp(void* that, uint64_t param1) {
     NETLOG("rad", "waitForHwStamp: this = %p param1 = 0x%llX", that, param1);
     auto ret = FunctionCast(wrapWaitForHwStamp, callbackRAD->orgWaitForHwStamp)(that, param1);
     NETLOG("rad", "waitForHwStamp returned %d", ret);
-    if (ret) panic("Timeout waiting for timestamp");
+    if (!ret) panic("Timeout waiting for timestamp");
     NETLOG("rad", "----------------------------------------------------------------------");
     return ret;
 }
