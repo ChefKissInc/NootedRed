@@ -946,7 +946,7 @@ uint64_t RAD::wrapSdmaMicroEngineControl(void *param1, void *param2, void *param
     return ret;
 }
 
-bool RAD::wrapWaitForHwStamp(void* that, uint64_t param1) {
+bool RAD::wrapWaitForHwStamp(void *that, uint64_t param1) {
     NETLOG("rad", "----------------------------------------------------------------------");
     NETLOG("rad", "waitForHwStamp: this = %p param1 = 0x%llX", that, param1);
     auto ret = FunctionCast(wrapWaitForHwStamp, callbackRAD->orgWaitForHwStamp)(that, param1);
@@ -1215,15 +1215,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
         }
-
-        uint8_t find_createAccelChannels[] = {0x74, 0x54, 0x48, 0xff, 0xc1, 0x48, 0x83, 0xf9, 0x03, 0x0f, 0x85, 0x66,
-            0xfe, 0xff, 0xff};
-        uint8_t repl_createAccelChannels[] = {0x74, 0x54, 0x48, 0xff, 0xc1, 0x48, 0x83, 0xf9, 0x02, 0x0f, 0x85, 0x66,
-            0xfe, 0xff, 0xff};
-        KernelPatcher::LookupPatch patch {&kextRadeonX5000, find_createAccelChannels, repl_createAccelChannels,
-            arrsize(find_createAccelChannels), 2};
-        patcher.applyLookupPatch(&patch);
-        patcher.clearError();
 
         return true;
     } else if (kextRadeonX6000.loadIndex == index) {

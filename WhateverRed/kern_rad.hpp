@@ -302,8 +302,8 @@ class RAD {
     mach_vm_address_t orgSdmaMicroEngineControl {};
     static uint64_t wrapSdmaMicroEngineControl(void *param1, void *param2, void *param3);
 
-    mach_vm_address_t orgWaitForHwStamp{};
-    static bool wrapWaitForHwStamp(void* that, uint64_t param1);
+    mach_vm_address_t orgWaitForHwStamp {};
+    static bool wrapWaitForHwStamp(void *that, uint64_t param1);
 };
 
 #endif /* kern_rad_hpp */
