@@ -12,6 +12,7 @@
 #include "kern_agdc.hpp"
 #include "kern_atom.hpp"
 #include "kern_con.hpp"
+#include "stdint.h"
 #include <Headers/kern_devinfo.hpp>
 #include <Headers/kern_patcher.hpp>
 #include <IOKit/IOService.h>
@@ -305,8 +306,10 @@ class RAD {
     mach_vm_address_t orgWaitForHwStamp {};
     static bool wrapWaitForHwStamp(void *that, uint64_t param1);
 
-    mach_vm_address_t orgRTGetHWChannel{};
-    static uint64_t wrapRTGetHWChannel(void* that, uint32_t param1, uint32_t param2, uint32_t param3);
+    mach_vm_address_t orgRTGetHWChannel {};
+    static uint64_t wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3);
+
+    uint32_t *orgChannelTypes = nullptr;
 };
 
 #endif /* kern_rad_hpp */

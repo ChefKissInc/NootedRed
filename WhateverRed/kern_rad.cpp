@@ -798,6 +798,12 @@ uint64_t RAD::wrapAccelGetHWChannel(void *that) {
 
 uint64_t RAD::wrapCreateAccelChannels(void *that, uint64_t param1) {
     NETLOG("rad", "createAccelChannels: this = %p param1 = 0x%llX", that, param1);
+    /**
+     * Patch the data so that it only uses SDMA0.
+     */
+    MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock);
+    callbackRAD->orgChannelTypes[5] = 1;
+    MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
     auto ret = FunctionCast(wrapCreateAccelChannels, callbackRAD->orgCreateAccelChannels)(that, param1);
     NETLOG("rad", "createAccelChannels returned 0x%llX", ret);
     return ret;
@@ -956,7 +962,7 @@ bool RAD::wrapWaitForHwStamp(void *that, uint64_t param1) {
     return ret;
 }
 
-uint64_t RAD::wrapRTGetHWChannel(void* that, uint32_t param1, uint32_t param2, uint32_t param3) {
+uint64_t RAD::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3) {
     NETLOG("rad", "----------------------------------------------------------------------");
     NETLOG("rad", "RTGetHWChannel: this = %p param1 = 0x%X param2 = 0x%X param3 = 0x%X", that, param1, param2, param3);
     auto ret = FunctionCast(wrapRTGetHWChannel, callbackRAD->orgRTGetHWChannel)(that, param1, param2, param3);
@@ -1170,6 +1176,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEnginenwEm", orgGFX9SDMAEngineNew},
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngineC1Ev", orgGFX9SDMAEngineConstructor},
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator20writeDiagnosisReportERPcRj", orgWriteDiagnosisReport},
+            {"__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator19createAccelChannelsEbE12channelTypes", orgChannelTypes},
         };
         if (!patcher.solveMultiple(index, solveRequests, address, size)) {
             panic("RAD: Failed to resolve AMDRadeonX5000 symbols");
@@ -1220,7 +1227,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngine5startEv", wrapSdmaEngineStart, orgSdmaEngineStart},
             {"__ZN24AMDRadeonX5000_AMDRTRing6enableEv", wrapRtRingEnable, orgRtRingEnable},
             {"__ZN27AMDRadeonX5000_AMDHWChannel14waitForHwStampEj", wrapWaitForHwStamp, orgWaitForHwStamp},
-            {"__ZN28AMDRadeonX5000_AMDRTHardware12getHWChannelE18_eAMD_CHANNEL_TYPE11SS_PRIORITYj", wrapRTGetHWChannel, orgRTGetHWChannel},
+            {"__ZN28AMDRadeonX5000_AMDRTHardware12getHWChannelE18_eAMD_CHANNEL_TYPE11SS_PRIORITYj", wrapRTGetHWChannel,
+                orgRTGetHWChannel},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
