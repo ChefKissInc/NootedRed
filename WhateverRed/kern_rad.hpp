@@ -310,6 +310,9 @@ class RAD {
     static uint64_t wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3);
 
     uint32_t *orgChannelTypes = nullptr;
+
+    mach_vm_address_t orgSdmaSwInit {};
+    static uint32_t wrapSdmaSwInit(uint32_t *param1, uint32_t *param2);
 };
 
 #endif /* kern_rad_hpp */

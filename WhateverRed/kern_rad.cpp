@@ -974,6 +974,16 @@ uint64_t RAD::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, u
     return ret;
 }
 
+uint32_t RAD::wrapSdmaSwInit(uint32_t *param1, uint32_t *param2) {
+    NETLOG("rad", "----------------------------------------------------------------------");
+    NETLOG("rad", "_sdma_sw_init: param1 = %p param2 = %p", param1, param2);
+    NETLOG("rad", "_sdma_sw_init: param1[4] = %X param1[5] = %X param1[6] = %X", param1[4], param1[5], param1[6]);
+    auto ret = FunctionCast(wrapSdmaSwInit, callbackRAD->orgSdmaSwInit)(param1, param2);
+    NETLOG("rad", "_sdma_sw_init returned 0x%X", ret);
+    NETLOG("rad", "----------------------------------------------------------------------");
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -1065,6 +1075,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_greenland_load_rlc_ucode", wrapGreenlandLoadRlcUcode, orgGreenlandLoadRlcUcode},
             {"_greenland_micro_engine_control", wrapGreenlandMicroEngineControl, orgGreenlandMicroEngineControl},
             {"_sdma_micro_engine_control", wrapSdmaMicroEngineControl, orgSdmaMicroEngineControl},
+            {"_sdma_sw_init", wrapSdmaSwInit, orgSdmaSwInit},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
