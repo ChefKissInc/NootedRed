@@ -30,16 +30,16 @@ in_addr_t NETDBG::ip_addr = 0;
 uint32_t NETDBG::port = 0;
 
 size_t NETDBG::nprint(char *data, size_t len) {
-    kprintf("netdbg: message: %s", data);
-
-    if (!enabled) { return 0; }
-
-    bool disable = false;
-    if (PE_parse_boot_argn("netdbg_disable", &disable, sizeof(bool)) && disable) {
-        kprintf("netdbg: Disabled via boot arg");
+    int disable = 0;
+    if (enabled && PE_parse_boot_argn("netdbg_disable", &disable, sizeof(disable))) {
+        kprintf("netdbg: Disabled via boot arg\n");
         enabled = false;
         return 0;
     }
+
+    kprintf("%s", data);
+
+    if (!enabled) { return 0; }
 
     if (!ip_addr || !port) {
         uint32_t b[4] = {0};
