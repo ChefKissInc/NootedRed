@@ -965,6 +965,10 @@ bool RAD::wrapWaitForHwStamp(void *that, uint64_t param1) {
 uint64_t RAD::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3) {
     NETLOG("rad", "----------------------------------------------------------------------");
     NETLOG("rad", "RTGetHWChannel: this = %p param1 = 0x%X param2 = 0x%X param3 = 0x%X", that, param1, param2, param3);
+    if (param1 == 2 && param2 == 0 && param3 == 0) {
+        param2 = 2;
+        NETLOG("rad", "RTGetHWChannel: setting param_2 to 2");
+    }
     auto ret = FunctionCast(wrapRTGetHWChannel, callbackRAD->orgRTGetHWChannel)(that, param1, param2, param3);
     NETLOG("rad", "RTGetHWChannel returned 0x%llX", ret);
     NETLOG("rad", "----------------------------------------------------------------------");
