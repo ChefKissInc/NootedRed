@@ -287,8 +287,8 @@ uint32_t RAD::wrapGcGetHwVersion(uint32_t *param1) {
     NETLOG("rad", "_gc_get_hw_version returned 0x%X", ret);
     switch (ret & 0xFF0000) {
         case 0x90000:
-            NETLOG("rad", "Spoofing GC version v9.x.x to v9.2.1");
-            return 0x90201;
+            NETLOG("rad", "Spoofing GC version v9.x.x to v9.0.1");
+            return 0x90001;
         default:
             return ret;
     }
@@ -502,7 +502,7 @@ uint64_t RAD::wrapSmuGetFwConstants() {
      * According to Linux AMDGPU source code,
      * on APUs, the System BIOS is the one that loads the SMC Firmware, and
      * therefore, we must not load any firmware ourselves.
-     * We fix that by making _smu_get_fw_constants a no-op.
+     * We fix that by making `_smu_get_fw_constants` a no-op.
      */
     return 0;
 }
