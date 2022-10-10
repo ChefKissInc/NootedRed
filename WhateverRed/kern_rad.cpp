@@ -591,17 +591,22 @@ bool RAD::wrapAllocateHWEngines(void *that) {
     auto *&vtable = getMember<mach_vm_address_t *>(that, 0);
     vtable[0x62] = reinterpret_cast<mach_vm_address_t>(wrapGetHWEngine);
 
-    auto *pm4Engine = callbackRAD->orgGFX9PM4EngineNew(0x1e8);
-    callbackRAD->orgGFX9PM4EngineConstructor(pm4Engine);
-    getMember<void *>(that, 0x3b8) = pm4Engine;
+    auto *pm4 = callbackRAD->orgGFX9PM4EngineNew(0x1e8);
+    callbackRAD->orgGFX9PM4EngineConstructor(pm4);
+    getMember<void *>(that, 0x3b8) = pm4;
 
-    auto *sdmaEngine = callbackRAD->orgGFX9SDMAEngineNew(0x128);
-    callbackRAD->orgGFX9SDMAEngineConstructor(sdmaEngine);
-    getMember<void *>(that, 0x3c0) = sdmaEngine;
+    auto *sdma0 = callbackRAD->orgGFX9SDMAEngineNew(0x128);
+    callbackRAD->orgGFX9SDMAEngineConstructor(sdma0);
+    getMember<void *>(that, 0x3c0) = sdma0;
 
-    auto *vcn2Engine = callbackRAD->orgGFX10VCN2EngineNew(0x198);
-    callbackRAD->orgGFX10VCN2EngineConstructor(vcn2Engine);
-    getMember<void *>(that, 0x3f8) = vcn2Engine;
+    auto *sdma1 = callbackRAD->orgGFX9SDMAEngineNew(0x128);
+    callbackRAD->orgGFX9SDMAEngineConstructor(sdma1);
+    getMember<void *>(that, 0x3c8) = sdma1;
+
+    auto *vcn2 = callbackRAD->orgGFX10VCN2EngineNew(0x198);
+    callbackRAD->orgGFX10VCN2EngineConstructor(vcn2);
+    getMember<void *>(that, 0x3f8) = vcn2;
+
     NETLOG("rad", "allocateHWEngines: returning true");
     return true;
 }
@@ -966,7 +971,7 @@ uint64_t RAD::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, u
     NETLOG("rad", "RTGetHWChannel: this = %p param1 = 0x%X param2 = 0x%X param3 = 0x%X", that, param1, param2, param3);
     if (param1 == 2 && param2 == 0 && param3 == 0) {
         param2 = 2;
-        NETLOG("rad", "RTGetHWChannel: setting param_2 to 2");
+        NETLOG("rad", "RTGetHWChannel: calling with param2 = 2");
     }
     auto ret = FunctionCast(wrapRTGetHWChannel, callbackRAD->orgRTGetHWChannel)(that, param1, param2, param3);
     NETLOG("rad", "RTGetHWChannel returned 0x%llX", ret);
