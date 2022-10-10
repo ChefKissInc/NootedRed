@@ -34,7 +34,6 @@ size_t NETDBG::nprint(char *data, size_t len) {
     if (enabled && PE_parse_boot_argn("netdbg_disable", &disable, sizeof(disable))) {
         kprintf("netdbg: Disabled via boot arg\n");
         enabled = false;
-        return 0;
     }
 
     kprintf("%s", data);
