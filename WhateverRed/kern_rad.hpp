@@ -321,17 +321,16 @@ class RAD {
     mach_vm_address_t orgSdmaGetHwVersion {};
     static uint64_t wrapSdmaGetHwVersion(uint32_t param1, uint32_t param2);
 
-    mach_vm_address_t orgTtlDevIsVega10Device {};
-    static bool wrapTtlDevIsVega10Device(void *param1);
+    static bool wrapTtlDevIsVega10Device();
 
     mach_vm_address_t orgCosDebugAssert {};
     static void wrapCosDebugAssert(void *param1, uint8_t *param2, uint8_t *param3, uint32_t param4, uint8_t *param5);
 
-    mach_vm_address_t orgIpiSdmaHwInit{};
-    static bool wrapIpiSdmaHwInit(void* ctx);
+    mach_vm_address_t orgIpiSdmaHwInit {};
+    static bool wrapIpiSdmaHwInit(void *ctx);
 
-    mach_vm_address_t orgIpiSdmaHwInitInstance{};
-    static uint64_t wrapIpiSdmaHwInitInstance(void* param1, uint32_t* param2);
+    mach_vm_address_t orgIpiSdmaHwInitInstance {};
+    static uint64_t wrapIpiSdmaHwInitInstance(void *param1, uint32_t *param2);
 };
 
 #endif /* kern_rad_hpp */

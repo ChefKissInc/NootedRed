@@ -990,12 +990,7 @@ uint64_t RAD::wrapSdmaGetHwVersion(uint32_t param1, uint32_t param2) {
     return ret;
 }
 
-bool RAD::wrapTtlDevIsVega10Device(void *param1) {
-    NETLOG("rad", "_ttlDevIsVega10Device: param1 = %p", param1);
-    auto ret = FunctionCast(wrapTtlDevIsVega10Device, callbackRAD->orgTtlDevIsVega10Device)(param1);
-    NETLOG("rad", "_ttlDevIsVega10Device returned %d", ret);
-    return true;
-}
+bool RAD::wrapTtlDevIsVega10Device() { return true; }
 
 void RAD::wrapCosDebugAssert(void *param1, uint8_t *param2, uint8_t *param3, uint32_t param4, uint8_t *param5) {
     NETLOG("rad", "----------------------------------------------------------------------");
@@ -1006,7 +1001,7 @@ void RAD::wrapCosDebugAssert(void *param1, uint8_t *param2, uint8_t *param3, uin
     NETLOG("rad", "----------------------------------------------------------------------");
 }
 
-bool RAD::wrapIpiSdmaHwInit(void* ctx) {
+bool RAD::wrapIpiSdmaHwInit(void *ctx) {
     NETLOG("rad", "----------------------------------------------------------------------");
     NETLOG("rad", "_ipi_sdma_hw_init: ctx = %p", ctx);
     auto ret = FunctionCast(wrapIpiSdmaHwInit, callbackRAD->orgIpiSdmaHwInit)(ctx);
@@ -1015,7 +1010,7 @@ bool RAD::wrapIpiSdmaHwInit(void* ctx) {
     return ret;
 }
 
-uint64_t RAD::wrapIpiSdmaHwInitInstance(void* param1, uint32_t* param2) {
+uint64_t RAD::wrapIpiSdmaHwInitInstance(void *param1, uint32_t *param2) {
     NETLOG("rad", "----------------------------------------------------------------------");
     NETLOG("rad", "_ipi_sdma_hw_init_instance: param1 = %p param2 = %p", param1, param2);
     auto ret = FunctionCast(wrapIpiSdmaHwInitInstance, callbackRAD->orgIpiSdmaHwInitInstance)(param1, param2);
@@ -1118,7 +1113,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_sdma_sw_init", wrapSdmaSwInit, orgSdmaSwInit},
             {"_sdma_assertion", wrapSdmaAssertion, orgSdmaAssertion},
             {"_sdma_get_hw_version", wrapSdmaGetHwVersion, orgSdmaGetHwVersion},
-            {"_ttlDevIsVega10Device", wrapTtlDevIsVega10Device, orgTtlDevIsVega10Device},
+            {"_ttlDevIsVega10Device", wrapTtlDevIsVega10Device},
             {"__ZN14AmdTtlServices14cosDebugAssertEPvPKcS2_jS2_", wrapCosDebugAssert, orgCosDebugAssert},
             {"_ipi_sdma_hw_init", wrapIpiSdmaHwInit, orgIpiSdmaHwInit},
             {"_ipi_sdma_hw_init_instance", wrapIpiSdmaHwInitInstance, orgIpiSdmaHwInitInstance},
