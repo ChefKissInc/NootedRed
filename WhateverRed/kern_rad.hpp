@@ -330,7 +330,7 @@ class RAD {
     static bool wrapIpiSdmaHwInit(void *ctx);
 
     mach_vm_address_t orgIpiSdmaHwInitInstance {};
-    static uint64_t wrapIpiSdmaHwInitInstance(void *param1, uint32_t *param2);
+    static bool wrapIpiSdmaHwInitInstance(void *param1, uint32_t *param2);
 };
 
 #endif /* kern_rad_hpp */

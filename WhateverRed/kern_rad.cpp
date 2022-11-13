@@ -993,29 +993,23 @@ uint64_t RAD::wrapSdmaGetHwVersion(uint32_t param1, uint32_t param2) {
 bool RAD::wrapTtlDevIsVega10Device() { return true; }
 
 void RAD::wrapCosDebugAssert(void *param1, uint8_t *param2, uint8_t *param3, uint32_t param4, uint8_t *param5) {
-    NETLOG("rad", "----------------------------------------------------------------------");
     NETLOG("rad", "cosDebugAssert: param1 = %p param2 = %p param3 = %p param4 = 0x%X param5 = %p", param1, param2,
         param3, param4, param5);
     FunctionCast(wrapCosDebugAssert, callbackRAD->orgCosDebugAssert)(param1, param2, param3, param4, param5);
     NETLOG("rad", "cosDebugAssert finished");
-    NETLOG("rad", "----------------------------------------------------------------------");
 }
 
 bool RAD::wrapIpiSdmaHwInit(void *ctx) {
-    NETLOG("rad", "----------------------------------------------------------------------");
     NETLOG("rad", "_ipi_sdma_hw_init: ctx = %p", ctx);
     auto ret = FunctionCast(wrapIpiSdmaHwInit, callbackRAD->orgIpiSdmaHwInit)(ctx);
     NETLOG("rad", "_ipi_sdma_hw_init returned %d", ret);
-    NETLOG("rad", "----------------------------------------------------------------------");
     return ret;
 }
 
-uint64_t RAD::wrapIpiSdmaHwInitInstance(void *param1, uint32_t *param2) {
-    NETLOG("rad", "----------------------------------------------------------------------");
+bool RAD::wrapIpiSdmaHwInitInstance(void *param1, uint32_t *param2) {
     NETLOG("rad", "_ipi_sdma_hw_init_instance: param1 = %p param2 = %p", param1, param2);
     auto ret = FunctionCast(wrapIpiSdmaHwInitInstance, callbackRAD->orgIpiSdmaHwInitInstance)(param1, param2);
-    NETLOG("rad", "_ipi_sdma_hw_init_instance returned 0x%llX", ret);
-    NETLOG("rad", "----------------------------------------------------------------------");
+    NETLOG("rad", "_ipi_sdma_hw_init_instance returned %d", ret);
     return ret;
 }
 
