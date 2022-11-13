@@ -975,11 +975,8 @@ uint32_t RAD::wrapSdmaSwInit(uint32_t *param1, uint32_t *param2) {
 
 void RAD::wrapSdmaAssertion(uint64_t param1, bool param2, uint8_t *param3, uint8_t *param4, uint64_t param5,
     uint8_t *param6) {
-    if (!param2) {
-        NETLOG("rad",
-            "_sdma_assertion: param1 = 0x%llX param2 = %d param3 = %p param4 = %p param5 = 0x%llX param6 = %p", param1,
-            param2, param3, param4, param5, param6);
-    }
+    NETLOG("rad", "_sdma_assertion: param1 = 0x%llX param2 = %d param3 = %p param4 = %p param5 = 0x%llX param6 = %p",
+        param1, param2, param3, param4, param5, param6);
     FunctionCast(wrapSdmaAssertion, callbackRAD->orgSdmaAssertion)(param1, param2, param3, param4, param5, param6);
 }
 
@@ -1013,28 +1010,28 @@ bool RAD::wrapIpiSdmaHwInitInstance(void *param1, uint32_t *param2) {
     return ret;
 }
 
-uint64_t RAD::wrapSdmaCreateQueue(uint64_t param1, uint32_t* param2, void* param3) {
+uint64_t RAD::wrapSdmaCreateQueue(uint64_t param1, uint32_t *param2, void *param3) {
     NETLOG("rad", "_sdma_create_queue: param1 = 0x%llX param2 = %p param3 = %p", param1, param2, param3);
     auto ret = FunctionCast(wrapSdmaCreateQueue, callbackRAD->orgSdmaCreateQueue)(param1, param2, param3);
     NETLOG("rad", "_sdma_create_queue returned 0x%llX", ret);
     return ret;
 }
 
-uint64_t RAD::wrapSdmaCreateHybridQueue(uint64_t param1, uint32_t* param2, uint64_t* param3) {
+uint64_t RAD::wrapSdmaCreateHybridQueue(uint64_t param1, uint32_t *param2, uint64_t *param3) {
     NETLOG("rad", "_sdma_create_hybrid_queue: param1 = 0x%llX param2 = %p param3 = %p", param1, param2, param3);
     auto ret = FunctionCast(wrapSdmaCreateHybridQueue, callbackRAD->orgSdmaCreateHybridQueue)(param1, param2, param3);
     NETLOG("rad", "_sdma_create_hybrid_queue returned 0x%llX", ret);
     return ret;
 }
 
-uint64_t RAD::wrapSdmaQueuePagingInitPfnPtr(uint64_t* param1) {
+uint64_t RAD::wrapSdmaQueuePagingInitPfnPtr(uint64_t *param1) {
     NETLOG("rad", "_sdma_queue_paging_init_pfn_ptr: param1 = %p", param1);
     auto ret = FunctionCast(wrapSdmaQueuePagingInitPfnPtr, callbackRAD->orgSdmaQueuePagingInitPfnPtr)(param1);
     NETLOG("rad", "_sdma_queue_paging_init_pfn_ptr returned 0x%llX", ret);
     return ret;
 }
 
-uint64_t RAD::wrapSdmaQueueDmaInitPfnPtr(uint64_t* param1) {
+uint64_t RAD::wrapSdmaQueueDmaInitPfnPtr(uint64_t *param1) {
     NETLOG("rad", "_sdma_queue_dma_init_pfn_ptr: param1 = %p", param1);
     auto ret = FunctionCast(wrapSdmaQueueDmaInitPfnPtr, callbackRAD->orgSdmaQueueDmaInitPfnPtr)(param1);
     NETLOG("rad", "_sdma_queue_dma_init_pfn_ptr returned 0x%llX", ret);
@@ -1049,34 +1046,37 @@ uint32_t RAD::wrapSdmaHwInit(uint64_t param1, uint64_t param2, uint64_t param3) 
 }
 
 uint64_t RAD::wrapIpiSdmaFindInstanceByEngineIndexAndType(uint64_t param1, uint32_t param2, uint32_t param3) {
-    NETLOG("rad", "_IpiSdmaFindInstanceByEngineIndexAndType: param1 = 0x%llX param2 = 0x%X param3 = 0x%X", param1, param2, param3);
-    auto ret = FunctionCast(wrapIpiSdmaFindInstanceByEngineIndexAndType, callbackRAD->orgIpiSdmaFindInstanceByEngineIndexAndType)(param1, param2, param3);
+    NETLOG("rad", "_IpiSdmaFindInstanceByEngineIndexAndType: param1 = 0x%llX param2 = 0x%X param3 = 0x%X", param1,
+        param2, param3);
+    auto ret = FunctionCast(wrapIpiSdmaFindInstanceByEngineIndexAndType,
+        callbackRAD->orgIpiSdmaFindInstanceByEngineIndexAndType)(param1, param2, param3);
     NETLOG("rad", "_IpiSdmaFindInstanceByEngineIndexAndType returned 0x%llX", ret);
     return ret;
 }
 
-uint64_t RAD::wrapIpiSdmaCreateQueue(void* param1, uint32_t* param2, uint64_t* param3) {
+uint64_t RAD::wrapIpiSdmaCreateQueue(void *param1, uint32_t *param2, uint64_t *param3) {
     NETLOG("rad", "_ipiSdmaCreateQueue: param1 = %p param2 = %p param3 = %p", param1, param2, param3);
     auto ret = FunctionCast(wrapIpiSdmaCreateQueue, callbackRAD->orgIpiSdmaCreateQueue)(param1, param2, param3);
     NETLOG("rad", "_ipiSdmaCreateQueue returned 0x%llX", ret);
     return ret;
 }
 
-uint64_t RAD::wrapTtlRtsCreateEngine(void* param1, uint32_t* param2, uint64_t* param3) {
+uint64_t RAD::wrapTtlRtsCreateEngine(void *param1, uint32_t *param2, uint64_t *param3) {
     NETLOG("rad", "_TtlRtsCreateEngine: param1 = %p param2 = %p param3 = %p", param1, param2, param3);
     auto ret = FunctionCast(wrapTtlRtsCreateEngine, callbackRAD->orgTtlRtsCreateEngine)(param1, param2, param3);
     NETLOG("rad", "_TtlRtsCreateEngine returned 0x%llX", ret);
     return ret;
 }
 
-uint64_t RAD::wrapIpiSdmaCreateHybridQueue(void* param1, uint32_t* param2, uint64_t* param3) {
+uint64_t RAD::wrapIpiSdmaCreateHybridQueue(void *param1, uint32_t *param2, uint64_t *param3) {
     NETLOG("rad", "_ipiSdmaCreateHybridQueue: param1 = %p param2 = %p param3 = %p", param1, param2, param3);
-    auto ret = FunctionCast(wrapIpiSdmaCreateHybridQueue, callbackRAD->orgIpiSdmaCreateHybridQueue)(param1, param2, param3);
+    auto ret =
+        FunctionCast(wrapIpiSdmaCreateHybridQueue, callbackRAD->orgIpiSdmaCreateHybridQueue)(param1, param2, param3);
     NETLOG("rad", "_ipiSdmaCreateHybridQueue returned 0x%llX", ret);
     return ret;
 }
 
-uint64_t RAD::wrapTtlCreateHybridEngine(void* param1, uint32_t* param2, uint64_t* param3) {
+uint64_t RAD::wrapTtlCreateHybridEngine(void *param1, uint32_t *param2, uint64_t *param3) {
     NETLOG("rad", "_TtlCreateHybridEngine: param1 = %p param2 = %p param3 = %p", param1, param2, param3);
     auto ret = FunctionCast(wrapTtlCreateHybridEngine, callbackRAD->orgTtlCreateHybridEngine)(param1, param2, param3);
     NETLOG("rad", "_TtlCreateHybridEngine returned 0x%llX", ret);
@@ -1186,7 +1186,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_sdma_queue_paging_init_pfn_ptr", wrapSdmaQueuePagingInitPfnPtr, orgSdmaQueuePagingInitPfnPtr},
             {"_sdma_queue_dma_init_pfn_ptr", wrapSdmaQueueDmaInitPfnPtr, orgSdmaQueueDmaInitPfnPtr},
             {"_sdma_hw_init", wrapSdmaHwInit, orgSdmaHwInit},
-            {"_IpiSdmaFindInstanceByEngineIndexAndType", wrapIpiSdmaFindInstanceByEngineIndexAndType, orgIpiSdmaFindInstanceByEngineIndexAndType},
+            {"_IpiSdmaFindInstanceByEngineIndexAndType", wrapIpiSdmaFindInstanceByEngineIndexAndType,
+                orgIpiSdmaFindInstanceByEngineIndexAndType},
             {"_ipiSdmaCreateQueue", wrapIpiSdmaCreateQueue, orgIpiSdmaCreateQueue},
             {"_TtlRtsCreateEngine", wrapTtlRtsCreateEngine, orgTtlRtsCreateEngine},
             {"_ipiSdmaCreateHybridQueue", wrapIpiSdmaCreateHybridQueue, orgIpiSdmaCreateHybridQueue},
