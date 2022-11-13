@@ -1006,6 +1006,24 @@ void RAD::wrapCosDebugAssert(void *param1, uint8_t *param2, uint8_t *param3, uin
     NETLOG("rad", "----------------------------------------------------------------------");
 }
 
+bool RAD::wrapIpiSdmaHwInit(void* ctx) {
+    NETLOG("rad", "----------------------------------------------------------------------");
+    NETLOG("rad", "_ipi_sdma_hw_init: ctx = %p", ctx);
+    auto ret = FunctionCast(wrapIpiSdmaHwInit, callbackRAD->orgIpiSdmaHwInit)(ctx);
+    NETLOG("rad", "_ipi_sdma_hw_init returned %d", ret);
+    NETLOG("rad", "----------------------------------------------------------------------");
+    return ret;
+}
+
+uint64_t RAD::wrapIpiSdmaHwInitInstance(void* param1, uint32_t* param2) {
+    NETLOG("rad", "----------------------------------------------------------------------");
+    NETLOG("rad", "_ipi_sdma_hw_init_instance: param1 = %p param2 = %p", param1, param2);
+    auto ret = FunctionCast(wrapIpiSdmaHwInitInstance, callbackRAD->orgIpiSdmaHwInitInstance)(param1, param2);
+    NETLOG("rad", "_ipi_sdma_hw_init_instance returned 0x%llX", ret);
+    NETLOG("rad", "----------------------------------------------------------------------");
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -1102,6 +1120,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_sdma_get_hw_version", wrapSdmaGetHwVersion, orgSdmaGetHwVersion},
             {"_ttlDevIsVega10Device", wrapTtlDevIsVega10Device, orgTtlDevIsVega10Device},
             {"__ZN14AmdTtlServices14cosDebugAssertEPvPKcS2_jS2_", wrapCosDebugAssert, orgCosDebugAssert},
+            {"_ipi_sdma_hw_init", wrapIpiSdmaHwInit, orgIpiSdmaHwInit},
+            {"_ipi_sdma_hw_init_instance", wrapIpiSdmaHwInitInstance, orgIpiSdmaHwInitInstance},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
