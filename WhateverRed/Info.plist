@@ -302,7 +302,13 @@
 			<integer>16908288</integer>
 			<key>cail_properties</key>
 			<dict>
-				<key>CAIL_DisablePowerGating</key>
+				<key>CAIL_DisableCpPowerGating</key>
+				<integer>1</integer>
+				<key>CAIL_DisableGfxCGPowerGating</key>
+				<integer>1</integer>
+				<key>CAIL_DisableUVDPowerGating</key>
+				<integer>1</integer>
+				<key>CAIL_DisableVCEPowerGating</key>
 				<integer>1</integer>
 			</dict>
 		</dict>
