@@ -343,6 +343,9 @@ class RAD {
 
     mach_vm_address_t orgSdmaQueueDmaInitPfnPtr{};
     static uint64_t wrapSdmaQueueDmaInitPfnPtr(uint64_t* param1);
+
+    mach_vm_address_t orgSdmaHwInit{};
+    static uint32_t wrapSdmaHwInit(uint64_t param1, uint64_t param2, uint64_t param3);
 };
 
 #endif /* kern_rad_hpp */

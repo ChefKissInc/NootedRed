@@ -1041,6 +1041,13 @@ uint64_t RAD::wrapSdmaQueueDmaInitPfnPtr(uint64_t* param1) {
     return ret;
 }
 
+uint32_t RAD::wrapSdmaHwInit(uint64_t param1, uint64_t param2, uint64_t param3) {
+    NETLOG("rad", "_sdma_hw_init: param1 = 0x%llX param2 = 0x%llX param3 = 0x%llX", param1, param2, param3);
+    auto ret = FunctionCast(wrapSdmaHwInit, callbackRAD->orgSdmaHwInit)(param1, param2, param3);
+    NETLOG("rad", "_sdma_hw_init returned 0x%X", ret);
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -1143,6 +1150,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_sdma_create_hybrid_queue", wrapSdmaCreateHybridQueue, orgSdmaCreateHybridQueue},
             {"_sdma_queue_paging_init_pfn_ptr", wrapSdmaQueuePagingInitPfnPtr, orgSdmaQueuePagingInitPfnPtr},
             {"_sdma_queue_dma_init_pfn_ptr", wrapSdmaQueueDmaInitPfnPtr, orgSdmaQueueDmaInitPfnPtr},
+            {"_sdma_hw_init", wrapSdmaHwInit, orgSdmaHwInit},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
