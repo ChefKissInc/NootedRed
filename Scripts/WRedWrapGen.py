@@ -120,7 +120,6 @@ if cpp[injectLine - 1] != "":
     inject.append("")
 
 inject.append(f"{retType} RAD::wrap{snakeName}({strParams}) {{")
-inject.append("    NETLOG(\"rad\", \"----------------------------------------------------------------------\");")
 
 formatTypes = " ".join(f"{getFormatName(x[1])} = {getFormatType(x[0])}" for x in params)
 args = ", ".join(x[1] for x in params)
@@ -132,7 +131,6 @@ if retType == "void":
 else:
     inject.append(f"    auto ret = FunctionCast(wrap{snakeName}, callbackRAD->org{snakeName})({args});")
     inject.append(f"    NETLOG(\"rad\", \"{funcName} returned {getFormatType(retType)}\", ret);")
-inject.append("    NETLOG(\"rad\", \"----------------------------------------------------------------------\");")
 if retType != "void":
     inject.append("    return ret;")
 inject.append("}")
