@@ -1048,6 +1048,41 @@ uint32_t RAD::wrapSdmaHwInit(uint64_t param1, uint64_t param2, uint64_t param3) 
     return ret;
 }
 
+uint64_t RAD::wrapIpiSdmaFindInstanceByEngineIndexAndType(uint64_t param1, uint32_t param2, uint32_t param3) {
+    NETLOG("rad", "_IpiSdmaFindInstanceByEngineIndexAndType: param1 = 0x%llX param2 = 0x%X param3 = 0x%X", param1, param2, param3);
+    auto ret = FunctionCast(wrapIpiSdmaFindInstanceByEngineIndexAndType, callbackRAD->orgIpiSdmaFindInstanceByEngineIndexAndType)(param1, param2, param3);
+    NETLOG("rad", "_IpiSdmaFindInstanceByEngineIndexAndType returned 0x%llX", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapIpiSdmaCreateQueue(void* param1, uint32_t* param2, uint64_t* param3) {
+    NETLOG("rad", "_ipiSdmaCreateQueue: param1 = %p param2 = %p param3 = %p", param1, param2, param3);
+    auto ret = FunctionCast(wrapIpiSdmaCreateQueue, callbackRAD->orgIpiSdmaCreateQueue)(param1, param2, param3);
+    NETLOG("rad", "_ipiSdmaCreateQueue returned 0x%llX", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapTtlRtsCreateEngine(void* param1, uint32_t* param2, uint64_t* param3) {
+    NETLOG("rad", "_TtlRtsCreateEngine: param1 = %p param2 = %p param3 = %p", param1, param2, param3);
+    auto ret = FunctionCast(wrapTtlRtsCreateEngine, callbackRAD->orgTtlRtsCreateEngine)(param1, param2, param3);
+    NETLOG("rad", "_TtlRtsCreateEngine returned 0x%llX", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapIpiSdmaCreateHybridQueue(void* param1, uint32_t* param2, uint64_t* param3) {
+    NETLOG("rad", "_ipiSdmaCreateHybridQueue: param1 = %p param2 = %p param3 = %p", param1, param2, param3);
+    auto ret = FunctionCast(wrapIpiSdmaCreateHybridQueue, callbackRAD->orgIpiSdmaCreateHybridQueue)(param1, param2, param3);
+    NETLOG("rad", "_ipiSdmaCreateHybridQueue returned 0x%llX", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapTtlCreateHybridEngine(void* param1, uint32_t* param2, uint64_t* param3) {
+    NETLOG("rad", "_TtlCreateHybridEngine: param1 = %p param2 = %p param3 = %p", param1, param2, param3);
+    auto ret = FunctionCast(wrapTtlCreateHybridEngine, callbackRAD->orgTtlCreateHybridEngine)(param1, param2, param3);
+    NETLOG("rad", "_TtlCreateHybridEngine returned 0x%llX", ret);
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -1151,6 +1186,11 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_sdma_queue_paging_init_pfn_ptr", wrapSdmaQueuePagingInitPfnPtr, orgSdmaQueuePagingInitPfnPtr},
             {"_sdma_queue_dma_init_pfn_ptr", wrapSdmaQueueDmaInitPfnPtr, orgSdmaQueueDmaInitPfnPtr},
             {"_sdma_hw_init", wrapSdmaHwInit, orgSdmaHwInit},
+            {"_IpiSdmaFindInstanceByEngineIndexAndType", wrapIpiSdmaFindInstanceByEngineIndexAndType, orgIpiSdmaFindInstanceByEngineIndexAndType},
+            {"_ipiSdmaCreateQueue", wrapIpiSdmaCreateQueue, orgIpiSdmaCreateQueue},
+            {"_TtlRtsCreateEngine", wrapTtlRtsCreateEngine, orgTtlRtsCreateEngine},
+            {"_ipiSdmaCreateHybridQueue", wrapIpiSdmaCreateHybridQueue, orgIpiSdmaCreateHybridQueue},
+            {"_TtlCreateHybridEngine", wrapTtlCreateHybridEngine, orgTtlCreateHybridEngine},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
