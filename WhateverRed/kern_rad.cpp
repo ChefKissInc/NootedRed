@@ -1013,6 +1013,34 @@ bool RAD::wrapIpiSdmaHwInitInstance(void *param1, uint32_t *param2) {
     return ret;
 }
 
+uint64_t RAD::wrapSdmaCreateQueue(uint64_t param1, uint32_t* param2, void* param3) {
+    NETLOG("rad", "_sdma_create_queue: param1 = 0x%llX param2 = %p param3 = %p", param1, param2, param3);
+    auto ret = FunctionCast(wrapSdmaCreateQueue, callbackRAD->orgSdmaCreateQueue)(param1, param2, param3);
+    NETLOG("rad", "_sdma_create_queue returned 0x%llX", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapSdmaCreateHybridQueue(uint64_t param1, uint32_t* param2, uint64_t* param3) {
+    NETLOG("rad", "_sdma_create_hybrid_queue: param1 = 0x%llX param2 = %p param3 = %p", param1, param2, param3);
+    auto ret = FunctionCast(wrapSdmaCreateHybridQueue, callbackRAD->orgSdmaCreateHybridQueue)(param1, param2, param3);
+    NETLOG("rad", "_sdma_create_hybrid_queue returned 0x%llX", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapSdmaQueuePagingInitPfnPtr(uint64_t* param1) {
+    NETLOG("rad", "_sdma_queue_paging_init_pfn_ptr: param1 = %p", param1);
+    auto ret = FunctionCast(wrapSdmaQueuePagingInitPfnPtr, callbackRAD->orgSdmaQueuePagingInitPfnPtr)(param1);
+    NETLOG("rad", "_sdma_queue_paging_init_pfn_ptr returned 0x%llX", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapSdmaQueueDmaInitPfnPtr(uint64_t* param1) {
+    NETLOG("rad", "_sdma_queue_dma_init_pfn_ptr: param1 = %p", param1);
+    auto ret = FunctionCast(wrapSdmaQueueDmaInitPfnPtr, callbackRAD->orgSdmaQueueDmaInitPfnPtr)(param1);
+    NETLOG("rad", "_sdma_queue_dma_init_pfn_ptr returned 0x%llX", ret);
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -1111,6 +1139,10 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN14AmdTtlServices14cosDebugAssertEPvPKcS2_jS2_", wrapCosDebugAssert, orgCosDebugAssert},
             {"_ipi_sdma_hw_init", wrapIpiSdmaHwInit, orgIpiSdmaHwInit},
             {"_ipi_sdma_hw_init_instance", wrapIpiSdmaHwInitInstance, orgIpiSdmaHwInitInstance},
+            {"_sdma_create_queue", wrapSdmaCreateQueue, orgSdmaCreateQueue},
+            {"_sdma_create_hybrid_queue", wrapSdmaCreateHybridQueue, orgSdmaCreateHybridQueue},
+            {"_sdma_queue_paging_init_pfn_ptr", wrapSdmaQueuePagingInitPfnPtr, orgSdmaQueuePagingInitPfnPtr},
+            {"_sdma_queue_dma_init_pfn_ptr", wrapSdmaQueueDmaInitPfnPtr, orgSdmaQueueDmaInitPfnPtr},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");

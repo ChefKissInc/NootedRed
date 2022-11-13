@@ -331,6 +331,18 @@ class RAD {
 
     mach_vm_address_t orgIpiSdmaHwInitInstance {};
     static bool wrapIpiSdmaHwInitInstance(void *param1, uint32_t *param2);
+
+    mach_vm_address_t orgSdmaCreateQueue{};
+    static uint64_t wrapSdmaCreateQueue(uint64_t param1, uint32_t* param2, void* param3);
+
+    mach_vm_address_t orgSdmaCreateHybridQueue{};
+    static uint64_t wrapSdmaCreateHybridQueue(uint64_t param1, uint32_t* param2, uint64_t* param3);
+
+    mach_vm_address_t orgSdmaQueuePagingInitPfnPtr{};
+    static uint64_t wrapSdmaQueuePagingInitPfnPtr(uint64_t* param1);
+
+    mach_vm_address_t orgSdmaQueueDmaInitPfnPtr{};
+    static uint64_t wrapSdmaQueueDmaInitPfnPtr(uint64_t* param1);
 };
 
 #endif /* kern_rad_hpp */
