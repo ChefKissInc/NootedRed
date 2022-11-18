@@ -50,7 +50,7 @@
 		402AB9AD28C7863400A55F4F /* renoir_vcn.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_vcn.bin; sourceTree = "<group>"; };
 		402AB9AF28C78D5800A55F4F /* raven_hdcp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_hdcp.bin; sourceTree = "<group>"; };
 		402AB9B028C78D5800A55F4F /* renoir_hdcp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_hdcp.bin; sourceTree = "<group>"; };
-		402D48C228A8903C0064644D /* renoir_dmcub.bin */ = {isa = PBXFileReference; lastKnownFileType = file; path = renoir_dmcub.bin; sourceTree = "<group>"; };
+		402D48C228A8903C0064644D /* renoir_dmcub.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_dmcub.bin; sourceTree = "<group>"; };
 		408F201E288ACBB0002EEC15 /* kern_fw.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_fw.hpp; sourceTree = "<group>"; };
 		408F201F288ACBE6002EEC15 /* kern_fw.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_fw.cpp; sourceTree = "<group>"; };
 		6CBEB3C428911DCF0063B877 /* kern_netdbg.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_netdbg.cpp; sourceTree = "<group>"; };
