@@ -79,21 +79,6 @@ static KernelPatcher::KextInfo kextRadeonX6000 = {
     KernelPatcher::KextInfo::Unloaded,
 };
 
-/**
- *  Power-gating flags
- *  Each symbol corresponds to a bit provided in a radpg argument mask
- */
-static const char *powerGatingFlags[] = {
-    "CAIL_DisableDrmdmaPowerGating",
-    "CAIL_DisableGfxCGPowerGating",
-    "CAIL_DisableUVDPowerGating",
-    "CAIL_DisableVCEPowerGating",
-    "CAIL_DisableDynamicGfxMGPowerGating",
-    "CAIL_DisableGmcPowerGating",
-    "CAIL_DisableAcpPowerGating",
-    "CAIL_DisableSAMUPowerGating",
-};
-
 RAD *RAD::callbackRAD;
 
 void RAD::init() {
@@ -112,18 +97,6 @@ void RAD::init() {
     lilu.onKextLoadForce(&kextRadeonX5000HWLibs);
     lilu.onKextLoadForce(&kextRadeonX5000);
     lilu.onKextLoadForce(&kextRadeonX6000);
-
-    // FIXME: autodetect?
-    uint32_t powerGatingMask = 0;
-    PE_parse_boot_argn("radpg", &powerGatingMask, sizeof(powerGatingMask));
-    for (size_t i = 0; i < arrsize(powerGatingFlags); i++) {
-        if (!(powerGatingMask & (1 << i))) {
-            DBGLOG("rad", "not enabling %s", powerGatingFlags[i]);
-            powerGatingFlags[i] = nullptr;
-        } else {
-            DBGLOG("rad", "enabling %s", powerGatingFlags[i]);
-        }
-    }
 }
 
 void RAD::deinit() {
@@ -1653,19 +1626,6 @@ void RAD::mergeProperties(OSDictionary *props, const char *prefix, IOService *pr
         }
     } else {
         NETLOG("rad", "prop merge failed to get properties");
-    }
-
-    if (!strcmp(prefix, "CAIL,")) {
-        for (size_t i = 0; i < arrsize(powerGatingFlags); i++) {
-            if (powerGatingFlags[i] && props->getObject(powerGatingFlags[i])) {
-                DBGLOG("rad", "cail prop merge found %s, replacing", powerGatingFlags[i]);
-                auto num = OSNumber::withNumber(1, 32);
-                if (num) {
-                    props->setObject(powerGatingFlags[i], num);
-                    num->release();
-                }
-            }
-        }
     }
 }
 
