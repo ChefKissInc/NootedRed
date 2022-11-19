@@ -115,29 +115,22 @@ void RAD::processKernel(KernelPatcher &patcher) {
 struct VFCT {
     char signature[4];
     uint32_t length;
-    uint8_t revision;
-    uint8_t checksum;
+    uint8_t revision, checksum;
     char oemId[6];
     char oemTableId[8];
     uint32_t oemRevision;
     char creatorId[4];
     uint32_t creatorRevision;
     char tableUUID[16];
-    uint32_t vbiosImageOffset;
-    uint32_t lib1ImageOffset;
+    uint32_t vbiosImageOffset, lib1ImageOffset;
     uint32_t reserved[4];
 };
 
 struct GOPVideoBIOSHeader {
-    uint32_t pciBus;
-    uint32_t pciDevice;
-    uint32_t pciFunction;
-    uint16_t vendorID;
-    uint16_t deviceID;
-    uint16_t ssvId;
-    uint16_t ssId;
-    uint32_t revision;
-    uint32_t imageLength;
+    uint32_t pciBus, pciDevice, pciFunction;
+    uint16_t vendorID, deviceID;
+    uint16_t ssvId, ssId;
+    uint32_t revision, imageLength;
 };
 #pragma pack(pop)
 
@@ -653,6 +646,8 @@ uint64_t RAD::wrapHwRegWrite(void *that, uint64_t addr, uint64_t val) {
 
 const char *RAD::getChipName() {
     switch (callbackRAD->orgDeviceTypeTable[0]) {
+        case 0x15D8:
+            return "picasso";
         case 0x15E7:
             [[fallthrough]];
         case 0x164C:
@@ -721,8 +716,7 @@ uint32_t RAD::wrapPspHdcpLoad(void *pspData) {
 
 void RAD::wrapAccelDisplayPipeWriteDiagnosisReport(void *that) {
     NETLOG("rad", "AccelDisplayPipeWriteDiagnosisReport: this = %p", that);
-    // FunctionCast(wrapAccelDisplayPipeWriteDiagnosisReport,
-    // callbackRAD->orgAccelDisplayPipeWriteDiagnosisReport)(that);
+    FunctionCast(wrapAccelDisplayPipeWriteDiagnosisReport, callbackRAD->orgAccelDisplayPipeWriteDiagnosisReport)(that);
     NETLOG("rad", "AccelDisplayPipeWriteDiagnosisReport finished");
 }
 
