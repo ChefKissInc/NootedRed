@@ -51,8 +51,20 @@
 		402AB9AF28C78D5800A55F4F /* raven_hdcp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_hdcp.bin; sourceTree = "<group>"; };
 		402AB9B028C78D5800A55F4F /* renoir_hdcp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_hdcp.bin; sourceTree = "<group>"; };
 		402D48C228A8903C0064644D /* renoir_dmcub.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_dmcub.bin; sourceTree = "<group>"; };
+		406ED93A29293C2900D930F6 /* raven_rlc.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_rlc.bin; sourceTree = "<group>"; };
+		406ED93B29293C2900D930F6 /* raven_mec.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_mec.bin; sourceTree = "<group>"; };
+		406ED93C29293C2A00D930F6 /* raven_ce.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_ce.bin; sourceTree = "<group>"; };
+		406ED93D29293C2A00D930F6 /* renoir_ce.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_ce.bin; sourceTree = "<group>"; };
+		406ED93E29293C2A00D930F6 /* renoir_me.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_me.bin; sourceTree = "<group>"; };
+		406ED93F29293C2A00D930F6 /* raven_pfp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_pfp.bin; sourceTree = "<group>"; };
+		406ED94029293C2A00D930F6 /* renoir_mec.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_mec.bin; sourceTree = "<group>"; };
+		406ED94329293C2A00D930F6 /* renoir_pfp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_pfp.bin; sourceTree = "<group>"; };
+		406ED94429293C2A00D930F6 /* renoir_rlc.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_rlc.bin; sourceTree = "<group>"; };
+		406ED94529293C2A00D930F6 /* raven_me.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_me.bin; sourceTree = "<group>"; };
 		408F201E288ACBB0002EEC15 /* kern_fw.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_fw.hpp; sourceTree = "<group>"; };
 		408F201F288ACBE6002EEC15 /* kern_fw.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_fw.cpp; sourceTree = "<group>"; };
+		40CFC67929294BB400748DCC /* raven_mec_jt.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_mec_jt.bin; sourceTree = "<group>"; };
+		40CFC67A29294BB400748DCC /* renoir_mec_jt.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_mec_jt.bin; sourceTree = "<group>"; };
 		6CBEB3C428911DCF0063B877 /* kern_netdbg.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_netdbg.cpp; sourceTree = "<group>"; };
 		6CBEB3C528911DCF0063B877 /* kern_netdbg.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_netdbg.hpp; sourceTree = "<group>"; };
 		CE405EBA1E49DD7100AA0B3D /* kern_compression.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_compression.hpp; sourceTree = "<group>"; };
@@ -133,13 +145,25 @@
 			isa = PBXGroup;
 			children = (
 				402AB9A928C7850B00A55F4F /* raven_asd.bin */,
+				406ED93C29293C2A00D930F6 /* raven_ce.bin */,
 				402AB9A728C7840B00A55F4F /* raven_dtm.bin */,
 				402AB9AF28C78D5800A55F4F /* raven_hdcp.bin */,
+				406ED94529293C2A00D930F6 /* raven_me.bin */,
+				40CFC67929294BB400748DCC /* raven_mec_jt.bin */,
+				406ED93B29293C2900D930F6 /* raven_mec.bin */,
+				406ED93F29293C2A00D930F6 /* raven_pfp.bin */,
+				406ED93A29293C2900D930F6 /* raven_rlc.bin */,
 				402AB9AC28C7863400A55F4F /* raven_vcn.bin */,
 				402AB9AA28C7850B00A55F4F /* renoir_asd.bin */,
+				406ED93D29293C2A00D930F6 /* renoir_ce.bin */,
 				402D48C228A8903C0064644D /* renoir_dmcub.bin */,
 				402AB9A828C7840B00A55F4F /* renoir_dtm.bin */,
 				402AB9B028C78D5800A55F4F /* renoir_hdcp.bin */,
+				406ED93E29293C2A00D930F6 /* renoir_me.bin */,
+				40CFC67A29294BB400748DCC /* renoir_mec_jt.bin */,
+				406ED94029293C2A00D930F6 /* renoir_mec.bin */,
+				406ED94329293C2A00D930F6 /* renoir_pfp.bin */,
+				406ED94429293C2A00D930F6 /* renoir_rlc.bin */,
 				402AB9AD28C7863400A55F4F /* renoir_vcn.bin */,
 			);
 			path = Firmware;

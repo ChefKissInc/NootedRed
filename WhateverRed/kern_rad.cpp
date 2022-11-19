@@ -226,11 +226,7 @@ uint64_t RAD::wrapPspSwInit(uint32_t *param1, uint32_t *param2) {
         param1[3], param1[4], param1[5]);
     switch (param1[3]) {
         case 0xA:
-            NETLOG("rad", "Spoofing PSP version v10.x.x to v9.0.2");
-            param1[3] = 0x9;
-            param1[4] = 0x0;
-            param1[5] = 0x2;
-            break;
+            [[fallthrough]];
         case 0xB:
             [[fallthrough]];
         case 0xC:
@@ -278,20 +274,75 @@ void RAD::wrapPopulateFirmwareDirectory(void *that) {
 
     auto *fwDesc = getFWDescByName(filename);
     PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
-    delete[] filename;
-    auto *fwDescBackdoor = getFWDescByName("renoir_dmcub.bin");
-    PANIC_COND(!fwDescBackdoor, "rad", "Somehow renoir_dmcub.bin is missing");
-    NETLOG("rad", "renoir_dmcub.bin => atidmcub_0.dat");
 
-    auto *fw = callbackRAD->orgCreateFirmware(fwDesc->getBytesNoCopy(), fwDesc->getLength(), 0x200, targetFilename);
-    auto *fwBackdoor =
-        callbackRAD->orgCreateFirmware(fwDesc->getBytesNoCopy(), fwDesc->getLength(), 0x200, "atidmcub_0.dat");
+    auto *fw = callbackRAD->orgCreateFirmware(fwDesc->var, fwDesc->size, 0x200, targetFilename);
+    fwDesc = getFWDescByName("renoir_dmcub.bin");
+    PANIC_COND(!fwDesc, "rad", "Somehow renoir_dmcub.bin is missing");
+    NETLOG("rad", "renoir_dmcub.bin => atidmcub_0.dat");
+    auto *fwBackdoor = callbackRAD->orgCreateFirmware(fwDesc->var, fwDesc->size, 0x200, "atidmcub_0.dat");
     auto *&fwDir = getMember<void *>(that, 0xB8);
     NETLOG("rad", "fwDir = %p", fwDir);
     NETLOG("rad", "inserting %s!", targetFilename);
-    if (!callbackRAD->orgPutFirmware(fwDir, 6, fw)) { panic("Failed to inject ativvaxy_rv.dat firmware"); }
+
+    PANIC_COND(!callbackRAD->orgPutFirmware(fwDir, 6, fw), "rad", "Failed to inject ativvaxy_rv.dat firmware");
     NETLOG("rad", "inserting atidmcub_0.dat!");
-    if (!callbackRAD->orgPutFirmware(fwDir, 6, fwBackdoor)) { panic("Failed to inject atidmcub_0.dat firmware"); }
+    PANIC_COND(!callbackRAD->orgPutFirmware(fwDir, 6, fwBackdoor), "rad", "Failed to inject atidmcub_0.dat firmware");
+
+    // snprintf(filename, 128, "%s_rlc.bin", chipName);
+    // fwDesc = getFWDescByName(filename);
+    // PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+    // PANIC_COND(fwDesc->size != callbackRAD->orgGcRlcUcode->size, "rad", "%s size mismatch", filename);
+    // callbackRAD->orgGcRlcUcode->addr = 0x0;
+    // memmove(callbackRAD->orgGcRlcUcode->data, fwDesc->var, fwDesc->size);
+    // NETLOG("rad", "Injected %s!", filename);
+
+    snprintf(filename, 128, "%s_me.bin", chipName);
+    fwDesc = getFWDescByName(filename);
+    PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+    PANIC_COND(fwDesc->size != callbackRAD->orgGcMeUcode->size, "rad", "%s size mismatch", filename);
+    callbackRAD->orgGcMeUcode->addr = 0x1000;
+    memmove(callbackRAD->orgGcMeUcode->data, fwDesc->var, fwDesc->size);
+    NETLOG("rad", "Injected %s!", filename);
+
+    snprintf(filename, 128, "%s_ce.bin", chipName);
+    fwDesc = getFWDescByName(filename);
+    PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+    PANIC_COND(fwDesc->size != callbackRAD->orgGcCeUcode->size, "rad", "%s size mismatch", filename);
+    callbackRAD->orgGcCeUcode->addr = 0x800;
+    memmove(callbackRAD->orgGcCeUcode->data, fwDesc->var, fwDesc->size);
+    NETLOG("rad", "Injected %s!", filename);
+
+    snprintf(filename, 128, "%s_pfp.bin", chipName);
+    fwDesc = getFWDescByName(filename);
+    PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+    PANIC_COND(fwDesc->size != callbackRAD->orgGcPfpUcode->size, "rad", "%s size mismatch", filename);
+    callbackRAD->orgGcPfpUcode->addr = 0x1400;
+    memmove(callbackRAD->orgGcPfpUcode->data, fwDesc->var, fwDesc->size);
+    NETLOG("rad", "Injected %s!", filename);
+
+    snprintf(filename, 128, "%s_mec.bin", chipName);
+    fwDesc = getFWDescByName(filename);
+    PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+    PANIC_COND(fwDesc->size != callbackRAD->orgGcMecUcode->size, "rad", "%s size mismatch", filename);
+    callbackRAD->orgGcMecUcode->addr = 0x0;
+    memmove(callbackRAD->orgGcMecUcode->data, fwDesc->var, fwDesc->size);
+    NETLOG("rad", "Injected %s!", filename);
+
+    snprintf(filename, 128, "%s_mec_jt.bin", chipName);
+    fwDesc = getFWDescByName(filename);
+    PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+    PANIC_COND(fwDesc->size != callbackRAD->orgGcMecJtUcode->size, "rad", "%s size mismatch", filename);
+    callbackRAD->orgGcMecJtUcode->addr = 0x104A4;
+    memmove(callbackRAD->orgGcMecJtUcode->data, fwDesc->var, fwDesc->size);
+    NETLOG("rad", "Injected %s!", filename);
+
+    snprintf(filename, 128, "%s_sdma.bin", chipName);
+    fwDesc = getFWDescByName(filename);
+    PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+    PANIC_COND(fwDesc->size != callbackRAD->orgSdmaUcode->size, "rad", "%s size mismatch", filename);
+    memmove(callbackRAD->orgSdmaUcode->data, fwDesc->var, fwDesc->size);
+    NETLOG("rad", "Injected %s!", filename);
+    delete[] filename;
 }
 
 void *RAD::wrapCreateAtomBiosProxy(void *param1) {
@@ -672,10 +723,10 @@ uint32_t RAD::wrapPspAsdLoad(void *pspData) {
     NETLOG("rad", "injecting %s!", filename);
     auto *org =
         reinterpret_cast<uint32_t (*)(void *, uint64_t, uint64_t, const void *, size_t)>(callbackRAD->orgPspAsdLoad);
-    auto *fw = getFWDescByName(filename);
-    PANIC_COND(!fw, "rad", "Somehow %s is missing", filename);
+    auto *fwDesc = getFWDescByName(filename);
+    PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
     delete[] filename;
-    auto ret = org(pspData, 0, 0, fw->getBytesNoCopy(), fw->getLength());
+    auto ret = org(pspData, 0, 0, fwDesc->var, fwDesc->size);
     NETLOG("rad", "_psp_asd_load returned 0x%X", ret);
     return ret;
 }
@@ -689,10 +740,10 @@ uint32_t RAD::wrapPspDtmLoad(void *pspData) {
     NETLOG("rad", "injecting %s!", filename);
     auto *org =
         reinterpret_cast<uint32_t (*)(void *, uint64_t, uint64_t, const void *, size_t)>(callbackRAD->orgPspDtmLoad);
-    auto *fw = getFWDescByName(filename);
-    PANIC_COND(!fw, "rad", "Somehow %s is missing", filename);
+    auto *fwDesc = getFWDescByName(filename);
+    PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
     delete[] filename;
-    auto ret = org(pspData, 0, 0, fw->getBytesNoCopy(), fw->getLength());
+    auto ret = org(pspData, 0, 0, fwDesc->var, fwDesc->size);
     NETLOG("rad", "_psp_dtm_load returned 0x%X", ret);
     return 0;
 }
@@ -706,10 +757,10 @@ uint32_t RAD::wrapPspHdcpLoad(void *pspData) {
     NETLOG("rad", "injecting %s!", filename);
     auto *org =
         reinterpret_cast<uint32_t (*)(void *, uint64_t, uint64_t, const void *, size_t)>(callbackRAD->orgPspHdcpLoad);
-    auto *fw = getFWDescByName(filename);
-    PANIC_COND(!fw, "rad", "Somehow %s is missing", filename);
+    auto *fwDesc = getFWDescByName(filename);
+    PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
     delete[] filename;
-    auto ret = org(pspData, 0, 0, fw->getBytesNoCopy(), fw->getLength());
+    auto ret = org(pspData, 0, 0, fwDesc->var, fwDesc->size);
     NETLOG("rad", "_psp_hdcp_load returned 0x%X", ret);
     return ret;
 }
@@ -1094,6 +1145,13 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 orgVega10PowerTuneConstructor},
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTableHWLibs},
             {"_CAILAsicCapsInitTable", orgAsicInitCapsTable},
+            {"_gc_9_2_1_rlc_ucode", orgGcRlcUcode},
+            {"_gc_9_2_1_me_ucode", orgGcMeUcode},
+            {"_gc_9_2_1_ce_ucode", orgGcCeUcode},
+            {"_gc_9_2_1_pfp_ucode", orgGcPfpUcode},
+            {"_gc_9_2_1_mec_ucode", orgGcMecUcode},
+            {"_gc_9_2_1_mec_jt_ucode", orgGcMecJtUcode},
+            {"_sdma_4_1_ucode", orgSdmaUcode},
         };
         if (!patcher.solveMultiple(index, solveRequests, address, size)) {
             panic("RAD: Failed to resolve AMDRadeonX5000HWLibs symbols");

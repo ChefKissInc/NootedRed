@@ -361,6 +361,14 @@ class RAD {
 
     mach_vm_address_t orgTtlCreateHybridEngine {};
     static uint64_t wrapTtlCreateHybridEngine(void *param1, uint32_t *param2, uint64_t *param3);
+
+    GcFwConstant *orgGcRlcUcode = nullptr;
+    GcFwConstant *orgGcMeUcode = nullptr;
+    GcFwConstant *orgGcCeUcode = nullptr;
+    GcFwConstant *orgGcPfpUcode = nullptr;
+    GcFwConstant *orgGcMecUcode = nullptr;
+    GcFwConstant *orgGcMecJtUcode = nullptr;
+    SdmaFwConstant *orgSdmaUcode = nullptr;
 };
 
 #endif /* kern_rad_hpp */
