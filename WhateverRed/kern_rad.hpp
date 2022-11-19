@@ -321,8 +321,6 @@ class RAD {
     mach_vm_address_t orgSdmaGetHwVersion {};
     static uint64_t wrapSdmaGetHwVersion(uint32_t param1, uint32_t param2);
 
-    static bool wrapTtlDevIsVega10Device();
-
     mach_vm_address_t orgCosDebugAssert {};
     static void wrapCosDebugAssert(void *param1, uint8_t *param2, uint8_t *param3, uint32_t param4, uint8_t *param5);
 

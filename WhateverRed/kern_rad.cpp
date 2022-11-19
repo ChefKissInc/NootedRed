@@ -1007,8 +1007,6 @@ uint64_t RAD::wrapSdmaGetHwVersion(uint32_t param1, uint32_t param2) {
     return ret;
 }
 
-bool RAD::wrapTtlDevIsVega10Device() { return true; }
-
 void RAD::wrapCosDebugAssert(void *param1, uint8_t *param2, uint8_t *param3, uint32_t param4, uint8_t *param5) {
     NETLOG("rad", "cosDebugAssert: param1 = %p param2 = %p param3 = %p param4 = 0x%X param5 = %p", param1, param2,
         param3, param4, param5);
@@ -1204,7 +1202,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_sdma_sw_init", wrapSdmaSwInit, orgSdmaSwInit},
             {"_sdma_assertion", wrapSdmaAssertion, orgSdmaAssertion},
             {"_sdma_get_hw_version", wrapSdmaGetHwVersion, orgSdmaGetHwVersion},
-            {"_ttlDevIsVega10Device", wrapTtlDevIsVega10Device},
             {"__ZN14AmdTtlServices14cosDebugAssertEPvPKcS2_jS2_", wrapCosDebugAssert, orgCosDebugAssert},
             {"_ipi_sdma_hw_init", wrapIpiSdmaHwInit, orgIpiSdmaHwInit},
             {"_ipi_sdma_hw_init_instance", wrapIpiSdmaHwInitInstance, orgIpiSdmaHwInitInstance},
