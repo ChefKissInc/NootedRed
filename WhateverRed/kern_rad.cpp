@@ -767,7 +767,8 @@ uint32_t RAD::wrapPspHdcpLoad(void *pspData) {
 
 void RAD::wrapAccelDisplayPipeWriteDiagnosisReport(void *that) {
     NETLOG("rad", "AccelDisplayPipeWriteDiagnosisReport: this = %p", that);
-    FunctionCast(wrapAccelDisplayPipeWriteDiagnosisReport, callbackRAD->orgAccelDisplayPipeWriteDiagnosisReport)(that);
+    // FunctionCast(wrapAccelDisplayPipeWriteDiagnosisReport,
+    // callbackRAD->orgAccelDisplayPipeWriteDiagnosisReport)(that);
     NETLOG("rad", "AccelDisplayPipeWriteDiagnosisReport finished");
 }
 
