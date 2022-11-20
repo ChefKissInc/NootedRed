@@ -888,8 +888,8 @@ bool RAD::wrapPowerUpHWEngines(void *that) {
 bool RAD::wrapStartHWEngines(void *that) {
     NETLOG("rad", "startHWEngines: this = %p", that);
     auto ret = FunctionCast(wrapStartHWEngines, callbackRAD->orgStartHWEngines)(that);
-    NETLOG("rad", "startHWEngines returned %d. Returning true anyways", ret);
-    return true;
+    NETLOG("rad", "startHWEngines returned %d", ret);
+    return ret;
 }
 
 uint64_t RAD::wrapMicroEngineControlLoadMicrocode(void *that, void *param1) {
@@ -1371,6 +1371,18 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
+        }
+
+        uint8_t find_startHWEngines[] = {0x49, 0x89, 0xfe, 0x31, 0xdb, 0x48, 0x83, 0xfb, 0x02, 0x74, 0x50};
+        uint8_t repl_startHWEngines[] = {0x49, 0x89, 0xfe, 0x31, 0xdb, 0x48, 0x83, 0xfb, 0x01, 0x74, 0x50};
+        static_assert(sizeof(find_startHWEngines) == sizeof(repl_startHWEngines), "Find/replace size mismatch");
+
+        KernelPatcher::LookupPatch patches[] = {
+            {&kextRadeonX5000, find_startHWEngines, repl_startHWEngines, arrsize(find_startHWEngines), 2},
+        };
+        for (auto &patch : patches) {
+            patcher.applyLookupPatch(&patch);
+            patcher.clearError();
         }
 
         return true;
