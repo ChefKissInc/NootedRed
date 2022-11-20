@@ -367,6 +367,9 @@ class RAD {
     GcFwConstant *orgGcMecUcode = nullptr;
     GcFwConstant *orgGcMecJtUcode = nullptr;
     SdmaFwConstant *orgSdmaUcode = nullptr;
+
+    mach_vm_address_t orgGetDmaPktInfo {};
+    static uint64_t wrapGetDmaPktInfo(void *that, uint32_t param2);
 };
 
 #endif /* kern_rad_hpp */

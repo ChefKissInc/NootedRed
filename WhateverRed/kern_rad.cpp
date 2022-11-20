@@ -1102,6 +1102,13 @@ uint64_t RAD::wrapTtlCreateHybridEngine(void *param1, uint32_t *param2, uint64_t
     return ret;
 }
 
+uint64_t RAD::wrapGetDmaPktInfo(void *that, uint32_t param2) {
+    NETLOG("rad", "getDmaPktInfo: this = %p param2 = 0x%X", that, param2);
+    auto ret = FunctionCast(wrapGetDmaPktInfo, callbackRAD->orgGetDmaPktInfo)(that, param2);
+    NETLOG("rad", "getDmaPktInfo returned 0x%llX", ret);
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -1368,6 +1375,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN27AMDRadeonX5000_AMDHWChannel14waitForHwStampEj", wrapWaitForHwStamp, orgWaitForHwStamp},
             {"__ZN28AMDRadeonX5000_AMDRTHardware12getHWChannelE18_eAMD_CHANNEL_TYPE11SS_PRIORITYj", wrapRTGetHWChannel,
                 orgRTGetHWChannel},
+            {"__ZNK30AMDRadeonX5000_AMDDMAHWChannel13getDmaPktInfoE20AMD_DMA_COMMAND_TYPE", wrapGetDmaPktInfo,
+                orgGetDmaPktInfo},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
