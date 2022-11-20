@@ -249,8 +249,8 @@ uint32_t RAD::wrapGcGetHwVersion(uint32_t *param1) {
     NETLOG("rad", "_gc_get_hw_version returned 0x%X", ret);
     switch (ret & 0xFF0000) {
         case 0x090000:
-            NETLOG("rad", "Spoofing GC version v9.x.x to v9.2.1");
-            return 0x090201;
+            NETLOG("rad", "Spoofing GC version v9.x.x to v9.4.0");
+            return 0x090400;
         default:
             return ret;
     }
@@ -1143,12 +1143,12 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 orgVega10PowerTuneConstructor},
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTableHWLibs},
             {"_CAILAsicCapsInitTable", orgAsicInitCapsTable},
-            {"_gc_9_2_1_rlc_ucode", orgGcRlcUcode},
-            {"_gc_9_2_1_me_ucode", orgGcMeUcode},
-            {"_gc_9_2_1_ce_ucode", orgGcCeUcode},
-            {"_gc_9_2_1_pfp_ucode", orgGcPfpUcode},
-            {"_gc_9_2_1_mec_ucode", orgGcMecUcode},
-            {"_gc_9_2_1_mec_jt_ucode", orgGcMecJtUcode},
+            {"_gc_9_4_rlc_ucode", orgGcRlcUcode},
+            {"_gc_9_4_me_ucode", orgGcMeUcode},
+            {"_gc_9_4_ce_ucode", orgGcCeUcode},
+            {"_gc_9_4_pfp_ucode", orgGcPfpUcode},
+            {"_gc_9_4_mec_ucode", orgGcMecUcode},
+            {"_gc_9_4_mec_jt_ucode", orgGcMecJtUcode},
             {"_sdma_4_1_ucode", orgSdmaUcode},
         };
         if (!patcher.solveMultiple(index, solveRequests, address, size)) {
