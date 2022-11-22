@@ -19,6 +19,14 @@
 #include <IOKit/graphics/IOFramebuffer.h>
 #include <IOKit/pci/IOPCIDevice.h>
 
+enum struct ASICType {
+    Unknown,
+    Raven,
+    Raven2,
+    Picasso,
+    Renoir,
+};
+
 class RAD {
     public:
     void init();
@@ -41,6 +49,7 @@ class RAD {
     static RAD *callbackRAD;
     ThreadLocal<IOService *, 8> currentPropProvider;
     OSData *vbiosData = nullptr;
+    ASICType asicType = ASICType::Unknown;
 
     mach_vm_address_t orgSetProperty {}, orgGetProperty {}, orgGetConnectorsInfoV2 {};
     mach_vm_address_t orgGetConnectorsInfoV1 {}, orgTranslateAtomConnectorInfoV1 {};
@@ -164,7 +173,7 @@ class RAD {
         uint level);
     static void wrapCosDebugPrintVaList(void *ttl, char *header, char *fmt, va_list args);
     static void wrapCosReleasePrintVaList(void *ttl, char *header, char *fmt, va_list args);
-    static const char *getChipName();
+    static const char *getASICName();
     static uint32_t wrapPspAsdLoad(void *pspData);
     static uint32_t wrapPspDtmLoad(void *pspData);
     static uint32_t wrapPspHdcpLoad(void *pspData);

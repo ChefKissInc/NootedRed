@@ -266,10 +266,10 @@ uint32_t RAD::wrapInternalCosReadFw(uint64_t param1, uint64_t *param2) {
 void RAD::wrapPopulateFirmwareDirectory(void *that) {
     NETLOG("rad", "AMDRadeonX5000_AMDRadeonHWLibsX5000::populateFirmwareDirectory this = %p", that);
     FunctionCast(wrapPopulateFirmwareDirectory, callbackRAD->orgPopulateFirmwareDirectory)(that);
-    auto *chipName = getChipName();
+    auto *asicName = getASICName();
     auto *filename = new char[128];
-    snprintf(filename, 128, "%s_vcn.bin", chipName);
-    auto *targetFilename = !strcmp(chipName, "renoir") ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
+    snprintf(filename, 128, "%s_vcn.bin", asicName);
+    auto *targetFilename = callbackRAD->asicType != ASICType::Renoir ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
     NETLOG("rad", "%s => %s", filename, targetFilename);
 
     auto *fwDesc = getFWDescByName(filename);
@@ -288,7 +288,7 @@ void RAD::wrapPopulateFirmwareDirectory(void *that) {
     NETLOG("rad", "inserting atidmcub_0.dat!");
     PANIC_COND(!callbackRAD->orgPutFirmware(fwDir, 6, fwBackdoor), "rad", "Failed to inject atidmcub_0.dat firmware");
 
-    // snprintf(filename, 128, "%s_rlc.bin", chipName);
+    // snprintf(filename, 128, "%s_rlc.bin", asicName);
     // fwDesc = getFWDescByName(filename);
     // PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
     // PANIC_COND(fwDesc->size != callbackRAD->orgGcRlcUcode->size, "rad", "%s size mismatch", filename);
@@ -296,7 +296,7 @@ void RAD::wrapPopulateFirmwareDirectory(void *that) {
     // memmove(callbackRAD->orgGcRlcUcode->data, fwDesc->var, fwDesc->size);
     // NETLOG("rad", "Injected %s!", filename);
 
-    snprintf(filename, 128, "%s_me.bin", chipName);
+    snprintf(filename, 128, "%s_me.bin", asicName);
     fwDesc = getFWDescByName(filename);
     PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
     PANIC_COND(fwDesc->size != callbackRAD->orgGcMeUcode->size, "rad", "%s size mismatch", filename);
@@ -304,7 +304,7 @@ void RAD::wrapPopulateFirmwareDirectory(void *that) {
     memmove(callbackRAD->orgGcMeUcode->data, fwDesc->var, fwDesc->size);
     NETLOG("rad", "Injected %s!", filename);
 
-    snprintf(filename, 128, "%s_ce.bin", chipName);
+    snprintf(filename, 128, "%s_ce.bin", asicName);
     fwDesc = getFWDescByName(filename);
     PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
     PANIC_COND(fwDesc->size != callbackRAD->orgGcCeUcode->size, "rad", "%s size mismatch", filename);
@@ -312,7 +312,7 @@ void RAD::wrapPopulateFirmwareDirectory(void *that) {
     memmove(callbackRAD->orgGcCeUcode->data, fwDesc->var, fwDesc->size);
     NETLOG("rad", "Injected %s!", filename);
 
-    snprintf(filename, 128, "%s_pfp.bin", chipName);
+    snprintf(filename, 128, "%s_pfp.bin", asicName);
     fwDesc = getFWDescByName(filename);
     PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
     PANIC_COND(fwDesc->size != callbackRAD->orgGcPfpUcode->size, "rad", "%s size mismatch", filename);
@@ -320,7 +320,7 @@ void RAD::wrapPopulateFirmwareDirectory(void *that) {
     memmove(callbackRAD->orgGcPfpUcode->data, fwDesc->var, fwDesc->size);
     NETLOG("rad", "Injected %s!", filename);
 
-    snprintf(filename, 128, "%s_mec.bin", chipName);
+    snprintf(filename, 128, "%s_mec.bin", asicName);
     fwDesc = getFWDescByName(filename);
     PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
     PANIC_COND(fwDesc->size != callbackRAD->orgGcMecUcode->size, "rad", "%s size mismatch", filename);
@@ -328,7 +328,7 @@ void RAD::wrapPopulateFirmwareDirectory(void *that) {
     memmove(callbackRAD->orgGcMecUcode->data, fwDesc->var, fwDesc->size);
     NETLOG("rad", "Injected %s!", filename);
 
-    snprintf(filename, 128, "%s_mec_jt.bin", chipName);
+    snprintf(filename, 128, "%s_mec_jt.bin", asicName);
     fwDesc = getFWDescByName(filename);
     PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
     PANIC_COND(fwDesc->size != callbackRAD->orgGcMecJtUcode->size, "rad", "%s size mismatch", filename);
@@ -336,7 +336,7 @@ void RAD::wrapPopulateFirmwareDirectory(void *that) {
     memmove(callbackRAD->orgGcMecJtUcode->data, fwDesc->var, fwDesc->size);
     NETLOG("rad", "Injected %s!", filename);
 
-    snprintf(filename, 128, "%s_sdma.bin", chipName);
+    snprintf(filename, 128, "%s_sdma.bin", asicName);
     fwDesc = getFWDescByName(filename);
     PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
     PANIC_COND(fwDesc->size != callbackRAD->orgSdmaUcode->size, "rad", "%s size mismatch", filename);
@@ -438,7 +438,7 @@ uint16_t RAD::wrapGetFamilyId() {
      * This function is hardcoded to return 0x8f which is Navi
      * So we now hard code it to return 0x8e, which is Raven/Renoir
      */
-    return 0x8e;
+    return 0x8E;
 }
 
 uint16_t RAD::wrapGetEnumeratedRevision(void *that) {
@@ -449,10 +449,19 @@ uint16_t RAD::wrapGetEnumeratedRevision(void *that) {
     auto *&pciDev = getMember<IOPCIDevice *>(that, 0x18);
     auto &revision = getMember<uint32_t>(that, 0x68);
     switch (pciDev->configRead16(kIOPCIConfigDeviceID)) {
-        case 0x15d8:
+        case 0x15D8:
+            if (revision >= 0x8) {
+                callbackRAD->asicType = ASICType::Raven2;
+                return 0x79;
+            }
+            callbackRAD->asicType = ASICType::Picasso;
             return 0x41;
-        case 0x15dd:
-            if (revision >= 0x8) { return 0x79; }
+        case 0x15DD:
+            if (revision >= 0x8) {
+                callbackRAD->asicType = ASICType::Raven2;
+                return 0x79;
+            }
+            callbackRAD->asicType = ASICType::Raven;
             return 0x10;
         case 0x15E7:
             [[fallthrough]];
@@ -461,6 +470,7 @@ uint16_t RAD::wrapGetEnumeratedRevision(void *that) {
         case 0x1636:
             [[fallthrough]];
         case 0x1638:
+            callbackRAD->asicType = ASICType::Renoir;
             return 0x91;
         default:
             if (revision == 1) { return 0x20; }
@@ -507,8 +517,7 @@ IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
     callbackRAD->orgAsicCapsTable->revision = callbackRAD->orgAsicCapsTableHWLibs->revision = revision;
     callbackRAD->orgAsicCapsTable->pciRev = callbackRAD->orgAsicCapsTableHWLibs->pciRev = 0xFFFFFFFF;
     callbackRAD->orgAsicCapsTable->emulatedRev = callbackRAD->orgAsicCapsTableHWLibs->emulatedRev = emulatedRevision;
-    memmove(callbackRAD->orgAsicCapsTable->caps, initCaps->caps, 0x40);
-    memmove(callbackRAD->orgAsicCapsTableHWLibs->caps, initCaps->caps, 0x40);
+    callbackRAD->orgAsicCapsTable->caps = callbackRAD->orgAsicCapsTableHWLibs->caps = initCaps->caps;
     MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
     NETLOG("rad", "AMDRadeonX6000_AmdAsicInfoNavi::populateDeviceInfo returned 0x%X", ret);
     return ret;
@@ -695,20 +704,18 @@ uint64_t RAD::wrapHwRegWrite(void *that, uint64_t addr, uint64_t val) {
     return ret;
 }
 
-const char *RAD::getChipName() {
-    switch (callbackRAD->orgDeviceTypeTable[0]) {
-        case 0x15D8:
+const char *RAD::getASICName() {
+    switch (callbackRAD->asicType) {
+        case ASICType::Picasso:
             return "picasso";
-        case 0x15E7:
-            [[fallthrough]];
-        case 0x164C:
-            [[fallthrough]];
-        case 0x1636:
-            [[fallthrough]];
-        case 0x1638:
+        case ASICType::Raven:
+            return "raven";
+        case ASICType::Raven2:
+            return "raven2";
+        case ASICType::Renoir:
             return "renoir";
         default:
-            return "raven";
+            panic("rad: ASIC type is unknown; this should never happen");
     }
 }
 
@@ -719,7 +726,7 @@ uint32_t RAD::wrapPspAsdLoad(void *pspData) {
      * Complementary to `_psp_asd_load` patch-set.
      */
     auto *filename = new char[128];
-    snprintf(filename, 128, "%s_asd.bin", getChipName());
+    snprintf(filename, 128, "%s_asd.bin", getASICName());
     NETLOG("rad", "injecting %s!", filename);
     auto *org =
         reinterpret_cast<uint32_t (*)(void *, uint64_t, uint64_t, const void *, size_t)>(callbackRAD->orgPspAsdLoad);
@@ -736,7 +743,7 @@ uint32_t RAD::wrapPspDtmLoad(void *pspData) {
      * Same idea as `_psp_asd_load`.
      */
     auto *filename = new char[128];
-    snprintf(filename, 128, "%s_dtm.bin", getChipName());
+    snprintf(filename, 128, "%s_dtm.bin", getASICName());
     NETLOG("rad", "injecting %s!", filename);
     auto *org =
         reinterpret_cast<uint32_t (*)(void *, uint64_t, uint64_t, const void *, size_t)>(callbackRAD->orgPspDtmLoad);
@@ -753,7 +760,7 @@ uint32_t RAD::wrapPspHdcpLoad(void *pspData) {
      * Same idea as `_psp_asd_load`.
      */
     auto *filename = new char[128];
-    snprintf(filename, 128, "%s_hdcp.bin", getChipName());
+    snprintf(filename, 128, "%s_hdcp.bin", getASICName());
     NETLOG("rad", "injecting %s!", filename);
     auto *org =
         reinterpret_cast<uint32_t (*)(void *, uint64_t, uint64_t, const void *, size_t)>(callbackRAD->orgPspHdcpLoad);
