@@ -266,83 +266,15 @@ uint32_t RAD::wrapInternalCosReadFw(uint64_t param1, uint64_t *param2) {
 void RAD::wrapPopulateFirmwareDirectory(void *that) {
     NETLOG("rad", "AMDRadeonX5000_AMDRadeonHWLibsX5000::populateFirmwareDirectory this = %p", that);
     FunctionCast(wrapPopulateFirmwareDirectory, callbackRAD->orgPopulateFirmwareDirectory)(that);
-    auto *asicName = getASICName();
-    auto *filename = new char[128];
-    snprintf(filename, 128, "%s_vcn.bin", asicName);
-    auto *targetFilename = callbackRAD->asicType != ASICType::Renoir ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
-    NETLOG("rad", "%s => %s", filename, targetFilename);
-
-    auto *fwDesc = getFWDescByName(filename);
-    PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
-
-    auto *fw = callbackRAD->orgCreateFirmware(fwDesc->var, fwDesc->size, 0x200, targetFilename);
-    fwDesc = getFWDescByName("renoir_dmcub.bin");
+    callbackRAD->callbackFirmwareDirectory = getMember<void *>(that, 0xB8);
+    auto *fwDesc = getFWDescByName("renoir_dmcub.bin");
     PANIC_COND(!fwDesc, "rad", "Somehow renoir_dmcub.bin is missing");
     NETLOG("rad", "renoir_dmcub.bin => atidmcub_0.dat");
     auto *fwBackdoor = callbackRAD->orgCreateFirmware(fwDesc->var, fwDesc->size, 0x200, "atidmcub_0.dat");
-    auto *&fwDir = getMember<void *>(that, 0xB8);
-    NETLOG("rad", "fwDir = %p", fwDir);
-    NETLOG("rad", "inserting %s!", targetFilename);
-
-    PANIC_COND(!callbackRAD->orgPutFirmware(fwDir, 6, fw), "rad", "Failed to inject ativvaxy_rv.dat firmware");
     NETLOG("rad", "inserting atidmcub_0.dat!");
-    PANIC_COND(!callbackRAD->orgPutFirmware(fwDir, 6, fwBackdoor), "rad", "Failed to inject atidmcub_0.dat firmware");
-
-    // snprintf(filename, 128, "%s_rlc.bin", asicName);
-    // fwDesc = getFWDescByName(filename);
-    // PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
-    // PANIC_COND(fwDesc->size != callbackRAD->orgGcRlcUcode->size, "rad", "%s size mismatch", filename);
-    // callbackRAD->orgGcRlcUcode->addr = 0x0;
-    // memmove(callbackRAD->orgGcRlcUcode->data, fwDesc->var, fwDesc->size);
-    // NETLOG("rad", "Injected %s!", filename);
-
-    snprintf(filename, 128, "%s_me.bin", asicName);
-    fwDesc = getFWDescByName(filename);
-    PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
-    PANIC_COND(fwDesc->size != callbackRAD->orgGcMeUcode->size, "rad", "%s size mismatch", filename);
-    callbackRAD->orgGcMeUcode->addr = 0x1000;
-    memmove(callbackRAD->orgGcMeUcode->data, fwDesc->var, fwDesc->size);
-    NETLOG("rad", "Injected %s!", filename);
-
-    snprintf(filename, 128, "%s_ce.bin", asicName);
-    fwDesc = getFWDescByName(filename);
-    PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
-    PANIC_COND(fwDesc->size != callbackRAD->orgGcCeUcode->size, "rad", "%s size mismatch", filename);
-    callbackRAD->orgGcCeUcode->addr = 0x800;
-    memmove(callbackRAD->orgGcCeUcode->data, fwDesc->var, fwDesc->size);
-    NETLOG("rad", "Injected %s!", filename);
-
-    snprintf(filename, 128, "%s_pfp.bin", asicName);
-    fwDesc = getFWDescByName(filename);
-    PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
-    PANIC_COND(fwDesc->size != callbackRAD->orgGcPfpUcode->size, "rad", "%s size mismatch", filename);
-    callbackRAD->orgGcPfpUcode->addr = 0x1400;
-    memmove(callbackRAD->orgGcPfpUcode->data, fwDesc->var, fwDesc->size);
-    NETLOG("rad", "Injected %s!", filename);
-
-    snprintf(filename, 128, "%s_mec.bin", asicName);
-    fwDesc = getFWDescByName(filename);
-    PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
-    PANIC_COND(fwDesc->size != callbackRAD->orgGcMecUcode->size, "rad", "%s size mismatch", filename);
-    callbackRAD->orgGcMecUcode->addr = 0x0;
-    memmove(callbackRAD->orgGcMecUcode->data, fwDesc->var, fwDesc->size);
-    NETLOG("rad", "Injected %s!", filename);
-
-    snprintf(filename, 128, "%s_mec_jt.bin", asicName);
-    fwDesc = getFWDescByName(filename);
-    PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
-    PANIC_COND(fwDesc->size != callbackRAD->orgGcMecJtUcode->size, "rad", "%s size mismatch", filename);
-    callbackRAD->orgGcMecJtUcode->addr = 0x104A4;
-    memmove(callbackRAD->orgGcMecJtUcode->data, fwDesc->var, fwDesc->size);
-    NETLOG("rad", "Injected %s!", filename);
-
-    snprintf(filename, 128, "%s_sdma.bin", asicName);
-    fwDesc = getFWDescByName(filename);
-    PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
-    PANIC_COND(fwDesc->size != callbackRAD->orgSdmaUcode->size, "rad", "%s size mismatch", filename);
-    memmove(callbackRAD->orgSdmaUcode->data, fwDesc->var, fwDesc->size);
-    NETLOG("rad", "Injected %s!", filename);
-    delete[] filename;
+    PANIC_COND(!callbackRAD->orgPutFirmware(callbackRAD->callbackFirmwareDirectory, 6, fwBackdoor), "rad",
+        "Failed to inject atidmcub_0.dat firmware");
+    NETLOG("rad", "AMDRadeonX5000_AMDRadeonHWLibsX5000::populateFirmwareDirectory finished");
 }
 
 void *RAD::wrapCreateAtomBiosProxy(void *param1) {
@@ -478,6 +410,8 @@ uint16_t RAD::wrapGetEnumeratedRevision(void *that) {
     }
 }
 
+static bool injectedIPFirmware = false;
+
 IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
     NETLOG("rad", "AMDRadeonX6000_AmdAsicInfoNavi::populateDeviceInfo: this = %p", that);
     auto ret = FunctionCast(wrapPopulateDeviceInfo, callbackRAD->orgPopulateDeviceInfo)(that);
@@ -492,6 +426,81 @@ IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
     familyId = 0x8e;
     NETLOG("rad", "locating Init Caps entry");
     MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock);
+
+    if (!injectedIPFirmware) {
+        auto *asicName = getASICName();
+        auto *filename = new char[128];
+        snprintf(filename, 128, "%s_vcn.bin", asicName);
+        auto *targetFilename = callbackRAD->asicType == ASICType::Renoir ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
+        NETLOG("rad", "%s => %s", filename, targetFilename);
+
+        auto *fwDesc = getFWDescByName(filename);
+        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+
+        auto *fw = callbackRAD->orgCreateFirmware(fwDesc->var, fwDesc->size, 0x200, targetFilename);
+        NETLOG("rad", "fwDir = %p", callbackRAD->callbackFirmwareDirectory);
+        NETLOG("rad", "inserting %s!", targetFilename);
+        PANIC_COND(!callbackRAD->orgPutFirmware(callbackRAD->callbackFirmwareDirectory, 6, fw), "rad",
+            "Failed to inject ativvaxy_rv.dat firmware");
+
+        // snprintf(filename, 128, "%s_rlc.bin", asicName);
+        // fwDesc = getFWDescByName(filename);
+        // PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        // PANIC_COND(fwDesc->size != callbackRAD->orgGcRlcUcode->size, "rad", "%s size mismatch", filename);
+        // callbackRAD->orgGcRlcUcode->addr = 0x0;
+        // memmove(callbackRAD->orgGcRlcUcode->data, fwDesc->var, fwDesc->size);
+        // NETLOG("rad", "Injected %s!", filename);
+
+        snprintf(filename, 128, "%s_me.bin", asicName);
+        fwDesc = getFWDescByName(filename);
+        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        PANIC_COND(fwDesc->size != callbackRAD->orgGcMeUcode->size, "rad", "%s size mismatch", filename);
+        callbackRAD->orgGcMeUcode->addr = 0x1000;
+        memmove(callbackRAD->orgGcMeUcode->data, fwDesc->var, fwDesc->size);
+        NETLOG("rad", "Injected %s!", filename);
+
+        snprintf(filename, 128, "%s_ce.bin", asicName);
+        fwDesc = getFWDescByName(filename);
+        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        PANIC_COND(fwDesc->size != callbackRAD->orgGcCeUcode->size, "rad", "%s size mismatch", filename);
+        callbackRAD->orgGcCeUcode->addr = 0x800;
+        memmove(callbackRAD->orgGcCeUcode->data, fwDesc->var, fwDesc->size);
+        NETLOG("rad", "Injected %s!", filename);
+
+        snprintf(filename, 128, "%s_pfp.bin", asicName);
+        fwDesc = getFWDescByName(filename);
+        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        PANIC_COND(fwDesc->size != callbackRAD->orgGcPfpUcode->size, "rad", "%s size mismatch", filename);
+        callbackRAD->orgGcPfpUcode->addr = 0x1400;
+        memmove(callbackRAD->orgGcPfpUcode->data, fwDesc->var, fwDesc->size);
+        NETLOG("rad", "Injected %s!", filename);
+
+        snprintf(filename, 128, "%s_mec.bin", asicName);
+        fwDesc = getFWDescByName(filename);
+        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        PANIC_COND(fwDesc->size != callbackRAD->orgGcMecUcode->size, "rad", "%s size mismatch", filename);
+        callbackRAD->orgGcMecUcode->addr = 0x0;
+        memmove(callbackRAD->orgGcMecUcode->data, fwDesc->var, fwDesc->size);
+        NETLOG("rad", "Injected %s!", filename);
+
+        snprintf(filename, 128, "%s_mec_jt.bin", asicName);
+        fwDesc = getFWDescByName(filename);
+        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        PANIC_COND(fwDesc->size != callbackRAD->orgGcMecJtUcode->size, "rad", "%s size mismatch", filename);
+        callbackRAD->orgGcMecJtUcode->addr = 0x104A4;
+        memmove(callbackRAD->orgGcMecJtUcode->data, fwDesc->var, fwDesc->size);
+        NETLOG("rad", "Injected %s!", filename);
+
+        snprintf(filename, 128, "%s_sdma.bin", asicName);
+        fwDesc = getFWDescByName(filename);
+        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        PANIC_COND(fwDesc->size != callbackRAD->orgSdmaUcode->size, "rad", "%s size mismatch", filename);
+        memmove(callbackRAD->orgSdmaUcode->data, fwDesc->var, fwDesc->size);
+        NETLOG("rad", "Injected %s!", filename);
+        delete[] filename;
+        injectedIPFirmware = true;
+    }
+
     CailInitAsicCapEntry *initCaps = nullptr;
     for (size_t i = 0; i < 789; i++) {
         auto *temp = callbackRAD->orgAsicInitCapsTable + i;

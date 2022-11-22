@@ -50,6 +50,7 @@ class RAD {
     ThreadLocal<IOService *, 8> currentPropProvider;
     OSData *vbiosData = nullptr;
     ASICType asicType = ASICType::Unknown;
+    void *callbackFirmwareDirectory = nullptr;
 
     mach_vm_address_t orgSetProperty {}, orgGetProperty {}, orgGetConnectorsInfoV2 {};
     mach_vm_address_t orgGetConnectorsInfoV1 {}, orgTranslateAtomConnectorInfoV1 {};
