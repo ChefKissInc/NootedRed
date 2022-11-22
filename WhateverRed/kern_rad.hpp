@@ -206,8 +206,6 @@ class RAD {
     mach_vm_address_t orgAccelStart {};
     void *callbackAccelerator = nullptr;
     static bool wrapAccelStart(void *that, IOService *provider);
-    using t_writeDiagnosisReport = void (*)(void *that, char **buf, size_t *size);
-    t_writeDiagnosisReport orgWriteDiagnosisReport = nullptr;
 
     mach_vm_address_t orgGFX9RTRingGetHead {};
     static uint64_t wrapGFX9RTRingGetHead(void *that);
@@ -261,15 +259,6 @@ class RAD {
     mach_vm_address_t orgVega10PowerUp {};
     static bool wrapVega10PowerUp(void *that);
 
-    mach_vm_address_t orgCreateBltMgr {};
-    static uint64_t wrapCreateBltMgr(void *that);
-
-    mach_vm_address_t orgPowerUpHWEngines {};
-    static bool wrapPowerUpHWEngines(void *that);
-
-    mach_vm_address_t orgStartHWEngines {};
-    static bool wrapStartHWEngines(void *that);
-
     mach_vm_address_t orgMicroEngineControlLoadMicrocode {};
     static uint64_t wrapMicroEngineControlLoadMicrocode(void *that, void *param1);
 
@@ -293,9 +282,6 @@ class RAD {
 
     mach_vm_address_t orgCailMCILTrace2 {};
     static void wrapCailMCILTrace2(void *that);
-
-    mach_vm_address_t orgGreenlandLoadRlcUcode {};
-    static uint64_t wrapGreenlandLoadRlcUcode(void *param1);
 
     mach_vm_address_t orgGreenlandMicroEngineControl {};
     static uint64_t wrapGreenlandMicroEngineControl(void *param1, uint64_t param2, void *param3);
@@ -327,38 +313,11 @@ class RAD {
     mach_vm_address_t orgIpiSdmaHwInit {};
     static bool wrapIpiSdmaHwInit(void *ctx);
 
-    mach_vm_address_t orgIpiSdmaHwInitInstance {};
-    static bool wrapIpiSdmaHwInitInstance(void *param1, uint32_t *param2);
-
-    mach_vm_address_t orgSdmaCreateQueue {};
-    static uint64_t wrapSdmaCreateQueue(uint64_t param1, uint32_t *param2, void *param3);
-
-    mach_vm_address_t orgSdmaCreateHybridQueue {};
-    static uint64_t wrapSdmaCreateHybridQueue(uint64_t param1, uint32_t *param2, uint64_t *param3);
-
-    mach_vm_address_t orgSdmaQueuePagingInitPfnPtr {};
-    static uint64_t wrapSdmaQueuePagingInitPfnPtr(uint64_t *param1);
-
-    mach_vm_address_t orgSdmaQueueDmaInitPfnPtr {};
-    static uint64_t wrapSdmaQueueDmaInitPfnPtr(uint64_t *param1);
-
     mach_vm_address_t orgSdmaHwInit {};
     static uint32_t wrapSdmaHwInit(uint64_t param1, uint64_t param2, uint64_t param3);
 
     mach_vm_address_t orgIpiSdmaFindInstanceByEngineIndexAndType {};
     static uint64_t wrapIpiSdmaFindInstanceByEngineIndexAndType(uint64_t param1, uint32_t param2, uint32_t param3);
-
-    mach_vm_address_t orgIpiSdmaCreateQueue {};
-    static uint64_t wrapIpiSdmaCreateQueue(void *param1, uint32_t *param2, uint64_t *param3);
-
-    mach_vm_address_t orgTtlRtsCreateEngine {};
-    static uint64_t wrapTtlRtsCreateEngine(void *param1, uint32_t *param2, uint64_t *param3);
-
-    mach_vm_address_t orgIpiSdmaCreateHybridQueue {};
-    static uint64_t wrapIpiSdmaCreateHybridQueue(void *param1, uint32_t *param2, uint64_t *param3);
-
-    mach_vm_address_t orgTtlCreateHybridEngine {};
-    static uint64_t wrapTtlCreateHybridEngine(void *param1, uint32_t *param2, uint64_t *param3);
 
     GcFwConstant *orgGcRlcUcode = nullptr;
     GcFwConstant *orgGcMeUcode = nullptr;
@@ -367,9 +326,6 @@ class RAD {
     GcFwConstant *orgGcMecUcode = nullptr;
     GcFwConstant *orgGcMecJtUcode = nullptr;
     SdmaFwConstant *orgSdmaUcode = nullptr;
-
-    mach_vm_address_t orgGetDmaPktInfo {};
-    static uint64_t wrapGetDmaPktInfo(void *that, uint32_t param2);
 };
 
 #endif /* kern_rad_hpp */

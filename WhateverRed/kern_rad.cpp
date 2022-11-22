@@ -871,27 +871,6 @@ bool RAD::wrapVega10PowerUp(void *that) {
     return ret;
 }
 
-uint64_t RAD::wrapCreateBltMgr(void *that) {
-    NETLOG("rad", "createBltMgr: this = %p", that);
-    auto ret = FunctionCast(wrapCreateBltMgr, callbackRAD->orgCreateBltMgr)(that);
-    NETLOG("rad", "createBltMgr returned 0x%llX", ret);
-    return ret;
-}
-
-bool RAD::wrapPowerUpHWEngines(void *that) {
-    NETLOG("rad", "powerUpHWEngines: this = %p", that);
-    auto ret = FunctionCast(wrapPowerUpHWEngines, callbackRAD->orgPowerUpHWEngines)(that);
-    NETLOG("rad", "powerUpHWEngines returned %d", ret);
-    return ret;
-}
-
-bool RAD::wrapStartHWEngines(void *that) {
-    NETLOG("rad", "startHWEngines: this = %p", that);
-    auto ret = FunctionCast(wrapStartHWEngines, callbackRAD->orgStartHWEngines)(that);
-    NETLOG("rad", "startHWEngines returned %d", ret);
-    return ret;
-}
-
 uint64_t RAD::wrapMicroEngineControlLoadMicrocode(void *that, void *param1) {
     NETLOG("rad", "microEngineControlLoadMicrocode: this = %p param1 = %p", that, param1);
     auto ret = FunctionCast(wrapMicroEngineControlLoadMicrocode, callbackRAD->orgMicroEngineControlLoadMicrocode)(that,
@@ -943,13 +922,6 @@ void RAD::wrapCailMCILTrace1(void *that) {
 void RAD::wrapCailMCILTrace2(void *that) {
     NETLOG("rad", "_Cail_MCILTrace2: this = %p", that);
     FunctionCast(wrapCailMCILTrace2, callbackRAD->orgCailMCILTrace2)(that);
-}
-
-uint64_t RAD::wrapGreenlandLoadRlcUcode(void *param1) {
-    NETLOG("rad", "_greenland_load_rlc_ucode: param1 = %p", param1);
-    auto ret = FunctionCast(wrapGreenlandLoadRlcUcode, callbackRAD->orgGreenlandLoadRlcUcode)(param1);
-    NETLOG("rad", "_greenland_load_rlc_ucode returned 0x%llX", ret);
-    return ret;
 }
 
 uint64_t RAD::wrapGreenlandMicroEngineControl(void *param1, uint64_t param2, void *param3) {
@@ -1022,41 +994,6 @@ bool RAD::wrapIpiSdmaHwInit(void *ctx) {
     return ret;
 }
 
-bool RAD::wrapIpiSdmaHwInitInstance(void *param1, uint32_t *param2) {
-    NETLOG("rad", "_ipi_sdma_hw_init_instance: param1 = %p param2 = %p", param1, param2);
-    auto ret = FunctionCast(wrapIpiSdmaHwInitInstance, callbackRAD->orgIpiSdmaHwInitInstance)(param1, param2);
-    NETLOG("rad", "_ipi_sdma_hw_init_instance returned %d", ret);
-    return ret;
-}
-
-uint64_t RAD::wrapSdmaCreateQueue(uint64_t param1, uint32_t *param2, void *param3) {
-    NETLOG("rad", "_sdma_create_queue: param1 = 0x%llX param2 = %p param3 = %p", param1, param2, param3);
-    auto ret = FunctionCast(wrapSdmaCreateQueue, callbackRAD->orgSdmaCreateQueue)(param1, param2, param3);
-    NETLOG("rad", "_sdma_create_queue returned 0x%llX", ret);
-    return ret;
-}
-
-uint64_t RAD::wrapSdmaCreateHybridQueue(uint64_t param1, uint32_t *param2, uint64_t *param3) {
-    NETLOG("rad", "_sdma_create_hybrid_queue: param1 = 0x%llX param2 = %p param3 = %p", param1, param2, param3);
-    auto ret = FunctionCast(wrapSdmaCreateHybridQueue, callbackRAD->orgSdmaCreateHybridQueue)(param1, param2, param3);
-    NETLOG("rad", "_sdma_create_hybrid_queue returned 0x%llX", ret);
-    return ret;
-}
-
-uint64_t RAD::wrapSdmaQueuePagingInitPfnPtr(uint64_t *param1) {
-    NETLOG("rad", "_sdma_queue_paging_init_pfn_ptr: param1 = %p", param1);
-    auto ret = FunctionCast(wrapSdmaQueuePagingInitPfnPtr, callbackRAD->orgSdmaQueuePagingInitPfnPtr)(param1);
-    NETLOG("rad", "_sdma_queue_paging_init_pfn_ptr returned 0x%llX", ret);
-    return ret;
-}
-
-uint64_t RAD::wrapSdmaQueueDmaInitPfnPtr(uint64_t *param1) {
-    NETLOG("rad", "_sdma_queue_dma_init_pfn_ptr: param1 = %p", param1);
-    auto ret = FunctionCast(wrapSdmaQueueDmaInitPfnPtr, callbackRAD->orgSdmaQueueDmaInitPfnPtr)(param1);
-    NETLOG("rad", "_sdma_queue_dma_init_pfn_ptr returned 0x%llX", ret);
-    return ret;
-}
-
 uint32_t RAD::wrapSdmaHwInit(uint64_t param1, uint64_t param2, uint64_t param3) {
     NETLOG("rad", "_sdma_hw_init: param1 = 0x%llX param2 = 0x%llX param3 = 0x%llX", param1, param2, param3);
     auto ret = FunctionCast(wrapSdmaHwInit, callbackRAD->orgSdmaHwInit)(param1, param2, param3);
@@ -1070,42 +1007,6 @@ uint64_t RAD::wrapIpiSdmaFindInstanceByEngineIndexAndType(uint64_t param1, uint3
     auto ret = FunctionCast(wrapIpiSdmaFindInstanceByEngineIndexAndType,
         callbackRAD->orgIpiSdmaFindInstanceByEngineIndexAndType)(param1, param2, param3);
     NETLOG("rad", "_IpiSdmaFindInstanceByEngineIndexAndType returned 0x%llX", ret);
-    return ret;
-}
-
-uint64_t RAD::wrapIpiSdmaCreateQueue(void *param1, uint32_t *param2, uint64_t *param3) {
-    NETLOG("rad", "_ipiSdmaCreateQueue: param1 = %p param2 = %p param3 = %p", param1, param2, param3);
-    auto ret = FunctionCast(wrapIpiSdmaCreateQueue, callbackRAD->orgIpiSdmaCreateQueue)(param1, param2, param3);
-    NETLOG("rad", "_ipiSdmaCreateQueue returned 0x%llX", ret);
-    return ret;
-}
-
-uint64_t RAD::wrapTtlRtsCreateEngine(void *param1, uint32_t *param2, uint64_t *param3) {
-    NETLOG("rad", "_TtlRtsCreateEngine: param1 = %p param2 = %p param3 = %p", param1, param2, param3);
-    auto ret = FunctionCast(wrapTtlRtsCreateEngine, callbackRAD->orgTtlRtsCreateEngine)(param1, param2, param3);
-    NETLOG("rad", "_TtlRtsCreateEngine returned 0x%llX", ret);
-    return ret;
-}
-
-uint64_t RAD::wrapIpiSdmaCreateHybridQueue(void *param1, uint32_t *param2, uint64_t *param3) {
-    NETLOG("rad", "_ipiSdmaCreateHybridQueue: param1 = %p param2 = %p param3 = %p", param1, param2, param3);
-    auto ret =
-        FunctionCast(wrapIpiSdmaCreateHybridQueue, callbackRAD->orgIpiSdmaCreateHybridQueue)(param1, param2, param3);
-    NETLOG("rad", "_ipiSdmaCreateHybridQueue returned 0x%llX", ret);
-    return ret;
-}
-
-uint64_t RAD::wrapTtlCreateHybridEngine(void *param1, uint32_t *param2, uint64_t *param3) {
-    NETLOG("rad", "_TtlCreateHybridEngine: param1 = %p param2 = %p param3 = %p", param1, param2, param3);
-    auto ret = FunctionCast(wrapTtlCreateHybridEngine, callbackRAD->orgTtlCreateHybridEngine)(param1, param2, param3);
-    NETLOG("rad", "_TtlCreateHybridEngine returned 0x%llX", ret);
-    return ret;
-}
-
-uint64_t RAD::wrapGetDmaPktInfo(void *that, uint32_t param2) {
-    NETLOG("rad", "getDmaPktInfo: this = %p param2 = 0x%X", that, param2);
-    auto ret = FunctionCast(wrapGetDmaPktInfo, callbackRAD->orgGetDmaPktInfo)(that, param2);
-    NETLOG("rad", "getDmaPktInfo returned 0x%llX", ret);
     return ret;
 }
 
@@ -1204,7 +1105,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_Cail_MCILTrace0", wrapCailMCILTrace0, orgCailMCILTrace0},
             {"_Cail_MCILTrace1", wrapCailMCILTrace1, orgCailMCILTrace1},
             {"_Cail_MCILTrace2", wrapCailMCILTrace0, orgCailMCILTrace0},
-            {"_greenland_load_rlc_ucode", wrapGreenlandLoadRlcUcode, orgGreenlandLoadRlcUcode},
             {"_greenland_micro_engine_control", wrapGreenlandMicroEngineControl, orgGreenlandMicroEngineControl},
             {"_sdma_micro_engine_control", wrapSdmaMicroEngineControl, orgSdmaMicroEngineControl},
             {"_sdma_sw_init", wrapSdmaSwInit, orgSdmaSwInit},
@@ -1212,18 +1112,9 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_sdma_get_hw_version", wrapSdmaGetHwVersion, orgSdmaGetHwVersion},
             {"__ZN14AmdTtlServices14cosDebugAssertEPvPKcS2_jS2_", wrapCosDebugAssert, orgCosDebugAssert},
             {"_ipi_sdma_hw_init", wrapIpiSdmaHwInit, orgIpiSdmaHwInit},
-            {"_ipi_sdma_hw_init_instance", wrapIpiSdmaHwInitInstance, orgIpiSdmaHwInitInstance},
-            {"_sdma_create_queue", wrapSdmaCreateQueue, orgSdmaCreateQueue},
-            {"_sdma_create_hybrid_queue", wrapSdmaCreateHybridQueue, orgSdmaCreateHybridQueue},
-            {"_sdma_queue_paging_init_pfn_ptr", wrapSdmaQueuePagingInitPfnPtr, orgSdmaQueuePagingInitPfnPtr},
-            {"_sdma_queue_dma_init_pfn_ptr", wrapSdmaQueueDmaInitPfnPtr, orgSdmaQueueDmaInitPfnPtr},
             {"_sdma_hw_init", wrapSdmaHwInit, orgSdmaHwInit},
             {"_IpiSdmaFindInstanceByEngineIndexAndType", wrapIpiSdmaFindInstanceByEngineIndexAndType,
                 orgIpiSdmaFindInstanceByEngineIndexAndType},
-            {"_ipiSdmaCreateQueue", wrapIpiSdmaCreateQueue, orgIpiSdmaCreateQueue},
-            {"_TtlRtsCreateEngine", wrapTtlRtsCreateEngine, orgTtlRtsCreateEngine},
-            {"_ipiSdmaCreateHybridQueue", wrapIpiSdmaCreateHybridQueue, orgIpiSdmaCreateHybridQueue},
-            {"_TtlCreateHybridEngine", wrapTtlCreateHybridEngine, orgTtlCreateHybridEngine},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
@@ -1321,7 +1212,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN31AMDRadeonX5000_AMDGFX9PM4EngineC1Ev", orgGFX9PM4EngineConstructor},
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEnginenwEm", orgGFX9SDMAEngineNew},
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngineC1Ev", orgGFX9SDMAEngineConstructor},
-            {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator20writeDiagnosisReportERPcRj", orgWriteDiagnosisReport},
             {"__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator19createAccelChannelsEbE12channelTypes", orgChannelTypes},
         };
         if (!patcher.solveMultiple(index, solveRequests, address, size)) {
@@ -1367,16 +1257,11 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator20callPlatformFunctionEPK8OSSymbolbPvS3_S3_S3_",
                 wrapAccelCallPlatformFunction, orgAccelCallPlatformFunction},
             {"__ZN32AMDRadeonX5000_AMDVega10Hardware7powerUpEv", wrapVega10PowerUp, orgVega10PowerUp},
-            {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator12createBltMgrEv", wrapCreateBltMgr, orgCreateBltMgr},
-            {"__ZN26AMDRadeonX5000_AMDHardware16powerUpHWEnginesEv", wrapPowerUpHWEngines, orgPowerUpHWEngines},
-            {"__ZN26AMDRadeonX5000_AMDHardware14startHWEnginesEv", wrapStartHWEngines, orgStartHWEngines},
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngine5startEv", wrapSdmaEngineStart, orgSdmaEngineStart},
             {"__ZN24AMDRadeonX5000_AMDRTRing6enableEv", wrapRtRingEnable, orgRtRingEnable},
             {"__ZN27AMDRadeonX5000_AMDHWChannel14waitForHwStampEj", wrapWaitForHwStamp, orgWaitForHwStamp},
             {"__ZN28AMDRadeonX5000_AMDRTHardware12getHWChannelE18_eAMD_CHANNEL_TYPE11SS_PRIORITYj", wrapRTGetHWChannel,
                 orgRTGetHWChannel},
-            {"__ZNK30AMDRadeonX5000_AMDDMAHWChannel13getDmaPktInfoE20AMD_DMA_COMMAND_TYPE", wrapGetDmaPktInfo,
-                orgGetDmaPktInfo},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
