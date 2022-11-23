@@ -336,6 +336,9 @@ class RAD {
     GcFwConstant *orgGcMecUcode = nullptr;
     GcFwConstant *orgGcMecJtUcode = nullptr;
     SdmaFwConstant *orgSdmaUcode = nullptr;
+
+    mach_vm_address_t orgHwReadReg32 {};
+    static uint32_t wrapHwReadReg32(void *that, uint32_t param1);
 };
 
 #endif /* kern_rad_hpp */
