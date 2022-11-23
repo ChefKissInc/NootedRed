@@ -249,8 +249,8 @@ uint32_t RAD::wrapGcGetHwVersion(uint32_t *param1) {
     NETLOG("rad", "_gc_get_hw_version returned 0x%X", ret);
     switch (ret & 0xFF0000) {
         case 0x090000:
-            NETLOG("rad", "Spoofing GC version v9.x.x to v9.4.0");
-            return 0x090400;
+            NETLOG("rad", "Spoofing GC version v9.x.x to v9.2.1");
+            return 0x090201;
         default:
             return ret;
     }
@@ -428,6 +428,7 @@ IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
     MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock);
 
     if (!injectedIPFirmware) {
+        injectedIPFirmware = true;
         auto *asicName = getASICName();
         auto *filename = new char[128];
         snprintf(filename, 128, "%s_vcn.bin", asicName);
@@ -498,7 +499,6 @@ IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
         memmove(callbackRAD->orgSdmaUcode->data, fwDesc->var, fwDesc->size);
         NETLOG("rad", "Injected %s!", filename);
         delete[] filename;
-        injectedIPFirmware = true;
     }
 
     CailInitAsicCapEntry *initCaps = nullptr;
