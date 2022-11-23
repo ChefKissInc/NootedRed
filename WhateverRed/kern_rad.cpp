@@ -443,13 +443,13 @@ IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
         PANIC_COND(!callbackRAD->orgPutFirmware(callbackRAD->callbackFirmwareDirectory, 6, fw), "rad",
             "Failed to inject ativvaxy_rv.dat firmware");
 
-        // snprintf(filename, 128, "%s_rlc.bin", asicName);
-        // fwDesc = getFWDescByName(filename);
-        // PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
-        // PANIC_COND(fwDesc->size != callbackRAD->orgGcRlcUcode->size, "rad", "%s size mismatch", filename);
-        // callbackRAD->orgGcRlcUcode->addr = 0x0;
-        // memmove(callbackRAD->orgGcRlcUcode->data, fwDesc->var, fwDesc->size);
-        // NETLOG("rad", "Injected %s!", filename);
+        snprintf(filename, 128, "%s_rlc.bin", asicName);
+        fwDesc = getFWDescByName(filename);
+        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        PANIC_COND(fwDesc->size != callbackRAD->orgGcRlcUcode->size, "rad", "%s size mismatch", filename);
+        callbackRAD->orgGcRlcUcode->addr = 0x0;
+        memmove(callbackRAD->orgGcRlcUcode->data, fwDesc->var, fwDesc->size);
+        NETLOG("rad", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_me.bin", asicName);
         fwDesc = getFWDescByName(filename);
