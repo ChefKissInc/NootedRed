@@ -1,31 +1,31 @@
-# WhateverRed
+# LegacyRed
 
-AMD iGPU [Lilu](https://github.com/acidanthera/Lilu) plug-in.
+AMD Legacy iGPU [Lilu](https://github.com/acidanthera/Lilu) plug-in.
 
-## !! IMPORTANT
+# IMPORTANT:
+**As with WhateverRed, LegacyRed contains a remote debugging system via a custom NETDBG service**
+Due to the NETDBG changes within WhateverRed, LegacyRed has been updated to account for the changes, as of such, you must specify a NETDBG IP and Port via boot arguments `netdbg_ip_X` and `netdbg_port`, where X is the part of an IP, example, the IP `12.34.56.78` would be as follows, `netdbg_ip_1=12` `netdbg_ip_2=34` `netdbg_ip_3=56` `netdbg_ip_4=78`
 
-**THIS KEXT CONTAINS REMOTE DEBUGGING VIA CUSTOM NETDBG LOGGING SERVICE. YOU MUST SPECIFY IP AND PORT OR DISABLE AS DESCRIBED BELOW.**
+To disable NETDBG entirely, use the boot argument `-netdbg_disable`
 
-WhateverRed NetDbg is a custom TCP logger developed by project owner [@ChefKissInc](https://github.com/ChefKissInc).
+Like WhateverRed, LegacyRed is under active development and research, It is not functional. 
 
-You can find the source code [here](https://github.com/NootInc/WhateverRed-NETDBG)
+Due to the lack of logic on macOS Monterey and up, you are required to run Big Sur or Catalina 
 
-Specify NetDbg IP and Port via `netdbg_ip_X` and `netdbg_port` boot args.
+In the future, this requirement could be bypassed, eg: OpenCore Injection
 
-Where `X` is IP part, i.e IP `1.2.3.4` becomes `netdbg_ip_1=1` `netdbg_ip_2=2` `netdbg_ip_3=3` `netdbg_ip_4=4`.
+# Compatibility
+Desktop APUs
+ - Empty for now to focus on CzL & Co
 
-Pass `-netdbg_disable` to disable NetDbg.
+Mobile APUs
+ - Empty for now to focus on CzL & Co
+ 
+Ultra Mobile APUs
+ - Beema
+ - Carrizo-L
+ - Mullins
 
-The WhateverRed kext is licensed under BSD-3.
+# Credits
 
-This kext is currently under active research and development. It is not functional, but in a close state to such.
-
-This kext is currently aimed to enable AMD iGPU support for Renoir/Raven(2) and their derivatives (i.e. Picasso).
-
-Unfortunately, due to the complexity of such drivers, extended support for non-existent logic is not possible. Therefore, you are (currently) required to use Catalina to Big Sur (recommended) as it appears Monterey has removed the logic for the iGPUs.
-
-The aforementioned requirement may be bypassed in a later stage by, for example, injecting the kext via the OpenCore Kext injection.
-
-Honourable mention:
-
-[@NyanCatTW1](https://github.com/NyanCatTW1) for helping with the Reverse Engineering and understanding of the AMDGPU logic, and his Ghidra RedMetaClassAnalyzer script, which has made the entire process way painless by automagically discovering C++ v-tables for classes.
+[The NootInc Team](https://github.com/NootInc) for making and actively working on WhateverRed 

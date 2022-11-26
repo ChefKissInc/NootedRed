@@ -37,7 +37,7 @@
 
 /* Begin PBXFileReference section */
 		198893C128085E2000C02A16 /* kern_model.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_model.cpp; sourceTree = "<group>"; };
-		1C748C271C21952C0024EED2 /* WhateverRed.kext */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WhateverRed.kext; sourceTree = BUILT_PRODUCTS_DIR; };
+		1C748C271C21952C0024EED2 /* LegacyRed.kext */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LegacyRed.kext; sourceTree = BUILT_PRODUCTS_DIR; };
 		1C748C2C1C21952C0024EED2 /* kern_start.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_start.cpp; sourceTree = "<group>"; };
 		1C748C2E1C21952C0024EED2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1C9CB7AE1C789FF500231E41 /* kern_rad.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = kern_rad.cpp; sourceTree = "<group>"; };
@@ -103,7 +103,7 @@
 		1C748C1D1C21952C0024EED2 = {
 			isa = PBXGroup;
 			children = (
-				1C748C291C21952C0024EED2 /* WhateverRed */,
+				1C748C291C21952C0024EED2 /* LegacyRed */,
 				CE405EC81E49DD7B00AA0B3D /* SDK */,
 				1C748C281C21952C0024EED2 /* Products */,
 				CE8DA0812517C41A008C44E8 /* Frameworks */,
@@ -114,12 +114,12 @@
 		1C748C281C21952C0024EED2 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				1C748C271C21952C0024EED2 /* WhateverRed.kext */,
+				1C748C271C21952C0024EED2 /* LegacyRed.kext */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		1C748C291C21952C0024EED2 /* WhateverRed */ = {
+		1C748C291C21952C0024EED2 /* LegacyRed */ = {
 			isa = PBXGroup;
 			children = (
 				408F201A288AC068002EEC15 /* Firmware */,
@@ -138,7 +138,7 @@
 				CEA03B5C20EE825A00BA842F /* kern_wred.cpp */,
 				CEA03B5D20EE825A00BA842F /* kern_wred.hpp */,
 			);
-			path = WhateverRed;
+			path = LegacyRed;
 			sourceTree = "<group>";
 		};
 		408F201A288AC068002EEC15 /* Firmware */ = {
@@ -233,9 +233,9 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		1C748C261C21952C0024EED2 /* WhateverRed */ = {
+		1C748C261C21952C0024EED2 /* LegacyRed */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1C748C311C21952C0024EED2 /* Build configuration list for PBXNativeTarget "WhateverRed" */;
+			buildConfigurationList = 1C748C311C21952C0024EED2 /* Build configuration list for PBXNativeTarget "LegacyRed" */;
 			buildPhases = (
 				408F2028288ACCC6002EEC15 /* ShellScript */,
 				1C748C221C21952C0024EED2 /* Sources */,
@@ -248,9 +248,9 @@
 			);
 			dependencies = (
 			);
-			name = WhateverRed;
+			name = LegacyRed;
 			productName = WhateverRed;
-			productReference = 1C748C271C21952C0024EED2 /* WhateverRed.kext */;
+			productReference = 1C748C271C21952C0024EED2 /* LegacyRed.kext */;
 			productType = "com.apple.product-type.kernel-extension";
 		};
 /* End PBXNativeTarget section */
@@ -260,14 +260,14 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 1330;
-				ORGANIZATIONNAME = VisualDevelopment;
+				ORGANIZATIONNAME = ZormIndustries;
 				TargetAttributes = {
 					1C748C261C21952C0024EED2 = {
 						CreatedOnToolsVersion = 7.2;
 					};
 				};
 			};
-			buildConfigurationList = 1C748C211C21952C0024EED2 /* Build configuration list for PBXProject "WhateverRed" */;
+			buildConfigurationList = 1C748C211C21952C0024EED2 /* Build configuration list for PBXProject "LegacyRed" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -280,7 +280,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				1C748C261C21952C0024EED2 /* WhateverRed */,
+				1C748C261C21952C0024EED2 /* LegacyRed */,
 			);
 		};
 /* End PBXProject section */
@@ -483,7 +483,7 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = "$(inherited)";
-				INFOPLIST_FILE = WhateverRed/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/LegacyRed/Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/MacKernelSDK/Library/x86_64",
@@ -510,7 +510,7 @@
 					"$(inherited)",
 				);
 				OTHER_LDFLAGS = "-static";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(MODULE_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.ZormIndustries.LegacyRed;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				WRAPPER_EXTENSION = kext;
@@ -535,7 +535,7 @@
 					"PRODUCT_NAME=$(PRODUCT_NAME)",
 				);
 				HEADER_SEARCH_PATHS = "$(inherited)";
-				INFOPLIST_FILE = WhateverRed/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/LegacyRed/Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/MacKernelSDK/Library/x86_64",
@@ -563,7 +563,7 @@
 					"$(inherited)",
 				);
 				OTHER_LDFLAGS = "-static";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(MODULE_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.ZormIndustries.LegacyRed;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRIP_STYLE = "non-global";
 				WRAPPER_EXTENSION = kext;
@@ -648,7 +648,7 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = "$(inherited)";
-				INFOPLIST_FILE = WhateverRed/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/LegacyRed/Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/MacKernelSDK/Library/x86_64",
@@ -677,7 +677,7 @@
 					"$(inherited)",
 				);
 				OTHER_LDFLAGS = "-static";
-				PRODUCT_BUNDLE_IDENTIFIER = "$(MODULE_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.ZormIndustries.LegacyRed;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = kext;
 			};
@@ -686,7 +686,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1C748C211C21952C0024EED2 /* Build configuration list for PBXProject "WhateverRed" */ = {
+		1C748C211C21952C0024EED2 /* Build configuration list for PBXProject "LegacyRed" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1C748C2F1C21952C0024EED2 /* Debug */,
@@ -696,7 +696,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1C748C311C21952C0024EED2 /* Build configuration list for PBXNativeTarget "WhateverRed" */ = {
+		1C748C311C21952C0024EED2 /* Build configuration list for PBXNativeTarget "LegacyRed" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1C748C321C21952C0024EED2 /* Debug */,
