@@ -837,7 +837,7 @@ uint64_t RAD::wrapAccelGetHWChannel(void *that) {
 uint64_t RAD::wrapCreateAccelChannels(void *that, uint64_t param1) {
     NETLOG("rad", "createAccelChannels: this = %p param1 = 0x%llX", that, param1);
     /**
-     * Patch the data so that it only uses SDMA0.
+     * Patch the data so that it only starts SDMA0.
      */
     MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock);
     callbackRAD->orgChannelTypes[5] = 1;
@@ -950,7 +950,8 @@ uint64_t RAD::wrapGreenlandMicroEngineControl(void *param1, uint64_t param2, voi
 
 uint64_t RAD::wrapSdmaMicroEngineControl(void *param1, void *param2, void *param3) {
     NETLOG("rad", "_sdma_micro_engine_control: param1 = %p param2 = %p param3 = %p", param1, param2, param3);
-    for (int i = 0; i < 0x70; i += 4) { NETLOG("rad", "param2->field_0x%X = %X", i, getMember<uint32_t>(param2, i)); }
+    // for (int i = 0; i < 0x70; i += 4) { NETLOG("rad", "param2->field_0x%X = %X", i, getMember<uint32_t>(param2, i));
+    // }
     auto ret = FunctionCast(wrapSdmaMicroEngineControl, callbackRAD->orgSdmaMicroEngineControl)(param1, param2, param3);
     NETLOG("rad", "_sdma_micro_engine_control returned 0x%llX", ret);
     return ret;
@@ -1301,10 +1302,10 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN27AMDRadeonX5000_AMDHWHandler8getStateEv", wrapGetState, orgGetState},
             {"__ZN28AMDRadeonX5000_AMDRTHardware13initializeTtlEP16_GART_PARAMETERS", wrapInitializeTtl,
                 orgInitializeTtl},
-            {"__ZN31AMDRadeonX5000_AMDGFX9PM4Engine23QueryComputeQueueIsIdleE18_eAMD_HW_RING_TYPE",
-                wrapQueryComputeQueueIsIdle, orgQueryComputeQueueIsIdle},
-            {"__ZN27AMDRadeonX5000_AMDHWChannel11waitForIdleEj", wrapAMDHWChannelWaitForIdle,
-                orgAMDHWChannelWaitForIdle},
+            // {"__ZN31AMDRadeonX5000_AMDGFX9PM4Engine23QueryComputeQueueIsIdleE18_eAMD_HW_RING_TYPE",
+            //     wrapQueryComputeQueueIsIdle, orgQueryComputeQueueIsIdle},
+            // {"__ZN27AMDRadeonX5000_AMDHWChannel11waitForIdleEj", wrapAMDHWChannelWaitForIdle,
+            //     orgAMDHWChannelWaitForIdle},
             {"__ZN32AMDRadeonX5000_AMDVega10Hardware17allocateHWEnginesEv", wrapAllocateHWEngines},
             {"__ZN26AMDRadeonX5000_AMDHardware11getHWEngineE20_eAMD_HW_ENGINE_TYPE", wrapGetHWEngine, orgGetHWEngine},
             {"__ZN32AMDRadeonX5000_AMDVega10Hardware32setupAndInitializeHWCapabilitiesEv",
@@ -1320,10 +1321,11 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 wrapAccelDisplayPipeWriteDiagnosisReport, orgAccelDisplayPipeWriteDiagnosisReport},
             {"__ZN23AMDRadeonX5000_AMDHWVMM27setMemoryAllocationsEnabledEb", wrapSetMemoryAllocationsEnabled,
                 orgSetMemoryAllocationsEnabled},
-            {"__ZN27AMDRadeonX5000_AMDHWHandler15getEventMachineEv", wrapGetEventMachine, orgGetEventMachine},
-            {"__ZN27AMDRadeonX5000_AMDHWHandler18getVMUpdateChannelEv", wrapGetVMUpdateChannel, orgGetVMUpdateChannel},
-            {"__ZN27AMDRadeonX5000_AMDHWHandler25createVMCommandBufferPoolEP30AMDRadeonX5000_AMDAccelChanneljj",
-                wrapCreateVMCommandBufferPool, orgCreateVMCommandBufferPool},
+            // {"__ZN27AMDRadeonX5000_AMDHWHandler15getEventMachineEv", wrapGetEventMachine, orgGetEventMachine},
+            // {"__ZN27AMDRadeonX5000_AMDHWHandler18getVMUpdateChannelEv", wrapGetVMUpdateChannel,
+            // orgGetVMUpdateChannel},
+            // {"__ZN27AMDRadeonX5000_AMDHWHandler25createVMCommandBufferPoolEP30AMDRadeonX5000_AMDAccelChanneljj",
+            //     wrapCreateVMCommandBufferPool, orgCreateVMCommandBufferPool},
             // {"__ZN35AMDRadeonX5000_AMDCommandBufferPool10getChannelEv", wrapPoolGetChannel, orgPoolGetChannel},
             // {"__ZN30AMDRadeonX5000_AMDAccelChannel12getHWChannelEv", wrapAccelGetHWChannel, orgAccelGetHWChannel},
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator19createAccelChannelsEb", wrapCreateAccelChannels,
@@ -1337,7 +1339,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 wrapAccelCallPlatformFunction, orgAccelCallPlatformFunction},
             {"__ZN32AMDRadeonX5000_AMDVega10Hardware7powerUpEv", wrapVega10PowerUp, orgVega10PowerUp},
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngine5startEv", wrapSdmaEngineStart, orgSdmaEngineStart},
-            {"__ZN24AMDRadeonX5000_AMDRTRing6enableEv", wrapRtRingEnable, orgRtRingEnable},
+            // {"__ZN24AMDRadeonX5000_AMDRTRing6enableEv", wrapRtRingEnable, orgRtRingEnable},
             {"__ZN27AMDRadeonX5000_AMDHWChannel14waitForHwStampEj", wrapWaitForHwStamp, orgWaitForHwStamp},
             {"__ZN28AMDRadeonX5000_AMDRTHardware12getHWChannelE18_eAMD_CHANNEL_TYPE11SS_PRIORITYj", wrapRTGetHWChannel,
                 orgRTGetHWChannel},
