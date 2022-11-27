@@ -1109,16 +1109,23 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 
         return true;
     } else if (kextRadeonX5000HWLibs.loadIndex == index) {
-        KernelPatcher::SolveRequest solveRequests[] = {{"__ZL15deviceTypeTable", orgDeviceTypeTable},
+        KernelPatcher::SolveRequest solveRequests[] = {
+            {"__ZL15deviceTypeTable", orgDeviceTypeTable},
             {"__ZN11AMDFirmware14createFirmwareEPhjjPKc", orgCreateFirmware},
             {"__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware", orgPutFirmware},
             {"__ZN31AtiAppleVega10PowerTuneServicesC1EP11PP_InstanceP18PowerPlayCallbacks",
                 orgVega10PowerTuneConstructor},
-            {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTableHWLibs}, {"_CAILAsicCapsInitTable", orgAsicInitCapsTable},
-            {"_gc_9_4_rlc_ucode", orgGcRlcUcode}, {"_gc_9_4_me_ucode", orgGcMeUcode},
-            {"_gc_9_4_ce_ucode", orgGcCeUcode}, {"_gc_9_4_pfp_ucode", orgGcPfpUcode},
-            {"_gc_9_4_mec_ucode", orgGcMecUcode}, {"_gc_9_4_mec_jt_ucode", orgGcMecJtUcode},
-            {"_sdma_4_1_ucode", orgSdmaUcode}, {"_Raven_SendMsgToSmcWithParameter", orgSendMsgToSmc}};
+            {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTableHWLibs},
+            {"_CAILAsicCapsInitTable", orgAsicInitCapsTable},
+            {"_gc_9_4_rlc_ucode", orgGcRlcUcode},
+            {"_gc_9_4_me_ucode", orgGcMeUcode},
+            {"_gc_9_4_ce_ucode", orgGcCeUcode},
+            {"_gc_9_4_pfp_ucode", orgGcPfpUcode},
+            {"_gc_9_4_mec_ucode", orgGcMecUcode},
+            {"_gc_9_4_mec_jt_ucode", orgGcMecJtUcode},
+            {"_sdma_4_1_ucode", orgSdmaUcode},
+            {"_Raven_SendMsgToSmcWithParameter", orgSendMsgToSmc},
+        };
         if (!patcher.solveMultiple(index, solveRequests, address, size)) {
             panic("RAD: Failed to resolve AMDRadeonX5000HWLibs symbols");
         }
@@ -1174,7 +1181,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_sdma_hw_init", wrapSdmaHwInit, orgSdmaHwInit},
             {"_IpiSdmaFindInstanceByEngineIndexAndType", wrapIpiSdmaFindInstanceByEngineIndexAndType,
                 orgIpiSdmaFindInstanceByEngineIndexAndType},
-            {"_sdma_hw_init", wrapSdmaHwInit, orgSdmaHwInit},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
