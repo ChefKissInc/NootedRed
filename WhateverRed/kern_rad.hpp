@@ -340,10 +340,16 @@ class RAD {
     mach_vm_address_t orgHwReadReg32 {};
     static uint32_t wrapHwReadReg32(void *that, uint32_t param1);
 
-    void *smumData = nullptr;
-
     using t_sendMsgToSmc = uint (*)(void *smumData, uint msgId, uint parameter);
     t_sendMsgToSmc orgSendMsgToSmc = nullptr;
+
+    static void powerUpSDMA(void *smumData);
+
+    mach_vm_address_t orgSmuRavenInitialize {};
+    static uint32_t wrapSmuRavenInitialize(void *param1, uint32_t param2);
+
+    mach_vm_address_t orgSmuRenoirInitialize {};
+    static uint32_t wrapSmuRenoirInitialize(void *param1, uint32_t param2);
 };
 
 #endif /* kern_rad_hpp */
