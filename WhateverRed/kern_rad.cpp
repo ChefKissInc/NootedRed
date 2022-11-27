@@ -355,6 +355,14 @@ uint64_t RAD::wrapSMUMInitialize(uint64_t param1, uint32_t *param2, uint64_t par
     NETLOG("rad", "_SMUM_Initialize: param1 = 0x%llX param2 = %p param3 = 0x%llX", param1, param2, param3);
     auto ret = FunctionCast(wrapSMUMInitialize, callbackRAD->orgSMUMInitialize)(param1, param2, param3);
     NETLOG("rad", "_SMUM_Initialize returned 0x%llX", ret);
+
+    void *adapterInfo = param1 + 8;
+    void *hwManager = getMember<void *>(adapterInfo, 0x8);
+    NETLOG("rad", "hwManager = 0x%llX", hwManager);
+    void *smumData = getMember<void *>(hwManager, 0x88);
+    NETLOG("rad", "smumData = 0x%llX", smumData);
+    callbackRAD->smumData = smumData;
+
     return ret;
 }
 
@@ -1063,6 +1071,17 @@ uint32_t RAD::wrapHwReadReg32(void *that, uint32_t reg) {
     return ret;
 }
 
+uint32_t RAD::wrapSdmaHwInit(uint64_t param1, uint64_t param2, uint64_t param3) {
+    NETLOG("rad", "Sending PPSMC_MSG_PowerUpSdma (0xE) to the SMC");
+    auto smcRet = callbackRAD->orgSendMsgToSmc(callbackRAD->smumData, 0xE, 0);
+    NETLOG("rad", "_Raven_SendMsgToSmcWithParameter returned 0x%X", smcRet);
+
+    NETLOG("rad", "_sdma_hw_init: param1 = 0x%llX param2 = 0x%llX param3 = 0x%llX", param1, param2, param3);
+    auto ret = FunctionCast(wrapSdmaHwInit, callbackRAD->orgSdmaHwInit)(param1, param2, param3);
+    NETLOG("rad", "_sdma_hw_init returned 0x%X", ret);
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -1112,6 +1131,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_gc_9_4_mec_ucode", orgGcMecUcode},
             {"_gc_9_4_mec_jt_ucode", orgGcMecJtUcode},
             {"_sdma_4_1_ucode", orgSdmaUcode},
+            {"_Raven_SendMsgToSmcWithParameter", orgSendMsgToSmc}
         };
         if (!patcher.solveMultiple(index, solveRequests, address, size)) {
             panic("RAD: Failed to resolve AMDRadeonX5000HWLibs symbols");
@@ -1168,6 +1188,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_sdma_hw_init", wrapSdmaHwInit, orgSdmaHwInit},
             {"_IpiSdmaFindInstanceByEngineIndexAndType", wrapIpiSdmaFindInstanceByEngineIndexAndType,
                 orgIpiSdmaFindInstanceByEngineIndexAndType},
+            {"_sdma_hw_init", wrapSdmaHwInit, orgSdmaHwInit},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
