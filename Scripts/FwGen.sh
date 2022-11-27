@@ -7,7 +7,7 @@ fi
 while [ $# -gt 0 ];
 do
     case $1 in
-    -P) fw_files=$2
+    -P) fw_files="$PROJECT_DIR/LegacyRed/Firmware"
     shift
     ;;
     
