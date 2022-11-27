@@ -342,10 +342,7 @@ class RAD {
 
     void *smumData = nullptr;
 
-    mach_vm_address_t orgSdmaHwInit{};
-    static uint32_t wrapSdmaHwInit(uint64_t param1, uint64_t param2, uint64_t param3);
-
-    using t_sendMsgToSmc = uint(*)(void* smumData, uint msgId, uint parameter);
+    using t_sendMsgToSmc = uint (*)(void *smumData, uint msgId, uint parameter);
     t_sendMsgToSmc orgSendMsgToSmc = nullptr;
 };
 
