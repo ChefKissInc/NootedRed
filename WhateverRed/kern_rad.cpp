@@ -1027,37 +1027,15 @@ uint64_t RAD::wrapIpiSdmaFindInstanceByEngineIndexAndType(uint64_t param1, uint3
     return ret;
 }
 
-static constexpr uint32_t MAX_INSTANCE = 5;
-static constexpr uint32_t MAX_SEGMENT = 5;
-
-struct IPInstance {
-    uint32_t segments[MAX_SEGMENT];
-};
-
-struct IPBase {
-    struct IPInstance instances[MAX_INSTANCE];
-};
-
-static const struct IPBase NBIO_BASE = {
-    .instances =
-        {
-            {{0x00000000, 0x00000014, 0x00000D20, 0x00010400, 0}},
-            {{0, 0, 0, 0, 0}},
-            {{0, 0, 0, 0, 0}},
-            {{0, 0, 0, 0, 0}},
-            {{0, 0, 0, 0, 0}},
-        },
-};
-
-static constexpr uint32_t mmRCC_DEV0_EPF0_STRAP0 = 0xF;
-static constexpr uint32_t mmRCC_DEV0_EPF0_STRAP0_BASE_IDX = 2;
-#define SOC15_OFFSET(ip, inst, reg) (ip.instances[inst].segments[reg##_BASE_IDX] + reg)
-
 uint32_t RAD::wrapHwReadReg32(void *that, uint32_t reg) {
     NETLOG("rad", "hwReadReg32: this = %p param1 = 0x%X", that, reg);
-    if (reg == 0xd31) {
-        reg = SOC15_OFFSET(NBIO_BASE, 0, mmRCC_DEV0_EPF0_STRAP0);
-        NETLOG("rad", "hwReadReg32: redirecting reg 0xd31 to 0x%X", reg);
+    if (reg == 0xD31) {
+        /**
+         * NBIO 7.4 -> NBIO 7.0
+         * reg = SOC15_OFFSET(NBIO_BASE, 0, mmRCC_DEV0_EPF0_STRAP0);
+         */
+        reg = 0xD2F;
+        NETLOG("rad", "hwReadReg32: redirecting reg 0xD31 to 0x%X", reg);
     }
     auto ret = FunctionCast(wrapHwReadReg32, callbackRAD->orgHwReadReg32)(that, reg);
     NETLOG("rad", "hwReadReg32 returned 0x%X", ret);
