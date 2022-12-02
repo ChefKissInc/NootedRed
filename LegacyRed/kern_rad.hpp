@@ -25,6 +25,9 @@ enum struct ASICType {
     Raven2,
     Picasso,
     Renoir,
+	CzL,
+	Cz,
+	BmMl,
 };
 
 class RAD {
@@ -57,7 +60,7 @@ class RAD {
     mach_vm_address_t orgTranslateAtomConnectorInfoV2 {}, orgATIControllerStart {};
     mach_vm_address_t orgNotifyLinkChange {}, orgGetHWInfo[1] {};
     uint32_t *orgDeviceTypeTable = nullptr;
-    mach_vm_address_t orgAmdTtlServicesConstructor {};
+    mach_vm_address_t orgAmdCailServicesConstructor {};
     mach_vm_address_t orgGetState {}, orgInitializeTtl {};
     mach_vm_address_t orgCreateAtomBiosProxy {};
     mach_vm_address_t orgPopulateDeviceMemory {}, orgQueryComputeQueueIsIdle {};
@@ -95,22 +98,29 @@ class RAD {
     mach_vm_address_t orgPspHdcpLoad {};
 
     /**
-     * X6000
+     * X4000
      */
-    t_HWEngineNew orgGFX10VCN2EngineNew = nullptr;
-    t_HWEngineConstructor orgGFX10VCN2EngineConstructor = nullptr;
-    mach_vm_address_t orgGFX10SetupAndInitializeHWCapabilities {};
-
-    /**
-     * X5000
-     */
-    t_HWEngineNew orgGFX9PM4EngineNew = nullptr;
-    t_HWEngineConstructor orgGFX9PM4EngineConstructor = nullptr;
-    t_HWEngineNew orgGFX9SDMAEngineNew = nullptr;
-    t_HWEngineConstructor orgGFX9SDMAEngineConstructor = nullptr;
+    t_HWEngineNew orgGFX7PM4EngineNew = nullptr;
+    t_HWEngineConstructor orgGFX7PM4EngineConstructor = nullptr;
+    t_HWEngineNew orgGFX7SDMAEngineNew = nullptr;
+    t_HWEngineConstructor orgGFX7SDMAEngineConstructor = nullptr;
     mach_vm_address_t orgGetHWEngine {};
     mach_vm_address_t orgGetHWCapabilities {};
     mach_vm_address_t orgSetupAndInitializeHWCapabilities {};
+	t_HWEngineNew orgGFX7UVDEngineNew = nullptr;
+	t_HWEngineConstructor orgGFX7UVDEngineConstructor = nullptr;
+	t_HWEngineNew orgGFX7VCEEngineNew = nullptr;
+	t_HWEngineConstructor orgGFX7VCEEngineConstructor = nullptr;
+	t_HWEngineNew orgGFX7SAMUEngineNew = nullptr;
+	t_HWEngineConstructor orgGFX7SAMUEngineConstructor = nullptr;
+	t_HWEngineNew orgGFX8UVDEngineNew = nullptr;
+	t_HWEngineConstructor orgGFX8UVDEngineConstructor = nullptr;
+	t_HWEngineNew orgGFX8VCEEngineNew = nullptr;
+	t_HWEngineConstructor orgGFX8VCEEngineConstructor = nullptr;
+	t_HWEngineNew orgGFX8PM4EngineNew = nullptr;
+	t_HWEngineConstructor orgGFX8PM4EngineConstructor = nullptr;
+	t_HWEngineNew orgGFX8SDMAEngineNew = nullptr;
+	t_HWEngineConstructor orgGFX8SDMAEngineConstructor = nullptr;
 
     bool force24BppMode = false;
     bool dviSingleLink = false;
@@ -139,19 +149,22 @@ class RAD {
     static bool wrapAMDHWChannelWaitForIdle(void *that, uint64_t param1);
 
     /**
-     * X6000Framebuffer
+     * AMD8000Controller
      */
     static uint16_t wrapGetFamilyId();
     static IOReturn wrapPopulateDeviceInfo(void *that);
-    static uint16_t wrapGetEnumeratedRevision(void *that);
-    static uint32_t wrapGetVideoMemoryType(void *that);
-    static uint32_t wrapGetVideoMemoryBitWidth(void *that);
-    static IOReturn wrapPopulateVramInfo(void *that, void *param1);
+//    static uint32_t wrapGetVideoMemoryType(void *that);
+//    static uint32_t wrapGetVideoMemoryBitWidth(void *that);
+//    static IOReturn wrapPopulateVramInfo(void *that, void *param1);
+	/**
+	 * AMDSupport
+	 */
+	
 
     /**
      * X5000HWLibs
      */
-    static void wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider);
+    static void wrapAmdCailServicesConstructor(IOService *that, IOPCIDevice *provider);
     static uint64_t wrapIpiSmuSwInit(void *tlsInstance);
     static uint64_t wrapSmuSwInit(void *input, uint64_t *output);
     static uint32_t wrapSmuInternalSwInit(uint64_t param1, uint64_t param2, void *param3);
@@ -180,12 +193,7 @@ class RAD {
     static uint32_t wrapPspHdcpLoad(void *pspData);
 
     /**
-     * X6000
-     */
-    static bool wrapGFX10AcceleratorStart();
-
-    /**
-     * X5000
+     * X4000
      */
     static bool wrapAllocateHWEngines(void *that);
     static void *wrapGetHWEngine(void *that, uint32_t engineType);
@@ -219,9 +227,6 @@ class RAD {
 
     mach_vm_address_t orgGFX9RTRingGetHead {};
     static uint64_t wrapGFX9RTRingGetHead(void *that);
-
-    mach_vm_address_t orgGFX10RTRingGetHead {};
-    static uint64_t wrapGFX10RTRingGetHead(void *that);
 
     mach_vm_address_t orgHwRegRead {};
     static uint64_t wrapHwRegRead(void *that, uint64_t addr);
@@ -339,6 +344,9 @@ class RAD {
 
     mach_vm_address_t orgHwReadReg32 {};
     static uint32_t wrapHwReadReg32(void *that, uint32_t param1);
+
+    mach_vm_address_t orgAtiAsicInfoGetPropertiesForUserClient{};
+    static uint64_t* wrapAtiAsicInfoGetPropertiesForUserClient(void* that);
 };
 
 #endif /* kern_rad_hpp */

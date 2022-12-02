@@ -94,8 +94,8 @@ def findLine(lines, needle):
     raise AssertionError("Failed to locate line!")
 
 
-cppPath = "./WhateverRed/kern_rad.cpp"
-hppPath = "./WhateverRed/kern_rad.hpp"
+cppPath = "./LegacyRed/kern_rad.cpp"
+hppPath = "./LegacyRed/kern_rad.hpp"
 
 cpp = open(cppPath).read().split("\n")
 hpp = open(hppPath).read().split("\n")
