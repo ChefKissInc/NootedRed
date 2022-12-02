@@ -29,6 +29,7 @@ static const char *pathRadeonX5000 = "/System/Library/Extensions/AMDRadeonX5000.
 static const char *pathRadeonX6000Framebuffer =
     "/System/Library/Extensions/AMDRadeonX6000Framebuffer.kext/Contents/MacOS/"
     "AMDRadeonX6000Framebuffer";
+static const char *pathIOAcceleratorFamily2 = "/System/Library/Extensions/IOAcceleratorFamily2.kext/Contents/MacOS/IOAcceleratorFamily2";
 
 static KernelPatcher::KextInfo kextRadeonFramebuffer {
     "com.apple.kext.AMDFramebuffer",
@@ -78,6 +79,14 @@ static KernelPatcher::KextInfo kextRadeonX6000 = {
     {},
     KernelPatcher::KextInfo::Unloaded,
 };
+static KernelPatcher::KextInfo kextIOAcceleratorFamily2 = {
+    "com.apple.iokit.IOAcceleratorFamily2",
+    &pathIOAcceleratorFamily2,
+    1,
+    {},
+    {},
+    KernelPatcher::KextInfo::Unloaded,
+};
 
 RAD *RAD::callbackRAD;
 
@@ -97,6 +106,7 @@ void RAD::init() {
     lilu.onKextLoadForce(&kextRadeonX5000HWLibs);
     lilu.onKextLoadForce(&kextRadeonX5000);
     lilu.onKextLoadForce(&kextRadeonX6000);
+    lilu.onKextLoadForce(&kextIOAcceleratorFamily2);
 }
 
 void RAD::deinit() {
@@ -752,6 +762,34 @@ uint64_t RAD::wrapCmdBufferPoolgetGPUVirtualAddress(void *that, uint64_t param1)
     return ret;
 }
 
+uint64_t RAD::wrapMemoryMapGetGPUVirtualAddress(void* that) {
+    NETLOG("rad", "memoryMapGetGPUVirtualAddress: this = %p", that);
+    auto ret = FunctionCast(wrapMemoryMapGetGPUVirtualAddress, callbackRAD->orgMemoryMapGetGPUVirtualAddress)(that);
+    NETLOG("rad", "memoryMapGetGPUVirtualAddress returned 0x%llX", ret);
+    return ret;
+}
+
+void* RAD::wrapSysMemGetPhysicalSegment(void* that, uint64_t param1, uint64_t* param2) {
+    NETLOG("rad", "sysMemGetPhysicalSegment: this = %p param1 = 0x%llX param2 = %p", that, param1, param2);
+    auto ret = FunctionCast(wrapSysMemGetPhysicalSegment, callbackRAD->orgSysMemGetPhysicalSegment)(that, param1, param2);
+    NETLOG("rad", "sysMemGetPhysicalSegment returned %p", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapVidMemGetPhysicalSegment(void* that, uint64_t param1, uint64_t* param2) {
+    NETLOG("rad", "vidMemGetPhysicalSegment: this = %p param1 = 0x%llX param2 = %p", that, param1, param2);
+    auto ret = FunctionCast(wrapVidMemGetPhysicalSegment, callbackRAD->orgVidMemGetPhysicalSegment)(that, param1, param2);
+    NETLOG("rad", "vidMemGetPhysicalSegment returned 0x%llX", ret);
+    return ret;
+}
+
+void* RAD::wrapRemoteMemGetPhysicalSegment(void* that, uint64_t* param2) {
+    NETLOG("rad", "remoteMemGetPhysicalSegment: this = %p param2 = %p", that, param2);
+    auto ret = FunctionCast(wrapRemoteMemGetPhysicalSegment, callbackRAD->orgRemoteMemGetPhysicalSegment)(that, param2);
+    NETLOG("rad", "remoteMemGetPhysicalSegment returned %p", ret);
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -1154,6 +1192,17 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
         }
 
         return true;
+    } else if (kextIOAcceleratorFamily2.loadIndex == index) {
+        KernelPatcher::RouteRequest requests[] = {
+            {"__ZN16IOAccelMemoryMap20getGPUVirtualAddressEv", wrapMemoryMapGetGPUVirtualAddress, orgMemoryMapGetGPUVirtualAddress},
+            {"__ZN16IOAccelSysMemory18getPhysicalSegmentEyPy", wrapSysMemGetPhysicalSegment, orgSysMemGetPhysicalSegment},
+            {"__ZN16IOAccelVidMemory18getPhysicalSegmentEyPy", wrapVidMemGetPhysicalSegment, orgVidMemGetPhysicalSegment},
+            {"__ZN19IOAccelRemoteMemory18getPhysicalSegmentEyPy", wrapRemoteMemGetPhysicalSegment, orgRemoteMemGetPhysicalSegment},
+        };
+
+        if (!patcher.routeMultipleLong(index, requests, address, size)) {
+            panic("RAD: Failed to route IOAcceleratorFamily2 symbols");
+        }
     }
 
     return false;
