@@ -143,7 +143,7 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider) 
     WIOKit::renameDevice(provider, "GFX0");
     if (!provider->getProperty("built-in")) {
         DBGLOG("wred", "fixing built-in");
-        uint8_t builtBytes[] {0x00};
+        uint8_t builtBytes[] = {0x00};
         provider->setProperty("built-in", builtBytes, sizeof(builtBytes));
     } else {
         DBGLOG("wred", "found existing built-in");
@@ -744,6 +744,14 @@ uint32_t RAD::wrapSmuRenoirInitialize(void *smumData, uint32_t param2) {
     return ret;
 }
 
+uint64_t RAD::wrapCmdBufferPoolgetGPUVirtualAddress(void *that, uint64_t param1) {
+    NETLOG("rad", "CmdBufferPoolgetGPUVirtualAddress: this = %p param1 = 0x%llX", that, param1);
+    auto ret = FunctionCast(wrapCmdBufferPoolgetGPUVirtualAddress,
+        callbackRAD->orgCmdBufferPoolgetGPUVirtualAddress)(that, param1);
+    NETLOG("rad", "CmdBufferPoolgetGPUVirtualAddress returned 0x%llX", ret);
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -951,6 +959,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 orgHWsetMemoryAllocationsEnabled},
             {"__ZN28AMDRadeonX5000_AMDRTHardware12getHWChannelE18_eAMD_CHANNEL_TYPE11SS_PRIORITYj", wrapRTGetHWChannel,
                 orgRTGetHWChannel},
+            {"__ZN35AMDRadeonX5000_AMDCommandBufferPool20getGPUVirtualAddressEPj",
+                wrapCmdBufferPoolgetGPUVirtualAddress, orgCmdBufferPoolgetGPUVirtualAddress},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");

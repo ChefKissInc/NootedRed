@@ -238,6 +238,9 @@ class RAD {
 
     mach_vm_address_t orgSmuRenoirInitialize {};
     static uint32_t wrapSmuRenoirInitialize(void *smumData, uint32_t param2);
+
+    mach_vm_address_t orgCmdBufferPoolgetGPUVirtualAddress {};
+    static uint64_t wrapCmdBufferPoolgetGPUVirtualAddress(void *that, uint64_t param1);
 };
 
 #endif /* kern_rad_hpp */
