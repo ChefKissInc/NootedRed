@@ -718,7 +718,6 @@ void RAD::wrapCosDebugAssert(void *param1, uint8_t *param2, uint8_t *param3, uin
 }
 
 uint32_t RAD::wrapHwReadReg32(void *that, uint32_t reg) {
-    NETLOG("rad", "hwReadReg32: this = %p param1 = 0x%X", that, reg);
     if (reg == 0xD31) {
         /**
          * NBIO 7.4 -> NBIO 7.0
@@ -728,7 +727,6 @@ uint32_t RAD::wrapHwReadReg32(void *that, uint32_t reg) {
         NETLOG("rad", "hwReadReg32: redirecting reg 0xD31 to 0x%X", reg);
     }
     auto ret = FunctionCast(wrapHwReadReg32, callbackRAD->orgHwReadReg32)(that, reg);
-    NETLOG("rad", "hwReadReg32 returned 0x%X", ret);
     return ret;
 }
 
