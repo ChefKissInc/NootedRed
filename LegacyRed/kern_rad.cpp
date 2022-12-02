@@ -131,13 +131,6 @@ void RAD::wrapAmdCailServicesConstructor(IOService *that, IOPCIDevice *provider)
     NETDBG::enabled = true;
     NETLOG("rad", "patching device type table");
     WIOKit::renameDevice(provider, "GFX0");
-    if (MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS) {
-        panic("Failed to enable kernel writing.");
-    }
-    auto deviceId = provider->extendedConfigRead16(kIOPCIConfigDeviceID);
-    *callbackRAD->orgDeviceTypeTable = deviceId;
-    *(callbackRAD->orgDeviceTypeTable + 1) = 6;
-    MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
     if (provider->getProperty("ATY,bin_image")) {
         NETLOG("rad", "VBIOS overridden using device property");
     } else {
@@ -839,6 +832,12 @@ uint64_t* RAD::wrapAtiAsicInfoGetPropertiesForUserClient(void* that) {
     return ret;
 }
 
+void RAD::wrapSmuCzReadSmuVersion(void* param1) {
+    NETLOG("rad", "_SmuCz_ReadSmuVersion: param1 = %p", param1);
+    FunctionCast(wrapSmuCzReadSmuVersion, callbackRAD->orgSmuCzReadSmuVersion)(param1);
+    NETLOG("rad", "_SmuCz_ReadSmuVersion finished");
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -917,6 +916,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_Cail_MCILTrace2", wrapCailMCILTrace0, orgCailMCILTrace0},
 //            {"_greenland_micro_engine_control", wrapGreenlandMicroEngineControl, orgGreenlandMicroEngineControl},
 //            {"_Bonaire_MicroEngineControlSdma", wrapSdmaMicroEngineControl, orgSdmaMicroEngineControl},
+            {"_SmuCz_ReadSmuVersion", wrapSmuCzReadSmuVersion, orgSmuCzReadSmuVersion},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX4000HWLibs symbols");

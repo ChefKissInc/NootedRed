@@ -4,6 +4,7 @@
 //
 //  Copyright © 2017 vit9696. All rights reserved.
 //  Copyright © 2022 ChefKiss Inc. All rights reserved.
+//  Leaving it here for the funni at the moment, serves no purpose
 //
 
 #include "kern_wred.hpp"
@@ -61,7 +62,7 @@ static constexpr DevicePair devices[] = {
     {0x15DD, dev15dd, arrsize(dev15dd)},
 };
 
-const char *WRed::getRadeonModel(uint16_t dev, uint16_t rev, uint16_t subven, uint16_t sub) {
+const char *LRed::getRadeonModel(uint16_t dev, uint16_t rev, uint16_t subven, uint16_t sub) {
     for (auto &device : devices) {
         if (device.dev == dev) {
             for (size_t j = 0; j < device.modelNum; j++) {

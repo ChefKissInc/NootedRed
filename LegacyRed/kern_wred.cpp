@@ -39,10 +39,10 @@ static KernelPatcher::KextInfo kextAGDPolicy {
     KernelPatcher::KextInfo::Unloaded,
 };
 
-WRed *WRed::callbackWRED = nullptr;
+LRed *LRed::callbackLRED = nullptr;
 
-void WRed::init() {
-    callbackWRED = this;
+void LRed::init() {
+    callbackLRED = this;
 
     // Background init fix is only necessary on 10.10 and newer.
     // Former boot-arg name is igfxrst.
@@ -63,12 +63,12 @@ void WRed::init() {
 
     // Callback setup is only done here for compatibility.
     lilu.onPatcherLoadForce(
-        [](void *user, KernelPatcher &patcher) { static_cast<WRed *>(user)->processKernel(patcher); }, this);
+        [](void *user, KernelPatcher &patcher) { static_cast<LRed *>(user)->processKernel(patcher); }, this);
 
     lilu.onKextLoadForce(
         nullptr, 0,
         [](void *user, KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
-            static_cast<WRed *>(user)->processKext(patcher, index, address, size);
+            static_cast<LRed *>(user)->processKext(patcher, index, address, size);
         },
         this);
 
@@ -81,9 +81,9 @@ void WRed::init() {
     rad.init();
 }
 
-void WRed::deinit() { rad.deinit(); }
+void LRed::deinit() { rad.deinit(); }
 
-void WRed::processKernel(KernelPatcher &patcher) {
+void LRed::processKernel(KernelPatcher &patcher) {
     // Correct GPU properties
     auto devInfo = DeviceInfo::create();
     if (devInfo) {
@@ -93,7 +93,7 @@ void WRed::processKernel(KernelPatcher &patcher) {
             auto getAgpdMod = [this](IORegistryEntry *device) {
                 auto prop = device->getProperty("agdpmod");
                 if (prop) {
-                    DBGLOG("wred", "found agdpmod in external GPU %s", safeString(device->getName()));
+                    DBGLOG("LRed", "found agdpmod in external GPU %s", safeString(device->getName()));
                     const char *agdp = nullptr;
                     auto propStr = OSDynamicCast(OSString, prop);
                     auto propData = OSDynamicCast(OSData, prop);
@@ -102,7 +102,7 @@ void WRed::processKernel(KernelPatcher &patcher) {
                     } else if (propData && propData->getLength() > 0) {
                         agdp = static_cast<const char *>(propData->getBytesNoCopy());
                         if (agdp && agdp[propData->getLength() - 1] != '\0') {
-                            DBGLOG("wred", "agdpmod config is not null terminated");
+                            DBGLOG("LRed", "agdpmod config is not null terminated");
                             agdp = nullptr;
                         }
                     }
@@ -144,19 +144,19 @@ void WRed::processKernel(KernelPatcher &patcher) {
         auto info = reinterpret_cast<vc_info *>(patcher.solveSymbol(KernelPatcher::KernelID, "_vinfo"));
         if (info) {
             consoleVinfo = *info;
-            DBGLOG("wred", "vinfo 1: %u:%u %u:%u:%u", consoleVinfo.v_height, consoleVinfo.v_width, consoleVinfo.v_depth,
+            DBGLOG("LRed", "vinfo 1: %u:%u %u:%u:%u", consoleVinfo.v_height, consoleVinfo.v_width, consoleVinfo.v_depth,
                 consoleVinfo.v_rowbytes, consoleVinfo.v_type);
-            DBGLOG("wred", "vinfo 2: %s %u:%u %u:%u:%u", consoleVinfo.v_name, consoleVinfo.v_rows,
+            DBGLOG("LRed", "vinfo 2: %s %u:%u %u:%u:%u", consoleVinfo.v_name, consoleVinfo.v_rows,
                 consoleVinfo.v_columns, consoleVinfo.v_rowscanbytes, consoleVinfo.v_scale, consoleVinfo.v_rotate);
             gotConsoleVinfo = true;
         } else {
-            SYSLOG("wred", "failed to obtain vcinfo");
+            SYSLOG("LRed", "failed to obtain vcinfo");
             patcher.clearError();
         }
     }
 }
 
-void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
+void LRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextIOGraphics.loadIndex == index) {
         gIOFBVerboseBootPtr = patcher.solveSymbol<uint8_t *>(index, "__ZL16gIOFBVerboseBoot", address, size);
         if (gIOFBVerboseBootPtr) {
@@ -164,7 +164,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
                 orgFramebufferInit);
             patcher.routeMultiple(index, &request, 1, address, size);
         } else {
-            SYSLOG("wred", "failed to resolve gIOFBVerboseBoot");
+            SYSLOG("LRed", "failed to resolve gIOFBVerboseBoot");
             patcher.clearError();
         }
         return;
@@ -176,7 +176,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
     if (rad.processKext(patcher, index, address, size)) return;
 }
 
-void WRed::processExternalProperties(IORegistryEntry *device, DeviceInfo *info, uint32_t vendor) {
+void LRed::processExternalProperties(IORegistryEntry *device, DeviceInfo *info, uint32_t vendor) {
     auto name = device->getName();
 
     // It is unclear how to properly name the GPUs, and supposedly it does not
@@ -220,16 +220,16 @@ void WRed::processExternalProperties(IORegistryEntry *device, DeviceInfo *info, 
 
     // Ensure built-in.
     if (!device->getProperty("built-in")) {
-        DBGLOG("wred", "fixing built-in");
+        DBGLOG("LRed", "fixing built-in");
         uint8_t builtBytes[] {0x00};
         device->setProperty("built-in", builtBytes, sizeof(builtBytes));
     } else {
-        DBGLOG("wred", "found existing built-in");
+        DBGLOG("LRed", "found existing built-in");
     }
 }
 
-void WRed::processGraphicsPolicyStr(const char *agdp) {
-    DBGLOG("wred", "agdpmod using config %s", agdp);
+void LRed::processGraphicsPolicyStr(const char *agdp) {
+    DBGLOG("LRed", "agdpmod using config %s", agdp);
     if (strstr(agdp, "detect")) {
         graphicsDisplayPolicyMod = AGDP_DETECT_SET;
     } else if (strstr(agdp, "ignore")) {
@@ -242,7 +242,7 @@ void WRed::processGraphicsPolicyStr(const char *agdp) {
     }
 }
 
-void WRed::processGraphicsPolicyMods(KernelPatcher &patcher, mach_vm_address_t address, size_t size) {
+void LRed::processGraphicsPolicyMods(KernelPatcher &patcher, mach_vm_address_t address, size_t size) {
     if (graphicsDisplayPolicyMod & AGDP_VIT9696) {
         uint8_t find[] = {0xBA, 0x05, 0x00, 0x00, 0x00};
         uint8_t replace[] = {0xBA, 0x00, 0x00, 0x00, 0x00};
@@ -250,7 +250,7 @@ void WRed::processGraphicsPolicyMods(KernelPatcher &patcher, mach_vm_address_t a
 
         patcher.applyLookupPatch(&patch);
         if (patcher.getError() != KernelPatcher::Error::NoError) {
-            SYSLOG("wred", "failed to apply agdp vit9696's patch %d", patcher.getError());
+            SYSLOG("LRed", "failed to apply agdp vit9696's patch %d", patcher.getError());
             patcher.clearError();
         }
     }
@@ -261,7 +261,7 @@ void WRed::processGraphicsPolicyMods(KernelPatcher &patcher, mach_vm_address_t a
 
         patcher.applyLookupPatch(&patch);
         if (patcher.getError() != KernelPatcher::Error::NoError) {
-            SYSLOG("wred", "failed to apply agdp Piker-Alpha's patch %d", patcher.getError());
+            SYSLOG("LRed", "failed to apply agdp Piker-Alpha's patch %d", patcher.getError());
             patcher.clearError();
         }
     }
@@ -270,31 +270,31 @@ void WRed::processGraphicsPolicyMods(KernelPatcher &patcher, mach_vm_address_t a
         // Does not function in 10.13.x, as the symbols have been stripped.
         // Abort on usage on 10.14 or newer.
         if (getKernelVersion() >= KernelVersion::Mojave)
-            PANIC("wred", "adgpmod=cfgmap has no effect on 10.13.4, use agdpmod=ignore");
+            PANIC("LRed", "adgpmod=cfgmap has no effect on 10.13.4, use agdpmod=ignore");
         KernelPatcher::RouteRequest request("__ZN25AppleGraphicsDevicePolicy5startEP9IOService",
             wrapGraphicsPolicyStart, orgGraphicsPolicyStart);
         patcher.routeMultiple(kextAGDPolicy.loadIndex, &request, 1, address, size);
     }
 }
 
-bool WRed::isGraphicsPolicyModRequired(DeviceInfo *info) {
-    DBGLOG("wred", "detecting policy");
+bool LRed::isGraphicsPolicyModRequired(DeviceInfo *info) {
+    DBGLOG("LRed", "detecting policy");
     // Graphics policy patches are only applicable to discrete GPUs.
     if (info->videoExternal.size() == 0) {
-        DBGLOG("wred", "no external gpus");
+        DBGLOG("LRed", "no external gpus");
         return false;
     }
 
     // Graphics policy patches do harm on Apple MacBooks, see:
     // https://github.com/acidanthera/bugtracker/issues/260
     if (info->firmwareVendor == DeviceInfo::FirmwareVendor::Apple) {
-        DBGLOG("wred", "apple firmware");
+        DBGLOG("LRed", "apple firmware");
         return false;
     }
 
     // We do not need AGDC patches on compatible devices.
     auto boardId = BaseDeviceInfo::get().boardIdentifier;
-    DBGLOG("wred", "board is %s", boardId);
+    DBGLOG("LRed", "board is %s", boardId);
     const char *compatibleBoards[] {
         "Mac-00BE6ED71E35EB86",    // iMac13,1
         "Mac-27ADBB7B4CEE8E61",    // iMac14,2
@@ -310,7 +310,7 @@ bool WRed::isGraphicsPolicyModRequired(DeviceInfo *info) {
     };
     for (size_t i = 0; i < arrsize(compatibleBoards); i++) {
         if (!strcmp(compatibleBoards[i], boardId)) {
-            DBGLOG("wred", "disabling nvidia patches on model %s", boardId);
+            DBGLOG("LRed", "disabling nvidia patches on model %s", boardId);
             return false;
         }
     }
@@ -318,10 +318,10 @@ bool WRed::isGraphicsPolicyModRequired(DeviceInfo *info) {
     return true;
 }
 
-void WRed::wrapFramebufferInit(IOFramebuffer *fb) {
-    bool backCopy = callbackWRED->gotConsoleVinfo && callbackWRED->resetFramebuffer == FB_COPY;
-    bool zeroFill = callbackWRED->gotConsoleVinfo && callbackWRED->resetFramebuffer == FB_ZEROFILL;
-    auto &info = callbackWRED->consoleVinfo;
+void LRed::wrapFramebufferInit(IOFramebuffer *fb) {
+    bool backCopy = callbackLRED->gotConsoleVinfo && callbackLRED->resetFramebuffer == FB_COPY;
+    bool zeroFill = callbackLRED->gotConsoleVinfo && callbackLRED->resetFramebuffer == FB_ZEROFILL;
+    auto &info = callbackLRED->consoleVinfo;
 
     // Copy back usually happens in a separate call to frameBufferInit
     // Furthermore, v_baseaddr may not be available on subsequent calls, so we
@@ -329,19 +329,19 @@ void WRed::wrapFramebufferInit(IOFramebuffer *fb) {
     if (backCopy && info.v_baseaddr) {
         // Note, this buffer is left allocated and never freed, yet there
         // actually is no way to free it.
-        callbackWRED->consoleBuffer = Buffer::create<uint8_t>(info.v_rowbytes * info.v_height);
-        if (callbackWRED->consoleBuffer)
-            lilu_os_memcpy(callbackWRED->consoleBuffer, reinterpret_cast<uint8_t *>(info.v_baseaddr),
+        callbackLRED->consoleBuffer = Buffer::create<uint8_t>(info.v_rowbytes * info.v_height);
+        if (callbackLRED->consoleBuffer)
+            lilu_os_memcpy(callbackLRED->consoleBuffer, reinterpret_cast<uint8_t *>(info.v_baseaddr),
                 info.v_rowbytes * info.v_height);
         else
-            SYSLOG("wred", "console buffer allocation failure");
+            SYSLOG("LRed", "console buffer allocation failure");
         // Even if we may succeed next time, it will be unreasonably dangerous
         info.v_baseaddr = 0;
     }
 
-    uint8_t verboseBoot = *callbackWRED->gIOFBVerboseBootPtr;
+    uint8_t verboseBoot = *callbackLRED->gIOFBVerboseBootPtr;
     // For back copy we need a console buffer and no verbose
-    backCopy = backCopy && callbackWRED->consoleBuffer && !verboseBoot;
+    backCopy = backCopy && callbackLRED->consoleBuffer && !verboseBoot;
 
     // Now check if the resolution and parameters match
     if (backCopy || zeroFill) {
@@ -351,51 +351,51 @@ void WRed::wrapFramebufferInit(IOFramebuffer *fb) {
 
         if (fb->getCurrentDisplayMode(&mode, &depth) == kIOReturnSuccess &&
             fb->getPixelInformation(mode, depth, kIOFBSystemAperture, &pixelInfo) == kIOReturnSuccess) {
-            DBGLOG("wred", "fb info 1: %d:%d %u:%u:%u", mode, depth, pixelInfo.bytesPerRow, pixelInfo.bytesPerPlane,
+            DBGLOG("LRed", "fb info 1: %d:%d %u:%u:%u", mode, depth, pixelInfo.bytesPerRow, pixelInfo.bytesPerPlane,
                 pixelInfo.bitsPerPixel);
-            DBGLOG("wred", "fb info 2: %u:%u %s %u:%u:%u", pixelInfo.componentCount, pixelInfo.bitsPerComponent,
+            DBGLOG("LRed", "fb info 2: %u:%u %s %u:%u:%u", pixelInfo.componentCount, pixelInfo.bitsPerComponent,
                 pixelInfo.pixelFormat, pixelInfo.flags, pixelInfo.activeWidth, pixelInfo.activeHeight);
 
             if (info.v_rowbytes != pixelInfo.bytesPerRow || info.v_width != pixelInfo.activeWidth ||
                 info.v_height != pixelInfo.activeHeight || info.v_depth != pixelInfo.bitsPerPixel) {
                 backCopy = zeroFill = false;
-                DBGLOG("wred", "this display has different mode");
+                DBGLOG("LRed", "this display has different mode");
             }
         } else {
-            DBGLOG("wred", "failed to obtain display mode");
+            DBGLOG("LRed", "failed to obtain display mode");
             backCopy = zeroFill = false;
         }
     }
 
     // For whatever reason not resetting Intel framebuffer (back copy mode)
     // twice works better.
-    if (!backCopy) *callbackWRED->gIOFBVerboseBootPtr = 1;
-    FunctionCast(wrapFramebufferInit, callbackWRED->orgFramebufferInit)(fb);
-    if (!backCopy) *callbackWRED->gIOFBVerboseBootPtr = verboseBoot;
+    if (!backCopy) *callbackLRED->gIOFBVerboseBootPtr = 1;
+    FunctionCast(wrapFramebufferInit, callbackLRED->orgFramebufferInit)(fb);
+    if (!backCopy) *callbackLRED->gIOFBVerboseBootPtr = verboseBoot;
 
     // Finish the framebuffer initialisation by filling with black or copying
     // the image back.
     if (FramebufferViewer::getVramMap(fb)) {
-        auto src = reinterpret_cast<uint8_t *>(callbackWRED->consoleBuffer);
+        auto src = reinterpret_cast<uint8_t *>(callbackLRED->consoleBuffer);
         auto dst = reinterpret_cast<uint8_t *>(FramebufferViewer::getVramMap(fb)->getVirtualAddress());
         if (backCopy) {
-            DBGLOG("wred", "attempting to copy...");
+            DBGLOG("LRed", "attempting to copy...");
             // Here you can actually draw at your will, but looks like only on
             // Intel. On AMD you technically can draw too, but it happens for a
             // very short while, and is not worth it.
             lilu_os_memcpy(dst, src, info.v_rowbytes * info.v_height);
         } else if (zeroFill) {
             // On AMD we do a zero-fill to ensure no visual glitches.
-            DBGLOG("wred", "doing zero-fill...");
+            DBGLOG("LRed", "doing zero-fill...");
             memset(dst, 0, info.v_rowbytes * info.v_height);
         }
     }
 }
 
-bool WRed::wrapGraphicsPolicyStart(IOService *that, IOService *provider) {
+bool LRed::wrapGraphicsPolicyStart(IOService *that, IOService *provider) {
     auto boardIdentifier = BaseDeviceInfo::get().boardIdentifier;
 
-    DBGLOG("wred", "agdp fix got board-id %s", boardIdentifier);
+    DBGLOG("LRed", "agdp fix got board-id %s", boardIdentifier);
     auto oldConfigMap = OSDynamicCast(OSDictionary, that->getProperty("ConfigMap"));
     if (oldConfigMap) {
         auto rawConfigMap = oldConfigMap->copyCollection();
@@ -409,16 +409,16 @@ bool WRed::wrapGraphicsPolicyStart(IOService *that, IOService *provider) {
                     that->setProperty("ConfigMap", newConfigMap);
                 }
             } else {
-                SYSLOG("wred", "agdp fix failed to clone ConfigMap");
+                SYSLOG("LRed", "agdp fix failed to clone ConfigMap");
             }
             rawConfigMap->release();
         }
     } else {
-        SYSLOG("wred", "agdp fix failed to obtain valid ConfigMap");
+        SYSLOG("LRed", "agdp fix failed to obtain valid ConfigMap");
     }
 
-    bool result = FunctionCast(wrapGraphicsPolicyStart, callbackWRED->orgGraphicsPolicyStart)(that, provider);
-    DBGLOG("wred", "agdp start returned %d", result);
+    bool result = FunctionCast(wrapGraphicsPolicyStart, callbackLRED->orgGraphicsPolicyStart)(that, provider);
+    DBGLOG("LRed", "agdp start returned %d", result);
 
     return result;
 }

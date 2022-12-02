@@ -1,6 +1,6 @@
 //
 //  kern_rad.hpp
-//  WhateverRed
+//  LegacyRed
 //
 //  Copyright © 2017 vit9696. All rights reserved.
 //  Copyright © 2022 ChefKiss Inc. All rights reserved.
@@ -347,6 +347,9 @@ class RAD {
 
     mach_vm_address_t orgAtiAsicInfoGetPropertiesForUserClient{};
     static uint64_t* wrapAtiAsicInfoGetPropertiesForUserClient(void* that);
+
+    mach_vm_address_t orgSmuCzReadSmuVersion{};
+    static void wrapSmuCzReadSmuVersion(void* param1);
 };
 
 #endif /* kern_rad_hpp */

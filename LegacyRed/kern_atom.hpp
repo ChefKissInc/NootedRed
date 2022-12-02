@@ -1,6 +1,6 @@
 //
 //  kern_atom.hpp
-//  WhateverRed
+//  LegacyRed
 //
 //  Copyright © 2017 vit9696. All rights reserved.
 //  Copyright © 2022 ChefKiss Inc. All rights reserved.

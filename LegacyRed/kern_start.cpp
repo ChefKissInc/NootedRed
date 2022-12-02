@@ -1,6 +1,6 @@
 //
 //  kern_start.cpp
-//  WhateverRed
+//  LegacyRed
 //
 //  Copyright © 2017 vit9696. All rights reserved.
 //  Copyright © 2022 ChefKiss Inc. All rights reserved.
@@ -10,18 +10,18 @@
 #include <Headers/kern_api.hpp>
 #include <Headers/plugin_start.hpp>
 
-static WRed wred;
+static LRed lred;
 
 static const char *bootargOff[] = {
-    "-wredoff",
+    "-lredoff",
 };
 
 static const char *bootargDebug[] = {
-    "-wreddbg",
+    "-lreddbg",
 };
 
 static const char *bootargBeta[] = {
-    "-wredbeta",
+    "-lredbeta",
 };
 
 PluginConfiguration ADDPR(config) {
@@ -36,5 +36,5 @@ PluginConfiguration ADDPR(config) {
     arrsize(bootargBeta),
     KernelVersion::Catalina,
     KernelVersion::Ventura,
-    []() { wred.init(); },
+    []() { lred.init(); },
 };

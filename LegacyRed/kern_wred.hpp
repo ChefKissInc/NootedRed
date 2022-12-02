@@ -16,7 +16,7 @@
 class IOFramebuffer;
 class IODisplay;
 
-class WRed {
+class LRed {
     public:
     void init();
     void deinit();
@@ -25,7 +25,7 @@ class WRed {
     /**
      *  Private self instance for callbacks
      */
-    static WRed *callbackWRED;
+    static LRed *callbackLRED;
 
     /**
      *  Radeon GPU fixes instance

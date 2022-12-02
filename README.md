@@ -10,7 +10,7 @@ To disable NETDBG entirely, use the boot argument `-netdbg_disable`
 
 Like WhateverRed, LegacyRed is under active development and research, It is not functional. 
 
-Due to the lack of logic on macOS Monterey and up, you are required to run Big Sur or Catalina 
+Due to the lack of certain iGPU logic on macOS Monterey and up, you are required to run Big Sur or Catalina
 
 ~~In the future, this requirement could be bypassed, eg: OpenCore Injection~~ The stage at which OpenCore injects kexts is too early
 
@@ -28,4 +28,4 @@ Ultra Mobile APUs
 
 # Credits
 
-[The NootInc Team](https://github.com/NootInc) for making and actively working on WhateverRed 
+[The NootInc Team](https://github.com/NootInc) for making and actively working on WhateverRed
