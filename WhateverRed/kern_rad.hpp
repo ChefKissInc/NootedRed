@@ -55,13 +55,10 @@ class RAD {
     mach_vm_address_t orgSetProperty {}, orgGetProperty {}, orgGetConnectorsInfoV2 {};
     mach_vm_address_t orgGetConnectorsInfoV1 {}, orgTranslateAtomConnectorInfoV1 {};
     mach_vm_address_t orgTranslateAtomConnectorInfoV2 {}, orgATIControllerStart {};
-    mach_vm_address_t orgNotifyLinkChange {}, orgGetHWInfo[1] {};
+    mach_vm_address_t orgNotifyLinkChange {};
     uint32_t *orgDeviceTypeTable = nullptr;
     mach_vm_address_t orgAmdTtlServicesConstructor {};
-    mach_vm_address_t orgGetState {}, orgInitializeTtl {};
-    mach_vm_address_t orgCreateAtomBiosProxy {};
-    mach_vm_address_t orgPopulateDeviceMemory {}, orgQueryComputeQueueIsIdle {};
-    mach_vm_address_t orgAMDHWChannelWaitForIdle {};
+    mach_vm_address_t orgPopulateDeviceMemory {};
 
     /**
      * X6000Framebuffer
@@ -73,17 +70,11 @@ class RAD {
     /**
      * X5000HWLibs
      */
-    mach_vm_address_t orgIpiSmuSwInit {}, orgSmuSwInit {};
-    mach_vm_address_t orgSmuInternalSwInit {}, orgSmuGetHwVersion {};
+    mach_vm_address_t orgSmuGetHwVersion {};
     mach_vm_address_t orgPspSwInit {}, orgGcGetHwVersion {};
-    mach_vm_address_t orgInternalCosReadFw {}, orgPopulateFirmwareDirectory {};
+    mach_vm_address_t orgPopulateFirmwareDirectory {};
     t_createFirmware orgCreateFirmware = nullptr;
     t_putFirmware orgPutFirmware = nullptr;
-    mach_vm_address_t orgMCILUpdateGfxCGPG {}, orgQueryEngineRunningState {};
-    mach_vm_address_t orgCAILQueryEngineRunningState {};
-    mach_vm_address_t orgCailMonitorEngineInternalState {};
-    mach_vm_address_t orgCailMonitorPerformanceCounter {};
-    mach_vm_address_t orgSMUMInitialize {};
     t_Vega10PowerTuneConstructor orgVega10PowerTuneConstructor = nullptr;
     mach_vm_address_t orgCosDebugPrint {}, orgMCILDebugPrint {};
     mach_vm_address_t orgCosDebugPrintVaList {};
@@ -131,12 +122,7 @@ class RAD {
     void process24BitOutput(KernelPatcher &patcher, KernelPatcher::KextInfo &info, mach_vm_address_t address,
         size_t size);
     void processConnectorOverrides(KernelPatcher &patcher, mach_vm_address_t address, size_t size);
-    static uint64_t wrapGetState(void *that);
-    static bool wrapInitializeTtl(void *that, void *param1);
-    static void *wrapCreateAtomBiosProxy(void *param1);
     static IOReturn wrapPopulateDeviceMemory(void *that, uint32_t reg);
-    static IOReturn wrapQueryComputeQueueIsIdle(void *that, uint64_t param1);
-    static bool wrapAMDHWChannelWaitForIdle(void *that, uint64_t param1);
 
     /**
      * X6000Framebuffer
@@ -152,20 +138,10 @@ class RAD {
      * X5000HWLibs
      */
     static void wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider);
-    static uint64_t wrapIpiSmuSwInit(void *tlsInstance);
-    static uint64_t wrapSmuSwInit(void *input, uint64_t *output);
-    static uint32_t wrapSmuInternalSwInit(uint64_t param1, uint64_t param2, void *param3);
     static uint64_t wrapSmuGetHwVersion(uint64_t param1, uint32_t param2);
     static uint64_t wrapPspSwInit(uint32_t *param1, uint32_t *param2);
     static uint32_t wrapGcGetHwVersion(uint32_t *param1);
-    static uint32_t wrapInternalCosReadFw(uint64_t param1, uint64_t *param2);
     static void wrapPopulateFirmwareDirectory(void *that);
-    static uint64_t wrapMCILUpdateGfxCGPG(void *param1);
-    static IOReturn wrapQueryEngineRunningState(void *that, void *param1, void *param2);
-    static uint64_t wrapCAILQueryEngineRunningState(void *param1, uint32_t *param2, uint64_t param3);
-    static uint64_t wrapCailMonitorEngineInternalState(void *that, uint32_t param1, uint32_t *param2);
-    static uint64_t wrapCailMonitorPerformanceCounter(void *that, uint32_t *param1);
-    static uint64_t wrapSMUMInitialize(uint64_t param1, uint32_t *param2, uint64_t param3);
     static void *wrapCreatePowerTuneServices(void *param1, void *param2);
     static uint64_t wrapSmuGetFwConstants();
     static uint64_t wrapSmuInternalHwInit();
@@ -188,7 +164,6 @@ class RAD {
      * X5000
      */
     static bool wrapAllocateHWEngines(void *that);
-    static void *wrapGetHWEngine(void *that, uint32_t engineType);
     static void wrapSetupAndInitializeHWCapabilities(void *that);
 
     void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);
@@ -207,15 +182,8 @@ class RAD {
     static bool doNotTestVram(IOService *ctrl, uint32_t reg, bool retryOnFail);
     static void updateGetHWInfo(IOService *accelVideoCtx, void *hwInfo);
 
-    mach_vm_address_t orgPM4EnginePowerUp {};
-    static bool wrapPM4EnginePowerUp(void *that);
-
     mach_vm_address_t orgDumpASICHangStateCold {};
     static void wrapDumpASICHangStateCold(uint64_t param1);
-
-    mach_vm_address_t orgAccelStart {};
-    void *callbackAccelerator = nullptr;
-    static bool wrapAccelStart(void *that, IOService *provider);
 
     mach_vm_address_t orgGFX9RTRingGetHead {};
     static uint64_t wrapGFX9RTRingGetHead(void *that);
@@ -235,99 +203,19 @@ class RAD {
     mach_vm_address_t orgSetMemoryAllocationsEnabled {};
     static uint64_t wrapSetMemoryAllocationsEnabled(void *that, uint64_t param1);
 
-    mach_vm_address_t orgGetEventMachine {};
-    static uint64_t wrapGetEventMachine(void *that);
-
-    mach_vm_address_t orgGetVMUpdateChannel {};
-    static uint64_t wrapGetVMUpdateChannel(void *that);
-
-    mach_vm_address_t orgCreateVMCommandBufferPool {};
-    static uint64_t wrapCreateVMCommandBufferPool(void *that, void *param1, uint64_t param2, uint64_t param3);
-
-    mach_vm_address_t orgPoolGetChannel {};
-    static uint64_t wrapPoolGetChannel(void *that);
-
-    mach_vm_address_t orgAccelGetHWChannel {};
-    static uint64_t wrapAccelGetHWChannel(void *that);
-
-    mach_vm_address_t orgCreateAccelChannels {};
-    static uint64_t wrapCreateAccelChannels(void *that, uint64_t param1);
-
-    mach_vm_address_t orgPopulateAccelConfig {};
-    static uint64_t wrapPopulateAccelConfig(void *that, void *param1);
-
     mach_vm_address_t orgPowerUpHW {};
     static bool wrapPowerUpHW(void *that);
 
     mach_vm_address_t orgHWsetMemoryAllocationsEnabled {};
     static void wrapHWsetMemoryAllocationsEnabled(void *that, bool param1);
 
-    mach_vm_address_t orgAccelCallPlatformFunction {};
-    static uint64_t wrapAccelCallPlatformFunction(void *param1, uint64_t param2, void *param3, void *param4,
-        void *param5, void *param6, void *param7);
-
-    mach_vm_address_t orgVega10PowerUp {};
-    static bool wrapVega10PowerUp(void *that);
-
-    mach_vm_address_t orgMicroEngineControlLoadMicrocode {};
-    static uint64_t wrapMicroEngineControlLoadMicrocode(void *that, void *param1);
-
-    mach_vm_address_t orgMicroEngineControlInitializeEngine {};
-    static uint64_t wrapMicroEngineControlInitializeEngine(void *that, void *param1, void *param2);
-
-    mach_vm_address_t orgMicroEngineControlStartEngine {};
-    static uint64_t wrapMicroEngineControlStartEngine(void *that, void *param1);
-
-    mach_vm_address_t orgSdmaEngineStart {};
-    static bool wrapSdmaEngineStart(void *that);
-
-    mach_vm_address_t orgRtRingEnable {};
-    static uint64_t wrapRtRingEnable(void *that);
-
-    mach_vm_address_t orgCailMCILTrace0 {};
-    static void wrapCailMCILTrace0(void *that);
-
-    mach_vm_address_t orgCailMCILTrace1 {};
-    static void wrapCailMCILTrace1(void *that);
-
-    mach_vm_address_t orgCailMCILTrace2 {};
-    static void wrapCailMCILTrace2(void *that);
-
-    mach_vm_address_t orgGreenlandMicroEngineControl {};
-    static uint64_t wrapGreenlandMicroEngineControl(void *param1, uint64_t param2, void *param3);
-
-    mach_vm_address_t orgSdmaMicroEngineControl {};
-    static uint64_t wrapSdmaMicroEngineControl(void *param1, void *param2, void *param3);
-
-    mach_vm_address_t orgWaitForHwStamp {};
-    static bool wrapWaitForHwStamp(void *that, uint64_t param1);
-
     mach_vm_address_t orgRTGetHWChannel {};
     static uint64_t wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3);
 
     uint32_t *orgChannelTypes = nullptr;
 
-    mach_vm_address_t orgSdmaSwInit {};
-    static uint32_t wrapSdmaSwInit(uint32_t *param1, uint32_t *param2);
-
-    mach_vm_address_t orgSdmaAssertion {};
-    static void wrapSdmaAssertion(uint64_t param1, bool param2, uint8_t *param3, uint8_t *param4, uint64_t param5,
-        uint8_t *param6);
-
-    mach_vm_address_t orgSdmaGetHwVersion {};
-    static uint64_t wrapSdmaGetHwVersion(uint32_t param1, uint32_t param2);
-
     mach_vm_address_t orgCosDebugAssert {};
     static void wrapCosDebugAssert(void *param1, uint8_t *param2, uint8_t *param3, uint32_t param4, uint8_t *param5);
-
-    mach_vm_address_t orgIpiSdmaHwInit {};
-    static bool wrapIpiSdmaHwInit(void *ctx);
-
-    mach_vm_address_t orgSdmaHwInit {};
-    static uint32_t wrapSdmaHwInit(uint64_t param1, uint64_t param2, uint64_t param3);
-
-    mach_vm_address_t orgIpiSdmaFindInstanceByEngineIndexAndType {};
-    static uint64_t wrapIpiSdmaFindInstanceByEngineIndexAndType(uint64_t param1, uint32_t param2, uint32_t param3);
 
     GcFwConstant *orgGcRlcUcode = nullptr;
     GcFwConstant *orgGcMeUcode = nullptr;
@@ -346,10 +234,10 @@ class RAD {
     static void powerUpSDMA(void *smumData);
 
     mach_vm_address_t orgSmuRavenInitialize {};
-    static uint32_t wrapSmuRavenInitialize(void *param1, uint32_t param2);
+    static uint32_t wrapSmuRavenInitialize(void *smumData, uint32_t param2);
 
     mach_vm_address_t orgSmuRenoirInitialize {};
-    static uint32_t wrapSmuRenoirInitialize(void *param1, uint32_t param2);
+    static uint32_t wrapSmuRenoirInitialize(void *smumData, uint32_t param2);
 };
 
 #endif /* kern_rad_hpp */
