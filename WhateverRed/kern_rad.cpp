@@ -790,6 +790,20 @@ void* RAD::wrapRemoteMemGetPhysicalSegment(void* that, uint64_t* param2) {
     return ret;
 }
 
+void* RAD::wrapAmdHwMemGetPhysicalSegment(void* that, void* param1, uint64_t param2, uint64_t* param3) {
+    NETLOG("rad", "amdHwMemGetPhysicalSegment: this = %p param1 = %p param2 = 0x%llX param3 = %p", that, param1, param2, param3);
+    auto ret = FunctionCast(wrapAmdHwMemGetPhysicalSegment, callbackRAD->orgAmdHwMemGetPhysicalSegment)(that, param1, param2, param3);
+    NETLOG("rad", "amdHwMemGetPhysicalSegment returned %p", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapAmdAccelVidMemGetPhysicalSegment(void* that, uint64_t param1, uint64_t* param2) {
+    NETLOG("rad", "amdAccelVidMemGetPhysicalSegment: this = %p param1 = 0x%llX param2 = %p", that, param1, param2);
+    auto ret = FunctionCast(wrapAmdAccelVidMemGetPhysicalSegment, callbackRAD->orgAmdAccelVidMemGetPhysicalSegment)(that, param1, param2);
+    NETLOG("rad", "amdAccelVidMemGetPhysicalSegment returned 0x%llX", ret);
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -999,6 +1013,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 orgRTGetHWChannel},
             {"__ZN35AMDRadeonX5000_AMDCommandBufferPool20getGPUVirtualAddressEPj",
                 wrapCmdBufferPoolgetGPUVirtualAddress, orgCmdBufferPoolgetGPUVirtualAddress},
+            {"__ZN26AMDRadeonX5000_AMDHWMemory18getPhysicalSegmentEP16AMDMemoryElementyPy", wrapAmdHwMemGetPhysicalSegment, orgAmdHwMemGetPhysicalSegment},
+            {"__ZN32AMDRadeonX5000_AMDAccelVidMemory18getPhysicalSegmentEyPy", wrapAmdAccelVidMemGetPhysicalSegment, orgAmdAccelVidMemGetPhysicalSegment},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
