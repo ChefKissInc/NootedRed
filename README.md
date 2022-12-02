@@ -33,4 +33,4 @@ The OpenCore injection stage is too early for injecting these types of kernel ex
 Collaborators:
 
 * [@ChefKissInc](https://github.com/ChefKissInc) | Project lead, Linux shitcode analyser and kernel extension developer. Extensive knowledge of OS inner workings
-* [@NyanCatTW1](https://github.com/NyanCatTW1) | Reverse Engineering and python automation magician. His Ghidra RedMetaClassAnalyzer script has made the entire process way painless by automagically discovering C++ v-tables for classes.
+* [@NyanCatTW1](https://github.com/NyanCatTW1) | Reverse Engineering and Python automation magician. His Ghidra RedMetaClassAnalyzer script has made the entire process way painless by automagically discovering C++ v-tables for classes.
