@@ -29,7 +29,8 @@ static const char *pathRadeonX5000 = "/System/Library/Extensions/AMDRadeonX5000.
 static const char *pathRadeonX6000Framebuffer =
     "/System/Library/Extensions/AMDRadeonX6000Framebuffer.kext/Contents/MacOS/"
     "AMDRadeonX6000Framebuffer";
-static const char *pathIOAcceleratorFamily2 = "/System/Library/Extensions/IOAcceleratorFamily2.kext/Contents/MacOS/IOAcceleratorFamily2";
+static const char *pathIOAcceleratorFamily2 =
+    "/System/Library/Extensions/IOAcceleratorFamily2.kext/Contents/MacOS/IOAcceleratorFamily2";
 
 static KernelPatcher::KextInfo kextRadeonFramebuffer {
     "com.apple.kext.AMDFramebuffer",
@@ -760,44 +761,49 @@ uint64_t RAD::wrapCmdBufferPoolgetGPUVirtualAddress(void *that, uint64_t param1)
     return ret;
 }
 
-uint64_t RAD::wrapMemoryMapGetGPUVirtualAddress(void* that) {
+uint64_t RAD::wrapMemoryMapGetGPUVirtualAddress(void *that) {
     NETLOG("rad", "memoryMapGetGPUVirtualAddress: this = %p", that);
     auto ret = FunctionCast(wrapMemoryMapGetGPUVirtualAddress, callbackRAD->orgMemoryMapGetGPUVirtualAddress)(that);
     NETLOG("rad", "memoryMapGetGPUVirtualAddress returned 0x%llX", ret);
     return ret;
 }
 
-void* RAD::wrapSysMemGetPhysicalSegment(void* that, uint64_t param1, uint64_t* param2) {
+void *RAD::wrapSysMemGetPhysicalSegment(void *that, uint64_t param1, uint64_t *param2) {
     NETLOG("rad", "sysMemGetPhysicalSegment: this = %p param1 = 0x%llX param2 = %p", that, param1, param2);
-    auto ret = FunctionCast(wrapSysMemGetPhysicalSegment, callbackRAD->orgSysMemGetPhysicalSegment)(that, param1, param2);
+    auto ret =
+        FunctionCast(wrapSysMemGetPhysicalSegment, callbackRAD->orgSysMemGetPhysicalSegment)(that, param1, param2);
     NETLOG("rad", "sysMemGetPhysicalSegment returned %p", ret);
     return ret;
 }
 
-uint64_t RAD::wrapVidMemGetPhysicalSegment(void* that, uint64_t param1, uint64_t* param2) {
+uint64_t RAD::wrapVidMemGetPhysicalSegment(void *that, uint64_t param1, uint64_t *param2) {
     NETLOG("rad", "vidMemGetPhysicalSegment: this = %p param1 = 0x%llX param2 = %p", that, param1, param2);
-    auto ret = FunctionCast(wrapVidMemGetPhysicalSegment, callbackRAD->orgVidMemGetPhysicalSegment)(that, param1, param2);
+    auto ret =
+        FunctionCast(wrapVidMemGetPhysicalSegment, callbackRAD->orgVidMemGetPhysicalSegment)(that, param1, param2);
     NETLOG("rad", "vidMemGetPhysicalSegment returned 0x%llX", ret);
     return ret;
 }
 
-void* RAD::wrapRemoteMemGetPhysicalSegment(void* that, uint64_t* param2) {
+void *RAD::wrapRemoteMemGetPhysicalSegment(void *that, uint64_t *param2) {
     NETLOG("rad", "remoteMemGetPhysicalSegment: this = %p param2 = %p", that, param2);
     auto ret = FunctionCast(wrapRemoteMemGetPhysicalSegment, callbackRAD->orgRemoteMemGetPhysicalSegment)(that, param2);
     NETLOG("rad", "remoteMemGetPhysicalSegment returned %p", ret);
     return ret;
 }
 
-void* RAD::wrapAmdHwMemGetPhysicalSegment(void* that, void* param1, uint64_t param2, uint64_t* param3) {
-    NETLOG("rad", "amdHwMemGetPhysicalSegment: this = %p param1 = %p param2 = 0x%llX param3 = %p", that, param1, param2, param3);
-    auto ret = FunctionCast(wrapAmdHwMemGetPhysicalSegment, callbackRAD->orgAmdHwMemGetPhysicalSegment)(that, param1, param2, param3);
+void *RAD::wrapAmdHwMemGetPhysicalSegment(void *that, void *param1, uint64_t param2, uint64_t *param3) {
+    NETLOG("rad", "amdHwMemGetPhysicalSegment: this = %p param1 = %p param2 = 0x%llX param3 = %p", that, param1, param2,
+        param3);
+    auto ret = FunctionCast(wrapAmdHwMemGetPhysicalSegment, callbackRAD->orgAmdHwMemGetPhysicalSegment)(that, param1,
+        param2, param3);
     NETLOG("rad", "amdHwMemGetPhysicalSegment returned %p", ret);
     return ret;
 }
 
-uint64_t RAD::wrapAmdAccelVidMemGetPhysicalSegment(void* that, uint64_t param1, uint64_t* param2) {
+uint64_t RAD::wrapAmdAccelVidMemGetPhysicalSegment(void *that, uint64_t param1, uint64_t *param2) {
     NETLOG("rad", "amdAccelVidMemGetPhysicalSegment: this = %p param1 = 0x%llX param2 = %p", that, param1, param2);
-    auto ret = FunctionCast(wrapAmdAccelVidMemGetPhysicalSegment, callbackRAD->orgAmdAccelVidMemGetPhysicalSegment)(that, param1, param2);
+    auto ret = FunctionCast(wrapAmdAccelVidMemGetPhysicalSegment,
+        callbackRAD->orgAmdAccelVidMemGetPhysicalSegment)(that, param1, param2);
     NETLOG("rad", "amdAccelVidMemGetPhysicalSegment returned 0x%llX", ret);
     return ret;
 }
@@ -1011,8 +1017,10 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 orgRTGetHWChannel},
             {"__ZN35AMDRadeonX5000_AMDCommandBufferPool20getGPUVirtualAddressEPj",
                 wrapCmdBufferPoolgetGPUVirtualAddress, orgCmdBufferPoolgetGPUVirtualAddress},
-            {"__ZN26AMDRadeonX5000_AMDHWMemory18getPhysicalSegmentEP16AMDMemoryElementyPy", wrapAmdHwMemGetPhysicalSegment, orgAmdHwMemGetPhysicalSegment},
-            {"__ZN32AMDRadeonX5000_AMDAccelVidMemory18getPhysicalSegmentEyPy", wrapAmdAccelVidMemGetPhysicalSegment, orgAmdAccelVidMemGetPhysicalSegment},
+            {"__ZN26AMDRadeonX5000_AMDHWMemory18getPhysicalSegmentEP16AMDMemoryElementyPy",
+                wrapAmdHwMemGetPhysicalSegment, orgAmdHwMemGetPhysicalSegment},
+            {"__ZN32AMDRadeonX5000_AMDAccelVidMemory18getPhysicalSegmentEyPy", wrapAmdAccelVidMemGetPhysicalSegment,
+                orgAmdAccelVidMemGetPhysicalSegment},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
@@ -1208,10 +1216,14 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
         return true;
     } else if (kextIOAcceleratorFamily2.loadIndex == index) {
         KernelPatcher::RouteRequest requests[] = {
-            {"__ZN16IOAccelMemoryMap20getGPUVirtualAddressEv", wrapMemoryMapGetGPUVirtualAddress, orgMemoryMapGetGPUVirtualAddress},
-            {"__ZN16IOAccelSysMemory18getPhysicalSegmentEyPy", wrapSysMemGetPhysicalSegment, orgSysMemGetPhysicalSegment},
-            {"__ZN16IOAccelVidMemory18getPhysicalSegmentEyPy", wrapVidMemGetPhysicalSegment, orgVidMemGetPhysicalSegment},
-            {"__ZN19IOAccelRemoteMemory18getPhysicalSegmentEyPy", wrapRemoteMemGetPhysicalSegment, orgRemoteMemGetPhysicalSegment},
+            {"__ZN16IOAccelMemoryMap20getGPUVirtualAddressEv", wrapMemoryMapGetGPUVirtualAddress,
+                orgMemoryMapGetGPUVirtualAddress},
+            {"__ZN16IOAccelSysMemory18getPhysicalSegmentEyPy", wrapSysMemGetPhysicalSegment,
+                orgSysMemGetPhysicalSegment},
+            {"__ZN16IOAccelVidMemory18getPhysicalSegmentEyPy", wrapVidMemGetPhysicalSegment,
+                orgVidMemGetPhysicalSegment},
+            {"__ZN19IOAccelRemoteMemory18getPhysicalSegmentEyPy", wrapRemoteMemGetPhysicalSegment,
+                orgRemoteMemGetPhysicalSegment},
         };
 
         if (!patcher.routeMultipleLong(index, requests, address, size)) {

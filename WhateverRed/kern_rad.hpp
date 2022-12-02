@@ -242,23 +242,23 @@ class RAD {
     mach_vm_address_t orgCmdBufferPoolgetGPUVirtualAddress {};
     static uint64_t wrapCmdBufferPoolgetGPUVirtualAddress(void *that, uint64_t param1);
 
-    mach_vm_address_t orgMemoryMapGetGPUVirtualAddress{};
-    static uint64_t wrapMemoryMapGetGPUVirtualAddress(void* that);
+    mach_vm_address_t orgMemoryMapGetGPUVirtualAddress {};
+    static uint64_t wrapMemoryMapGetGPUVirtualAddress(void *that);
 
-    mach_vm_address_t orgSysMemGetPhysicalSegment{};
-    static void* wrapSysMemGetPhysicalSegment(void* that, uint64_t param1, uint64_t* param2);
+    mach_vm_address_t orgSysMemGetPhysicalSegment {};
+    static void *wrapSysMemGetPhysicalSegment(void *that, uint64_t param1, uint64_t *param2);
 
-    mach_vm_address_t orgVidMemGetPhysicalSegment{};
-    static uint64_t wrapVidMemGetPhysicalSegment(void* that, uint64_t param1, uint64_t* param2);
+    mach_vm_address_t orgVidMemGetPhysicalSegment {};
+    static uint64_t wrapVidMemGetPhysicalSegment(void *that, uint64_t param1, uint64_t *param2);
 
-    mach_vm_address_t orgRemoteMemGetPhysicalSegment{};
-    static void* wrapRemoteMemGetPhysicalSegment(void* that, uint64_t* param2);
+    mach_vm_address_t orgRemoteMemGetPhysicalSegment {};
+    static void *wrapRemoteMemGetPhysicalSegment(void *that, uint64_t *param2);
 
-    mach_vm_address_t orgAmdHwMemGetPhysicalSegment{};
-    static void* wrapAmdHwMemGetPhysicalSegment(void* that, void* param1, uint64_t param2, uint64_t* param3);
+    mach_vm_address_t orgAmdHwMemGetPhysicalSegment {};
+    static void *wrapAmdHwMemGetPhysicalSegment(void *that, void *param1, uint64_t param2, uint64_t *param3);
 
-    mach_vm_address_t orgAmdAccelVidMemGetPhysicalSegment{};
-    static uint64_t wrapAmdAccelVidMemGetPhysicalSegment(void* that, uint64_t param1, uint64_t* param2);
+    mach_vm_address_t orgAmdAccelVidMemGetPhysicalSegment {};
+    static uint64_t wrapAmdAccelVidMemGetPhysicalSegment(void *that, uint64_t param1, uint64_t *param2);
 };
 
 #endif /* kern_rad_hpp */
