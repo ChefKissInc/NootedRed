@@ -12,7 +12,7 @@ Like WhateverRed, LegacyRed is under active development and research, It is not 
 
 Due to the lack of logic on macOS Monterey and up, you are required to run Big Sur or Catalina 
 
-In the future, this requirement could be bypassed, eg: OpenCore Injection
+~~In the future, this requirement could be bypassed, eg: OpenCore Injection~~ The stage at which OpenCore injects kexts is too early
 
 # Compatibility
 Desktop APUs
