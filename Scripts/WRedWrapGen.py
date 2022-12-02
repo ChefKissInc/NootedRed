@@ -16,7 +16,7 @@ def fixType(typ):
         ret = "uint16_t"
     elif typ in ["int", "uint", "int*", "uint*"]:
         ret = "uint32_t"
-    elif typ in ["long", "ulong", "long*", "ulong*"]:
+    elif typ in ["long", "ulong", "long*", "ulong*", "ulonglong", "ulonglong*"]:
         ret = "uint64_t"
     elif typ == "void":
         ret = "void"
