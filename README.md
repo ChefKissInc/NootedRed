@@ -6,9 +6,13 @@ AMD iGPU support [Lilu](https://github.com/acidanthera/Lilu) plug-in.
 
 **This Kernel Extension contains remote debug logging functionality via our custom "NetDbg" software; you must specify a valid NetDbg server IP or explicitly disable the functionality as described below.**
 
-WhateverRed NetDbg is a custom remote debug logging service, sending raw data over TCP, developed by project owner [@ChefKissInc](https://github.com/ChefKissInc).
+WhateverRed NetDbg is a custom remote debug logging service, which sends the raw data over TCP.
 
-You can find the source code for the service [here](https://github.com/NootInc/WhateverRed-NETDBG)
+The first version and idea was developed by [@NyanCatTW1](https://github.com/NyanCatTW1), in Python. However, it was often unstable and incredibly primitive.
+
+The current release is developed by project owner [@ChefKissInc](https://github.com/ChefKissInc), in Rust.
+
+You can find the source code for the service [here](https://github.com/NootInc/WhateverRed-NETDBG).
 
 Specify the NetDbg server IP and port via `netdbg_ip_X` and `netdbg_port` boot args.
 
