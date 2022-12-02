@@ -140,9 +140,17 @@ class AppleACPIPlatformExpert : IOACPIPlatformExpert {
 };
 
 void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider) {
+    WIOKit::renameDevice(provider, "GFX0");
+    if (!provider->getProperty("built-in")) {
+        DBGLOG("wred", "fixing built-in");
+        uint8_t builtBytes[] {0x00};
+        provider->setProperty("built-in", builtBytes, sizeof(builtBytes));
+    } else {
+        DBGLOG("wred", "found existing built-in");
+    }
+
     NETDBG::enabled = true;
     NETLOG("rad", "patching device type table");
-    WIOKit::renameDevice(provider, "GFX0");
     PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "rad",
         "Failed to enable kernel writing");
     auto deviceId = provider->extendedConfigRead16(kIOPCIConfigDeviceID);

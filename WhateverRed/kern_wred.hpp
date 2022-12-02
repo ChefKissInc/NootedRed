@@ -176,14 +176,6 @@ class WRed {
     void processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size);
 
     /**
-     *  Apply external GPU properties and renamings
-     *
-     *  @param device  GFX0 device
-     *  @param info    device information
-     */
-    void processExternalProperties(IORegistryEntry *device, DeviceInfo *info, uint32_t vendor);
-
-    /**
      *  Parse AppleGraphicsDevicePolicy (AGDP) patch configuration
      *
      *  @param patcher KernelPatcher instance
@@ -209,18 +201,6 @@ class WRed {
      *  @return true if we should continue
      */
     bool isGraphicsPolicyModRequired(DeviceInfo *info);
-
-    /**
-     *  Attempts to find a printable name of a Radeon GPU
-     *
-     *  @param dev    devide-id
-     *  @param rev    revision-id
-     *  @param subven subsystem-vendor-id
-     *  @param sub    susbsytem-id
-     *
-     *  @return autodetected GPU name or nullptr
-     */
-    const char *getRadeonModel(uint16_t dev, uint16_t rev, uint16_t subven, uint16_t sub);
 
     /**
      *  IOFramebuffer initialisation wrapper used for screen distortion fixes

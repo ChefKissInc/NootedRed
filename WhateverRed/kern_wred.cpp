@@ -176,58 +176,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
     if (rad.processKext(patcher, index, address, size)) return;
 }
 
-void WRed::processExternalProperties(IORegistryEntry *device, DeviceInfo *info, uint32_t vendor) {
-    auto name = device->getName();
-
-    // It is unclear how to properly name the GPUs, and supposedly it does not
-    // really matter. However, we will try to at least name them in a unique
-    // manner (GFX0, GFX1, ...)
-    if (device->getProperty("preserve-names") == nullptr && currentExternalGfxIndex <= MaxExternalGfxIndex &&
-        (!name || strncmp(name, "GFX", strlen("GFX")) != 0)) {
-        char name[16];
-        snprintf(name, sizeof(name), "GFX%u", currentExternalGfxIndex++);
-        WIOKit::renameDevice(device, name);
-    }
-
-    // AAPL,slot-name is used to distinguish GPU slots in Mac Pro.
-    // NVIDIA Web Drivers have a preference panel, where they read this value
-    // and allow up to 4 GPUs. Each NVIDIA GPU is then displayed on the ECC tab.
-    // We permit more slots, since 4 is an artificial restriction. iMac on the
-    // other side has only one GPU and is not expected to have multiple slots.
-    // Here we pass AAPL,slot-name if the GPU is NVIDIA or we have more than one
-    // GPU.
-    bool wantSlot = info->videoExternal.size() > 1 || vendor == WIOKit::VendorID::NVIDIA;
-    if (wantSlot && currentExternalSlotIndex <= MaxExternalSlotIndex && !device->getProperty("AAPL,slot-name")) {
-        char name[16];
-        snprintf(name, sizeof(name), "Slot-%u", currentExternalSlotIndex++);
-        device->setProperty("AAPL,slot-name", name, sizeof("Slot-1"));
-    }
-
-    // Set the autodetected AMD GPU name here, it will later be handled by RAD
-    // to not get overridden. This is not necessary for NVIDIA, as their drivers
-    // properly detect the name.
-    if (vendor == WIOKit::VendorID::ATIAMD && !device->getProperty("model")) {
-        uint32_t dev, rev, subven, sub;
-        if (WIOKit::getOSDataValue(device, "device-id", dev) && WIOKit::getOSDataValue(device, "revision-id", rev) &&
-            WIOKit::getOSDataValue(device, "subsystem-vendor-id", subven) &&
-            WIOKit::getOSDataValue(device, "subsystem-id", sub)) {
-            auto model = getRadeonModel(dev, rev, subven, sub);
-            if (model) {
-                device->setProperty("model", const_cast<char *>(model), static_cast<unsigned>(strlen(model) + 1));
-            }
-        }
-    }
-
-    // Ensure built-in.
-    if (!device->getProperty("built-in")) {
-        DBGLOG("wred", "fixing built-in");
-        uint8_t builtBytes[] {0x00};
-        device->setProperty("built-in", builtBytes, sizeof(builtBytes));
-    } else {
-        DBGLOG("wred", "found existing built-in");
-    }
-}
-
 void WRed::processGraphicsPolicyStr(const char *agdp) {
     DBGLOG("wred", "agdpmod using config %s", agdp);
     if (strstr(agdp, "detect")) {
