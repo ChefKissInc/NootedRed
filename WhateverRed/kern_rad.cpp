@@ -559,7 +559,8 @@ void RAD::wrapSetupAndInitializeHWCapabilities(void *that) {
     NETLOG("rad", "wrapSetupAndInitializeCapabilities: this = %p", that);
     FunctionCast(wrapSetupAndInitializeHWCapabilities, callbackRAD->orgSetupAndInitializeHWCapabilities)(that);
     FunctionCast(wrapSetupAndInitializeHWCapabilities, callbackRAD->orgGFX10SetupAndInitializeHWCapabilities)(that);
-    getMember<uint64_t>(that, 0xC0) = 0;
+    /* SDMA Page Queue support */
+    getMember<uint32_t>(that, 0xC0) = 0;
     NETLOG("rad", "wrapSetupAndInitializeCapabilities: done");
 }
 
@@ -568,40 +569,6 @@ void RAD::wrapDumpASICHangStateCold(uint64_t param1) {
     IOSleep(3600000);
     FunctionCast(wrapDumpASICHangStateCold, callbackRAD->orgDumpASICHangStateCold)(param1);
     NETLOG("rad", "dumpASICHangStateCold finished");
-}
-
-uint64_t RAD::wrapGFX9RTRingGetHead(void *that) {
-    NETLOG("rad", "GFX9RTRingGetHead: this = %p", that);
-    auto ret = FunctionCast(wrapGFX9RTRingGetHead, callbackRAD->orgGFX9RTRingGetHead)(that);
-    NETLOG("rad", "GFX9RTRingGetHead returned 0x%llX", ret);
-    NETLOG("rad", "RTRing->field_0x54 = 0x%X", getMember<uint32_t>(that, 0x54));
-    NETLOG("rad", "RTRing->field_0x74 = 0x%X", getMember<uint32_t>(that, 0x74));
-    NETLOG("rad", "RTRing->field_0x8c = 0x%X", getMember<uint32_t>(that, 0x8c));
-    return ret;
-}
-
-uint64_t RAD::wrapGFX10RTRingGetHead(void *that) {
-    NETLOG("rad", "GFX10RTRingGetHead: this = %p", that);
-    auto ret = FunctionCast(wrapGFX10RTRingGetHead, callbackRAD->orgGFX10RTRingGetHead)(that);
-    NETLOG("rad", "GFX10RTRingGetHead returned 0x%llX", ret);
-    NETLOG("rad", "RTRing->field_0x54 = 0x%X", getMember<uint32_t>(that, 0x54));
-    NETLOG("rad", "RTRing->field_0x74 = 0x%X", getMember<uint32_t>(that, 0x74));
-    NETLOG("rad", "RTRing->field_0x8c = 0x%X", getMember<uint32_t>(that, 0x8c));
-    return ret;
-}
-
-uint64_t RAD::wrapHwRegRead(void *that, uint64_t addr) {
-    NETLOG("rad", "hwRegRead: this = %p addr = 0x%llX", that, addr);
-    auto ret = FunctionCast(wrapHwRegRead, callbackRAD->orgHwRegRead)(that, addr);
-    NETLOG("rad", "hwRegRead returned 0x%llX", ret);
-    return ret;
-}
-
-uint64_t RAD::wrapHwRegWrite(void *that, uint64_t addr, uint64_t val) {
-    NETLOG("rad", "hwRegWrite: this = %p addr = 0x%llX val = 0x%llX", that, addr, val);
-    auto ret = FunctionCast(wrapHwRegWrite, callbackRAD->orgHwRegWrite)(that, addr, val);
-    NETLOG("rad", "hwRegWrite returned 0x%llX", ret);
-    return ret;
 }
 
 const char *RAD::getASICName() {
@@ -750,61 +717,6 @@ uint32_t RAD::wrapSmuRenoirInitialize(void *smumData, uint32_t param2) {
     auto ret = FunctionCast(wrapSmuRenoirInitialize, callbackRAD->orgSmuRenoirInitialize)(smumData, param2);
     NETLOG("rad", "_SmuRenoir_Initialize returned 0x%X", ret);
     powerUpSDMA(smumData);
-    return ret;
-}
-
-uint64_t RAD::wrapCmdBufferPoolgetGPUVirtualAddress(void *that, uint64_t param1) {
-    NETLOG("rad", "CmdBufferPoolgetGPUVirtualAddress: this = %p param1 = 0x%llX", that, param1);
-    auto ret = FunctionCast(wrapCmdBufferPoolgetGPUVirtualAddress,
-        callbackRAD->orgCmdBufferPoolgetGPUVirtualAddress)(that, param1);
-    NETLOG("rad", "CmdBufferPoolgetGPUVirtualAddress returned 0x%llX", ret);
-    return ret;
-}
-
-uint64_t RAD::wrapMemoryMapGetGPUVirtualAddress(void *that) {
-    NETLOG("rad", "memoryMapGetGPUVirtualAddress: this = %p", that);
-    auto ret = FunctionCast(wrapMemoryMapGetGPUVirtualAddress, callbackRAD->orgMemoryMapGetGPUVirtualAddress)(that);
-    NETLOG("rad", "memoryMapGetGPUVirtualAddress returned 0x%llX", ret);
-    return ret;
-}
-
-void *RAD::wrapSysMemGetPhysicalSegment(void *that, uint64_t param1, uint64_t *param2) {
-    NETLOG("rad", "sysMemGetPhysicalSegment: this = %p param1 = 0x%llX param2 = %p", that, param1, param2);
-    auto ret =
-        FunctionCast(wrapSysMemGetPhysicalSegment, callbackRAD->orgSysMemGetPhysicalSegment)(that, param1, param2);
-    NETLOG("rad", "sysMemGetPhysicalSegment returned %p", ret);
-    return ret;
-}
-
-uint64_t RAD::wrapVidMemGetPhysicalSegment(void *that, uint64_t param1, uint64_t *param2) {
-    NETLOG("rad", "vidMemGetPhysicalSegment: this = %p param1 = 0x%llX param2 = %p", that, param1, param2);
-    auto ret =
-        FunctionCast(wrapVidMemGetPhysicalSegment, callbackRAD->orgVidMemGetPhysicalSegment)(that, param1, param2);
-    NETLOG("rad", "vidMemGetPhysicalSegment returned 0x%llX", ret);
-    return ret;
-}
-
-void *RAD::wrapRemoteMemGetPhysicalSegment(void *that, uint64_t *param2) {
-    NETLOG("rad", "remoteMemGetPhysicalSegment: this = %p param2 = %p", that, param2);
-    auto ret = FunctionCast(wrapRemoteMemGetPhysicalSegment, callbackRAD->orgRemoteMemGetPhysicalSegment)(that, param2);
-    NETLOG("rad", "remoteMemGetPhysicalSegment returned %p", ret);
-    return ret;
-}
-
-void *RAD::wrapAmdHwMemGetPhysicalSegment(void *that, void *param1, uint64_t param2, uint64_t *param3) {
-    NETLOG("rad", "amdHwMemGetPhysicalSegment: this = %p param1 = %p param2 = 0x%llX param3 = %p", that, param1, param2,
-        param3);
-    auto ret = FunctionCast(wrapAmdHwMemGetPhysicalSegment, callbackRAD->orgAmdHwMemGetPhysicalSegment)(that, param1,
-        param2, param3);
-    NETLOG("rad", "amdHwMemGetPhysicalSegment returned %p", ret);
-    return ret;
-}
-
-uint64_t RAD::wrapAmdAccelVidMemGetPhysicalSegment(void *that, uint64_t param1, uint64_t *param2) {
-    NETLOG("rad", "amdAccelVidMemGetPhysicalSegment: this = %p param1 = 0x%llX param2 = %p", that, param1, param2);
-    auto ret = FunctionCast(wrapAmdAccelVidMemGetPhysicalSegment,
-        callbackRAD->orgAmdAccelVidMemGetPhysicalSegment)(that, param1, param2);
-    NETLOG("rad", "amdAccelVidMemGetPhysicalSegment returned 0x%llX", ret);
     return ret;
 }
 
@@ -1003,9 +915,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 wrapSetupAndInitializeHWCapabilities, orgSetupAndInitializeHWCapabilities},
             {"__ZN26AMDRadeonX5000_AMDHardware17dumpASICHangStateEb.cold.1", wrapDumpASICHangStateCold,
                 orgDumpASICHangStateCold},
-            {"__ZN24AMDRadeonX5000_AMDRTRing7getHeadEv", wrapGFX9RTRingGetHead, orgGFX9RTRingGetHead},
-            {"__ZN29AMDRadeonX5000_AMDHWRegisters4readEj", wrapHwRegRead, orgHwRegRead},
-            {"__ZN29AMDRadeonX5000_AMDHWRegisters5writeEjj", wrapHwRegWrite, orgHwRegWrite},
             {"__ZN34AMDRadeonX5000_AMDAccelDisplayPipe20writeDiagnosisReportERPcRj",
                 wrapAccelDisplayPipeWriteDiagnosisReport, orgAccelDisplayPipeWriteDiagnosisReport},
             {"__ZN23AMDRadeonX5000_AMDHWVMM27setMemoryAllocationsEnabledEb", wrapSetMemoryAllocationsEnabled,
@@ -1015,12 +924,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 orgHWsetMemoryAllocationsEnabled},
             {"__ZN28AMDRadeonX5000_AMDRTHardware12getHWChannelE18_eAMD_CHANNEL_TYPE11SS_PRIORITYj", wrapRTGetHWChannel,
                 orgRTGetHWChannel},
-            {"__ZN35AMDRadeonX5000_AMDCommandBufferPool20getGPUVirtualAddressEPj",
-                wrapCmdBufferPoolgetGPUVirtualAddress, orgCmdBufferPoolgetGPUVirtualAddress},
-            {"__ZN26AMDRadeonX5000_AMDHWMemory18getPhysicalSegmentEP16AMDMemoryElementyPy",
-                wrapAmdHwMemGetPhysicalSegment, orgAmdHwMemGetPhysicalSegment},
-            {"__ZN32AMDRadeonX5000_AMDAccelVidMemory18getPhysicalSegmentEyPy", wrapAmdAccelVidMemGetPhysicalSegment,
-                orgAmdAccelVidMemGetPhysicalSegment},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
@@ -1052,7 +955,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 
         KernelPatcher::RouteRequest requests[] = {
             {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator5startEP9IOService", wrapGFX10AcceleratorStart},
-            {"__ZN24AMDRadeonX6000_AMDRTRing7getHeadEv", wrapGFX10RTRingGetHead, orgGFX10RTRingGetHead},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX6000 symbols");
@@ -1215,20 +1117,13 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 
         return true;
     } else if (kextIOAcceleratorFamily2.loadIndex == index) {
-        KernelPatcher::RouteRequest requests[] = {
-            {"__ZN16IOAccelMemoryMap20getGPUVirtualAddressEv", wrapMemoryMapGetGPUVirtualAddress,
-                orgMemoryMapGetGPUVirtualAddress},
-            {"__ZN16IOAccelSysMemory18getPhysicalSegmentEyPy", wrapSysMemGetPhysicalSegment,
-                orgSysMemGetPhysicalSegment},
-            {"__ZN16IOAccelVidMemory18getPhysicalSegmentEyPy", wrapVidMemGetPhysicalSegment,
-                orgVidMemGetPhysicalSegment},
-            {"__ZN19IOAccelRemoteMemory18getPhysicalSegmentEyPy", wrapRemoteMemGetPhysicalSegment,
-                orgRemoteMemGetPhysicalSegment},
-        };
+        // KernelPatcher::RouteRequest requests[] = {};
 
-        if (!patcher.routeMultipleLong(index, requests, address, size)) {
-            panic("RAD: Failed to route IOAcceleratorFamily2 symbols");
-        }
+        // if (!patcher.routeMultipleLong(index, requests, address, size)) {
+        //     panic("RAD: Failed to route IOAcceleratorFamily2 symbols");
+        // }
+
+        return true;
     }
 
     return false;

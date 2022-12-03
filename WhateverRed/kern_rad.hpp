@@ -185,18 +185,6 @@ class RAD {
     mach_vm_address_t orgDumpASICHangStateCold {};
     static void wrapDumpASICHangStateCold(uint64_t param1);
 
-    mach_vm_address_t orgGFX9RTRingGetHead {};
-    static uint64_t wrapGFX9RTRingGetHead(void *that);
-
-    mach_vm_address_t orgGFX10RTRingGetHead {};
-    static uint64_t wrapGFX10RTRingGetHead(void *that);
-
-    mach_vm_address_t orgHwRegRead {};
-    static uint64_t wrapHwRegRead(void *that, uint64_t addr);
-
-    mach_vm_address_t orgHwRegWrite {};
-    static uint64_t wrapHwRegWrite(void *that, uint64_t addr, uint64_t val);
-
     mach_vm_address_t orgAccelDisplayPipeWriteDiagnosisReport {};
     static void wrapAccelDisplayPipeWriteDiagnosisReport(void *that);
 
@@ -238,27 +226,6 @@ class RAD {
 
     mach_vm_address_t orgSmuRenoirInitialize {};
     static uint32_t wrapSmuRenoirInitialize(void *smumData, uint32_t param2);
-
-    mach_vm_address_t orgCmdBufferPoolgetGPUVirtualAddress {};
-    static uint64_t wrapCmdBufferPoolgetGPUVirtualAddress(void *that, uint64_t param1);
-
-    mach_vm_address_t orgMemoryMapGetGPUVirtualAddress {};
-    static uint64_t wrapMemoryMapGetGPUVirtualAddress(void *that);
-
-    mach_vm_address_t orgSysMemGetPhysicalSegment {};
-    static void *wrapSysMemGetPhysicalSegment(void *that, uint64_t param1, uint64_t *param2);
-
-    mach_vm_address_t orgVidMemGetPhysicalSegment {};
-    static uint64_t wrapVidMemGetPhysicalSegment(void *that, uint64_t param1, uint64_t *param2);
-
-    mach_vm_address_t orgRemoteMemGetPhysicalSegment {};
-    static void *wrapRemoteMemGetPhysicalSegment(void *that, uint64_t *param2);
-
-    mach_vm_address_t orgAmdHwMemGetPhysicalSegment {};
-    static void *wrapAmdHwMemGetPhysicalSegment(void *that, void *param1, uint64_t param2, uint64_t *param3);
-
-    mach_vm_address_t orgAmdAccelVidMemGetPhysicalSegment {};
-    static uint64_t wrapAmdAccelVidMemGetPhysicalSegment(void *that, uint64_t param1, uint64_t *param2);
 };
 
 #endif /* kern_rad_hpp */
