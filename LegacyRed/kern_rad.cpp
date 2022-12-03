@@ -958,7 +958,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZZN37AMDRadeonX4000_AMDGraphicsAccelerator19createAccelChannelsEbE12channelTypes", orgChannelTypes},
         };
         if (!patcher.solveMultiple(index, solveRequests, address, size)) {
-            panic("RAD: Failed to resolve AMDRadeonX5000 symbols");
+            panic("RAD: Failed to resolve AMDRadeonX4000 symbols");
         }
 
         KernelPatcher::RouteRequest requests[] = {
@@ -969,7 +969,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 orgAMDHWChannelWaitForIdle},
             {"__ZN28AMDRadeonX4000_AMDCIHardware17allocateHWEnginesEv", wrapAllocateHWEngines},
             {"__ZN26AMDRadeonX4000_AMDHardware11getHWEngineE20_eAMD_HW_ENGINE_TYPE", wrapGetHWEngine, orgGetHWEngine},
-            {"__ZN29AMDRadeonX4000_AMDCIHardware32setupAndInitializeHWCapabilitiesEv",
+            {"__ZN28AMDRadeonX4000_AMDCIHardware32setupAndInitializeHWCapabilitiesEv",
                 wrapSetupAndInitializeHWCapabilities, orgSetupAndInitializeHWCapabilities},
             {"__ZN29AMDRadeonX4000_AMDCIPM4Engine7powerUpEv", wrapPM4EnginePowerUp, orgPM4EnginePowerUp},
             {"__ZN26AMDRadeonX4000_AMDHardware17dumpASICHangStateEb.cold.1", wrapDumpASICHangStateCold,
