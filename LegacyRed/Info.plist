@@ -128,7 +128,7 @@
 			<key>IOName</key>
 			<string>AMD8000Controller</string>
 			<key>IOPCIMatch</key>
-			<string>0x66401002 0x66411002 0x66461002 0x66471002 0x66501002 0x66511002 0x665C1002 0x665D1002 0x67B01002</string>
+			<string>0x98531002</string>
 			<key>IOProbeScore</key>
 			<integer>65050</integer>
 			<key>IOPropertyMatch</key>
