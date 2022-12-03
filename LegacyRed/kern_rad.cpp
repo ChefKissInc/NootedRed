@@ -998,7 +998,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN37AMDRadeonX4000_AMDGraphicsAccelerator20callPlatformFunctionEPK8OSSymbolbPvS3_S3_S3_",
                 wrapAccelCallPlatformFunction, orgAccelCallPlatformFunction},
             {"__ZN32AMDRadeonX4000_AMDHawaiiHardware7powerUpEv", wrapVega10PowerUp, orgVega10PowerUp},
-            {"__ZN29AMDRadeonX4000_AMDCIsDMAEngine5startEv", wrapSdmaEngineStart, orgSdmaEngineStart},
+            {"__ZN30AMDRadeonX4000_AMDCIsDMAEngine5startEv", wrapSdmaEngineStart, orgSdmaEngineStart},
             {"__ZN24AMDRadeonX4000_AMDHWRing6enableEv", wrapRtRingEnable, orgRtRingEnable},
             {"__ZN27AMDRadeonX4000_AMDHWChannel14waitForHwStampEj", wrapWaitForHwStamp, orgWaitForHwStamp},
             {"__ZN26AMDRadeonX4000_AMDHardware12getHWChannelE18_eAMD_CHANNEL_TYPE11SS_PRIORITYj", wrapRTGetHWChannel,
