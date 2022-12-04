@@ -198,9 +198,7 @@ class RAD {
     static void wrapHWsetMemoryAllocationsEnabled(void *that, bool param1);
 
     mach_vm_address_t orgRTGetHWChannel {};
-    static uint64_t wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3);
-
-    uint32_t *orgChannelTypes = nullptr;
+    static void *wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3);
 
     mach_vm_address_t orgCosDebugAssert {};
     static void wrapCosDebugAssert(void *param1, uint8_t *param2, uint8_t *param3, uint32_t param4, uint8_t *param5);
@@ -226,6 +224,11 @@ class RAD {
 
     mach_vm_address_t orgSmuRenoirInitialize {};
     static uint32_t wrapSmuRenoirInitialize(void *smumData, uint32_t param2);
+
+    void *sdma0HWChannel = nullptr;
+
+    static bool sdma1IsIdleHack(void *that);
+    static void sdma1TimeStampInterruptCallbackHack(void *that);
 };
 
 #endif /* kern_rad_hpp */

@@ -547,6 +547,10 @@ bool RAD::wrapAllocateHWEngines(void *that) {
     callbackRAD->orgGFX9SDMAEngineConstructor(sdma0);
     getMember<void *>(that, 0x3c0) = sdma0;
 
+    auto *sdma1 = callbackRAD->orgGFX9SDMAEngineNew(0x128);
+    callbackRAD->orgGFX9SDMAEngineConstructor(sdma1);
+    getMember<void *>(that, 0x3c8) = sdma1;
+
     auto *vcn2 = callbackRAD->orgGFX10VCN2EngineNew(0x198);
     callbackRAD->orgGFX10VCN2EngineConstructor(vcn2);
     getMember<void *>(that, 0x3f8) = vcn2;
@@ -668,14 +672,42 @@ void RAD::wrapHWsetMemoryAllocationsEnabled(void *that, bool param1) {
     NETLOG("rad", "HWsetMemoryAllocationsEnabled finished");
 }
 
-uint64_t RAD::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3) {
+static void doNothing() {}
+
+static bool sdma1Hacked = false;
+
+bool RAD::sdma1IsIdleHack([[maybe_unused]] void *that) {
+    return FunctionCast(sdma1IsIdleHack, getMember<mach_vm_address_t *>(callbackRAD->sdma0HWChannel, 0)[0x2E])(
+        callbackRAD->sdma0HWChannel);
+}
+
+// void RAD::sdma1TimeStampInterruptCallbackHack([[maybe_unused]] void *that) {
+//     FunctionCast(sdma1IsIdleHack, getMember<mach_vm_address_t *>(callbackRAD->sdma0HWChannel, 0)[0x2E])(
+//         callbackRAD->sdma0HWChannel)
+// }
+
+void *RAD::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3) {
     NETLOG("rad", "RTGetHWChannel: this = %p param1 = 0x%X param2 = 0x%X param3 = 0x%X", that, param1, param2, param3);
-    if (param1 == 2 && param2 == 0 && param3 == 0) {
-        param2 = 2;
-        NETLOG("rad", "RTGetHWChannel: calling with param2 = 2");
-    }
     auto ret = FunctionCast(wrapRTGetHWChannel, callbackRAD->orgRTGetHWChannel)(that, param1, param2, param3);
-    NETLOG("rad", "RTGetHWChannel returned 0x%llX", ret);
+    if (!sdma1Hacked && param1 == 2 && param2 == 0 && param3 == 0) {
+        sdma1Hacked = true;    // Do only once
+        NETLOG("rad", "RTGetHWChannel: SDMA1 HWChannel detected. Hacking it");
+        param2 = 2;
+        auto sdma0HWChannel =
+            FunctionCast(wrapRTGetHWChannel, callbackRAD->orgRTGetHWChannel)(that, param1, param2, param3);
+        callbackRAD->sdma0HWChannel = sdma0HWChannel;
+        auto *vtable = getMember<mach_vm_address_t *>(ret, 0);
+        /* isIdle */
+        vtable[0x2E] = reinterpret_cast<mach_vm_address_t>(sdma1IsIdleHack);
+        /* dumpEngineHangState */
+        vtable[0x4A] = reinterpret_cast<mach_vm_address_t>(doNothing);
+        /* writeDiagnosticReport */
+        vtable[0x4F] = reinterpret_cast<mach_vm_address_t>(doNothing);
+
+        /* Swap ring with SDMA0's */
+        getMember<void *>(ret, 0x28) = getMember<void *>(sdma0HWChannel, 0x28);
+    }
+    NETLOG("rad", "RTGetHWChannel returned %p", ret);
     return ret;
 }
 
@@ -895,19 +927,10 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN31AMDRadeonX5000_AMDGFX9PM4EngineC1Ev", orgGFX9PM4EngineConstructor},
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEnginenwEm", orgGFX9SDMAEngineNew},
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngineC1Ev", orgGFX9SDMAEngineConstructor},
-            {"__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator19createAccelChannelsEbE12channelTypes", orgChannelTypes},
         };
         if (!patcher.solveMultiple(index, solveRequests, address, size)) {
             panic("RAD: Failed to resolve AMDRadeonX5000 symbols");
         }
-
-        /**
-         * Patch the data so that it only starts SDMA0.
-         */
-        PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "rad",
-            "Failed to enable kernel writing");
-        callbackRAD->orgChannelTypes[5] = 1;
-        MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
         KernelPatcher::RouteRequest requests[] = {
             {"__ZN32AMDRadeonX5000_AMDVega10Hardware17allocateHWEnginesEv", wrapAllocateHWEngines},
@@ -934,6 +957,10 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
         static_assert(sizeof(find_startHWEngines) == sizeof(repl_startHWEngines), "Find/replace size mismatch");
 
         KernelPatcher::LookupPatch patches[] = {
+            /**
+             * `AMDRadeonX5000_AMDHardware::startHWEngines`
+             * Make for loop stop at 1 instead of 2 in order to skip starting SDMA1 engine.
+             */
             {&kextRadeonX5000, find_startHWEngines, repl_startHWEngines, arrsize(find_startHWEngines), 2},
         };
         for (auto &patch : patches) {
