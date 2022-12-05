@@ -435,7 +435,11 @@ IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
                 break;
             }
         }
-        if (!initCaps) { panic("rad: Failed to find Init Caps entry for device ID 0x%X", deviceId); }
+        if (!initCaps) {
+          NETLOG("rad", "Failed to find Init Caps entry for device ID 0x%X", deviceId);
+          IOSleep(3600000);
+          panic("rad: Failed to find Init Caps entry for device ID 0x%X", deviceId);
+        }
     }
     callbackRAD->orgAsicCapsTable->familyId = callbackRAD->orgAsicCapsTableHWLibs->familyId = 0x8e;
     callbackRAD->orgAsicCapsTable->deviceId = callbackRAD->orgAsicCapsTableHWLibs->deviceId = deviceId;
