@@ -681,16 +681,11 @@ bool RAD::sdma1IsIdleHack([[maybe_unused]] void *that) {
         callbackRAD->sdma0HWChannel);
 }
 
-// void RAD::sdma1TimeStampInterruptCallbackHack([[maybe_unused]] void *that) {
-//     FunctionCast(sdma1IsIdleHack, getMember<mach_vm_address_t *>(callbackRAD->sdma0HWChannel, 0)[0x2E])(
-//         callbackRAD->sdma0HWChannel)
-// }
-
 void *RAD::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3) {
     NETLOG("rad", "RTGetHWChannel: this = %p param1 = 0x%X param2 = 0x%X param3 = 0x%X", that, param1, param2, param3);
     auto ret = FunctionCast(wrapRTGetHWChannel, callbackRAD->orgRTGetHWChannel)(that, param1, param2, param3);
     if (!sdma1Hacked && param1 == 2 && param2 == 0 && param3 == 0) {
-        sdma1Hacked = true;    // Do only once
+        sdma1Hacked = true;
         NETLOG("rad", "RTGetHWChannel: SDMA1 HWChannel detected. Hacking it");
 
         // This makes `orgRTGetHWChannel` return the SDMA0 HW channel
@@ -699,11 +694,11 @@ void *RAD::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint
             FunctionCast(wrapRTGetHWChannel, callbackRAD->orgRTGetHWChannel)(that, param1, param2, param3);
         callbackRAD->sdma0HWChannel = sdma0HWChannel;
 
-        auto *&oldVtable = getMember<mach_vm_address_t *>(ret, 0);
-        auto *vtable = new mach_vm_address_t[72];
-        memmove(vtable, oldVtable, 72 * sizeof(mach_vm_address_t));
-        oldVtable = vtable;
-        
+        mach_vm_address_t *oldVtable = getMember<mach_vm_address_t *>(ret, 0);
+        auto *vtable = new mach_vm_address_t[0x6E];
+        memmove(vtable, oldVtable, 0x6E * sizeof(mach_vm_address_t));
+        getMember<mach_vm_address_t *>(ret, 0) = vtable;
+
         /* isIdle */
         vtable[0x2E] = reinterpret_cast<mach_vm_address_t>(sdma1IsIdleHack);
         /* dumpEngineHangState */
@@ -759,21 +754,22 @@ uint32_t RAD::wrapSmuRenoirInitialize(void *smumData, uint32_t param2) {
     return ret;
 }
 
-uint32_t RAD::wrapWaitForStamp(void* that, uint32_t param1, uint32_t param2, uint32_t* param3) {
+uint32_t RAD::wrapWaitForStamp(void *that, uint32_t param1, uint32_t param2, uint32_t *param3) {
     NETLOG("rad", "waitForStamp: this = %p param1 = 0x%X param2 = 0x%X param3 = %p", that, param1, param2, param3);
     auto ret = FunctionCast(wrapWaitForStamp, callbackRAD->orgWaitForStamp)(that, param1, param2, param3);
     NETLOG("rad", "waitForStamp returned 0x%X", ret);
     return ret;
 }
 
-uint64_t RAD::wrapAccelChannelWaitForTimestamp(void* that, uint32_t param1) {
+uint64_t RAD::wrapAccelChannelWaitForTimestamp(void *that, uint32_t param1) {
     NETLOG("rad", "accelChannelWaitForTimestamp: this = %p param1 = 0x%X", that, param1);
-    auto ret = FunctionCast(wrapAccelChannelWaitForTimestamp, callbackRAD->orgAccelChannelWaitForTimestamp)(that, param1);
+    auto ret =
+        FunctionCast(wrapAccelChannelWaitForTimestamp, callbackRAD->orgAccelChannelWaitForTimestamp)(that, param1);
     NETLOG("rad", "accelChannelWaitForTimestamp returned 0x%llX", ret);
     return ret;
 }
 
-void RAD::wrapSchedulerCheckTimestamps(void* that) {
+void RAD::wrapSchedulerCheckTimestamps(void *that) {
     NETLOG("rad", "schedulerCheckTimestamps: this = %p", that);
     FunctionCast(wrapSchedulerCheckTimestamps, callbackRAD->orgSchedulerCheckTimestamps)(that);
     NETLOG("rad", "schedulerCheckTimestamps finished");
@@ -975,8 +971,10 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN28AMDRadeonX5000_AMDRTHardware12getHWChannelE18_eAMD_CHANNEL_TYPE11SS_PRIORITYj", wrapRTGetHWChannel,
                 orgRTGetHWChannel},
             {"__ZN35AMDRadeonX5000_AMDAccelEventMachine12waitForStampEijPj", wrapWaitForStamp, orgWaitForStamp},
-            {"__ZN30AMDRadeonX5000_AMDAccelChannel16waitForTimestampEj", wrapAccelChannelWaitForTimestamp, orgAccelChannelWaitForTimestamp},
-            {"__ZN29AMDRadeonX5000_AMDSWScheduler15checkTimestampsEv", wrapSchedulerCheckTimestamps, orgSchedulerCheckTimestamps},
+            {"__ZN30AMDRadeonX5000_AMDAccelChannel16waitForTimestampEj", wrapAccelChannelWaitForTimestamp,
+                orgAccelChannelWaitForTimestamp},
+            {"__ZN29AMDRadeonX5000_AMDSWScheduler15checkTimestampsEv", wrapSchedulerCheckTimestamps,
+                orgSchedulerCheckTimestamps},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
