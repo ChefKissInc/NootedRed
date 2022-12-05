@@ -765,6 +765,13 @@ uint32_t RAD::wrapSmuRenoirInitialize(void *smumData, uint32_t param2) {
     return ret;
 }
 
+uint32_t RAD::wrapWaitForStamp(void* that, uint32_t param1, uint32_t param2, uint32_t* param3) {
+    NETLOG("rad", "waitForStamp: this = %p param1 = 0x%X param2 = 0x%X param3 = %p", that, param1, param2, param3);
+    auto ret = FunctionCast(wrapWaitForStamp, callbackRAD->orgWaitForStamp)(that, param1, param2, param3);
+    NETLOG("rad", "waitForStamp returned 0x%X", ret);
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -960,6 +967,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 orgHWsetMemoryAllocationsEnabled},
             {"__ZN28AMDRadeonX5000_AMDRTHardware12getHWChannelE18_eAMD_CHANNEL_TYPE11SS_PRIORITYj", wrapRTGetHWChannel,
                 orgRTGetHWChannel},
+            {"__ZN35AMDRadeonX5000_AMDAccelEventMachine12waitForStampEijPj", wrapWaitForStamp, orgWaitForStamp},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
