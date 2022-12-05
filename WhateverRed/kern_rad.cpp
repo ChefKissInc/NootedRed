@@ -674,8 +674,6 @@ void RAD::wrapHWsetMemoryAllocationsEnabled(void *that, bool param1) {
     NETLOG("rad", "HWsetMemoryAllocationsEnabled finished");
 }
 
-static void doNothing() {}
-
 static bool sdma1Hacked = false;
 
 bool RAD::sdma1IsIdleHack([[maybe_unused]] void *that) {
@@ -703,10 +701,6 @@ void *RAD::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint
 
         /* isIdle */
         vtable[0x2E] = reinterpret_cast<mach_vm_address_t>(sdma1IsIdleHack);
-        /* dumpEngineHangState */
-        vtable[0x4A] = reinterpret_cast<mach_vm_address_t>(doNothing);
-        /* writeDiagnosticReport */
-        vtable[0x4F] = reinterpret_cast<mach_vm_address_t>(doNothing);
 
         /* Swap ring with SDMA0's */
         getMember<void *>(ret, 0x28) = getMember<void *>(sdma0HWChannel, 0x28);
