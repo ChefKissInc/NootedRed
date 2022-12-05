@@ -590,6 +590,8 @@ const char *RAD::getASICName() {
         case ASICType::Renoir:
             return "renoir";
         default:
+            NETLOG("rad", "ASIC type is unknown; this should never happen");
+            IOSleep(3600000);
             panic("rad: ASIC type is unknown; this should never happen");
     }
 }
