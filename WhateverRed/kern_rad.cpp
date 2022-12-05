@@ -550,6 +550,8 @@ bool RAD::wrapAllocateHWEngines(void *that) {
     auto *sdma1 = callbackRAD->orgGFX9SDMAEngineNew(0x128);
     callbackRAD->orgGFX9SDMAEngineConstructor(sdma1);
     getMember<void *>(that, 0x3c8) = sdma1;
+    /** Set this->enabled to true, as engine startup is patched out for this fake engine */
+    getMember<bool>(sdma1, 0x10) = true;
 
     auto *vcn2 = callbackRAD->orgGFX10VCN2EngineNew(0x198);
     callbackRAD->orgGFX10VCN2EngineConstructor(vcn2);
