@@ -692,11 +692,18 @@ void *RAD::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint
     if (!sdma1Hacked && param1 == 2 && param2 == 0 && param3 == 0) {
         sdma1Hacked = true;    // Do only once
         NETLOG("rad", "RTGetHWChannel: SDMA1 HWChannel detected. Hacking it");
+
+        // This makes `orgRTGetHWChannel` return the SDMA0 HW channel
         param2 = 2;
         auto sdma0HWChannel =
             FunctionCast(wrapRTGetHWChannel, callbackRAD->orgRTGetHWChannel)(that, param1, param2, param3);
         callbackRAD->sdma0HWChannel = sdma0HWChannel;
-        auto *vtable = getMember<mach_vm_address_t *>(ret, 0);
+
+        auto *&oldVtable = getMember<mach_vm_address_t *>(ret, 0);
+        auto *vtable = new mach_vm_address_t[72];
+        memmove(vtable, oldVtable, 72 * sizeof(mach_vm_address_t));
+        oldVtable = vtable;
+        
         /* isIdle */
         vtable[0x2E] = reinterpret_cast<mach_vm_address_t>(sdma1IsIdleHack);
         /* dumpEngineHangState */
