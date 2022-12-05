@@ -772,6 +772,19 @@ uint32_t RAD::wrapWaitForStamp(void* that, uint32_t param1, uint32_t param2, uin
     return ret;
 }
 
+uint64_t RAD::wrapAccelChannelWaitForTimestamp(void* that, uint32_t param1) {
+    NETLOG("rad", "accelChannelWaitForTimestamp: this = %p param1 = 0x%X", that, param1);
+    auto ret = FunctionCast(wrapAccelChannelWaitForTimestamp, callbackRAD->orgAccelChannelWaitForTimestamp)(that, param1);
+    NETLOG("rad", "accelChannelWaitForTimestamp returned 0x%llX", ret);
+    return ret;
+}
+
+void RAD::wrapSchedulerCheckTimestamps(void* that) {
+    NETLOG("rad", "schedulerCheckTimestamps: this = %p", that);
+    FunctionCast(wrapSchedulerCheckTimestamps, callbackRAD->orgSchedulerCheckTimestamps)(that);
+    NETLOG("rad", "schedulerCheckTimestamps finished");
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -968,6 +981,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN28AMDRadeonX5000_AMDRTHardware12getHWChannelE18_eAMD_CHANNEL_TYPE11SS_PRIORITYj", wrapRTGetHWChannel,
                 orgRTGetHWChannel},
             {"__ZN35AMDRadeonX5000_AMDAccelEventMachine12waitForStampEijPj", wrapWaitForStamp, orgWaitForStamp},
+            {"__ZN30AMDRadeonX5000_AMDAccelChannel16waitForTimestampEj", wrapAccelChannelWaitForTimestamp, orgAccelChannelWaitForTimestamp},
+            {"__ZN29AMDRadeonX5000_AMDSWScheduler15checkTimestampsEv", wrapSchedulerCheckTimestamps, orgSchedulerCheckTimestamps},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");

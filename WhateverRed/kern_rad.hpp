@@ -232,6 +232,12 @@ class RAD {
 
     mach_vm_address_t orgWaitForStamp{};
     static uint32_t wrapWaitForStamp(void* that, uint32_t param1, uint32_t param2, uint32_t* param3);
+
+    mach_vm_address_t orgAccelChannelWaitForTimestamp{};
+    static uint64_t wrapAccelChannelWaitForTimestamp(void* that, uint32_t param1);
+
+    mach_vm_address_t orgSchedulerCheckTimestamps{};
+    static void wrapSchedulerCheckTimestamps(void* that);
 };
 
 #endif /* kern_rad_hpp */
