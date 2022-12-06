@@ -537,6 +537,14 @@ bool RAD::wrapGFX10AcceleratorStart() {
     return false;
 }
 
+bool RAD::sdma1AllocateAndInitHWRingsHack(void *that) {
+    /** Copy over correct HWChannel */
+    getMember<void *>(that, 0x20) = getMember<void *>(callbackRAD->sdma0HWEngine, 0x20);
+    /** Copy ring */
+    getMember<void *>(that, 0x50) = getMember<void *>(getMember<void *>(that, 0x20), 0x28);
+    return true;
+}
+
 bool RAD::wrapAllocateHWEngines(void *that) {
     NETLOG("rad", "allocateHWEngines: this = %p", that);
     auto *pm4 = callbackRAD->orgGFX9PM4EngineNew(0x1e8);
@@ -546,12 +554,19 @@ bool RAD::wrapAllocateHWEngines(void *that) {
     auto *sdma0 = callbackRAD->orgGFX9SDMAEngineNew(0x128);
     callbackRAD->orgGFX9SDMAEngineConstructor(sdma0);
     getMember<void *>(that, 0x3c0) = sdma0;
+    callbackRAD->sdma0HWEngine = sdma0;
 
     auto *sdma1 = callbackRAD->orgGFX9SDMAEngineNew(0x128);
     callbackRAD->orgGFX9SDMAEngineConstructor(sdma1);
     getMember<void *>(that, 0x3c8) = sdma1;
-    /** Set this->enabled to true, as engine startup is patched out for this fake engine */
+    /** Set this->enabled to true, as `HWEngine::start` is patched out for this fake engine */
     getMember<bool>(sdma1, 0x10) = true;
+
+    mach_vm_address_t *oldVtable = getMember<mach_vm_address_t *>(sdma1, 0);
+    auto *vtable = new mach_vm_address_t[0x48];
+    memmove(vtable, oldVtable, 0x48 * sizeof(mach_vm_address_t));
+    getMember<mach_vm_address_t *>(sdma1, 0) = vtable;
+    vtable[0x200] = reinterpret_cast<mach_vm_address_t>(sdma1AllocateAndInitHWRingsHack);
 
     auto *vcn2 = callbackRAD->orgGFX10VCN2EngineNew(0x198);
     callbackRAD->orgGFX10VCN2EngineConstructor(vcn2);
@@ -704,6 +719,8 @@ void *RAD::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint
 
         /* Swap ring with SDMA0's */
         getMember<void *>(ret, 0x28) = getMember<void *>(sdma0HWChannel, 0x28);
+
+        getMember<bool>(getMember<void *>(ret, 0x20), 0x10) = true;
     }
     NETLOG("rad", "RTGetHWChannel returned %p", ret);
     return ret;

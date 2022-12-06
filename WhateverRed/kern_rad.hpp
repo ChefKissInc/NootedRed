@@ -237,6 +237,10 @@ class RAD {
 
     mach_vm_address_t orgSchedulerCheckTimestamps {};
     static void wrapSchedulerCheckTimestamps(void *that);
+
+    void *sdma0HWEngine = nullptr;
+
+    static bool sdma1AllocateAndInitHWRingsHack(void *that);
 };
 
 #endif /* kern_rad_hpp */
