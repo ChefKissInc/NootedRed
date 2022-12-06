@@ -64,7 +64,6 @@ class RAD {
      * X6000Framebuffer
      */
     mach_vm_address_t orgPopulateDeviceInfo {};
-    mach_vm_address_t orgGetVideoMemoryType {}, orgGetVideoMemoryBitWidth {};
     CailAsicCapEntry *orgAsicCapsTable = nullptr;
 
     /**

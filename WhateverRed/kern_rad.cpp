@@ -505,21 +505,18 @@ void RAD::wrapCosReleasePrintVaList(void *ttl, char *header, char *fmt, va_list 
     FunctionCast(wrapCosReleasePrintVaList, callbackRAD->orgCosReleasePrintVaList)(ttl, header, fmt, args);
 }
 
+/** Info from gmc_v9_0.c */
 uint32_t RAD::wrapGetVideoMemoryType(void *that) {
     NETLOG("rad", "getVideoMemoryType: this = %p", that);
-    auto ret = FunctionCast(wrapGetVideoMemoryType, callbackRAD->orgGetVideoMemoryType)(that);
-    NETLOG("rad", "getVideoMemoryType returned 0x%X", ret);
-    return ret != 0 ? ret : 4;
+    /** HBM */
+    return 5;
 }
 
+/** Info from gmc_v9_0.c */
 uint32_t RAD::wrapGetVideoMemoryBitWidth(void *that) {
     NETLOG("rad", "getVideoMemoryBitWidth: this = %p", that);
-    auto ret = FunctionCast(wrapGetVideoMemoryBitWidth, callbackRAD->orgGetVideoMemoryBitWidth)(that);
-    NETLOG("rad",
-        "getVideoMemoryBitWidth "
-        "returned 0x%X",
-        ret);
-    return ret != 0 ? ret : 64;
+    /** 64 bits */
+    return 64;
 }
 
 IOReturn RAD::wrapPopulateVramInfo(void *that, void *param1) {
@@ -900,10 +897,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
         }
 
         KernelPatcher::RouteRequest requests[] = {
-            {"__ZNK34AMDRadeonX6000_AmdBiosParserHelper18getVideoMemoryTypeEv", wrapGetVideoMemoryType,
-                orgGetVideoMemoryType},
-            {"__ZNK34AMDRadeonX6000_AmdBiosParserHelper22getVideoMemoryBitWidthEv", wrapGetVideoMemoryBitWidth,
-                orgGetVideoMemoryBitWidth},
+            {"__ZNK34AMDRadeonX6000_AmdBiosParserHelper18getVideoMemoryTypeEv", wrapGetVideoMemoryType},
+            {"__ZNK34AMDRadeonX6000_AmdBiosParserHelper22getVideoMemoryBitWidthEv", wrapGetVideoMemoryBitWidth},
             {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", wrapPopulateVramInfo},
             {"__ZNK26AMDRadeonX6000_AmdAsicInfo11getFamilyIdEv", wrapGetFamilyId},
             {"__ZN30AMDRadeonX6000_AmdAsicInfoNavi18populateDeviceInfoEv", wrapPopulateDeviceInfo,
