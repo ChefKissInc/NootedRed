@@ -240,6 +240,14 @@ class RAD {
     void *sdma0HWEngine = nullptr;
 
     static bool sdma1AllocateAndInitHWRingsHack(void *that);
+
+    mach_vm_address_t orgMapVA {};
+    static uint64_t wrapMapVA(void *that, uint64_t param1, void *memory, uint64_t param3, uint64_t param4,
+        uint64_t flags);
+
+    mach_vm_address_t orgMapVMPT {};
+    static uint64_t wrapMapVMPT(void *that, void *vmptCtl, uint64_t vmptLevel, uint32_t param3, uint64_t param4,
+        uint64_t param5, uint64_t param6);
 };
 
 #endif /* kern_rad_hpp */

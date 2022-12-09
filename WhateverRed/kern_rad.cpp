@@ -785,6 +785,26 @@ void RAD::wrapSchedulerCheckTimestamps(void *that) {
     NETLOG("rad", "schedulerCheckTimestamps finished");
 }
 
+uint64_t RAD::wrapMapVA(void *that, uint64_t param1, void *memory, uint64_t param3, uint64_t param4, uint64_t flags) {
+    NETLOG("rad", "mapVA: this = %p param1 = 0x%llX memory = %p param3 = 0x%llX param4 = 0x%llX flags = 0x%llX", that,
+        param1, memory, param3, param4, flags);
+    auto ret = FunctionCast(wrapMapVA, callbackRAD->orgMapVA)(that, param1, memory, param3, param4, flags);
+    NETLOG("rad", "mapVA returned 0x%llX", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapMapVMPT(void *that, void *vmptCtl, uint64_t vmptLevel, uint32_t param3, uint64_t param4,
+    uint64_t param5, uint64_t param6) {
+    NETLOG("rad",
+        "mapVMPT: this = %p vmptCtl = %p vmptLevel = 0x%llX param3 = 0x%X param4 = 0x%llX param5 = 0x%llX param6 = "
+        "0x%llX",
+        that, vmptCtl, vmptLevel, param3, param4, param5, param6);
+    auto ret =
+        FunctionCast(wrapMapVMPT, callbackRAD->orgMapVMPT)(that, vmptCtl, vmptLevel, param3, param4, param5, param6);
+    NETLOG("rad", "mapVMPT returned 0x%llX", ret);
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -983,6 +1003,10 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 orgAccelChannelWaitForTimestamp},
             {"__ZN29AMDRadeonX5000_AMDSWScheduler15checkTimestampsEv", wrapSchedulerCheckTimestamps,
                 orgSchedulerCheckTimestamps},
+            {"__ZN29AMDRadeonX5000_AMDHWVMContext5mapVAEyP13IOAccelMemoryyyN24AMDRadeonX5000_IAMDHWVMM10VmMapFlagsE",
+                wrapMapVA, orgMapVA},
+            {"__ZN29AMDRadeonX5000_AMDHWVMContext7mapVMPTEP12AMD_VMPT_CTL15eAMD_VMPT_LEVELjyyy", wrapMapVMPT,
+                orgMapVMPT},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
