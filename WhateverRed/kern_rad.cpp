@@ -295,6 +295,10 @@ uint16_t RAD::wrapGetEnumeratedRevision(void *that) {
      */
     auto *&pciDev = getMember<IOPCIDevice *>(that, 0x18);
     auto &revision = getMember<uint32_t>(that, 0x68);
+
+    // https://elixir.bootlin.com/linux/v5.16.9/source/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c#L1532
+    callbackRAD->isThreeLevelVMPT = revision == 0 || revision == 1;
+
     switch (pciDev->configRead16(kIOPCIConfigDeviceID)) {
         case 0x15D8:
             if (revision >= 0x8) {
@@ -323,9 +327,6 @@ uint16_t RAD::wrapGetEnumeratedRevision(void *that) {
             if (revision == 1) { return 0x20; }
             return 0x10;
     }
-
-    // https://elixir.bootlin.com/linux/v5.16.9/source/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c#L1532
-    callbackRAD->isThreeLevelVMPT = revision == 0 || revision == 1;
 }
 
 static bool injectedIPFirmware = false;
@@ -788,9 +789,10 @@ void RAD::wrapSchedulerCheckTimestamps(void *that) {
     NETLOG("rad", "schedulerCheckTimestamps finished");
 }
 
-uint64_t RAD::wrapMapVA(void *that, uint64_t param1, void *memory, uint64_t param3, uint64_t sizeToMap, uint64_t flags) {
-    NETLOG("rad", "mapVA: this = %p param1 = 0x%llX memory = %p param3 = 0x%llX sizeToMap = 0x%llX flags = 0x%llX", that,
-        param1, memory, param3, sizeToMap, flags);
+uint64_t RAD::wrapMapVA(void *that, uint64_t param1, void *memory, uint64_t param3, uint64_t sizeToMap,
+    uint64_t flags) {
+    NETLOG("rad", "mapVA: this = %p param1 = 0x%llX memory = %p param3 = 0x%llX sizeToMap = 0x%llX flags = 0x%llX",
+        that, param1, memory, param3, sizeToMap, flags);
     auto ret = FunctionCast(wrapMapVA, callbackRAD->orgMapVA)(that, param1, memory, param3, sizeToMap, flags);
     NETLOG("rad", "mapVA returned 0x%llX", ret);
     return ret;
@@ -809,15 +811,18 @@ uint64_t RAD::wrapMapVMPT(void *that, void *vmptCtl, uint64_t vmptLevel, uint32_
 }
 
 // Hand computed by both @ChefKissInc and @NyanCatTW1 from the decompiled code. Hopefully it's correct.
-int vmptConfigLevel3[] = {0x10000, 0x200, 0x1000,
-                          0x10000, 0x1000, 0x8000,
-                          0x1000, 0x0, 0x0};
+int vmptConfigLevel3[] = {
+    0x10000, 0x200, 0x1000,     // Level 0
+    0x10000, 0x1000, 0x8000,    // Level 1
+    0x1000, 0x0, 0x0            // Level 2
+};
+int vmptConfigLevel2[] = {
+    0x1000, 0x200, 0x1000,       // Level 0
+    0x1000, 0x10000, 0x80000,    // Level 1
+    0x0, 0x0, 0x0                // Level 2 (unused)
+};
 
-int vmptConfigLevel2[] = {0x1000, 0x200, 0x1000,
-                          0x1000, 0x10000, 0x80000,
-                          0x0, 0x0, 0x0};
-
-bool RAD::wrapVMMInit(void* that, void* param1) {
+bool RAD::wrapVMMInit(void *that, void *param1) {
     NETLOG("rad", "VMMInit: this = %p param1 = %p", that, param1);
 
     int vmptLevel;
@@ -832,11 +837,10 @@ bool RAD::wrapVMMInit(void* that, void* param1) {
         vmptConfig = vmptConfigLevel2;
     }
 
-    void *orgVMPTConfig = that + 0x1b0;
     for (int level = 0; level < 3; level++) {
-        getMember<uint64_t>(orgVMPTConfig, 0x20 * level) = vmptConfig[3 * level];
-        getMember<uint32_t>(orgVMPTConfig, 0x20 * level + 0xc) = vmptConfig[3 * level + 1];
-        getMember<uint32_t>(orgVMPTConfig, 0x20 * level + 0x10) = vmptConfig[3 * level + 2];
+        getMember<uint64_t>(that, 0xab0 + 0x20 * level) = vmptConfig[3 * level];
+        getMember<uint32_t>(that, 0xab0 + 0x20 * level + 0xc) = vmptConfig[3 * level + 1];
+        getMember<uint32_t>(that, 0xab0 + 0x20 * level + 0x10) = vmptConfig[3 * level + 2];
     }
 
     auto ret = FunctionCast(wrapVMMInit, callbackRAD->orgVMMInit)(that, param1);
@@ -1057,8 +1061,12 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
         uint8_t repl_startHWEngines[] = {0x49, 0x89, 0xfe, 0x31, 0xdb, 0x48, 0x83, 0xfb, 0x01, 0x74, 0x50};
         static_assert(sizeof(find_startHWEngines) == sizeof(repl_startHWEngines), "Find/replace size mismatch");
 
-        uint8_t find_VMMInit[] = { 0xba, 0x00, 0x10, 0x00, 0x00, 0x31, 0xc9, 0x48, 0x89, 0x84, 0x0b, 0xd0, 0x0a, 0x00, 0x00, 0x89, 0x94, 0x0b, 0xdc, 0x0a, 0x00, 0x00, 0x89, 0xd6, 0xc1, 0xe2, 0x03, 0x89, 0x94, 0x0b, 0xe0, 0x0a, 0x00, 0x00, 0x48, 0x0f, 0xaf, 0xc6, 0x48, 0x83, 0xc1, 0xe0};
-        uint8_t repl_VMMInit[] = { 0xba, 0x00, 0x10, 0x00, 0x00, 0x31, 0xc9, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x89, 0xd6, 0xc1, 0xe2, 0x03, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x48, 0x0f, 0xaf, 0xc6, 0x48, 0x83, 0xc1, 0xe0};
+        uint8_t find_VMMInit[] = {0xba, 0x00, 0x10, 0x00, 0x00, 0x31, 0xc9, 0x48, 0x89, 0x84, 0x0b, 0xd0, 0x0a, 0x00,
+            0x00, 0x89, 0x94, 0x0b, 0xdc, 0x0a, 0x00, 0x00, 0x89, 0xd6, 0xc1, 0xe2, 0x03, 0x89, 0x94, 0x0b, 0xe0, 0x0a,
+            0x00, 0x00, 0x48, 0x0f, 0xaf, 0xc6, 0x48, 0x83, 0xc1, 0xe0};
+        uint8_t repl_VMMInit[] = {0xba, 0x00, 0x10, 0x00, 0x00, 0x31, 0xc9, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,
+            0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x89, 0xd6, 0xc1, 0xe2, 0x03, 0x90, 0x90, 0x90, 0x90, 0x90,
+            0x90, 0x90, 0x48, 0x0f, 0xaf, 0xc6, 0x48, 0x83, 0xc1, 0xe0};
         static_assert(sizeof(find_VMMInit) == sizeof(repl_VMMInit), "Find/replace size mismatch");
 
         KernelPatcher::LookupPatch patches[] = {

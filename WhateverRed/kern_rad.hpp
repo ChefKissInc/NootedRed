@@ -251,8 +251,8 @@ class RAD {
 
     bool isThreeLevelVMPT = true;
 
-    mach_vm_address_t orgVMMInit{};
-    static bool wrapVMMInit(void* that, void* param1);
+    mach_vm_address_t orgVMMInit {};
+    static bool wrapVMMInit(void *that, void *param1);
 };
 
 #endif /* kern_rad_hpp */
