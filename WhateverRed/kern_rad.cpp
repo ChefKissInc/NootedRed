@@ -812,12 +812,12 @@ uint64_t RAD::wrapMapVMPT(void *that, void *vmptCtl, uint64_t vmptLevel, uint32_
 
 // Computed according to the decompiled code.
 uint64_t vmptConfigLevel3[][3] = {
-    {0x10000000, 0x200, 0x1000},    // Level 0
-    {0x10000, 0x1000, 0x8000},      // Level 1
+    {0x10000000, 0x200, 0x1000},    // PDB0
+    {0x10000, 0x1000, 0x8000},      // PDB1
 };
 uint64_t vmptConfigLevel2[][3] = {
-    {0x10000000, 0x200, 0x1000},    // Level 0
-    {0x1000, 0x10000, 0x80000},     // Level 1
+    {0x10000000, 0x200, 0x1000},    // PDB0
+    {0x1000, 0x10000, 0x80000},     // PDB1
 };
 
 bool RAD::wrapVMMInit(void *that, void *param1) {
@@ -827,8 +827,7 @@ bool RAD::wrapVMMInit(void *that, void *param1) {
     auto *vmptConfig = vmptConfigLevel3;
     if (!callbackRAD->isThreeLevelVMPT) {
         NETLOG("rad", "Setting VMPT to two levels");
-        // maxLevel = 2;
-        maxLevel = 1;
+        maxLevel = 2;
         vmptConfig = vmptConfigLevel2;
     }
 
