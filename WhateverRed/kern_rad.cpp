@@ -812,35 +812,29 @@ uint64_t RAD::wrapMapVMPT(void *that, void *vmptCtl, uint64_t vmptLevel, uint32_
 
 // Computed according to the decompiled code.
 uint64_t vmptConfigLevel3[][3] = {
-    {0x10000000, 0x200, 0x1000},    // PDB0
-    {0x10000, 0x1000, 0x8000},      // PDB1
+    {0x10000000, 0x200, 0x1000},
+    {0x10000, 0x1000, 0x8000},
 };
 uint64_t vmptConfigLevel2[][3] = {
-    {0x10000000, 0x200, 0x1000},    // PDB0
-    {0x1000, 0x10000, 0x80000},     // PDB1
+    {0x10000000, 0x200, 0x1000},
+    {0x1000, 0x10000, 0x80000},
 };
 
 bool RAD::wrapVMMInit(void *that, void *param1) {
     NETLOG("rad", "VMMInit: this = %p param1 = %p", that, param1);
 
-    uint32_t maxLevel = 3;
-    auto *vmptConfig = vmptConfigLevel3;
-    if (!callbackRAD->isThreeLevelVMPT) {
-        NETLOG("rad", "Setting VMPT to two levels");
-        maxLevel = 2;
-        vmptConfig = vmptConfigLevel2;
-    }
+    auto *vmptConfig = callbackRAD->isThreeLevelVMPT ? vmptConfigLevel3 : vmptConfigLevel2;
 
     for (size_t level = 0; level < 2; level++) {
-        getMember<uint64_t>(that, 0xab0 + 0x20 * level) = vmptConfig[level][0];
-        getMember<uint32_t>(that, 0xab0 + 0x20 * level + 0xc) = static_cast<uint32_t>(vmptConfig[level][1]);
-        getMember<uint32_t>(that, 0xab0 + 0x20 * level + 0x10) = static_cast<uint32_t>(vmptConfig[level][2]);
+        getMember<uint64_t>(that, 0xAB0 + 0x20 * level) = vmptConfig[level][0];
+        getMember<uint32_t>(that, 0xAB0 + 0x20 * level + 0xC) = static_cast<uint32_t>(vmptConfig[level][1]);
+        getMember<uint32_t>(that, 0xAB0 + 0x20 * level + 0x10) = static_cast<uint32_t>(vmptConfig[level][2]);
     }
 
     auto ret = FunctionCast(wrapVMMInit, callbackRAD->orgVMMInit)(that, param1);
     if (!callbackRAD->isThreeLevelVMPT) {
-        getMember<uint64_t>(that, 0xab0 + 0x20 * 2 + 0x18) = 0;    // Level 2 not enabled
-        getMember<uint32_t>(that, 0xb30) = maxLevel;
+        getMember<uint64_t>(that, 0xAB0 + 0x20 * 2 + 0x18) = 0;    // Level 2 not enabled
+        getMember<uint32_t>(that, 0xB30) = 2;
     }
     NETLOG("rad", "VMMInit returned %d", ret);
     return ret;
