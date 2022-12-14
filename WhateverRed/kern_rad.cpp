@@ -698,7 +698,6 @@ bool RAD::sdma1IsIdleHack([[maybe_unused]] void *that) {
 }
 
 void *RAD::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3) {
-    NETLOG("rad", "RTGetHWChannel: this = %p param1 = 0x%X param2 = 0x%X param3 = 0x%X", that, param1, param2, param3);
     auto ret = FunctionCast(wrapRTGetHWChannel, callbackRAD->orgRTGetHWChannel)(that, param1, param2, param3);
     if (!sdma1Hacked && param1 == 2 && param2 == 0 && param3 == 0) {
         sdma1Hacked = true;
@@ -723,7 +722,6 @@ void *RAD::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint
 
         getMember<bool>(getMember<void *>(ret, 0x20), 0x10) = true;
     }
-    NETLOG("rad", "RTGetHWChannel returned %p", ret);
     return ret;
 }
 
