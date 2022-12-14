@@ -485,7 +485,7 @@ void RAD::wrapCosDebugPrint(char *fmt, ...) {
 
 void RAD::wrapMCILDebugPrint(uint32_t level_max, char *fmt, uint64_t param3, uint64_t param4, uint64_t param5,
     uint level) {
-    NETDBG::printf("_MCILDebugPrint PARAM1 = 0x%X: ", level_max);
+    NETDBG::printf("_MCILDebugPrint: ");
     NETDBG::printf(fmt, param3, param4, param5, level);
     FunctionCast(wrapMCILDebugPrint, callbackRAD->orgMCILDebugPrint)(level_max, fmt, param3, param4, param5, level);
 }
