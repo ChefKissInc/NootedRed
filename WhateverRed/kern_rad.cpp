@@ -766,27 +766,6 @@ uint32_t RAD::wrapSmuRenoirInitialize(void *smumData, uint32_t param2) {
     return ret;
 }
 
-uint32_t RAD::wrapWaitForStamp(void *that, uint32_t param1, uint32_t param2, uint32_t *param3) {
-    NETLOG("rad", "waitForStamp: this = %p param1 = 0x%X param2 = 0x%X param3 = %p", that, param1, param2, param3);
-    auto ret = FunctionCast(wrapWaitForStamp, callbackRAD->orgWaitForStamp)(that, param1, param2, param3);
-    NETLOG("rad", "waitForStamp returned 0x%X", ret);
-    return ret;
-}
-
-uint64_t RAD::wrapAccelChannelWaitForTimestamp(void *that, uint32_t param1) {
-    NETLOG("rad", "accelChannelWaitForTimestamp: this = %p param1 = 0x%X", that, param1);
-    auto ret =
-        FunctionCast(wrapAccelChannelWaitForTimestamp, callbackRAD->orgAccelChannelWaitForTimestamp)(that, param1);
-    NETLOG("rad", "accelChannelWaitForTimestamp returned 0x%llX", ret);
-    return ret;
-}
-
-void RAD::wrapSchedulerCheckTimestamps(void *that) {
-    NETLOG("rad", "schedulerCheckTimestamps: this = %p", that);
-    FunctionCast(wrapSchedulerCheckTimestamps, callbackRAD->orgSchedulerCheckTimestamps)(that);
-    NETLOG("rad", "schedulerCheckTimestamps finished");
-}
-
 uint64_t RAD::wrapMapVA(void *that, uint64_t param1, void *memory, uint64_t param3, uint64_t sizeToMap,
     uint64_t flags) {
     NETLOG("rad", "mapVA: this = %p param1 = 0x%llX memory = %p param3 = 0x%llX sizeToMap = 0x%llX flags = 0x%llX",
@@ -1031,11 +1010,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 orgHWsetMemoryAllocationsEnabled},
             {"__ZN28AMDRadeonX5000_AMDRTHardware12getHWChannelE18_eAMD_CHANNEL_TYPE11SS_PRIORITYj", wrapRTGetHWChannel,
                 orgRTGetHWChannel},
-            {"__ZN35AMDRadeonX5000_AMDAccelEventMachine12waitForStampEijPj", wrapWaitForStamp, orgWaitForStamp},
-            {"__ZN30AMDRadeonX5000_AMDAccelChannel16waitForTimestampEj", wrapAccelChannelWaitForTimestamp,
-                orgAccelChannelWaitForTimestamp},
-            {"__ZN29AMDRadeonX5000_AMDSWScheduler15checkTimestampsEv", wrapSchedulerCheckTimestamps,
-                orgSchedulerCheckTimestamps},
             {"__ZN29AMDRadeonX5000_AMDHWVMContext5mapVAEyP13IOAccelMemoryyyN24AMDRadeonX5000_IAMDHWVMM10VmMapFlagsE",
                 wrapMapVA, orgMapVA},
             {"__ZN29AMDRadeonX5000_AMDHWVMContext7mapVMPTEP12AMD_VMPT_CTL15eAMD_VMPT_LEVELjyyy", wrapMapVMPT,
