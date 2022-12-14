@@ -244,6 +244,20 @@ class RAD {
 
     mach_vm_address_t orgVMMInit {};
     static bool wrapVMMInit(void *that, void *param1);
+
+    mach_vm_address_t orgWriteWritePTEPDECommand {};
+    static uint32_t wrapWriteWritePTEPDECommand(void *that, uint32_t *buf, uint64_t pe, uint32_t count, uint64_t flags,
+        uint64_t addr, uint64_t incr);
+
+    mach_vm_address_t orgGetPDEValue {};
+    static uint64_t wrapGetPDEValue(void *that, uint64_t param1, uint64_t param2);
+
+    mach_vm_address_t orgGetPTEValue {};
+    static uint64_t wrapGetPTEValue(void *that, uint64_t param1, uint64_t param2, uint64_t param3, uint32_t param4);
+
+    mach_vm_address_t orgUpdateContiguousPTEsWithDMAUsingAddr {};
+    static void wrapUpdateContiguousPTEsWithDMAUsingAddr(void *that, uint64_t param1, uint64_t param2, uint64_t param3,
+        uint64_t param4, uint64_t param5);
 };
 
 #endif /* kern_rad_hpp */

@@ -816,6 +816,44 @@ bool RAD::wrapVMMInit(void *that, void *param1) {
     return ret;
 }
 
+uint32_t RAD::wrapWriteWritePTEPDECommand(void *that, uint32_t *buf, uint64_t pe, uint32_t count, uint64_t flags,
+    uint64_t addr, uint64_t incr) {
+    NETLOG("rad",
+        "writeWritePTEPDECommand: this = %p buf = %p pe = 0x%llX count = 0x%X flags = 0x%llX addr = 0x%llX incr = "
+        "0x%llX",
+        that, buf, pe, count, flags, addr, incr);
+    auto ret = FunctionCast(wrapWriteWritePTEPDECommand, callbackRAD->orgWriteWritePTEPDECommand)(that, buf, pe, count,
+        flags, addr, incr);
+    NETLOG("rad", "writeWritePTEPDECommand returned 0x%X", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapGetPDEValue(void *that, uint64_t param1, uint64_t param2) {
+    NETLOG("rad", "getPDEValue: this = %p param1 = 0x%llX param2 = 0x%llX", that, param1, param2);
+    auto ret = FunctionCast(wrapGetPDEValue, callbackRAD->orgGetPDEValue)(that, param1, param2);
+    NETLOG("rad", "getPDEValue returned 0x%llX", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapGetPTEValue(void *that, uint64_t param1, uint64_t param2, uint64_t param3, uint32_t param4) {
+    NETLOG("rad", "getPTEValue: this = %p param1 = 0x%llX param2 = 0x%llX param3 = 0x%llX param4 = 0x%X", that, param1,
+        param2, param3, param4);
+    auto ret = FunctionCast(wrapGetPTEValue, callbackRAD->orgGetPTEValue)(that, param1, param2, param3, param4);
+    NETLOG("rad", "getPTEValue returned 0x%llX", ret);
+    return ret;
+}
+
+void RAD::wrapUpdateContiguousPTEsWithDMAUsingAddr(void *that, uint64_t param1, uint64_t param2, uint64_t param3,
+    uint64_t param4, uint64_t param5) {
+    NETLOG("rad",
+        "updateContiguousPTEsWithDMAUsingAddr: this = %p param1 = 0x%llX param2 = 0x%llX param3 = 0x%llX param4 = "
+        "0x%llX param5 = 0x%llX",
+        that, param1, param2, param3, param4, param5);
+    FunctionCast(wrapUpdateContiguousPTEsWithDMAUsingAddr, callbackRAD->orgUpdateContiguousPTEsWithDMAUsingAddr)(that,
+        param1, param2, param3, param4, param5);
+    NETLOG("rad", "updateContiguousPTEsWithDMAUsingAddr finished");
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -1014,6 +1052,13 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN29AMDRadeonX5000_AMDHWVMContext7mapVMPTEP12AMD_VMPT_CTL15eAMD_VMPT_LEVELjyyy", wrapMapVMPT,
                 orgMapVMPT},
             {"__ZN25AMDRadeonX5000_AMDGFX9VMM4initEP30AMDRadeonX5000_IAMDHWInterface", wrapVMMInit, orgVMMInit},
+            {"__ZN33AMDRadeonX5000_AMDGFX9SDMAChannel23writeWritePTEPDECommandEPjyjyyy", wrapWriteWritePTEPDECommand,
+                orgWriteWritePTEPDECommand},
+            {"__ZN25AMDRadeonX5000_AMDGFX9VMM11getPDEValueE15eAMD_VMPT_LEVELy", wrapGetPDEValue, orgGetPDEValue},
+            {"__ZN25AMDRadeonX5000_AMDGFX9VMM11getPTEValueE15eAMD_VMPT_LEVELyN24AMDRadeonX5000_IAMDHWVMM10VmMapFlagsEj",
+                wrapGetPTEValue, orgGetPTEValue},
+            {"__ZN29AMDRadeonX5000_AMDHWVMContext36updateContiguousPTEsWithDMAUsingAddrEyyyyy",
+                wrapUpdateContiguousPTEsWithDMAUsingAddr, orgUpdateContiguousPTEsWithDMAUsingAddr},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
