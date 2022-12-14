@@ -240,7 +240,7 @@ class RAD {
     static uint64_t wrapMapVMPT(void *that, void *vmptCtl, uint64_t vmptLevel, uint32_t param3, uint64_t param4,
         uint64_t param5, uint64_t sizeToMap);
 
-    bool isThreeLevelVMPT = true;
+    bool isThreeLevelVMPT = false;
 
     mach_vm_address_t orgVMMInit {};
     static bool wrapVMMInit(void *that, void *param1);
