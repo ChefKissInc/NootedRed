@@ -258,6 +258,8 @@ class RAD {
     mach_vm_address_t orgUpdateContiguousPTEsWithDMAUsingAddr {};
     static void wrapUpdateContiguousPTEsWithDMAUsingAddr(void *that, uint64_t param1, uint64_t param2, uint64_t param3,
         uint64_t param4, uint64_t param5);
+
+    static void wrapInitializeFamilyType(void *that);
 };
 
 #endif /* kern_rad_hpp */
