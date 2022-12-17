@@ -509,18 +509,14 @@ void RAD::wrapCosReleasePrintVaList(void *ttl, char *header, char *fmt, va_list 
     FunctionCast(wrapCosReleasePrintVaList, callbackRAD->orgCosReleasePrintVaList)(ttl, header, fmt, args);
 }
 
-/** Info from gmc_v9_0.c */
 uint32_t RAD::wrapGetVideoMemoryType(void *that) {
     NETLOG("rad", "getVideoMemoryType: this = %p", that);
-    /** HBM */
-    return 5;
+    return 4;    // DDR4
 }
 
-/** Info from gmc_v9_0.c */
 uint32_t RAD::wrapGetVideoMemoryBitWidth(void *that) {
     NETLOG("rad", "getVideoMemoryBitWidth: this = %p", that);
-    /** 64 bits */
-    return 64;
+    return 64;    // 64 bits
 }
 
 IOReturn RAD::wrapPopulateVramInfo(void *that, void *param1) {
