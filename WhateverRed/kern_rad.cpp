@@ -783,12 +783,12 @@ uint64_t RAD::wrapMapVMPT(void *that, void *vmptCtl, uint64_t vmptLevel, uint32_
     return ret;
 }
 
-uint64_t vmptConfig3Level[][3] = {
+static uint64_t vmptConfig3Level[][3] = {
     {0x10000000, 0x200, 0x1000},
     {0x10000, 0x1000, 0x8000},
 };
 
-uint64_t vmptConfig2Level[][3] = {
+static uint64_t vmptConfig2Level[][3] = {
     {0x10000000, 0x200, 0x1000},
     {0x1000, 0x10000, 0x80000},
 };
