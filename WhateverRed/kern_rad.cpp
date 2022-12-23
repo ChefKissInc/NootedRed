@@ -747,17 +747,13 @@ uint32_t RAD::wrapHwReadReg32(void *that, uint32_t reg) {
     return ret;
 }
 
-void RAD::powerUpSDMA(void *smumData) {
-    NETLOG("rad", "Sending PPSMC_MSG_PowerUpSdma (0xE) to the SMC");
-    auto smcRet = callbackRAD->orgSendMsgToSmc(smumData, 0xE, 0);
-    NETLOG("rad", "_Raven_SendMsgToSmcWithParameter returned 0x%X", smcRet);
-}
+constexpr uint32_t PPSMC_MSG_PowerUpSdma = 0xE;
 
 uint32_t RAD::wrapSmuRavenInitialize(void *smumData, uint32_t param2) {
     NETLOG("rad", "_SmuRaven_Initialize: param1 = %p param2 = 0x%X", smumData, param2);
     auto ret = FunctionCast(wrapSmuRavenInitialize, callbackRAD->orgSmuRavenInitialize)(smumData, param2);
     NETLOG("rad", "_SmuRaven_Initialize returned 0x%X", ret);
-    powerUpSDMA(smumData);
+    callbackRAD->orgRavenSendMsgToSmcWithParam(smumData, PPSMC_MSG_PowerUpSdma, 0);
     return ret;
 }
 
@@ -765,7 +761,7 @@ uint32_t RAD::wrapSmuRenoirInitialize(void *smumData, uint32_t param2) {
     NETLOG("rad", "_SmuRenoir_Initialize: param1 = %p param2 = 0x%X", smumData, param2);
     auto ret = FunctionCast(wrapSmuRenoirInitialize, callbackRAD->orgSmuRenoirInitialize)(smumData, param2);
     NETLOG("rad", "_SmuRenoir_Initialize returned 0x%X", ret);
-    powerUpSDMA(smumData);
+    callbackRAD->orgRenoirSendMsgToSmcWithParam(smumData, PPSMC_MSG_PowerUpSdma, 0);
     return ret;
 }
 
@@ -910,7 +906,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_gc_9_4_mec_ucode", orgGcMecUcode},
             {"_gc_9_4_mec_jt_ucode", orgGcMecJtUcode},
             {"_sdma_4_1_ucode", orgSdmaUcode},
-            {"_Raven_SendMsgToSmcWithParameter", orgSendMsgToSmc},
+            {"_Raven_SendMsgToSmcWithParameter", orgRavenSendMsgToSmcWithParam},
+            {"_Renoir_SendMsgToSmcWithParameter", orgRenoirSendMsgToSmcWithParam},
         };
         if (!patcher.solveMultiple(index, solveRequests, address, size)) {
             panic("RAD: Failed to resolve AMDRadeonX5000HWLibs symbols");

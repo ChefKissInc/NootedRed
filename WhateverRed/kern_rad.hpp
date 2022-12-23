@@ -146,7 +146,7 @@ class RAD {
     static uint64_t wrapSmuInternalHwInit();
     static void wrapCosDebugPrint(char *fmt, ...);
     static void wrapMCILDebugPrint(uint32_t level_max, char *fmt, uint64_t param3, uint64_t param4, uint64_t param5,
-        uint level);
+        uint32_t level);
     static void wrapCosDebugPrintVaList(void *ttl, char *header, char *fmt, va_list args);
     static void wrapCosReleasePrintVaList(void *ttl, char *header, char *fmt, va_list args);
     static const char *getASICName();
@@ -213,8 +213,9 @@ class RAD {
     mach_vm_address_t orgHwReadReg32 {};
     static uint32_t wrapHwReadReg32(void *that, uint32_t param1);
 
-    using t_sendMsgToSmc = uint (*)(void *smumData, uint msgId, uint parameter);
-    t_sendMsgToSmc orgSendMsgToSmc = nullptr;
+    using t_sendMsgToSmcWithParam = uint32_t (*)(void *smumData, uint32_t msgId, uint32_t parameter);
+    t_sendMsgToSmcWithParam orgRavenSendMsgToSmcWithParam = nullptr;
+    t_sendMsgToSmcWithParam orgRenoirSendMsgToSmcWithParam = nullptr;
 
     static void powerUpSDMA(void *smumData);
 
