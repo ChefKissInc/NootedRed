@@ -154,7 +154,7 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider) 
     WIOKit::renameDevice(provider, "GFX0");
     if (!provider->getProperty("built-in")) {
         DBGLOG("wred", "fixing built-in");
-        uint8_t builtBytes[] = {0x00};
+        uint8_t builtBytes[] = {0x01};
         provider->setProperty("built-in", builtBytes, sizeof(builtBytes));
     } else {
         DBGLOG("wred", "found existing built-in");
