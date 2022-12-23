@@ -222,11 +222,15 @@ uint64_t RAD::wrapPspSwInit(uint32_t *param1, uint32_t *param2) {
         param1[3], param1[4], param1[5]);
     switch (param1[3]) {
         case 0xA:
-            [[fallthrough]];
+            NETLOG("rad", "Spoofing PSP version v10 to v9.0.2");
+            param1[3] = 0x9;
+            param1[4] = 0x0;
+            param1[5] = 0x2;
+            break;
         case 0xB:
             [[fallthrough]];
         case 0xC:
-            NETLOG("rad", "Spoofing PSP version v11.x.x/v12.x.x to v11");
+            NETLOG("rad", "Spoofing PSP version v11/v12 to v11");
             param1[3] = 0xB;
             param1[4] = 0x0;
             param1[5] = 0x0;
@@ -243,10 +247,13 @@ uint32_t RAD::wrapGcGetHwVersion(uint32_t *param1) {
     NETLOG("rad", "_gc_get_hw_version: param1 = %p", param1);
     auto ret = FunctionCast(wrapGcGetHwVersion, callbackRAD->orgGcGetHwVersion)(param1);
     NETLOG("rad", "_gc_get_hw_version returned 0x%X", ret);
-    switch (ret & 0xFF0000) {
-        case 0x090000:
-            NETLOG("rad", "Spoofing GC version v9.x.x to v9.2.1");
+    switch (ret & 0xFFFF00) {
+        case 0x090200:
+            NETLOG("rad", "Spoofing GC version v9.2.x to v9.2.1");
             return 0x090201;
+        case 0x090100:
+            NETLOG("rad", "Spoofing GC version v9.1.x to v9.0.1");
+            return 0x090001;
         default:
             return ret;
     }
