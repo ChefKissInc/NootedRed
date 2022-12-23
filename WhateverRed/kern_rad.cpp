@@ -859,6 +859,10 @@ void RAD::wrapUpdateContiguousPTEsWithDMAUsingAddr(void *that, uint64_t param1, 
 
 void RAD::wrapInitializeFamilyType(void *that) { getMember<uint32_t>(that, 0x308) = 0x8E; }
 
+uint32_t RAD::wrapPspXgmiIsSupport() { return 4; }
+
+uint32_t RAD::wrapPspRapIsSupported() { return 4; }
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -936,6 +940,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN14AmdTtlServices14cosDebugAssertEPvPKcS2_jS2_", wrapCosDebugAssert, orgCosDebugAssert},
             {"_SmuRaven_Initialize", wrapSmuRavenInitialize, orgSmuRavenInitialize},
             {"_SmuRenoir_Initialize", wrapSmuRenoirInitialize, orgSmuRenoirInitialize},
+            {"_psp_xgmi_is_support", wrapPspXgmiIsSupport},
+            {"_psp_rap_is_supported", wrapPspRapIsSupported},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");

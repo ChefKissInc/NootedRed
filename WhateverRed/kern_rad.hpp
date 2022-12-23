@@ -260,6 +260,9 @@ class RAD {
         uint64_t param4, uint64_t param5);
 
     static void wrapInitializeFamilyType(void *that);
+
+    static uint32_t wrapPspXgmiIsSupport();
+    static uint32_t wrapPspRapIsSupported();
 };
 
 #endif /* kern_rad_hpp */
