@@ -566,10 +566,10 @@ bool RAD::wrapAllocateHWEngines(void *that) {
     /** Set this->enabled to true, as `HWEngine::start` is patched out for this fake engine */
     getMember<bool>(sdma1, 0x10) = true;
 
-    mach_vm_address_t *oldVtable = getMember<mach_vm_address_t *>(sdma1, 0);
+    auto *&oldVtable = getMember<mach_vm_address_t *>(sdma1, 0);
     auto *vtable = new mach_vm_address_t[0x48];
-    memmove(vtable, oldVtable, 0x48 * sizeof(mach_vm_address_t));
-    getMember<mach_vm_address_t *>(sdma1, 0) = vtable;
+    memcpy(vtable, oldVtable, 0x48 * sizeof(mach_vm_address_t));
+    oldVtable = vtable;
     vtable[0x200] = reinterpret_cast<mach_vm_address_t>(sdma1AllocateAndInitHWRingsHack);
 
     auto *vcn2 = callbackRAD->orgGFX10VCN2EngineNew(0x198);
@@ -712,10 +712,10 @@ void *RAD::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint
             FunctionCast(wrapRTGetHWChannel, callbackRAD->orgRTGetHWChannel)(that, param1, param2, param3);
         callbackRAD->sdma0HWChannel = sdma0HWChannel;
 
-        mach_vm_address_t *oldVtable = getMember<mach_vm_address_t *>(ret, 0);
+        auto *&oldVtable = getMember<mach_vm_address_t *>(ret, 0);
         auto *vtable = new mach_vm_address_t[0x6E];
-        memmove(vtable, oldVtable, 0x6E * sizeof(mach_vm_address_t));
-        getMember<mach_vm_address_t *>(ret, 0) = vtable;
+        memcpy(vtable, oldVtable, 0x6E * sizeof(mach_vm_address_t));
+        oldVtable = vtable;
 
         /* isIdle */
         vtable[0x2E] = reinterpret_cast<mach_vm_address_t>(sdma1IsIdleHack);
