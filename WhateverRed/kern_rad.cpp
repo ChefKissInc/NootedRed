@@ -883,6 +883,14 @@ void RAD::wrapGvmCgsWriteRegister(uint64_t param1, uint64_t param2, uint64_t par
     NETLOG("rad", "_gvm_cgs_write_register finished");
 }
 
+uint64_t RAD::wrapGmmCbSetMemoryAttributes(void* param1, uint32_t param2, void* param3) {
+    NETLOG("rad", "gmmCbSetMemoryAttributes: param1 = %p param2 = 0x%X param3 = %p", param1, param2, param3);
+    auto ret = FunctionCast(wrapGmmCbSetMemoryAttributes, callbackRAD->orgGmmCbSetMemoryAttributes)(param1, param2, param3);
+    NETLOG("rad", "gmmCbSetMemoryAttributes returned 0x%llX", ret);
+    panic("gmmCbSetMemoryAttributes called!");
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -967,6 +975,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_vm_9_x_write_register_ext", wrapVm9XWriteRegisterExt, orgVm9XWriteRegisterExt},
             {"_gvm_write_register", wrapGvmWriteRegister, orgGvmWriteRegister},
             {"_gvm_cgs_write_register", wrapGvmCgsWriteRegister, orgGvmCgsWriteRegister},
+            {"gmmCbSetMemoryAttributes", wrapGmmCbSetMemoryAttributes, orgGmmCbSetMemoryAttributes},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
