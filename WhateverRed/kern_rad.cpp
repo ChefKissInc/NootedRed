@@ -887,7 +887,6 @@ uint64_t RAD::wrapGmmCbSetMemoryAttributes(void* param1, uint32_t param2, void* 
     NETLOG("rad", "gmmCbSetMemoryAttributes: param1 = %p param2 = 0x%X param3 = %p", param1, param2, param3);
     auto ret = FunctionCast(wrapGmmCbSetMemoryAttributes, callbackRAD->orgGmmCbSetMemoryAttributes)(param1, param2, param3);
     NETLOG("rad", "gmmCbSetMemoryAttributes returned 0x%llX", ret);
-    panic("gmmCbSetMemoryAttributes called!");
     return ret;
 }
 
