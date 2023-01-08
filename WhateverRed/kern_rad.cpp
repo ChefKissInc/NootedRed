@@ -871,6 +871,18 @@ void RAD::wrapVm9XWriteRegisterExt(uint64_t* param1, uint32_t param2, uint64_t p
     NETLOG("rad", "_vm_9_x_write_register_ext finished");
 }
 
+void RAD::wrapGvmWriteRegister(uint64_t param1, uint64_t param2, uint64_t param3, uint64_t param4, uint32_t param5) {
+    NETLOG("rad", "_gvm_write_register: param1 = 0x%llX param2 = 0x%llX param3 = 0x%llX param4 = 0x%llX param5 = 0x%X", param1, param2, param3, param4, param5);
+    FunctionCast(wrapGvmWriteRegister, callbackRAD->orgGvmWriteRegister)(param1, param2, param3, param4, param5);
+    NETLOG("rad", "_gvm_write_register finished");
+}
+
+void RAD::wrapGvmCgsWriteRegister(uint64_t param1, uint64_t param2, uint64_t param3, uint64_t param4, uint32_t param5) {
+    NETLOG("rad", "_gvm_cgs_write_register: param1 = 0x%llX param2 = 0x%llX param3 = 0x%llX param4 = 0x%llX param5 = 0x%X", param1, param2, param3, param4, param5);
+    FunctionCast(wrapGvmCgsWriteRegister, callbackRAD->orgGvmCgsWriteRegister)(param1, param2, param3, param4, param5);
+    NETLOG("rad", "_gvm_cgs_write_register finished");
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -953,6 +965,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_psp_rap_is_supported", wrapPspRapIsSupported},
             {"_vm_9_x_write_register", wrapVm9XWriteRegister, orgVm9XWriteRegister},
             {"_vm_9_x_write_register_ext", wrapVm9XWriteRegisterExt, orgVm9XWriteRegisterExt},
+            {"_gvm_write_register", wrapGvmWriteRegister, orgGvmWriteRegister},
+            {"_gvm_cgs_write_register", wrapGvmCgsWriteRegister, orgGvmCgsWriteRegister},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");

@@ -270,6 +270,12 @@ class RAD {
 
     mach_vm_address_t orgVm9XWriteRegisterExt{};
     static void wrapVm9XWriteRegisterExt(uint64_t* param1, uint32_t param2, uint64_t param3, uint32_t param4, uint32_t param5);
+
+    mach_vm_address_t orgGvmWriteRegister{};
+    static void wrapGvmWriteRegister(uint64_t param1, uint64_t param2, uint64_t param3, uint64_t param4, uint32_t param5);
+
+    mach_vm_address_t orgGvmCgsWriteRegister{};
+    static void wrapGvmCgsWriteRegister(uint64_t param1, uint64_t param2, uint64_t param3, uint64_t param4, uint32_t param5);
 };
 
 #endif /* kern_rad_hpp */
