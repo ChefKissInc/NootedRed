@@ -1103,7 +1103,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 wrapMapVA, orgMapVA},
             {"__ZN29AMDRadeonX5000_AMDHWVMContext7mapVMPTEP12AMD_VMPT_CTL15eAMD_VMPT_LEVELjyyy", wrapMapVMPT,
                 orgMapVMPT},
-            {"__ZN25AMDRadeonX5000_AMDGFX9VMM4initEP30AMDRadeonX5000_IAMDHWInterface", wrapVMMInit, orgVMMInit},
+            // {"__ZN25AMDRadeonX5000_AMDGFX9VMM4initEP30AMDRadeonX5000_IAMDHWInterface", wrapVMMInit, orgVMMInit},
             {"__ZN33AMDRadeonX5000_AMDGFX9SDMAChannel23writeWritePTEPDECommandEPjyjyyy", wrapWriteWritePTEPDECommand,
                 orgWriteWritePTEPDECommand},
             {"__ZN25AMDRadeonX5000_AMDGFX9VMM11getPDEValueE15eAMD_VMPT_LEVELy", wrapGetPDEValue, orgGetPDEValue},
@@ -1137,7 +1137,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
              * `AMDRadeonX5000_AMDGFX9VMM::init`
              * NOP out part of the vmptConfig setting logic, in order not to override the value set in wrapVMMInit.
              */
-            {&kextRadeonX5000, find_VMMInit, repl_VMMInit, arrsize(find_VMMInit), 2},
+            // {&kextRadeonX5000, find_VMMInit, repl_VMMInit, arrsize(find_VMMInit), 2},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
