@@ -265,20 +265,24 @@ class RAD {
     static uint32_t wrapPspXgmiIsSupport();
     static uint32_t wrapPspRapIsSupported();
 
-    mach_vm_address_t orgVm9XWriteRegister{};
-    static void wrapVm9XWriteRegister(uint64_t* param1, uint32_t param2, uint32_t param3, uint32_t param4, uint32_t param5);
+    mach_vm_address_t orgVm9XWriteRegister {};
+    static void wrapVm9XWriteRegister(uint64_t *param1, uint32_t param2, uint32_t param3, uint32_t param4,
+        uint32_t param5);
 
-    mach_vm_address_t orgVm9XWriteRegisterExt{};
-    static void wrapVm9XWriteRegisterExt(uint64_t* param1, uint32_t param2, uint64_t param3, uint32_t param4, uint32_t param5);
+    mach_vm_address_t orgVm9XWriteRegisterExt {};
+    static void wrapVm9XWriteRegisterExt(uint64_t *param1, uint32_t param2, uint64_t param3, uint32_t param4,
+        uint32_t param5);
 
-    mach_vm_address_t orgGvmWriteRegister{};
-    static void wrapGvmWriteRegister(uint64_t param1, uint64_t param2, uint64_t param3, uint64_t param4, uint32_t param5);
+    mach_vm_address_t orgGvmWriteRegister {};
+    static void wrapGvmWriteRegister(uint64_t param1, uint64_t param2, uint64_t param3, uint64_t param4,
+        uint32_t param5);
 
-    mach_vm_address_t orgGvmCgsWriteRegister{};
-    static void wrapGvmCgsWriteRegister(uint64_t param1, uint64_t param2, uint64_t param3, uint64_t param4, uint32_t param5);
+    mach_vm_address_t orgGvmCgsWriteRegister {};
+    static void wrapGvmCgsWriteRegister(uint64_t param1, uint64_t param2, uint64_t param3, uint64_t param4,
+        uint32_t param5);
 
-    mach_vm_address_t orgGmmCbSetMemoryAttributes{};
-    static uint64_t wrapGmmCbSetMemoryAttributes(void* param1, uint32_t param2, void* param3);
+    mach_vm_address_t orgGmmCbSetMemoryAttributes {};
+    static uint64_t wrapGmmCbSetMemoryAttributes(void *param1, uint32_t param2, void *param3);
 };
 
 #endif /* kern_rad_hpp */

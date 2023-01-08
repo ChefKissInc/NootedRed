@@ -859,33 +859,41 @@ uint32_t RAD::wrapPspXgmiIsSupport() { return 4; }
 
 uint32_t RAD::wrapPspRapIsSupported() { return 4; }
 
-void RAD::wrapVm9XWriteRegister(uint64_t* param1, uint32_t param2, uint32_t param3, uint32_t param4, uint32_t param5) {
-    NETLOG("rad", "_vm_9_x_write_register: param1 = %p param2 = 0x%X param3 = 0x%X param4 = 0x%X param5 = 0x%X", param1, param2, param3, param4, param5);
+void RAD::wrapVm9XWriteRegister(uint64_t *param1, uint32_t param2, uint32_t param3, uint32_t param4, uint32_t param5) {
+    NETLOG("rad", "_vm_9_x_write_register: param1 = %p param2 = 0x%X param3 = 0x%X param4 = 0x%X param5 = 0x%X", param1,
+        param2, param3, param4, param5);
     FunctionCast(wrapVm9XWriteRegister, callbackRAD->orgVm9XWriteRegister)(param1, param2, param3, param4, param5);
     NETLOG("rad", "_vm_9_x_write_register finished");
 }
 
-void RAD::wrapVm9XWriteRegisterExt(uint64_t* param1, uint32_t param2, uint64_t param3, uint32_t param4, uint32_t param5) {
-    NETLOG("rad", "_vm_9_x_write_register_ext: param1 = %p param2 = 0x%X param3 = 0x%llX param4 = 0x%X param5 = 0x%X", param1, param2, param3, param4, param5);
-    FunctionCast(wrapVm9XWriteRegisterExt, callbackRAD->orgVm9XWriteRegisterExt)(param1, param2, param3, param4, param5);
+void RAD::wrapVm9XWriteRegisterExt(uint64_t *param1, uint32_t param2, uint64_t param3, uint32_t param4,
+    uint32_t param5) {
+    NETLOG("rad", "_vm_9_x_write_register_ext: param1 = %p param2 = 0x%X param3 = 0x%llX param4 = 0x%X param5 = 0x%X",
+        param1, param2, param3, param4, param5);
+    FunctionCast(wrapVm9XWriteRegisterExt, callbackRAD->orgVm9XWriteRegisterExt)(param1, param2, param3, param4,
+        param5);
     NETLOG("rad", "_vm_9_x_write_register_ext finished");
 }
 
 void RAD::wrapGvmWriteRegister(uint64_t param1, uint64_t param2, uint64_t param3, uint64_t param4, uint32_t param5) {
-    NETLOG("rad", "_gvm_write_register: param1 = 0x%llX param2 = 0x%llX param3 = 0x%llX param4 = 0x%llX param5 = 0x%X", param1, param2, param3, param4, param5);
+    NETLOG("rad", "_gvm_write_register: param1 = 0x%llX param2 = 0x%llX param3 = 0x%llX param4 = 0x%llX param5 = 0x%X",
+        param1, param2, param3, param4, param5);
     FunctionCast(wrapGvmWriteRegister, callbackRAD->orgGvmWriteRegister)(param1, param2, param3, param4, param5);
     NETLOG("rad", "_gvm_write_register finished");
 }
 
 void RAD::wrapGvmCgsWriteRegister(uint64_t param1, uint64_t param2, uint64_t param3, uint64_t param4, uint32_t param5) {
-    NETLOG("rad", "_gvm_cgs_write_register: param1 = 0x%llX param2 = 0x%llX param3 = 0x%llX param4 = 0x%llX param5 = 0x%X", param1, param2, param3, param4, param5);
+    NETLOG("rad",
+        "_gvm_cgs_write_register: param1 = 0x%llX param2 = 0x%llX param3 = 0x%llX param4 = 0x%llX param5 = 0x%X",
+        param1, param2, param3, param4, param5);
     FunctionCast(wrapGvmCgsWriteRegister, callbackRAD->orgGvmCgsWriteRegister)(param1, param2, param3, param4, param5);
     NETLOG("rad", "_gvm_cgs_write_register finished");
 }
 
-uint64_t RAD::wrapGmmCbSetMemoryAttributes(void* param1, uint32_t param2, void* param3) {
+uint64_t RAD::wrapGmmCbSetMemoryAttributes(void *param1, uint32_t param2, void *param3) {
     NETLOG("rad", "gmmCbSetMemoryAttributes: param1 = %p param2 = 0x%X param3 = %p", param1, param2, param3);
-    auto ret = FunctionCast(wrapGmmCbSetMemoryAttributes, callbackRAD->orgGmmCbSetMemoryAttributes)(param1, param2, param3);
+    auto ret =
+        FunctionCast(wrapGmmCbSetMemoryAttributes, callbackRAD->orgGmmCbSetMemoryAttributes)(param1, param2, param3);
     NETLOG("rad", "gmmCbSetMemoryAttributes returned 0x%llX", ret);
     return ret;
 }
