@@ -898,10 +898,12 @@ uint64_t RAD::wrapGmmCbSetMemoryAttributes(void *param1, uint32_t param2, void *
     return ret;
 }
 
-bool RAD::wrapTtlIsApuDevice(void *param1) {
-    NETLOG("rad", "_ttlIsApuDevice: param1 = %p", param1);
-    auto ret = FunctionCast(wrapTtlIsApuDevice, callbackRAD->orgTtlIsApuDevice)(param1);
-    NETLOG("rad", "_ttlIsApuDevice returned %d", ret);
+bool RAD::wrapIpiGvmHwInit(void* ctx) {
+    NETLOG("rad", "_ipi_gvm_hw_init: ctx = %p", ctx);
+    bool isApuDevice = callbackRAD->orgTtlIsApuDevice(**(void***)ctx);
+    NETLOG("rad", "_ttlIsApuDevice returns %d", isApuDevice);
+    auto ret = FunctionCast(wrapIpiGvmHwInit, callbackRAD->orgIpiGvmHwInit)(ctx);
+    NETLOG("rad", "_ipi_gvm_hw_init returned %d", ret);
     return ret;
 }
 
@@ -954,6 +956,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_sdma_4_1_ucode", orgSdmaUcode},
             {"_Raven_SendMsgToSmcWithParameter", orgRavenSendMsgToSmcWithParam},
             {"_Renoir_SendMsgToSmcWithParameter", orgRenoirSendMsgToSmcWithParam},
+            {"_ttlIsApuDevice", orgTtlIsApuDevice},
         };
         if (!patcher.solveMultiple(index, solveRequests, address, size)) {
             panic("RAD: Failed to resolve AMDRadeonX5000HWLibs symbols");
@@ -991,7 +994,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_gvm_cgs_write_register", wrapGvmCgsWriteRegister, orgGvmCgsWriteRegister},
             {"__ZN14AmdTtlServices24gmmCbSetMemoryAttributesEPv16_TtlCbMemoryTypeP22_TtlCbMemoryAttributes",
                 wrapGmmCbSetMemoryAttributes, orgGmmCbSetMemoryAttributes},
-            {"_ttlIsApuDevice", wrapTtlIsApuDevice, orgTtlIsApuDevice},
+            {"_ipi_gvm_hw_init", wrapIpiGvmHwInit, orgIpiGvmHwInit},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");

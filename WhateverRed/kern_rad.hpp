@@ -284,8 +284,11 @@ class RAD {
     mach_vm_address_t orgGmmCbSetMemoryAttributes {};
     static uint64_t wrapGmmCbSetMemoryAttributes(void *param1, uint32_t param2, void *param3);
 
-    mach_vm_address_t orgTtlIsApuDevice {};
-    static bool wrapTtlIsApuDevice(void *param1);
+    using t_TtlIsApuDevice = bool (*)(void *param_1);
+    t_TtlIsApuDevice orgTtlIsApuDevice = nullptr;
+
+    mach_vm_address_t orgIpiGvmHwInit{};
+    static bool wrapIpiGvmHwInit(void* ctx);
 };
 
 #endif /* kern_rad_hpp */
