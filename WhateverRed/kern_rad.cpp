@@ -989,7 +989,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_vm_9_x_write_register_ext", wrapVm9XWriteRegisterExt, orgVm9XWriteRegisterExt},
             {"_gvm_write_register", wrapGvmWriteRegister, orgGvmWriteRegister},
             {"_gvm_cgs_write_register", wrapGvmCgsWriteRegister, orgGvmCgsWriteRegister},
-            {"gmmCbSetMemoryAttributes", wrapGmmCbSetMemoryAttributes, orgGmmCbSetMemoryAttributes},
+            {"__ZN14AmdTtlServices24gmmCbSetMemoryAttributesEPv16_TtlCbMemoryTypeP22_TtlCbMemoryAttributes", wrapGmmCbSetMemoryAttributes, orgGmmCbSetMemoryAttributes},
             {"_ttlIsApuDevice", wrapTtlIsApuDevice, orgTtlIsApuDevice},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
