@@ -289,6 +289,8 @@ class RAD {
 
     mach_vm_address_t orgIpiGvmHwInit{};
     static bool wrapIpiGvmHwInit(void* ctx);
+
+    static void wrapCgsWriteRegister(void** tlsInstance, uint32_t regIndex, uint32_t val);
 };
 
 #endif /* kern_rad_hpp */

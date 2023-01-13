@@ -907,6 +907,12 @@ bool RAD::wrapIpiGvmHwInit(void* ctx) {
     return ret;
 }
 
+void RAD::wrapCgsWriteRegister(void** tlsInstance, uint32_t regIndex, uint32_t val) {
+    NETLOG("rad", "_write_register: tlsInstance = %p regIndex = 0x%X val = 0x%X", tlsInstance, regIndex, val);
+    uint *regs = getMember<uint *>(tlsInstance, 8);
+    regs[regIndex] = val;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -995,6 +1001,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN14AmdTtlServices24gmmCbSetMemoryAttributesEPv16_TtlCbMemoryTypeP22_TtlCbMemoryAttributes",
                 wrapGmmCbSetMemoryAttributes, orgGmmCbSetMemoryAttributes},
             {"_ipi_gvm_hw_init", wrapIpiGvmHwInit, orgIpiGvmHwInit},
+            {"_write_register", wrapCgsWriteRegister},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
