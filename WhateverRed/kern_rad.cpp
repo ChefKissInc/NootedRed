@@ -898,7 +898,7 @@ uint64_t RAD::wrapGmmCbSetMemoryAttributes(void *param1, uint32_t param2, void *
     return ret;
 }
 
-bool RAD::wrapTtlIsApuDevice(void* param1) {
+bool RAD::wrapTtlIsApuDevice(void *param1) {
     NETLOG("rad", "_ttlIsApuDevice: param1 = %p", param1);
     auto ret = FunctionCast(wrapTtlIsApuDevice, callbackRAD->orgTtlIsApuDevice)(param1);
     NETLOG("rad", "_ttlIsApuDevice returned %d", ret);
@@ -989,7 +989,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_vm_9_x_write_register_ext", wrapVm9XWriteRegisterExt, orgVm9XWriteRegisterExt},
             {"_gvm_write_register", wrapGvmWriteRegister, orgGvmWriteRegister},
             {"_gvm_cgs_write_register", wrapGvmCgsWriteRegister, orgGvmCgsWriteRegister},
-            {"__ZN14AmdTtlServices24gmmCbSetMemoryAttributesEPv16_TtlCbMemoryTypeP22_TtlCbMemoryAttributes", wrapGmmCbSetMemoryAttributes, orgGmmCbSetMemoryAttributes},
+            {"__ZN14AmdTtlServices24gmmCbSetMemoryAttributesEPv16_TtlCbMemoryTypeP22_TtlCbMemoryAttributes",
+                wrapGmmCbSetMemoryAttributes, orgGmmCbSetMemoryAttributes},
             {"_ttlIsApuDevice", wrapTtlIsApuDevice, orgTtlIsApuDevice},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
