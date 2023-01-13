@@ -898,6 +898,13 @@ uint64_t RAD::wrapGmmCbSetMemoryAttributes(void *param1, uint32_t param2, void *
     return ret;
 }
 
+bool RAD::wrapTtlIsApuDevice(void* param1) {
+    NETLOG("rad", "_ttlIsApuDevice: param1 = %p", param1);
+    auto ret = FunctionCast(wrapTtlIsApuDevice, callbackRAD->orgTtlIsApuDevice)(param1);
+    NETLOG("rad", "_ttlIsApuDevice returned %d", ret);
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonFramebuffer.loadIndex == index) {
         if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
@@ -983,6 +990,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_gvm_write_register", wrapGvmWriteRegister, orgGvmWriteRegister},
             {"_gvm_cgs_write_register", wrapGvmCgsWriteRegister, orgGvmCgsWriteRegister},
             {"gmmCbSetMemoryAttributes", wrapGmmCbSetMemoryAttributes, orgGmmCbSetMemoryAttributes},
+            {"_ttlIsApuDevice", wrapTtlIsApuDevice, orgTtlIsApuDevice},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
