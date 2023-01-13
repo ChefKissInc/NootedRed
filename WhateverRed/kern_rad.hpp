@@ -273,14 +273,6 @@ class RAD {
     static void wrapVm9XWriteRegisterExt(uint64_t *param1, uint32_t param2, uint64_t param3, uint32_t param4,
         uint32_t param5);
 
-    mach_vm_address_t orgGvmWriteRegister {};
-    static void wrapGvmWriteRegister(uint64_t param1, uint64_t param2, uint64_t param3, uint64_t param4,
-        uint32_t param5);
-
-    mach_vm_address_t orgGvmCgsWriteRegister {};
-    static void wrapGvmCgsWriteRegister(uint64_t param1, uint64_t param2, uint64_t param3, uint64_t param4,
-        uint32_t param5);
-
     mach_vm_address_t orgGmmCbSetMemoryAttributes {};
     static uint64_t wrapGmmCbSetMemoryAttributes(void *param1, uint32_t param2, void *param3);
 
