@@ -851,8 +851,6 @@ uint64_t RAD::wrapGmmCbSetMemoryAttributes(void *param1, uint32_t param2, void *
 
 bool RAD::wrapIpiGvmHwInit(void *ctx) {
     NETLOG("rad", "_ipi_gvm_hw_init: ctx = %p", ctx);
-    bool isApuDevice = callbackRAD->orgTtlIsApuDevice(**(void ***)ctx);
-    NETLOG("rad", "_ttlIsApuDevice returns %d", isApuDevice);
     auto ret = FunctionCast(wrapIpiGvmHwInit, callbackRAD->orgIpiGvmHwInit)(ctx);
     NETLOG("rad", "_ipi_gvm_hw_init returned %d", ret);
     return ret;
@@ -894,7 +892,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_sdma_4_1_ucode", orgSdmaUcode},
             {"_Raven_SendMsgToSmcWithParameter", orgRavenSendMsgToSmcWithParam},
             {"_Renoir_SendMsgToSmcWithParameter", orgRenoirSendMsgToSmcWithParam},
-            {"_ttlIsApuDevice", orgTtlIsApuDevice},
         };
         if (!patcher.solveMultiple(index, solveRequests, address, size)) {
             panic("RAD: Failed to resolve AMDRadeonX5000HWLibs symbols");
