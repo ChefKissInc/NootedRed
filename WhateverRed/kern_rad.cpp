@@ -832,9 +832,7 @@ void RAD::wrapUpdateContiguousPTEsWithDMAUsingAddr(void *that, uint64_t param1, 
 
 void RAD::wrapInitializeFamilyType(void *that) { getMember<uint32_t>(that, 0x308) = 0x8E; }
 
-uint32_t RAD::wrapPspXgmiIsSupport() { return 4; }
-
-uint32_t RAD::wrapPspRapIsSupported() { return 4; }
+uint32_t RAD::pspFeatureUnsupported() { return 4; }
 
 void RAD::wrapVm9XWriteRegister(uint64_t *param1, uint32_t param2, uint32_t param3, uint32_t param4, uint32_t param5) {
     NETLOG("rad", "_vm_9_x_write_register: param1 = %p param2 = 0x%X param3 = 0x%X param4 = 0x%X param5 = 0x%X", param1,
@@ -935,8 +933,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN14AmdTtlServices14cosDebugAssertEPvPKcS2_jS2_", wrapCosDebugAssert, orgCosDebugAssert},
             {"_SmuRaven_Initialize", wrapSmuRavenInitialize, orgSmuRavenInitialize},
             {"_SmuRenoir_Initialize", wrapSmuRenoirInitialize, orgSmuRenoirInitialize},
-            {"_psp_xgmi_is_support", wrapPspXgmiIsSupport},
-            {"_psp_rap_is_supported", wrapPspRapIsSupported},
+            {"_psp_xgmi_is_support", pspFeatureUnsupported},
+            {"_psp_rap_is_supported", pspFeatureUnsupported},
             {"_vm_9_x_write_register", wrapVm9XWriteRegister, orgVm9XWriteRegister},
             {"_vm_9_x_write_register_ext", wrapVm9XWriteRegisterExt, orgVm9XWriteRegisterExt},
             {"__ZN14AmdTtlServices24gmmCbSetMemoryAttributesEPv16_TtlCbMemoryTypeP22_TtlCbMemoryAttributes",

@@ -230,8 +230,7 @@ class RAD {
 
     static void wrapInitializeFamilyType(void *that);
 
-    static uint32_t wrapPspXgmiIsSupport();
-    static uint32_t wrapPspRapIsSupported();
+    static uint32_t pspFeatureUnsupported();
 
     mach_vm_address_t orgVm9XWriteRegister {};
     static void wrapVm9XWriteRegister(uint64_t *param1, uint32_t param2, uint32_t param3, uint32_t param4,
