@@ -35,17 +35,15 @@ class RAD {
     bool processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size);
 
     private:
-    static constexpr size_t MaxGetFrameBufferProcs = 3;
-
-    using t_getHWInfo = IOReturn (*)(IOService *accelVideoCtx, void *hwInfo);
     using t_createFirmware = void *(*)(const void *data, uint32_t size, uint32_t param3, const char *filename);
     using t_putFirmware = bool (*)(void *that, uint32_t deviceType, void *fw);
     using t_Vega10PowerTuneConstructor = void (*)(void *that, void *param1, void *param2);
     using t_HWEngineConstructor = void (*)(void *that);
     using t_HWEngineNew = void *(*)(size_t size);
+    using t_sendMsgToSmcWithParam = uint32_t (*)(void *smumData, uint32_t msgId, uint32_t parameter);
 
     static RAD *callbackRAD;
-    ThreadLocal<IOService *, 8> currentPropProvider;
+
     OSData *vbiosData = nullptr;
     ASICType asicType = ASICType::Unknown;
     void *callbackFirmwareDirectory = nullptr;
@@ -142,8 +140,6 @@ class RAD {
     static bool wrapAllocateHWEngines(void *that);
     static void wrapSetupAndInitializeHWCapabilities(void *that);
 
-    void processHardwareKext(KernelPatcher &patcher, size_t hwIndex, mach_vm_address_t address, size_t size);
-
     static bool wrapSetProperty(IORegistryEntry *that, const char *aKey, void *bytes, unsigned length);
     static OSObject *wrapGetProperty(IORegistryEntry *that, const char *aKey);
     static bool wrapNotifyLinkChange(void *atiDeviceControl, kAGDCRegisterLinkControlEvent_t event, void *eventData,
@@ -181,7 +177,6 @@ class RAD {
     mach_vm_address_t orgHwReadReg32 {};
     static uint32_t wrapHwReadReg32(void *that, uint32_t param1);
 
-    using t_sendMsgToSmcWithParam = uint32_t (*)(void *smumData, uint32_t msgId, uint32_t parameter);
     t_sendMsgToSmcWithParam orgRavenSendMsgToSmcWithParam = nullptr;
     t_sendMsgToSmcWithParam orgRenoirSendMsgToSmcWithParam = nullptr;
 

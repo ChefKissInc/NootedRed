@@ -84,8 +84,6 @@ RAD *RAD::callbackRAD;
 void RAD::init() {
     callbackRAD = this;
 
-    currentPropProvider.init();
-
     lilu.onKextLoadForce(&kextRadeonX6000Framebuffer);
     lilu.onKextLoadForce(&kextRadeonSupport);
     lilu.onKextLoadForce(&kextRadeonX5000HWLibs);
