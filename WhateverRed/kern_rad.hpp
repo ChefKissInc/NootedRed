@@ -48,20 +48,28 @@ class RAD {
     ASICType asicType = ASICType::Unknown;
     void *callbackFirmwareDirectory = nullptr;
 
+    /**
+     * Kernel
+     */
     mach_vm_address_t orgSetProperty {}, orgGetProperty {};
+
+    /**
+     * AMDSupport
+     */
     mach_vm_address_t orgNotifyLinkChange {};
-    uint32_t *orgDeviceTypeTable = nullptr;
-    mach_vm_address_t orgAmdTtlServicesConstructor {};
 
     /**
      * X6000Framebuffer
      */
     mach_vm_address_t orgPopulateDeviceInfo {};
     CailAsicCapEntry *orgAsicCapsTable = nullptr;
+    mach_vm_address_t orgHwReadReg32 {};
 
     /**
      * X5000HWLibs
      */
+    uint32_t *orgDeviceTypeTable = nullptr;
+    mach_vm_address_t orgAmdTtlServicesConstructor {};
     mach_vm_address_t orgSmuGetHwVersion {};
     mach_vm_address_t orgPspSwInit {}, orgGcGetHwVersion {};
     mach_vm_address_t orgPopulateFirmwareDirectory {};
@@ -76,6 +84,22 @@ class RAD {
     mach_vm_address_t orgPspAsdLoad {};
     mach_vm_address_t orgPspDtmLoad {};
     mach_vm_address_t orgPspHdcpLoad {};
+    mach_vm_address_t orgCosDebugAssert {};
+    GcFwConstant *orgGcRlcUcode = nullptr;
+    GcFwConstant *orgGcMeUcode = nullptr;
+    GcFwConstant *orgGcCeUcode = nullptr;
+    GcFwConstant *orgGcPfpUcode = nullptr;
+    GcFwConstant *orgGcMecUcode = nullptr;
+    GcFwConstant *orgGcMecJtUcode = nullptr;
+    SdmaFwConstant *orgSdmaUcode = nullptr;
+    t_sendMsgToSmcWithParam orgRavenSendMsgToSmcWithParam = nullptr;
+    t_sendMsgToSmcWithParam orgRenoirSendMsgToSmcWithParam = nullptr;
+    mach_vm_address_t orgSmuRavenInitialize {};
+    mach_vm_address_t orgSmuRenoirInitialize {};
+    mach_vm_address_t orgVm9XWriteRegister {};
+    mach_vm_address_t orgVm9XWriteRegisterExt {};
+    mach_vm_address_t orgGmmCbSetMemoryAttributes {};
+    mach_vm_address_t orgIpiGvmHwInit {};
 
     /**
      * X6000
@@ -94,9 +118,36 @@ class RAD {
     mach_vm_address_t orgGetHWEngine {};
     mach_vm_address_t orgGetHWCapabilities {};
     mach_vm_address_t orgSetupAndInitializeHWCapabilities {};
+    mach_vm_address_t orgDumpASICHangStateCold {};
+    mach_vm_address_t orgAccelDisplayPipeWriteDiagnosisReport {};
+    mach_vm_address_t orgSetMemoryAllocationsEnabled {};
+    mach_vm_address_t orgPowerUpHW {};
+    mach_vm_address_t orgHWsetMemoryAllocationsEnabled {};
+    mach_vm_address_t orgRTGetHWChannel {};
+    void *sdma0HWChannel = nullptr;
+    void *sdma0HWEngine = nullptr;
+    mach_vm_address_t orgMapVA {};
+    mach_vm_address_t orgMapVMPT {};
+    bool isThreeLevelVMPT = false;
+    mach_vm_address_t orgVMMInit {};
+    mach_vm_address_t orgWriteWritePTEPDECommand {};
+    mach_vm_address_t orgGetPDEValue {};
+    mach_vm_address_t orgGetPTEValue {};
+    mach_vm_address_t orgUpdateContiguousPTEsWithDMAUsingAddr {};
 
+    /**
+     * Kernel
+     */
     void mergeProperty(OSDictionary *props, const char *name, OSObject *value);
     void mergeProperties(OSDictionary *props, const char *prefix, IOService *provider);
+    static bool wrapSetProperty(IORegistryEntry *that, const char *aKey, void *bytes, unsigned length);
+    static OSObject *wrapGetProperty(IORegistryEntry *that, const char *aKey);
+
+    /**
+     * AMDSupport
+     */
+    static bool wrapNotifyLinkChange(void *atiDeviceControl, kAGDCRegisterLinkControlEvent_t event, void *eventData,
+        uint32_t eventFlags);
 
     /**
      * X6000Framebuffer
@@ -107,6 +158,7 @@ class RAD {
     static uint32_t wrapGetVideoMemoryType();
     static uint32_t wrapGetVideoMemoryBitWidth();
     static IOReturn wrapPopulateVramInfo();
+    static uint32_t wrapHwReadReg32(void *that, uint32_t param1);
 
     /**
      * X5000HWLibs
@@ -128,6 +180,18 @@ class RAD {
     static uint32_t wrapPspAsdLoad(void *pspData);
     static uint32_t wrapPspDtmLoad(void *pspData);
     static uint32_t wrapPspHdcpLoad(void *pspData);
+    static void wrapCosDebugAssert(void *param1, uint8_t *param2, uint8_t *param3, uint32_t param4, uint8_t *param5);
+    static void powerUpSDMA(void *smumData);
+    static uint32_t wrapSmuRavenInitialize(void *smumData, uint32_t param2);
+    static uint32_t wrapSmuRenoirInitialize(void *smumData, uint32_t param2);
+    static uint32_t pspFeatureUnsupported();
+    static void wrapVm9XWriteRegister(uint64_t *param1, uint32_t param2, uint32_t param3, uint32_t param4,
+        uint32_t param5);
+    static void wrapVm9XWriteRegisterExt(uint64_t *param1, uint32_t param2, uint64_t param3, uint32_t param4,
+        uint32_t param5);
+    static uint64_t wrapGmmCbSetMemoryAttributes(void *param1, uint32_t param2, void *param3);
+    static bool wrapIpiGvmHwInit(void *ctx);
+    static void wrapCgsWriteRegister(void **tlsInstance, uint32_t regIndex, uint32_t val);
 
     /**
      * X6000
@@ -139,109 +203,26 @@ class RAD {
      */
     static bool wrapAllocateHWEngines(void *that);
     static void wrapSetupAndInitializeHWCapabilities(void *that);
-
-    static bool wrapSetProperty(IORegistryEntry *that, const char *aKey, void *bytes, unsigned length);
-    static OSObject *wrapGetProperty(IORegistryEntry *that, const char *aKey);
-    static bool wrapNotifyLinkChange(void *atiDeviceControl, kAGDCRegisterLinkControlEvent_t event, void *eventData,
-        uint32_t eventFlags);
-
-    mach_vm_address_t orgDumpASICHangStateCold {};
     static void wrapDumpASICHangStateCold(uint64_t param1);
-
-    mach_vm_address_t orgAccelDisplayPipeWriteDiagnosisReport {};
     static void wrapAccelDisplayPipeWriteDiagnosisReport(void *that);
-
-    mach_vm_address_t orgSetMemoryAllocationsEnabled {};
     static uint64_t wrapSetMemoryAllocationsEnabled(void *that, uint64_t param1);
-
-    mach_vm_address_t orgPowerUpHW {};
     static bool wrapPowerUpHW(void *that);
-
-    mach_vm_address_t orgHWsetMemoryAllocationsEnabled {};
     static void wrapHWsetMemoryAllocationsEnabled(void *that, bool param1);
-
-    mach_vm_address_t orgRTGetHWChannel {};
     static void *wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3);
-
-    mach_vm_address_t orgCosDebugAssert {};
-    static void wrapCosDebugAssert(void *param1, uint8_t *param2, uint8_t *param3, uint32_t param4, uint8_t *param5);
-
-    GcFwConstant *orgGcRlcUcode = nullptr;
-    GcFwConstant *orgGcMeUcode = nullptr;
-    GcFwConstant *orgGcCeUcode = nullptr;
-    GcFwConstant *orgGcPfpUcode = nullptr;
-    GcFwConstant *orgGcMecUcode = nullptr;
-    GcFwConstant *orgGcMecJtUcode = nullptr;
-    SdmaFwConstant *orgSdmaUcode = nullptr;
-
-    mach_vm_address_t orgHwReadReg32 {};
-    static uint32_t wrapHwReadReg32(void *that, uint32_t param1);
-
-    t_sendMsgToSmcWithParam orgRavenSendMsgToSmcWithParam = nullptr;
-    t_sendMsgToSmcWithParam orgRenoirSendMsgToSmcWithParam = nullptr;
-
-    static void powerUpSDMA(void *smumData);
-
-    mach_vm_address_t orgSmuRavenInitialize {};
-    static uint32_t wrapSmuRavenInitialize(void *smumData, uint32_t param2);
-
-    mach_vm_address_t orgSmuRenoirInitialize {};
-    static uint32_t wrapSmuRenoirInitialize(void *smumData, uint32_t param2);
-
-    void *sdma0HWChannel = nullptr;
-
+    static void wrapInitializeFamilyType(void *that);
     static bool sdma1IsIdleHack(void *that);
-
-    void *sdma0HWEngine = nullptr;
-
     static bool sdma1AllocateAndInitHWRingsHack(void *that);
-
-    mach_vm_address_t orgMapVA {};
     static uint64_t wrapMapVA(void *that, uint64_t param1, void *memory, uint64_t param3, uint64_t sizeToMap,
         uint64_t flags);
-
-    mach_vm_address_t orgMapVMPT {};
     static uint64_t wrapMapVMPT(void *that, void *vmptCtl, uint64_t vmptLevel, uint32_t param3, uint64_t param4,
         uint64_t param5, uint64_t sizeToMap);
-
-    bool isThreeLevelVMPT = false;
-
-    mach_vm_address_t orgVMMInit {};
     static bool wrapVMMInit(void *that, void *param1);
-
-    mach_vm_address_t orgWriteWritePTEPDECommand {};
     static uint32_t wrapWriteWritePTEPDECommand(void *that, uint32_t *buf, uint64_t pe, uint32_t count, uint64_t flags,
         uint64_t addr, uint64_t incr);
-
-    mach_vm_address_t orgGetPDEValue {};
     static uint64_t wrapGetPDEValue(void *that, uint64_t param1, uint64_t param2);
-
-    mach_vm_address_t orgGetPTEValue {};
     static uint64_t wrapGetPTEValue(void *that, uint64_t param1, uint64_t param2, uint64_t param3, uint32_t param4);
-
-    mach_vm_address_t orgUpdateContiguousPTEsWithDMAUsingAddr {};
     static void wrapUpdateContiguousPTEsWithDMAUsingAddr(void *that, uint64_t param1, uint64_t param2, uint64_t param3,
         uint64_t param4, uint64_t param5);
-
-    static void wrapInitializeFamilyType(void *that);
-
-    static uint32_t pspFeatureUnsupported();
-
-    mach_vm_address_t orgVm9XWriteRegister {};
-    static void wrapVm9XWriteRegister(uint64_t *param1, uint32_t param2, uint32_t param3, uint32_t param4,
-        uint32_t param5);
-
-    mach_vm_address_t orgVm9XWriteRegisterExt {};
-    static void wrapVm9XWriteRegisterExt(uint64_t *param1, uint32_t param2, uint64_t param3, uint32_t param4,
-        uint32_t param5);
-
-    mach_vm_address_t orgGmmCbSetMemoryAttributes {};
-    static uint64_t wrapGmmCbSetMemoryAttributes(void *param1, uint32_t param2, void *param3);
-
-    mach_vm_address_t orgIpiGvmHwInit {};
-    static bool wrapIpiGvmHwInit(void *ctx);
-
-    static void wrapCgsWriteRegister(void **tlsInstance, uint32_t regIndex, uint32_t val);
 };
 
 #endif /* kern_rad_hpp */
