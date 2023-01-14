@@ -14,9 +14,11 @@ The current release is developed by project owner [@ChefKissInc](https://github.
 
 You can find the source code for the service [here](https://github.com/NootInc/WhateverRed-NETDBG).
 
-Specify the NetDbg server IP and port via `netdbg_ip_X` and `netdbg_port` boot args.
+Specify the NetDbg server IP and port via `wrednetdbgip` boot arg.
 
-Where `X` is IP part. Example: IP `192.168.60.231` would become `netdbg_ip_1=192` `netdbg_ip_2=168` `netdbg_ip_3=60` `netdbg_ip_4=231`.
+Syntax: `wrednetdbgip=<IP>:<PORT>`
+
+Example: `wrednetdbgip=127.0.0.1:8081`
 
 Pass `-wrednetdbg` to disable the NetDbg functionality.
 

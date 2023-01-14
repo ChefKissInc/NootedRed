@@ -27,24 +27,19 @@ size_t NETDBG::nprint(char *data, size_t len) {
     if (!enabled) { return 0; }
 
     if (!ip_addr || !port) {
-        uint32_t b[4] = {0};
+        uint8_t b[4] = {0};
         uint32_t p = 0;
-        if (!PE_parse_boot_argn("netdbg_ip_1", b, sizeof(uint32_t)) ||
-            !PE_parse_boot_argn("netdbg_ip_2", b + 1, sizeof(uint32_t)) ||
-            !PE_parse_boot_argn("netdbg_ip_3", b + 2, sizeof(uint32_t)) ||
-            !PE_parse_boot_argn("netdbg_ip_4", b + 3, sizeof(uint32_t)) ||
-            !PE_parse_boot_argn("netdbg_port", &p, sizeof(uint32_t))) {
-            panic("netdbg: No IP and/or Port specified");
-            return 0;
+        char ip[128];
+        if (!PE_parse_boot_argn("wrednetdbgip", &ip, sizeof(ip))) { panic("netdbg: No IP specified"); }
+
+        if (sscanf(ip, "%hhu.%hhu.%hhu.%hhu:%u", &b[0], &b[1], &b[2], &b[3], &p) != 5) {
+            panic("netdbg: Invalid IP and/or Port specified");
         }
 
         ip_addr = inet_addr(b[0], b[1], b[2], b[3]);
         port = htons(p);
 
-        if (!ip_addr || !port) {
-            panic("netdbg: Invalid IP and/or Port specified");
-            return 0;
-        }
+        if (!ip_addr || !port) { panic("netdbg: Invalid IP and/or Port specified"); }
     }
 
     socket_t socket = nullptr;
