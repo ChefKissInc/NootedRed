@@ -17,7 +17,6 @@
 		CE8DA0832517C41A008C44E8 /* libkmod.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CE8DA0822517C41A008C44E8 /* libkmod.a */; };
 		CEA03B5E20EE825A00BA842F /* kern_wred.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CEA03B5C20EE825A00BA842F /* kern_wred.cpp */; };
 		CEA03B5F20EE825A00BA842F /* kern_wred.hpp in Headers */ = {isa = PBXBuildFile; fileRef = CEA03B5D20EE825A00BA842F /* kern_wred.hpp */; };
-		CEB402A61F17F5C400716912 /* kern_con.hpp in Headers */ = {isa = PBXBuildFile; fileRef = CEB402A41F17F5C400716912 /* kern_con.hpp */; };
 		CEC0863624331E9B00F5B701 /* kern_agdc.hpp in Headers */ = {isa = PBXBuildFile; fileRef = CEC0863524331E9B00F5B701 /* kern_agdc.hpp */; };
 /* End PBXBuildFile section */
 
@@ -105,7 +104,6 @@
 		CE8DA0822517C41A008C44E8 /* libkmod.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libkmod.a; path = ../Lilu/MacKernelSDK/Library/x86_64/libkmod.a; sourceTree = "<group>"; };
 		CEA03B5C20EE825A00BA842F /* kern_wred.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_wred.cpp; sourceTree = "<group>"; };
 		CEA03B5D20EE825A00BA842F /* kern_wred.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_wred.hpp; sourceTree = "<group>"; };
-		CEB402A41F17F5C400716912 /* kern_con.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = kern_con.hpp; sourceTree = "<group>"; };
 		CEB402A71F181D8300716912 /* kern_atom.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_atom.hpp; sourceTree = "<group>"; };
 		CEC0863524331E9B00F5B701 /* kern_agdc.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_agdc.hpp; sourceTree = "<group>"; usesTabs = 0; };
 /* End PBXFileReference section */
@@ -148,7 +146,6 @@
 				1C748C2E1C21952C0024EED2 /* Info.plist */,
 				CEC0863524331E9B00F5B701 /* kern_agdc.hpp */,
 				CEB402A71F181D8300716912 /* kern_atom.hpp */,
-				CEB402A41F17F5C400716912 /* kern_con.hpp */,
 				408F201F288ACBE6002EEC15 /* kern_fw.cpp */,
 				408F201E288ACBB0002EEC15 /* kern_fw.hpp */,
 				6CBEB3C428911DCF0063B877 /* kern_netdbg.cpp */,
@@ -271,7 +268,6 @@
 				CEC0863624331E9B00F5B701 /* kern_agdc.hpp in Headers */,
 				1C9CB7B11C789FF500231E41 /* kern_rad.hpp in Headers */,
 				6CBEB3C728911DD00063B877 /* kern_netdbg.hpp in Headers */,
-				CEB402A61F17F5C400716912 /* kern_con.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
