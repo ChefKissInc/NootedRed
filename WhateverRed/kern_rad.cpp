@@ -233,8 +233,8 @@ uint32_t RAD::wrapGcGetHwVersion(uint32_t *param1) {
         case 0x090200:
             [[fallthrough]];
         case 0x090100:
-            NETLOG("rad", "Spoofing GC version v9.{2,1}.x to v9.2.1");
-            return 0x090201;
+            NETLOG("rad", "Spoofing GC version v9.{2,1}.x to v9.0.1");
+            return 0x090001;
         default:
             return ret;
     }
@@ -880,12 +880,12 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 orgVega10PowerTuneConstructor},
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTableHWLibs},
             {"_CAILAsicCapsInitTable", orgAsicInitCapsTable},
-            {"_gc_9_2_1_rlc_ucode", orgGcRlcUcode},
-            {"_gc_9_2_1_me_ucode", orgGcMeUcode},
-            {"_gc_9_2_1_ce_ucode", orgGcCeUcode},
-            {"_gc_9_2_1_pfp_ucode", orgGcPfpUcode},
-            {"_gc_9_2_1_mec_ucode", orgGcMecUcode},
-            {"_gc_9_2_1_mec_jt_ucode", orgGcMecJtUcode},
+            {"_gc_9_0_rlc_ucode", orgGcRlcUcode},
+            {"_gc_9_0_me_ucode", orgGcMeUcode},
+            {"_gc_9_0_ce_ucode", orgGcCeUcode},
+            {"_gc_9_0_pfp_ucode", orgGcPfpUcode},
+            {"_gc_9_0_mec_ucode", orgGcMecUcode},
+            {"_gc_9_0_mec_jt_ucode", orgGcMecJtUcode},
             {"_sdma_4_1_ucode", orgSdmaUcode},
             {"_Raven_SendMsgToSmcWithParameter", orgRavenSendMsgToSmcWithParam},
             {"_Renoir_SendMsgToSmcWithParameter", orgRenoirSendMsgToSmcWithParam},
