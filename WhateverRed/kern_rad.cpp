@@ -17,8 +17,6 @@
 #include <IOKit/IOService.h>
 #include <IOKit/acpi/IOACPIPlatformExpert.h>
 
-static const char *pathFramebuffer = "/System/Library/Extensions/AMDFramebuffer.kext/Contents/MacOS/"
-                                     "AMDFramebuffer";
 static const char *pathSupport = "/System/Library/Extensions/AMDSupport.kext/Contents/MacOS/AMDSupport";
 static const char *pathRadeonX6000 = "/System/Library/Extensions/AMDRadeonX6000.kext/Contents/MacOS/"
                                      "AMDRadeonX6000";
@@ -32,14 +30,6 @@ static const char *pathRadeonX6000Framebuffer =
 static const char *pathIOAcceleratorFamily2 =
     "/System/Library/Extensions/IOAcceleratorFamily2.kext/Contents/MacOS/IOAcceleratorFamily2";
 
-static KernelPatcher::KextInfo kextRadeonFramebuffer {
-    "com.apple.kext.AMDFramebuffer",
-    &pathFramebuffer,
-    1,
-    {},
-    {},
-    KernelPatcher::KextInfo::Unloaded,
-};
 static KernelPatcher::KextInfo kextRadeonSupport {
     "com.apple.kext.AMDSupport",
     &pathSupport,
@@ -96,12 +86,6 @@ void RAD::init() {
 
     currentPropProvider.init();
 
-    force24BppMode = checkKernelArgument("-rad24");
-
-    if (force24BppMode) lilu.onKextLoadForce(&kextRadeonFramebuffer);
-
-    dviSingleLink = checkKernelArgument("-raddvi");
-
     lilu.onKextLoadForce(&kextRadeonX6000Framebuffer);
     lilu.onKextLoadForce(&kextRadeonSupport);
     lilu.onKextLoadForce(&kextRadeonX5000HWLibs);
@@ -154,7 +138,7 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider) 
     WIOKit::renameDevice(provider, "GFX0");
     if (!provider->getProperty("built-in")) {
         DBGLOG("wred", "fixing built-in");
-        uint8_t builtBytes[] = {0x01};
+        static uint8_t builtBytes[] = {0x01};
         provider->setProperty("built-in", builtBytes, sizeof(builtBytes));
     } else {
         DBGLOG("wred", "found existing built-in");
@@ -271,13 +255,6 @@ void RAD::wrapPopulateFirmwareDirectory(void *that) {
     PANIC_COND(!callbackRAD->orgPutFirmware(callbackRAD->callbackFirmwareDirectory, 6, fwBackdoor), "rad",
         "Failed to inject atidmcub_0.dat firmware");
     NETLOG("rad", "AMDRadeonX5000_AMDRadeonHWLibsX5000::populateFirmwareDirectory finished");
-}
-
-IOReturn RAD::wrapPopulateDeviceMemory(void *that, uint32_t reg) {
-    DBGLOG("rad", "populateDeviceMemory: this = %p reg = 0x%X", that, reg);
-    auto ret = FunctionCast(wrapPopulateDeviceMemory, callbackRAD->orgPopulateDeviceMemory)(that, reg);
-    DBGLOG("rad", "populateDeviceMemory returned 0x%X", ret);
-    return kIOReturnSuccess;
 }
 
 void *RAD::wrapCreatePowerTuneServices(void *param1, void *param2) {
@@ -883,50 +860,31 @@ uint64_t RAD::wrapGmmCbSetMemoryAttributes(void *param1, uint32_t param2, void *
     return ret;
 }
 
-bool RAD::wrapIpiGvmHwInit(void* ctx) {
+bool RAD::wrapIpiGvmHwInit(void *ctx) {
     NETLOG("rad", "_ipi_gvm_hw_init: ctx = %p", ctx);
-    bool isApuDevice = callbackRAD->orgTtlIsApuDevice(**(void***)ctx);
+    bool isApuDevice = callbackRAD->orgTtlIsApuDevice(**(void ***)ctx);
     NETLOG("rad", "_ttlIsApuDevice returns %d", isApuDevice);
     auto ret = FunctionCast(wrapIpiGvmHwInit, callbackRAD->orgIpiGvmHwInit)(ctx);
     NETLOG("rad", "_ipi_gvm_hw_init returned %d", ret);
     return ret;
 }
 
-void RAD::wrapCgsWriteRegister(void** tlsInstance, uint32_t regIndex, uint32_t val) {
+void RAD::wrapCgsWriteRegister(void **tlsInstance, uint32_t regIndex, uint32_t val) {
     NETLOG("rad", "_write_register: tlsInstance = %p regIndex = 0x%X val = 0x%X", tlsInstance, regIndex, val);
     uint *regs = getMember<uint *>(tlsInstance, 8);
     regs[regIndex] = val;
 }
 
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
-    if (kextRadeonFramebuffer.loadIndex == index) {
-        if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
-
-        return true;
-    } else if (kextRadeonSupport.loadIndex == index) {
-        processConnectorOverrides(patcher, address, size);
-
+    if (kextRadeonSupport.loadIndex == index) {
         KernelPatcher::RouteRequest requests[] = {
-            {"__ZN13ATIController8TestVRAME13PCI_REG_INDEXb", doNotTestVram},
             {"__ZN16AtiDeviceControl16notifyLinkChangeE31kAGDCRegisterLinkControlEvent_tmj", wrapNotifyLinkChange,
                 orgNotifyLinkChange},
-            {"__ZN13ATIController20populateDeviceMemoryE13PCI_REG_INDEX", wrapPopulateDeviceMemory,
-                orgPopulateDeviceMemory},
+
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDSupport symbols");
         }
-
-        /**
-         * Neutralises VRAM Info Null Check
-         */
-        uint8_t find[] = {0x48, 0x89, 0x83, 0x18, 0x01, 0x00, 0x00, 0x31, 0xC0, 0x48, 0x85, 0xC9, 0x75, 0x3E, 0x48,
-            0x8D, 0x3D, 0xA4, 0xE2, 0x01, 0x00};
-        uint8_t repl[] = {0x48, 0x89, 0x83, 0x18, 0x01, 0x00, 0x00, 0x31, 0xC0, 0x48, 0x85, 0xC9, 0x74, 0x3E, 0x48,
-            0x8D, 0x3D, 0xA4, 0xE2, 0x01, 0x00};
-        KernelPatcher::LookupPatch patch {&kextRadeonSupport, find, repl, arrsize(find), 1};
-        patcher.applyLookupPatch(&patch);
-        patcher.clearError();
 
         return true;
     } else if (kextRadeonX5000HWLibs.loadIndex == index) {
@@ -990,10 +948,10 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
         }
 
-        uint8_t find_asic_reset[] = {0x55, 0x48, 0x89, 0xE5, 0x8B, 0x56, 0x04, 0xBE, 0x3B, 0x00, 0x00, 0x00, 0x5D, 0xE9,
-            0x51, 0xFE, 0xFF, 0xFF};
-        uint8_t repl_asic_reset[] = {0x55, 0x48, 0x89, 0xE5, 0x8B, 0x56, 0x04, 0xBE, 0x1E, 0x00, 0x00, 0x00, 0x5D, 0xE9,
-            0x51, 0xFE, 0xFF, 0xFF};
+        static uint8_t find_asic_reset[] = {0x55, 0x48, 0x89, 0xE5, 0x8B, 0x56, 0x04, 0xBE, 0x3B, 0x00, 0x00, 0x00,
+            0x5D, 0xE9, 0x51, 0xFE, 0xFF, 0xFF};
+        static uint8_t repl_asic_reset[] = {0x55, 0x48, 0x89, 0xE5, 0x8B, 0x56, 0x04, 0xBE, 0x1E, 0x00, 0x00, 0x00,
+            0x5D, 0xE9, 0x51, 0xFE, 0xFF, 0xFF};
         static_assert(arrsize(find_asic_reset) == arrsize(repl_asic_reset), "Find/replace patch size mismatch");
 
         KernelPatcher::LookupPatch patches[] = {
@@ -1034,22 +992,22 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             panic("RAD: Failed to route AMDRadeonX6000Framebuffer symbols");
         }
 
-        uint8_t find_null_check1[] = {0x48, 0x89, 0x83, 0x90, 0x00, 0x00, 0x00, 0x48, 0x85, 0xC0, 0x0F, 0x84, 0x89,
-            0x00, 0x00, 0x00, 0x48, 0x8B, 0x7B, 0x18};
-        uint8_t repl_null_check1[] = {0x48, 0x89, 0x83, 0x90, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,
-            0x90, 0x90, 0x90, 0x48, 0x8B, 0x7B, 0x18};
+        static uint8_t find_null_check1[] = {0x48, 0x89, 0x83, 0x90, 0x00, 0x00, 0x00, 0x48, 0x85, 0xC0, 0x0F, 0x84,
+            0x89, 0x00, 0x00, 0x00, 0x48, 0x8B, 0x7B, 0x18};
+        static uint8_t repl_null_check1[] = {0x48, 0x89, 0x83, 0x90, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90, 0x90, 0x90,
+            0x90, 0x90, 0x90, 0x90, 0x48, 0x8B, 0x7B, 0x18};
         static_assert(arrsize(find_null_check1) == arrsize(repl_null_check1), "Find/replace patch size mismatch");
 
-        uint8_t find_null_check2[] = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00, 0x48, 0x85, 0xC0, 0x0F, 0x84, 0xA1,
-            0x00, 0x00, 0x00, 0x48, 0x8B, 0x7B, 0x18};
-        uint8_t repl_null_check2[] = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,
-            0x90, 0x90, 0x90, 0x48, 0x8B, 0x7B, 0x18};
+        static uint8_t find_null_check2[] = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00, 0x48, 0x85, 0xC0, 0x0F, 0x84,
+            0xA1, 0x00, 0x00, 0x00, 0x48, 0x8B, 0x7B, 0x18};
+        static uint8_t repl_null_check2[] = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90, 0x90, 0x90,
+            0x90, 0x90, 0x90, 0x90, 0x48, 0x8B, 0x7B, 0x18};
         static_assert(arrsize(find_null_check2) == arrsize(repl_null_check2), "Find/replace patch size mismatch");
 
-        uint8_t find_null_check3[] = {0x48, 0x83, 0xBB, 0x90, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x84, 0x90, 0x00, 0x00,
-            0x00, 0x49, 0x89, 0xF7, 0xBA, 0x60, 0x00, 0x00, 0x00};
-        uint8_t repl_null_check3[] = {0x48, 0x83, 0xBB, 0x90, 0x00, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90, 0x90, 0x90,
-            0x90, 0x49, 0x89, 0xF7, 0xBA, 0x60, 0x00, 0x00, 0x00};
+        static uint8_t find_null_check3[] = {0x48, 0x83, 0xBB, 0x90, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x84, 0x90, 0x00,
+            0x00, 0x00, 0x49, 0x89, 0xF7, 0xBA, 0x60, 0x00, 0x00, 0x00};
+        static uint8_t repl_null_check3[] = {0x48, 0x83, 0xBB, 0x90, 0x00, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90, 0x90,
+            0x90, 0x90, 0x49, 0x89, 0xF7, 0xBA, 0x60, 0x00, 0x00, 0x00};
         static_assert(arrsize(find_null_check3) == arrsize(repl_null_check3), "Find/replace patch size mismatch");
 
         KernelPatcher::LookupPatch patches[] = {
@@ -1119,14 +1077,14 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
         }
 
-        uint8_t find_startHWEngines[] = {0x49, 0x89, 0xFE, 0x31, 0xDB, 0x48, 0x83, 0xFB, 0x02, 0x74, 0x50};
-        uint8_t repl_startHWEngines[] = {0x49, 0x89, 0xFE, 0x31, 0xDB, 0x48, 0x83, 0xFB, 0x01, 0x74, 0x50};
+        static uint8_t find_startHWEngines[] = {0x49, 0x89, 0xFE, 0x31, 0xDB, 0x48, 0x83, 0xFB, 0x02, 0x74, 0x50};
+        static uint8_t repl_startHWEngines[] = {0x49, 0x89, 0xFE, 0x31, 0xDB, 0x48, 0x83, 0xFB, 0x01, 0x74, 0x50};
         static_assert(sizeof(find_startHWEngines) == sizeof(repl_startHWEngines), "Find/replace size mismatch");
 
-        uint8_t find_VMMInit[] = {0x48, 0x89, 0x84, 0x0B, 0xD0, 0x0A, 0x00, 0x00, 0x89, 0x94, 0x0B, 0xDC, 0x0A, 0x00,
-            0x00, 0x89, 0xD6, 0xC1, 0xE2, 0x03, 0x89, 0x94, 0x0B, 0xE0, 0x0A, 0x00, 0x00};
-        uint8_t repl_VMMInit[] = {0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90,
-            0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x90};
+        static uint8_t find_VMMInit[] = {0x48, 0x89, 0x84, 0x0B, 0xD0, 0x0A, 0x00, 0x00, 0x89, 0x94, 0x0B, 0xDC, 0x0A,
+            0x00, 0x00, 0x89, 0xD6, 0xC1, 0xE2, 0x03, 0x89, 0x94, 0x0B, 0xE0, 0x0A, 0x00, 0x00};
+        static uint8_t repl_VMMInit[] = {0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66,
+            0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x90};
         static_assert(sizeof(find_VMMInit) == sizeof(repl_VMMInit), "Find/replace size mismatch");
 
         KernelPatcher::LookupPatch patches[] = {
@@ -1165,93 +1123,93 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             panic("RAD: Failed to route AMDRadeonX6000 symbols");
         }
 
-        uint8_t find_hwchannel_init1[] = {0x74, 0x54, 0x49, 0x8B, 0x7C, 0x24, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xB8,
-            0x03, 0x00, 0x00};
-        uint8_t repl_hwchannel_init1[] = {0x74, 0x54, 0x49, 0x8B, 0x7C, 0x24, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC0,
-            0x03, 0x00, 0x00};
+        static uint8_t find_hwchannel_init1[] = {0x74, 0x54, 0x49, 0x8B, 0x7C, 0x24, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90,
+            0xB8, 0x03, 0x00, 0x00};
+        static uint8_t repl_hwchannel_init1[] = {0x74, 0x54, 0x49, 0x8B, 0x7C, 0x24, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90,
+            0xC0, 0x03, 0x00, 0x00};
         static_assert(sizeof(find_hwchannel_init1) == sizeof(repl_hwchannel_init1), "Find/replace size mismatch");
 
-        uint8_t find_hwchannel_init2[] = {0xFF, 0x90, 0xC0, 0x03, 0x00, 0x00, 0xA8, 0x01, 0x74, 0x12, 0x49, 0x8B, 0x04,
-            0x24, 0x4C, 0x89, 0xE7, 0xBE, 0x01, 0x00, 0x00, 0x00, 0xFF, 0x90, 0x18, 0x02, 0x00, 0x00, 0x49, 0x8B, 0x7C,
-            0x24, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC0, 0x03, 0x00, 0x00, 0xA8, 0x02, 0x74, 0x12, 0x49, 0x8B, 0x04,
-            0x24, 0x4C, 0x89, 0xE7, 0xBE, 0x02, 0x00, 0x00, 0x00, 0xFF, 0x90, 0x18, 0x02, 0x00, 0x00, 0x49, 0x8B, 0x7C,
-            0x24, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC0, 0x03, 0x00, 0x00, 0x0F, 0xBA, 0xE0, 0x0B, 0x73, 0x12, 0x49,
-            0x8B, 0x04, 0x24, 0x4C, 0x89, 0xE7, 0xBE, 0x08, 0x00, 0x00, 0x00, 0xFF, 0x90, 0x18, 0x02, 0x00, 0x00, 0x49,
-            0x8B, 0x7C, 0x24, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC0, 0x03, 0x00, 0x00, 0x0F, 0xBA, 0xE0, 0x0A, 0x73,
-            0x12, 0x49, 0x8B, 0x04, 0x24, 0x4C, 0x89, 0xE7, 0xBE, 0x10, 0x00, 0x00, 0x00, 0xFF, 0x90, 0x18, 0x02, 0x00,
-            0x00, 0x49, 0x8B, 0x7C, 0x24, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC0, 0x03, 0x00, 0x00};
-        uint8_t repl_hwchannel_init2[] = {0xFF, 0x90, 0xC8, 0x03, 0x00, 0x00, 0xA8, 0x01, 0x74, 0x12, 0x49, 0x8B, 0x04,
-            0x24, 0x4C, 0x89, 0xE7, 0xBE, 0x01, 0x00, 0x00, 0x00, 0xFF, 0x90, 0x18, 0x02, 0x00, 0x00, 0x49, 0x8B, 0x7C,
-            0x24, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC8, 0x03, 0x00, 0x00, 0xA8, 0x02, 0x74, 0x12, 0x49, 0x8B, 0x04,
-            0x24, 0x4C, 0x89, 0xE7, 0xBE, 0x02, 0x00, 0x00, 0x00, 0xFF, 0x90, 0x18, 0x02, 0x00, 0x00, 0x49, 0x8B, 0x7C,
-            0x24, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC8, 0x03, 0x00, 0x00, 0x0F, 0xBA, 0xE0, 0x0B, 0x73, 0x12, 0x49,
-            0x8B, 0x04, 0x24, 0x4C, 0x89, 0xE7, 0xBE, 0x08, 0x00, 0x00, 0x00, 0xFF, 0x90, 0x18, 0x02, 0x00, 0x00, 0x49,
-            0x8B, 0x7C, 0x24, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC8, 0x03, 0x00, 0x00, 0x0F, 0xBA, 0xE0, 0x0A, 0x73,
-            0x12, 0x49, 0x8B, 0x04, 0x24, 0x4C, 0x89, 0xE7, 0xBE, 0x10, 0x00, 0x00, 0x00, 0xFF, 0x90, 0x18, 0x02, 0x00,
-            0x00, 0x49, 0x8B, 0x7C, 0x24, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC8, 0x03, 0x00, 0x00};
+        static uint8_t find_hwchannel_init2[] = {0xFF, 0x90, 0xC0, 0x03, 0x00, 0x00, 0xA8, 0x01, 0x74, 0x12, 0x49, 0x8B,
+            0x04, 0x24, 0x4C, 0x89, 0xE7, 0xBE, 0x01, 0x00, 0x00, 0x00, 0xFF, 0x90, 0x18, 0x02, 0x00, 0x00, 0x49, 0x8B,
+            0x7C, 0x24, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC0, 0x03, 0x00, 0x00, 0xA8, 0x02, 0x74, 0x12, 0x49, 0x8B,
+            0x04, 0x24, 0x4C, 0x89, 0xE7, 0xBE, 0x02, 0x00, 0x00, 0x00, 0xFF, 0x90, 0x18, 0x02, 0x00, 0x00, 0x49, 0x8B,
+            0x7C, 0x24, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC0, 0x03, 0x00, 0x00, 0x0F, 0xBA, 0xE0, 0x0B, 0x73, 0x12,
+            0x49, 0x8B, 0x04, 0x24, 0x4C, 0x89, 0xE7, 0xBE, 0x08, 0x00, 0x00, 0x00, 0xFF, 0x90, 0x18, 0x02, 0x00, 0x00,
+            0x49, 0x8B, 0x7C, 0x24, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC0, 0x03, 0x00, 0x00, 0x0F, 0xBA, 0xE0, 0x0A,
+            0x73, 0x12, 0x49, 0x8B, 0x04, 0x24, 0x4C, 0x89, 0xE7, 0xBE, 0x10, 0x00, 0x00, 0x00, 0xFF, 0x90, 0x18, 0x02,
+            0x00, 0x00, 0x49, 0x8B, 0x7C, 0x24, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC0, 0x03, 0x00, 0x00};
+        static uint8_t repl_hwchannel_init2[] = {0xFF, 0x90, 0xC8, 0x03, 0x00, 0x00, 0xA8, 0x01, 0x74, 0x12, 0x49, 0x8B,
+            0x04, 0x24, 0x4C, 0x89, 0xE7, 0xBE, 0x01, 0x00, 0x00, 0x00, 0xFF, 0x90, 0x18, 0x02, 0x00, 0x00, 0x49, 0x8B,
+            0x7C, 0x24, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC8, 0x03, 0x00, 0x00, 0xA8, 0x02, 0x74, 0x12, 0x49, 0x8B,
+            0x04, 0x24, 0x4C, 0x89, 0xE7, 0xBE, 0x02, 0x00, 0x00, 0x00, 0xFF, 0x90, 0x18, 0x02, 0x00, 0x00, 0x49, 0x8B,
+            0x7C, 0x24, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC8, 0x03, 0x00, 0x00, 0x0F, 0xBA, 0xE0, 0x0B, 0x73, 0x12,
+            0x49, 0x8B, 0x04, 0x24, 0x4C, 0x89, 0xE7, 0xBE, 0x08, 0x00, 0x00, 0x00, 0xFF, 0x90, 0x18, 0x02, 0x00, 0x00,
+            0x49, 0x8B, 0x7C, 0x24, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC8, 0x03, 0x00, 0x00, 0x0F, 0xBA, 0xE0, 0x0A,
+            0x73, 0x12, 0x49, 0x8B, 0x04, 0x24, 0x4C, 0x89, 0xE7, 0xBE, 0x10, 0x00, 0x00, 0x00, 0xFF, 0x90, 0x18, 0x02,
+            0x00, 0x00, 0x49, 0x8B, 0x7C, 0x24, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC8, 0x03, 0x00, 0x00};
         static_assert(sizeof(find_hwchannel_init2) == sizeof(repl_hwchannel_init2), "Find/replace size mismatch");
 
-        uint8_t find_hwchannel_submitCommandBuffer[] = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0x30,
-            0x02, 0x00, 0x00, 0x48, 0x8B, 0x43, 0x50};
-        uint8_t repl_hwchannel_submitCommandBuffer[] = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0x90, 0x90, 0x90,
-            0x90, 0x90, 0x90, 0x48, 0x8B, 0x43, 0x50};
+        static uint8_t find_hwchannel_submitCommandBuffer[] = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90,
+            0x30, 0x02, 0x00, 0x00, 0x48, 0x8B, 0x43, 0x50};
+        static uint8_t repl_hwchannel_submitCommandBuffer[] = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0x90, 0x90,
+            0x90, 0x90, 0x90, 0x90, 0x48, 0x8B, 0x43, 0x50};
         static_assert(sizeof(find_hwchannel_submitCommandBuffer) == sizeof(repl_hwchannel_submitCommandBuffer),
             "Find/replace size mismatch");
 
-        uint8_t find_hwchannel_waitForHwStamp[] = {0x49, 0x8B, 0x7D, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xA0, 0x02,
-            0x00, 0x00, 0x84, 0xC0, 0x74, 0x2E, 0x44, 0x39, 0xFB};
-        uint8_t repl_hwchannel_waitForHwStamp[] = {0x49, 0x8B, 0x7D, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0x98, 0x02,
-            0x00, 0x00, 0x84, 0xC0, 0x74, 0x2E, 0x44, 0x39, 0xFB};
+        static uint8_t find_hwchannel_waitForHwStamp[] = {0x49, 0x8B, 0x7D, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xA0,
+            0x02, 0x00, 0x00, 0x84, 0xC0, 0x74, 0x2E, 0x44, 0x39, 0xFB};
+        static uint8_t repl_hwchannel_waitForHwStamp[] = {0x49, 0x8B, 0x7D, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0x98,
+            0x02, 0x00, 0x00, 0x84, 0xC0, 0x74, 0x2E, 0x44, 0x39, 0xFB};
         static_assert(sizeof(find_hwchannel_waitForHwStamp) == sizeof(repl_hwchannel_waitForHwStamp),
             "Find/replace size mismatch");
 
-        uint8_t find_hwchannel_reset[] = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xB8, 0x03, 0x00, 0x00,
-            0x49, 0x89, 0xC6, 0x48, 0x8B, 0x03};
-        uint8_t repl_hwchannel_reset[] = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC0, 0x03, 0x00, 0x00,
-            0x49, 0x89, 0xC6, 0x48, 0x8B, 0x03};
+        static uint8_t find_hwchannel_reset[] = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xB8, 0x03, 0x00,
+            0x00, 0x49, 0x89, 0xC6, 0x48, 0x8B, 0x03};
+        static uint8_t repl_hwchannel_reset[] = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC0, 0x03, 0x00,
+            0x00, 0x49, 0x89, 0xC6, 0x48, 0x8B, 0x03};
         static_assert(sizeof(find_hwchannel_reset) == sizeof(repl_hwchannel_reset), "Find/replace size mismatch");
 
-        uint8_t find_hwchannel_timestampUpdated1[] = {0x74, 0x20, 0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90,
-            0xB8, 0x03, 0x00, 0x00, 0x48, 0x8B, 0xB3, 0xC8, 0x00, 0x00, 0x00};
-        uint8_t repl_hwchannel_timestampUpdated1[] = {0x74, 0x20, 0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90,
-            0xC0, 0x03, 0x00, 0x00, 0x48, 0x8B, 0xB3, 0xC8, 0x00, 0x00, 0x00};
+        static uint8_t find_hwchannel_timestampUpdated1[] = {0x74, 0x20, 0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0xFF,
+            0x90, 0xB8, 0x03, 0x00, 0x00, 0x48, 0x8B, 0xB3, 0xC8, 0x00, 0x00, 0x00};
+        static uint8_t repl_hwchannel_timestampUpdated1[] = {0x74, 0x20, 0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0xFF,
+            0x90, 0xC0, 0x03, 0x00, 0x00, 0x48, 0x8B, 0xB3, 0xC8, 0x00, 0x00, 0x00};
         static_assert(sizeof(find_hwchannel_timestampUpdated1) == sizeof(repl_hwchannel_timestampUpdated1),
             "Find/replace size mismatch");
 
-        uint8_t find_hwchannel_timestampUpdated2[] = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xB8, 0x03,
-            0x00, 0x00, 0x49, 0x8B, 0xB6, 0x50, 0x03, 0x00, 0x00, 0x48, 0x89, 0xC7};
-        uint8_t repl_hwchannel_timestampUpdated2[] = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC0, 0x03,
-            0x00, 0x00, 0x49, 0x8B, 0xB6, 0x50, 0x03, 0x00, 0x00, 0x48, 0x89, 0xC7};
+        static uint8_t find_hwchannel_timestampUpdated2[] = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xB8,
+            0x03, 0x00, 0x00, 0x49, 0x8B, 0xB6, 0x50, 0x03, 0x00, 0x00, 0x48, 0x89, 0xC7};
+        static uint8_t repl_hwchannel_timestampUpdated2[] = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC0,
+            0x03, 0x00, 0x00, 0x49, 0x8B, 0xB6, 0x50, 0x03, 0x00, 0x00, 0x48, 0x89, 0xC7};
         static_assert(sizeof(find_hwchannel_timestampUpdated2) == sizeof(repl_hwchannel_timestampUpdated2),
             "Find/replace size mismatch");
 
-        uint8_t find_hwchannel_enableTimestampInterrupt[] = {0x85, 0xC0, 0x74, 0x14, 0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B,
-            0x07, 0xFF, 0x90, 0xA0, 0x02, 0x00, 0x00, 0x41, 0x89, 0xC6, 0x41, 0x80, 0xF6, 0x01};
-        uint8_t repl_hwchannel_enableTimestampInterrupt[] = {0x85, 0xC0, 0x74, 0x14, 0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B,
-            0x07, 0xFF, 0x90, 0x98, 0x02, 0x00, 0x00, 0x41, 0x89, 0xC6, 0x41, 0x80, 0xF6, 0x01};
+        static uint8_t find_hwchannel_enableTimestampInterrupt[] = {0x85, 0xC0, 0x74, 0x14, 0x48, 0x8B, 0x7B, 0x18,
+            0x48, 0x8B, 0x07, 0xFF, 0x90, 0xA0, 0x02, 0x00, 0x00, 0x41, 0x89, 0xC6, 0x41, 0x80, 0xF6, 0x01};
+        static uint8_t repl_hwchannel_enableTimestampInterrupt[] = {0x85, 0xC0, 0x74, 0x14, 0x48, 0x8B, 0x7B, 0x18,
+            0x48, 0x8B, 0x07, 0xFF, 0x90, 0x98, 0x02, 0x00, 0x00, 0x41, 0x89, 0xC6, 0x41, 0x80, 0xF6, 0x01};
         static_assert(sizeof(find_hwchannel_enableTimestampInterrupt) ==
                           sizeof(repl_hwchannel_enableTimestampInterrupt),
             "Find/replace size mismatch");
 
-        uint8_t find_hwchannel_writeDiagnosisReport[] = {0x49, 0x8B, 0x7C, 0x24, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90,
-            0xB8, 0x03, 0x00, 0x00, 0x49, 0x8B, 0xB4, 0x24, 0xC8, 0x00, 0x00, 0x00, 0xB9, 0x01, 0x00, 0x00, 0x00};
-        uint8_t repl_hwchannel_writeDiagnosisReport[] = {0x49, 0x8B, 0x7C, 0x24, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90,
-            0xC0, 0x03, 0x00, 0x00, 0x49, 0x8B, 0xB4, 0x24, 0xC8, 0x00, 0x00, 0x00, 0xB9, 0x01, 0x00, 0x00, 0x00};
+        static uint8_t find_hwchannel_writeDiagnosisReport[] = {0x49, 0x8B, 0x7C, 0x24, 0x18, 0x48, 0x8B, 0x07, 0xFF,
+            0x90, 0xB8, 0x03, 0x00, 0x00, 0x49, 0x8B, 0xB4, 0x24, 0xC8, 0x00, 0x00, 0x00, 0xB9, 0x01, 0x00, 0x00, 0x00};
+        static uint8_t repl_hwchannel_writeDiagnosisReport[] = {0x49, 0x8B, 0x7C, 0x24, 0x18, 0x48, 0x8B, 0x07, 0xFF,
+            0x90, 0xC0, 0x03, 0x00, 0x00, 0x49, 0x8B, 0xB4, 0x24, 0xC8, 0x00, 0x00, 0x00, 0xB9, 0x01, 0x00, 0x00, 0x00};
         static_assert(sizeof(find_hwchannel_writeDiagnosisReport) == sizeof(repl_hwchannel_writeDiagnosisReport),
             "Find/replace size mismatch");
 
-        uint8_t find_setupAndInitializeHWCapabilities_pt1[] = {0x4C, 0x89, 0xF7, 0xFF, 0x90, 0xA0, 0x02, 0x00, 0x00,
-            0x84, 0xC0, 0x0F, 0x84, 0x6E, 0x02, 0x00, 0x00};
-        uint8_t repl_setupAndInitializeHWCapabilities_pt1[] = {0x4C, 0x89, 0xF7, 0xFF, 0x90, 0x98, 0x02, 0x00, 0x00,
-            0x84, 0xC0, 0x0F, 0x84, 0x6E, 0x02, 0x00, 0x00};
+        static uint8_t find_setupAndInitializeHWCapabilities_pt1[] = {0x4C, 0x89, 0xF7, 0xFF, 0x90, 0xA0, 0x02, 0x00,
+            0x00, 0x84, 0xC0, 0x0F, 0x84, 0x6E, 0x02, 0x00, 0x00};
+        static uint8_t repl_setupAndInitializeHWCapabilities_pt1[] = {0x4C, 0x89, 0xF7, 0xFF, 0x90, 0x98, 0x02, 0x00,
+            0x00, 0x84, 0xC0, 0x0F, 0x84, 0x6E, 0x02, 0x00, 0x00};
         static_assert(sizeof(find_setupAndInitializeHWCapabilities_pt1) ==
                           sizeof(repl_setupAndInitializeHWCapabilities_pt1),
             "Find/replace size mismatch");
 
-        uint8_t find_setupAndInitializeHWCapabilities_pt2[] = {0xFF, 0x50, 0x70, 0x85, 0xC0, 0x74, 0x0A, 0x41, 0xC6,
-            0x46, 0x28, 0x00, 0xE9, 0xB0, 0x01, 0x00, 0x00};
-        uint8_t repl_setupAndInitializeHWCapabilities_pt2[] = {0x66, 0x90, 0x90, 0x85, 0xC0, 0x66, 0x90, 0x41, 0xC6,
-            0x46, 0x28, 0x00, 0xE9, 0xB0, 0x01, 0x00, 0x00};
+        static uint8_t find_setupAndInitializeHWCapabilities_pt2[] = {0xFF, 0x50, 0x70, 0x85, 0xC0, 0x74, 0x0A, 0x41,
+            0xC6, 0x46, 0x28, 0x00, 0xE9, 0xB0, 0x01, 0x00, 0x00};
+        static uint8_t repl_setupAndInitializeHWCapabilities_pt2[] = {0x66, 0x90, 0x90, 0x85, 0xC0, 0x66, 0x90, 0x41,
+            0xC6, 0x46, 0x28, 0x00, 0xE9, 0xB0, 0x01, 0x00, 0x00};
         static_assert(sizeof(find_setupAndInitializeHWCapabilities_pt2) ==
                           sizeof(repl_setupAndInitializeHWCapabilities_pt2),
             "Find/replace size mismatch");
@@ -1263,13 +1221,9 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
          * so we have to make patches to correct the offsets.
          */
         KernelPatcher::LookupPatch patches[] = {
-            /**
-             * Mismatched VTable Call to getScheduler.
-             */
+            /** Mismatched VTable Call to getScheduler. */
             {&kextRadeonX6000, find_hwchannel_init1, repl_hwchannel_init1, arrsize(find_hwchannel_init1), 1},
-            /**
-             * Mismatched VTable Calls to getGpuDebugPolicy.
-             */
+            /** Mismatched VTable Calls to getGpuDebugPolicy. */
             {&kextRadeonX6000, find_hwchannel_init2, repl_hwchannel_init2, arrsize(find_hwchannel_init2), 1},
             /**
              * VTable Call to signalGPUWorkSubmitted.
@@ -1278,40 +1232,26 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
              */
             {&kextRadeonX6000, find_hwchannel_submitCommandBuffer, repl_hwchannel_submitCommandBuffer,
                 arrsize(find_hwchannel_submitCommandBuffer), 1},
-            /**
-             * Mismatched VTable Call to isDeviceValid.
-             */
+            /** Mismatched VTable Call to isDeviceValid. */
             {&kextRadeonX6000, find_hwchannel_waitForHwStamp, repl_hwchannel_waitForHwStamp,
                 arrsize(find_hwchannel_waitForHwStamp), 1},
-            /**
-             * Mismatched VTable Call to getScheduler.
-             */
+            /** Mismatched VTable Call to getScheduler. */
             {&kextRadeonX6000, find_hwchannel_reset, repl_hwchannel_reset, arrsize(find_hwchannel_reset), 1},
-            /**
-             * Mismatched VTable Calls to getScheduler.
-             */
+            /** Mismatched VTable Calls to getScheduler. */
             {&kextRadeonX6000, find_hwchannel_timestampUpdated1, repl_hwchannel_timestampUpdated1,
                 arrsize(find_hwchannel_timestampUpdated1), 1},
             {&kextRadeonX6000, find_hwchannel_timestampUpdated2, repl_hwchannel_timestampUpdated2,
                 arrsize(find_hwchannel_timestampUpdated2), 1},
-            /**
-             * Mismatched VTable Call to isDeviceValid.
-             */
+            /** Mismatched VTable Call to isDeviceValid. */
             {&kextRadeonX6000, find_hwchannel_enableTimestampInterrupt, repl_hwchannel_enableTimestampInterrupt,
                 arrsize(find_hwchannel_enableTimestampInterrupt), 1},
-            /**
-             * Mismatched VTable Call to getScheduler.
-             */
+            /** Mismatched VTable Call to getScheduler. */
             {&kextRadeonX6000, find_hwchannel_writeDiagnosisReport, repl_hwchannel_writeDiagnosisReport,
                 arrsize(find_hwchannel_writeDiagnosisReport), 1},
-            /**
-             * Mismatched VTable Call to isDeviceValid.
-             */
+            /** Mismatched VTable Call to isDeviceValid. */
             {&kextRadeonX6000, find_setupAndInitializeHWCapabilities_pt1, repl_setupAndInitializeHWCapabilities_pt1,
                 arrsize(find_setupAndInitializeHWCapabilities_pt1), 1},
-            /**
-             * Remove call to TTL.
-             */
+            /** Remove call to TTL. */
             {&kextRadeonX6000, find_setupAndInitializeHWCapabilities_pt2, repl_setupAndInitializeHWCapabilities_pt2,
                 arrsize(find_setupAndInitializeHWCapabilities_pt2), 1},
         };
@@ -1332,58 +1272,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
     }
 
     return false;
-}
-
-void RAD::process24BitOutput(KernelPatcher &patcher, KernelPatcher::KextInfo &info, mach_vm_address_t address,
-    size_t size) {
-    auto bitsPerComponent = patcher.solveSymbol<int *>(info.loadIndex, "__ZL18BITS_PER_COMPONENT", address, size);
-    if (bitsPerComponent) {
-        while (bitsPerComponent && *bitsPerComponent) {
-            if (*bitsPerComponent == 10) {
-                auto ret = MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock);
-                if (ret == KERN_SUCCESS) {
-                    DBGLOG("rad", "fixing BITS_PER_COMPONENT");
-                    *bitsPerComponent = 8;
-                    MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
-                } else {
-                    NETLOG("rad", "failed to disable write protection for "
-                                  "BITS_PER_COMPONENT");
-                }
-            }
-            bitsPerComponent++;
-        }
-    } else {
-        NETLOG("rad", "failed to find BITS_PER_COMPONENT");
-        patcher.clearError();
-    }
-
-    DBGLOG("rad", "fixing pixel types");
-
-    KernelPatcher::LookupPatch pixelPatch {&info, reinterpret_cast<const uint8_t *>("--RRRRRRRRRRGGGGGGGGGGBBBBBBBBBB"),
-        reinterpret_cast<const uint8_t *>("--------RRRRRRRRGGGGGGGGBBBBBBBB"), 32, 2};
-
-    patcher.applyLookupPatch(&pixelPatch);
-    if (patcher.getError() != KernelPatcher::Error::NoError) {
-        NETLOG("rad", "failed to patch RGB mask for 24-bit output");
-        patcher.clearError();
-    }
-}
-
-void RAD::processConnectorOverrides(KernelPatcher &patcher, mach_vm_address_t address, size_t size) {
-    KernelPatcher::RouteRequest requests[] = {
-        {"__ZN14AtiBiosParser116getConnectorInfoEP13ConnectorInfoRh", wrapGetConnectorsInfoV1, orgGetConnectorsInfoV1},
-        {"__ZN14AtiBiosParser216getConnectorInfoEP13ConnectorInfoRh", wrapGetConnectorsInfoV2, orgGetConnectorsInfoV2},
-        {"__"
-         "ZN14AtiBiosParser126translateAtomConnectorInfoERN30AtiObjectInfoTable"
-         "Interface_V117AtomConnectorInfoER13ConnectorInfo",
-            wrapTranslateAtomConnectorInfoV1, orgTranslateAtomConnectorInfoV1},
-        {"__"
-         "ZN14AtiBiosParser226translateAtomConnectorInfoERN30AtiObjectInfoTable"
-         "Interface_V217AtomConnectorInfoER13ConnectorInfo",
-            wrapTranslateAtomConnectorInfoV2, orgTranslateAtomConnectorInfoV2},
-        {"__ZN13ATIController5startEP9IOService", wrapATIControllerStart, orgATIControllerStart},
-    };
-    patcher.routeMultiple(kextRadeonSupport.loadIndex, requests, address, size);
 }
 
 void RAD::mergeProperty(OSDictionary *props, const char *name, OSObject *value) {
@@ -1469,258 +1357,6 @@ void RAD::mergeProperties(OSDictionary *props, const char *prefix, IOService *pr
     }
 }
 
-void RAD::applyPropertyFixes(IOService *service, uint32_t connectorNum) {
-    if (!service->getProperty("CFG,CFG_FB_LIMIT")) {
-        DBGLOG("rad", "setting fb limit to %u", connectorNum);
-        service->setProperty("CFG_FB_LIMIT", connectorNum, 32);
-    }
-}
-
-uint32_t RAD::wrapGetConnectorsInfoV1(void *that, RADConnectors::Connector *connectors, uint8_t *sz) {
-    NETLOG("rad", "getConnectorsInfoV1: this = %p connectors = %p sz = %p", that, connectors, sz);
-    uint32_t code = FunctionCast(wrapGetConnectorsInfoV1, callbackRAD->orgGetConnectorsInfoV1)(that, connectors, sz);
-    NETLOG("rad", "getConnectorsInfoV1 returned 0x%X", code);
-    auto props = callbackRAD->currentPropProvider.get();
-
-    if (code == 0 && sz && props && *props) {
-        callbackRAD->updateConnectorsInfo(nullptr, nullptr, *props, connectors, sz);
-    } else
-        NETLOG("rad", "getConnectorsInfoV1 failed %X or undefined %d", code, props == nullptr);
-
-    return code;
-}
-
-void RAD::updateConnectorsInfo(void *atomutils, t_getAtomObjectTableForType gettable, IOService *ctrl,
-    RADConnectors::Connector *connectors, uint8_t *sz) {
-    if (atomutils) {
-        NETLOG("rad", "getConnectorsInfo found %u connectors", *sz);
-        RADConnectors::print(connectors, *sz);
-    }
-
-    auto cons = ctrl->getProperty("connectors");
-    if (cons) {
-        auto consData = OSDynamicCast(OSData, cons);
-        if (consData) {
-            auto consPtr = consData->getBytesNoCopy();
-            auto consSize = consData->getLength();
-
-            uint32_t consCount;
-            if (WIOKit::getOSDataValue(ctrl, "connector-count", consCount)) {
-                *sz = consCount;
-                NETLOG("rad", "getConnectorsInfo got size override to %u", *sz);
-            }
-
-            if (consPtr && consSize > 0 && *sz > 0 && RADConnectors::valid(consSize, *sz)) {
-                RADConnectors::copy(connectors, *sz, static_cast<const RADConnectors::Connector *>(consPtr), consSize);
-                NETLOG("rad", "getConnectorsInfo installed %u connectors", *sz);
-                applyPropertyFixes(ctrl, *sz);
-            } else {
-                NETLOG("rad",
-                    "getConnectorsInfo conoverrides have invalid size %u "
-                    "for %u num",
-                    consSize, *sz);
-            }
-        } else {
-            NETLOG("rad", "getConnectorsInfo conoverrides have invalid type");
-        }
-    } else {
-        if (atomutils) {
-            NETLOG("rad", "getConnectorsInfo attempting to autofix connectors");
-            uint8_t sHeader = 0, displayPathNum = 0, connectorObjectNum = 0;
-            auto baseAddr =
-                static_cast<uint8_t *>(gettable(atomutils, AtomObjectTableType::Common, &sHeader)) - sizeof(uint32_t);
-            auto displayPaths = static_cast<AtomDisplayObjectPath *>(
-                gettable(atomutils, AtomObjectTableType::DisplayPath, &displayPathNum));
-            auto connectorObjects = static_cast<AtomConnectorObject *>(
-                gettable(atomutils, AtomObjectTableType::ConnectorObject, &connectorObjectNum));
-            if (displayPathNum == connectorObjectNum) {
-                autocorrectConnectors(baseAddr, displayPaths, displayPathNum, connectorObjects, connectorObjectNum,
-                    connectors, *sz);
-            } else {
-                NETLOG("rad",
-                    "getConnectorsInfo found different displaypaths %u and "
-                    "connectors %u",
-                    displayPathNum, connectorObjectNum);
-            }
-        }
-
-        applyPropertyFixes(ctrl, *sz);
-
-        const uint8_t *senseList = nullptr;
-        uint8_t senseNum = 0;
-        auto priData = OSDynamicCast(OSData, ctrl->getProperty("connector-priority"));
-        if (priData) {
-            senseList = static_cast<const uint8_t *>(priData->getBytesNoCopy());
-            senseNum = static_cast<uint8_t>(priData->getLength());
-            NETLOG("rad", "getConnectorInfo found %u senses in connector-priority", senseNum);
-            reprioritiseConnectors(senseList, senseNum, connectors, *sz);
-        } else {
-            NETLOG("rad", "getConnectorInfo leaving unchaged priority");
-        }
-    }
-
-    NETLOG("rad", "getConnectorsInfo resulting %u connectors follow", *sz);
-    RADConnectors::print(connectors, *sz);
-}
-
-uint32_t RAD::wrapTranslateAtomConnectorInfoV1(void *that, RADConnectors::AtomConnectorInfo *info,
-    RADConnectors::Connector *connector) {
-    uint32_t code = FunctionCast(wrapTranslateAtomConnectorInfoV1, callbackRAD->orgTranslateAtomConnectorInfoV1)(that,
-        info, connector);
-
-    if (code == 0 && info && connector) {
-        RADConnectors::print(connector, 1);
-
-        uint8_t sense = getSenseID(info->i2cRecord);
-        if (sense) {
-            NETLOG("rad", "translateAtomConnectorInfoV1 got sense id %02X", sense);
-
-            // We need to extract usGraphicObjIds from info->hpdRecord, which is
-            // of type ATOM_SRC_DST_TABLE_FOR_ONE_OBJECT: struct
-            // ATOM_SRC_DST_TABLE_FOR_ONE_OBJECT {
-            //   uint8_t ucNumberOfSrc;
-            //   uint16_t usSrcObjectID[ucNumberOfSrc];
-            //   uint8_t ucNumberOfDst;
-            //   uint16_t usDstObjectID[ucNumberOfDst];
-            // };
-            // The value we need is in usSrcObjectID. The structure is
-            // byte-packed.
-
-            uint8_t ucNumberOfSrc = info->hpdRecord[0];
-            for (uint8_t i = 0; i < ucNumberOfSrc; i++) {
-                auto usSrcObjectID =
-                    *reinterpret_cast<uint16_t *>(info->hpdRecord + sizeof(uint8_t) + i * sizeof(uint16_t));
-                NETLOG("rad", "translateAtomConnectorInfoV1 checking %04X object id", usSrcObjectID);
-                if (((usSrcObjectID & OBJECT_TYPE_MASK) >> OBJECT_TYPE_SHIFT) == GRAPH_OBJECT_TYPE_ENCODER) {
-                    uint8_t txmit = 0, enc = 0;
-                    if (getTxEnc(usSrcObjectID, txmit, enc))
-                        callbackRAD->autocorrectConnector(getConnectorID(info->usConnObjectId),
-                            getSenseID(info->i2cRecord), txmit, enc, connector, 1);
-                    break;
-                }
-            }
-        } else {
-            NETLOG("rad", "translateAtomConnectorInfoV1 failed to detect sense for "
-                          "translated connector");
-        }
-    }
-
-    return code;
-}
-
-void RAD::autocorrectConnectors(uint8_t *baseAddr, AtomDisplayObjectPath *displayPaths, uint8_t displayPathNum,
-    AtomConnectorObject *connectorObjects, [[maybe_unused]] uint8_t connectorObjectNum,
-    RADConnectors::Connector *connectors, uint8_t sz) {
-    for (uint8_t i = 0; i < displayPathNum; i++) {
-        if (!isEncoder(displayPaths[i].usGraphicObjIds)) {
-            NETLOG("rad", "autocorrectConnectors not encoder %X at %u", displayPaths[i].usGraphicObjIds, i);
-            continue;
-        }
-
-        uint8_t txmit = 0, enc = 0;
-        if (!getTxEnc(displayPaths[i].usGraphicObjIds, txmit, enc)) { continue; }
-
-        uint8_t sense = getSenseID(baseAddr + connectorObjects[i].usRecordOffset);
-        if (!sense) {
-            NETLOG("rad", "autocorrectConnectors failed to detect sense for %u connector", i);
-            continue;
-        }
-
-        NETLOG("rad",
-            "autocorrectConnectors found txmit %02X enc %02X sense %02X for %u "
-            "connector",
-            txmit, enc, sense, i);
-
-        autocorrectConnector(getConnectorID(displayPaths[i].usConnObjectId), sense, txmit, enc, connectors, sz);
-    }
-}
-
-void RAD::autocorrectConnector(uint8_t connector, uint8_t sense, uint8_t txmit, [[maybe_unused]] uint8_t enc,
-    RADConnectors::Connector *connectors, uint8_t sz) {
-    if (callbackRAD->dviSingleLink) {
-        if (connector != CONNECTOR_OBJECT_ID_DUAL_LINK_DVI_I && connector != CONNECTOR_OBJECT_ID_DUAL_LINK_DVI_D &&
-            connector != CONNECTOR_OBJECT_ID_LVDS) {
-            NETLOG("rad", "autocorrectConnector found unsupported connector type %02X", connector);
-            return;
-        }
-
-        auto fixTransmit = [](auto &con, uint8_t idx, uint8_t sense, uint8_t txmit) {
-            if (con.sense == sense) {
-                if (con.transmitter != txmit && (con.transmitter & 0xCF) == con.transmitter) {
-                    NETLOG("rad",
-                        "autocorrectConnector replacing txmit %02X with "
-                        "%02X for %u "
-                        "connector sense %02X",
-                        con.transmitter, txmit, idx, sense);
-                    con.transmitter = txmit;
-                }
-                return true;
-            }
-            return false;
-        };
-
-        bool isModern = RADConnectors::modern();
-        for (uint8_t j = 0; j < sz; j++) {
-            if (isModern) {
-                auto &con = (&connectors->modern)[j];
-                if (fixTransmit(con, j, sense, txmit)) break;
-            } else {
-                auto &con = (&connectors->legacy)[j];
-                if (fixTransmit(con, j, sense, txmit)) break;
-            }
-        }
-    } else
-        NETLOG("rad", "autocorrectConnector use -raddvi to enable dvi autocorrection");
-}
-
-void RAD::reprioritiseConnectors(const uint8_t *senseList, uint8_t senseNum, RADConnectors::Connector *connectors,
-    uint8_t sz) {
-    static constexpr uint32_t typeList[] = {
-        RADConnectors::ConnectorLVDS,
-        RADConnectors::ConnectorDigitalDVI,
-        RADConnectors::ConnectorHDMI,
-        RADConnectors::ConnectorDP,
-        RADConnectors::ConnectorVGA,
-    };
-    static constexpr uint8_t typeNum {static_cast<uint8_t>(arrsize(typeList))};
-
-    bool isModern = RADConnectors::modern();
-    uint16_t priCount = 1;
-    for (uint8_t i = 0; i < senseNum + typeNum + 1; i++) {
-        for (uint8_t j = 0; j < sz; j++) {
-            auto reorder = [&](auto &con) {
-                if (i == senseNum + typeNum) {
-                    if (con.priority == 0) con.priority = priCount++;
-                } else if (i < senseNum) {
-                    if (con.sense == senseList[i]) {
-                        NETLOG("rad",
-                            "reprioritiseConnectors setting priority of "
-                            "sense %02X to "
-                            "%u by sense",
-                            con.sense, priCount);
-                        con.priority = priCount++;
-                        return true;
-                    }
-                } else {
-                    if (con.priority == 0 && con.type == typeList[i - senseNum]) {
-                        NETLOG("rad",
-                            "reprioritiseConnectors setting priority of "
-                            "sense %02X to "
-                            "%u by type",
-                            con.sense, priCount);
-                        con.priority = priCount++;
-                    }
-                }
-                return false;
-            };
-
-            if ((isModern && reorder((&connectors->modern)[j])) || (!isModern && reorder((&connectors->legacy)[j]))) {
-                break;
-            }
-        }
-    }
-}
-
 bool RAD::wrapSetProperty(IORegistryEntry *that, const char *aKey, void *bytes, unsigned length) {
     if (length > 10 && aKey && reinterpret_cast<const uint32_t *>(aKey)[0] == 'edom' &&
         reinterpret_cast<const uint16_t *>(aKey)[2] == 'l') {
@@ -1773,60 +1409,6 @@ OSObject *RAD::wrapGetProperty(IORegistryEntry *that, const char *aKey) {
     return obj;
 }
 
-uint32_t RAD::wrapGetConnectorsInfoV2(void *that, RADConnectors::Connector *connectors, uint8_t *sz) {
-    NETLOG("rad", "getConnectorsInfoV2: this = %p connectors = %p sz = %p", that, connectors, sz);
-    uint32_t code = FunctionCast(wrapGetConnectorsInfoV2, callbackRAD->orgGetConnectorsInfoV2)(that, connectors, sz);
-    NETLOG("rad", "getConnectorsInfoV2 returned 0x%X", code);
-    auto props = callbackRAD->currentPropProvider.get();
-
-    if (code == 0 && sz && props && *props) callbackRAD->updateConnectorsInfo(nullptr, nullptr, *props, connectors, sz);
-    else
-        NETLOG("rad", "getConnectorsInfoV2 failed %X or undefined %d", code, props == nullptr);
-
-    return code;
-}
-
-uint32_t RAD::wrapTranslateAtomConnectorInfoV2(void *that, RADConnectors::AtomConnectorInfo *info,
-    RADConnectors::Connector *connector) {
-    uint32_t code = FunctionCast(wrapTranslateAtomConnectorInfoV2, callbackRAD->orgTranslateAtomConnectorInfoV2)(that,
-        info, connector);
-
-    if (code == 0 && info && connector) {
-        RADConnectors::print(connector, 1);
-
-        uint8_t sense = getSenseID(info->i2cRecord);
-        if (sense) {
-            NETLOG("rad", "translateAtomConnectorInfoV2 got sense id %02X", sense);
-            uint8_t txmit = 0, enc = 0;
-            if (getTxEnc(info->usGraphicObjIds, txmit, enc))
-                callbackRAD->autocorrectConnector(getConnectorID(info->usConnObjectId), getSenseID(info->i2cRecord),
-                    txmit, enc, connector, 1);
-        } else {
-            NETLOG("rad", "translateAtomConnectorInfoV2 failed to detect sense for "
-                          "translated connector");
-        }
-    }
-
-    return code;
-}
-
-bool RAD::wrapATIControllerStart(IOService *ctrl, IOService *provider) {
-    NETLOG("rad", "starting controller " PRIKADDR, CASTKADDR(current_thread()));
-
-    callbackRAD->currentPropProvider.set(provider);
-    bool r = FunctionCast(wrapATIControllerStart, callbackRAD->orgATIControllerStart)(ctrl, provider);
-    NETLOG("rad", "starting controller done %d " PRIKADDR, r, CASTKADDR(current_thread()));
-    callbackRAD->currentPropProvider.erase();
-
-    return r;
-}
-
-bool RAD::doNotTestVram([[maybe_unused]] IOService *ctrl, [[maybe_unused]] uint32_t reg,
-    [[maybe_unused]] bool retryOnFail) {
-    NETLOG("rad", "TestVRAM called! Returning true");
-    return true;
-}
-
 bool RAD::wrapNotifyLinkChange(void *atiDeviceControl, kAGDCRegisterLinkControlEvent_t event, void *eventData,
     uint32_t eventFlags) {
     auto ret = FunctionCast(wrapNotifyLinkChange, callbackRAD->orgNotifyLinkChange)(atiDeviceControl, event, eventData,
@@ -1842,23 +1424,4 @@ bool RAD::wrapNotifyLinkChange(void *atiDeviceControl, kAGDCRegisterLinkControlE
     }
 
     return ret;
-}
-
-void RAD::updateGetHWInfo(IOService *accelVideoCtx, void *hwInfo) {
-    IOService *accel, *pciDev;
-    accel = OSDynamicCast(IOService, accelVideoCtx->getParentEntry(gIOServicePlane));
-    if (accel == NULL) {
-        NETLOG("rad", "getHWInfo: no parent found for accelVideoCtx!");
-        return;
-    }
-    pciDev = OSDynamicCast(IOService, accel->getParentEntry(gIOServicePlane));
-    if (pciDev == NULL) {
-        NETLOG("rad", "getHWInfo: no parent found for accel!");
-        return;
-    }
-    uint16_t &org = getMember<uint16_t>(hwInfo, 0x4);
-    uint32_t dev = org;
-    if (!WIOKit::getOSDataValue(pciDev, "codec-device-id", dev)) { WIOKit::getOSDataValue(pciDev, "device-id", dev); }
-    NETLOG("rad", "getHWInfo: original PID: 0x%04X, replaced PID: 0x%04X", org, dev);
-    org = static_cast<uint16_t>(dev);
 }
