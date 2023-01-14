@@ -493,20 +493,11 @@ void RAD::wrapCosReleasePrintVaList(void *ttl, char *header, char *fmt, va_list 
     FunctionCast(wrapCosReleasePrintVaList, callbackRAD->orgCosReleasePrintVaList)(ttl, header, fmt, args);
 }
 
-uint32_t RAD::wrapGetVideoMemoryType(void *that) {
-    NETLOG("rad", "getVideoMemoryType: this = %p", that);
-    return 4;    // DDR4
-}
+uint32_t RAD::wrapGetVideoMemoryType() { return 4; }    // DDR4
 
-uint32_t RAD::wrapGetVideoMemoryBitWidth(void *that) {
-    NETLOG("rad", "getVideoMemoryBitWidth: this = %p", that);
-    return 64;    // 64 bits
-}
+uint32_t RAD::wrapGetVideoMemoryBitWidth() { return 64; }    // 64 bits
 
-IOReturn RAD::wrapPopulateVramInfo(void *that, void *param1) {
-    NETLOG("rad", "populateVramInfo: this = %p param1 = %p", that, param1);
-    return kIOReturnSuccess;
-}
+IOReturn RAD::wrapPopulateVramInfo() { return kIOReturnSuccess; }
 
 bool RAD::wrapGFX10AcceleratorStart() {
     /**

@@ -106,9 +106,9 @@ class RAD {
     static uint16_t wrapGetFamilyId();
     static IOReturn wrapPopulateDeviceInfo(void *that);
     static uint16_t wrapGetEnumeratedRevision(void *that);
-    static uint32_t wrapGetVideoMemoryType(void *that);
-    static uint32_t wrapGetVideoMemoryBitWidth(void *that);
-    static IOReturn wrapPopulateVramInfo(void *that, void *param1);
+    static uint32_t wrapGetVideoMemoryType();
+    static uint32_t wrapGetVideoMemoryBitWidth();
+    static IOReturn wrapPopulateVramInfo();
 
     /**
      * X5000HWLibs
