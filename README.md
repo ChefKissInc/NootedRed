@@ -20,7 +20,7 @@ Syntax: `wrednetdbgip=<IP>:<PORT>`
 
 Example: `wrednetdbgip=127.0.0.1:8081`
 
-Pass `-wrednetdbg` to disable the NetDbg functionality.
+Pass `wrednetdbg=0` to disable the NetDbg functionality.
 
 The WhateverRed kext is licensed under BSD-3.
 
