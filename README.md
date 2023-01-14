@@ -18,7 +18,7 @@ Specify the NetDbg server IP and port via `netdbg_ip_X` and `netdbg_port` boot a
 
 Where `X` is IP part. Example: IP `192.168.60.231` would become `netdbg_ip_1=192` `netdbg_ip_2=168` `netdbg_ip_3=60` `netdbg_ip_4=231`.
 
-Pass `-netdbg_disable` to disable the NetDbg functionality.
+Pass `netdbg_disable` to disable the NetDbg functionality.
 
 The WhateverRed kext is licensed under BSD-3.
 

@@ -17,8 +17,8 @@ in_addr_t NETDBG::ip_addr = 0;
 uint32_t NETDBG::port = 0;
 
 size_t NETDBG::nprint(char *data, size_t len) {
-    int disable = 0;
-    if (enabled && PE_parse_boot_argn("netdbg_disable", &disable, sizeof(disable))) {
+    bool disable = 0;
+    if (enabled && PE_parse_boot_argn("netdbg_disable", &disable, sizeof(disable) && disable)) {
         kprintf("netdbg: Disabled via boot arg\n");
         enabled = false;
     }
