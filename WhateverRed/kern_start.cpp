@@ -2,7 +2,6 @@
 //  kern_start.cpp
 //  WhateverRed
 //
-//  Copyright © 2017 vit9696. All rights reserved.
 //  Copyright © 2022 ChefKiss Inc. All rights reserved.
 //
 
@@ -27,7 +26,7 @@ static const char *bootargBeta[] = {
 PluginConfiguration ADDPR(config) {
     xStringify(PRODUCT_NAME),
     parseModuleVersion(xStringify(MODULE_VERSION)),
-    LiluAPI::AllowNormal | LiluAPI::AllowInstallerRecovery | LiluAPI::AllowSafeMode,
+    LiluAPI::AllowNormal | LiluAPI::AllowSafeMode,
     bootargOff,
     arrsize(bootargOff),
     bootargDebug,
@@ -35,6 +34,6 @@ PluginConfiguration ADDPR(config) {
     bootargBeta,
     arrsize(bootargBeta),
     KernelVersion::Catalina,
-    KernelVersion::Ventura,
+    KernelVersion::BigSur,
     []() { wred.init(); },
 };
