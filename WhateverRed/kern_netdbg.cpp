@@ -10,20 +10,7 @@
 #include <Headers/kern_api.hpp>
 #include <netinet/in.h>
 
-in_addr_t inet_addr(uint32_t a, uint32_t b, uint32_t c, uint32_t d) {
-    auto ret = d;
-
-    ret *= 256;
-    ret += c;
-
-    ret *= 256;
-    ret += b;
-
-    ret *= 256;
-    ret += a;
-
-    return ret;
-}
+in_addr_t inet_addr(uint32_t a, uint32_t b, uint32_t c, uint32_t d) { return a | (b << 8) | (c << 16) | (d << 24); }
 
 bool NETDBG::enabled = false;
 in_addr_t NETDBG::ip_addr = 0;
