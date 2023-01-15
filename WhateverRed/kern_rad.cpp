@@ -134,13 +134,16 @@ class AppleACPIPlatformExpert : IOACPIPlatformExpert {
 
 void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider) {
     WIOKit::renameDevice(provider, "GFX0");
-    if (!provider->getProperty("built-in")) {
-        DBGLOG("wred", "fixing built-in");
-        static uint8_t builtBytes[] = {0x01};
-        provider->setProperty("built-in", builtBytes, sizeof(builtBytes));
-    } else {
-        DBGLOG("wred", "found existing built-in");
+
+    static uint8_t builtBytes[] = {0x01};
+    provider->setProperty("built-in", builtBytes, sizeof(builtBytes));
+
+    for (size_t i = 0; i < 4; i++) {
+        char prop[8] = {0};
+        snprintf(prop, 8, "@%zu,name", i);
+        provider->setProperty(prop, "ATY,Adder");
     }
+    if (!provider->getProperty("ATY,EFIVersion")) { provider->setProperty("ATY,EFIVersion", "016.001.001.000.008771"); }
 
     NETDBG::enabled = true;
     NETLOG("rad", "patching device type table");
