@@ -859,6 +859,13 @@ void RAD::wrapCgsWriteRegister(void **tlsInstance, uint32_t regIndex, uint32_t v
     regs[regIndex] = val;
 }
 
+uint32_t RAD::wrapFbEnableController(void* that) {
+    NETLOG("rad", "fbEnableController: this = %p", that);
+    auto ret = FunctionCast(wrapFbEnableController, callbackRAD->orgFbEnableController)(that);
+    NETLOG("rad", "fbEnableController returned 0x%X", ret);
+    return ret;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonSupport.loadIndex == index) {
         KernelPatcher::RouteRequest requests[] = {
@@ -969,6 +976,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 orgPopulateDeviceInfo},
             {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
             {"__ZN32AMDRadeonX6000_AmdRegisterAccess11hwReadReg32Ej", wrapHwReadReg32, orgHwReadReg32},
+            {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer16enableControllerEv", wrapFbEnableController, orgFbEnableController},
         };
 
         if (!patcher.routeMultiple(index, requests, address, size, true)) {
