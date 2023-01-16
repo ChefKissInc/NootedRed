@@ -119,7 +119,6 @@ class RAD {
     mach_vm_address_t orgGetHWCapabilities {};
     mach_vm_address_t orgSetupAndInitializeHWCapabilities {};
     mach_vm_address_t orgDumpASICHangStateCold {};
-    mach_vm_address_t orgAccelDisplayPipeWriteDiagnosisReport {};
     mach_vm_address_t orgSetMemoryAllocationsEnabled {};
     mach_vm_address_t orgPowerUpHW {};
     mach_vm_address_t orgHWsetMemoryAllocationsEnabled {};
@@ -204,7 +203,6 @@ class RAD {
     static bool wrapAllocateHWEngines(void *that);
     static void wrapSetupAndInitializeHWCapabilities(void *that);
     static void wrapDumpASICHangStateCold(uint64_t param1);
-    static void wrapAccelDisplayPipeWriteDiagnosisReport(void *that);
     static uint64_t wrapSetMemoryAllocationsEnabled(void *that, uint64_t param1);
     static bool wrapPowerUpHW(void *that);
     static void wrapHWsetMemoryAllocationsEnabled(void *that, bool param1);
