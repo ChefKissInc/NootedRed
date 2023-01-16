@@ -20,6 +20,8 @@ def fixType(typ):
         ret = "uint64_t"
     elif typ == "void":
         ret = "void"
+    elif typ == "IOReturn":
+        ret = "IOReturn"
     else:
         if "*" in typ:
             return "void*"
@@ -64,7 +66,8 @@ def getFormatType(typ):
              "uint32_t": "0x%X",
              "uint16_t": "0x%hX",
              "uint8_t": "0x%hhX",
-             "bool": "%d"}
+             "bool": "%d",
+             "IOReturn": "0x%X"}
 
     if typ in table:
         return table[typ]
