@@ -139,13 +139,6 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider) 
     static uint8_t builtBytes[] = {0x01};
     provider->setProperty("built-in", builtBytes, sizeof(builtBytes));
 
-    for (size_t i = 0; i < 4; i++) {
-        char prop[8] = {0};
-        snprintf(prop, 8, "@%zu,name", i);
-        provider->setProperty(prop, "ATY,Adder");
-    }
-    if (!provider->getProperty("ATY,EFIVersion")) { provider->setProperty("ATY,EFIVersion", "016.001.001.000.008771"); }
-
     NETDBG::enabled = true;
     NETLOG("rad", "patching device type table");
     PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "rad",
