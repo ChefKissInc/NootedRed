@@ -608,7 +608,14 @@ uint32_t RAD::wrapPspHdcpLoad(void *pspData) {
     return ret;
 }
 
-uint64_t RAD::wrapSetMemoryAllocationsEnabled(void *that, uint64_t param1) {    // TODO: Remove this
+void RAD::wrapAccelDisplayPipeWriteDiagnosisReport(void *that) {
+    NETLOG("rad", "AccelDisplayPipeWriteDiagnosisReport: this = %p", that);
+    // FunctionCast(wrapAccelDisplayPipeWriteDiagnosisReport,
+    // callbackRAD->orgAccelDisplayPipeWriteDiagnosisReport)(that);
+    NETLOG("rad", "AccelDisplayPipeWriteDiagnosisReport finished");
+}
+
+uint64_t RAD::wrapSetMemoryAllocationsEnabled(void *that, uint64_t param1) {
     NETLOG("rad", "setMemoryAllocationsEnabled: this = %p param1 = 0x%llX", that, param1);
     auto ret = FunctionCast(wrapSetMemoryAllocationsEnabled, callbackRAD->orgSetMemoryAllocationsEnabled)(that, param1);
     NETLOG("rad", "setMemoryAllocationsEnabled returned 0x%llX", ret);
@@ -968,6 +975,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 wrapSetupAndInitializeHWCapabilities, orgSetupAndInitializeHWCapabilities},
             {"__ZN26AMDRadeonX5000_AMDHardware17dumpASICHangStateEb.cold.1", wrapDumpASICHangStateCold,
                 orgDumpASICHangStateCold},
+            {"__ZN34AMDRadeonX5000_AMDAccelDisplayPipe20writeDiagnosisReportERPcRj",
+                wrapAccelDisplayPipeWriteDiagnosisReport, orgAccelDisplayPipeWriteDiagnosisReport},
             {"__ZN23AMDRadeonX5000_AMDHWVMM27setMemoryAllocationsEnabledEb", wrapSetMemoryAllocationsEnabled,
                 orgSetMemoryAllocationsEnabled},
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator9powerUpHWEv", wrapPowerUpHW, orgPowerUpHW},
