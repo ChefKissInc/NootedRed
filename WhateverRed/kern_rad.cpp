@@ -941,6 +941,9 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             0x5D, 0xE9, 0x51, 0xFE, 0xFF, 0xFF};
         static_assert(arrsize(find_asic_reset) == arrsize(repl_asic_reset), "Find/replace patch size mismatch");
 
+        static uint8_t find_hdp_flush[] = { 0x81, 0xbf, 0x90, 0x01, 0x00, 0x00, 0x8e, 0x00, 0x00, 0x00, 0x75, 0x20, 0x8b, 0x87, 0x9c, 0x01, 0x00, 0x00 };
+        static uint8_t repl_hdp_flush[] = { 0x81, 0xbf, 0x90, 0x01, 0x00, 0x00, 0x8e, 0x00, 0x00, 0x00, 0x74, 0x20, 0x8b, 0x87, 0x9c, 0x01, 0x00, 0x00 };
+
         KernelPatcher::LookupPatch patches[] = {
             /**
              * Patch for `_smu_9_0_1_full_asic_reset`
@@ -949,6 +952,14 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
              * the original code sends `0x3B`, which is wrong for SMU 10.
              */
             {&kextRadeonX5000HWLibs, find_asic_reset, repl_asic_reset, arrsize(find_asic_reset), 2},
+            /**
+             * Patch for `_greenland_HdpFlushAfterWrite`
+             * This function has an if condition that checks
+             * whether to call `_nbio_7_0_hdp_flush` instead of `_nbio_6_1_hdp_flush`.
+             * However, the reg index in `_nbio_7_0_hdp_flush` is actually incorrect.
+             * This patches works around that by making the function always call `_nbio_6_1_hdp_flush`.
+             */
+            {&kextRadeonX5000HWLibs, find_hdp_flush, repl_hdp_flush, arrsize(find_hdp_flush), 2},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
