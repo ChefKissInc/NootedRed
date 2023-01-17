@@ -855,9 +855,12 @@ void RAD::wrapCgsWriteRegister(void **tlsInstance, uint32_t regIndex, uint32_t v
     regs[regIndex] = val;
 }
 
-IOReturn RAD::wrapQueryHwBlockRegisterBase(void* that, uint32_t blockType, uint8_t param2, uint32_t param3, uint32_t* retPtr) {
-    NETLOG("rad", "queryHwBlockRegisterBase: this = %p blockType = 0x%X param2 = 0x%hhX param3 = 0x%X retPtr = %p", that, blockType, param2, param3, retPtr);
-    auto ret = FunctionCast(wrapQueryHwBlockRegisterBase, callbackRAD->orgQueryHwBlockRegisterBase)(that, blockType, param2, param3, retPtr);
+IOReturn RAD::wrapQueryHwBlockRegisterBase(void *that, uint32_t blockType, uint8_t param2, uint32_t param3,
+    uint32_t *retPtr) {
+    NETLOG("rad", "queryHwBlockRegisterBase: this = %p blockType = 0x%X param2 = 0x%hhX param3 = 0x%X retPtr = %p",
+        that, blockType, param2, param3, retPtr);
+    auto ret = FunctionCast(wrapQueryHwBlockRegisterBase, callbackRAD->orgQueryHwBlockRegisterBase)(that, blockType,
+        param2, param3, retPtr);
     NETLOG("rad", "Register base is set to 0x%X", *retPtr);
     return ret;
 }
@@ -929,7 +932,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 wrapGmmCbSetMemoryAttributes, orgGmmCbSetMemoryAttributes},
             {"_ipi_gvm_hw_init", wrapIpiGvmHwInit, orgIpiGvmHwInit},
             {"_write_register", wrapCgsWriteRegister},
-            {"__ZN14AmdTtlServices24queryHwBlockRegisterBaseE12hwblock_typehjPj", wrapQueryHwBlockRegisterBase, orgQueryHwBlockRegisterBase},
+            {"__ZN14AmdTtlServices24queryHwBlockRegisterBaseE12hwblock_typehjPj", wrapQueryHwBlockRegisterBase,
+                orgQueryHwBlockRegisterBase},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");

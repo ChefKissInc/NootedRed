@@ -222,8 +222,9 @@ class RAD {
     static void wrapUpdateContiguousPTEsWithDMAUsingAddr(void *that, uint64_t param1, uint64_t param2, uint64_t param3,
         uint64_t param4, uint64_t param5);
 
-    mach_vm_address_t orgQueryHwBlockRegisterBase{};
-    static IOReturn wrapQueryHwBlockRegisterBase(void* that, uint32_t blockType, uint8_t param2, uint32_t param3, uint32_t* ret);
+    mach_vm_address_t orgQueryHwBlockRegisterBase {};
+    static IOReturn wrapQueryHwBlockRegisterBase(void *that, uint32_t blockType, uint8_t param2, uint32_t param3,
+        uint32_t *ret);
 };
 
 #endif /* kern_rad_hpp */
