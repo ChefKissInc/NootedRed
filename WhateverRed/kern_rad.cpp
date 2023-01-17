@@ -788,12 +788,6 @@ void RAD::wrapInitializeFamilyType(void *that) { getMember<uint32_t>(that, 0x308
 
 uint32_t RAD::pspFeatureUnsupported() { return 4; }
 
-void RAD::wrapCgsWriteRegister(void **tlsInstance, uint32_t regIndex, uint32_t val) {
-    NETLOG("rad", "_write_register: tlsInstance = %p regIndex = 0x%X val = 0x%X", tlsInstance, regIndex, val);
-    uint *regs = getMember<uint *>(tlsInstance, 8);
-    regs[regIndex] = val;
-}
-
 IOReturn RAD::wrapQueryHwBlockRegisterBase(void *that, uint32_t blockType, uint8_t param2, uint32_t param3,
     uint32_t *retPtr) {
     NETLOG("rad", "queryHwBlockRegisterBase: this = %p blockType = 0x%X param2 = 0x%hhX param3 = 0x%X retPtr = %p",
@@ -865,7 +859,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_SmuRenoir_Initialize", wrapSmuRenoirInitialize, orgSmuRenoirInitialize},
             {"_psp_xgmi_is_support", pspFeatureUnsupported},
             {"_psp_rap_is_supported", pspFeatureUnsupported},
-            {"_write_register", wrapCgsWriteRegister},
             {"__ZN14AmdTtlServices24queryHwBlockRegisterBaseE12hwblock_typehjPj", wrapQueryHwBlockRegisterBase,
                 orgQueryHwBlockRegisterBase},
         };

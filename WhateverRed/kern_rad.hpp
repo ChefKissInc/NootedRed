@@ -157,7 +157,6 @@ class RAD {
     static uint32_t wrapSmuRavenInitialize(void *smumData, uint32_t param2);
     static uint32_t wrapSmuRenoirInitialize(void *smumData, uint32_t param2);
     static uint32_t pspFeatureUnsupported();
-    static void wrapCgsWriteRegister(void **tlsInstance, uint32_t regIndex, uint32_t val);
 
     /** X6000 */
     static bool wrapGFX10AcceleratorStart();
