@@ -48,26 +48,15 @@ class RAD {
     ASICType asicType = ASICType::Unknown;
     void *callbackFirmwareDirectory = nullptr;
 
-    /**
-     * Kernel
-     */
-    mach_vm_address_t orgSetProperty {}, orgGetProperty {};
+    mach_vm_address_t orgSetProperty {}, orgGetProperty {};    // Kernel
+    mach_vm_address_t orgNotifyLinkChange {};                  // AMDSupport
 
-    /**
-     * AMDSupport
-     */
-    mach_vm_address_t orgNotifyLinkChange {};
-
-    /**
-     * X6000Framebuffer
-     */
+    /** X6000Framebuffer */
     mach_vm_address_t orgPopulateDeviceInfo {};
     CailAsicCapEntry *orgAsicCapsTable = nullptr;
     mach_vm_address_t orgHwReadReg32 {};
 
-    /**
-     * X5000HWLibs
-     */
+    /** X5000HWLibs */
     uint32_t *orgDeviceTypeTable = nullptr;
     mach_vm_address_t orgAmdTtlServicesConstructor {};
     mach_vm_address_t orgSmuGetHwVersion {};
@@ -101,16 +90,12 @@ class RAD {
     mach_vm_address_t orgGmmCbSetMemoryAttributes {};
     mach_vm_address_t orgIpiGvmHwInit {};
 
-    /**
-     * X6000
-     */
+    /** X6000 */
     t_HWEngineNew orgGFX10VCN2EngineNew = nullptr;
     t_HWEngineConstructor orgGFX10VCN2EngineConstructor = nullptr;
     mach_vm_address_t orgGFX10SetupAndInitializeHWCapabilities {};
 
-    /**
-     * X5000
-     */
+    /** X5000 */
     t_HWEngineNew orgGFX9PM4EngineNew = nullptr;
     t_HWEngineConstructor orgGFX9PM4EngineConstructor = nullptr;
     t_HWEngineNew orgGFX9SDMAEngineNew = nullptr;
@@ -134,23 +119,17 @@ class RAD {
     mach_vm_address_t orgGetPTEValue {};
     mach_vm_address_t orgUpdateContiguousPTEsWithDMAUsingAddr {};
 
-    /**
-     * Kernel
-     */
+    /** Kernel */
     void mergeProperty(OSDictionary *props, const char *name, OSObject *value);
     void mergeProperties(OSDictionary *props, const char *prefix, IOService *provider);
     static bool wrapSetProperty(IORegistryEntry *that, const char *aKey, void *bytes, unsigned length);
     static OSObject *wrapGetProperty(IORegistryEntry *that, const char *aKey);
 
-    /**
-     * AMDSupport
-     */
+    /** AMDSupport */
     static bool wrapNotifyLinkChange(void *atiDeviceControl, kAGDCRegisterLinkControlEvent_t event, void *eventData,
         uint32_t eventFlags);
 
-    /**
-     * X6000Framebuffer
-     */
+    /** X6000Framebuffer */
     static uint16_t wrapGetFamilyId();
     static IOReturn wrapPopulateDeviceInfo(void *that);
     static uint16_t wrapGetEnumeratedRevision(void *that);
@@ -159,9 +138,7 @@ class RAD {
     static IOReturn wrapPopulateVramInfo();
     static uint32_t wrapHwReadReg32(void *that, uint32_t param1);
 
-    /**
-     * X5000HWLibs
-     */
+    /** X5000HWLibs */
     static void wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider);
     static uint64_t wrapSmuGetHwVersion(uint64_t param1, uint32_t param2);
     static uint64_t wrapPspSwInit(uint32_t *param1, uint32_t *param2);
@@ -192,14 +169,10 @@ class RAD {
     static bool wrapIpiGvmHwInit(void *ctx);
     static void wrapCgsWriteRegister(void **tlsInstance, uint32_t regIndex, uint32_t val);
 
-    /**
-     * X6000
-     */
+    /** X6000 */
     static bool wrapGFX10AcceleratorStart();
 
-    /**
-     * X5000
-     */
+    /** X5000 */
     static bool wrapAllocateHWEngines(void *that);
     static void wrapSetupAndInitializeHWCapabilities(void *that);
     static void wrapDumpASICHangStateCold(uint64_t param1);
