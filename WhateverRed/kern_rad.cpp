@@ -788,37 +788,6 @@ void RAD::wrapInitializeFamilyType(void *that) { getMember<uint32_t>(that, 0x308
 
 uint32_t RAD::pspFeatureUnsupported() { return 4; }
 
-void RAD::wrapVm9XWriteRegister(uint64_t *param1, uint32_t param2, uint32_t param3, uint32_t param4, uint32_t param5) {
-    NETLOG("rad", "_vm_9_x_write_register: param1 = %p param2 = 0x%X param3 = 0x%X param4 = 0x%X param5 = 0x%X", param1,
-        param2, param3, param4, param5);
-    FunctionCast(wrapVm9XWriteRegister, callbackRAD->orgVm9XWriteRegister)(param1, param2, param3, param4, param5);
-    NETLOG("rad", "_vm_9_x_write_register finished");
-}
-
-void RAD::wrapVm9XWriteRegisterExt(uint64_t *param1, uint32_t param2, uint64_t param3, uint32_t param4,
-    uint32_t param5) {
-    NETLOG("rad", "_vm_9_x_write_register_ext: param1 = %p param2 = 0x%X param3 = 0x%llX param4 = 0x%X param5 = 0x%X",
-        param1, param2, param3, param4, param5);
-    FunctionCast(wrapVm9XWriteRegisterExt, callbackRAD->orgVm9XWriteRegisterExt)(param1, param2, param3, param4,
-        param5);
-    NETLOG("rad", "_vm_9_x_write_register_ext finished");
-}
-
-uint64_t RAD::wrapGmmCbSetMemoryAttributes(void *param1, uint32_t param2, void *param3) {
-    NETLOG("rad", "gmmCbSetMemoryAttributes: param1 = %p param2 = 0x%X param3 = %p", param1, param2, param3);
-    auto ret =
-        FunctionCast(wrapGmmCbSetMemoryAttributes, callbackRAD->orgGmmCbSetMemoryAttributes)(param1, param2, param3);
-    NETLOG("rad", "gmmCbSetMemoryAttributes returned 0x%llX", ret);
-    return ret;
-}
-
-bool RAD::wrapIpiGvmHwInit(void *ctx) {
-    NETLOG("rad", "_ipi_gvm_hw_init: ctx = %p", ctx);
-    auto ret = FunctionCast(wrapIpiGvmHwInit, callbackRAD->orgIpiGvmHwInit)(ctx);
-    NETLOG("rad", "_ipi_gvm_hw_init returned %d", ret);
-    return ret;
-}
-
 void RAD::wrapCgsWriteRegister(void **tlsInstance, uint32_t regIndex, uint32_t val) {
     NETLOG("rad", "_write_register: tlsInstance = %p regIndex = 0x%X val = 0x%X", tlsInstance, regIndex, val);
     uint *regs = getMember<uint *>(tlsInstance, 8);
@@ -896,11 +865,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_SmuRenoir_Initialize", wrapSmuRenoirInitialize, orgSmuRenoirInitialize},
             {"_psp_xgmi_is_support", pspFeatureUnsupported},
             {"_psp_rap_is_supported", pspFeatureUnsupported},
-            {"_vm_9_x_write_register", wrapVm9XWriteRegister, orgVm9XWriteRegister},
-            {"_vm_9_x_write_register_ext", wrapVm9XWriteRegisterExt, orgVm9XWriteRegisterExt},
-            {"__ZN14AmdTtlServices24gmmCbSetMemoryAttributesEPv16_TtlCbMemoryTypeP22_TtlCbMemoryAttributes",
-                wrapGmmCbSetMemoryAttributes, orgGmmCbSetMemoryAttributes},
-            {"_ipi_gvm_hw_init", wrapIpiGvmHwInit, orgIpiGvmHwInit},
             {"_write_register", wrapCgsWriteRegister},
             {"__ZN14AmdTtlServices24queryHwBlockRegisterBaseE12hwblock_typehjPj", wrapQueryHwBlockRegisterBase,
                 orgQueryHwBlockRegisterBase},

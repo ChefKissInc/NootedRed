@@ -85,10 +85,6 @@ class RAD {
     t_sendMsgToSmcWithParam orgRenoirSendMsgToSmcWithParam = nullptr;
     mach_vm_address_t orgSmuRavenInitialize {};
     mach_vm_address_t orgSmuRenoirInitialize {};
-    mach_vm_address_t orgVm9XWriteRegister {};
-    mach_vm_address_t orgVm9XWriteRegisterExt {};
-    mach_vm_address_t orgGmmCbSetMemoryAttributes {};
-    mach_vm_address_t orgIpiGvmHwInit {};
 
     /** X6000 */
     t_HWEngineNew orgGFX10VCN2EngineNew = nullptr;
@@ -161,12 +157,6 @@ class RAD {
     static uint32_t wrapSmuRavenInitialize(void *smumData, uint32_t param2);
     static uint32_t wrapSmuRenoirInitialize(void *smumData, uint32_t param2);
     static uint32_t pspFeatureUnsupported();
-    static void wrapVm9XWriteRegister(uint64_t *param1, uint32_t param2, uint32_t param3, uint32_t param4,
-        uint32_t param5);
-    static void wrapVm9XWriteRegisterExt(uint64_t *param1, uint32_t param2, uint64_t param3, uint32_t param4,
-        uint32_t param5);
-    static uint64_t wrapGmmCbSetMemoryAttributes(void *param1, uint32_t param2, void *param3);
-    static bool wrapIpiGvmHwInit(void *ctx);
     static void wrapCgsWriteRegister(void **tlsInstance, uint32_t regIndex, uint32_t val);
 
     /** X6000 */
