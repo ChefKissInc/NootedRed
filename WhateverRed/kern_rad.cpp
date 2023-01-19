@@ -794,6 +794,12 @@ IOReturn RAD::wrapQueryHwBlockRegisterBase(void *that, uint32_t blockType, uint8
     return ret;
 }
 
+void RAD::wrapHwWriteReg(void* that, uint32_t regIndex, uint32_t regVal) {
+    NETLOG("rad", "hwWriteReg: this = %p regIndex = 0x%X regVal = 0x%X", that, regIndex, regVal);
+    FunctionCast(wrapHwWriteReg, callbackRAD->orgHwWriteReg)(that, regIndex, regVal);
+    NETLOG("rad", "hwWriteReg finished");
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonSupport.loadIndex == index) {
         KernelPatcher::RouteRequest requests[] = {
@@ -986,6 +992,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN29AMDRadeonX5000_AMDHWVMContext36updateContiguousPTEsWithDMAUsingAddrEyyyyy",
                 wrapUpdateContiguousPTEsWithDMAUsingAddr, orgUpdateContiguousPTEsWithDMAUsingAddr},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20initializeFamilyTypeEv", wrapInitializeFamilyType},
+            {"__ZN29AMDRadeonX5000_AMDHWRegisters5writeEjj", wrapHwWriteReg, orgHwWriteReg},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
