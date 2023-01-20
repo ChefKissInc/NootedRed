@@ -190,8 +190,8 @@ class RAD {
     static IOReturn wrapQueryHwBlockRegisterBase(void *that, uint32_t blockType, uint8_t param2, uint32_t param3,
         uint32_t *ret);
 
-    mach_vm_address_t orgHwWriteReg{};
-    static void wrapHwWriteReg(void* that, uint32_t regIndex, uint32_t regVal);
+    mach_vm_address_t orgHwWriteReg {};
+    static void wrapHwWriteReg(void *that, uint32_t regIndex, uint32_t regVal);
 };
 
 #endif /* kern_rad_hpp */

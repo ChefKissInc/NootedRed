@@ -797,7 +797,7 @@ IOReturn RAD::wrapQueryHwBlockRegisterBase(void *that, uint32_t blockType, uint8
     return ret;
 }
 
-void RAD::wrapHwWriteReg(void* that, uint32_t regIndex, uint32_t regVal) {
+void RAD::wrapHwWriteReg(void *that, uint32_t regIndex, uint32_t regVal) {
     NETLOG("rad", "hwWriteReg: this = %p regIndex = 0x%X regVal = 0x%X", that, regIndex, regVal);
     FunctionCast(wrapHwWriteReg, callbackRAD->orgHwWriteReg)(that, regIndex, regVal);
     NETLOG("rad", "hwWriteReg finished");
@@ -1266,7 +1266,9 @@ void RAD::mergeProperties(OSDictionary *props, const char *prefix, IOService *pr
                 if (name && propname->getLength() > prefixlen && !strncmp(name, prefix, prefixlen)) {
                     auto prop = dict->getObject(propname);
                     if (prop) mergeProperty(props, name + prefixlen, prop);
-                    else { DBGLOG("rad", "prop %s was not merged due to no value", name); }
+                    else {
+                        DBGLOG("rad", "prop %s was not merged due to no value", name);
+                    }
                 } else {
                     DBGLOG("rad", "prop %s does not match %s prefix", safeString(name), prefix);
                 }
