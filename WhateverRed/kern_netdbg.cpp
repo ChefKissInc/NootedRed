@@ -9,6 +9,7 @@
 #include "kern_netdbg.hpp"
 #include <Headers/kern_api.hpp>
 #include <netinet/in.h>
+#include <IOKit/IOLocks.h>
 
 in_addr_t inet_addr(uint32_t a, uint32_t b, uint32_t c, uint32_t d) { return a | (b << 8) | (c << 16) | (d << 24); }
 
@@ -98,11 +99,15 @@ size_t NETDBG::printf(const char *fmt, ...) {
 }
 
 size_t NETDBG::vprintf(const char *fmt, va_list args) {
+	static IOLock* lock = nullptr;
+	if (lock == nullptr) lock = IOLockAlloc();
+	IOLockLock(lock);
     char *data = new char[2048];
     size_t len = vsnprintf(data, 2047, fmt, args);
 
     auto ret = NETDBG::nprint(data, len);
 
     delete[] data;
+	IOLockUnlock(lock);
     return ret;
 }
