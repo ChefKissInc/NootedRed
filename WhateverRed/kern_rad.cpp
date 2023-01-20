@@ -328,13 +328,13 @@ IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
         auto *filename = new char[128];
         snprintf(filename, 128, "%s_vcn.bin", asicName);
         auto *targetFilename = callbackRAD->asicType == ASICType::Renoir ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
-        // NETLOG("rad", "%s => %s", filename, targetFilename);
+        DBGLOG("rad", "%s => %s", filename, targetFilename);
 
         auto *fwDesc = getFWDescByName(filename);
         PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
 
         auto *fw = callbackRAD->orgCreateFirmware(fwDesc->var, fwDesc->size, 0x200, targetFilename);
-        // NETLOG("rad", "Inserting %s!", targetFilename);
+        DBGLOG("rad", "Inserting %s!", targetFilename);
         PANIC_COND(!callbackRAD->orgPutFirmware(callbackRAD->callbackFirmwareDirectory, 6, fw), "rad",
             "Failed to inject ativvaxy_rv.dat firmware");
 
@@ -343,48 +343,48 @@ IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
         PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
         callbackRAD->orgGcRlcUcode->addr = 0x0;
         memmove(callbackRAD->orgGcRlcUcode->data, fwDesc->var, fwDesc->size);
-        // NETLOG("rad", "Injected %s!", filename);
+        DBGLOG("rad", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_me.bin", asicName);
         fwDesc = getFWDescByName(filename);
         PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
         callbackRAD->orgGcMeUcode->addr = 0x1000;
         memmove(callbackRAD->orgGcMeUcode->data, fwDesc->var, fwDesc->size);
-        // NETLOG("rad", "Injected %s!", filename);
+        DBGLOG("rad", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_ce.bin", asicName);
         fwDesc = getFWDescByName(filename);
         PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
         callbackRAD->orgGcCeUcode->addr = 0x800;
         memmove(callbackRAD->orgGcCeUcode->data, fwDesc->var, fwDesc->size);
-        // NETLOG("rad", "Injected %s!", filename);
+        DBGLOG("rad", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_pfp.bin", asicName);
         fwDesc = getFWDescByName(filename);
         PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
         callbackRAD->orgGcPfpUcode->addr = 0x1400;
         memmove(callbackRAD->orgGcPfpUcode->data, fwDesc->var, fwDesc->size);
-        // NETLOG("rad", "Injected %s!", filename);
+        DBGLOG("rad", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_mec.bin", asicName);
         fwDesc = getFWDescByName(filename);
         PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
         callbackRAD->orgGcMecUcode->addr = 0x0;
         memmove(callbackRAD->orgGcMecUcode->data, fwDesc->var, fwDesc->size);
-        // NETLOG("rad", "Injected %s!", filename);
+        DBGLOG("rad", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_mec_jt.bin", asicName);
         fwDesc = getFWDescByName(filename);
         PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
         callbackRAD->orgGcMecJtUcode->addr = 0x104A4;
         memmove(callbackRAD->orgGcMecJtUcode->data, fwDesc->var, fwDesc->size);
-        // NETLOG("rad", "Injected %s!", filename);
+        DBGLOG("rad", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_sdma.bin", asicName);
         fwDesc = getFWDescByName(filename);
         PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
         memmove(callbackRAD->orgSdmaUcode->data, fwDesc->var, fwDesc->size);
-        // NETLOG("rad", "Injected %s!", filename);
+        DBGLOG("rad", "Injected %s!", filename);
         delete[] filename;
     }
 
@@ -397,7 +397,7 @@ IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
         }
     }
     if (!initCaps) {
-        // NETLOG("rad", "Warning! Using Fallback Init Caps mechanism");
+        DBGLOG("rad", "Warning! Using Fallback Init Caps mechanism");
         for (size_t i = 0; i < 789; i++) {
             auto *temp = callbackRAD->orgAsicInitCapsTable + i;
             if (temp->familyId == 0x8e && temp->deviceId == deviceId &&
