@@ -192,6 +192,9 @@ class RAD {
 
     mach_vm_address_t orgHwWriteReg {};
     static void wrapHwWriteReg(void *that, uint32_t regIndex, uint32_t regVal);
+
+    mach_vm_address_t orgPrepareVMInvalidateRequest{};
+    static void wrapPrepareVMInvalidateRequest(void* that, void* param1, void* param2, bool param3);
 };
 
 #endif /* kern_rad_hpp */

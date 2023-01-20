@@ -803,6 +803,12 @@ void RAD::wrapHwWriteReg(void *that, uint32_t regIndex, uint32_t regVal) {
     NETLOG("rad", "hwWriteReg finished");
 }
 
+void RAD::wrapPrepareVMInvalidateRequest(void* that, void* param1, void* param2, bool param3) {
+    NETLOG("rad", "prepareVMInvalidateRequest: this = %p param1 = %p param2 = %p param3 = %d", that, param1, param2, param3);
+    FunctionCast(wrapPrepareVMInvalidateRequest, callbackRAD->orgPrepareVMInvalidateRequest)(that, param1, param2, param3);
+    NETLOG("rad", "prepareVMInvalidateRequest finished");
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonSupport.loadIndex == index) {
         KernelPatcher::RouteRequest requests[] = {
@@ -996,6 +1002,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN29AMDRadeonX5000_AMDHWVMContext36updateContiguousPTEsWithDMAUsingAddrEyyyyy",
                 wrapUpdateContiguousPTEsWithDMAUsingAddr, orgUpdateContiguousPTEsWithDMAUsingAddr},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20initializeFamilyTypeEv", wrapInitializeFamilyType},
+            {"__ZN25AMDRadeonX5000_AMDGFX9VMM26prepareVMInvalidateRequestEP25AMD_VM_INVALIDATE_REQUESTPK22AMD_VM_INVALIDATE_INFOb", wrapPrepareVMInvalidateRequest, orgPrepareVMInvalidateRequest},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
