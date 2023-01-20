@@ -809,6 +809,18 @@ void RAD::wrapPrepareVMInvalidateRequest(void* that, void* param1, void* param2,
     NETLOG("rad", "prepareVMInvalidateRequest finished");
 }
 
+void RAD::wrapInvalidateVM(void* that, void* param2, uint32_t* param3, uint32_t param4) {
+    NETLOG("rad", "invalidateVM: this = %p param2 = %p param3 = %p param4 = 0x%X", that, param2, param3, param4);
+    FunctionCast(wrapInvalidateVM, callbackRAD->orgInvalidateVM)(that, param2, param3, param4);
+    NETLOG("rad", "invalidateVM finished");
+}
+
+void RAD::wrapFlushAndInvalidateCaches(void* that, uint64_t param1, uint64_t param2) {
+    NETLOG("rad", "flushAndInvalidateCaches: this = %p param1 = 0x%llX param2 = 0x%llX", that, param1, param2);
+    FunctionCast(wrapFlushAndInvalidateCaches, callbackRAD->orgFlushAndInvalidateCaches)(that, param1, param2);
+    NETLOG("rad", "flushAndInvalidateCaches finished");
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonSupport.loadIndex == index) {
         KernelPatcher::RouteRequest requests[] = {
@@ -1003,6 +1015,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 wrapUpdateContiguousPTEsWithDMAUsingAddr, orgUpdateContiguousPTEsWithDMAUsingAddr},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20initializeFamilyTypeEv", wrapInitializeFamilyType},
             {"__ZN25AMDRadeonX5000_AMDGFX9VMM26prepareVMInvalidateRequestEP25AMD_VM_INVALIDATE_REQUESTPK22AMD_VM_INVALIDATE_INFOb", wrapPrepareVMInvalidateRequest, orgPrepareVMInvalidateRequest},
+            {"__ZN23AMDRadeonX5000_AMDHWVMM12invalidateVMEPK28AMD_VM_INVALIDATE_RANGE_INFOPKjj", wrapInvalidateVM, orgInvalidateVM},
+            {"__ZN24AMDRadeonX5000_AMDHWGart24flushAndInvalidateCachesEyy", wrapFlushAndInvalidateCaches, orgFlushAndInvalidateCaches},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
