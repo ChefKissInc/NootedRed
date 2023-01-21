@@ -829,7 +829,9 @@ void RAD::genericAssertion([[maybe_unused]] void *data, bool cond, char *func, c
 
 uint32_t RAD::wrapPspNpFwLoad(void *pspData) {
     NETLOG("rad", "_psp_np_fw_load: pspData = %p", pspData);
-    return 0;
+    auto ret = FunctionCast(wrapPspNpFwLoad, callbackRAD->orgPspNpFwLoad)(pspData);
+    NETLOG("rad", "_psp_np_fw_load returned 0x%X", ret);
+    return 0;    // Seems like on Renoir the firmware is already loaded
 }
 
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
@@ -897,7 +899,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 orgQueryHwBlockRegisterBase},
             {"_psp_rap_is_supported", pspFeatureUnsupported},
             {"_psp_assertion", genericAssertion},
-            {"_psp_np_fw_load", wrapPspNpFwLoad},
+            {"_psp_np_fw_load", wrapPspNpFwLoad, orgPspNpFwLoad},
             {"_gvm_assertion", genericAssertion},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {

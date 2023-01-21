@@ -85,6 +85,7 @@ class RAD {
     t_sendMsgToSmcWithParam orgRenoirSendMsgToSmcWithParam = nullptr;
     mach_vm_address_t orgSmuRavenInitialize {};
     mach_vm_address_t orgSmuRenoirInitialize {};
+    mach_vm_address_t orgPspNpFwLoad {};
 
     /** X6000 */
     t_HWEngineNew orgGFX10VCN2EngineNew = nullptr;
