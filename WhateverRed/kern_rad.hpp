@@ -106,8 +106,6 @@ class RAD {
     mach_vm_address_t orgPowerUpHW {};
     mach_vm_address_t orgHWsetMemoryAllocationsEnabled {};
     mach_vm_address_t orgRTGetHWChannel {};
-    void *sdma0HWChannel = nullptr;
-    void *sdma0HWEngine = nullptr;
     mach_vm_address_t orgMapVA {};
     mach_vm_address_t orgMapVMPT {};
     bool isThreeLevelVMPT = false;
@@ -159,6 +157,7 @@ class RAD {
     static uint32_t wrapSmuRavenInitialize(void *smumData, uint32_t param2);
     static uint32_t wrapSmuRenoirInitialize(void *smumData, uint32_t param2);
     static uint32_t pspFeatureUnsupported();
+    static uint32_t wrapPspNpFwLoad(void *pspData);
 
     /** X6000 */
     static bool wrapGFX10AcceleratorStart();
@@ -173,8 +172,6 @@ class RAD {
     static void wrapHWsetMemoryAllocationsEnabled(void *that, bool param1);
     static void *wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3);
     static void wrapInitializeFamilyType(void *that);
-    static bool sdma1IsIdleHack(void *that);
-    static bool sdma1AllocateAndInitHWRingsHack(void *that);
     static uint64_t wrapMapVA(void *that, uint64_t param1, void *memory, uint64_t param3, uint64_t sizeToMap,
         uint64_t flags);
     static uint64_t wrapMapVMPT(void *that, void *vmptCtl, uint64_t vmptLevel, uint32_t param3, uint64_t param4,
@@ -186,26 +183,6 @@ class RAD {
     static uint64_t wrapGetPTEValue(void *that, uint64_t param1, uint64_t param2, uint64_t param3, uint32_t param4);
     static void wrapUpdateContiguousPTEsWithDMAUsingAddr(void *that, uint64_t param1, uint64_t param2, uint64_t param3,
         uint64_t param4, uint64_t param5);
-
-    mach_vm_address_t orgQueryHwBlockRegisterBase {};
-    static IOReturn wrapQueryHwBlockRegisterBase(void *that, uint32_t blockType, uint8_t param2, uint32_t param3,
-        uint32_t *ret);
-
-    mach_vm_address_t orgHwWriteReg {};
-    static void wrapHwWriteReg(void *that, uint32_t regIndex, uint32_t regVal);
-
-    mach_vm_address_t orgPrepareVMInvalidateRequest {};
-    static void wrapPrepareVMInvalidateRequest(void *that, void *param1, void *param2, bool param3);
-
-    mach_vm_address_t orgInvalidateVM {};
-    static void wrapInvalidateVM(void *that, void *param2, uint32_t *param3, uint32_t param4);
-
-    mach_vm_address_t orgFlushAndInvalidateCaches {};
-    static void wrapFlushAndInvalidateCaches(void *that, uint64_t param1, uint64_t param2);
-
-    static void genericAssertion(void *data, bool cond, char *func, char *file, uint64_t line, char *msg);
-
-    static uint32_t wrapPspNpFwLoad(void *pspData);
 };
 
 #endif /* kern_rad_hpp */

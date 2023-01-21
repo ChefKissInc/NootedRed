@@ -487,12 +487,6 @@ bool RAD::wrapGFX10AcceleratorStart() {
     return false;
 }
 
-bool RAD::sdma1AllocateAndInitHWRingsHack(void *that) {
-    NETLOG("rad", "sdma1AllocateAndInitHWRings: this = %p", that);
-    getMember<void *>(that, 0x50) = getMember<void *>(getMember<void *>(that, 0x20), 0x28);    // Copy ring
-    return true;
-}
-
 bool RAD::wrapAllocateHWEngines(void *that) {
     auto *pm4 = callbackRAD->orgGFX9PM4EngineNew(0x1E8);
     callbackRAD->orgGFX9PM4EngineConstructor(pm4);
@@ -501,18 +495,6 @@ bool RAD::wrapAllocateHWEngines(void *that) {
     auto *sdma0 = callbackRAD->orgGFX9SDMAEngineNew(0x128);
     callbackRAD->orgGFX9SDMAEngineConstructor(sdma0);
     getMember<void *>(that, 0x3C0) = sdma0;
-    callbackRAD->sdma0HWEngine = sdma0;
-
-    auto *sdma1 = callbackRAD->orgGFX9SDMAEngineNew(0x128);
-    callbackRAD->orgGFX9SDMAEngineConstructor(sdma1);
-    getMember<bool>(sdma1, 0x10) = true;    // Set this->enabled to true, as this isn't a real engine.
-    getMember<void *>(that, 0x3C8) = sdma1;
-
-    auto *&oldVtable = getMember<mach_vm_address_t *>(sdma1, 0);
-    auto *vtable = new mach_vm_address_t[0x48];
-    memcpy(vtable, oldVtable, 0x48 * sizeof(mach_vm_address_t));
-    oldVtable = vtable;
-    vtable[0x200] = reinterpret_cast<mach_vm_address_t>(sdma1AllocateAndInitHWRingsHack);
 
     auto *vcn2 = callbackRAD->orgGFX10VCN2EngineNew(0x198);
     callbackRAD->orgGFX10VCN2EngineConstructor(vcn2);
@@ -629,32 +611,10 @@ void RAD::wrapHWsetMemoryAllocationsEnabled(void *that, bool param1) {    // TOD
     NETLOG("rad", "HWsetMemoryAllocationsEnabled finished");
 }
 
-static bool sdma1Hacked = false;
-
-bool RAD::sdma1IsIdleHack([[maybe_unused]] void *that) {
-    return FunctionCast(sdma1IsIdleHack, getMember<mach_vm_address_t *>(callbackRAD->sdma0HWChannel, 0)[0x2E])(
-        callbackRAD->sdma0HWChannel);
-}
-
 void *RAD::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3) {
+    if (param1 == 2 && param2 == 0 && param3 == 0) { param2 = 2; }
     auto ret = FunctionCast(wrapRTGetHWChannel, callbackRAD->orgRTGetHWChannel)(that, param1, param2, param3);
-    if (!sdma1Hacked && param1 == 2 && param2 == 0 && param3 == 0) {
-        sdma1Hacked = true;
-        NETLOG("rad", "RTGetHWChannel: SDMA1 HWChannel detected. Hacking it");
 
-        auto sdma0HWChannel = FunctionCast(wrapRTGetHWChannel, callbackRAD->orgRTGetHWChannel)(that, param1, 2, param3);
-        callbackRAD->sdma0HWChannel = sdma0HWChannel;
-
-        auto *&oldVtable = getMember<mach_vm_address_t *>(ret, 0);
-        auto *vtable = new mach_vm_address_t[0x6E];
-        memcpy(vtable, oldVtable, 0x6E * sizeof(mach_vm_address_t));
-        oldVtable = vtable;
-
-        vtable[0x2E] = reinterpret_cast<mach_vm_address_t>(sdma1IsIdleHack);
-
-        /* Swap ring with SDMA0's */
-        getMember<void *>(ret, 0x28) = getMember<void *>(sdma0HWChannel, 0x28);
-    }
     return ret;
 }
 
@@ -787,46 +747,6 @@ void RAD::wrapInitializeFamilyType(void *that) { getMember<uint32_t>(that, 0x308
 
 uint32_t RAD::pspFeatureUnsupported() { return 4; }
 
-IOReturn RAD::wrapQueryHwBlockRegisterBase(void *that, uint32_t blockType, uint8_t param2, uint32_t param3,
-    uint32_t *retPtr) {
-    NETLOG("rad", "queryHwBlockRegisterBase: this = %p blockType = 0x%X param2 = 0x%hhX param3 = 0x%X retPtr = %p",
-        that, blockType, param2, param3, retPtr);
-    auto ret = FunctionCast(wrapQueryHwBlockRegisterBase, callbackRAD->orgQueryHwBlockRegisterBase)(that, blockType,
-        param2, param3, retPtr);
-    NETLOG("rad", "Register base is set to 0x%X", *retPtr);
-    return ret;
-}
-
-void RAD::wrapHwWriteReg(void *that, uint32_t regIndex, uint32_t regVal) {
-    NETLOG("rad", "hwWriteReg: this = %p regIndex = 0x%X regVal = 0x%X", that, regIndex, regVal);
-    FunctionCast(wrapHwWriteReg, callbackRAD->orgHwWriteReg)(that, regIndex, regVal);
-    NETLOG("rad", "hwWriteReg finished");
-}
-
-void RAD::wrapPrepareVMInvalidateRequest(void *that, void *param1, void *param2, bool param3) {
-    NETLOG("rad", "prepareVMInvalidateRequest: this = %p param1 = %p param2 = %p param3 = %d", that, param1, param2,
-        param3);
-    FunctionCast(wrapPrepareVMInvalidateRequest, callbackRAD->orgPrepareVMInvalidateRequest)(that, param1, param2,
-        param3);
-    NETLOG("rad", "prepareVMInvalidateRequest finished");
-}
-
-void RAD::wrapInvalidateVM(void *that, void *param2, uint32_t *param3, uint32_t param4) {
-    NETLOG("rad", "invalidateVM: this = %p param2 = %p param3 = %p param4 = 0x%X", that, param2, param3, param4);
-    FunctionCast(wrapInvalidateVM, callbackRAD->orgInvalidateVM)(that, param2, param3, param4);
-    NETLOG("rad", "invalidateVM finished");
-}
-
-void RAD::wrapFlushAndInvalidateCaches(void *that, uint64_t param1, uint64_t param2) {
-    NETLOG("rad", "flushAndInvalidateCaches: this = %p param1 = 0x%llX param2 = 0x%llX", that, param1, param2);
-    FunctionCast(wrapFlushAndInvalidateCaches, callbackRAD->orgFlushAndInvalidateCaches)(that, param1, param2);
-    NETLOG("rad", "flushAndInvalidateCaches finished");
-}
-
-void RAD::genericAssertion([[maybe_unused]] void *data, bool cond, char *func, char *file, uint64_t line, char *msg) {
-    if (!cond) { NETDBG::printf("assertion failed: %s:%llu %s: %s", file, line, func, msg); }
-}
-
 uint32_t RAD::wrapPspNpFwLoad(void *pspData) {
     NETLOG("rad", "_psp_np_fw_load: pspData = %p", pspData);
     auto ret = FunctionCast(wrapPspNpFwLoad, callbackRAD->orgPspNpFwLoad)(pspData);
@@ -895,12 +815,8 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_SmuRenoir_Initialize", wrapSmuRenoirInitialize, orgSmuRenoirInitialize},
             {"_psp_xgmi_is_support", pspFeatureUnsupported},
             {"_psp_rap_is_supported", pspFeatureUnsupported},
-            {"__ZN14AmdTtlServices24queryHwBlockRegisterBaseE12hwblock_typehjPj", wrapQueryHwBlockRegisterBase,
-                orgQueryHwBlockRegisterBase},
             {"_psp_rap_is_supported", pspFeatureUnsupported},
-            {"_psp_assertion", genericAssertion},
             {"_psp_np_fw_load", wrapPspNpFwLoad, orgPspNpFwLoad},
-            {"_gvm_assertion", genericAssertion},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
@@ -992,15 +908,24 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
 
         return true;
     } else if (kextRadeonX5000.loadIndex == index) {
+        uint32_t *orgChannelTypes = nullptr;
+
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZN31AMDRadeonX5000_AMDGFX9PM4EnginenwEm", orgGFX9PM4EngineNew},
             {"__ZN31AMDRadeonX5000_AMDGFX9PM4EngineC1Ev", orgGFX9PM4EngineConstructor},
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEnginenwEm", orgGFX9SDMAEngineNew},
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngineC1Ev", orgGFX9SDMAEngineConstructor},
+            {"__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator19createAccelChannelsEbE12channelTypes", orgChannelTypes},
         };
         if (!patcher.solveMultiple(index, solveRequests, address, size)) {
             panic("RAD: Failed to resolve AMDRadeonX5000 symbols");
         }
+
+        /** Patch the data so that it only starts SDMA0. */
+        PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "rad",
+            "Failed to enable kernel writing");
+        orgChannelTypes[5] = 1;
+        MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
         KernelPatcher::RouteRequest requests[] = {
             {"__ZN32AMDRadeonX5000_AMDVega10Hardware17allocateHWEnginesEv", wrapAllocateHWEngines},
@@ -1024,20 +949,12 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             // {"__ZN25AMDRadeonX5000_AMDGFX9VMM4initEP30AMDRadeonX5000_IAMDHWInterface", wrapVMMInit, orgVMMInit},
             {"__ZN33AMDRadeonX5000_AMDGFX9SDMAChannel23writeWritePTEPDECommandEPjyjyyy", wrapWriteWritePTEPDECommand,
                 orgWriteWritePTEPDECommand},
-            {"__ZN29AMDRadeonX5000_AMDHWRegisters5writeEjj", wrapHwWriteReg, orgHwWriteReg},
             {"__ZN25AMDRadeonX5000_AMDGFX9VMM11getPDEValueE15eAMD_VMPT_LEVELy", wrapGetPDEValue, orgGetPDEValue},
             {"__ZN25AMDRadeonX5000_AMDGFX9VMM11getPTEValueE15eAMD_VMPT_LEVELyN24AMDRadeonX5000_IAMDHWVMM10VmMapFlagsEj",
                 wrapGetPTEValue, orgGetPTEValue},
             {"__ZN29AMDRadeonX5000_AMDHWVMContext36updateContiguousPTEsWithDMAUsingAddrEyyyyy",
                 wrapUpdateContiguousPTEsWithDMAUsingAddr, orgUpdateContiguousPTEsWithDMAUsingAddr},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20initializeFamilyTypeEv", wrapInitializeFamilyType},
-            {"__ZN25AMDRadeonX5000_AMDGFX9VMM26prepareVMInvalidateRequestEP25AMD_VM_INVALIDATE_REQUESTPK22AMD_VM_"
-             "INVALIDATE_INFOb",
-                wrapPrepareVMInvalidateRequest, orgPrepareVMInvalidateRequest},
-            {"__ZN23AMDRadeonX5000_AMDHWVMM12invalidateVMEPK28AMD_VM_INVALIDATE_RANGE_INFOPKjj", wrapInvalidateVM,
-                orgInvalidateVM},
-            {"__ZN24AMDRadeonX5000_AMDHWGart24flushAndInvalidateCachesEyy", wrapFlushAndInvalidateCaches,
-                orgFlushAndInvalidateCaches},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000 symbols");
@@ -1053,6 +970,12 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x90};
         static_assert(sizeof(find_VMMInit) == sizeof(repl_VMMInit), "Find/replace size mismatch");
 
+        constexpr uint8_t find_sdmachannel_init[] = {0xff, 0x90, 0x30, 0x01, 0x00, 0x00, 0x83, 0xf8, 0x01, 0xb8, 0x21,
+            0x01, 0x00, 0xff, 0xb9, 0x27, 0x01, 0x00, 0xff, 0x0f, 0x44, 0xc8};
+        constexpr uint8_t repl_sdmachannel_init[] = {0xff, 0x90, 0x30, 0x01, 0x00, 0x00, 0x83, 0xf8, 0x02, 0xb8, 0x21,
+            0x01, 0x00, 0xff, 0xb9, 0x27, 0x01, 0x00, 0xff, 0x0f, 0x44, 0xc8};
+        static_assert(sizeof(find_sdmachannel_init) == sizeof(repl_sdmachannel_init), "Find/replace size mismatch");
+
         KernelPatcher::LookupPatch patches[] = {
             /**
              * `AMDRadeonX5000_AMDHardware::startHWEngines`
@@ -1064,6 +987,12 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
              * NOP out part of the vmptConfig setting logic, in order not to override the value set in wrapVMMInit.
              */
             // {&kextRadeonX5000, find_VMMInit, repl_VMMInit, arrsize(find_VMMInit), 2},
+            /**
+             * `AMDRadeonX5000_AMDGFX9SDMAChannel::init`
+             * Field 0x98 somehow tells the scheduler to wait for VMPT before sending user SDMA commands.
+             * Invert the check to set the SDMA1 value when on SDMA0.
+             */
+            {&kextRadeonX5000, find_sdmachannel_init, repl_sdmachannel_init, arrsize(find_sdmachannel_init), 2},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
