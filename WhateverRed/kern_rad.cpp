@@ -886,6 +886,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_psp_rap_is_supported", pspFeatureUnsupported},
             {"__ZN14AmdTtlServices24queryHwBlockRegisterBaseE12hwblock_typehjPj", wrapQueryHwBlockRegisterBase,
                 orgQueryHwBlockRegisterBase},
+            {"_psp_rap_is_supported", pspFeatureUnsupported},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");
