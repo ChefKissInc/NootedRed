@@ -823,6 +823,11 @@ void RAD::wrapFlushAndInvalidateCaches(void *that, uint64_t param1, uint64_t par
     NETLOG("rad", "flushAndInvalidateCaches finished");
 }
 
+void RAD::wrapPspAssertion(void *pspData, bool cond, char *func, char *file, uint64_t line, char *msg) {
+    if (!cond) { NETDBG::printf("PSP assertion failed: %s:%llu %s: %s", file, line, func, msg); }
+    FunctionCast(wrapPspAssertion, callbackRAD->orgPspAssertion)(pspData, cond, func, file, line, msg);
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonSupport.loadIndex == index) {
         KernelPatcher::RouteRequest requests[] = {
@@ -887,6 +892,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"__ZN14AmdTtlServices24queryHwBlockRegisterBaseE12hwblock_typehjPj", wrapQueryHwBlockRegisterBase,
                 orgQueryHwBlockRegisterBase},
             {"_psp_rap_is_supported", pspFeatureUnsupported},
+            {"_psp_assertion", wrapPspAssertion, orgPspAssertion},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");

@@ -201,6 +201,9 @@ class RAD {
 
     mach_vm_address_t orgFlushAndInvalidateCaches {};
     static void wrapFlushAndInvalidateCaches(void *that, uint64_t param1, uint64_t param2);
+
+    mach_vm_address_t orgPspAssertion {};
+    static void wrapPspAssertion(void *pspData, bool cond, char *func, char *file, uint64_t line, char *msg);
 };
 
 #endif /* kern_rad_hpp */
