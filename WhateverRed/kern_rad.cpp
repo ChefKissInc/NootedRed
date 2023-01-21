@@ -828,6 +828,11 @@ void RAD::wrapPspAssertion(void *pspData, bool cond, char *func, char *file, uin
     FunctionCast(wrapPspAssertion, callbackRAD->orgPspAssertion)(pspData, cond, func, file, line, msg);
 }
 
+uint32_t RAD::wrapPspNpFwLoad(void *pspData) {
+    NETLOG("rad", "_psp_np_fw_load: pspData = %p", pspData);
+    return 0;
+}
+
 bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonSupport.loadIndex == index) {
         KernelPatcher::RouteRequest requests[] = {
@@ -893,6 +898,7 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 orgQueryHwBlockRegisterBase},
             {"_psp_rap_is_supported", pspFeatureUnsupported},
             {"_psp_assertion", wrapPspAssertion, orgPspAssertion},
+            {"_psp_np_fw_load", wrapPspNpFwLoad},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX5000HWLibs symbols");

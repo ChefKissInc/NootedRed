@@ -204,6 +204,8 @@ class RAD {
 
     mach_vm_address_t orgPspAssertion {};
     static void wrapPspAssertion(void *pspData, bool cond, char *func, char *file, uint64_t line, char *msg);
+
+    static uint32_t wrapPspNpFwLoad(void *pspData);
 };
 
 #endif /* kern_rad_hpp */
