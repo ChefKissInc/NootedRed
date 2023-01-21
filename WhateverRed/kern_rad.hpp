@@ -193,14 +193,14 @@ class RAD {
     mach_vm_address_t orgHwWriteReg {};
     static void wrapHwWriteReg(void *that, uint32_t regIndex, uint32_t regVal);
 
-    mach_vm_address_t orgPrepareVMInvalidateRequest{};
-    static void wrapPrepareVMInvalidateRequest(void* that, void* param1, void* param2, bool param3);
+    mach_vm_address_t orgPrepareVMInvalidateRequest {};
+    static void wrapPrepareVMInvalidateRequest(void *that, void *param1, void *param2, bool param3);
 
-    mach_vm_address_t orgInvalidateVM{};
-    static void wrapInvalidateVM(void* that, void* param2, uint32_t* param3, uint32_t param4);
+    mach_vm_address_t orgInvalidateVM {};
+    static void wrapInvalidateVM(void *that, void *param2, uint32_t *param3, uint32_t param4);
 
-    mach_vm_address_t orgFlushAndInvalidateCaches{};
-    static void wrapFlushAndInvalidateCaches(void* that, uint64_t param1, uint64_t param2);
+    mach_vm_address_t orgFlushAndInvalidateCaches {};
+    static void wrapFlushAndInvalidateCaches(void *that, uint64_t param1, uint64_t param2);
 };
 
 #endif /* kern_rad_hpp */
