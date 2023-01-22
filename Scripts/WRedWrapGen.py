@@ -1,81 +1,62 @@
 #!/usr/bin/python3
 
 
-def fixType(typ):
-    if "const" in typ:
-        raise AssertionError("Can't handle const types lol")
+def fix_type(type: str) -> str:
+    assert not "const" in type
 
-    if typ.startswith("uint") and "_t" in typ:
-        return typ
-
-    if typ == "bool":
-        ret = "bool"
-    elif typ in ["char", "uchar", "char*", "uchar*"]:
+    if type == "uchar":
         ret = "uint8_t"
-    elif typ in ["short", "ushort", "short*", "ushort*"]:
+    elif type in ["short", "ushort"]:
         ret = "uint16_t"
-    elif typ in ["int", "uint", "int*", "uint*"]:
+    elif type in ["int", "uint"]:
         ret = "uint32_t"
-    elif typ in ["long", "ulong", "long*", "ulong*", "ulonglong", "ulonglong*"]:
+    elif type in ["long", "ulong", "ulonglong"]:
         ret = "uint64_t"
-    elif typ == "void":
-        ret = "void"
-    elif typ == "IOReturn":
-        ret = "IOReturn"
+    elif "*" in type:
+        ret = "void *"
     else:
-        if "*" in typ:
-            return "void*"
-        raise AssertionError("Failed parsing type: " + typ)
-
-    if "*" in typ:
-        ret += "*"
+        ret = type
 
     return ret
 
 
-def parseParam(param):
-    if " " in param:
-        typ, name = param.split(" ")
-    elif "*" in param:
-        typ, name = param.split("*")
-        typ += "*"
+def parse_param(param: str) -> tuple(str, str):
+    if "*" in param:
+        typ, name: list[str] = [v.strip() for v in param.split("*")]
+        typ += " *"
+    elif " " in param:
+        typ, name: list[str] = [v.strip() for v in param.split(" ")]
     else:
-        raise AssertionError("Failed parsing param: " + param)
+        assert False
 
-    typ = fixType(typ)
-
-    if name == "this":
-        name = "that"
-
-    name = name.replace("param_", "param")
-
-    return (typ, name)
+    return (
+        fix_type(typ),
+        "that" if name == "this" else name.replace("param_", "param"),
+    )
 
 
-def getFormatName(name):
-    if name == "that":
-        name = "this"
-    return name
+def get_fmt_name(name: str) -> str:
+    return "that" if name == "this" else name
 
 
-def getFormatType(typ):
+def get_fmt_type(typ: str) -> str:
     if "*" in typ:
         return "%p"
 
-    table = {"uint64_t": "0x%llX",
-             "uint32_t": "0x%X",
-             "uint16_t": "0x%hX",
-             "uint8_t": "0x%hhX",
-             "bool": "%d",
-             "IOReturn": "0x%X"}
+    table = {
+        "uint64_t": "0x%llX",
+        "uint32_t": "0x%X",
+        "uint16_t": "0x%hX",
+        "uint8_t": "0x%hhX",
+        "bool": "%d",
+        "IOReturn": "0x%X",
+    }
 
-    if typ in table:
-        return table[typ]
-    else:
-        raise AssertionError("Failed getting format for: " + typ)
+    assert typ in table
+    return table[typ]
 
 
-def toSnakeCase(inp):
+def to_pascal_case(inp: str) -> str:
     ret = ""
     i = 0
     while i < len(inp):
@@ -90,86 +71,94 @@ def toSnakeCase(inp):
     return ret[0].upper() + ret[1:]
 
 
-def findLine(lines, needle):
-    for i in range(len(lines)):
-        if needle in lines[i]:
+def locate_line(lines: list[str], needle: str) -> int:
+    for i, line in enumerate(lines):
+        if needle in line:
             return i
-    raise AssertionError("Failed to locate line!")
+    assert False
 
 
-cppPath = "./WhateverRed/kern_rad.cpp"
-hppPath = "./WhateverRed/kern_rad.hpp"
+cpp_path: str = "./WhateverRed/kern_rad.cpp"
+hpp_path: str = "./WhateverRed/kern_rad.hpp"
 
-cpp = open(cppPath).read().split("\n")
-hpp = open(hppPath).read().split("\n")
+with open(cpp_path) as cpp_file:
+    cpp_lines: list[str] = cpp_file.readlines()
 
-sign = input("Copy full signature from the Edit function panel: ").strip().replace(" *", "*")
-signParts = sign.split(" ")
+with open(hpp_path) as hpp_file:
+    hpp_lines: list[str] = hpp_file.readlines()
 
-retType = fixType(signParts[0])
+signature: str = input("Signature from \"Edit Function\": ").strip().replace(
+    " *", "*")
+signature_parts = signature.split(" ")
 
-funcName = signParts[1]
-snakeName = toSnakeCase(funcName)
+return_type = fix_type(signature_parts[0])
 
-params = [x.strip() for x in sign.split("(")[1].split(")")[0].split(",")]
-params = [parseParam(x) for x in params]
+func_ident = signature_parts[1]
+func_ident_pascal = to_pascal_case(func_ident)
 
-strParams = ", ".join([" ".join(x) for x in params])
+parameters = [x.strip()
+              for x in signature.split("(")[1].split(")")[0].split(",")]
+parameters = [parse_param(x) for x in parameters]
 
-injectLine = findLine(cpp, "bool RAD::processKext(KernelPatcher &patcher, size_t index,")
-inject = []
+params_stringified = ", ".join([" ".join(x) for x in parameters])
 
-if cpp[injectLine - 1] != "":
-    inject.append("")
+kext_handler_line = locate_line(
+    cpp_lines, "bool RAD::processKext(KernelPatcher &patcher, size_t index,")
+function = []
 
-inject.append(f"{retType} RAD::wrap{snakeName}({strParams}) {{")
+if cpp_lines[kext_handler_line - 1] != "":
+    function.append("")
 
-formatTypes = " ".join(f"{getFormatName(x[1])} = {getFormatType(x[0])}" for x in params)
-args = ", ".join(x[1] for x in params)
-inject.append(f"    NETLOG(\"rad\", \"{funcName}: {formatTypes}\", {args});")
+function.append(
+    f"{return_type} RAD::wrap{func_ident_pascal}({params_stringified}) {{")  # -- Start of function --
 
-if retType == "void":
-    inject.append(f"    FunctionCast(wrap{snakeName}, callbackRAD->org{snakeName})({args});")
-    inject.append(f"    NETLOG(\"rad\", \"{funcName} finished\");")
+fmt_types = " ".join(
+    f"{get_fmt_name(x[1])} = {get_fmt_type(x[0])}" for x in parameters)
+arguments = ", ".join(x[1] for x in parameters)
+function.append(
+    f"    NETLOG(\"rad\", \"{func_ident}: {fmt_types}\", {arguments});")
+
+if return_type == "void":
+    function.append(
+        f"    FunctionCast(wrap{func_ident_pascal}, callbackRAD->org{func_ident_pascal})({arguments});")
+    function.append(f"    NETLOG(\"rad\", \"{func_ident} finished\");")
 else:
-    inject.append(f"    auto ret = FunctionCast(wrap{snakeName}, callbackRAD->org{snakeName})({args});")
-    inject.append(f"    NETLOG(\"rad\", \"{funcName} returned {getFormatType(retType)}\", ret);")
-if retType != "void":
-    inject.append("    return ret;")
-inject.append("}")
-inject.append("")
+    function.append(
+        f"    auto ret = FunctionCast(wrap{func_ident_pascal}, callbackRAD->org{func_ident_pascal})({arguments});")
+    function.append(
+        f"    NETLOG(\"rad\", \"{func_ident} returned {get_fmt_type(return_type)}\", ret);")
+    function.append("    return ret;")
 
-# https://stackoverflow.com/a/7376026
-# Magik
-cpp[injectLine:injectLine] = inject
+function.append("}")  # -- End of function --
+function.append("")
 
+cpp_lines[kext_handler_line:kext_handler_line] = function  # Extend at index
 
-kextName = input("Input the kext name: ").strip()
-symbolName = input("Input the symbol name: ").strip()
-injectLine = findLine(cpp, f"Failed to route {kextName} symbols")
+kext: str = input("Kext: ").strip()
+symbol: str = input("Symbol: ").strip()
+kext_handler_line: int = locate_line(
+    cpp_lines, f"Failed to route {kext} symbols")
 
-while not cpp[injectLine].endswith("};"):
-    injectLine -= 1
-indent = cpp[injectLine][:-2]
+while not cpp_lines[kext_handler_line].endswith("};"):
+    kext_handler_line -= 1
+indent = cpp_lines[kext_handler_line][:-2]
 
-cpp.insert(injectLine, f"{indent}    {{\"{symbolName}\", wrap{snakeName}, org{snakeName}}},")
+cpp_lines.insert(
+    kext_handler_line, f"{indent}    {{\"{symbol}\", wrap{func_ident_pascal}, org{func_ident_pascal}}},")
 
+kext_handler_line = len(hpp_lines) - 1
+while hpp_lines[kext_handler_line] != "};":
+    kext_handler_line -= 1
 
-injectLine = len(hpp) - 1
-while hpp[injectLine] != "};":
-    injectLine -= 1
+decls = [
+    f"    mach_vm_address_t org{func_ident_pascal}{{}};",
+    f"    static {return_type} wrap{func_ident_pascal}({params_stringified});",
+]
 
-inject = []
-if hpp[injectLine - 1] != "":
-    inject.append("")
-inject.append(f"    mach_vm_address_t org{snakeName}{{}};")
-inject.append(f"    static {retType} wrap{snakeName}({strParams});")
+hpp_lines[kext_handler_line:kext_handler_line] = decls
 
-hpp[injectLine:injectLine] = inject
+with open(cpp_path, "w") as f:
+    f.write("\n".join(cpp_lines))
 
-
-with open(cppPath, "w") as f:
-    f.write("\n".join(cpp))
-
-with open(hppPath, "w") as f:
-    f.write("\n".join(hpp))
+with open(hpp_path, "w") as f:
+    f.write("\n".join(hpp_lines))
