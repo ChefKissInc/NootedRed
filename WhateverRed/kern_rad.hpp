@@ -34,6 +34,21 @@ class RAD {
     void processKernel(KernelPatcher &patcher);
     bool processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size);
 
+    static const char *getASICName() {
+        switch (callbackRAD->asicType) {
+            case ASICType::Picasso:
+                return "picasso";
+            case ASICType::Raven:
+                return "raven";
+            case ASICType::Raven2:
+                return "raven2";
+            case ASICType::Renoir:
+                return "renoir";
+            default:
+                panic("rad: Unknown ASIC type");
+        }
+    }
+
     private:
     using t_createFirmware = void *(*)(const void *data, uint32_t size, uint32_t param3, const char *filename);
     using t_putFirmware = bool (*)(void *that, uint32_t deviceType, void *fw);
@@ -100,7 +115,6 @@ class RAD {
     mach_vm_address_t orgGetHWEngine {};
     mach_vm_address_t orgGetHWCapabilities {};
     mach_vm_address_t orgSetupAndInitializeHWCapabilities {};
-    mach_vm_address_t orgDumpASICHangStateCold {};
     mach_vm_address_t orgAccelDisplayPipeWriteDiagnosisReport {};
     mach_vm_address_t orgSetMemoryAllocationsEnabled {};
     mach_vm_address_t orgPowerUpHW {};
@@ -146,7 +160,6 @@ class RAD {
         uint32_t level);
     static void wrapCosDebugPrintVaList(void *ttl, char *header, char *fmt, va_list args);
     static void wrapCosReleasePrintVaList(void *ttl, char *header, char *fmt, va_list args);
-    static const char *getASICName();
     static uint32_t wrapPspAsdLoad(void *pspData);
     static uint32_t wrapPspDtmLoad(void *pspData);
     static uint32_t wrapPspHdcpLoad(void *pspData);
@@ -163,11 +176,7 @@ class RAD {
     /** X5000 */
     static bool wrapAllocateHWEngines(void *that);
     static void wrapSetupAndInitializeHWCapabilities(void *that);
-    static void wrapDumpASICHangStateCold(uint64_t param1);
-    static void wrapAccelDisplayPipeWriteDiagnosisReport(void *that);
-    static uint64_t wrapSetMemoryAllocationsEnabled(void *that, uint64_t param1);
-    static bool wrapPowerUpHW(void *that);
-    static void wrapHWsetMemoryAllocationsEnabled(void *that, bool param1);
+    static void wrapAccelDisplayPipeWriteDiagnosisReport();
     static void *wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3);
     static void wrapInitializeFamilyType(void *that);
     static uint64_t wrapMapVA(void *that, uint64_t param1, void *memory, uint64_t param3, uint64_t sizeToMap,
