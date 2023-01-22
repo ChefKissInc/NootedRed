@@ -80,9 +80,6 @@ class RAD {
     t_createFirmware orgCreateFirmware = nullptr;
     t_putFirmware orgPutFirmware = nullptr;
     t_Vega10PowerTuneConstructor orgVega10PowerTuneConstructor = nullptr;
-    mach_vm_address_t orgCosDebugPrint {}, orgMCILDebugPrint {};
-    mach_vm_address_t orgCosDebugPrintVaList {};
-    mach_vm_address_t orgCosReleasePrintVaList {};
     CailAsicCapEntry *orgAsicCapsTableHWLibs = nullptr;
     CailInitAsicCapEntry *orgAsicInitCapsTable = nullptr;
     mach_vm_address_t orgPspAsdLoad {};
@@ -153,13 +150,8 @@ class RAD {
     static uint32_t wrapGcGetHwVersion(uint32_t *param1);
     static void wrapPopulateFirmwareDirectory(void *that);
     static void *wrapCreatePowerTuneServices(void *param1, void *param2);
-    static uint64_t wrapSmuGetFwConstants();
-    static uint64_t wrapSmuInternalHwInit();
-    static void wrapCosDebugPrint(char *fmt, ...);
-    static void wrapMCILDebugPrint(uint32_t level_max, char *fmt, uint64_t param3, uint64_t param4, uint64_t param5,
-        uint32_t level);
-    static void wrapCosDebugPrintVaList(void *ttl, char *header, char *fmt, va_list args);
-    static void wrapCosReleasePrintVaList(void *ttl, char *header, char *fmt, va_list args);
+    static uint32_t wrapSmuGetFwConstants();
+    static uint32_t wrapSmuInternalHwInit();
     static uint32_t wrapPspAsdLoad(void *pspData);
     static uint32_t wrapPspDtmLoad(void *pspData);
     static uint32_t wrapPspHdcpLoad(void *pspData);

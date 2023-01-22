@@ -389,46 +389,8 @@ IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
     return ret;
 }
 
-uint64_t RAD::wrapSmuGetFwConstants() { return 0; }    // The System BIOS is the one that loads the SMC Firmware.
-
-uint64_t RAD::wrapSmuInternalHwInit() { return 0; }    // Firmware is already loaded
-
-void RAD::wrapCosDebugPrint(char *fmt, ...) {
-    NETDBG::printf("AMD TTL COS: ");
-    va_list args, netdbg_args;
-    va_start(args, fmt);
-    va_copy(netdbg_args, args);
-    NETDBG::vprintf(fmt, netdbg_args);
-    va_end(netdbg_args);
-    FunctionCast(wrapCosDebugPrint, callbackRAD->orgCosDebugPrint)(fmt, args);
-    va_end(args);
-}
-
-void RAD::wrapMCILDebugPrint(uint32_t level_max, char *fmt, uint64_t param3, uint64_t param4, uint64_t param5,
-    uint32_t level) {
-    NETDBG::printf(fmt, param3, param4, param5, level);
-    FunctionCast(wrapMCILDebugPrint, callbackRAD->orgMCILDebugPrint)(level_max, fmt, param3, param4, param5, level);
-}
-
-void RAD::wrapCosDebugPrintVaList(void *ttl, char *header, char *fmt, va_list args) {
-    NETDBG::printf("AMD TTL COS: %s ", header);
-    va_list netdbg_args;
-    va_copy(netdbg_args, args);
-    NETDBG::vprintf(fmt, netdbg_args);
-    NETDBG::printf("\n");
-    va_end(netdbg_args);
-    FunctionCast(wrapCosDebugPrintVaList, callbackRAD->orgCosDebugPrintVaList)(ttl, header, fmt, args);
-}
-
-void RAD::wrapCosReleasePrintVaList(void *ttl, char *header, char *fmt, va_list args) {
-    NETDBG::printf("AMD TTL COS: %s ", header);
-    va_list netdbg_args;
-    va_copy(netdbg_args, args);
-    NETDBG::vprintf(fmt, netdbg_args);
-    va_end(netdbg_args);
-    FunctionCast(wrapCosReleasePrintVaList, callbackRAD->orgCosReleasePrintVaList)(ttl, header, fmt, args);
-}
-
+uint32_t RAD::wrapSmuGetFwConstants() { return 0; }          // The System BIOS is the one that loads the SMC Firmware.
+uint32_t RAD::wrapSmuInternalHwInit() { return 0; }          // Firmware is already loaded
 uint32_t RAD::wrapGetVideoMemoryType() { return 4; }         // DDR4
 uint32_t RAD::wrapGetVideoMemoryBitWidth() { return 64; }    // 64-bit
 IOReturn RAD::wrapPopulateVramInfo() { return kIOReturnSuccess; }
@@ -665,12 +627,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
             {"_smu_get_fw_constants", wrapSmuGetFwConstants},
             {"_smu_9_0_1_internal_hw_init", wrapSmuInternalHwInit},
             {"_smu_11_0_internal_hw_init", wrapSmuInternalHwInit},
-            {"__ZN14AmdTtlServices13cosDebugPrintEPKcz", wrapCosDebugPrint, orgCosDebugPrint},
-            {"_MCILDebugPrint", wrapMCILDebugPrint, orgMCILDebugPrint},
-            {"__ZN14AmdTtlServices19cosDebugPrintVaListEPvPKcS2_P13__va_list_tag", wrapCosDebugPrintVaList,
-                orgCosDebugPrintVaList},
-            {"__ZN14AmdTtlServices21cosReleasePrintVaListEPvPKcS2_P13__va_list_tag", wrapCosReleasePrintVaList,
-                orgCosReleasePrintVaList},
             {"_psp_asd_load", wrapPspAsdLoad, orgPspAsdLoad},
             {"_psp_dtm_load", wrapPspDtmLoad, orgPspDtmLoad},
             {"_psp_hdcp_load", wrapPspHdcpLoad, orgPspHdcpLoad},
