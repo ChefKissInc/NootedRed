@@ -175,6 +175,7 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider) 
 
     NETLOG("rad", "calling original AmdTtlServices constructor");
     FunctionCast(wrapAmdTtlServicesConstructor, callbackRAD->orgAmdTtlServicesConstructor)(that, provider);
+    getMember<uint64_t>(that, 0x288) = provider->getDeviceMemoryWithIndex(kIOPCIConfigBaseAddress0)->getPhysicalAddress();
 }
 
 uint64_t RAD::wrapSmuGetHwVersion(uint64_t param1, uint32_t param2) {
