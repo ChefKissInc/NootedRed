@@ -4,7 +4,7 @@
 def fix_type(type: str) -> str:
     assert not "const" in type
 
-    if type == "uchar":
+    if type in ["uchar", "byte"]:
         ret = "uint8_t"
     elif type in ["short", "ushort"]:
         ret = "uint16_t"
@@ -20,17 +20,17 @@ def fix_type(type: str) -> str:
     return ret
 
 
-def parse_param(param: str) -> tuple(str, str):
+def parse_param(param: str) -> tuple[str, str]:
     if "*" in param:
-        typ, name: list[str] = [v.strip() for v in param.split("*")]
-        typ += " *"
+        type, name = [v.strip() for v in param.split("*")]
+        type += " *"
     elif " " in param:
-        typ, name: list[str] = [v.strip() for v in param.split(" ")]
+        type, name = [v.strip() for v in param.split(" ")]
     else:
         assert False
 
     return (
-        fix_type(typ),
+        fix_type(type),
         "that" if name == "this" else name.replace("param_", "param"),
     )
 
@@ -39,21 +39,23 @@ def get_fmt_name(name: str) -> str:
     return "that" if name == "this" else name
 
 
-def get_fmt_type(typ: str) -> str:
-    if "*" in typ:
-        return "%p"
-
+def get_fmt_type(type: str) -> str:
     table = {
         "uint64_t": "0x%llX",
         "uint32_t": "0x%X",
         "uint16_t": "0x%hX",
         "uint8_t": "0x%hhX",
         "bool": "%d",
+        "char *": "%s",
+        "char": "%c",
         "IOReturn": "0x%X",
     }
 
-    assert typ in table
-    return table[typ]
+    if not type in table and type.endswith(" *"):
+        return "%p"
+
+    assert type in table
+    return table[type]
 
 
 def to_pascal_case(inp: str) -> str:
@@ -102,63 +104,57 @@ parameters = [parse_param(x) for x in parameters]
 
 params_stringified = ", ".join([" ".join(x) for x in parameters])
 
-kext_handler_line = locate_line(
+target_line = locate_line(
     cpp_lines, "bool RAD::processKext(KernelPatcher &patcher, size_t index,")
-function = []
-
-if cpp_lines[kext_handler_line - 1] != "":
-    function.append("")
-
-function.append(
-    f"{return_type} RAD::wrap{func_ident_pascal}({params_stringified}) {{")  # -- Start of function --
+function = [
+    f"{return_type} RAD::wrap{func_ident_pascal}({params_stringified}) {{\n"]
 
 fmt_types = " ".join(
     f"{get_fmt_name(x[1])} = {get_fmt_type(x[0])}" for x in parameters)
 arguments = ", ".join(x[1] for x in parameters)
 function.append(
-    f"    NETLOG(\"rad\", \"{func_ident}: {fmt_types}\", {arguments});")
+    f"    NETLOG(\"rad\", \"{func_ident}: {fmt_types}\", {arguments});\n")
 
 if return_type == "void":
     function.append(
-        f"    FunctionCast(wrap{func_ident_pascal}, callbackRAD->org{func_ident_pascal})({arguments});")
-    function.append(f"    NETLOG(\"rad\", \"{func_ident} finished\");")
+        f"    FunctionCast(wrap{func_ident_pascal}, callbackRAD->org{func_ident_pascal})({arguments});\n")
+    function.append(f"    NETLOG(\"rad\", \"{func_ident} finished\");\n")
 else:
     function.append(
-        f"    auto ret = FunctionCast(wrap{func_ident_pascal}, callbackRAD->org{func_ident_pascal})({arguments});")
+        f"    auto ret = FunctionCast(wrap{func_ident_pascal}, callbackRAD->org{func_ident_pascal})({arguments});\n")
     function.append(
-        f"    NETLOG(\"rad\", \"{func_ident} returned {get_fmt_type(return_type)}\", ret);")
-    function.append("    return ret;")
+        f"    NETLOG(\"rad\", \"{func_ident} returned {get_fmt_type(return_type)}\", ret);\n")
+    function.append("    return ret;\n")
 
-function.append("}")  # -- End of function --
-function.append("")
+function.append("}\n")  # -- End of function --
+function.append("\n")
 
-cpp_lines[kext_handler_line:kext_handler_line] = function  # Extend at index
+cpp_lines[target_line:target_line] = function  # Extend at index
 
 kext: str = input("Kext: ").strip()
 symbol: str = input("Symbol: ").strip()
-kext_handler_line: int = locate_line(
+target_line: int = locate_line(
     cpp_lines, f"Failed to route {kext} symbols")
 
-while not cpp_lines[kext_handler_line].endswith("};"):
-    kext_handler_line -= 1
-indent = cpp_lines[kext_handler_line][:-2]
+while not cpp_lines[target_line].endswith("};\n"):
+    target_line -= 1
+
+indent = cpp_lines[target_line][:-3]
 
 cpp_lines.insert(
-    kext_handler_line, f"{indent}    {{\"{symbol}\", wrap{func_ident_pascal}, org{func_ident_pascal}}},")
+    target_line, f"{indent}    {{\"{symbol}\", wrap{func_ident_pascal}, org{func_ident_pascal}}},\n")
 
-kext_handler_line = len(hpp_lines) - 1
-while hpp_lines[kext_handler_line] != "};":
-    kext_handler_line -= 1
+target_line = len(hpp_lines) - 1
+while hpp_lines[target_line] != "};\n":
+    target_line -= 1
 
-decls = [
-    f"    mach_vm_address_t org{func_ident_pascal}{{}};",
-    f"    static {return_type} wrap{func_ident_pascal}({params_stringified});",
+hpp_lines[target_line:target_line] = [
+    f"    mach_vm_address_t org{func_ident_pascal}{{}};\n",
+    f"    static {return_type} wrap{func_ident_pascal}({params_stringified});\n",
 ]
 
-hpp_lines[kext_handler_line:kext_handler_line] = decls
-
 with open(cpp_path, "w") as f:
-    f.write("\n".join(cpp_lines))
+    f.write("".join(cpp_lines))
 
 with open(hpp_path, "w") as f:
-    f.write("\n".join(hpp_lines))
+    f.write("".join(hpp_lines))
