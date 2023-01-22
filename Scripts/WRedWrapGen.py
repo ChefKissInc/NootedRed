@@ -12,7 +12,7 @@ def fix_type(type: str) -> str:
         ret = "uint32_t"
     elif type in ["long", "ulong", "ulonglong"]:
         ret = "uint64_t"
-    elif "*" in type:
+    elif not type == "char *" and "*" in type:
         ret = "void *"
     else:
         ret = type
@@ -93,7 +93,7 @@ signature: str = input("Signature from \"Edit Function\": ").strip().replace(
     " *", "*")
 signature_parts = signature.split(" ")
 
-return_type = fix_type(signature_parts[0])
+return_type = fix_type(signature_parts[0].replace("*", " *"))
 
 func_ident = signature_parts[1]
 func_ident_pascal = to_pascal_case(func_ident)
