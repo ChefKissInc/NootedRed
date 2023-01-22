@@ -175,7 +175,8 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider) 
 
     NETLOG("rad", "calling original AmdTtlServices constructor");
     FunctionCast(wrapAmdTtlServicesConstructor, callbackRAD->orgAmdTtlServicesConstructor)(that, provider);
-    getMember<uint64_t>(that, 0x288) = provider->getDeviceMemoryWithIndex(kIOPCIConfigBaseAddress0)->getPhysicalAddress();
+    getMember<uint64_t>(that, 0x288) =
+        provider->getDeviceMemoryWithIndex(kIOPCIConfigBaseAddress0)->getPhysicalAddress();
 }
 
 uint64_t RAD::wrapSmuGetHwVersion(uint64_t param1, uint32_t param2) {
@@ -271,9 +272,6 @@ uint16_t RAD::wrapGetEnumeratedRevision(void *that) {
      */
     auto *&pciDev = getMember<IOPCIDevice *>(that, 0x18);
     auto &revision = getMember<uint32_t>(that, 0x68);
-
-    // https://elixir.bootlin.com/linux/v5.16.9/source/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c#L1532
-    callbackRAD->isThreeLevelVMPT = revision == 0 || revision == 1;
 
     switch (pciDev->configRead16(kIOPCIConfigDeviceID)) {
         case 0x15D8:
@@ -677,35 +675,6 @@ uint64_t RAD::wrapMapVMPT(void *that, void *vmptCtl, uint64_t vmptLevel, uint32_
     return ret;
 }
 
-static uint64_t vmptConfig3Level[][3] = {
-    {0x10000000, 0x200, 0x1000},
-    {0x10000, 0x1000, 0x8000},
-};
-
-static uint64_t vmptConfig2Level[][3] = {
-    {0x10000000, 0x200, 0x1000},
-    {0x1000, 0x10000, 0x80000},
-};
-
-bool RAD::wrapVMMInit(void *that, void *param1) {
-    NETLOG("rad", "VMMInit: this = %p param1 = %p", that, param1);
-
-    auto vmptConfig = callbackRAD->isThreeLevelVMPT ? vmptConfig3Level : vmptConfig2Level;
-    for (size_t level = 0; level < 2; level++) {
-        getMember<uint64_t>(that, 0xAB0 + 0x20 * level) = vmptConfig[level][0];
-        getMember<uint32_t>(that, 0xAB0 + 0x20 * level + 0xC) = static_cast<uint32_t>(vmptConfig[level][1]);
-        getMember<uint32_t>(that, 0xAB0 + 0x20 * level + 0x10) = static_cast<uint32_t>(vmptConfig[level][2]);
-    }
-    auto ret = FunctionCast(wrapVMMInit, callbackRAD->orgVMMInit)(that, param1);
-    if (!callbackRAD->isThreeLevelVMPT) {
-        getMember<uint32_t>(that, 0xB30) = 2;
-        memset(reinterpret_cast<void *>(reinterpret_cast<uint64_t>(that) + 0xAB0 + 0x20 * 2), 0,
-            0x20);    // Only 2 levels
-    }
-    NETLOG("rad", "VMMInit returned %d", ret);
-    return ret;
-}
-
 uint32_t RAD::wrapWriteWritePTEPDECommand(void *that, uint32_t *buf, uint64_t pe, uint32_t count, uint64_t flags,
     uint64_t addr, uint64_t incr) {
     NETLOG("rad",
@@ -947,7 +916,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
                 wrapMapVA, orgMapVA},
             {"__ZN29AMDRadeonX5000_AMDHWVMContext7mapVMPTEP12AMD_VMPT_CTL15eAMD_VMPT_LEVELjyyy", wrapMapVMPT,
                 orgMapVMPT},
-            // {"__ZN25AMDRadeonX5000_AMDGFX9VMM4initEP30AMDRadeonX5000_IAMDHWInterface", wrapVMMInit, orgVMMInit},
             {"__ZN33AMDRadeonX5000_AMDGFX9SDMAChannel23writeWritePTEPDECommandEPjyjyyy", wrapWriteWritePTEPDECommand,
                 orgWriteWritePTEPDECommand},
             {"__ZN25AMDRadeonX5000_AMDGFX9VMM11getPDEValueE15eAMD_VMPT_LEVELy", wrapGetPDEValue, orgGetPDEValue},
@@ -965,12 +933,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
         constexpr uint8_t repl_startHWEngines[] = {0x49, 0x89, 0xFE, 0x31, 0xDB, 0x48, 0x83, 0xFB, 0x01, 0x74, 0x50};
         static_assert(sizeof(find_startHWEngines) == sizeof(repl_startHWEngines), "Find/replace size mismatch");
 
-        constexpr uint8_t find_VMMInit[] = {0x48, 0x89, 0x84, 0x0B, 0xD0, 0x0A, 0x00, 0x00, 0x89, 0x94, 0x0B, 0xDC,
-            0x0A, 0x00, 0x00, 0x89, 0xD6, 0xC1, 0xE2, 0x03, 0x89, 0x94, 0x0B, 0xE0, 0x0A, 0x00, 0x00};
-        constexpr uint8_t repl_VMMInit[] = {0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90,
-            0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x90};
-        static_assert(sizeof(find_VMMInit) == sizeof(repl_VMMInit), "Find/replace size mismatch");
-
         constexpr uint8_t find_sdmachannel_init[] = {0x83, 0xf8, 0x01, 0xb8, 0x21, 0x01, 0x00, 0xff, 0xb9, 0x27, 0x01,
             0x00, 0xff, 0x0f, 0x44, 0xc8};
         constexpr uint8_t repl_sdmachannel_init[] = {0x83, 0xf8, 0x02, 0xb8, 0x21, 0x01, 0x00, 0xff, 0xb9, 0x27, 0x01,
@@ -983,11 +945,6 @@ bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t ad
              * Make for loop stop at 1 instead of 2 in order to skip starting SDMA1 engine.
              */
             {&kextRadeonX5000, find_startHWEngines, repl_startHWEngines, arrsize(find_startHWEngines), 2},
-            /**
-             * `AMDRadeonX5000_AMDGFX9VMM::init`
-             * NOP out part of the vmptConfig setting logic, in order not to override the value set in wrapVMMInit.
-             */
-            // {&kextRadeonX5000, find_VMMInit, repl_VMMInit, arrsize(find_VMMInit), 2},
             /**
              * `AMDRadeonX5000_AMDGFX9SDMAChannel::init`
              * Field 0x98 somehow tells the scheduler to wait for VMPT before sending user SDMA commands.

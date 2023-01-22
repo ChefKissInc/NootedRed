@@ -108,8 +108,6 @@ class RAD {
     mach_vm_address_t orgRTGetHWChannel {};
     mach_vm_address_t orgMapVA {};
     mach_vm_address_t orgMapVMPT {};
-    bool isThreeLevelVMPT = false;
-    mach_vm_address_t orgVMMInit {};
     mach_vm_address_t orgWriteWritePTEPDECommand {};
     mach_vm_address_t orgGetPDEValue {};
     mach_vm_address_t orgGetPTEValue {};
@@ -176,7 +174,6 @@ class RAD {
         uint64_t flags);
     static uint64_t wrapMapVMPT(void *that, void *vmptCtl, uint64_t vmptLevel, uint32_t param3, uint64_t param4,
         uint64_t param5, uint64_t sizeToMap);
-    static bool wrapVMMInit(void *that, void *param1);
     static uint32_t wrapWriteWritePTEPDECommand(void *that, uint32_t *buf, uint64_t pe, uint32_t count, uint64_t flags,
         uint64_t addr, uint64_t incr);
     static uint64_t wrapGetPDEValue(void *that, uint64_t param1, uint64_t param2);
