@@ -144,7 +144,7 @@ class RAD {
     static uint32_t wrapHwReadReg32(void *that, uint32_t param1);
 
     /** X5000HWLibs */
-    static void wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider);
+    static void wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider);
     static uint64_t wrapSmuGetHwVersion(uint64_t param1, uint32_t param2);
     static uint64_t wrapPspSwInit(uint32_t *param1, uint32_t *param2);
     static uint32_t wrapGcGetHwVersion(uint32_t *param1);

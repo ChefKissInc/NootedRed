@@ -121,7 +121,7 @@ class AppleACPIPlatformExpert : IOACPIPlatformExpert {
     friend class RAD;
 };
 
-void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider) {
+void RAD::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
     WIOKit::renameDevice(provider, "GFX0");
 
     static uint8_t builtBytes[] = {0x01};
@@ -161,7 +161,7 @@ void RAD::wrapAmdTtlServicesConstructor(IOService *that, IOPCIDevice *provider) 
         provider->setProperty("ATY,bin_image", callbackRAD->vbiosData);
     }
 
-    NETLOG("rad", "calling original AmdTtlServices constructor");
+    NETLOG("rad", "AmdTtlServices: Calling original constructor");
     FunctionCast(wrapAmdTtlServicesConstructor, callbackRAD->orgAmdTtlServicesConstructor)(that, provider);
     getMember<uint64_t>(that, 0x288) =
         provider->getDeviceMemoryWithIndex(kIOPCIConfigBaseAddress0)->getPhysicalAddress();
