@@ -510,10 +510,9 @@ uint32_t WRed::wrapGcGetHwVersion(uint32_t *param1) {
 void WRed::wrapPopulateFirmwareDirectory(void *that) {
     FunctionCast(wrapPopulateFirmwareDirectory, callbackWRed->orgPopulateFirmwareDirectory)(that);
     callbackWRed->callbackFirmwareDirectory = getMember<void *>(that, 0xB8);
-    auto *fwDesc = getFWDescByName("renoir_dmcub.bin");
-    PANIC_COND(!fwDesc, "wred", "Somehow renoir_dmcub.bin is missing");
+    auto &fwDesc = getFWDescByName("renoir_dmcub.bin");
     NETLOG("wred", "renoir_dmcub.bin => atidmcub_0.dat");
-    auto *fwBackdoor = callbackWRed->orgCreateFirmware(fwDesc->var, fwDesc->size, 0x200, "atidmcub_0.dat");
+    auto *fwBackdoor = callbackWRed->orgCreateFirmware(fwDesc.data, fwDesc.size, 0x200, "atidmcub_0.dat");
     NETLOG("wred", "inserting atidmcub_0.dat!");
     PANIC_COND(!callbackWRed->orgPutFirmware(callbackWRed->callbackFirmwareDirectory, 6, fwBackdoor), "wred",
         "Failed to inject atidmcub_0.dat firmware");
@@ -577,64 +576,56 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
         injectedIPFirmware = true;
         auto *asicName = getASICName();
         auto *filename = new char[128];
+
         snprintf(filename, 128, "%s_vcn.bin", asicName);
         auto *targetFilename = callbackWRed->asicType == ASICType::Renoir ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
         DBGLOG("wred", "%s => %s", filename, targetFilename);
 
-        auto *fwDesc = getFWDescByName(filename);
-        PANIC_COND(!fwDesc, "wred", "Somehow %s is missing", filename);
-
-        auto *fw = callbackWRed->orgCreateFirmware(fwDesc->var, fwDesc->size, 0x200, targetFilename);
+        auto *fwDesc = &getFWDescByName(filename);
+        auto *fw = callbackWRed->orgCreateFirmware(fwDesc->data, fwDesc->size, 0x200, targetFilename);
         DBGLOG("wred", "Inserting %s!", targetFilename);
         PANIC_COND(!callbackWRed->orgPutFirmware(callbackWRed->callbackFirmwareDirectory, 6, fw), "wred",
             "Failed to inject ativvaxy_rv.dat firmware");
 
         snprintf(filename, 128, "%s_rlc.bin", asicName);
-        fwDesc = getFWDescByName(filename);
-        PANIC_COND(!fwDesc, "wred", "Somehow %s is missing", filename);
         callbackWRed->orgGcRlcUcode->addr = 0x0;
-        memmove(callbackWRed->orgGcRlcUcode->data, fwDesc->var, fwDesc->size);
+        fwDesc = &getFWDescByName(filename);
+        memmove(callbackWRed->orgGcRlcUcode->data, fwDesc->data, fwDesc->size);
         DBGLOG("wred", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_me.bin", asicName);
-        fwDesc = getFWDescByName(filename);
-        PANIC_COND(!fwDesc, "wred", "Somehow %s is missing", filename);
+        fwDesc = &getFWDescByName(filename);
         callbackWRed->orgGcMeUcode->addr = 0x1000;
-        memmove(callbackWRed->orgGcMeUcode->data, fwDesc->var, fwDesc->size);
+        memmove(callbackWRed->orgGcMeUcode->data, fwDesc->data, fwDesc->size);
         DBGLOG("wred", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_ce.bin", asicName);
-        fwDesc = getFWDescByName(filename);
-        PANIC_COND(!fwDesc, "wred", "Somehow %s is missing", filename);
+        fwDesc = &getFWDescByName(filename);
         callbackWRed->orgGcCeUcode->addr = 0x800;
-        memmove(callbackWRed->orgGcCeUcode->data, fwDesc->var, fwDesc->size);
+        memmove(callbackWRed->orgGcCeUcode->data, fwDesc->data, fwDesc->size);
         DBGLOG("wred", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_pfp.bin", asicName);
-        fwDesc = getFWDescByName(filename);
-        PANIC_COND(!fwDesc, "wred", "Somehow %s is missing", filename);
+        fwDesc = &getFWDescByName(filename);
         callbackWRed->orgGcPfpUcode->addr = 0x1400;
-        memmove(callbackWRed->orgGcPfpUcode->data, fwDesc->var, fwDesc->size);
+        memmove(callbackWRed->orgGcPfpUcode->data, fwDesc->data, fwDesc->size);
         DBGLOG("wred", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_mec.bin", asicName);
-        fwDesc = getFWDescByName(filename);
-        PANIC_COND(!fwDesc, "wred", "Somehow %s is missing", filename);
+        fwDesc = &getFWDescByName(filename);
         callbackWRed->orgGcMecUcode->addr = 0x0;
-        memmove(callbackWRed->orgGcMecUcode->data, fwDesc->var, fwDesc->size);
+        memmove(callbackWRed->orgGcMecUcode->data, fwDesc->data, fwDesc->size);
         DBGLOG("wred", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_mec_jt.bin", asicName);
-        fwDesc = getFWDescByName(filename);
-        PANIC_COND(!fwDesc, "wred", "Somehow %s is missing", filename);
+        fwDesc = &getFWDescByName(filename);
         callbackWRed->orgGcMecJtUcode->addr = 0x104A4;
-        memmove(callbackWRed->orgGcMecJtUcode->data, fwDesc->var, fwDesc->size);
+        memmove(callbackWRed->orgGcMecJtUcode->data, fwDesc->data, fwDesc->size);
         DBGLOG("wred", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_sdma.bin", asicName);
-        fwDesc = getFWDescByName(filename);
-        PANIC_COND(!fwDesc, "wred", "Somehow %s is missing", filename);
-        memmove(callbackWRed->orgSdmaUcode->data, fwDesc->var, fwDesc->size);
+        fwDesc = &getFWDescByName(filename);
+        memmove(callbackWRed->orgSdmaUcode->data, fwDesc->data, fwDesc->size);
         DBGLOG("wred", "Injected %s!", filename);
         delete[] filename;
     }
@@ -704,48 +695,45 @@ void WRed::wrapSetupAndInitializeHWCapabilities(void *that) {
     getMember<uint32_t>(that, 0xC0) = 0;    // Raven ASICs do not have an SDMA Page Queue
 }
 
+/**
+ * Hack: Add custom param 4 and 5 (pointer to firmware and size)
+ * aka RCX and R8 registers
+ * Complementary to `_psp_asd_load` patch-set.
+ */
 uint32_t WRed::wrapPspAsdLoad(void *pspData) {
-    /**
-     * Hack: Add custom param 4 and 5 (pointer to firmware and size)
-     * aka RCX and R8 registers
-     * Complementary to `_psp_asd_load` patch-set.
-     */
     auto *filename = new char[128];
     snprintf(filename, 128, "%s_asd.bin", getASICName());
     NETLOG("wred", "injecting %s!", filename);
-    auto *fwDesc = getFWDescByName(filename);
-    PANIC_COND(!fwDesc, "wred", "Somehow %s is missing", filename);
+    auto &fwDesc = getFWDescByName(filename);
     delete[] filename;
     auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspAsdLoad);
-    auto ret = org(pspData, 0, 0, fwDesc->var, fwDesc->size);
+    auto ret = org(pspData, 0, 0, fwDesc.data, fwDesc.size);
     NETLOG("wred", "_psp_asd_load returned 0x%X", ret);
     return ret;
 }
 
+/** Same idea as `_psp_asd_load`. */
 uint32_t WRed::wrapPspDtmLoad(void *pspData) {
-    /** Same idea as `_psp_asd_load`. */
     auto *filename = new char[128];
     snprintf(filename, 128, "%s_dtm.bin", getASICName());
     NETLOG("wred", "injecting %s!", filename);
-    auto *fwDesc = getFWDescByName(filename);
-    PANIC_COND(!fwDesc, "wred", "Somehow %s is missing", filename);
+    auto &fwDesc = getFWDescByName(filename);
     delete[] filename;
     auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspDtmLoad);
-    auto ret = org(pspData, 0, 0, fwDesc->var, fwDesc->size);
+    auto ret = org(pspData, 0, 0, fwDesc.data, fwDesc.size);
     NETLOG("wred", "_psp_dtm_load returned 0x%X", ret);
     return 0;
 }
 
+/** Same idea as `_psp_asd_load`. */
 uint32_t WRed::wrapPspHdcpLoad(void *pspData) {
-    /** Same idea as `_psp_asd_load`. */
     auto *filename = new char[128];
     snprintf(filename, 128, "%s_hdcp.bin", getASICName());
     NETLOG("wred", "injecting %s!", filename);
-    auto *fwDesc = getFWDescByName(filename);
-    PANIC_COND(!fwDesc, "wred", "Somehow %s is missing", filename);
+    auto &fwDesc = getFWDescByName(filename);
     delete[] filename;
     auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspHdcpLoad);
-    auto ret = org(pspData, 0, 0, fwDesc->var, fwDesc->size);
+    auto ret = org(pspData, 0, 0, fwDesc.data, fwDesc.size);
     NETLOG("wred", "_psp_hdcp_load returned 0x%X", ret);
     return ret;
 }
