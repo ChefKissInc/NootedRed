@@ -37,14 +37,14 @@ struct CailAsicCapEntry {
     uint32_t revision, emulatedRev;
     uint32_t pciRev;
     void *caps, *skeleton;
-} PACKED;
+};
 
 struct CailInitAsicCapEntry {
     uint64_t familyId, deviceId;
     uint64_t revision, emulatedRev;
     uint64_t pciRev;
     void *caps, *goldenCaps;
-} PACKED;
+};
 
 struct GcFwConstant {
     const char *unknown1;
@@ -52,10 +52,10 @@ struct GcFwConstant {
     uint32_t addr, unknown4;
     uint32_t unknown5, unknown6;
     uint8_t *data;
-} PACKED;
+};
 
 struct SdmaFwConstant {
     const char *unknown1;
     uint32_t size, unknown2;
     uint8_t *data;
-} PACKED;
+};
