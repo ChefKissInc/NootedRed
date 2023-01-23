@@ -68,7 +68,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"_Raven_SendMsgToSmcWithParameter", orgRavenSendMsgToSmcWithParam},
             {"_Renoir_SendMsgToSmcWithParameter", orgRenoirSendMsgToSmcWithParam},
         };
-        PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "rad",
+        PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "wred",
             "Failed to resolve AMDRadeonX5000HWLibs symbols");
 
         KernelPatcher::RouteRequest requests[] = {
