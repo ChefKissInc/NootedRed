@@ -118,9 +118,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable},
         };
-        if (!patcher.solveMultiple(index, solveRequests, address, size, true)) {
-            panic("RAD: Failed to resolve AMDRadeonX6000Framebuffer symbols");
-        }
+        PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size, true), "wred",
+            "Failed to resolve AMDRadeonX6000Framebuffer symbols");
 
         KernelPatcher::RouteRequest requests[] = {
             {"__ZNK34AMDRadeonX6000_AmdBiosParserHelper18getVideoMemoryTypeEv", wrapGetVideoMemoryType},
@@ -132,10 +131,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
             {"__ZN32AMDRadeonX6000_AmdRegisterAccess11hwReadReg32Ej", wrapHwReadReg32, orgHwReadReg32},
         };
-
-        if (!patcher.routeMultiple(index, requests, address, size, true)) {
-            panic("RAD: Failed to route AMDRadeonX6000Framebuffer symbols");
-        }
+        PANIC_COND(!patcher.routeMultiple(index, requests, address, size, true), "wred",
+            "Failed to route AMDRadeonX6000Framebuffer symbols");
 
         constexpr uint8_t find_null_check1[] = {0x48, 0x89, 0x83, 0x90, 0x00, 0x00, 0x00, 0x48, 0x85, 0xC0, 0x0F, 0x84,
             0x89, 0x00, 0x00, 0x00, 0x48, 0x8B, 0x7B, 0x18};
@@ -256,9 +253,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         KernelPatcher::RouteRequest requests[] = {
             {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator5startEP9IOService", wrapAccelStartX6000},
         };
-        if (!patcher.routeMultipleLong(index, requests, address, size)) {
-            panic("RAD: Failed to route AMDRadeonX6000 symbols");
-        }
+        PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
+            "Failed to route AMDRadeonX6000 symbols");
 
         constexpr uint8_t find_hwchannel_init1[] = {0x74, 0x54, 0x49, 0x8B, 0x7C, 0x24, 0x18, 0x48, 0x8B, 0x07, 0xFF,
             0x90, 0xB8, 0x03, 0x00, 0x00};
@@ -572,7 +568,7 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
     auto deviceId = getMember<IOPCIDevice *>(that, 0x18)->configRead16(kIOPCIConfigDeviceID);
     auto &revision = getMember<uint32_t>(that, 0x68);
     auto &emulatedRevision = getMember<uint32_t>(that, 0x6c);
-    NETLOG("wred", "deviceId = 0x%X revision = 0x%X emulatedRevision = 0x%X", deviceId, revision, emulatedRevision);
+
     NETLOG("wred", "Locating Init Caps entry");
     PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "wred",
         "Failed to enable kernel writing");
@@ -652,7 +648,7 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
         }
     }
     if (!initCaps) {
-        DBGLOG("wred", "Warning: Using Fallback Init Caps mechanism");
+        DBGLOG("wred", "Warning: Using fallback Init Caps search");
         for (size_t i = 0; i < 789; i++) {
             auto *temp = callbackWRed->orgAsicInitCapsTable + i;
             if (temp->familyId == 0x8e && temp->deviceId == deviceId &&
@@ -661,7 +657,7 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
                 break;
             }
         }
-        if (!initCaps) { panic("rad: Failed to find Init Caps entry for device ID 0x%X", deviceId); }
+        PANIC_COND(!initCaps, "wred", "Failed to find Init Caps entry");
     }
 
     callbackWRed->orgAsicCapsTable->familyId = callbackWRed->orgAsicCapsTableHWLibs->familyId = 0x8e;

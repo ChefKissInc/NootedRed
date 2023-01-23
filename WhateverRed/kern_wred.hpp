@@ -34,7 +34,7 @@ class WRed {
             case ASICType::Renoir:
                 return "renoir";
             default:
-                panic("rad: Unknown ASIC type");
+                PANIC("wred", "Unknown ASIC type");
         }
     }
 
