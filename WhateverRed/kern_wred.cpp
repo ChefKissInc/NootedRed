@@ -93,7 +93,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"_psp_rap_is_supported", pspFeatureUnsupported},
             {"_psp_np_fw_load", wrapPspNpFwLoad, orgPspNpFwLoad},
         };
-        PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "rad",
+        PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000HWLibs symbols");
 
         constexpr uint8_t find_asic_reset[] = {0x55, 0x48, 0x89, 0xE5, 0x8B, 0x56, 0x04, 0xBE, 0x3B, 0x00, 0x00, 0x00,
@@ -183,11 +183,11 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngineC1Ev", orgGFX9SDMAEngineConstructor},
             {"__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator19createAccelChannelsEbE12channelTypes", orgChannelTypes},
         };
-        PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "rad",
+        PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "wred",
             "Failed to resolve AMDRadeonX5000 symbols");
 
         /** Patch the data so that it only starts SDMA0. */
-        PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "rad",
+        PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "wred",
             "Failed to enable kernel writing");
         orgChannelTypes[5] = 1;
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
@@ -214,7 +214,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20initializeFamilyTypeEv", wrapInitializeFamilyType},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20allocateAMDHWDisplayEv", wrapAllocateAMDHWDisplay},
         };
-        PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "rad",
+        PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000 symbols");
 
         constexpr uint8_t find_startHWEngines[] = {0x49, 0x89, 0xFE, 0x31, 0xDB, 0x48, 0x83, 0xFB, 0x02, 0x74, 0x50};
@@ -254,7 +254,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
                 orgSetupAndInitializeHWCapabilitiesX6000},
             {"__ZN31AMDRadeonX6000_AMDGFX10Hardware20allocateAMDHWDisplayEv", orgAllocateAMDHWDisplayX6000},
         };
-        PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "rad",
+        PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "wred",
             "Failed to resolve AMDRadeonX6000 symbols");
 
         KernelPatcher::RouteRequest requests[] = {
@@ -422,7 +422,7 @@ void WRed::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
 
     NETDBG::enabled = true;
     NETLOG("wred", "Patching device type table");
-    PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "rad",
+    PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "wred",
         "Failed to enable kernel writing");
     callbackWRed->orgDeviceTypeTable[0] = provider->extendedConfigRead16(kIOPCIConfigDeviceID);
     callbackWRed->orgDeviceTypeTable[1] = 6;
@@ -528,7 +528,7 @@ void WRed::wrapPopulateFirmwareDirectory(void *that) {
     NETLOG("wred", "renoir_dmcub.bin => atidmcub_0.dat");
     auto *fwBackdoor = callbackWRed->orgCreateFirmware(fwDesc->var, fwDesc->size, 0x200, "atidmcub_0.dat");
     NETLOG("wred", "inserting atidmcub_0.dat!");
-    PANIC_COND(!callbackWRed->orgPutFirmware(callbackWRed->callbackFirmwareDirectory, 6, fwBackdoor), "rad",
+    PANIC_COND(!callbackWRed->orgPutFirmware(callbackWRed->callbackFirmwareDirectory, 6, fwBackdoor), "wred",
         "Failed to inject atidmcub_0.dat firmware");
 }
 
@@ -583,7 +583,7 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
     auto &emulatedRevision = getMember<uint32_t>(that, 0x6c);
     NETLOG("wred", "deviceId = 0x%X revision = 0x%X emulatedRevision = 0x%X", deviceId, revision, emulatedRevision);
     NETLOG("wred", "Locating Init Caps entry");
-    PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "rad",
+    PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "wred",
         "Failed to enable kernel writing");
 
     if (!injectedIPFirmware) {
@@ -599,7 +599,7 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
 
         auto *fw = callbackWRed->orgCreateFirmware(fwDesc->var, fwDesc->size, 0x200, targetFilename);
         DBGLOG("wred", "Inserting %s!", targetFilename);
-        PANIC_COND(!callbackWRed->orgPutFirmware(callbackWRed->callbackFirmwareDirectory, 6, fw), "rad",
+        PANIC_COND(!callbackWRed->orgPutFirmware(callbackWRed->callbackFirmwareDirectory, 6, fw), "wred",
             "Failed to inject ativvaxy_rv.dat firmware");
 
         snprintf(filename, 128, "%s_rlc.bin", asicName);
@@ -822,7 +822,7 @@ uint64_t WRed::wrapMapVA(void *that, uint64_t param1, void *memory, uint64_t par
 
 uint64_t WRed::wrapMapVMPT(void *that, void *vmptCtl, uint64_t vmptLevel, uint32_t param3, uint64_t param4,
     uint64_t param5, uint64_t sizeToMap) {
-    NETLOG("rad",
+    NETLOG("wred",
         "mapVMPT: this = %p vmptCtl = %p vmptLevel = 0x%llX param3 = 0x%X param4 = 0x%llX param5 = 0x%llX sizeToMap = "
         "0x%llX",
         that, vmptCtl, vmptLevel, param3, param4, param5, sizeToMap);
@@ -834,7 +834,7 @@ uint64_t WRed::wrapMapVMPT(void *that, void *vmptCtl, uint64_t vmptLevel, uint32
 
 uint32_t WRed::wrapWriteWritePTEPDECommand(void *that, uint32_t *buf, uint64_t pe, uint32_t count, uint64_t flags,
     uint64_t addr, uint64_t incr) {
-    NETLOG("rad",
+    NETLOG("wred",
         "writeWritePTEPDECommand: this = %p buf = %p pe = 0x%llX count = 0x%X flags = 0x%llX addr = 0x%llX incr = "
         "0x%llX",
         that, buf, pe, count, flags, addr, incr);
@@ -844,9 +844,9 @@ uint32_t WRed::wrapWriteWritePTEPDECommand(void *that, uint32_t *buf, uint64_t p
     return ret;
 }
 
-uint64_t WRed::wrapGetPDEValue(void *that, uint64_t param1, uint64_t param2) {
-    NETLOG("wred", "getPDEValue: this = %p param1 = 0x%llX param2 = 0x%llX", that, param1, param2);
-    auto ret = FunctionCast(wrapGetPDEValue, callbackWRed->orgGetPDEValue)(that, param1, param2);
+uint64_t WRed::wrapGetPDEValue(void *that, uint64_t level, uint64_t param2) {
+    NETLOG("wred", "getPDEValue: this = %p level = 0x%llX param2 = 0x%llX", that, level, param2);
+    auto ret = FunctionCast(wrapGetPDEValue, callbackWRed->orgGetPDEValue)(that, level, param2);
     NETLOG("wred", "getPDEValue returned 0x%llX", ret);
     return ret;
 }
@@ -861,7 +861,7 @@ uint64_t WRed::wrapGetPTEValue(void *that, uint64_t param1, uint64_t param2, uin
 
 void WRed::wrapUpdateContiguousPTEsWithDMAUsingAddr(void *that, uint64_t param1, uint64_t param2, uint64_t param3,
     uint64_t param4, uint64_t param5) {
-    NETLOG("rad",
+    NETLOG("wred",
         "updateContiguousPTEsWithDMAUsingAddr: this = %p param1 = 0x%llX param2 = 0x%llX param3 = 0x%llX param4 = "
         "0x%llX param5 = 0x%llX",
         that, param1, param2, param3, param4, param5);
