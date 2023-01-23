@@ -454,12 +454,7 @@ void WRed::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
     }
 
     NETLOG("wred", "AmdTtlServices: Calling original constructor");
-    auto *devMem = provider->getDeviceMemoryWithRegister(kIOPCIConfigBaseAddress0);
-    PANIC_COND(!devMem, "wred", "Failed to get device memory");
-    auto addr = devMem->getPhysicalAddress();
-    devMem->release();
     FunctionCast(wrapAmdTtlServicesConstructor, callbackWRed->orgAmdTtlServicesConstructor)(that, provider);
-    getMember<uint64_t>(that, 0x288) = addr;    // Aperture Base
 }
 
 uint64_t WRed::wrapSmuGetHwVersion(uint64_t param1, uint32_t param2) {
