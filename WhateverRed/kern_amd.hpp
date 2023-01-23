@@ -1,13 +1,8 @@
-//
-//  kern_atom.hpp
-//  WhateverRed
-//
-//  Copyright © 2022 ChefKiss Inc. All rights reserved.
-//
+//  Copyright © 2022 ChefKiss Inc. Licensed under the Non-Profit Open Software License version 3.0. See LICENSE for
+//  details.
+// SPDX-License-Identifier: NPOSL-3.0
 
-#ifndef kern_atom_h
-#define kern_atom_h
-
+#pragma once
 #include <Headers/kern_util.hpp>
 
 struct CailAsicCapEntry {
@@ -37,5 +32,3 @@ struct SdmaFwConstant {
     uint32_t size, unknown2;
     uint8_t *data;
 };
-
-#endif /* kern_atom_h */

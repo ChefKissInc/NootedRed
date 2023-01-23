@@ -1,21 +1,19 @@
-//
-//  kern_netdbg.cpp
-//  WhateverRed
-//
-//  Created by Nyan Cat on 7/27/22.
-//  Copyright © 2022 ChefKiss Inc. All rights reserved.
-//
+//  Copyright © 2022 ChefKiss Inc. Licensed under the Non-Profit Open Software License version 3.0. See LICENSE for
+//  details.
+// SPDX-License-Identifier: NPOSL-3.0
 
 #include "kern_netdbg.hpp"
 #include <Headers/kern_api.hpp>
 #include <IOKit/IOLocks.h>
 #include <netinet/in.h>
 
-in_addr_t inet_addr(uint32_t a, uint32_t b, uint32_t c, uint32_t d) { return a | (b << 8) | (c << 16) | (d << 24); }
+inline in_addr_t inet_addr(uint32_t a, uint32_t b, uint32_t c, uint32_t d) {
+    return a | (b << 8) | (c << 16) | (d << 24);
+}
 
-bool NETDBG::enabled = false;
 in_addr_t NETDBG::ip_addr = 0;
 uint32_t NETDBG::port = 0;
+bool NETDBG::enabled = false;
 
 size_t NETDBG::nprint(char *data, size_t len) {
     if (enabled && PE_parse_boot_argn("wrednetdbg", &enabled, sizeof(enabled) && !enabled)) {

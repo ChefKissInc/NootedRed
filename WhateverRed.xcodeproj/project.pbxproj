@@ -8,8 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		1C748C2D1C21952C0024EED2 /* kern_start.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C748C2C1C21952C0024EED2 /* kern_start.cpp */; };
-		1C9CB7B01C789FF500231E41 /* kern_rad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C9CB7AE1C789FF500231E41 /* kern_rad.cpp */; };
-		1C9CB7B11C789FF500231E41 /* kern_rad.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 1C9CB7AF1C789FF500231E41 /* kern_rad.hpp */; };
 		408F2020288ACBE6002EEC15 /* kern_fw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 408F201F288ACBE6002EEC15 /* kern_fw.cpp */; };
 		6CBEB3C628911DCF0063B877 /* kern_netdbg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6CBEB3C428911DCF0063B877 /* kern_netdbg.cpp */; };
 		6CBEB3C728911DD00063B877 /* kern_netdbg.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 6CBEB3C528911DCF0063B877 /* kern_netdbg.hpp */; };
@@ -17,7 +15,6 @@
 		CE8DA0832517C41A008C44E8 /* libkmod.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CE8DA0822517C41A008C44E8 /* libkmod.a */; };
 		CEA03B5E20EE825A00BA842F /* kern_wred.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CEA03B5C20EE825A00BA842F /* kern_wred.cpp */; };
 		CEA03B5F20EE825A00BA842F /* kern_wred.hpp in Headers */ = {isa = PBXBuildFile; fileRef = CEA03B5D20EE825A00BA842F /* kern_wred.hpp */; };
-		CEC0863624331E9B00F5B701 /* kern_agdc.hpp in Headers */ = {isa = PBXBuildFile; fileRef = CEC0863524331E9B00F5B701 /* kern_agdc.hpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -37,8 +34,6 @@
 		1C748C271C21952C0024EED2 /* WhateverRed.kext */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WhateverRed.kext; sourceTree = BUILT_PRODUCTS_DIR; };
 		1C748C2C1C21952C0024EED2 /* kern_start.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_start.cpp; sourceTree = "<group>"; };
 		1C748C2E1C21952C0024EED2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		1C9CB7AE1C789FF500231E41 /* kern_rad.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = kern_rad.cpp; sourceTree = "<group>"; };
-		1C9CB7AF1C789FF500231E41 /* kern_rad.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = kern_rad.hpp; sourceTree = "<group>"; };
 		402AB9A728C7840B00A55F4F /* raven_dtm.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_dtm.bin; sourceTree = "<group>"; };
 		402AB9A828C7840B00A55F4F /* renoir_dtm.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_dtm.bin; sourceTree = "<group>"; };
 		402AB9A928C7850B00A55F4F /* raven_asd.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_asd.bin; sourceTree = "<group>"; };
@@ -104,8 +99,7 @@
 		CE8DA0822517C41A008C44E8 /* libkmod.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libkmod.a; path = ../Lilu/MacKernelSDK/Library/x86_64/libkmod.a; sourceTree = "<group>"; };
 		CEA03B5C20EE825A00BA842F /* kern_wred.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_wred.cpp; sourceTree = "<group>"; };
 		CEA03B5D20EE825A00BA842F /* kern_wred.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_wred.hpp; sourceTree = "<group>"; };
-		CEB402A71F181D8300716912 /* kern_atom.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_atom.hpp; sourceTree = "<group>"; };
-		CEC0863524331E9B00F5B701 /* kern_agdc.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_agdc.hpp; sourceTree = "<group>"; usesTabs = 0; };
+		CEB402A71F181D8300716912 /* kern_amd.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_amd.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -144,14 +138,11 @@
 			children = (
 				408F201A288AC068002EEC15 /* Firmware */,
 				1C748C2E1C21952C0024EED2 /* Info.plist */,
-				CEC0863524331E9B00F5B701 /* kern_agdc.hpp */,
-				CEB402A71F181D8300716912 /* kern_atom.hpp */,
+				CEB402A71F181D8300716912 /* kern_amd.hpp */,
 				408F201F288ACBE6002EEC15 /* kern_fw.cpp */,
 				408F201E288ACBB0002EEC15 /* kern_fw.hpp */,
 				6CBEB3C428911DCF0063B877 /* kern_netdbg.cpp */,
 				6CBEB3C528911DCF0063B877 /* kern_netdbg.hpp */,
-				1C9CB7AE1C789FF500231E41 /* kern_rad.cpp */,
-				1C9CB7AF1C789FF500231E41 /* kern_rad.hpp */,
 				1C748C2C1C21952C0024EED2 /* kern_start.cpp */,
 				CEA03B5C20EE825A00BA842F /* kern_wred.cpp */,
 				CEA03B5D20EE825A00BA842F /* kern_wred.hpp */,
@@ -265,8 +256,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				CEA03B5F20EE825A00BA842F /* kern_wred.hpp in Headers */,
-				CEC0863624331E9B00F5B701 /* kern_agdc.hpp in Headers */,
-				1C9CB7B11C789FF500231E41 /* kern_rad.hpp in Headers */,
 				6CBEB3C728911DD00063B877 /* kern_netdbg.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -368,7 +357,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				408F2020288ACBE6002EEC15 /* kern_fw.cpp in Sources */,
-				1C9CB7B01C789FF500231E41 /* kern_rad.cpp in Sources */,
 				CEA03B5E20EE825A00BA842F /* kern_wred.cpp in Sources */,
 				6CBEB3C628911DCF0063B877 /* kern_netdbg.cpp in Sources */,
 				CE405ED91E4A080700AA0B3D /* plugin_start.cpp in Sources */,

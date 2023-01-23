@@ -1,9 +1,6 @@
-//
-//  kern_start.cpp
-//  WhateverRed
-//
-//  Copyright © 2022 ChefKiss Inc. All rights reserved.
-//
+//  Copyright © 2022 ChefKiss Inc. Licensed under the Non-Profit Open Software License version 3.0. See LICENSE for
+//  details.
+// SPDX-License-Identifier: NPOSL-3.0
 
 #include "kern_wred.hpp"
 #include <Headers/kern_api.hpp>
@@ -26,7 +23,7 @@ static const char *bootargBeta[] = {
 PluginConfiguration ADDPR(config) {
     xStringify(PRODUCT_NAME),
     parseModuleVersion(xStringify(MODULE_VERSION)),
-    LiluAPI::AllowNormal | LiluAPI::AllowSafeMode,
+    LiluAPI::AllowNormal | LiluAPI::AllowInstallerRecovery | LiluAPI::AllowSafeMode,
     bootargOff,
     arrsize(bootargOff),
     bootargDebug,

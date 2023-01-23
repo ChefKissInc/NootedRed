@@ -1,224 +1,158 @@
-//
-//  kern_weg.hpp
-//  WhateverRed
-//
-//  Copyright © 2017 vit9696. All rights reserved.
-//  Copyright © 2022 ChefKiss Inc. All rights reserved.
-//
+//  Copyright © 2022 ChefKiss Inc. Licensed under the Non-Profit Open Software License version 3.0. See LICENSE for
+//  details.
+// SPDX-License-Identifier: NPOSL-3.0
 
-#ifndef kern_weg_hpp
-#define kern_weg_hpp
-
-#include "kern_rad.hpp"
-#include <Headers/kern_devinfo.hpp>
+#pragma once
+#include "kern_amd.hpp"
 #include <Headers/kern_iokit.hpp>
+#include <IOKit/pci/IOPCIDevice.h>
 
-class IOFramebuffer;
-class IODisplay;
+enum struct ASICType {
+    Unknown,
+    Raven,
+    Raven2,
+    Picasso,
+    Renoir,
+};
 
 class WRed {
     public:
+    static WRed *callbackWRed;
+
     void init();
     void deinit();
-
-    private:
-    /**
-     *  Private self instance for callbacks
-     */
-    static WRed *callbackWRED;
-
-    /**
-     *  Radeon GPU fixes instance
-     */
-    RAD rad;
-
-    /**
-     *  FB_DETECT   autodetects based on the installed GPU.
-     *  FB_RESET    enforces -v like usual patch.
-     *  FB_COPY     enforces screen copy (default on IGPU).
-     *  FB_ZEROFILL erases screen content (default on AMD).
-     *  FB_NONE     does nothing.
-     */
-    enum FramebufferFixMode { FB_DETECT = 0, FB_RESET = 1, FB_COPY = 2, FB_ZEROFILL = 3, FB_NONE = 4, FB_TOTAL = 5 };
-
-    /**
-     *  Framebuffer distortion fix mode
-     */
-    uint32_t resetFramebuffer {FB_DETECT};
-
-    /**
-     *  Console info structure, taken from osfmk/console/video_console.h
-     *  Last updated from XNU 4570.1.46.
-     */
-    struct vc_info {
-        unsigned int v_height; /* pixels */
-        unsigned int v_width;  /* pixels */
-        unsigned int v_depth;
-        unsigned int v_rowbytes;
-        unsigned long v_baseaddr;
-        unsigned int v_type;
-        char v_name[32];
-        uint64_t v_physaddr;
-        unsigned int v_rows;         /* characters */
-        unsigned int v_columns;      /* characters */
-        unsigned int v_rowscanbytes; /* Actualy number of bytes used for display
-                                        per row*/
-        unsigned int v_scale;
-        unsigned int v_rotate;
-        unsigned int v_reserved[3];
-    };
-
-    /**
-     *  Loaded vinfo
-     */
-    vc_info consoleVinfo {};
-
-    /**
-     *  Console buffer backcopy
-     */
-    uint8_t *consoleBuffer {nullptr};
-
-    /**
-     *  Original IOGraphics framebuffer init handler
-     */
-    mach_vm_address_t orgFramebufferInit {};
-
-    /**
-     *  Verbose boot global variable pointer
-     */
-    uint8_t *gIOFBVerboseBootPtr {nullptr};
-
-    /**
-     *  Original AppleGraphicsDevicePolicy start handler
-     */
-    mach_vm_address_t orgGraphicsPolicyStart {0};
-
-    /**
-     *  vinfo presence status
-     */
-    bool gotConsoleVinfo {false};
-
-    /**
-     *  Device identification spoofing for IGPU
-     */
-    bool hasIgpuSpoof {false};
-
-    /**
-     *  Device identification spoofing for GFX0
-     */
-    bool hasGfxSpoof {false};
-
-    /**
-     *  Maximum GFX naming index (due to ACPI name restrictions)
-     */
-    static constexpr uint8_t MaxExternalGfxIndex {9};
-
-    /**
-     *  GPU index used for GFXx naming in IORegistry
-     *  Must be single digits (i.e. 0~9 inclusive).
-     */
-    uint8_t currentExternalGfxIndex {0};
-
-    /**
-     *  Maximum GFX slot naming index
-     *  Should be 1~4 to display properly in NVIDIA panel.
-     *  However, we permit more to match external GFX naming.
-     */
-    static constexpr uint8_t MaxExternalSlotIndex {10};
-
-    /**
-     *  GPU index used for AAPL,slot-name naming in IORegistry
-     *  Should be 1~4 to display properly in NVIDIA panel.
-     */
-    uint8_t currentExternalSlotIndex {1};
-
-    /**
-     *  AppleGraphicsDisplayPolicy modifications if applicable.
-     *
-     *  AGDP_NONE     no modifications
-     *  AGDP_DETECT   detect on firmware vendor and hardware installed
-     *  AGDP_VIT9696  null config string size at strcmp
-     *  AGDP_PIKERA   board-id -> board-ix replace
-     *  AGDP_CFGMAP   add board-id with none to ConfigMap
-     *  SET bit is used to distinguish from agpmod=detect.
-     */
-    enum GraphicsDisplayPolicyMod {
-        AGDP_SET = 0x8000,
-        AGDP_NONE_SET = AGDP_SET | 0,
-        AGDP_DETECT = 1,
-        AGDP_DETECT_SET = AGDP_SET | AGDP_DETECT,
-        AGDP_VIT9696 = 2,
-        AGDP_PIKERA = 4,
-        AGDP_CFGMAP = 8,
-        AGDP_PATCHES = AGDP_VIT9696 | AGDP_PIKERA | AGDP_CFGMAP
-    };
-
-    /**
-     *  Current AppleGraphicsDisplayPolicy modifications.
-     */
-    int graphicsDisplayPolicyMod {AGDP_DETECT};
-
-    /**
-     *  Apply pre-kext patches and setup the configuration
-     *
-     *  @param patcher KernelPatcher instance
-     */
-    void processKernel(KernelPatcher &patcher);
-
-    /**
-     *  Patch kext if needed and prepare other patches
-     *
-     *  @param patcher KernelPatcher instance
-     *  @param index   kinfo handle
-     *  @param address kinfo load address
-     *  @param size    kinfo memory size
-     */
     void processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size);
 
-    /**
-     *  Parse AppleGraphicsDevicePolicy (AGDP) patch configuration
-     *
-     *  @param patcher KernelPatcher instance
-     *  @param address agdp load address
-     *  @param size    agdp memory size
-     */
-    void processGraphicsPolicyStr(const char *agdp);
+    static const char *getASICName() {
+        switch (callbackWRed->asicType) {
+            case ASICType::Picasso:
+                return "picasso";
+            case ASICType::Raven:
+                return "raven";
+            case ASICType::Raven2:
+                return "raven2";
+            case ASICType::Renoir:
+                return "renoir";
+            default:
+                panic("rad: Unknown ASIC type");
+        }
+    }
 
-    /**
-     *  Apply AppleGraphicsDevicePolicy (AGDP) patches if any
-     *
-     *  @param patcher KernelPatcher instance
-     *  @param address agdp load address
-     *  @param size    agdp memory size
-     */
-    void processGraphicsPolicyMods(KernelPatcher &patcher, mach_vm_address_t address, size_t size);
+    private:
+    using t_createFirmware = void *(*)(const void *data, uint32_t size, uint32_t param3, const char *filename);
+    using t_putFirmware = bool (*)(void *that, uint32_t deviceType, void *fw);
+    using t_Vega10PowerTuneConstructor = void (*)(void *that, void *param1, void *param2);
+    using t_HWEngineConstructor = void (*)(void *that);
+    using t_HWEngineNew = void *(*)(size_t size);
+    using t_sendMsgToSmcWithParam = uint32_t (*)(void *smumData, uint32_t msgId, uint32_t parameter);
 
-    /**
-     *  Check whether the graphics policy modification patches are required
-     *
-     *  @param info  device information
-     *
-     *  @return true if we should continue
-     */
-    bool isGraphicsPolicyModRequired(DeviceInfo *info);
+    OSData *vbiosData = nullptr;
+    ASICType asicType = ASICType::Unknown;
+    void *callbackFirmwareDirectory = nullptr;
 
-    /**
-     *  IOFramebuffer initialisation wrapper used for screen distortion fixes
-     *
-     *  @param fb  framebuffer instance
-     */
-    static void wrapFramebufferInit(IOFramebuffer *fb);
+    /** X6000Framebuffer */
+    mach_vm_address_t orgPopulateDeviceInfo {};
+    CailAsicCapEntry *orgAsicCapsTable = nullptr;
+    mach_vm_address_t orgHwReadReg32 {};
 
-    /**
-     *  AppleGraphicsDevicePolicy start wrapper used for black screen fixes in
-     * AGDP_CFGMAP mode
-     *
-     *  @param that      agdp instance
-     *  @param provider  agdp provider
-     *
-     *  @return agdp start status
-     */
-    static bool wrapGraphicsPolicyStart(IOService *that, IOService *provider);
+    /** X5000HWLibs */
+    uint32_t *orgDeviceTypeTable = nullptr;
+    mach_vm_address_t orgAmdTtlServicesConstructor {};
+    mach_vm_address_t orgSmuGetHwVersion {};
+    mach_vm_address_t orgPspSwInit {}, orgGcGetHwVersion {};
+    mach_vm_address_t orgPopulateFirmwareDirectory {};
+    t_createFirmware orgCreateFirmware = nullptr;
+    t_putFirmware orgPutFirmware = nullptr;
+    t_Vega10PowerTuneConstructor orgVega10PowerTuneConstructor = nullptr;
+    CailAsicCapEntry *orgAsicCapsTableHWLibs = nullptr;
+    CailInitAsicCapEntry *orgAsicInitCapsTable = nullptr;
+    mach_vm_address_t orgPspAsdLoad {};
+    mach_vm_address_t orgPspDtmLoad {};
+    mach_vm_address_t orgPspHdcpLoad {};
+    mach_vm_address_t orgCosDebugAssert {};
+    GcFwConstant *orgGcRlcUcode = nullptr;
+    GcFwConstant *orgGcMeUcode = nullptr;
+    GcFwConstant *orgGcCeUcode = nullptr;
+    GcFwConstant *orgGcPfpUcode = nullptr;
+    GcFwConstant *orgGcMecUcode = nullptr;
+    GcFwConstant *orgGcMecJtUcode = nullptr;
+    SdmaFwConstant *orgSdmaUcode = nullptr;
+    t_sendMsgToSmcWithParam orgRavenSendMsgToSmcWithParam = nullptr;
+    t_sendMsgToSmcWithParam orgRenoirSendMsgToSmcWithParam = nullptr;
+    mach_vm_address_t orgSmuRavenInitialize {};
+    mach_vm_address_t orgSmuRenoirInitialize {};
+    mach_vm_address_t orgPspNpFwLoad {};
+
+    /** X6000 */
+    t_HWEngineNew orgGFX10VCN2EngineNew = nullptr;
+    t_HWEngineConstructor orgGFX10VCN2EngineConstructor = nullptr;
+    mach_vm_address_t orgGFX10SetupAndInitializeHWCapabilities {};
+
+    /** X5000 */
+    t_HWEngineNew orgGFX9PM4EngineNew = nullptr;
+    t_HWEngineConstructor orgGFX9PM4EngineConstructor = nullptr;
+    t_HWEngineNew orgGFX9SDMAEngineNew = nullptr;
+    t_HWEngineConstructor orgGFX9SDMAEngineConstructor = nullptr;
+    mach_vm_address_t orgGetHWEngine {};
+    mach_vm_address_t orgGetHWCapabilities {};
+    mach_vm_address_t orgSetupAndInitializeHWCapabilities {};
+    mach_vm_address_t orgAccelDisplayPipeWriteDiagnosisReport {};
+    mach_vm_address_t orgSetMemoryAllocationsEnabled {};
+    mach_vm_address_t orgPowerUpHW {};
+    mach_vm_address_t orgHWsetMemoryAllocationsEnabled {};
+    mach_vm_address_t orgRTGetHWChannel {};
+    mach_vm_address_t orgMapVA {};
+    mach_vm_address_t orgMapVMPT {};
+    mach_vm_address_t orgWriteWritePTEPDECommand {};
+    mach_vm_address_t orgGetPDEValue {};
+    mach_vm_address_t orgGetPTEValue {};
+    mach_vm_address_t orgUpdateContiguousPTEsWithDMAUsingAddr {};
+
+    /** X6000Framebuffer */
+    static uint16_t wrapGetFamilyId();
+    static IOReturn wrapPopulateDeviceInfo(void *that);
+    static uint16_t wrapGetEnumeratedRevision(void *that);
+    static uint32_t wrapGetVideoMemoryType();
+    static uint32_t wrapGetVideoMemoryBitWidth();
+    static IOReturn wrapPopulateVramInfo();
+    static uint32_t wrapHwReadReg32(void *that, uint32_t param1);
+
+    /** X5000HWLibs */
+    static void wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider);
+    static uint64_t wrapSmuGetHwVersion(uint64_t param1, uint32_t param2);
+    static uint64_t wrapPspSwInit(uint32_t *param1, uint32_t *param2);
+    static uint32_t wrapGcGetHwVersion(uint32_t *param1);
+    static void wrapPopulateFirmwareDirectory(void *that);
+    static void *wrapCreatePowerTuneServices(void *param1, void *param2);
+    static uint32_t wrapSmuGetFwConstants();
+    static uint32_t wrapSmuInternalHwInit();
+    static uint32_t wrapPspAsdLoad(void *pspData);
+    static uint32_t wrapPspDtmLoad(void *pspData);
+    static uint32_t wrapPspHdcpLoad(void *pspData);
+    static void wrapCosDebugAssert(void *param1, uint8_t *param2, uint8_t *param3, uint32_t param4, uint8_t *param5);
+    static void powerUpSDMA(void *smumData);
+    static uint32_t wrapSmuRavenInitialize(void *smumData, uint32_t param2);
+    static uint32_t wrapSmuRenoirInitialize(void *smumData, uint32_t param2);
+    static uint32_t pspFeatureUnsupported();
+    static uint32_t wrapPspNpFwLoad(void *pspData);
+
+    /** X6000 */
+    static bool wrapGFX10AcceleratorStart();
+
+    /** X5000 */
+    static bool wrapAllocateHWEngines(void *that);
+    static void wrapSetupAndInitializeHWCapabilities(void *that);
+    static void wrapAccelDisplayPipeWriteDiagnosisReport();
+    static void *wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3);
+    static void wrapInitializeFamilyType(void *that);
+    static uint64_t wrapMapVA(void *that, uint64_t param1, void *memory, uint64_t param3, uint64_t sizeToMap,
+        uint64_t flags);
+    static uint64_t wrapMapVMPT(void *that, void *vmptCtl, uint64_t vmptLevel, uint32_t param3, uint64_t param4,
+        uint64_t param5, uint64_t sizeToMap);
+    static uint32_t wrapWriteWritePTEPDECommand(void *that, uint32_t *buf, uint64_t pe, uint32_t count, uint64_t flags,
+        uint64_t addr, uint64_t incr);
+    static uint64_t wrapGetPDEValue(void *that, uint64_t param1, uint64_t param2);
+    static uint64_t wrapGetPTEValue(void *that, uint64_t param1, uint64_t param2, uint64_t param3, uint32_t param4);
+    static void wrapUpdateContiguousPTEsWithDMAUsingAddr(void *that, uint64_t param1, uint64_t param2, uint64_t param3,
+        uint64_t param4, uint64_t param5);
 };
-
-#endif /* kern_weg_hpp */
