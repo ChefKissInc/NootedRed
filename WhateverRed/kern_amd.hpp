@@ -11,6 +11,27 @@ using t_HWEngineConstructor = void (*)(void *that);
 using t_HWEngineNew = void *(*)(size_t size);
 using t_sendMsgToSmcWithParam = uint32_t (*)(void *smumData, uint32_t msgId, uint32_t parameter);
 
+struct VFCT {
+    char signature[4];
+    uint32_t length;
+    uint8_t revision, checksum;
+    char oemId[6];
+    char oemTableId[8];
+    uint32_t oemRevision;
+    char creatorId[4];
+    uint32_t creatorRevision;
+    char tableUUID[16];
+    uint32_t vbiosImageOffset, lib1ImageOffset;
+    uint32_t reserved[4];
+} PACKED;
+
+struct GOPVideoBIOSHeader {
+    uint32_t pciBus, pciDevice, pciFunction;
+    uint16_t vendorID, deviceID;
+    uint16_t ssvId, ssId;
+    uint32_t revision, imageLength;
+} PACKED;
+
 struct CailAsicCapEntry {
     uint32_t familyId, deviceId;
     uint32_t revision, emulatedRev;

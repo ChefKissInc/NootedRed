@@ -407,29 +407,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
     }
 }
 
-#pragma pack(push, 1)
-struct VFCT {
-    char signature[4];
-    uint32_t length;
-    uint8_t revision, checksum;
-    char oemId[6];
-    char oemTableId[8];
-    uint32_t oemRevision;
-    char creatorId[4];
-    uint32_t creatorRevision;
-    char tableUUID[16];
-    uint32_t vbiosImageOffset, lib1ImageOffset;
-    uint32_t reserved[4];
-};
-
-struct GOPVideoBIOSHeader {
-    uint32_t pciBus, pciDevice, pciFunction;
-    uint16_t vendorID, deviceID;
-    uint16_t ssvId, ssId;
-    uint32_t revision, imageLength;
-};
-#pragma pack(pop)
-
 // Hack
 class AppleACPIPlatformExpert : IOACPIPlatformExpert {
     friend class WRed;
