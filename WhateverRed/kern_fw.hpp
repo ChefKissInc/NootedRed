@@ -1,6 +1,5 @@
 //  Copyright © 2022 ChefKiss Inc. Licensed under the Non-Profit Open Software License version 3.0. See LICENSE for
 //  details.
-// SPDX-License-Identifier: NPOSL-3.0
 
 #pragma once
 #include <libkern/c++/OSData.h>

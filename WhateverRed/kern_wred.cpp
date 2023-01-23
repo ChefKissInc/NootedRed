@@ -1,59 +1,30 @@
 //  Copyright © 2022 ChefKiss Inc. Licensed under the Non-Profit Open Software License version 3.0. See LICENSE for
 //  details.
-// SPDX-License-Identifier: NPOSL-3.0
 
 #include "kern_wred.hpp"
 #include "kern_fw.hpp"
 #include "kern_netdbg.hpp"
 #include <Headers/kern_api.hpp>
-#include <Headers/kern_cpu.hpp>
-#include <Headers/kern_devinfo.hpp>
-#include <Headers/kern_iokit.hpp>
 #include <IOKit/acpi/IOACPIPlatformExpert.h>
-#include <IOKit/graphics/IOFramebuffer.h>
 
-static const char *pathRadeonX6000 = "/System/Library/Extensions/AMDRadeonX6000.kext/Contents/MacOS/"
-                                     "AMDRadeonX6000";
 static const char *pathRadeonX5000HWLibs = "/System/Library/Extensions/AMDRadeonX5000HWServices.kext/Contents/PlugIns/"
                                            "AMDRadeonX5000HWLibs.kext/Contents/MacOS/AMDRadeonX5000HWLibs";
-static const char *pathRadeonX5000 = "/System/Library/Extensions/AMDRadeonX5000.kext/Contents/MacOS/"
-                                     "AMDRadeonX5000";
 static const char *pathRadeonX6000Framebuffer =
-    "/System/Library/Extensions/AMDRadeonX6000Framebuffer.kext/Contents/MacOS/"
-    "AMDRadeonX6000Framebuffer";
+    "/System/Library/Extensions/AMDRadeonX6000Framebuffer.kext/Contents/MacOS/AMDRadeonX6000Framebuffer";
+static const char *pathRadeonX6000 = "/System/Library/Extensions/AMDRadeonX6000.kext/Contents/MacOS/AMDRadeonX6000";
+static const char *pathRadeonX5000 = "/System/Library/Extensions/AMDRadeonX5000.kext/Contents/MacOS/AMDRadeonX5000";
 
-static KernelPatcher::KextInfo kextRadeonX5000HWLibs {
-    "com.apple.kext.AMDRadeonX5000HWLibs",
-    &pathRadeonX5000HWLibs,
-    1,
-    {},
-    {},
-    KernelPatcher::KextInfo::Unloaded,
-};
-static KernelPatcher::KextInfo kextRadeonX6000Framebuffer {
-    "com.apple.kext.AMDRadeonX6000Framebuffer",
-    &pathRadeonX6000Framebuffer,
-    1,
-    {},
-    {},
-    KernelPatcher::KextInfo::Unloaded,
-};
-static KernelPatcher::KextInfo kextRadeonX5000 {
-    "com.apple.kext.AMDRadeonX5000",
-    &pathRadeonX5000,
-    1,
-    {},
-    {},
-    KernelPatcher::KextInfo::Unloaded,
-};
-static KernelPatcher::KextInfo kextRadeonX6000 = {
-    "com.apple.kext.AMDRadeonX6000",
-    &pathRadeonX6000,
-    1,
-    {},
-    {},
-    KernelPatcher::KextInfo::Unloaded,
-};
+static KernelPatcher::KextInfo kextRadeonX5000HWLibs {"com.apple.kext.AMDRadeonX5000HWLibs", &pathRadeonX5000HWLibs, 1,
+    {}, {}, KernelPatcher::KextInfo::Unloaded};
+
+static KernelPatcher::KextInfo kextRadeonX6000Framebuffer {"com.apple.kext.AMDRadeonX6000Framebuffer",
+    &pathRadeonX6000Framebuffer, 1, {}, {}, KernelPatcher::KextInfo::Unloaded};
+
+static KernelPatcher::KextInfo kextRadeonX6000 = {"com.apple.kext.AMDRadeonX6000", &pathRadeonX6000, 1, {}, {},
+    KernelPatcher::KextInfo::Unloaded};
+
+static KernelPatcher::KextInfo kextRadeonX5000 {"com.apple.kext.AMDRadeonX5000", &pathRadeonX5000, 1, {}, {},
+    KernelPatcher::KextInfo::Unloaded};
 
 WRed *WRed::callbackWRed = nullptr;
 
@@ -65,7 +36,7 @@ void WRed::init() {
     lilu.onKextLoadForce(&kextRadeonX6000);
     lilu.onKextLoadForce(&kextRadeonX5000);
 
-    lilu.onKextLoadForce(
+    lilu.onKextLoadForce(    // For compatibility
         nullptr, 0,
         [](void *user, KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
             static_cast<WRed *>(user)->processKext(patcher, index, address, size);
@@ -73,498 +44,8 @@ void WRed::init() {
         this);
 }
 
-void WRed::deinit() {}
-
-#pragma pack(push, 1)
-struct VFCT {
-    char signature[4];
-    uint32_t length;
-    uint8_t revision, checksum;
-    char oemId[6];
-    char oemTableId[8];
-    uint32_t oemRevision;
-    char creatorId[4];
-    uint32_t creatorRevision;
-    char tableUUID[16];
-    uint32_t vbiosImageOffset, lib1ImageOffset;
-    uint32_t reserved[4];
-};
-
-struct GOPVideoBIOSHeader {
-    uint32_t pciBus, pciDevice, pciFunction;
-    uint16_t vendorID, deviceID;
-    uint16_t ssvId, ssId;
-    uint32_t revision, imageLength;
-};
-#pragma pack(pop)
-
-// Hack
-class AppleACPIPlatformExpert : IOACPIPlatformExpert {
-    friend class WRed;
-};
-
-void WRed::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
-    WIOKit::renameDevice(provider, "GFX0");
-
-    static uint8_t builtBytes[] = {0x01};
-    provider->setProperty("built-in", builtBytes, sizeof(builtBytes));
-
-    NETDBG::enabled = true;
-    NETLOG("rad", "patching device type table");
-    PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "rad",
-        "Failed to enable kernel writing");
-    auto deviceId = provider->extendedConfigRead16(kIOPCIConfigDeviceID);
-    callbackWRed->orgDeviceTypeTable[0] = deviceId;
-    callbackWRed->orgDeviceTypeTable[1] = 6;
-    MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
-    if (provider->getProperty("ATY,bin_image")) {
-        NETLOG("rad", "VBIOS manually overridden");
-    } else {
-        NETLOG("rad", "Fetching VBIOS from VFCT table");
-        auto *expert = reinterpret_cast<AppleACPIPlatformExpert *>(provider->getPlatform());
-        PANIC_COND(!expert, "rad", "Failed to get AppleACPIPlatformExpert");
-
-        auto *vfctData = expert->getACPITableData("VFCT", 0);
-        PANIC_COND(!vfctData, "rad", "Failed to get VFCT from AppleACPIPlatformExpert");
-
-        auto *vfct = static_cast<const VFCT *>(vfctData->getBytesNoCopy());
-        PANIC_COND(!vfct, "rad", "VFCT OSData::getBytesNoCopy returned null");
-
-        auto *vbiosContent = static_cast<const GOPVideoBIOSHeader *>(
-            vfctData->getBytesNoCopy(vfct->vbiosImageOffset, sizeof(GOPVideoBIOSHeader)));
-        PANIC_COND(!vfct->vbiosImageOffset || !vbiosContent, "rad", "No VBIOS contained in VFCT table");
-
-        auto *vbiosPtr =
-            vfctData->getBytesNoCopy(vfct->vbiosImageOffset + sizeof(GOPVideoBIOSHeader), vbiosContent->imageLength);
-        PANIC_COND(!vbiosPtr, "rad", "Bad VFCT: Offset + Size not within buffer boundaries");
-
-        callbackWRed->vbiosData = OSData::withBytes(vbiosPtr, vbiosContent->imageLength);
-        PANIC_COND(!callbackWRed->vbiosData, "rad", "OSData::withBytes failed");
-        provider->setProperty("ATY,bin_image", callbackWRed->vbiosData);
-    }
-
-    NETLOG("rad", "AmdTtlServices: Calling original constructor");
-    auto *devMem = provider->getDeviceMemoryWithRegister(kIOPCIConfigBaseAddress0);
-    PANIC_COND(!devMem, "rad", "Failed to get device memory");
-    auto addr = devMem->getPhysicalAddress();
-    devMem->release();
-    FunctionCast(wrapAmdTtlServicesConstructor, callbackWRed->orgAmdTtlServicesConstructor)(that, provider);
-    getMember<uint64_t>(that, 0x288) = addr;
-}
-
-uint64_t WRed::wrapSmuGetHwVersion(uint64_t param1, uint32_t param2) {
-    auto ret = FunctionCast(wrapSmuGetHwVersion, callbackWRed->orgSmuGetHwVersion)(param1, param2);
-    NETLOG("rad", "_smu_get_hw_version returned 0x%llX", ret);
-    switch (ret) {
-        case 0x2:
-            NETLOG("rad", "Spoofing SMU v10 to v9.0.1");
-            return 0x1;
-        case 0xB:
-            [[fallthrough]];
-        case 0xC:
-            NETLOG("rad", "Spoofing SMU v11/v12 to v11");
-            return 0x3;
-        default:
-            return ret;
-    }
-}
-
-uint64_t WRed::wrapPspSwInit(uint32_t *param1, uint32_t *param2) {
-    switch (param1[3]) {
-        case 0xA:
-            NETLOG("rad", "Spoofing PSP version v10 to v9.0.2");
-            param1[3] = 0x9;
-            param1[4] = 0x0;
-            param1[5] = 0x2;
-            break;
-        case 0xB:
-            [[fallthrough]];
-        case 0xC:
-            NETLOG("rad", "Spoofing PSP version v11/v12 to v11");
-            param1[3] = 0xB;
-            param1[4] = 0x0;
-            param1[5] = 0x0;
-            break;
-        default:
-            break;
-    }
-    auto ret = FunctionCast(wrapPspSwInit, callbackWRed->orgPspSwInit)(param1, param2);
-    NETLOG("rad", "_psp_sw_init returned 0x%llX", ret);
-    return ret;
-}
-
-uint32_t WRed::wrapGcGetHwVersion(uint32_t *param1) {
-    auto ret = FunctionCast(wrapGcGetHwVersion, callbackWRed->orgGcGetHwVersion)(param1);
-    switch (ret & 0xFFFF00) {
-        case 0x090100:
-            [[fallthrough]];
-        case 0x090200:
-            [[fallthrough]];
-        case 0x090300:
-            NETLOG("rad", "Spoofing GC version v9.1/v9.2/v9.3 to v9.2.1");
-            return 0x090201;
-        default:
-            NETLOG("rad", "_gc_get_hw_version returned 0x%X", ret);
-            return ret;
-    }
-}
-
-void WRed::wrapPopulateFirmwareDirectory(void *that) {
-    FunctionCast(wrapPopulateFirmwareDirectory, callbackWRed->orgPopulateFirmwareDirectory)(that);
-    callbackWRed->callbackFirmwareDirectory = getMember<void *>(that, 0xB8);
-    auto *fwDesc = getFWDescByName("renoir_dmcub.bin");
-    PANIC_COND(!fwDesc, "rad", "Somehow renoir_dmcub.bin is missing");
-    NETLOG("rad", "renoir_dmcub.bin => atidmcub_0.dat");
-    auto *fwBackdoor = callbackWRed->orgCreateFirmware(fwDesc->var, fwDesc->size, 0x200, "atidmcub_0.dat");
-    NETLOG("rad", "inserting atidmcub_0.dat!");
-    PANIC_COND(!callbackWRed->orgPutFirmware(callbackWRed->callbackFirmwareDirectory, 6, fwBackdoor), "rad",
-        "Failed to inject atidmcub_0.dat firmware");
-}
-
-void *WRed::wrapCreatePowerTuneServices(void *param1, void *param2) {
-    auto *ret = IOMallocZero(0x18);
-    callbackWRed->orgVega10PowerTuneConstructor(ret, param1, param2);
-    return ret;
-}
-
-uint16_t WRed::wrapGetFamilyId() { return 0x8E; }    // 0x8F -> 0x8E
-
-uint16_t WRed::wrapGetEnumeratedRevision(void *that) {
-    auto *&pciDev = getMember<IOPCIDevice *>(that, 0x18);
-    auto &revision = getMember<uint32_t>(that, 0x68);
-
-    switch (pciDev->configRead16(kIOPCIConfigDeviceID)) {
-        case 0x15D8:
-            if (revision >= 0x8) {
-                callbackWRed->asicType = ASICType::Raven2;
-                return 0x79;
-            }
-            callbackWRed->asicType = ASICType::Picasso;
-            return 0x41;
-        case 0x15DD:
-            if (revision >= 0x8) {
-                callbackWRed->asicType = ASICType::Raven2;
-                return 0x79;
-            }
-            callbackWRed->asicType = ASICType::Raven;
-            return 0x10;
-        case 0x15E7:
-            [[fallthrough]];
-        case 0x164C:
-            [[fallthrough]];
-        case 0x1636:
-            [[fallthrough]];
-        case 0x1638:
-            callbackWRed->asicType = ASICType::Renoir;
-            return 0x91;
-        default:
-            if (revision == 1) { return 0x20; }
-            return 0x10;
-    }
-}
-
-static bool injectedIPFirmware = false;
-
-IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
-    auto ret = FunctionCast(wrapPopulateDeviceInfo, callbackWRed->orgPopulateDeviceInfo)(that);
-    getMember<uint32_t>(that, 0x60) = 0x8E;
-    auto deviceId = getMember<IOPCIDevice *>(that, 0x18)->configRead16(kIOPCIConfigDeviceID);
-    auto &revision = getMember<uint32_t>(that, 0x68);
-    auto &emulatedRevision = getMember<uint32_t>(that, 0x6c);
-    NETLOG("rad", "deviceId = 0x%X revision = 0x%X emulatedRevision = 0x%X", deviceId, revision, emulatedRevision);
-    NETLOG("rad", "Locating Init Caps entry");
-    PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "rad",
-        "Failed to enable kernel writing");
-
-    if (!injectedIPFirmware) {
-        injectedIPFirmware = true;
-        auto *asicName = getASICName();
-        auto *filename = new char[128];
-        snprintf(filename, 128, "%s_vcn.bin", asicName);
-        auto *targetFilename = callbackWRed->asicType == ASICType::Renoir ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
-        DBGLOG("rad", "%s => %s", filename, targetFilename);
-
-        auto *fwDesc = getFWDescByName(filename);
-        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
-
-        auto *fw = callbackWRed->orgCreateFirmware(fwDesc->var, fwDesc->size, 0x200, targetFilename);
-        DBGLOG("rad", "Inserting %s!", targetFilename);
-        PANIC_COND(!callbackWRed->orgPutFirmware(callbackWRed->callbackFirmwareDirectory, 6, fw), "rad",
-            "Failed to inject ativvaxy_rv.dat firmware");
-
-        snprintf(filename, 128, "%s_rlc.bin", asicName);
-        fwDesc = getFWDescByName(filename);
-        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
-        callbackWRed->orgGcRlcUcode->addr = 0x0;
-        memmove(callbackWRed->orgGcRlcUcode->data, fwDesc->var, fwDesc->size);
-        DBGLOG("rad", "Injected %s!", filename);
-
-        snprintf(filename, 128, "%s_me.bin", asicName);
-        fwDesc = getFWDescByName(filename);
-        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
-        callbackWRed->orgGcMeUcode->addr = 0x1000;
-        memmove(callbackWRed->orgGcMeUcode->data, fwDesc->var, fwDesc->size);
-        DBGLOG("rad", "Injected %s!", filename);
-
-        snprintf(filename, 128, "%s_ce.bin", asicName);
-        fwDesc = getFWDescByName(filename);
-        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
-        callbackWRed->orgGcCeUcode->addr = 0x800;
-        memmove(callbackWRed->orgGcCeUcode->data, fwDesc->var, fwDesc->size);
-        DBGLOG("rad", "Injected %s!", filename);
-
-        snprintf(filename, 128, "%s_pfp.bin", asicName);
-        fwDesc = getFWDescByName(filename);
-        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
-        callbackWRed->orgGcPfpUcode->addr = 0x1400;
-        memmove(callbackWRed->orgGcPfpUcode->data, fwDesc->var, fwDesc->size);
-        DBGLOG("rad", "Injected %s!", filename);
-
-        snprintf(filename, 128, "%s_mec.bin", asicName);
-        fwDesc = getFWDescByName(filename);
-        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
-        callbackWRed->orgGcMecUcode->addr = 0x0;
-        memmove(callbackWRed->orgGcMecUcode->data, fwDesc->var, fwDesc->size);
-        DBGLOG("rad", "Injected %s!", filename);
-
-        snprintf(filename, 128, "%s_mec_jt.bin", asicName);
-        fwDesc = getFWDescByName(filename);
-        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
-        callbackWRed->orgGcMecJtUcode->addr = 0x104A4;
-        memmove(callbackWRed->orgGcMecJtUcode->data, fwDesc->var, fwDesc->size);
-        DBGLOG("rad", "Injected %s!", filename);
-
-        snprintf(filename, 128, "%s_sdma.bin", asicName);
-        fwDesc = getFWDescByName(filename);
-        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
-        memmove(callbackWRed->orgSdmaUcode->data, fwDesc->var, fwDesc->size);
-        DBGLOG("rad", "Injected %s!", filename);
-        delete[] filename;
-    }
-
-    CailInitAsicCapEntry *initCaps = nullptr;
-    for (size_t i = 0; i < 789; i++) {
-        auto *temp = callbackWRed->orgAsicInitCapsTable + i;
-        if (temp->familyId == 0x8e && temp->deviceId == deviceId && temp->emulatedRev == emulatedRevision) {
-            initCaps = temp;
-            break;
-        }
-    }
-    if (!initCaps) {
-        DBGLOG("rad", "Warning: Using Fallback Init Caps mechanism");
-        for (size_t i = 0; i < 789; i++) {
-            auto *temp = callbackWRed->orgAsicInitCapsTable + i;
-            if (temp->familyId == 0x8e && temp->deviceId == deviceId &&
-                (temp->emulatedRev >= wrapGetEnumeratedRevision(that) || temp->emulatedRev <= emulatedRevision)) {
-                initCaps = temp;
-                break;
-            }
-        }
-        if (!initCaps) { panic("rad: Failed to find Init Caps entry for device ID 0x%X", deviceId); }
-    }
-
-    callbackWRed->orgAsicCapsTable->familyId = callbackWRed->orgAsicCapsTableHWLibs->familyId = 0x8e;
-    callbackWRed->orgAsicCapsTable->deviceId = callbackWRed->orgAsicCapsTableHWLibs->deviceId = deviceId;
-    callbackWRed->orgAsicCapsTable->revision = callbackWRed->orgAsicCapsTableHWLibs->revision = revision;
-    callbackWRed->orgAsicCapsTable->pciRev = callbackWRed->orgAsicCapsTableHWLibs->pciRev = 0xFFFFFFFF;
-    callbackWRed->orgAsicCapsTable->emulatedRev = callbackWRed->orgAsicCapsTableHWLibs->emulatedRev = emulatedRevision;
-    callbackWRed->orgAsicCapsTable->caps = callbackWRed->orgAsicCapsTableHWLibs->caps = initCaps->caps;
-    MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
-
-    return ret;
-}
-
-uint32_t WRed::wrapSmuGetFwConstants() { return 0; }          // The System BIOS is the one that loads the SMC Firmware.
-uint32_t WRed::wrapSmuInternalHwInit() { return 0; }          // Firmware is already loaded
-uint32_t WRed::wrapGetVideoMemoryType() { return 4; }         // DDR4
-uint32_t WRed::wrapGetVideoMemoryBitWidth() { return 64; }    // 64-bit
-IOReturn WRed::wrapPopulateVramInfo() { return kIOReturnSuccess; }
-
-/**
- * We don't want the `AMDRadeonX6000` personality defined in the `Info.plist` to do anything.
- * We only use it to force-load `AMDRadeonX6000` and snatch the VCN symbols.
- */
-bool WRed::wrapGFX10AcceleratorStart() { return false; }
-
-bool WRed::wrapAllocateHWEngines(void *that) {
-    auto *pm4 = callbackWRed->orgGFX9PM4EngineNew(0x1E8);
-    callbackWRed->orgGFX9PM4EngineConstructor(pm4);
-    getMember<void *>(that, 0x3B8) = pm4;
-
-    auto *sdma0 = callbackWRed->orgGFX9SDMAEngineNew(0x128);
-    callbackWRed->orgGFX9SDMAEngineConstructor(sdma0);
-    getMember<void *>(that, 0x3C0) = sdma0;
-
-    auto *vcn2 = callbackWRed->orgGFX10VCN2EngineNew(0x198);
-    callbackWRed->orgGFX10VCN2EngineConstructor(vcn2);
-    getMember<void *>(that, 0x3F8) = vcn2;
-    return true;
-}
-
-void WRed::wrapSetupAndInitializeHWCapabilities(void *that) {
-    FunctionCast(wrapSetupAndInitializeHWCapabilities, callbackWRed->orgSetupAndInitializeHWCapabilities)(that);
-    FunctionCast(wrapSetupAndInitializeHWCapabilities, callbackWRed->orgGFX10SetupAndInitializeHWCapabilities)(that);
-    getMember<uint32_t>(that, 0xC0) = 0;    // Raven ASICs do not have an SDMA Page Queue
-}
-
-using t_pspLoadExtended = uint32_t (*)(void *, uint64_t, uint64_t, const void *, size_t);
-
-uint32_t WRed::wrapPspAsdLoad(void *pspData) {
-    /**
-     * Hack: Add custom param 4 and 5 (pointer to firmware and size)
-     * aka RCX and R8 registers
-     * Complementary to `_psp_asd_load` patch-set.
-     */
-    auto *filename = new char[128];
-    snprintf(filename, 128, "%s_asd.bin", getASICName());
-    NETLOG("rad", "injecting %s!", filename);
-    auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspAsdLoad);
-    auto *fwDesc = getFWDescByName(filename);
-    PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
-    delete[] filename;
-    auto ret = org(pspData, 0, 0, fwDesc->var, fwDesc->size);
-    NETLOG("rad", "_psp_asd_load returned 0x%X", ret);
-    return ret;
-}
-
-uint32_t WRed::wrapPspDtmLoad(void *pspData) {
-    /** Same idea as `_psp_asd_load`. */
-    auto *filename = new char[128];
-    snprintf(filename, 128, "%s_dtm.bin", getASICName());
-    NETLOG("rad", "injecting %s!", filename);
-    auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspDtmLoad);
-    auto *fwDesc = getFWDescByName(filename);
-    PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
-    delete[] filename;
-    auto ret = org(pspData, 0, 0, fwDesc->var, fwDesc->size);
-    NETLOG("rad", "_psp_dtm_load returned 0x%X", ret);
-    return 0;
-}
-
-uint32_t WRed::wrapPspHdcpLoad(void *pspData) {
-    /** Same idea as `_psp_asd_load`. */
-    auto *filename = new char[128];
-    snprintf(filename, 128, "%s_hdcp.bin", getASICName());
-    NETLOG("rad", "injecting %s!", filename);
-    auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspHdcpLoad);
-    auto *fwDesc = getFWDescByName(filename);
-    PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
-    delete[] filename;
-    auto ret = org(pspData, 0, 0, fwDesc->var, fwDesc->size);
-    NETLOG("rad", "_psp_hdcp_load returned 0x%X", ret);
-    return ret;
-}
-
-void WRed::wrapAccelDisplayPipeWriteDiagnosisReport() {}
-
-void *WRed::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3) {
-    if (param1 == 2 && param2 == 0 && param3 == 0) { param2 = 2; }    // Redirect SDMA1 retrival to SDMA0
-    return FunctionCast(wrapRTGetHWChannel, callbackWRed->orgRTGetHWChannel)(that, param1, param2, param3);
-}
-
-void WRed::wrapCosDebugAssert(void *param1, uint8_t *param2, uint8_t *param3, uint32_t param4, uint8_t *param5) {
-    NETLOG("rad", "cosDebugAssert: param1 = %p param2 = %p param3 = %p param4 = 0x%X param5 = %p", param1, param2,
-        param3, param4, param5);
-    FunctionCast(wrapCosDebugAssert, callbackWRed->orgCosDebugAssert)(param1, param2, param3, param4, param5);
-}
-
-uint32_t WRed::wrapHwReadReg32(void *that, uint32_t reg) {
-    if (reg == 0xD31) {
-        /**
-         * NBIO 7.4 -> NBIO 7.0
-         * reg = SOC15_OFFSET(NBIO_BASE, 0, mmRCC_DEV0_EPF0_STRAP0);
-         */
-        reg = 0xD2F;
-        NETLOG("rad", "hwReadReg32: redirecting reg 0xD31 to 0xD2F");
-    }
-    auto ret = FunctionCast(wrapHwReadReg32, callbackWRed->orgHwReadReg32)(that, reg);
-    return ret;
-}
-
-constexpr uint32_t PPSMC_MSG_PowerUpSdma = 0xE;
-
-uint32_t WRed::wrapSmuRavenInitialize(void *smumData, uint32_t param2) {
-    NETLOG("rad", "_SmuRaven_Initialize: param1 = %p param2 = 0x%X", smumData, param2);
-    auto ret = FunctionCast(wrapSmuRavenInitialize, callbackWRed->orgSmuRavenInitialize)(smumData, param2);
-    NETLOG("rad", "_SmuRaven_Initialize returned 0x%X", ret);
-    callbackWRed->orgRavenSendMsgToSmcWithParam(smumData, PPSMC_MSG_PowerUpSdma, 0);
-    return ret;
-}
-
-uint32_t WRed::wrapSmuRenoirInitialize(void *smumData, uint32_t param2) {
-    NETLOG("rad", "_SmuRenoir_Initialize: param1 = %p param2 = 0x%X", smumData, param2);
-    auto ret = FunctionCast(wrapSmuRenoirInitialize, callbackWRed->orgSmuRenoirInitialize)(smumData, param2);
-    NETLOG("rad", "_SmuRenoir_Initialize returned 0x%X", ret);
-    callbackWRed->orgRenoirSendMsgToSmcWithParam(smumData, PPSMC_MSG_PowerUpSdma, 0);
-    return ret;
-}
-
-uint64_t WRed::wrapMapVA(void *that, uint64_t param1, void *memory, uint64_t param3, uint64_t sizeToMap,
-    uint64_t flags) {
-    NETLOG("rad", "mapVA: this = %p param1 = 0x%llX memory = %p param3 = 0x%llX sizeToMap = 0x%llX flags = 0x%llX",
-        that, param1, memory, param3, sizeToMap, flags);
-    auto ret = FunctionCast(wrapMapVA, callbackWRed->orgMapVA)(that, param1, memory, param3, sizeToMap, flags);
-    NETLOG("rad", "mapVA returned 0x%llX", ret);
-    return ret;
-}
-
-uint64_t WRed::wrapMapVMPT(void *that, void *vmptCtl, uint64_t vmptLevel, uint32_t param3, uint64_t param4,
-    uint64_t param5, uint64_t sizeToMap) {
-    NETLOG("rad",
-        "mapVMPT: this = %p vmptCtl = %p vmptLevel = 0x%llX param3 = 0x%X param4 = 0x%llX param5 = 0x%llX sizeToMap = "
-        "0x%llX",
-        that, vmptCtl, vmptLevel, param3, param4, param5, sizeToMap);
-    auto ret = FunctionCast(wrapMapVMPT, callbackWRed->orgMapVMPT)(that, vmptCtl, vmptLevel, param3, param4, param5,
-        sizeToMap);
-    NETLOG("rad", "mapVMPT returned 0x%llX", ret);
-    return ret;
-}
-
-uint32_t WRed::wrapWriteWritePTEPDECommand(void *that, uint32_t *buf, uint64_t pe, uint32_t count, uint64_t flags,
-    uint64_t addr, uint64_t incr) {
-    NETLOG("rad",
-        "writeWritePTEPDECommand: this = %p buf = %p pe = 0x%llX count = 0x%X flags = 0x%llX addr = 0x%llX incr = "
-        "0x%llX",
-        that, buf, pe, count, flags, addr, incr);
-    auto ret = FunctionCast(wrapWriteWritePTEPDECommand, callbackWRed->orgWriteWritePTEPDECommand)(that, buf, pe, count,
-        flags, addr, incr);
-    NETLOG("rad", "writeWritePTEPDECommand returned 0x%X", ret);
-    return ret;
-}
-
-uint64_t WRed::wrapGetPDEValue(void *that, uint64_t param1, uint64_t param2) {
-    NETLOG("rad", "getPDEValue: this = %p param1 = 0x%llX param2 = 0x%llX", that, param1, param2);
-    auto ret = FunctionCast(wrapGetPDEValue, callbackWRed->orgGetPDEValue)(that, param1, param2);
-    NETLOG("rad", "getPDEValue returned 0x%llX", ret);
-    return ret;
-}
-
-uint64_t WRed::wrapGetPTEValue(void *that, uint64_t param1, uint64_t param2, uint64_t param3, uint32_t param4) {
-    NETLOG("rad", "getPTEValue: this = %p param1 = 0x%llX param2 = 0x%llX param3 = 0x%llX param4 = 0x%X", that, param1,
-        param2, param3, param4);
-    auto ret = FunctionCast(wrapGetPTEValue, callbackWRed->orgGetPTEValue)(that, param1, param2, param3, param4);
-    NETLOG("rad", "getPTEValue returned 0x%llX", ret);
-    return ret;
-}
-
-void WRed::wrapUpdateContiguousPTEsWithDMAUsingAddr(void *that, uint64_t param1, uint64_t param2, uint64_t param3,
-    uint64_t param4, uint64_t param5) {
-    NETLOG("rad",
-        "updateContiguousPTEsWithDMAUsingAddr: this = %p param1 = 0x%llX param2 = 0x%llX param3 = 0x%llX param4 = "
-        "0x%llX param5 = 0x%llX",
-        that, param1, param2, param3, param4, param5);
-    FunctionCast(wrapUpdateContiguousPTEsWithDMAUsingAddr, callbackWRed->orgUpdateContiguousPTEsWithDMAUsingAddr)(that,
-        param1, param2, param3, param4, param5);
-    NETLOG("rad", "updateContiguousPTEsWithDMAUsingAddr finished");
-}
-
-void WRed::wrapInitializeFamilyType(void *that) { getMember<uint32_t>(that, 0x308) = 0x8E; }    // 0x8D -> 0x8E
-
-uint32_t WRed::pspFeatureUnsupported() { return 4; }    // PSP RAP and XGMI not supported
-
-uint32_t WRed::wrapPspNpFwLoad(void *pspData) {
-    FunctionCast(wrapPspNpFwLoad, callbackWRed->orgPspNpFwLoad)(pspData);
-    return 0;    // Looks like on Renoir the firmware is already loaded
+void WRed::deinit() {
+    if (this->vbiosData) { this->vbiosData->release(); }
 }
 
 void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
@@ -751,6 +232,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
              * Make for loop stop at 1 instead of 2 in order to skip starting SDMA1 engine.
              */
             {&kextRadeonX5000, find_startHWEngines, repl_startHWEngines, arrsize(find_startHWEngines), 2},
+
             /**
              * `AMDRadeonX5000_AMDGFX9SDMAChannel::init`
              * Field 0x98 somehow tells the scheduler to wait for VMPT before sending user SDMA commands.
@@ -765,16 +247,16 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
 
     } else if (kextRadeonX6000.loadIndex == index) {
         KernelPatcher::SolveRequest solveRequests[] = {
-            {"__ZN30AMDRadeonX6000_AMDVCN2HWEnginenwEm", orgGFX10VCN2EngineNew},
-            {"__ZN30AMDRadeonX6000_AMDVCN2HWEngineC1Ev", orgGFX10VCN2EngineConstructor},
+            {"__ZN30AMDRadeonX6000_AMDVCN2HWEnginenwEm", orgVCN2EngineNewX6000},
+            {"__ZN30AMDRadeonX6000_AMDVCN2HWEngineC1Ev", orgVCN2EngineConstructorX6000},
             {"__ZN32AMDRadeonX6000_AMDNavi10Hardware32setupAndInitializeHWCapabilitiesEv",
-                orgGFX10SetupAndInitializeHWCapabilities},
+                orgSetupAndInitializeHWCapabilitiesX6000},
         };
         PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "rad",
             "Failed to resolve AMDRadeonX6000 symbols");
 
         KernelPatcher::RouteRequest requests[] = {
-            {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator5startEP9IOService", wrapGFX10AcceleratorStart},
+            {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator5startEP9IOService", wrapAccelStartX6000},
         };
         if (!patcher.routeMultipleLong(index, requests, address, size)) {
             panic("RAD: Failed to route AMDRadeonX6000 symbols");
@@ -923,4 +405,498 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             patcher.clearError();
         }
     }
+}
+
+#pragma pack(push, 1)
+struct VFCT {
+    char signature[4];
+    uint32_t length;
+    uint8_t revision, checksum;
+    char oemId[6];
+    char oemTableId[8];
+    uint32_t oemRevision;
+    char creatorId[4];
+    uint32_t creatorRevision;
+    char tableUUID[16];
+    uint32_t vbiosImageOffset, lib1ImageOffset;
+    uint32_t reserved[4];
+};
+
+struct GOPVideoBIOSHeader {
+    uint32_t pciBus, pciDevice, pciFunction;
+    uint16_t vendorID, deviceID;
+    uint16_t ssvId, ssId;
+    uint32_t revision, imageLength;
+};
+#pragma pack(pop)
+
+// Hack
+class AppleACPIPlatformExpert : IOACPIPlatformExpert {
+    friend class WRed;
+};
+
+void WRed::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
+    WIOKit::renameDevice(provider, "GFX0");
+
+    static uint8_t builtBytes[] = {0x01};
+    provider->setProperty("built-in", builtBytes, sizeof(builtBytes));
+
+    NETDBG::enabled = true;
+    NETLOG("rad", "patching device type table");
+    PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "rad",
+        "Failed to enable kernel writing");
+    auto deviceId = provider->extendedConfigRead16(kIOPCIConfigDeviceID);
+    callbackWRed->orgDeviceTypeTable[0] = deviceId;
+    callbackWRed->orgDeviceTypeTable[1] = 6;
+    MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
+    if (provider->getProperty("ATY,bin_image")) {
+        NETLOG("rad", "VBIOS manually overridden");
+    } else {
+        NETLOG("rad", "Fetching VBIOS from VFCT table");
+        auto *expert = reinterpret_cast<AppleACPIPlatformExpert *>(provider->getPlatform());
+        PANIC_COND(!expert, "rad", "Failed to get AppleACPIPlatformExpert");
+
+        auto *vfctData = expert->getACPITableData("VFCT", 0);
+        PANIC_COND(!vfctData, "rad", "Failed to get VFCT from AppleACPIPlatformExpert");
+
+        auto *vfct = static_cast<const VFCT *>(vfctData->getBytesNoCopy());
+        PANIC_COND(!vfct, "rad", "VFCT OSData::getBytesNoCopy returned null");
+
+        auto *vbiosContent = static_cast<const GOPVideoBIOSHeader *>(
+            vfctData->getBytesNoCopy(vfct->vbiosImageOffset, sizeof(GOPVideoBIOSHeader)));
+        PANIC_COND(!vfct->vbiosImageOffset || !vbiosContent, "rad", "No VBIOS contained in VFCT table");
+
+        auto *vbiosPtr =
+            vfctData->getBytesNoCopy(vfct->vbiosImageOffset + sizeof(GOPVideoBIOSHeader), vbiosContent->imageLength);
+        PANIC_COND(!vbiosPtr, "rad", "Bad VFCT: Offset + Size not within buffer boundaries");
+
+        callbackWRed->vbiosData = OSData::withBytes(vbiosPtr, vbiosContent->imageLength);
+        PANIC_COND(!callbackWRed->vbiosData, "rad", "OSData::withBytes failed");
+        provider->setProperty("ATY,bin_image", callbackWRed->vbiosData);
+    }
+
+    NETLOG("rad", "AmdTtlServices: Calling original constructor");
+    auto *devMem = provider->getDeviceMemoryWithRegister(kIOPCIConfigBaseAddress0);
+    PANIC_COND(!devMem, "rad", "Failed to get device memory");
+    auto addr = devMem->getPhysicalAddress();
+    devMem->release();
+    FunctionCast(wrapAmdTtlServicesConstructor, callbackWRed->orgAmdTtlServicesConstructor)(that, provider);
+    getMember<uint64_t>(that, 0x288) = addr;
+}
+
+uint64_t WRed::wrapSmuGetHwVersion(uint64_t param1, uint32_t param2) {
+    auto ret = FunctionCast(wrapSmuGetHwVersion, callbackWRed->orgSmuGetHwVersion)(param1, param2);
+    NETLOG("rad", "_smu_get_hw_version returned 0x%llX", ret);
+    switch (ret) {
+        case 0x2:
+            NETLOG("rad", "Spoofing SMU v10 to v9.0.1");
+            return 0x1;
+        case 0xB:
+            [[fallthrough]];
+        case 0xC:
+            NETLOG("rad", "Spoofing SMU v11/v12 to v11");
+            return 0x3;
+        default:
+            return ret;
+    }
+}
+
+uint64_t WRed::wrapPspSwInit(uint32_t *param1, uint32_t *param2) {
+    switch (param1[3]) {
+        case 0xA:
+            NETLOG("rad", "Spoofing PSP version v10 to v9.0.2");
+            param1[3] = 0x9;
+            param1[4] = 0x0;
+            param1[5] = 0x2;
+            break;
+        case 0xB:
+            [[fallthrough]];
+        case 0xC:
+            NETLOG("rad", "Spoofing PSP version v11/v12 to v11");
+            param1[3] = 0xB;
+            param1[4] = 0x0;
+            param1[5] = 0x0;
+            break;
+        default:
+            break;
+    }
+    auto ret = FunctionCast(wrapPspSwInit, callbackWRed->orgPspSwInit)(param1, param2);
+    NETLOG("rad", "_psp_sw_init returned 0x%llX", ret);
+    return ret;
+}
+
+uint32_t WRed::wrapGcGetHwVersion(uint32_t *param1) {
+    auto ret = FunctionCast(wrapGcGetHwVersion, callbackWRed->orgGcGetHwVersion)(param1);
+    switch (ret & 0xFFFF00) {
+        case 0x090100:
+            [[fallthrough]];
+        case 0x090200:
+            [[fallthrough]];
+        case 0x090300:
+            NETLOG("rad", "Spoofing GC version v9.1/v9.2/v9.3 to v9.2.1");
+            return 0x090201;
+        default:
+            NETLOG("rad", "_gc_get_hw_version returned 0x%X", ret);
+            return ret;
+    }
+}
+
+void WRed::wrapPopulateFirmwareDirectory(void *that) {
+    FunctionCast(wrapPopulateFirmwareDirectory, callbackWRed->orgPopulateFirmwareDirectory)(that);
+    callbackWRed->callbackFirmwareDirectory = getMember<void *>(that, 0xB8);
+    auto *fwDesc = getFWDescByName("renoir_dmcub.bin");
+    PANIC_COND(!fwDesc, "rad", "Somehow renoir_dmcub.bin is missing");
+    NETLOG("rad", "renoir_dmcub.bin => atidmcub_0.dat");
+    auto *fwBackdoor = callbackWRed->orgCreateFirmware(fwDesc->var, fwDesc->size, 0x200, "atidmcub_0.dat");
+    NETLOG("rad", "inserting atidmcub_0.dat!");
+    PANIC_COND(!callbackWRed->orgPutFirmware(callbackWRed->callbackFirmwareDirectory, 6, fwBackdoor), "rad",
+        "Failed to inject atidmcub_0.dat firmware");
+}
+
+void *WRed::wrapCreatePowerTuneServices(void *that, void *param2) {
+    auto *ret = IOMallocZero(0x18);
+    callbackWRed->orgVega10PowerTuneConstructor(ret, that, param2);
+    return ret;
+}
+
+uint16_t WRed::wrapGetFamilyId([[maybe_unused]] void *that) { return 0x8E; }    // 0x8F -> 0x8E
+
+uint16_t WRed::wrapGetEnumeratedRevision(void *that) {
+    auto *&pciDev = getMember<IOPCIDevice *>(that, 0x18);
+    auto &revision = getMember<uint32_t>(that, 0x68);
+
+    switch (pciDev->configRead16(kIOPCIConfigDeviceID)) {
+        case 0x15D8:
+            if (revision >= 0x8) {
+                callbackWRed->asicType = ASICType::Raven2;
+                return 0x79;
+            }
+            callbackWRed->asicType = ASICType::Picasso;
+            return 0x41;
+        case 0x15DD:
+            if (revision >= 0x8) {
+                callbackWRed->asicType = ASICType::Raven2;
+                return 0x79;
+            }
+            callbackWRed->asicType = ASICType::Raven;
+            return 0x10;
+        case 0x15E7:
+            [[fallthrough]];
+        case 0x164C:
+            [[fallthrough]];
+        case 0x1636:
+            [[fallthrough]];
+        case 0x1638:
+            callbackWRed->asicType = ASICType::Renoir;
+            return 0x91;
+        default:
+            if (revision == 1) { return 0x20; }
+            return 0x10;
+    }
+}
+
+static bool injectedIPFirmware = false;
+
+IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
+    auto ret = FunctionCast(wrapPopulateDeviceInfo, callbackWRed->orgPopulateDeviceInfo)(that);
+    getMember<uint32_t>(that, 0x60) = 0x8E;
+    auto deviceId = getMember<IOPCIDevice *>(that, 0x18)->configRead16(kIOPCIConfigDeviceID);
+    auto &revision = getMember<uint32_t>(that, 0x68);
+    auto &emulatedRevision = getMember<uint32_t>(that, 0x6c);
+    NETLOG("rad", "deviceId = 0x%X revision = 0x%X emulatedRevision = 0x%X", deviceId, revision, emulatedRevision);
+    NETLOG("rad", "Locating Init Caps entry");
+    PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "rad",
+        "Failed to enable kernel writing");
+
+    if (!injectedIPFirmware) {
+        injectedIPFirmware = true;
+        auto *asicName = getASICName();
+        auto *filename = new char[128];
+        snprintf(filename, 128, "%s_vcn.bin", asicName);
+        auto *targetFilename = callbackWRed->asicType == ASICType::Renoir ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
+        DBGLOG("rad", "%s => %s", filename, targetFilename);
+
+        auto *fwDesc = getFWDescByName(filename);
+        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+
+        auto *fw = callbackWRed->orgCreateFirmware(fwDesc->var, fwDesc->size, 0x200, targetFilename);
+        DBGLOG("rad", "Inserting %s!", targetFilename);
+        PANIC_COND(!callbackWRed->orgPutFirmware(callbackWRed->callbackFirmwareDirectory, 6, fw), "rad",
+            "Failed to inject ativvaxy_rv.dat firmware");
+
+        snprintf(filename, 128, "%s_rlc.bin", asicName);
+        fwDesc = getFWDescByName(filename);
+        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        callbackWRed->orgGcRlcUcode->addr = 0x0;
+        memmove(callbackWRed->orgGcRlcUcode->data, fwDesc->var, fwDesc->size);
+        DBGLOG("rad", "Injected %s!", filename);
+
+        snprintf(filename, 128, "%s_me.bin", asicName);
+        fwDesc = getFWDescByName(filename);
+        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        callbackWRed->orgGcMeUcode->addr = 0x1000;
+        memmove(callbackWRed->orgGcMeUcode->data, fwDesc->var, fwDesc->size);
+        DBGLOG("rad", "Injected %s!", filename);
+
+        snprintf(filename, 128, "%s_ce.bin", asicName);
+        fwDesc = getFWDescByName(filename);
+        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        callbackWRed->orgGcCeUcode->addr = 0x800;
+        memmove(callbackWRed->orgGcCeUcode->data, fwDesc->var, fwDesc->size);
+        DBGLOG("rad", "Injected %s!", filename);
+
+        snprintf(filename, 128, "%s_pfp.bin", asicName);
+        fwDesc = getFWDescByName(filename);
+        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        callbackWRed->orgGcPfpUcode->addr = 0x1400;
+        memmove(callbackWRed->orgGcPfpUcode->data, fwDesc->var, fwDesc->size);
+        DBGLOG("rad", "Injected %s!", filename);
+
+        snprintf(filename, 128, "%s_mec.bin", asicName);
+        fwDesc = getFWDescByName(filename);
+        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        callbackWRed->orgGcMecUcode->addr = 0x0;
+        memmove(callbackWRed->orgGcMecUcode->data, fwDesc->var, fwDesc->size);
+        DBGLOG("rad", "Injected %s!", filename);
+
+        snprintf(filename, 128, "%s_mec_jt.bin", asicName);
+        fwDesc = getFWDescByName(filename);
+        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        callbackWRed->orgGcMecJtUcode->addr = 0x104A4;
+        memmove(callbackWRed->orgGcMecJtUcode->data, fwDesc->var, fwDesc->size);
+        DBGLOG("rad", "Injected %s!", filename);
+
+        snprintf(filename, 128, "%s_sdma.bin", asicName);
+        fwDesc = getFWDescByName(filename);
+        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        memmove(callbackWRed->orgSdmaUcode->data, fwDesc->var, fwDesc->size);
+        DBGLOG("rad", "Injected %s!", filename);
+        delete[] filename;
+    }
+
+    CailInitAsicCapEntry *initCaps = nullptr;
+    for (size_t i = 0; i < 789; i++) {
+        auto *temp = callbackWRed->orgAsicInitCapsTable + i;
+        if (temp->familyId == 0x8e && temp->deviceId == deviceId && temp->emulatedRev == emulatedRevision) {
+            initCaps = temp;
+            break;
+        }
+    }
+    if (!initCaps) {
+        DBGLOG("rad", "Warning: Using Fallback Init Caps mechanism");
+        for (size_t i = 0; i < 789; i++) {
+            auto *temp = callbackWRed->orgAsicInitCapsTable + i;
+            if (temp->familyId == 0x8e && temp->deviceId == deviceId &&
+                (temp->emulatedRev >= wrapGetEnumeratedRevision(that) || temp->emulatedRev <= emulatedRevision)) {
+                initCaps = temp;
+                break;
+            }
+        }
+        if (!initCaps) { panic("rad: Failed to find Init Caps entry for device ID 0x%X", deviceId); }
+    }
+
+    callbackWRed->orgAsicCapsTable->familyId = callbackWRed->orgAsicCapsTableHWLibs->familyId = 0x8e;
+    callbackWRed->orgAsicCapsTable->deviceId = callbackWRed->orgAsicCapsTableHWLibs->deviceId = deviceId;
+    callbackWRed->orgAsicCapsTable->revision = callbackWRed->orgAsicCapsTableHWLibs->revision = revision;
+    callbackWRed->orgAsicCapsTable->pciRev = callbackWRed->orgAsicCapsTableHWLibs->pciRev = 0xFFFFFFFF;
+    callbackWRed->orgAsicCapsTable->emulatedRev = callbackWRed->orgAsicCapsTableHWLibs->emulatedRev = emulatedRevision;
+    callbackWRed->orgAsicCapsTable->caps = callbackWRed->orgAsicCapsTableHWLibs->caps = initCaps->caps;
+    MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
+
+    return ret;
+}
+
+uint32_t WRed::wrapSmuGetFwConstants([[maybe_unused]] void *param1) {
+    return 0;
+}    // The System BIOS is the one that loads the SMC Firmware.
+uint32_t WRed::wrapSmuInternalHwInit([[maybe_unused]] void *param1) { return 0; }        // Firmware is already loaded
+uint32_t WRed::wrapGetVideoMemoryType([[maybe_unused]] void *that) { return 4; }         // DDR4
+uint32_t WRed::wrapGetVideoMemoryBitWidth([[maybe_unused]] void *that) { return 64; }    // 64-bit
+IOReturn WRed::wrapPopulateVramInfo([[maybe_unused]] void *that) { return kIOReturnSuccess; }
+
+/**
+ * We don't want the `AMDRadeonX6000` personality defined in the `Info.plist` to do anything.
+ * We only use it to force-load `AMDRadeonX6000` and snatch the VCN symbols.
+ */
+bool WRed::wrapAccelStartX6000() { return false; }
+
+bool WRed::wrapAllocateHWEngines(void *that) {
+    auto *pm4 = callbackWRed->orgGFX9PM4EngineNew(0x1E8);
+    callbackWRed->orgGFX9PM4EngineConstructor(pm4);
+    getMember<void *>(that, 0x3B8) = pm4;
+
+    auto *sdma0 = callbackWRed->orgGFX9SDMAEngineNew(0x128);
+    callbackWRed->orgGFX9SDMAEngineConstructor(sdma0);
+    getMember<void *>(that, 0x3C0) = sdma0;
+
+    auto *vcn2 = callbackWRed->orgVCN2EngineNewX6000(0x198);
+    callbackWRed->orgVCN2EngineConstructorX6000(vcn2);
+    getMember<void *>(that, 0x3F8) = vcn2;
+    return true;
+}
+
+void WRed::wrapSetupAndInitializeHWCapabilities(void *that) {
+    FunctionCast(wrapSetupAndInitializeHWCapabilities, callbackWRed->orgSetupAndInitializeHWCapabilities)(that);
+    FunctionCast(wrapSetupAndInitializeHWCapabilities, callbackWRed->orgSetupAndInitializeHWCapabilitiesX6000)(that);
+    getMember<uint32_t>(that, 0xC0) = 0;    // Raven ASICs do not have an SDMA Page Queue
+}
+
+using t_pspLoadExtended = uint32_t (*)(void *, uint64_t, uint64_t, const void *, size_t);
+
+uint32_t WRed::wrapPspAsdLoad(void *pspData) {
+    /**
+     * Hack: Add custom param 4 and 5 (pointer to firmware and size)
+     * aka RCX and R8 registers
+     * Complementary to `_psp_asd_load` patch-set.
+     */
+    auto *filename = new char[128];
+    snprintf(filename, 128, "%s_asd.bin", getASICName());
+    NETLOG("rad", "injecting %s!", filename);
+    auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspAsdLoad);
+    auto *fwDesc = getFWDescByName(filename);
+    PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+    delete[] filename;
+    auto ret = org(pspData, 0, 0, fwDesc->var, fwDesc->size);
+    NETLOG("rad", "_psp_asd_load returned 0x%X", ret);
+    return ret;
+}
+
+uint32_t WRed::wrapPspDtmLoad(void *pspData) {
+    /** Same idea as `_psp_asd_load`. */
+    auto *filename = new char[128];
+    snprintf(filename, 128, "%s_dtm.bin", getASICName());
+    NETLOG("rad", "injecting %s!", filename);
+    auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspDtmLoad);
+    auto *fwDesc = getFWDescByName(filename);
+    PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+    delete[] filename;
+    auto ret = org(pspData, 0, 0, fwDesc->var, fwDesc->size);
+    NETLOG("rad", "_psp_dtm_load returned 0x%X", ret);
+    return 0;
+}
+
+uint32_t WRed::wrapPspHdcpLoad(void *pspData) {
+    /** Same idea as `_psp_asd_load`. */
+    auto *filename = new char[128];
+    snprintf(filename, 128, "%s_hdcp.bin", getASICName());
+    NETLOG("rad", "injecting %s!", filename);
+    auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspHdcpLoad);
+    auto *fwDesc = getFWDescByName(filename);
+    PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+    delete[] filename;
+    auto ret = org(pspData, 0, 0, fwDesc->var, fwDesc->size);
+    NETLOG("rad", "_psp_hdcp_load returned 0x%X", ret);
+    return ret;
+}
+
+void WRed::wrapAccelDisplayPipeWriteDiagnosisReport() {}
+
+void *WRed::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3) {
+    if (param1 == 2 && param2 == 0 && param3 == 0) { param2 = 2; }    // Redirect SDMA1 retrival to SDMA0
+    return FunctionCast(wrapRTGetHWChannel, callbackWRed->orgRTGetHWChannel)(that, param1, param2, param3);
+}
+
+void WRed::wrapCosDebugAssert(void *that, uint8_t *param2, uint8_t *param3, uint32_t param4, uint8_t *param5) {
+    NETLOG("rad", "cosDebugAssert: this = %p param2 = %p param3 = %p param4 = 0x%X param5 = %p", that, param2, param3,
+        param4, param5);
+    FunctionCast(wrapCosDebugAssert, callbackWRed->orgCosDebugAssert)(that, param2, param3, param4, param5);
+}
+
+uint32_t WRed::wrapHwReadReg32(void *that, uint32_t reg) {
+    if (reg == 0xD31) {
+        /**
+         * NBIO 7.4 -> NBIO 7.0
+         * reg = SOC15_OFFSET(NBIO_BASE, 0, mmRCC_DEV0_EPF0_STRAP0);
+         */
+        reg = 0xD2F;
+        NETLOG("rad", "hwReadReg32: redirecting reg 0xD31 to 0xD2F");
+    }
+    auto ret = FunctionCast(wrapHwReadReg32, callbackWRed->orgHwReadReg32)(that, reg);
+    return ret;
+}
+
+constexpr uint32_t PPSMC_MSG_PowerUpSdma = 0xE;
+
+uint32_t WRed::wrapSmuRavenInitialize(void *smumData, uint32_t param2) {
+    NETLOG("rad", "_SmuRaven_Initialize: param1 = %p param2 = 0x%X", smumData, param2);
+    auto ret = FunctionCast(wrapSmuRavenInitialize, callbackWRed->orgSmuRavenInitialize)(smumData, param2);
+    NETLOG("rad", "_SmuRaven_Initialize returned 0x%X", ret);
+    callbackWRed->orgRavenSendMsgToSmcWithParam(smumData, PPSMC_MSG_PowerUpSdma, 0);
+    return ret;
+}
+
+uint32_t WRed::wrapSmuRenoirInitialize(void *smumData, uint32_t param2) {
+    NETLOG("rad", "_SmuRenoir_Initialize: param1 = %p param2 = 0x%X", smumData, param2);
+    auto ret = FunctionCast(wrapSmuRenoirInitialize, callbackWRed->orgSmuRenoirInitialize)(smumData, param2);
+    NETLOG("rad", "_SmuRenoir_Initialize returned 0x%X", ret);
+    callbackWRed->orgRenoirSendMsgToSmcWithParam(smumData, PPSMC_MSG_PowerUpSdma, 0);
+    return ret;
+}
+
+uint64_t WRed::wrapMapVA(void *that, uint64_t param1, void *memory, uint64_t param3, uint64_t sizeToMap,
+    uint64_t flags) {
+    NETLOG("rad", "mapVA: this = %p param1 = 0x%llX memory = %p param3 = 0x%llX sizeToMap = 0x%llX flags = 0x%llX",
+        that, param1, memory, param3, sizeToMap, flags);
+    auto ret = FunctionCast(wrapMapVA, callbackWRed->orgMapVA)(that, param1, memory, param3, sizeToMap, flags);
+    NETLOG("rad", "mapVA returned 0x%llX", ret);
+    return ret;
+}
+
+uint64_t WRed::wrapMapVMPT(void *that, void *vmptCtl, uint64_t vmptLevel, uint32_t param3, uint64_t param4,
+    uint64_t param5, uint64_t sizeToMap) {
+    NETLOG("rad",
+        "mapVMPT: this = %p vmptCtl = %p vmptLevel = 0x%llX param3 = 0x%X param4 = 0x%llX param5 = 0x%llX sizeToMap = "
+        "0x%llX",
+        that, vmptCtl, vmptLevel, param3, param4, param5, sizeToMap);
+    auto ret = FunctionCast(wrapMapVMPT, callbackWRed->orgMapVMPT)(that, vmptCtl, vmptLevel, param3, param4, param5,
+        sizeToMap);
+    NETLOG("rad", "mapVMPT returned 0x%llX", ret);
+    return ret;
+}
+
+uint32_t WRed::wrapWriteWritePTEPDECommand(void *that, uint32_t *buf, uint64_t pe, uint32_t count, uint64_t flags,
+    uint64_t addr, uint64_t incr) {
+    NETLOG("rad",
+        "writeWritePTEPDECommand: this = %p buf = %p pe = 0x%llX count = 0x%X flags = 0x%llX addr = 0x%llX incr = "
+        "0x%llX",
+        that, buf, pe, count, flags, addr, incr);
+    auto ret = FunctionCast(wrapWriteWritePTEPDECommand, callbackWRed->orgWriteWritePTEPDECommand)(that, buf, pe, count,
+        flags, addr, incr);
+    NETLOG("rad", "writeWritePTEPDECommand returned 0x%X", ret);
+    return ret;
+}
+
+uint64_t WRed::wrapGetPDEValue(void *that, uint64_t param1, uint64_t param2) {
+    NETLOG("rad", "getPDEValue: this = %p param1 = 0x%llX param2 = 0x%llX", that, param1, param2);
+    auto ret = FunctionCast(wrapGetPDEValue, callbackWRed->orgGetPDEValue)(that, param1, param2);
+    NETLOG("rad", "getPDEValue returned 0x%llX", ret);
+    return ret;
+}
+
+uint64_t WRed::wrapGetPTEValue(void *that, uint64_t param1, uint64_t param2, uint64_t param3, uint32_t param4) {
+    NETLOG("rad", "getPTEValue: this = %p param1 = 0x%llX param2 = 0x%llX param3 = 0x%llX param4 = 0x%X", that, param1,
+        param2, param3, param4);
+    auto ret = FunctionCast(wrapGetPTEValue, callbackWRed->orgGetPTEValue)(that, param1, param2, param3, param4);
+    NETLOG("rad", "getPTEValue returned 0x%llX", ret);
+    return ret;
+}
+
+void WRed::wrapUpdateContiguousPTEsWithDMAUsingAddr(void *that, uint64_t param1, uint64_t param2, uint64_t param3,
+    uint64_t param4, uint64_t param5) {
+    NETLOG("rad",
+        "updateContiguousPTEsWithDMAUsingAddr: this = %p param1 = 0x%llX param2 = 0x%llX param3 = 0x%llX param4 = "
+        "0x%llX param5 = 0x%llX",
+        that, param1, param2, param3, param4, param5);
+    FunctionCast(wrapUpdateContiguousPTEsWithDMAUsingAddr, callbackWRed->orgUpdateContiguousPTEsWithDMAUsingAddr)(that,
+        param1, param2, param3, param4, param5);
+    NETLOG("rad", "updateContiguousPTEsWithDMAUsingAddr finished");
+}
+
+void WRed::wrapInitializeFamilyType(void *that) { getMember<uint32_t>(that, 0x308) = 0x8E; }    // 0x8D -> 0x8E
+
+uint32_t WRed::pspFeatureUnsupported() { return 4; }    // PSP RAP and XGMI not supported
+
+uint32_t WRed::wrapPspNpFwLoad(void *pspData) {
+    FunctionCast(wrapPspNpFwLoad, callbackWRed->orgPspNpFwLoad)(pspData);
+    return 0;    // Looks like on Renoir the firmware is already loaded
 }

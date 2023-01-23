@@ -1,6 +1,5 @@
 //  Copyright © 2022 ChefKiss Inc. Licensed under the Non-Profit Open Software License version 3.0. See LICENSE for
 //  details.
-// SPDX-License-Identifier: NPOSL-3.0
 
 #pragma once
 #include "kern_amd.hpp"
@@ -8,11 +7,11 @@
 #include <IOKit/pci/IOPCIDevice.h>
 
 enum struct ASICType {
-    Unknown,
     Raven,
     Raven2,
     Picasso,
     Renoir,
+    Unknown,
 };
 
 class WRed {
@@ -23,6 +22,7 @@ class WRed {
     void deinit();
     void processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size);
 
+    private:
     static const char *getASICName() {
         switch (callbackWRed->asicType) {
             case ASICType::Picasso:
@@ -37,14 +37,6 @@ class WRed {
                 panic("rad: Unknown ASIC type");
         }
     }
-
-    private:
-    using t_createFirmware = void *(*)(const void *data, uint32_t size, uint32_t param3, const char *filename);
-    using t_putFirmware = bool (*)(void *that, uint32_t deviceType, void *fw);
-    using t_Vega10PowerTuneConstructor = void (*)(void *that, void *param1, void *param2);
-    using t_HWEngineConstructor = void (*)(void *that);
-    using t_HWEngineNew = void *(*)(size_t size);
-    using t_sendMsgToSmcWithParam = uint32_t (*)(void *smumData, uint32_t msgId, uint32_t parameter);
 
     OSData *vbiosData = nullptr;
     ASICType asicType = ASICType::Unknown;
@@ -84,22 +76,17 @@ class WRed {
     mach_vm_address_t orgPspNpFwLoad {};
 
     /** X6000 */
-    t_HWEngineNew orgGFX10VCN2EngineNew = nullptr;
-    t_HWEngineConstructor orgGFX10VCN2EngineConstructor = nullptr;
-    mach_vm_address_t orgGFX10SetupAndInitializeHWCapabilities {};
+    t_HWEngineNew orgVCN2EngineNewX6000 = nullptr;
+    t_HWEngineConstructor orgVCN2EngineConstructorX6000 = nullptr;
+    mach_vm_address_t orgSetupAndInitializeHWCapabilitiesX6000 {};
 
     /** X5000 */
     t_HWEngineNew orgGFX9PM4EngineNew = nullptr;
     t_HWEngineConstructor orgGFX9PM4EngineConstructor = nullptr;
     t_HWEngineNew orgGFX9SDMAEngineNew = nullptr;
     t_HWEngineConstructor orgGFX9SDMAEngineConstructor = nullptr;
-    mach_vm_address_t orgGetHWEngine {};
-    mach_vm_address_t orgGetHWCapabilities {};
     mach_vm_address_t orgSetupAndInitializeHWCapabilities {};
     mach_vm_address_t orgAccelDisplayPipeWriteDiagnosisReport {};
-    mach_vm_address_t orgSetMemoryAllocationsEnabled {};
-    mach_vm_address_t orgPowerUpHW {};
-    mach_vm_address_t orgHWsetMemoryAllocationsEnabled {};
     mach_vm_address_t orgRTGetHWChannel {};
     mach_vm_address_t orgMapVA {};
     mach_vm_address_t orgMapVMPT {};
@@ -109,12 +96,12 @@ class WRed {
     mach_vm_address_t orgUpdateContiguousPTEsWithDMAUsingAddr {};
 
     /** X6000Framebuffer */
-    static uint16_t wrapGetFamilyId();
+    static uint16_t wrapGetFamilyId(void *that);
     static IOReturn wrapPopulateDeviceInfo(void *that);
     static uint16_t wrapGetEnumeratedRevision(void *that);
-    static uint32_t wrapGetVideoMemoryType();
-    static uint32_t wrapGetVideoMemoryBitWidth();
-    static IOReturn wrapPopulateVramInfo();
+    static uint32_t wrapGetVideoMemoryType(void *that);
+    static uint32_t wrapGetVideoMemoryBitWidth(void *that);
+    static IOReturn wrapPopulateVramInfo(void *that);
     static uint32_t wrapHwReadReg32(void *that, uint32_t param1);
 
     /** X5000HWLibs */
@@ -123,13 +110,13 @@ class WRed {
     static uint64_t wrapPspSwInit(uint32_t *param1, uint32_t *param2);
     static uint32_t wrapGcGetHwVersion(uint32_t *param1);
     static void wrapPopulateFirmwareDirectory(void *that);
-    static void *wrapCreatePowerTuneServices(void *param1, void *param2);
-    static uint32_t wrapSmuGetFwConstants();
-    static uint32_t wrapSmuInternalHwInit();
+    static void *wrapCreatePowerTuneServices(void *that, void *param2);
+    static uint32_t wrapSmuGetFwConstants(void *param1);
+    static uint32_t wrapSmuInternalHwInit(void *param1);
     static uint32_t wrapPspAsdLoad(void *pspData);
     static uint32_t wrapPspDtmLoad(void *pspData);
     static uint32_t wrapPspHdcpLoad(void *pspData);
-    static void wrapCosDebugAssert(void *param1, uint8_t *param2, uint8_t *param3, uint32_t param4, uint8_t *param5);
+    static void wrapCosDebugAssert(void *that, uint8_t *param2, uint8_t *param3, uint32_t param4, uint8_t *param5);
     static void powerUpSDMA(void *smumData);
     static uint32_t wrapSmuRavenInitialize(void *smumData, uint32_t param2);
     static uint32_t wrapSmuRenoirInitialize(void *smumData, uint32_t param2);
@@ -137,7 +124,7 @@ class WRed {
     static uint32_t wrapPspNpFwLoad(void *pspData);
 
     /** X6000 */
-    static bool wrapGFX10AcceleratorStart();
+    static bool wrapAccelStartX6000();
 
     /** X5000 */
     static bool wrapAllocateHWEngines(void *that);

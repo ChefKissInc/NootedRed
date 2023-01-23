@@ -1,15 +1,11 @@
 //  Copyright © 2022 ChefKiss Inc. Licensed under the Non-Profit Open Software License version 3.0. See LICENSE for
 //  details.
-// SPDX-License-Identifier: NPOSL-3.0
 
 #include "kern_netdbg.hpp"
 #include <Headers/kern_api.hpp>
+#include <Headers/kern_util.hpp>
 #include <IOKit/IOLocks.h>
 #include <netinet/in.h>
-
-inline in_addr_t inet_addr(uint32_t a, uint32_t b, uint32_t c, uint32_t d) {
-    return a | (b << 8) | (c << 16) | (d << 24);
-}
 
 in_addr_t NETDBG::ip_addr = 0;
 uint32_t NETDBG::port = 0;
@@ -17,7 +13,7 @@ bool NETDBG::enabled = false;
 
 size_t NETDBG::nprint(char *data, size_t len) {
     if (enabled && PE_parse_boot_argn("wrednetdbg", &enabled, sizeof(enabled) && !enabled)) {
-        kprintf("netdbg: Disabled via boot arg\n");
+        SYSLOG("netdbg", "Disabled via boot arg");
         enabled = false;
     }
 
@@ -26,19 +22,17 @@ size_t NETDBG::nprint(char *data, size_t len) {
     if (!enabled) { return 0; }
 
     if (!ip_addr || !port) {
-        uint8_t b[4] = {0};
-        uint32_t p = 0;
-        char ip[128];
-        if (!PE_parse_boot_argn("wrednetdbgip", &ip, sizeof(ip))) { panic("netdbg: No IP specified"); }
+        uint8_t ipParts[4] = {0};
+        uint32_t port = 0;
+        char ip[64];
+        PANIC_COND(!PE_parse_boot_argn("wrednetdbgip", &ip, sizeof(ip)), "netdbg", "No IP specified");
+        PANIC_COND(sscanf(ip, "%hhu.%hhu.%hhu.%hhu:%u", &ipParts[0], &ipParts[1], &ipParts[2], &ipParts[3], &port) != 5,
+            "netdbg", "Invalid IP and/or Port specified");
 
-        if (sscanf(ip, "%hhu.%hhu.%hhu.%hhu:%u", &b[0], &b[1], &b[2], &b[3], &p) != 5) {
-            panic("netdbg: Invalid IP and/or Port specified");
-        }
+        ip_addr = ipParts[0] | (ipParts[1] << 8) | (ipParts[2] << 16) | (ipParts[3] << 24);
+        port = htons(port);
 
-        ip_addr = inet_addr(b[0], b[1], b[2], b[3]);
-        port = htons(p);
-
-        if (!ip_addr || !port) { panic("netdbg: Invalid IP and/or Port specified"); }
+        PANIC_COND(!ip_addr || !port, "netdbg", "Invalid IP and/or Port specified");
     }
 
     socket_t socket = nullptr;

@@ -254,8 +254,7 @@
 			</dict>
 		</dict>
 		<key>NSHumanReadableCopyright</key>
-		<string>Copyright © 2022 ChefKiss Inc. Licensed under the Non-Profit Open Software License
-			version 3.0.</string>
+		<string>Copyright © 2022 ChefKiss Inc. All rights reserved.</string>
 		<key>OSBundleCompatibleVersion</key>
 		<string>1.0</string>
 		<key>OSBundleLibraries</key>
