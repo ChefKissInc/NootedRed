@@ -12,6 +12,8 @@ using t_HWEngineNew = void *(*)(size_t size);
 using t_sendMsgToSmcWithParam = uint32_t (*)(void *smumData, uint32_t msgId, uint32_t parameter);
 using t_pspLoadExtended = uint32_t (*)(void *, uint64_t, uint64_t, const void *, size_t);
 
+constexpr uint32_t PPSMC_MSG_PowerUpSdma = 0xE;
+
 struct VFCT {
     char signature[4];
     uint32_t length;

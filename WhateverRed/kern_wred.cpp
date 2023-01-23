@@ -758,8 +758,6 @@ uint32_t WRed::wrapHwReadReg32(void *that, uint32_t reg) {
     return ret;
 }
 
-constexpr uint32_t PPSMC_MSG_PowerUpSdma = 0xE;
-
 uint32_t WRed::wrapSmuRavenInitialize(void *smumData, uint32_t param2) {
     NETLOG("wred", "_SmuRaven_Initialize: param1 = %p param2 = 0x%X", smumData, param2);
     auto ret = FunctionCast(wrapSmuRavenInitialize, callbackWRed->orgSmuRavenInitialize)(smumData, param2);
@@ -837,7 +835,7 @@ void WRed::wrapUpdateContiguousPTEsWithDMAUsingAddr(void *that, uint64_t param1,
 
 void WRed::wrapInitializeFamilyType(void *that) { getMember<uint32_t>(that, 0x308) = 0x8E; }    // 0x8D -> 0x8E
 
-uint32_t WRed::pspFeatureUnsupported() { return 4; }    // PSP RAP and XGMI not supported
+uint32_t WRed::pspFeatureUnsupported() { return 4; }    // PSP RAP and XGMI are unsupported
 
 uint32_t WRed::wrapPspNpFwLoad(void *pspData) {
     FunctionCast(wrapPspNpFwLoad, callbackWRed->orgPspNpFwLoad)(pspData);
