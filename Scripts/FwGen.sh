@@ -2,15 +2,15 @@
 
 target_file="${PROJECT_DIR}/WhateverRed/kern_fw.cpp"
 if [ -f "$target_file" ]; then
-rm -f $target_file
+    rm -f "$target_file"
 fi
 while [ $# -gt 0 ];
 do
     case $1 in
-    -P) fw_files=$2
-    shift
-    ;;
-    
+        -P) fw_files=$2
+            shift
+        ;;
+        
     esac
     shift
 done
