@@ -162,9 +162,12 @@ void RAD::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
     }
 
     NETLOG("rad", "AmdTtlServices: Calling original constructor");
+    auto *devMem = provider->getDeviceMemoryWithRegister(kIOPCIConfigBaseAddress0);
+    PANIC_COND(!devMem, "rad", "Failed to get device memory");
+    auto addr = devMem->getPhysicalAddress();
+    devMem->release();
     FunctionCast(wrapAmdTtlServicesConstructor, callbackRAD->orgAmdTtlServicesConstructor)(that, provider);
-    getMember<uint64_t>(that, 0x288) =
-        provider->getDeviceMemoryWithIndex(kIOPCIConfigBaseAddress0)->getPhysicalAddress();
+    getMember<uint64_t>(that, 0x288) = addr;
 }
 
 uint64_t RAD::wrapSmuGetHwVersion(uint64_t param1, uint32_t param2) {
