@@ -212,6 +212,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN29AMDRadeonX5000_AMDHWVMContext36updateContiguousPTEsWithDMAUsingAddrEyyyyy",
                 wrapUpdateContiguousPTEsWithDMAUsingAddr, orgUpdateContiguousPTEsWithDMAUsingAddr},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20initializeFamilyTypeEv", wrapInitializeFamilyType},
+            {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20allocateAMDHWDisplayEv", wrapAllocateAMDHWDisplay},
         };
         PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "rad",
             "Failed to route AMDRadeonX5000 symbols");
@@ -251,6 +252,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN30AMDRadeonX6000_AMDVCN2HWEngineC1Ev", orgVCN2EngineConstructorX6000},
             {"__ZN32AMDRadeonX6000_AMDNavi10Hardware32setupAndInitializeHWCapabilitiesEv",
                 orgSetupAndInitializeHWCapabilitiesX6000},
+            {"__ZN31AMDRadeonX6000_AMDGFX10Hardware20allocateAMDHWDisplayEv", orgAllocateAMDHWDisplayX6000},
         };
         PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "rad",
             "Failed to resolve AMDRadeonX6000 symbols");
@@ -419,41 +421,41 @@ void WRed::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
     provider->setProperty("built-in", builtBytes, sizeof(builtBytes));
 
     NETDBG::enabled = true;
-    NETLOG("rad", "Patching device type table");
+    NETLOG("wred", "Patching device type table");
     PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "rad",
         "Failed to enable kernel writing");
     callbackWRed->orgDeviceTypeTable[0] = provider->extendedConfigRead16(kIOPCIConfigDeviceID);
     callbackWRed->orgDeviceTypeTable[1] = 6;
     MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
     if (provider->getProperty("ATY,bin_image")) {
-        NETLOG("rad", "VBIOS manually overridden");
+        NETLOG("wred", "VBIOS manually overridden");
     } else {
-        NETLOG("rad", "Fetching VBIOS from VFCT table");
+        NETLOG("wred", "Fetching VBIOS from VFCT table");
         auto *expert = reinterpret_cast<AppleACPIPlatformExpert *>(provider->getPlatform());
-        PANIC_COND(!expert, "rad", "Failed to get AppleACPIPlatformExpert");
+        PANIC_COND(!expert, "wred", "Failed to get AppleACPIPlatformExpert");
 
         auto *vfctData = expert->getACPITableData("VFCT", 0);
-        PANIC_COND(!vfctData, "rad", "Failed to get VFCT from AppleACPIPlatformExpert");
+        PANIC_COND(!vfctData, "wred", "Failed to get VFCT from AppleACPIPlatformExpert");
 
         auto *vfct = static_cast<const VFCT *>(vfctData->getBytesNoCopy());
-        PANIC_COND(!vfct, "rad", "VFCT OSData::getBytesNoCopy returned null");
+        PANIC_COND(!vfct, "wred", "VFCT OSData::getBytesNoCopy returned null");
 
         auto *vbiosContent = static_cast<const GOPVideoBIOSHeader *>(
             vfctData->getBytesNoCopy(vfct->vbiosImageOffset, sizeof(GOPVideoBIOSHeader)));
-        PANIC_COND(!vfct->vbiosImageOffset || !vbiosContent, "rad", "No VBIOS contained in VFCT table");
+        PANIC_COND(!vfct->vbiosImageOffset || !vbiosContent, "wred", "No VBIOS contained in VFCT table");
 
         auto *vbiosPtr =
             vfctData->getBytesNoCopy(vfct->vbiosImageOffset + sizeof(GOPVideoBIOSHeader), vbiosContent->imageLength);
-        PANIC_COND(!vbiosPtr, "rad", "Bad VFCT: Offset + Size not within buffer boundaries");
+        PANIC_COND(!vbiosPtr, "wred", "Bad VFCT: Offset + Size not within buffer boundaries");
 
         callbackWRed->vbiosData = OSData::withBytes(vbiosPtr, vbiosContent->imageLength);
-        PANIC_COND(!callbackWRed->vbiosData, "rad", "OSData::withBytes failed");
+        PANIC_COND(!callbackWRed->vbiosData, "wred", "OSData::withBytes failed");
         provider->setProperty("ATY,bin_image", callbackWRed->vbiosData);
     }
 
-    NETLOG("rad", "AmdTtlServices: Calling original constructor");
+    NETLOG("wred", "AmdTtlServices: Calling original constructor");
     auto *devMem = provider->getDeviceMemoryWithRegister(kIOPCIConfigBaseAddress0);
-    PANIC_COND(!devMem, "rad", "Failed to get device memory");
+    PANIC_COND(!devMem, "wred", "Failed to get device memory");
     auto addr = devMem->getPhysicalAddress();
     devMem->release();
     FunctionCast(wrapAmdTtlServicesConstructor, callbackWRed->orgAmdTtlServicesConstructor)(that, provider);
@@ -462,15 +464,15 @@ void WRed::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
 
 uint64_t WRed::wrapSmuGetHwVersion(uint64_t param1, uint32_t param2) {
     auto ret = FunctionCast(wrapSmuGetHwVersion, callbackWRed->orgSmuGetHwVersion)(param1, param2);
-    NETLOG("rad", "_smu_get_hw_version returned 0x%llX", ret);
+    NETLOG("wred", "_smu_get_hw_version returned 0x%llX", ret);
     switch (ret) {
         case 0x2:
-            NETLOG("rad", "Spoofing SMU v10 to v9.0.1");
+            NETLOG("wred", "Spoofing SMU v10 to v9.0.1");
             return 0x1;
         case 0xB:
             [[fallthrough]];
         case 0xC:
-            NETLOG("rad", "Spoofing SMU v11/v12 to v11");
+            NETLOG("wred", "Spoofing SMU v11/v12 to v11");
             return 0x3;
         default:
             return ret;
@@ -480,15 +482,16 @@ uint64_t WRed::wrapSmuGetHwVersion(uint64_t param1, uint32_t param2) {
 uint64_t WRed::wrapPspSwInit(uint32_t *param1, uint32_t *param2) {
     switch (param1[3]) {
         case 0xA:
-            NETLOG("rad", "Spoofing PSP version v10 to v9.0.2");
-            param1[3] = 0x9;
-            param1[4] = 0x0;
-            param1[5] = 0x2;
-            break;
+            // NETLOG("wred", "Spoofing PSP version v10 to v9.0.2");
+            // param1[3] = 0x9;
+            // param1[4] = 0x0;
+            // param1[5] = 0x2;
+            // break;
+            [[fallthrough]];
         case 0xB:
             [[fallthrough]];
         case 0xC:
-            NETLOG("rad", "Spoofing PSP version v11/v12 to v11");
+            NETLOG("wred", "Spoofing PSP version v11/v12 to v11");
             param1[3] = 0xB;
             param1[4] = 0x0;
             param1[5] = 0x0;
@@ -497,7 +500,7 @@ uint64_t WRed::wrapPspSwInit(uint32_t *param1, uint32_t *param2) {
             break;
     }
     auto ret = FunctionCast(wrapPspSwInit, callbackWRed->orgPspSwInit)(param1, param2);
-    NETLOG("rad", "_psp_sw_init returned 0x%llX", ret);
+    NETLOG("wred", "_psp_sw_init returned 0x%llX", ret);
     return ret;
 }
 
@@ -509,10 +512,10 @@ uint32_t WRed::wrapGcGetHwVersion(uint32_t *param1) {
         case 0x090200:
             [[fallthrough]];
         case 0x090300:
-            NETLOG("rad", "Spoofing GC version v9.1/v9.2/v9.3 to v9.2.1");
+            NETLOG("wred", "Spoofing GC version v9.1/v9.2/v9.3 to v9.2.1");
             return 0x090201;
         default:
-            NETLOG("rad", "_gc_get_hw_version returned 0x%X", ret);
+            NETLOG("wred", "_gc_get_hw_version returned 0x%X", ret);
             return ret;
     }
 }
@@ -521,10 +524,10 @@ void WRed::wrapPopulateFirmwareDirectory(void *that) {
     FunctionCast(wrapPopulateFirmwareDirectory, callbackWRed->orgPopulateFirmwareDirectory)(that);
     callbackWRed->callbackFirmwareDirectory = getMember<void *>(that, 0xB8);
     auto *fwDesc = getFWDescByName("renoir_dmcub.bin");
-    PANIC_COND(!fwDesc, "rad", "Somehow renoir_dmcub.bin is missing");
-    NETLOG("rad", "renoir_dmcub.bin => atidmcub_0.dat");
+    PANIC_COND(!fwDesc, "wred", "Somehow renoir_dmcub.bin is missing");
+    NETLOG("wred", "renoir_dmcub.bin => atidmcub_0.dat");
     auto *fwBackdoor = callbackWRed->orgCreateFirmware(fwDesc->var, fwDesc->size, 0x200, "atidmcub_0.dat");
-    NETLOG("rad", "inserting atidmcub_0.dat!");
+    NETLOG("wred", "inserting atidmcub_0.dat!");
     PANIC_COND(!callbackWRed->orgPutFirmware(callbackWRed->callbackFirmwareDirectory, 6, fwBackdoor), "rad",
         "Failed to inject atidmcub_0.dat firmware");
 }
@@ -566,7 +569,7 @@ uint16_t WRed::wrapGetEnumeratedRevision(void *that) {
             callbackWRed->asicType = ASICType::Renoir;
             return 0x91;
         default:
-            PANIC("rad", "Unknown device ID for iGPU");
+            PANIC("wred", "Unknown device ID for iGPU");
     }
 }
 
@@ -578,8 +581,8 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
     auto deviceId = getMember<IOPCIDevice *>(that, 0x18)->configRead16(kIOPCIConfigDeviceID);
     auto &revision = getMember<uint32_t>(that, 0x68);
     auto &emulatedRevision = getMember<uint32_t>(that, 0x6c);
-    NETLOG("rad", "deviceId = 0x%X revision = 0x%X emulatedRevision = 0x%X", deviceId, revision, emulatedRevision);
-    NETLOG("rad", "Locating Init Caps entry");
+    NETLOG("wred", "deviceId = 0x%X revision = 0x%X emulatedRevision = 0x%X", deviceId, revision, emulatedRevision);
+    NETLOG("wred", "Locating Init Caps entry");
     PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "rad",
         "Failed to enable kernel writing");
 
@@ -589,63 +592,63 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
         auto *filename = new char[128];
         snprintf(filename, 128, "%s_vcn.bin", asicName);
         auto *targetFilename = callbackWRed->asicType == ASICType::Renoir ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
-        DBGLOG("rad", "%s => %s", filename, targetFilename);
+        DBGLOG("wred", "%s => %s", filename, targetFilename);
 
         auto *fwDesc = getFWDescByName(filename);
-        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        PANIC_COND(!fwDesc, "wred", "Somehow %s is missing", filename);
 
         auto *fw = callbackWRed->orgCreateFirmware(fwDesc->var, fwDesc->size, 0x200, targetFilename);
-        DBGLOG("rad", "Inserting %s!", targetFilename);
+        DBGLOG("wred", "Inserting %s!", targetFilename);
         PANIC_COND(!callbackWRed->orgPutFirmware(callbackWRed->callbackFirmwareDirectory, 6, fw), "rad",
             "Failed to inject ativvaxy_rv.dat firmware");
 
         snprintf(filename, 128, "%s_rlc.bin", asicName);
         fwDesc = getFWDescByName(filename);
-        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        PANIC_COND(!fwDesc, "wred", "Somehow %s is missing", filename);
         callbackWRed->orgGcRlcUcode->addr = 0x0;
         memmove(callbackWRed->orgGcRlcUcode->data, fwDesc->var, fwDesc->size);
-        DBGLOG("rad", "Injected %s!", filename);
+        DBGLOG("wred", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_me.bin", asicName);
         fwDesc = getFWDescByName(filename);
-        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        PANIC_COND(!fwDesc, "wred", "Somehow %s is missing", filename);
         callbackWRed->orgGcMeUcode->addr = 0x1000;
         memmove(callbackWRed->orgGcMeUcode->data, fwDesc->var, fwDesc->size);
-        DBGLOG("rad", "Injected %s!", filename);
+        DBGLOG("wred", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_ce.bin", asicName);
         fwDesc = getFWDescByName(filename);
-        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        PANIC_COND(!fwDesc, "wred", "Somehow %s is missing", filename);
         callbackWRed->orgGcCeUcode->addr = 0x800;
         memmove(callbackWRed->orgGcCeUcode->data, fwDesc->var, fwDesc->size);
-        DBGLOG("rad", "Injected %s!", filename);
+        DBGLOG("wred", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_pfp.bin", asicName);
         fwDesc = getFWDescByName(filename);
-        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        PANIC_COND(!fwDesc, "wred", "Somehow %s is missing", filename);
         callbackWRed->orgGcPfpUcode->addr = 0x1400;
         memmove(callbackWRed->orgGcPfpUcode->data, fwDesc->var, fwDesc->size);
-        DBGLOG("rad", "Injected %s!", filename);
+        DBGLOG("wred", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_mec.bin", asicName);
         fwDesc = getFWDescByName(filename);
-        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        PANIC_COND(!fwDesc, "wred", "Somehow %s is missing", filename);
         callbackWRed->orgGcMecUcode->addr = 0x0;
         memmove(callbackWRed->orgGcMecUcode->data, fwDesc->var, fwDesc->size);
-        DBGLOG("rad", "Injected %s!", filename);
+        DBGLOG("wred", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_mec_jt.bin", asicName);
         fwDesc = getFWDescByName(filename);
-        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        PANIC_COND(!fwDesc, "wred", "Somehow %s is missing", filename);
         callbackWRed->orgGcMecJtUcode->addr = 0x104A4;
         memmove(callbackWRed->orgGcMecJtUcode->data, fwDesc->var, fwDesc->size);
-        DBGLOG("rad", "Injected %s!", filename);
+        DBGLOG("wred", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_sdma.bin", asicName);
         fwDesc = getFWDescByName(filename);
-        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        PANIC_COND(!fwDesc, "wred", "Somehow %s is missing", filename);
         memmove(callbackWRed->orgSdmaUcode->data, fwDesc->var, fwDesc->size);
-        DBGLOG("rad", "Injected %s!", filename);
+        DBGLOG("wred", "Injected %s!", filename);
         delete[] filename;
     }
 
@@ -658,7 +661,7 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
         }
     }
     if (!initCaps) {
-        DBGLOG("rad", "Warning: Using Fallback Init Caps mechanism");
+        DBGLOG("wred", "Warning: Using Fallback Init Caps mechanism");
         for (size_t i = 0; i < 789; i++) {
             auto *temp = callbackWRed->orgAsicInitCapsTable + i;
             if (temp->familyId == 0x8e && temp->deviceId == deviceId &&
@@ -726,13 +729,13 @@ uint32_t WRed::wrapPspAsdLoad(void *pspData) {
      */
     auto *filename = new char[128];
     snprintf(filename, 128, "%s_asd.bin", getASICName());
-    NETLOG("rad", "injecting %s!", filename);
+    NETLOG("wred", "injecting %s!", filename);
     auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspAsdLoad);
     auto *fwDesc = getFWDescByName(filename);
-    PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+    PANIC_COND(!fwDesc, "wred", "Somehow %s is missing", filename);
     delete[] filename;
     auto ret = org(pspData, 0, 0, fwDesc->var, fwDesc->size);
-    NETLOG("rad", "_psp_asd_load returned 0x%X", ret);
+    NETLOG("wred", "_psp_asd_load returned 0x%X", ret);
     return ret;
 }
 
@@ -740,13 +743,13 @@ uint32_t WRed::wrapPspDtmLoad(void *pspData) {
     /** Same idea as `_psp_asd_load`. */
     auto *filename = new char[128];
     snprintf(filename, 128, "%s_dtm.bin", getASICName());
-    NETLOG("rad", "injecting %s!", filename);
+    NETLOG("wred", "injecting %s!", filename);
     auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspDtmLoad);
     auto *fwDesc = getFWDescByName(filename);
-    PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+    PANIC_COND(!fwDesc, "wred", "Somehow %s is missing", filename);
     delete[] filename;
     auto ret = org(pspData, 0, 0, fwDesc->var, fwDesc->size);
-    NETLOG("rad", "_psp_dtm_load returned 0x%X", ret);
+    NETLOG("wred", "_psp_dtm_load returned 0x%X", ret);
     return 0;
 }
 
@@ -754,13 +757,13 @@ uint32_t WRed::wrapPspHdcpLoad(void *pspData) {
     /** Same idea as `_psp_asd_load`. */
     auto *filename = new char[128];
     snprintf(filename, 128, "%s_hdcp.bin", getASICName());
-    NETLOG("rad", "injecting %s!", filename);
+    NETLOG("wred", "injecting %s!", filename);
     auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspHdcpLoad);
     auto *fwDesc = getFWDescByName(filename);
-    PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+    PANIC_COND(!fwDesc, "wred", "Somehow %s is missing", filename);
     delete[] filename;
     auto ret = org(pspData, 0, 0, fwDesc->var, fwDesc->size);
-    NETLOG("rad", "_psp_hdcp_load returned 0x%X", ret);
+    NETLOG("wred", "_psp_hdcp_load returned 0x%X", ret);
     return ret;
 }
 
@@ -772,7 +775,7 @@ void *WRed::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uin
 }
 
 void WRed::wrapCosDebugAssert(void *that, uint8_t *param2, uint8_t *param3, uint32_t param4, uint8_t *param5) {
-    NETLOG("rad", "cosDebugAssert: this = %p param2 = %p param3 = %p param4 = 0x%X param5 = %p", that, param2, param3,
+    NETLOG("wred", "cosDebugAssert: this = %p param2 = %p param3 = %p param4 = 0x%X param5 = %p", that, param2, param3,
         param4, param5);
     FunctionCast(wrapCosDebugAssert, callbackWRed->orgCosDebugAssert)(that, param2, param3, param4, param5);
 }
@@ -784,7 +787,7 @@ uint32_t WRed::wrapHwReadReg32(void *that, uint32_t reg) {
          * reg = SOC15_OFFSET(NBIO_BASE, 0, mmRCC_DEV0_EPF0_STRAP0);
          */
         reg = 0xD2F;
-        NETLOG("rad", "hwReadReg32: redirecting reg 0xD31 to 0xD2F");
+        NETLOG("wred", "hwReadReg32: redirecting reg 0xD31 to 0xD2F");
     }
     auto ret = FunctionCast(wrapHwReadReg32, callbackWRed->orgHwReadReg32)(that, reg);
     return ret;
@@ -793,27 +796,27 @@ uint32_t WRed::wrapHwReadReg32(void *that, uint32_t reg) {
 constexpr uint32_t PPSMC_MSG_PowerUpSdma = 0xE;
 
 uint32_t WRed::wrapSmuRavenInitialize(void *smumData, uint32_t param2) {
-    NETLOG("rad", "_SmuRaven_Initialize: param1 = %p param2 = 0x%X", smumData, param2);
+    NETLOG("wred", "_SmuRaven_Initialize: param1 = %p param2 = 0x%X", smumData, param2);
     auto ret = FunctionCast(wrapSmuRavenInitialize, callbackWRed->orgSmuRavenInitialize)(smumData, param2);
-    NETLOG("rad", "_SmuRaven_Initialize returned 0x%X", ret);
+    NETLOG("wred", "_SmuRaven_Initialize returned 0x%X", ret);
     callbackWRed->orgRavenSendMsgToSmcWithParam(smumData, PPSMC_MSG_PowerUpSdma, 0);
     return ret;
 }
 
 uint32_t WRed::wrapSmuRenoirInitialize(void *smumData, uint32_t param2) {
-    NETLOG("rad", "_SmuRenoir_Initialize: param1 = %p param2 = 0x%X", smumData, param2);
+    NETLOG("wred", "_SmuRenoir_Initialize: param1 = %p param2 = 0x%X", smumData, param2);
     auto ret = FunctionCast(wrapSmuRenoirInitialize, callbackWRed->orgSmuRenoirInitialize)(smumData, param2);
-    NETLOG("rad", "_SmuRenoir_Initialize returned 0x%X", ret);
+    NETLOG("wred", "_SmuRenoir_Initialize returned 0x%X", ret);
     callbackWRed->orgRenoirSendMsgToSmcWithParam(smumData, PPSMC_MSG_PowerUpSdma, 0);
     return ret;
 }
 
 uint64_t WRed::wrapMapVA(void *that, uint64_t param1, void *memory, uint64_t param3, uint64_t sizeToMap,
     uint64_t flags) {
-    NETLOG("rad", "mapVA: this = %p param1 = 0x%llX memory = %p param3 = 0x%llX sizeToMap = 0x%llX flags = 0x%llX",
+    NETLOG("wred", "mapVA: this = %p param1 = 0x%llX memory = %p param3 = 0x%llX sizeToMap = 0x%llX flags = 0x%llX",
         that, param1, memory, param3, sizeToMap, flags);
     auto ret = FunctionCast(wrapMapVA, callbackWRed->orgMapVA)(that, param1, memory, param3, sizeToMap, flags);
-    NETLOG("rad", "mapVA returned 0x%llX", ret);
+    NETLOG("wred", "mapVA returned 0x%llX", ret);
     return ret;
 }
 
@@ -825,7 +828,7 @@ uint64_t WRed::wrapMapVMPT(void *that, void *vmptCtl, uint64_t vmptLevel, uint32
         that, vmptCtl, vmptLevel, param3, param4, param5, sizeToMap);
     auto ret = FunctionCast(wrapMapVMPT, callbackWRed->orgMapVMPT)(that, vmptCtl, vmptLevel, param3, param4, param5,
         sizeToMap);
-    NETLOG("rad", "mapVMPT returned 0x%llX", ret);
+    NETLOG("wred", "mapVMPT returned 0x%llX", ret);
     return ret;
 }
 
@@ -837,22 +840,22 @@ uint32_t WRed::wrapWriteWritePTEPDECommand(void *that, uint32_t *buf, uint64_t p
         that, buf, pe, count, flags, addr, incr);
     auto ret = FunctionCast(wrapWriteWritePTEPDECommand, callbackWRed->orgWriteWritePTEPDECommand)(that, buf, pe, count,
         flags, addr, incr);
-    NETLOG("rad", "writeWritePTEPDECommand returned 0x%X", ret);
+    NETLOG("wred", "writeWritePTEPDECommand returned 0x%X", ret);
     return ret;
 }
 
 uint64_t WRed::wrapGetPDEValue(void *that, uint64_t param1, uint64_t param2) {
-    NETLOG("rad", "getPDEValue: this = %p param1 = 0x%llX param2 = 0x%llX", that, param1, param2);
+    NETLOG("wred", "getPDEValue: this = %p param1 = 0x%llX param2 = 0x%llX", that, param1, param2);
     auto ret = FunctionCast(wrapGetPDEValue, callbackWRed->orgGetPDEValue)(that, param1, param2);
-    NETLOG("rad", "getPDEValue returned 0x%llX", ret);
+    NETLOG("wred", "getPDEValue returned 0x%llX", ret);
     return ret;
 }
 
 uint64_t WRed::wrapGetPTEValue(void *that, uint64_t param1, uint64_t param2, uint64_t param3, uint32_t param4) {
-    NETLOG("rad", "getPTEValue: this = %p param1 = 0x%llX param2 = 0x%llX param3 = 0x%llX param4 = 0x%X", that, param1,
+    NETLOG("wred", "getPTEValue: this = %p param1 = 0x%llX param2 = 0x%llX param3 = 0x%llX param4 = 0x%X", that, param1,
         param2, param3, param4);
     auto ret = FunctionCast(wrapGetPTEValue, callbackWRed->orgGetPTEValue)(that, param1, param2, param3, param4);
-    NETLOG("rad", "getPTEValue returned 0x%llX", ret);
+    NETLOG("wred", "getPTEValue returned 0x%llX", ret);
     return ret;
 }
 
@@ -864,7 +867,7 @@ void WRed::wrapUpdateContiguousPTEsWithDMAUsingAddr(void *that, uint64_t param1,
         that, param1, param2, param3, param4, param5);
     FunctionCast(wrapUpdateContiguousPTEsWithDMAUsingAddr, callbackWRed->orgUpdateContiguousPTEsWithDMAUsingAddr)(that,
         param1, param2, param3, param4, param5);
-    NETLOG("rad", "updateContiguousPTEsWithDMAUsingAddr finished");
+    NETLOG("wred", "updateContiguousPTEsWithDMAUsingAddr finished");
 }
 
 void WRed::wrapInitializeFamilyType(void *that) { getMember<uint32_t>(that, 0x308) = 0x8E; }    // 0x8D -> 0x8E
@@ -874,4 +877,11 @@ uint32_t WRed::pspFeatureUnsupported() { return 4; }    // PSP RAP and XGMI not 
 uint32_t WRed::wrapPspNpFwLoad(void *pspData) {
     FunctionCast(wrapPspNpFwLoad, callbackWRed->orgPspNpFwLoad)(pspData);
     return 0;    // Looks like on Renoir the firmware is already loaded
+}
+
+void *WRed::wrapAllocateAMDHWDisplay(void *that) {
+    NETLOG("wred", "allocateAMDHWDisplay: that = %p", that);
+    auto ret = FunctionCast(wrapAllocateAMDHWDisplay, callbackWRed->orgAllocateAMDHWDisplayX6000)(that);
+    NETLOG("wred", "allocateAMDHWDisplay returned %p", ret);
+    return ret;
 }

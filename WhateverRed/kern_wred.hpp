@@ -79,6 +79,7 @@ class WRed {
     t_HWEngineNew orgVCN2EngineNewX6000 = nullptr;
     t_HWEngineConstructor orgVCN2EngineConstructorX6000 = nullptr;
     mach_vm_address_t orgSetupAndInitializeHWCapabilitiesX6000 {};
+    mach_vm_address_t orgAllocateAMDHWDisplayX6000 {};
 
     /** X5000 */
     t_HWEngineNew orgGFX9PM4EngineNew = nullptr;
@@ -142,4 +143,5 @@ class WRed {
     static uint64_t wrapGetPTEValue(void *that, uint64_t param1, uint64_t param2, uint64_t param3, uint32_t param4);
     static void wrapUpdateContiguousPTEsWithDMAUsingAddr(void *that, uint64_t param1, uint64_t param2, uint64_t param3,
         uint64_t param4, uint64_t param5);
+    static void *wrapAllocateAMDHWDisplay(void *that);
 };
