@@ -419,11 +419,10 @@ void WRed::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
     provider->setProperty("built-in", builtBytes, sizeof(builtBytes));
 
     NETDBG::enabled = true;
-    NETLOG("rad", "patching device type table");
+    NETLOG("rad", "Patching device type table");
     PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "rad",
         "Failed to enable kernel writing");
-    auto deviceId = provider->extendedConfigRead16(kIOPCIConfigDeviceID);
-    callbackWRed->orgDeviceTypeTable[0] = deviceId;
+    callbackWRed->orgDeviceTypeTable[0] = provider->extendedConfigRead16(kIOPCIConfigDeviceID);
     callbackWRed->orgDeviceTypeTable[1] = 6;
     MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
     if (provider->getProperty("ATY,bin_image")) {
@@ -458,7 +457,7 @@ void WRed::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
     auto addr = devMem->getPhysicalAddress();
     devMem->release();
     FunctionCast(wrapAmdTtlServicesConstructor, callbackWRed->orgAmdTtlServicesConstructor)(that, provider);
-    getMember<uint64_t>(that, 0x288) = addr;
+    getMember<uint64_t>(that, 0x288) = addr; // Aperture Base
 }
 
 uint64_t WRed::wrapSmuGetHwVersion(uint64_t param1, uint32_t param2) {
