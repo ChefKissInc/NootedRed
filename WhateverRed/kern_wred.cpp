@@ -457,7 +457,7 @@ void WRed::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
     auto addr = devMem->getPhysicalAddress();
     devMem->release();
     FunctionCast(wrapAmdTtlServicesConstructor, callbackWRed->orgAmdTtlServicesConstructor)(that, provider);
-    getMember<uint64_t>(that, 0x288) = addr; // Aperture Base
+    getMember<uint64_t>(that, 0x288) = addr;    // Aperture Base
 }
 
 uint64_t WRed::wrapSmuGetHwVersion(uint64_t param1, uint32_t param2) {
@@ -566,8 +566,7 @@ uint16_t WRed::wrapGetEnumeratedRevision(void *that) {
             callbackWRed->asicType = ASICType::Renoir;
             return 0x91;
         default:
-            if (revision == 1) { return 0x20; }
-            return 0x10;
+            PANIC("rad", "Unknown device ID for iGPU");
     }
 }
 
