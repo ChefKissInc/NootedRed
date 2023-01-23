@@ -2,7 +2,7 @@
 
 AMD iGPU support [Lilu](https://github.com/acidanthera/Lilu) plug-in.
 
-The Source Code of this Original Work is licensed under the `Non-Profit Open Software License version 3.0`. See `LICENSE`
+The Source Code of this Original Work is licensed under the `Thou Shalt Not Profit License version 1.0`. See `LICENSE`
 
 Requires [WhateverGreen](https://github.com/Acidanthera/WhateverGreen) to function properly.
 
