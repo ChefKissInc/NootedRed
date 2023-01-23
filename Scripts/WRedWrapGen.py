@@ -80,8 +80,8 @@ def locate_line(lines: list[str], needle: str) -> int:
     assert False
 
 
-cpp_path: str = "./WhateverRed/kern_rad.cpp"
-hpp_path: str = "./WhateverRed/kern_rad.hpp"
+cpp_path: str = "./WhateverRed/kern_wred.cpp"
+hpp_path: str = "./WhateverRed/kern_wred.hpp"
 
 with open(cpp_path) as cpp_file:
     cpp_lines: list[str] = cpp_file.readlines()
@@ -104,26 +104,27 @@ parameters = [parse_param(x) for x in parameters]
 
 params_stringified = ", ".join([" ".join(x) for x in parameters])
 
-target_line = locate_line(
-    cpp_lines, "bool RAD::processKext(KernelPatcher &patcher, size_t index,")
+target_line = len(cpp_lines)
 function = [
-    f"{return_type} RAD::wrap{func_ident_pascal}({params_stringified}) {{\n"]
+    "\n",
+    f"{return_type} WRed::wrap{func_ident_pascal}({params_stringified}) {{\n",
+]
 
 fmt_types = " ".join(
     f"{get_fmt_name(x[1])} = {get_fmt_type(x[0])}" for x in parameters)
 arguments = ", ".join(x[1] for x in parameters)
 function.append(
-    f"    NETLOG(\"rad\", \"{func_ident}: {fmt_types}\", {arguments});\n")
+    f"    NETLOG(\"wred\", \"{func_ident}: {fmt_types}\", {arguments});\n")
 
 if return_type == "void":
     function.append(
-        f"    FunctionCast(wrap{func_ident_pascal}, callbackRAD->org{func_ident_pascal})({arguments});\n")
-    function.append(f"    NETLOG(\"rad\", \"{func_ident} finished\");\n")
+        f"    FunctionCast(wrap{func_ident_pascal}, callbackWRed->org{func_ident_pascal})({arguments});\n")
+    function.append(f"    NETLOG(\"wred\", \"{func_ident} finished\");\n")
 else:
     function.append(
-        f"    auto ret = FunctionCast(wrap{func_ident_pascal}, callbackRAD->org{func_ident_pascal})({arguments});\n")
+        f"    auto ret = FunctionCast(wrap{func_ident_pascal}, callbackWRed->org{func_ident_pascal})({arguments});\n")
     function.append(
-        f"    NETLOG(\"rad\", \"{func_ident} returned {get_fmt_type(return_type)}\", ret);\n")
+        f"    NETLOG(\"wred\", \"{func_ident} returned {get_fmt_type(return_type)}\", ret);\n")
     function.append("    return ret;\n")
 
 function.append("}\n")  # -- End of function --
