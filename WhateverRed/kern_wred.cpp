@@ -86,7 +86,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"_psp_asd_load", wrapPspAsdLoad, orgPspAsdLoad},
             {"_psp_dtm_load", wrapPspDtmLoad, orgPspDtmLoad},
             {"_psp_hdcp_load", wrapPspHdcpLoad, orgPspHdcpLoad},
-            {"__ZN14AmdTtlServices14cosDebugAssertEPvPKcS2_jS2_", wrapCosDebugAssert, orgCosDebugAssert},
             {"_SmuRaven_Initialize", wrapSmuRavenInitialize, orgSmuRavenInitialize},
             {"_SmuRenoir_Initialize", wrapSmuRenoirInitialize, orgSmuRenoirInitialize},
             {"_psp_xgmi_is_support", pspFeatureUnsupported},
@@ -115,7 +114,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             patcher.applyLookupPatch(&patch);
             patcher.clearError();
         }
-
     } else if (kextRadeonX6000Framebuffer.loadIndex == index) {
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable},
@@ -172,7 +170,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             patcher.applyLookupPatch(&patch);
             patcher.clearError();
         }
-
     } else if (kextRadeonX5000.loadIndex == index) {
         uint32_t *orgChannelTypes = nullptr;
 
@@ -245,7 +242,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             patcher.applyLookupPatch(&patch);
             patcher.clearError();
         }
-
     } else if (kextRadeonX6000.loadIndex == index) {
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZN30AMDRadeonX6000_AMDVCN2HWEnginenwEm", orgVCN2EngineNewX6000},
@@ -679,12 +675,10 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
     return ret;
 }
 
-uint32_t WRed::wrapSmuGetFwConstants([[maybe_unused]] void *param1) {
-    return 0;
-}    // The System BIOS is the one that loads the SMC Firmware.
+uint32_t WRed::wrapSmuGetFwConstants([[maybe_unused]] void *param1) { return 0; }        // Firmware already loaded
 uint32_t WRed::wrapSmuInternalHwInit([[maybe_unused]] void *param1) { return 0; }        // Firmware is already loaded
 uint32_t WRed::wrapGetVideoMemoryType([[maybe_unused]] void *that) { return 4; }         // DDR4
-uint32_t WRed::wrapGetVideoMemoryBitWidth([[maybe_unused]] void *that) { return 64; }    // 64-bit
+uint32_t WRed::wrapGetVideoMemoryBitWidth([[maybe_unused]] void *that) { return 64; }    // 64 bits
 IOReturn WRed::wrapPopulateVramInfo([[maybe_unused]] void *that) { return kIOReturnSuccess; }
 
 /**
@@ -714,8 +708,6 @@ void WRed::wrapSetupAndInitializeHWCapabilities(void *that) {
     getMember<uint32_t>(that, 0xC0) = 0;    // Raven ASICs do not have an SDMA Page Queue
 }
 
-using t_pspLoadExtended = uint32_t (*)(void *, uint64_t, uint64_t, const void *, size_t);
-
 uint32_t WRed::wrapPspAsdLoad(void *pspData) {
     /**
      * Hack: Add custom param 4 and 5 (pointer to firmware and size)
@@ -725,10 +717,10 @@ uint32_t WRed::wrapPspAsdLoad(void *pspData) {
     auto *filename = new char[128];
     snprintf(filename, 128, "%s_asd.bin", getASICName());
     NETLOG("wred", "injecting %s!", filename);
-    auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspAsdLoad);
     auto *fwDesc = getFWDescByName(filename);
     PANIC_COND(!fwDesc, "wred", "Somehow %s is missing", filename);
     delete[] filename;
+    auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspAsdLoad);
     auto ret = org(pspData, 0, 0, fwDesc->var, fwDesc->size);
     NETLOG("wred", "_psp_asd_load returned 0x%X", ret);
     return ret;
@@ -739,10 +731,10 @@ uint32_t WRed::wrapPspDtmLoad(void *pspData) {
     auto *filename = new char[128];
     snprintf(filename, 128, "%s_dtm.bin", getASICName());
     NETLOG("wred", "injecting %s!", filename);
-    auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspDtmLoad);
     auto *fwDesc = getFWDescByName(filename);
     PANIC_COND(!fwDesc, "wred", "Somehow %s is missing", filename);
     delete[] filename;
+    auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspDtmLoad);
     auto ret = org(pspData, 0, 0, fwDesc->var, fwDesc->size);
     NETLOG("wred", "_psp_dtm_load returned 0x%X", ret);
     return 0;
@@ -753,10 +745,10 @@ uint32_t WRed::wrapPspHdcpLoad(void *pspData) {
     auto *filename = new char[128];
     snprintf(filename, 128, "%s_hdcp.bin", getASICName());
     NETLOG("wred", "injecting %s!", filename);
-    auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspHdcpLoad);
     auto *fwDesc = getFWDescByName(filename);
     PANIC_COND(!fwDesc, "wred", "Somehow %s is missing", filename);
     delete[] filename;
+    auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspHdcpLoad);
     auto ret = org(pspData, 0, 0, fwDesc->var, fwDesc->size);
     NETLOG("wred", "_psp_hdcp_load returned 0x%X", ret);
     return ret;
@@ -767,12 +759,6 @@ void WRed::wrapAccelDisplayPipeWriteDiagnosisReport() {}
 void *WRed::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3) {
     if (param1 == 2 && param2 == 0 && param3 == 0) { param2 = 2; }    // Redirect SDMA1 retrival to SDMA0
     return FunctionCast(wrapRTGetHWChannel, callbackWRed->orgRTGetHWChannel)(that, param1, param2, param3);
-}
-
-void WRed::wrapCosDebugAssert(void *that, uint8_t *param2, uint8_t *param3, uint32_t param4, uint8_t *param5) {
-    NETLOG("wred", "cosDebugAssert: this = %p param2 = %p param3 = %p param4 = 0x%X param5 = %p", that, param2, param3,
-        param4, param5);
-    FunctionCast(wrapCosDebugAssert, callbackWRed->orgCosDebugAssert)(that, param2, param3, param4, param5);
 }
 
 uint32_t WRed::wrapHwReadReg32(void *that, uint32_t reg) {

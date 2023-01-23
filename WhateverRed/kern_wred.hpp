@@ -61,7 +61,6 @@ class WRed {
     mach_vm_address_t orgPspAsdLoad {};
     mach_vm_address_t orgPspDtmLoad {};
     mach_vm_address_t orgPspHdcpLoad {};
-    mach_vm_address_t orgCosDebugAssert {};
     GcFwConstant *orgGcRlcUcode = nullptr;
     GcFwConstant *orgGcMeUcode = nullptr;
     GcFwConstant *orgGcCeUcode = nullptr;
@@ -117,7 +116,6 @@ class WRed {
     static uint32_t wrapPspAsdLoad(void *pspData);
     static uint32_t wrapPspDtmLoad(void *pspData);
     static uint32_t wrapPspHdcpLoad(void *pspData);
-    static void wrapCosDebugAssert(void *that, uint8_t *param2, uint8_t *param3, uint32_t param4, uint8_t *param5);
     static void powerUpSDMA(void *smumData);
     static uint32_t wrapSmuRavenInitialize(void *smumData, uint32_t param2);
     static uint32_t wrapSmuRenoirInitialize(void *smumData, uint32_t param2);
