@@ -64,7 +64,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"_gc_9_2_1_pfp_ucode", orgGcPfpUcode},
             {"_gc_9_2_1_mec_ucode", orgGcMecUcode},
             {"_gc_9_2_1_mec_jt_ucode", orgGcMecJtUcode},
-            {"_sdma_4_1_ucode", orgSdmaUcode},
+            {"_sdma_4_1_ucode", orgSdma41Ucode},
+            {"_sdma_4_2_ucode", orgSdma42Ucode},
             {"_Raven_SendMsgToSmcWithParameter", orgRavenSendMsgToSmcWithParam},
             {"_Renoir_SendMsgToSmcWithParameter", orgRenoirSendMsgToSmcWithParam},
         };
@@ -625,7 +626,8 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
 
         snprintf(filename, 128, "%s_sdma.bin", asicName);
         fwDesc = &getFWDescByName(filename);
-        memmove(callbackWRed->orgSdmaUcode->data, fwDesc->data, fwDesc->size);
+        memmove(callbackWRed->orgSdma41Ucode->data, fwDesc->data, fwDesc->size);
+        memmove(callbackWRed->orgSdma42Ucode->data, fwDesc->data, fwDesc->size);
         DBGLOG("wred", "Injected %s!", filename);
         delete[] filename;
     }

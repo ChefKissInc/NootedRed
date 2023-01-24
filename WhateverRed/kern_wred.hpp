@@ -67,7 +67,8 @@ class WRed {
     GcFwConstant *orgGcPfpUcode = nullptr;
     GcFwConstant *orgGcMecUcode = nullptr;
     GcFwConstant *orgGcMecJtUcode = nullptr;
-    SdmaFwConstant *orgSdmaUcode = nullptr;
+    SdmaFwConstant *orgSdma41Ucode = nullptr;
+    SdmaFwConstant *orgSdma42Ucode = nullptr;
     t_sendMsgToSmcWithParam orgRavenSendMsgToSmcWithParam = nullptr;
     t_sendMsgToSmcWithParam orgRenoirSendMsgToSmcWithParam = nullptr;
     mach_vm_address_t orgSmuRavenInitialize {};
