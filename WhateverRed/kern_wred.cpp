@@ -93,6 +93,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"_psp_rap_is_supported", pspFeatureUnsupported},
             {"_psp_np_fw_load", wrapPspNpFwLoad, orgPspNpFwLoad},
             {"_psp_cos_log", wrapPspCosLog, orgPspCosLog},
+            {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, orgPspCmdKmSubmit},
         };
         PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000HWLibs symbols");
@@ -869,3 +870,17 @@ void WRed::wrapPspCosLog(void * pspData, uint32_t param2, uint64_t param3, uint3
     NETLOG("wred", "_psp_cos_log finished");
 }
 
+uint32_t WRed::wrapPspCmdKmSubmit(void * pspData, void * context, void * param3, void * param4) {
+    NETLOG("wred", "_psp_cmd_km_submit: pspData = %p context = %p param3 = %p param4 = %p", pspData, context, param3, param4);
+    uint fwType = getMember<uint>(context, 16);
+    // Skip loading of CP MEC JT2 FW on Renoir devices due to it being unsupported
+    // See also: https://github.com/torvalds/linux/commit/f8f70c1371d304f42d4a1242d8abcbda807d0bed
+    if (fwType == 6 && callbackWRed->asicType == ASICType::Renoir) {
+        NETLOG("wred", "Skipping loading of fwType 6");
+        return 0;
+    }
+
+    auto ret = FunctionCast(wrapPspCmdKmSubmit, callbackWRed->orgPspCmdKmSubmit)(pspData, context, param3, param4);
+    NETLOG("wred", "_psp_cmd_km_submit returned 0x%X", ret);
+    return ret;
+}
