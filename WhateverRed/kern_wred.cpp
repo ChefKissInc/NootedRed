@@ -811,6 +811,13 @@ uint64_t WRed::wrapGetPDEValue(void *that, uint64_t level, uint64_t param2) {
     NETLOG("wred", "getPDEValue: this = %p level = 0x%llX param2 = 0x%llX", that, level, param2);
     auto ret = FunctionCast(wrapGetPDEValue, callbackWRed->orgGetPDEValue)(that, level, param2);
     NETLOG("wred", "getPDEValue returned 0x%llX", ret);
+
+    // See also: https://elixir.bootlin.com/linux/latest/C/ident/gmc_v9_0_get_vm_pde
+    // ret &= ~(1ULL << 56); // Unset AMDGPU_PTE_TF for PDB0
+
+    // See also: https://elixir.bootlin.com/linux/latest/A/ident/amdgpu_vm_make_compute
+    ret |= (1ULL << 5); // Set AMDGPU_PTE_READABLE for ats entries
+
     return ret;
 }
 
