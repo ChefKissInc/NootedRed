@@ -92,6 +92,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"_psp_xgmi_is_support", pspFeatureUnsupported},
             {"_psp_rap_is_supported", pspFeatureUnsupported},
             {"_psp_np_fw_load", wrapPspNpFwLoad, orgPspNpFwLoad},
+            {"_psp_cos_log", wrapPspCosLog, orgPspCosLog},
         };
         PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000HWLibs symbols");
@@ -860,3 +861,11 @@ void *WRed::wrapAllocateAMDHWDisplay(void *that) {
     NETLOG("wred", "allocateAMDHWDisplay returned %p", ret);
     return ret;
 }
+
+void WRed::wrapPspCosLog(void * pspData, uint32_t param2, uint64_t param3, uint32_t param4, uint64_t param5) {
+    NETLOG("wred", "_psp_cos_log: pspData = %p param2 = 0x%X param3 = 0x%llX param4 = 0x%X param5 = 0x%llX", pspData, param2, param3, param4, param5);
+    NETLOG("wred", "Message: %s", param5);
+    FunctionCast(wrapPspCosLog, callbackWRed->orgPspCosLog)(pspData, param2, param3, param4, param5);
+    NETLOG("wred", "_psp_cos_log finished");
+}
+
