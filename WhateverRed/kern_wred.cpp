@@ -93,7 +93,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"_psp_rap_is_supported", pspFeatureUnsupported},
             {"_psp_cos_log", wrapPspCosLog, orgPspCosLog},
             {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, orgPspCmdKmSubmit},
-            {"__ZN20AtiPowerPlayServicesC1EP18PowerPlayCallbacks", wrapAtiPowerPlayServicesConstructor, orgAtiPowerPlayServicesConstructor},
+            {"__ZN20AtiPowerPlayServicesC2EP18PowerPlayCallbacks", wrapAtiPowerPlayServicesConstructor,
+                orgAtiPowerPlayServicesConstructor},
         };
         PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000HWLibs symbols");
@@ -876,11 +877,12 @@ uint32_t WRed::wrapPspCmdKmSubmit(void *pspData, void *context, void *param3, vo
     return ret;
 }
 
-void * WRed::wrapAtiPowerPlayServicesConstructor(void * that, void * ppCallbacks) {
+void *WRed::wrapAtiPowerPlayServicesConstructor(void *that, void *ppCallbacks) {
     NETLOG("wred", "AtiPowerPlayServicesConstructor: that = %p ppCallbacks = %p", that, ppCallbacks);
     // Set debugLevel in order to activate _MCILDebugPrint
     getMember<uint>(ppCallbacks, 0x60) = 0xFF;
-    auto ret = FunctionCast(wrapAtiPowerPlayServicesConstructor, callbackWRed->orgAtiPowerPlayServicesConstructor)(that, ppCallbacks);
+    auto ret = FunctionCast(wrapAtiPowerPlayServicesConstructor, callbackWRed->orgAtiPowerPlayServicesConstructor)(that,
+        ppCallbacks);
     NETLOG("wred", "AtiPowerPlayServicesConstructor returned %p", ret);
     return ret;
 }
