@@ -73,7 +73,6 @@ class WRed {
     t_sendMsgToSmcWithParam orgRenoirSendMsgToSmcWithParam = nullptr;
     mach_vm_address_t orgSmuRavenInitialize {};
     mach_vm_address_t orgSmuRenoirInitialize {};
-    mach_vm_address_t orgPspNpFwLoad {};
 
     /** X6000 */
     t_HWEngineNew orgVCN2EngineNewX6000 = nullptr;
@@ -121,7 +120,6 @@ class WRed {
     static uint32_t wrapSmuRavenInitialize(void *smumData, uint32_t param2);
     static uint32_t wrapSmuRenoirInitialize(void *smumData, uint32_t param2);
     static uint32_t pspFeatureUnsupported();
-    static uint32_t wrapPspNpFwLoad(void *pspData);
 
     /** X6000 */
     static bool wrapAccelStartX6000();

@@ -91,7 +91,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"_SmuRenoir_Initialize", wrapSmuRenoirInitialize, orgSmuRenoirInitialize},
             {"_psp_xgmi_is_support", pspFeatureUnsupported},
             {"_psp_rap_is_supported", pspFeatureUnsupported},
-            {"_psp_np_fw_load", wrapPspNpFwLoad, orgPspNpFwLoad},
             {"_psp_cos_log", wrapPspCosLog, orgPspCosLog},
             {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, orgPspCmdKmSubmit},
         };
@@ -847,14 +846,6 @@ void WRed::wrapUpdateContiguousPTEsWithDMAUsingAddr(void *that, uint64_t param1,
 void WRed::wrapInitializeFamilyType(void *that) { getMember<uint32_t>(that, 0x308) = 0x8E; }    // 0x8D -> 0x8E
 
 uint32_t WRed::pspFeatureUnsupported() { return 4; }    // PSP RAP and XGMI are unsupported
-
-uint32_t WRed::wrapPspNpFwLoad(void *pspData) {
-    // Looks like on Renoir the firmware is already loaded
-    if (callbackWRed->asicType != ASICType::Renoir) {
-        FunctionCast(wrapPspNpFwLoad, callbackWRed->orgPspNpFwLoad)(pspData);
-    }
-    return 0;
-}
 
 void *WRed::wrapAllocateAMDHWDisplay(void *that) {
     NETLOG("wred", "allocateAMDHWDisplay: that = %p", that);
