@@ -2,7 +2,7 @@
 
 
 def fix_type(type: str) -> str:
-    assert not "const" in type
+    assert "const" not in type
 
     if type in ["uchar", "byte"]:
         ret = "uint8_t"
@@ -27,7 +27,7 @@ def parse_param(param: str) -> tuple[str, str]:
     elif " " in param:
         type, name = [v.strip() for v in param.split(" ")]
     else:
-        assert False
+        raise AssertionError()
 
     return (
         fix_type(type),
@@ -51,7 +51,7 @@ def get_fmt_type(type: str) -> str:
         "IOReturn": "0x%X",
     }
 
-    if not type in table and type.endswith(" *"):
+    if type not in table and type.endswith(" *"):
         return "%p"
 
     assert type in table
@@ -77,7 +77,7 @@ def locate_line(lines: list[str], needle: str) -> int:
     for i, line in enumerate(lines):
         if needle in line:
             return i
-    assert False
+    raise AssertionError()
 
 
 cpp_path: str = "./WhateverRed/kern_wred.cpp"

@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import os
 import struct
 import sys
@@ -60,7 +61,7 @@ def process_files(target_file, dir):
             os.mkdirs(os.path.dirname(target_file))
     target_file_handle = open(target_file, "w")
     target_file_handle.write(header)
-    for root, dirs, files in os.walk(dir):
+    for root, _dirs, files in os.walk(dir):
         for file in files:
             path = os.path.join(root, file)
             write_single_file(target_file_handle, path, file)
