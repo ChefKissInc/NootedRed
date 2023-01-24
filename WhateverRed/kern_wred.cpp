@@ -845,7 +845,7 @@ void WRed::wrapInitializeFamilyType(void *that) { getMember<uint32_t>(that, 0x30
 uint32_t WRed::pspFeatureUnsupported() { return 4; }    // PSP RAP and XGMI are unsupported
 
 uint32_t WRed::wrapPspNpFwLoad(void *pspData) {
-    FunctionCast(wrapPspNpFwLoad, callbackWRed->orgPspNpFwLoad)(pspData);
+    // FunctionCast(wrapPspNpFwLoad, callbackWRed->orgPspNpFwLoad)(pspData);
     return 0;    // Looks like on Renoir the firmware is already loaded
 }
 
