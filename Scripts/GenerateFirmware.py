@@ -6,7 +6,7 @@ import sys
 header = '''
 //  WhateverRed
 //
-//  Copyright © 2022 ChefKiss Inc. All rights reserved.
+//  Copyright © 2023 ChefKiss Inc. All rights reserved.
 
 #include "kern_fw.hpp"
 '''
