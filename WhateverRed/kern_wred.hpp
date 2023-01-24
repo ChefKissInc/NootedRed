@@ -143,6 +143,4 @@ class WRed {
     static void wrapUpdateContiguousPTEsWithDMAUsingAddr(void *that, uint64_t param1, uint64_t param2, uint64_t param3,
         uint64_t param4, uint64_t param5);
     static void *wrapAllocateAMDHWDisplay(void *that);
-    mach_vm_address_t orgPspNpFwLoadWaitAndGetStatus{};
-    static uint32_t wrapPspNpFwLoadWaitAndGetStatus(void * param1, uint32_t param2, uint64_t param3);
 };
