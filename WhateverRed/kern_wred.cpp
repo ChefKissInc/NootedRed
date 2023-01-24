@@ -92,6 +92,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"_psp_xgmi_is_support", pspFeatureUnsupported},
             {"_psp_rap_is_supported", pspFeatureUnsupported},
             {"_psp_np_fw_load", wrapPspNpFwLoad, orgPspNpFwLoad},
+            {"_psp_np_fw_load_wait_and_get_status", wrapPspNpFwLoadWaitAndGetStatus, orgPspNpFwLoadWaitAndGetStatus},
         };
         PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000HWLibs symbols");
@@ -860,3 +861,11 @@ void *WRed::wrapAllocateAMDHWDisplay(void *that) {
     NETLOG("wred", "allocateAMDHWDisplay returned %p", ret);
     return ret;
 }
+
+uint32_t WRed::wrapPspNpFwLoadWaitAndGetStatus(void * param1, uint32_t param2, uint64_t param3) {
+    NETLOG("wred", "_psp_np_fw_load_wait_and_get_status: param1 = %p param2 = 0x%X param3 = 0x%llX", param1, param2, param3);
+    auto ret = FunctionCast(wrapPspNpFwLoadWaitAndGetStatus, callbackWRed->orgPspNpFwLoadWaitAndGetStatus)(param1, param2, param3);
+    NETLOG("wred", "_psp_np_fw_load_wait_and_get_status returned 0x%X. Returning 0", ret);
+    return 0;
+}
+
