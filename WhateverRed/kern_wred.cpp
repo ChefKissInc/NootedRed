@@ -820,7 +820,7 @@ uint64_t WRed::wrapGetPDEValue(void *that, uint64_t level, uint64_t param2) {
     // ret &= ~(1ULL << 56); // Unset AMDGPU_PTE_TF for PDB0
 
     // See also: https://elixir.bootlin.com/linux/latest/A/ident/amdgpu_vm_make_compute
-    ret |= (1ULL << 5); // Set AMDGPU_PTE_READABLE for ats entries
+    ret |= (1ULL << 5);    // Set AMDGPU_PTE_READABLE for ats entries
 
     return ret;
 }
@@ -863,15 +863,17 @@ void *WRed::wrapAllocateAMDHWDisplay(void *that) {
     return ret;
 }
 
-void WRed::wrapPspCosLog(void * pspData, uint32_t param2, uint64_t param3, uint32_t param4, uint64_t param5) {
-    NETLOG("wred", "_psp_cos_log: pspData = %p param2 = 0x%X param3 = 0x%llX param4 = 0x%X param5 = 0x%llX", pspData, param2, param3, param4, param5);
-    NETLOG("wred", "Message: %s", (char*)param5);
+void WRed::wrapPspCosLog(void *pspData, uint32_t param2, uint64_t param3, uint32_t param4, uint64_t param5) {
+    NETLOG("wred", "_psp_cos_log: pspData = %p param2 = 0x%X param3 = 0x%llX param4 = 0x%X param5 = 0x%llX", pspData,
+        param2, param3, param4, param5);
+    NETLOG("wred", "Message: %s", (char *)param5);
     FunctionCast(wrapPspCosLog, callbackWRed->orgPspCosLog)(pspData, param2, param3, param4, param5);
     NETLOG("wred", "_psp_cos_log finished");
 }
 
-uint32_t WRed::wrapPspCmdKmSubmit(void * pspData, void * context, void * param3, void * param4) {
-    NETLOG("wred", "_psp_cmd_km_submit: pspData = %p context = %p param3 = %p param4 = %p", pspData, context, param3, param4);
+uint32_t WRed::wrapPspCmdKmSubmit(void *pspData, void *context, void *param3, void *param4) {
+    NETLOG("wred", "_psp_cmd_km_submit: pspData = %p context = %p param3 = %p param4 = %p", pspData, context, param3,
+        param4);
     uint fwType = getMember<uint>(context, 16);
     // Skip loading of CP MEC JT2 FW on Renoir devices due to it being unsupported
     // See also: https://github.com/torvalds/linux/commit/f8f70c1371d304f42d4a1242d8abcbda807d0bed

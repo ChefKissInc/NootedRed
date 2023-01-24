@@ -143,8 +143,8 @@ class WRed {
     static void wrapUpdateContiguousPTEsWithDMAUsingAddr(void *that, uint64_t param1, uint64_t param2, uint64_t param3,
         uint64_t param4, uint64_t param5);
     static void *wrapAllocateAMDHWDisplay(void *that);
-    mach_vm_address_t orgPspCosLog{};
-    static void wrapPspCosLog(void * pspData, uint32_t param2, uint64_t param3, uint32_t param4, uint64_t param5);
-    mach_vm_address_t orgPspCmdKmSubmit{};
-    static uint32_t wrapPspCmdKmSubmit(void * pspData, void * context, void * param3, void * param4);
+    mach_vm_address_t orgPspCosLog {};
+    static void wrapPspCosLog(void *pspData, uint32_t param2, uint64_t param3, uint32_t param4, uint64_t param5);
+    mach_vm_address_t orgPspCmdKmSubmit {};
+    static uint32_t wrapPspCmdKmSubmit(void *pspData, void *context, void *param3, void *param4);
 };
