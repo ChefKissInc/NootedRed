@@ -864,7 +864,7 @@ void *WRed::wrapAllocateAMDHWDisplay(void *that) {
 
 uint32_t WRed::wrapPspNpFwLoadWaitAndGetStatus(void * param1, uint32_t param2, uint64_t param3) {
     NETLOG("wred", "_psp_np_fw_load_wait_and_get_status: param1 = %p param2 = 0x%X param3 = 0x%llX", param1, param2, param3);
-    NETLOG("wred", "_psp_np_fw_load_wait_and_get_status: returning 0", ret);
+    NETLOG("wred", "_psp_np_fw_load_wait_and_get_status: returning 0");
     return 0;
 }
 
