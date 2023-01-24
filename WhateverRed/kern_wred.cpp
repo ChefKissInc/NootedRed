@@ -864,11 +864,8 @@ void *WRed::wrapAllocateAMDHWDisplay(void *that) {
 }
 
 void WRed::wrapPspCosLog(void *pspData, uint32_t param2, uint64_t param3, uint32_t param4, uint64_t param5) {
-    NETLOG("wred", "_psp_cos_log: pspData = %p param2 = 0x%X param3 = 0x%llX param4 = 0x%X param5 = 0x%llX", pspData,
-        param2, param3, param4, param5);
-    NETLOG("wred", "Message: %s", (char *)param5);
+    NETLOG("wred", "_psp_cos_log called with message: %s", (char *)param5);
     FunctionCast(wrapPspCosLog, callbackWRed->orgPspCosLog)(pspData, param2, param3, param4, param5);
-    NETLOG("wred", "_psp_cos_log finished");
 }
 
 uint32_t WRed::wrapPspCmdKmSubmit(void *pspData, void *context, void *param3, void *param4) {
