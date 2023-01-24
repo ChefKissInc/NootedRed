@@ -4,13 +4,13 @@
 def fix_type(type: str) -> str:
     assert "const" not in type
 
-    if type in ["uchar", "byte"]:
+    if type in ["uchar", "byte", "undefined1"]:
         ret = "uint8_t"
-    elif type in ["short", "ushort"]:
+    elif type in ["short", "ushort", "undefined2"]:
         ret = "uint16_t"
-    elif type in ["int", "uint"]:
+    elif type in ["int", "uint", "undefined4"]:
         ret = "uint32_t"
-    elif type in ["long", "ulong", "ulonglong"]:
+    elif type in ["long", "ulong", "ulonglong", "undefined8"]:
         ret = "uint64_t"
     elif not type == "char *" and "*" in type:
         ret = "void *"
