@@ -135,6 +135,9 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
             {"__ZN32AMDRadeonX6000_AmdRegisterAccess11hwReadReg32Ej", wrapHwReadReg32, orgHwReadReg32},
             {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo, orgInitWithPciInfo},
+            {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer16enableControllerEv", wrapEnableController, orgEnableController},
+            {"__ZN34AMDRadeonX6000_AmdRadeonController7powerUpEv", wrapControllerPowerUp, orgControllerPowerUp},
+            {"__ZN33AMDRadeonX6000_AmdPowerPlayHelper7powerUpEv", wrapPpPowerUp, orgPpPowerUp},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size, true), "wred",
             "Failed to route AMDRadeonX6000Framebuffer symbols");
@@ -888,7 +891,7 @@ void *WRed::wrapAtiPowerPlayServicesConstructor(void *that, void *ppCallbacks) {
     return ret;
 }
 
-uint64_t WRed::wrapInitWithPciInfo(void * that, void * param1) {
+uint64_t WRed::wrapInitWithPciInfo(void *that, void *param1) {
     NETLOG("wred", "initWithPciInfo: that = %p param1 = %p", that, param1);
     auto ret = FunctionCast(wrapInitWithPciInfo, callbackWRed->orgInitWithPciInfo)(that, param1);
     NETLOG("wred", "initWithPciInfo returned 0x%llX", ret);
@@ -899,3 +902,27 @@ uint64_t WRed::wrapInitWithPciInfo(void * that, void * param1) {
 
     return ret;
 }
+
+IOReturn WRed::wrapEnableController(void * that) {
+    NETLOG("wred", "enableController: that = %p", that);
+    auto ret = FunctionCast(wrapEnableController, callbackWRed->orgEnableController)(that);
+    NETLOG("wred", "enableController returned 0x%X", ret);
+    return ret;
+}
+
+
+uint64_t WRed::wrapControllerPowerUp(void * that) {
+    NETLOG("wred", "controllerPowerUp: that = %p", that);
+    auto ret = FunctionCast(wrapControllerPowerUp, callbackWRed->orgControllerPowerUp)(that);
+    NETLOG("wred", "controllerPowerUp returned 0x%llX", ret);
+    return ret;
+}
+
+
+uint64_t WRed::wrapPpPowerUp(void * that) {
+    NETLOG("wred", "ppPowerUp: that = %p", that);
+    auto ret = FunctionCast(wrapPpPowerUp, callbackWRed->orgPpPowerUp)(that);
+    NETLOG("wred", "ppPowerUp returned 0x%llX", ret);
+    return ret;
+}
+
