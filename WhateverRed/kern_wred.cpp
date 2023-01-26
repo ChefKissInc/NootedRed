@@ -134,6 +134,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
                 orgPopulateDeviceInfo},
             {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
             {"__ZN32AMDRadeonX6000_AmdRegisterAccess11hwReadReg32Ej", wrapHwReadReg32, orgHwReadReg32},
+            {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo, orgInitWithPciInfo},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size, true), "wred",
             "Failed to route AMDRadeonX6000Framebuffer symbols");
@@ -884,5 +885,17 @@ void *WRed::wrapAtiPowerPlayServicesConstructor(void *that, void *ppCallbacks) {
     auto ret = FunctionCast(wrapAtiPowerPlayServicesConstructor, callbackWRed->orgAtiPowerPlayServicesConstructor)(that,
         ppCallbacks);
     NETLOG("wred", "AtiPowerPlayServicesConstructor returned %p", ret);
+    return ret;
+}
+
+uint64_t WRed::wrapInitWithPciInfo(void * that, void * param1) {
+    NETLOG("wred", "initWithPciInfo: that = %p param1 = %p", that, param1);
+    auto ret = FunctionCast(wrapInitWithPciInfo, callbackWRed->orgInitWithPciInfo)(that, param1);
+    NETLOG("wred", "initWithPciInfo returned 0x%llX", ret);
+
+    // Hack AMDRadeonX6000_AmdLogger to log everything
+    getMember<uint64_t>(that, 0x28) = 0xFFFFFFFFFFFFFFFFULL;
+    getMember<uint32_t>(that, 0x30) = 0xFF;
+
     return ret;
 }
