@@ -853,16 +853,15 @@ void WRed::wrapInitializeFamilyType(void *that) { getMember<uint32_t>(that, 0x30
 uint32_t WRed::pspFeatureUnsupported() { return 4; }    // PSP RAP and XGMI are unsupported
 
 void *WRed::wrapAllocateAMDHWDisplay(void *that) {
-    NETLOG("wred", "allocateAMDHWDisplay: that = %p", that);
-    auto ret = FunctionCast(wrapAllocateAMDHWDisplay, callbackWRed->orgAllocateAMDHWDisplayX6000)(that);
-    NETLOG("wred", "allocateAMDHWDisplay returned %p", ret);
-    return ret;
+    return FunctionCast(wrapAllocateAMDHWDisplay, callbackWRed->orgAllocateAMDHWDisplayX6000)(that);
 }
 
 void WRed::wrapPspCosLog(void *pspData, uint32_t param2, uint64_t param3, uint32_t param4, char *param5) {
-    auto len = strlen(param5);
-    NETDBG::nprint(param5, len);
-    if (param5[len - 1] != '\n') { NETDBG::printf("\n"); }
+    if (param5) {
+        NETDBG::printf("%s", param5);
+        auto len = strlen(param5);
+        if (!len || param5[len - 1] != '\n') { NETDBG::printf("\n"); }
+    }
     FunctionCast(wrapPspCosLog, callbackWRed->orgPspCosLog)(pspData, param2, param3, param4, param5);
 }
 
