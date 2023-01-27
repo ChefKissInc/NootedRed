@@ -1,4 +1,4 @@
-//  Copyright © 2022 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
+//  Copyright © 2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
 //  details.
 
 #include "kern_wred.hpp"
@@ -135,7 +135,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
             {"__ZN32AMDRadeonX6000_AmdRegisterAccess11hwReadReg32Ej", wrapHwReadReg32, orgHwReadReg32},
             {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo, orgInitWithPciInfo},
-            {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer16enableControllerEv", wrapEnableController, orgEnableController},
+            {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer16enableControllerEv", wrapEnableController,
+                orgEnableController},
             {"__ZN34AMDRadeonX6000_AmdRadeonController7powerUpEv", wrapControllerPowerUp, orgControllerPowerUp},
             {"__ZN33AMDRadeonX6000_AmdPowerPlayHelper7powerUpEv", wrapPpPowerUp, orgPpPowerUp},
         };
@@ -822,10 +823,7 @@ uint64_t WRed::wrapGetPDEValue(void *that, uint64_t level, uint64_t param2) {
     NETLOG("wred", "getPDEValue returned 0x%llX", ret);
 
     // See also: https://elixir.bootlin.com/linux/latest/C/ident/gmc_v9_0_get_vm_pde
-    // ret &= ~(1ULL << 56); // Unset AMDGPU_PTE_TF for PDB0
-
-    // See also: https://elixir.bootlin.com/linux/latest/A/ident/amdgpu_vm_make_compute
-    ret |= (1ULL << 5);    // Set AMDGPU_PTE_READABLE for ats entries
+    ret &= ~(1ULL << 56);    // Unset AMDGPU_PTE_TF for PDB0
 
     return ret;
 }
@@ -903,26 +901,23 @@ uint64_t WRed::wrapInitWithPciInfo(void *that, void *param1) {
     return ret;
 }
 
-IOReturn WRed::wrapEnableController(void * that) {
+IOReturn WRed::wrapEnableController(void *that) {
     NETLOG("wred", "enableController: that = %p", that);
     auto ret = FunctionCast(wrapEnableController, callbackWRed->orgEnableController)(that);
     NETLOG("wred", "enableController returned 0x%X", ret);
     return ret;
 }
 
-
-uint64_t WRed::wrapControllerPowerUp(void * that) {
+uint64_t WRed::wrapControllerPowerUp(void *that) {
     NETLOG("wred", "controllerPowerUp: that = %p", that);
     auto ret = FunctionCast(wrapControllerPowerUp, callbackWRed->orgControllerPowerUp)(that);
     NETLOG("wred", "controllerPowerUp returned 0x%llX", ret);
     return ret;
 }
 
-
-uint64_t WRed::wrapPpPowerUp(void * that) {
+uint64_t WRed::wrapPpPowerUp(void *that) {
     NETLOG("wred", "ppPowerUp: that = %p", that);
     auto ret = FunctionCast(wrapPpPowerUp, callbackWRed->orgPpPowerUp)(that);
     NETLOG("wred", "ppPowerUp returned 0x%llX", ret);
     return ret;
 }
-

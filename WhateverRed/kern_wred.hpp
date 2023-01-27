@@ -149,10 +149,10 @@ class WRed {
     static void *wrapAtiPowerPlayServicesConstructor(void *that, void *ppCallbacks);
     mach_vm_address_t orgInitWithPciInfo {};
     static uint64_t wrapInitWithPciInfo(void *that, void *param1);
-    mach_vm_address_t orgEnableController{};
-    static IOReturn wrapEnableController(void * that);
-    mach_vm_address_t orgControllerPowerUp{};
-    static uint64_t wrapControllerPowerUp(void * that);
-    mach_vm_address_t orgPpPowerUp{};
-    static uint64_t wrapPpPowerUp(void * that);
+    mach_vm_address_t orgEnableController {};
+    static IOReturn wrapEnableController(void *that);
+    mach_vm_address_t orgControllerPowerUp {};
+    static uint64_t wrapControllerPowerUp(void *that);
+    mach_vm_address_t orgPpPowerUp {};
+    static uint64_t wrapPpPowerUp(void *that);
 };
