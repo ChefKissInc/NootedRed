@@ -788,6 +788,11 @@ uint64_t WRed::wrapMapVA(void *that, uint64_t param1, void *memory, uint64_t par
     uint64_t flags) {
     NETLOG("wred", "mapVA: this = %p param1 = 0x%llX memory = %p param3 = 0x%llX sizeToMap = 0x%llX flags = 0x%llX",
         that, param1, memory, param3, sizeToMap, flags);
+    if (param1 != 0x400280000) {
+        NETLOG("wred", "mapVA: skipping");
+        return 1;
+    }
+
     auto ret = FunctionCast(wrapMapVA, callbackWRed->orgMapVA)(that, param1, memory, param3, sizeToMap, flags);
     NETLOG("wred", "mapVA returned 0x%llX", ret);
     return ret;
@@ -903,22 +908,27 @@ uint64_t WRed::wrapInitWithPciInfo(void *that, void *param1) {
 
 IOReturn WRed::wrapEnableController(void *that) {
     NETLOG("wred", "enableController: that = %p", that);
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(20000); }
+    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(500); }
     auto ret = FunctionCast(wrapEnableController, callbackWRed->orgEnableController)(that);
+    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(500); }
     NETLOG("wred", "enableController returned 0x%X", ret);
     return ret;
 }
 
 uint64_t WRed::wrapControllerPowerUp(void *that) {
     NETLOG("wred", "controllerPowerUp: that = %p", that);
+    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(500); }
     auto ret = FunctionCast(wrapControllerPowerUp, callbackWRed->orgControllerPowerUp)(that);
+    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(500); }
     NETLOG("wred", "controllerPowerUp returned 0x%llX", ret);
     return ret;
 }
 
 uint64_t WRed::wrapPpPowerUp(void *that) {
     NETLOG("wred", "ppPowerUp: that = %p", that);
+    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(500); }
     auto ret = FunctionCast(wrapPpPowerUp, callbackWRed->orgPpPowerUp)(that);
+    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(500); }
     NETLOG("wred", "ppPowerUp returned 0x%llX", ret);
     return ret;
 }
