@@ -858,7 +858,7 @@ void *WRed::wrapAllocateAMDHWDisplay(void *that) {
 
 void WRed::wrapPspCosLog(void *pspData, uint32_t param2, uint64_t param3, uint32_t param4, char *param5) {
     if (param5) {
-        NETDBG::printf("%s", param5);
+        NETDBG::printf("AMD TTL COS: %s", param5);
         auto len = strlen(param5);
         if (!len || param5[len - 1] != '\n') { NETDBG::printf("\n"); }
     }
