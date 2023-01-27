@@ -903,6 +903,7 @@ uint64_t WRed::wrapInitWithPciInfo(void *that, void *param1) {
 
 IOReturn WRed::wrapEnableController(void *that) {
     NETLOG("wred", "enableController: that = %p", that);
+    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(20000); }
     auto ret = FunctionCast(wrapEnableController, callbackWRed->orgEnableController)(that);
     NETLOG("wred", "enableController returned 0x%X", ret);
     return ret;
