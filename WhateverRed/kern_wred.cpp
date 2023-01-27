@@ -826,10 +826,6 @@ uint64_t WRed::wrapGetPDEValue(void *that, uint64_t level, uint64_t param2) {
     NETLOG("wred", "getPDEValue: this = %p level = 0x%llX param2 = 0x%llX", that, level, param2);
     auto ret = FunctionCast(wrapGetPDEValue, callbackWRed->orgGetPDEValue)(that, level, param2);
     NETLOG("wred", "getPDEValue returned 0x%llX", ret);
-
-    // See also: https://elixir.bootlin.com/linux/latest/C/ident/gmc_v9_0_get_vm_pde
-    ret &= ~(1ULL << 56);    // Unset AMDGPU_PTE_TF for PDB0
-
     return ret;
 }
 
@@ -863,14 +859,14 @@ void *WRed::wrapAllocateAMDHWDisplay(void *that) {
     return ret;
 }
 
-void WRed::wrapPspCosLog(void *pspData, uint32_t param2, uint64_t param3, uint32_t param4, uint64_t param5) {
-    NETLOG("wred", "_psp_cos_log called with message: %s", (char *)param5);
+void WRed::wrapPspCosLog(void *pspData, uint32_t param2, uint64_t param3, uint32_t param4, char *param5) {
+    auto len = strlen(param5);
+    NETDBG::nprint(param5, len);
+    if (param5[len - 1] != '\n') { NETDBG::printf("\n"); }
     FunctionCast(wrapPspCosLog, callbackWRed->orgPspCosLog)(pspData, param2, param3, param4, param5);
 }
 
 uint32_t WRed::wrapPspCmdKmSubmit(void *pspData, void *context, void *param3, void *param4) {
-    NETLOG("wred", "_psp_cmd_km_submit: pspData = %p context = %p param3 = %p param4 = %p", pspData, context, param3,
-        param4);
     uint fwType = getMember<uint>(context, 16);
     // Skip loading of CP MEC JT2 FW on Renoir devices due to it being unsupported
     // See also: https://github.com/torvalds/linux/commit/f8f70c1371d304f42d4a1242d8abcbda807d0bed
@@ -884,25 +880,17 @@ uint32_t WRed::wrapPspCmdKmSubmit(void *pspData, void *context, void *param3, vo
     return ret;
 }
 
-void *WRed::wrapAtiPowerPlayServicesConstructor(void *that, void *ppCallbacks) {
-    NETLOG("wred", "AtiPowerPlayServicesConstructor: that = %p ppCallbacks = %p", that, ppCallbacks);
-    // Set debugLevel in order to activate _MCILDebugPrint
-    getMember<uint>(ppCallbacks, 0x60) = 0xFF;
-    auto ret = FunctionCast(wrapAtiPowerPlayServicesConstructor, callbackWRed->orgAtiPowerPlayServicesConstructor)(that,
+void WRed::wrapAtiPowerPlayServicesConstructor(void *that, void *ppCallbacks) {
+    getMember<uint32_t>(ppCallbacks, 0x60) = 0xFF;    // Set debugLevel in order to activate _MCILDebugPrint
+    FunctionCast(wrapAtiPowerPlayServicesConstructor, callbackWRed->orgAtiPowerPlayServicesConstructor)(that,
         ppCallbacks);
-    NETLOG("wred", "AtiPowerPlayServicesConstructor returned %p", ret);
-    return ret;
 }
 
-uint64_t WRed::wrapInitWithPciInfo(void *that, void *param1) {
-    NETLOG("wred", "initWithPciInfo: that = %p param1 = %p", that, param1);
+bool WRed::wrapInitWithPciInfo(void *that, void *param1) {
     auto ret = FunctionCast(wrapInitWithPciInfo, callbackWRed->orgInitWithPciInfo)(that, param1);
-    NETLOG("wred", "initWithPciInfo returned 0x%llX", ret);
-
     // Hack AMDRadeonX6000_AmdLogger to log everything
     getMember<uint64_t>(that, 0x28) = 0xFFFFFFFFFFFFFFFFULL;
     getMember<uint32_t>(that, 0x30) = 0xFF;
-
     return ret;
 }
 

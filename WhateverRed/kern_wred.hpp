@@ -146,9 +146,9 @@ class WRed {
     mach_vm_address_t orgPspCmdKmSubmit {};
     static uint32_t wrapPspCmdKmSubmit(void *pspData, void *context, void *param3, void *param4);
     mach_vm_address_t orgAtiPowerPlayServicesConstructor {};
-    static void *wrapAtiPowerPlayServicesConstructor(void *that, void *ppCallbacks);
+    static void wrapAtiPowerPlayServicesConstructor(void *that, void *ppCallbacks);
     mach_vm_address_t orgInitWithPciInfo {};
-    static uint64_t wrapInitWithPciInfo(void *that, void *param1);
+    static bool wrapInitWithPciInfo(void *that, void *param1);
     mach_vm_address_t orgEnableController {};
     static IOReturn wrapEnableController(void *that);
     mach_vm_address_t orgControllerPowerUp {};
