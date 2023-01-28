@@ -681,7 +681,7 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
 uint32_t WRed::wrapSmuGetFwConstants([[maybe_unused]] void *param1) { return 0; }    // SMC firmware's already loaded
 uint32_t WRed::wrapSmuInternalHwInit([[maybe_unused]] void *param1) { return 0; }    // Don't wait for firmware load
 uint32_t WRed::wrapGetVideoMemoryType([[maybe_unused]] void *that) { return 4; }     // DDR4
-uint32_t WRed::wrapGetVideoMemoryBitWidth([[maybe_unused]] void *that) { return 64; }    // 64 bits
+uint32_t WRed::wrapGetVideoMemoryBitWidth([[maybe_unused]] void *that) { return 128; }    // 128 bits
 IOReturn WRed::wrapPopulateVramInfo([[maybe_unused]] void *that) { return kIOReturnSuccess; }
 
 /**
