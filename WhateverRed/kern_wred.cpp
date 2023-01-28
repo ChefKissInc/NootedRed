@@ -112,7 +112,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
              * The patch corrects the sent message to `0x1E`;
              * the original code sends `0x3B`, which is wrong for SMU 10.
              */
-            {&kextRadeonX5000HWLibs, find_asic_reset, repl_asic_reset, arrsize(find_asic_reset), 2},
+            {&kextRadeonX5000HWLibs, find_asic_reset, repl_asic_reset, arrsize(find_asic_reset), 1},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
@@ -169,14 +169,14 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
 
         KernelPatcher::LookupPatch patches[] = {
             /** Neutralise VRAM Info creation null check to proceed with Controller Core Services initialisation. */
-            {&kextRadeonX6000Framebuffer, find_null_check1, repl_null_check1, arrsize(find_null_check1), 2},
+            {&kextRadeonX6000Framebuffer, find_null_check1, repl_null_check1, arrsize(find_null_check1), 1},
 
             /** Neutralise PSP Firmware Info creation null check to proceed with Controller Core Services
                initialisation. */
-            {&kextRadeonX6000Framebuffer, find_null_check2, repl_null_check2, arrsize(find_null_check2), 2},
+            {&kextRadeonX6000Framebuffer, find_null_check2, repl_null_check2, arrsize(find_null_check2), 1},
 
             /** Neutralise VRAM Info null check inside `AmdAtomFwServices::getFirmwareInfo`. */
-            {&kextRadeonX6000Framebuffer, find_null_check3, repl_null_check3, arrsize(find_null_check3), 2},
+            {&kextRadeonX6000Framebuffer, find_null_check3, repl_null_check3, arrsize(find_null_check3), 1},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
@@ -241,14 +241,14 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
              * `AMDRadeonX5000_AMDHardware::startHWEngines`
              * Make for loop stop at 1 instead of 2 in order to skip starting SDMA1 engine.
              */
-            {&kextRadeonX5000, find_startHWEngines, repl_startHWEngines, arrsize(find_startHWEngines), 2},
+            {&kextRadeonX5000, find_startHWEngines, repl_startHWEngines, arrsize(find_startHWEngines), 1},
 
             /**
              * `AMDRadeonX5000_AMDGFX9SDMAChannel::init`
              * Field 0x98 somehow tells the scheduler to wait for VMPT before sending user SDMA commands.
              * Invert the check to set the SDMA1 value when on SDMA0.
              */
-            {&kextRadeonX5000, find_sdmachannel_init, repl_sdmachannel_init, arrsize(find_sdmachannel_init), 2},
+            {&kextRadeonX5000, find_sdmachannel_init, repl_sdmachannel_init, arrsize(find_sdmachannel_init), 1},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
