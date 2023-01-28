@@ -139,6 +139,12 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
                 orgEnableController},
             {"__ZN34AMDRadeonX6000_AmdRadeonController7powerUpEv", wrapControllerPowerUp, orgControllerPowerUp},
             {"__ZN33AMDRadeonX6000_AmdPowerPlayHelper7powerUpEv", wrapPpPowerUp, orgPpPowerUp},
+            {"__ZN27AMDRadeonX6000_AmdDalHelper7powerUpEv", wrapDalHelperPowerUp, orgDalHelperPowerUp},
+            {"__ZN38AMDRadeonX6000_AmdRadeonControllerNavi19setupBootWatermarksEv", wrapSetupBootWatermarks,
+                orgSetupBootWatermarks},
+            {"__ZN34AMDRadeonX6000_AmdRadeonController10setupLinksEv", wrapSetupLinks, orgSetupLinks},
+            {"__ZNK34AMDRadeonX6000_AmdRadeonController18messageAcceleratorE25_eAMDAccelIOFBRequestTypePvS1_S1_",
+                wrapMessageAccelerator, orgMessageAccelerator},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size, true), "wred",
             "Failed to route AMDRadeonX6000Framebuffer symbols");
@@ -889,9 +895,11 @@ bool WRed::wrapInitWithPciInfo(void *that, void *param1) {
 }
 
 IOReturn WRed::wrapEnableController(void *that) {
+    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
     NETLOG("wred", "enableController: that = %p", that);
     auto ret = FunctionCast(wrapEnableController, callbackWRed->orgEnableController)(that);
     NETLOG("wred", "enableController returned 0x%X", ret);
+    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
     return ret;
 }
 
@@ -899,14 +907,49 @@ uint64_t WRed::wrapControllerPowerUp(void *that) {
     NETLOG("wred", "controllerPowerUp: that = %p", that);
     auto ret = FunctionCast(wrapControllerPowerUp, callbackWRed->orgControllerPowerUp)(that);
     NETLOG("wred", "controllerPowerUp returned 0x%llX", ret);
+    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
     return ret;
 }
 
 uint64_t WRed::wrapPpPowerUp(void *that) {
     NETLOG("wred", "ppPowerUp: that = %p", that);
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
     auto ret = FunctionCast(wrapPpPowerUp, callbackWRed->orgPpPowerUp)(that);
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
     NETLOG("wred", "ppPowerUp returned 0x%llX", ret);
+    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
+    return ret;
+}
+
+uint64_t WRed::wrapDalHelperPowerUp(void *that) {
+    NETLOG("wred", "dalHelperPowerUp: that = %p", that);
+    auto ret = FunctionCast(wrapDalHelperPowerUp, callbackWRed->orgDalHelperPowerUp)(that);
+    NETLOG("wred", "dalHelperPowerUp returned 0x%llX", ret);
+    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
+    return ret;
+}
+
+uint64_t WRed::wrapSetupBootWatermarks(void *that) {
+    NETLOG("wred", "setupBootWatermarks: that = %p", that);
+    auto ret = FunctionCast(wrapSetupBootWatermarks, callbackWRed->orgSetupBootWatermarks)(that);
+    NETLOG("wred", "setupBootWatermarks returned 0x%llX", ret);
+    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
+    return ret;
+}
+
+uint32_t WRed::wrapSetupLinks(void *that) {
+    NETLOG("wred", "setupLinks: that = %p", that);
+    auto ret = FunctionCast(wrapSetupLinks, callbackWRed->orgSetupLinks)(that);
+    NETLOG("wred", "setupLinks returned 0x%X", ret);
+    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
+    return ret;
+}
+
+uint64_t WRed::wrapMessageAccelerator(void *that, uint32_t param1, void *param2, void *param3, void *param4) {
+    NETLOG("wred", "messageAccelerator: that = %p param1 = 0x%X param2 = %p param3 = %p param4 = %p", that, param1,
+        param2, param3, param4);
+    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
+    auto ret =
+        FunctionCast(wrapMessageAccelerator, callbackWRed->orgMessageAccelerator)(that, param1, param2, param3, param4);
+    NETLOG("wred", "messageAccelerator returned 0x%llX", ret);
+    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
     return ret;
 }
