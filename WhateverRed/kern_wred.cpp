@@ -830,10 +830,10 @@ uint64_t WRed::wrapGetPDEValue(void *that, uint64_t level, uint64_t param2) {
     return ret;
 }
 
-uint64_t WRed::wrapGetPTEValue(void *that, uint64_t param1, uint64_t param2, uint64_t param3, uint32_t param4) {
-    NETLOG("wred", "getPTEValue: this = %p param1 = 0x%llX param2 = 0x%llX param3 = 0x%llX param4 = 0x%X", that, param1,
+uint64_t WRed::wrapGetPTEValue(void *that, uint64_t level, uint64_t param2, uint64_t param3, uint32_t param4) {
+    NETLOG("wred", "getPTEValue: this = %p level = 0x%llX param2 = 0x%llX param3 = 0x%llX param4 = 0x%X", that, level,
         param2, param3, param4);
-    auto ret = FunctionCast(wrapGetPTEValue, callbackWRed->orgGetPTEValue)(that, param1, param2, param3, param4);
+    auto ret = FunctionCast(wrapGetPTEValue, callbackWRed->orgGetPTEValue)(that, level, param2, param3, param4);
     NETLOG("wred", "getPTEValue returned 0x%llX", ret);
     return ret;
 }

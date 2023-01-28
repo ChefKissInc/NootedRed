@@ -137,7 +137,7 @@ class WRed {
     static uint32_t wrapWriteWritePTEPDECommand(void *that, uint32_t *buf, uint64_t pe, uint32_t count, uint64_t flags,
         uint64_t addr, uint64_t incr);
     static uint64_t wrapGetPDEValue(void *that, uint64_t level, uint64_t param2);
-    static uint64_t wrapGetPTEValue(void *that, uint64_t param1, uint64_t param2, uint64_t param3, uint32_t param4);
+    static uint64_t wrapGetPTEValue(void *that, uint64_t level, uint64_t param2, uint64_t param3, uint32_t param4);
     static void wrapUpdateContiguousPTEsWithDMAUsingAddr(void *that, uint64_t param1, uint64_t param2, uint64_t param3,
         uint64_t param4, uint64_t param5);
     static void *wrapAllocateAMDHWDisplay(void *that);
