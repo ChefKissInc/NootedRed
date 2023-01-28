@@ -788,11 +788,6 @@ uint64_t WRed::wrapMapVA(void *that, uint64_t param1, void *memory, uint64_t par
     uint64_t flags) {
     NETLOG("wred", "mapVA: this = %p param1 = 0x%llX memory = %p param3 = 0x%llX sizeToMap = 0x%llX flags = 0x%llX",
         that, param1, memory, param3, sizeToMap, flags);
-    if (param1 != 0x400280000) {
-        NETLOG("wred", "mapVA: skipping");
-        return 1;
-    }
-
     auto ret = FunctionCast(wrapMapVA, callbackWRed->orgMapVA)(that, param1, memory, param3, sizeToMap, flags);
     NETLOG("wred", "mapVA returned 0x%llX", ret);
     return ret;
@@ -866,7 +861,7 @@ void WRed::wrapPspCosLog(void *pspData, uint32_t param2, uint64_t param3, uint32
 }
 
 uint32_t WRed::wrapPspCmdKmSubmit(void *pspData, void *context, void *param3, void *param4) {
-    uint fwType = getMember<uint>(context, 16);
+    uint32_t fwType = getMember<uint>(context, 16);
     // Skip loading of CP MEC JT2 FW on Renoir devices due to it being unsupported
     // See also: https://github.com/torvalds/linux/commit/f8f70c1371d304f42d4a1242d8abcbda807d0bed
     if (fwType == 6 && callbackWRed->asicType == ASICType::Renoir) {
