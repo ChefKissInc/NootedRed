@@ -86,7 +86,6 @@ class WRed {
     t_HWEngineNew orgGFX9SDMAEngineNew = nullptr;
     t_HWEngineConstructor orgGFX9SDMAEngineConstructor = nullptr;
     mach_vm_address_t orgSetupAndInitializeHWCapabilities {};
-    mach_vm_address_t orgAccelDisplayPipeWriteDiagnosisReport {};
     mach_vm_address_t orgRTGetHWChannel {};
     mach_vm_address_t orgMapVA {};
     mach_vm_address_t orgMapVMPT {};
@@ -125,7 +124,6 @@ class WRed {
     /** X5000 */
     static bool wrapAllocateHWEngines(void *that);
     static void wrapSetupAndInitializeHWCapabilities(void *that);
-    static void wrapAccelDisplayPipeWriteDiagnosisReport();
     static void *wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3);
     static void wrapInitializeFamilyType(void *that);
     static uint64_t wrapMapVA(void *that, uint64_t param1, void *memory, uint64_t param3, uint64_t sizeToMap,
