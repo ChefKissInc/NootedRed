@@ -6,7 +6,7 @@ The Source Code of this Original Work is licensed under the `Thou Shalt Not Prof
 
 ## ⚠️ IMPORTANT ⚠️
 
-This kernel extension includes remote debugging logging functionality through our custom "NetDbg" software. You must specify a valid NetDbg server IP or disable the functionality as described below.
+This kernel extension currently contains remote debug log functionality through our custom "NetDbg" software. You must specify a valid NetDbg server IP or disable the functionality as described below.
 
 WhateverRed NetDbg is a custom remote debug log service, which sends raw data over TCP. The first version, created in Python by [@NyanCatTW1](https://github.com/NyanCatTW1), was primitive and often unstable. The current release, developed in Rust by project lead [@ChefKissInc](https://github.com/ChefKissInc), is more stable, and has a lot more features (Like a GUI).
 
