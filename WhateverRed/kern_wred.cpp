@@ -1017,6 +1017,24 @@ uint64_t WRed::wrapGvmGetIpFunction(uint16_t major, uint16_t minor, uint16_t pat
     NETLOG("wred",
         "_gvm_get_ip_function: major = 0x%hX minor = 0x%hX patch = 0x%hX funcType = 0x%X funcTable = %p ipType = 0x%X",
         major, minor, patch, funcType, funcTable, ipType);
+    if (ipType == 0xF) {
+        switch (callbackWRed->asicType) {
+            case ASICType::Raven2:
+                major = 0x6;
+                minor = 0x1;
+                patch = 0x0;
+                NETLOG("wred", "_gvm_get_ip_function: Changing MC version to v6.1.0");
+                break;
+            case ASICType::Raven:
+                major = 0x6;
+                minor = 0x0;
+                patch = 0x0;
+                NETLOG("wred", "_gvm_get_ip_function: Changing MC version to v6.0.0");
+                break;
+            default:
+                break;
+        }
+    }
     auto ret = FunctionCast(wrapGvmGetIpFunction, callbackWRed->orgGvmGetIpFunction)(major, minor, patch, funcType,
         funcTable, ipType);
     NETLOG("wred", "_gvm_get_ip_function returned 0x%llX", ret);
