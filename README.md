@@ -38,7 +38,7 @@ We are a team of three working on getting graphics acceleration for AMD iGPUs (R
 - However, the data being fed to the Virtual Memory Page Table (VMPT) is likely incorrect, causing Page Faults in both GFX and ME as soon as WindowServer tries to clear the video memory.
 - We are investigating the cause of the Page Faults and will eventually fix it.
 
-## **ETA**
+## ETA?
 
 Unknown, the project will be completed when it is done.
 
