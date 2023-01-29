@@ -166,4 +166,8 @@ class WRed {
     mach_vm_address_t orgGvmGetIpFunction {};
     static uint64_t wrapGvmGetIpFunction(uint16_t major, uint16_t minor, uint16_t patch, uint32_t funcType,
         void *funcTable, uint32_t ipType);
+    mach_vm_address_t orgGetVMPTBCoverage {};
+    static uint64_t wrapGetVMPTBCoverage(void *that);
+    mach_vm_address_t orgHwRegWrite {};
+    static void wrapHwRegWrite(void *that, uint32_t regIndex, uint32_t regVal);
 };
