@@ -24,7 +24,7 @@ The WhateverRed kext is licensed under BSD-3.
 
 This project is under active research and development and is not yet functional but close to being so. Its goal is to enable AMD iGPU support for Renoir/Raven(2)/Renoir and their derivatives, such as Picasso. However, due to the complexity of GPU drivers, especially those without public source code, extended support for non-existent logic is not possible. As a result, you must use Catalina (minimum) to Big Sur (recommended) since some required iGPU logic has been removed in Monterey.
 
-Injecting kernel extensions is not possible during the OpenCore injection stage.
+Injecting kernel extensions is not possible during the OpenCore injection stage. This is because the prelink injection fails for kernel extensions of this type, as the libraries used for them are not contained in the Boot kernel cache, which is where OpenCore injects kexts to. Instead, they're contained in the Auxiliary kernel cache.
 
 
 ## **Introduction**
