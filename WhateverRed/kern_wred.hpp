@@ -159,13 +159,6 @@ class WRed {
     static uint32_t wrapSetupLinks(void *that);
     mach_vm_address_t orgMessageAccelerator {};
     static uint64_t wrapMessageAccelerator(void *that, uint32_t param1, void *param2, void *param3, void *param4);
-    mach_vm_address_t orgVMMInit {};
-    static bool wrapVMMInit(void *that, void *param1);
-    mach_vm_address_t orgGvmGetIpFunction {};
-    static uint64_t wrapGvmGetIpFunction(uint16_t major, uint16_t minor, uint16_t patch, uint32_t funcType,
-        void *funcTable, uint32_t ipType);
-    mach_vm_address_t orgGetVMPTBCoverage {};
-    static uint64_t wrapGetVMPTBCoverage(void *that);
     mach_vm_address_t orgHwRegWrite {};
     static void wrapHwRegWrite(void *that, uint32_t regIndex, uint32_t regVal);
 };

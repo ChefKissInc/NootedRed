@@ -95,7 +95,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, orgPspCmdKmSubmit},
             {"__ZN20AtiPowerPlayServicesC2EP18PowerPlayCallbacks", wrapAtiPowerPlayServicesConstructor,
                 orgAtiPowerPlayServicesConstructor},
-            {"_gvm_get_ip_function", wrapGvmGetIpFunction, orgGvmGetIpFunction},
         };
         PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000HWLibs symbols");
@@ -219,8 +218,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
                 wrapUpdateContiguousPTEsWithDMAUsingAddr, orgUpdateContiguousPTEsWithDMAUsingAddr},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20initializeFamilyTypeEv", wrapInitializeFamilyType},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20allocateAMDHWDisplayEv", wrapAllocateAMDHWDisplay},
-            {"__ZN25AMDRadeonX5000_AMDGFX9VMM4initEP30AMDRadeonX5000_IAMDHWInterface", wrapVMMInit, orgVMMInit},
-            {"__ZN23AMDRadeonX5000_AMDHWVMM16getVMPTBCoverageEv", wrapGetVMPTBCoverage, orgGetVMPTBCoverage},
             {"__ZN29AMDRadeonX5000_AMDHWRegisters5writeEjj", wrapHwRegWrite, orgHwRegWrite},
         };
         PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
@@ -236,20 +233,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             0x00, 0xff, 0x0f, 0x44, 0xc8};
         static_assert(sizeof(find_sdmachannel_init) == sizeof(repl_sdmachannel_init), "Find/replace size mismatch");
 
-        constexpr uint8_t find_VMMInit[] = {0x48, 0x89, 0x84, 0x0B, 0xD0, 0x0A, 0x00, 0x00, 0x89, 0x94, 0x0B, 0xDC,
-            0x0A, 0x00, 0x00, 0x89, 0xD6, 0xC1, 0xE2, 0x03, 0x89, 0x94, 0x0B, 0xE0, 0x0A, 0x00, 0x00};
-        constexpr uint8_t repl_VMMInit[] = {0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90,
-            0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x90};
-        static_assert(sizeof(find_VMMInit) == sizeof(repl_VMMInit), "Find/replace size mismatch");
-
-        constexpr uint8_t find_VMMInit2[] = {0x75, 0xd2, 0x48, 0xc7, 0x83, 0xf0, 0x0a, 0x00, 0x00, 0x00, 0x10, 0x00,
-            0x00, 0x48, 0xb8, 0x10, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x48, 0x89, 0x83, 0xfc, 0x0a, 0x00, 0x00,
-            0x4c, 0x8d, 0x05, 0xc1, 0x89, 0x08, 0x00};
-        constexpr uint8_t repl_VMMInit2[] = {0x75, 0xd2, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90,
-            0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90,
-            0x4c, 0x8d, 0x05, 0xc1, 0x89, 0x08, 0x00};
-        static_assert(sizeof(find_VMMInit2) == sizeof(repl_VMMInit2), "Find/replace size mismatch");
-
         KernelPatcher::LookupPatch patches[] = {
             /**
              * `AMDRadeonX5000_AMDHardware::startHWEngines`
@@ -263,12 +246,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
              * Invert the check to set the SDMA1 value when on SDMA0.
              */
             {&kextRadeonX5000, find_sdmachannel_init, repl_sdmachannel_init, arrsize(find_sdmachannel_init), 1},
-            /**
-             * `AMDRadeonX5000_AMDGFX9VMM::init`
-             * NOP out part of the vmptConfig setting logic, in order not to override the value set in wrapVMMInit.
-             */
-            {&kextRadeonX5000, find_VMMInit, repl_VMMInit, arrsize(find_VMMInit), 1},
-            {&kextRadeonX5000, find_VMMInit2, repl_VMMInit2, arrsize(find_VMMInit2), 1},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
@@ -954,46 +931,6 @@ uint64_t WRed::wrapMessageAccelerator(void *that, uint32_t param1, void *param2,
     return ret;
 }
 
-// {incr, entryCount, vmBlockSize}
-static uint64_t oneLevelVMPTConfig[][3] = {
-    {0x1000, 0x400000, 0x2000000},
-    {0x1000, 0x200, 0x1000},
-    {0x1000, 0x200, 0x1000},
-};
-
-static uint64_t twoLevelVMPTConfig[][3] = {
-    {0x10000000, 0x200, 0x1000},
-    {0x1000, 0x10000, 0x80000},
-    {0x1000, 0x200, 0x1000},
-};
-
-// Inferred from the Linux codebase
-static uint64_t threeLevelVMPTConfig[][3] = {
-    {0x40000000, 0x80, 0x1000},
-    {0x200000, 0x200, 0x1000},
-    {0x1000, 0x200, 0x1000},
-};
-
-bool WRed::wrapVMMInit(void *that, void *param1) {
-    NETLOG("rad", "VMMInit: this = %p param1 = %p", that, param1);
-
-    for (size_t level = 0; level < 3; level++) {
-        getMember<uint64_t>(that, 0xAB0 + 0x20 * level) = oneLevelVMPTConfig[level][0];
-        getMember<uint32_t>(that, 0xAB0 + 0x20 * level + 0xC) = static_cast<uint32_t>(oneLevelVMPTConfig[level][1]);
-        getMember<uint32_t>(that, 0xAB0 + 0x20 * level + 0x10) = static_cast<uint32_t>(oneLevelVMPTConfig[level][2]);
-    }
-
-    auto ret = FunctionCast(wrapVMMInit, callbackWRed->orgVMMInit)(that, param1);
-    getMember<uint64_t>(that, 0xAA8) = 0x800000000;    // rangeEnd
-    getMember<uint32_t>(that, 0xB30) = 1;              // vmptLevels
-    getMember<uint32_t>(that, 0xB34) = 0;              // vmptDepth
-
-    NETLOG("rad", "VMMInit returned %d", ret);
-
-    getMember<mach_vm_address_t *>(that, 0)[56] = reinterpret_cast<mach_vm_address_t>(wrapGetVMPTBCoverage);
-    return ret;
-}
-
 uint64_t WRed::wrapGetPDEValue(void *that, uint64_t level, uint64_t param2) {
     NETLOG("wred", "getPDEValue: this = %p level = 0x%llX param2 = 0x%llX", that, level, param2);
     auto ret = FunctionCast(wrapGetPDEValue, callbackWRed->orgGetPDEValue)(that, level, param2);
@@ -1013,42 +950,6 @@ uint64_t WRed::wrapGetPTEValue(void *that, uint64_t level, uint64_t param2, uint
         param2, param3, param4);
     auto ret = FunctionCast(wrapGetPTEValue, callbackWRed->orgGetPTEValue)(that, level, param2, param3, param4);
     NETLOG("wred", "getPTEValue returned 0x%llX", ret);
-    return ret;
-}
-
-uint64_t WRed::wrapGvmGetIpFunction(uint16_t major, uint16_t minor, uint16_t patch, uint32_t funcType, void *funcTable,
-    uint32_t ipType) {
-    NETLOG("wred",
-        "_gvm_get_ip_function: major = 0x%hX minor = 0x%hX patch = 0x%hX funcType = 0x%X funcTable = %p ipType = 0x%X",
-        major, minor, patch, funcType, funcTable, ipType);
-    if (ipType == 0xF) {
-        switch (callbackWRed->asicType) {
-            case ASICType::Raven2:
-                major = 0x6;
-                minor = 0x1;
-                patch = 0x0;
-                NETLOG("wred", "_gvm_get_ip_function: Changing MC version to v6.1.0");
-                break;
-            case ASICType::Raven:
-                major = 0x6;
-                minor = 0x0;
-                patch = 0x0;
-                NETLOG("wred", "_gvm_get_ip_function: Changing MC version to v6.0.0");
-                break;
-            default:
-                break;
-        }
-    }
-    auto ret = FunctionCast(wrapGvmGetIpFunction, callbackWRed->orgGvmGetIpFunction)(major, minor, patch, funcType,
-        funcTable, ipType);
-    NETLOG("wred", "_gvm_get_ip_function returned 0x%llX", ret);
-    return ret;
-}
-
-uint64_t WRed::wrapGetVMPTBCoverage(void *that) {
-    uint block_size = 0;
-    uint64_t ret = 1ULL << (21 + block_size);
-    NETLOG("wred", "getVMPTBCoverage: Returning 0x%llX", ret);
     return ret;
 }
 
