@@ -62,7 +62,7 @@ We do not provide support for EFI setup, please follow the AMD section of the Do
 - Everything starts out well and the AMD driver even congratulates us with the following message: `[3:0:0]: Controller is enabled, finish initialization`.
 - However, as soon as WindowServer tries to zero the video memory, Page Faults occur and cause the SDMA0 and GFX engines halt, because they fail to read the IB (buffer that contains commands).
 - The AMD driver will attempt to reset the GFX/SDMA0 channels every minute, but the Page Faults persist.
-- This results in a black screen for a few minutes, before the machine eventually restarts due to the driver failing to properly reset the channels.
+- This results in a black screen for a few minutes, before the machine eventually restarts due to a watchdog timeout because WindowServer fails to check in success.
 
 Note: The X6000 branch has been abandoned for now.
 
