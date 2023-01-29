@@ -1038,6 +1038,9 @@ uint64_t WRed::wrapGvmGetIpFunction(uint16_t major, uint16_t minor, uint16_t pat
 }
 
 uint64_t WRed::wrapGetVMPTBCoverage(void *that) {
+    static uint32_t callCount = 0;
+    callCount++;
+    if (callCount > 10) { PANIC("wred", "Meow"); }
     uint block_size = 0;
     uint64_t ret = 1ULL << (21 + block_size);
     NETLOG("wred", "getVMPTBCoverage: Returning 0x%llX", ret);
