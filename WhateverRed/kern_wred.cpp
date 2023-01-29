@@ -476,9 +476,9 @@ void WRed::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
     FunctionCast(wrapAmdTtlServicesConstructor, callbackWRed->orgAmdTtlServicesConstructor)(that, provider);
 }
 
-uint64_t WRed::wrapSmuGetHwVersion(uint64_t param1, uint32_t param2) {
+uint32_t WRed::wrapSmuGetHwVersion(uint64_t param1, uint32_t param2) {
     auto ret = FunctionCast(wrapSmuGetHwVersion, callbackWRed->orgSmuGetHwVersion)(param1, param2);
-    NETLOG("wred", "_smu_get_hw_version returned 0x%llX", ret);
+    NETLOG("wred", "_smu_get_hw_version returned 0x%X", ret);
     switch (ret) {
         case 0x2:
             NETLOG("wred", "Spoofing SMU v10 to v9.0.1");
@@ -493,7 +493,7 @@ uint64_t WRed::wrapSmuGetHwVersion(uint64_t param1, uint32_t param2) {
     }
 }
 
-uint64_t WRed::wrapPspSwInit(uint32_t *param1, uint32_t *param2) {
+uint32_t WRed::wrapPspSwInit(uint32_t *param1, uint32_t *param2) {
     switch (param1[3]) {
         case 0xA:
             [[fallthrough]];
@@ -509,7 +509,7 @@ uint64_t WRed::wrapPspSwInit(uint32_t *param1, uint32_t *param2) {
             break;
     }
     auto ret = FunctionCast(wrapPspSwInit, callbackWRed->orgPspSwInit)(param1, param2);
-    NETLOG("wred", "_psp_sw_init returned 0x%llX", ret);
+    NETLOG("wred", "_psp_sw_init returned 0x%X", ret);
     return ret;
 }
 
