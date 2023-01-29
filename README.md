@@ -1,6 +1,6 @@
 # WhateverRed
 
-An AMD iGPU support plugin for Lilu.
+An AMD iGPU support plugin for [Lilu](https://github.com/acidanthera/Lilu).
 
 The Source Code of this Original Work is licensed under the `Thou Shalt Not Profit License version 1.0`. See `LICENSE`
 
