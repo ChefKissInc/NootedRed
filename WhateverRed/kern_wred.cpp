@@ -957,11 +957,14 @@ uint64_t WRed::wrapMessageAccelerator(void *that, uint32_t param1, void *param2,
 // {incr, entryCount, vmBlockSize}
 static uint64_t oneLevelVMPTConfig[][3] = {
     {0x1000, 0x400000, 0x2000000},
+    {0x1000, 0x200, 0x1000},
+    {0x1000, 0x200, 0x1000},
 };
 
 static uint64_t twoLevelVMPTConfig[][3] = {
     {0x10000000, 0x200, 0x1000},
     {0x1000, 0x10000, 0x80000},
+    {0x1000, 0x200, 0x1000},
 };
 
 // Inferred from the Linux codebase
@@ -974,7 +977,7 @@ static uint64_t threeLevelVMPTConfig[][3] = {
 bool WRed::wrapVMMInit(void *that, void *param1) {
     NETLOG("rad", "VMMInit: this = %p param1 = %p", that, param1);
 
-    for (size_t level = 0; level < 1; level++) {
+    for (size_t level = 0; level < 3; level++) {
         getMember<uint64_t>(that, 0xAB0 + 0x20 * level) = oneLevelVMPTConfig[level][0];
         getMember<uint32_t>(that, 0xAB0 + 0x20 * level + 0xC) = static_cast<uint32_t>(oneLevelVMPTConfig[level][1]);
         getMember<uint32_t>(that, 0xAB0 + 0x20 * level + 0x10) = static_cast<uint32_t>(oneLevelVMPTConfig[level][2]);
