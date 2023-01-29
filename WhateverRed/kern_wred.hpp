@@ -163,4 +163,6 @@ class WRed {
     static uint32_t wrapSetupLinks(void *that);
     mach_vm_address_t orgMessageAccelerator {};
     static uint64_t wrapMessageAccelerator(void *that, uint32_t param1, void *param2, void *param3, void *param4);
+    mach_vm_address_t orgVMMInit {};
+    static bool wrapVMMInit(void *that, void *param1);
 };
