@@ -42,7 +42,7 @@ We are a team of three working on getting graphics acceleration for AMD iGPUs (R
 
 Unknown, the project will be completed when it is done.
 
-## **Installation**
+## macOS Installation on laptops
 
 It may be possible to install macOS on your laptop, but without graphics acceleration and the touchpad may not work.
 
