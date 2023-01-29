@@ -95,6 +95,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, orgPspCmdKmSubmit},
             {"__ZN20AtiPowerPlayServicesC2EP18PowerPlayCallbacks", wrapAtiPowerPlayServicesConstructor,
                 orgAtiPowerPlayServicesConstructor},
+            {"_gvm_get_ip_function", wrapGvmGetIpFunction, orgGvmGetIpFunction},
         };
         PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000HWLibs symbols");
@@ -988,5 +989,15 @@ uint64_t WRed::wrapGetPTEValue(void *that, uint64_t level, uint64_t param2, uint
         param2, param3, param4);
     auto ret = FunctionCast(wrapGetPTEValue, callbackWRed->orgGetPTEValue)(that, level, param2, param3, param4);
     NETLOG("wred", "getPTEValue returned 0x%llX", ret);
+    return ret;
+}
+uint64_t WRed::wrapGvmGetIpFunction(uint16_t major, uint16_t minor, uint16_t patch, uint32_t funcType, void *funcTable,
+    uint32_t ipType) {
+    NETLOG("wred",
+        "_gvm_get_ip_function: major = 0x%hX minor = 0x%hX patch = 0x%hX funcType = 0x%X funcTable = %p ipType = 0x%X",
+        major, minor, patch, funcType, funcTable, ipType);
+    auto ret = FunctionCast(wrapGvmGetIpFunction, callbackWRed->orgGvmGetIpFunction)(major, minor, patch, funcType,
+        funcTable, ipType);
+    NETLOG("wred", "_gvm_get_ip_function returned 0x%llX", ret);
     return ret;
 }
