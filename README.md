@@ -55,7 +55,7 @@ We do not provide support for EFI setup, please follow the AMD section of the Do
 ## **X5000 vs X6000**
 
 - X5000: GFX 9, uses VCE + UVD, same VBIOS logic as our device
-- X6000: GFX 10, uses VCN 2, newer VBIOS structure (displays may not be detected properly)
+- X6000: GFX 10, uses VCN 2, DCN 1/2
 
 ## **Current Status (X5000)**
 
