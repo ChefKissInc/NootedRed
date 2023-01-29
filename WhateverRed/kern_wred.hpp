@@ -99,9 +99,7 @@ class WRed {
     static uint16_t wrapGetFamilyId(void *that);
     static IOReturn wrapPopulateDeviceInfo(void *that);
     static uint16_t wrapGetEnumeratedRevision(void *that);
-    static uint32_t wrapGetVideoMemoryType(void *that);
-    static uint32_t wrapGetVideoMemoryBitWidth(void *that);
-    static IOReturn wrapPopulateVramInfo(void *that);
+    static IOReturn wrapPopulateVramInfo(void *that, void *fwInfo);
     static uint32_t wrapHwReadReg32(void *that, uint32_t param1);
 
     /** X5000HWLibs */

@@ -127,8 +127,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             "Failed to resolve AMDRadeonX6000Framebuffer symbols");
 
         KernelPatcher::RouteRequest requests[] = {
-            {"__ZNK34AMDRadeonX6000_AmdBiosParserHelper18getVideoMemoryTypeEv", wrapGetVideoMemoryType},
-            {"__ZNK34AMDRadeonX6000_AmdBiosParserHelper22getVideoMemoryBitWidthEv", wrapGetVideoMemoryBitWidth},
             {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", wrapPopulateVramInfo},
             {"__ZNK26AMDRadeonX6000_AmdAsicInfo11getFamilyIdEv", wrapGetFamilyId},
             {"__ZN30AMDRadeonX6000_AmdAsicInfoNavi18populateDeviceInfoEv", wrapPopulateDeviceInfo,
@@ -688,9 +686,11 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
 
 uint32_t WRed::wrapSmuGetFwConstants([[maybe_unused]] void *param1) { return 0; }    // SMC firmware's already loaded
 uint32_t WRed::wrapSmuInternalHwInit([[maybe_unused]] void *param1) { return 0; }    // Don't wait for firmware load
-uint32_t WRed::wrapGetVideoMemoryType([[maybe_unused]] void *that) { return 4; }     // DDR4
-uint32_t WRed::wrapGetVideoMemoryBitWidth([[maybe_unused]] void *that) { return 128; }    // 128 bits
-IOReturn WRed::wrapPopulateVramInfo([[maybe_unused]] void *that) { return kIOReturnSuccess; }
+IOReturn WRed::wrapPopulateVramInfo([[maybe_unused]] void *that, void *fwInfo) {
+    getMember<uint32_t>(fwInfo, 0x1C) = 4;      // DDR4
+    getMember<uint32_t>(fwInfo, 0x20) = 128;    // 128-bit
+    return kIOReturnSuccess;
+}
 
 /**
  * We don't want the `AMDRadeonX6000` personality defined in the `Info.plist` to do anything.
