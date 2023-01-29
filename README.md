@@ -66,7 +66,7 @@ We do not provide support for EFI setup, please follow the AMD section of the Do
 
 Note: The X6000 branch has been abandoned for now.
 
-###Collaborators:
+### Collaborators:
 
 * [@ChefKissInc](https://github.com/ChefKissInc) | Project lead, Linux shitcode analyser and kernel extension developer. Extensive knowledge of OS inner workings
 * [@NyanCatTW1](https://github.com/NyanCatTW1) | Reverse Engineering and Python automation magician. His Ghidra RedMetaClassAnalyzer script has made the entire process way painless by automagically discovering C++ v-tables for classes.
