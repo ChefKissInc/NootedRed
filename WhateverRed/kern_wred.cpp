@@ -500,7 +500,7 @@ uint64_t WRed::wrapPspSwInit(uint32_t *param1, uint32_t *param2) {
         case 0xB:
             [[fallthrough]];
         case 0xC:
-            NETLOG("wred", "Spoofing PSP version v11/v12 to v11");
+            NETLOG("wred", "Spoofing PSP version v10/v11/v12 to v11");
             param1[3] = 0xB;
             param1[4] = 0x0;
             param1[5] = 0x0;
