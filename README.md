@@ -8,7 +8,7 @@ This kernel extension currently contains remote debug log functionality through 
 
 WhateverRed NetDbg is a custom remote debug log service, which sends raw data over TCP. The first version, created in Python by [@NyanCatTW1](https://github.com/NyanCatTW1), was primitive and often unstable. The current release, developed in Rust by project lead [@ChefKissInc](https://github.com/ChefKissInc), is more stable, and has a lot more features (Like a GUI).
 
-You can find the source code for the service **[here](https://chat.openai.com/chat)**.
+You can find the source code for the service [here](https://github.com/NootInc/WhateverRed-NETDBG).
 
 To specify the NetDbg server IP and port, use the `wrednetdbgip` boot argument.
 
