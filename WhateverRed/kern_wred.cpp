@@ -127,7 +127,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
 
         KernelPatcher::RouteRequest requests[] = {
             {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", wrapPopulateVramInfo},
-            {"__ZNK26AMDRadeonX6000_AmdAsicInfo11getFamilyIdEv", wrapGetFamilyId},
             {"__ZN30AMDRadeonX6000_AmdAsicInfoNavi18populateDeviceInfoEv", wrapPopulateDeviceInfo,
                 orgPopulateDeviceInfo},
             {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
@@ -530,8 +529,6 @@ void *WRed::wrapCreatePowerTuneServices(void *that, void *param2) {
     callbackWRed->orgVega10PowerTuneConstructor(ret, that, param2);
     return ret;
 }
-
-uint16_t WRed::wrapGetFamilyId([[maybe_unused]] void *that) { return 0x8E; }    // 0x8F -> 0x8E
 
 uint16_t WRed::wrapGetEnumeratedRevision(void *that) {
     auto *&pciDev = getMember<IOPCIDevice *>(that, 0x18);

@@ -95,7 +95,6 @@ class WRed {
     mach_vm_address_t orgUpdateContiguousPTEsWithDMAUsingAddr {};
 
     /** X6000Framebuffer */
-    static uint16_t wrapGetFamilyId(void *that);
     static IOReturn wrapPopulateDeviceInfo(void *that);
     static uint16_t wrapGetEnumeratedRevision(void *that);
     static IOReturn wrapPopulateVramInfo(void *that, void *fwInfo);
