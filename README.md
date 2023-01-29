@@ -48,10 +48,6 @@ However, there is some weird quirk happening relating to GPUVM (GPU Virtual Memo
 
 When it is done. It may take more than a month. But we are currently stuck on 99% essentially.
 
-## macOS Installation on laptops
-
-It may be possible to install macOS on your laptop, but without graphics acceleration and the touchpad may not work.
-
 ### X5000 vs X6000
 
 - X5000: GFX 9, uses VCE + UVD, and DCE 5
