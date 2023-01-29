@@ -496,11 +496,6 @@ uint64_t WRed::wrapSmuGetHwVersion(uint64_t param1, uint32_t param2) {
 uint64_t WRed::wrapPspSwInit(uint32_t *param1, uint32_t *param2) {
     switch (param1[3]) {
         case 0xA:
-            // NETLOG("wred", "Spoofing PSP version v10 to v9.0.2");
-            // param1[3] = 0x9;
-            // param1[4] = 0x0;
-            // param1[5] = 0x2;
-            // break;
             [[fallthrough]];
         case 0xB:
             [[fallthrough]];
