@@ -811,7 +811,6 @@ uint32_t WRed::wrapSmuRenoirInitialize(void *smumData, uint32_t param2) {
 
 uint64_t WRed::wrapMapVA(void *that, uint64_t param1, void *memory, uint64_t param3, uint64_t sizeToMap,
     uint64_t flags) {
-    PANIC("wred", "mapVA called");
     NETLOG("wred", "mapVA: this = %p param1 = 0x%llX memory = %p param3 = 0x%llX sizeToMap = 0x%llX flags = 0x%llX",
         that, param1, memory, param3, sizeToMap, flags);
     auto ret = FunctionCast(wrapMapVA, callbackWRed->orgMapVA)(that, param1, memory, param3, sizeToMap, flags);
