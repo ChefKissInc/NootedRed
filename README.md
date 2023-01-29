@@ -29,7 +29,7 @@ Injecting kernel extensions is not possible during the OpenCore injection stage.
 
 ## **Introduction**
 
-We are a team of three working on getting graphics acceleration for AMD iGPUs (Raven/Raven2/Renoir and their derivatives) on hackintoshes (PCs running macOS). Currently, we are fixing the missing and broken logic by patching the existing kexts (AMDRadeonX5000 for GCN 5 and AMDRadeonX6000 for VCN).
+We are a team of three working on getting graphics acceleration for AMD iGPUs (Raven/Raven2/Renoir and their derivatives) on hackintoshes. We are patching the existing kexts in order to achieve this (mixing AMDRadeonX5000 for GCN 5 and AMDRadeonX6000 for VCN 1/2, and replacing AMDRadeonX6000Framebuffer for DCN instead of AMD10000Controller which is DCE).
 
 ## Current Progress
 
