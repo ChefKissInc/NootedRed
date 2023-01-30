@@ -1,15 +1,8 @@
-//
-//  kern_fw.hpp
-//  WhateverRed
-//
-//  Created by Visual on 22/7/22.
-//  Copyright © 2022 ChefKiss Inc. All rights reserved.
-//
+//  Copyright © 2022 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
+//  details.
 
-#ifndef kern_fw_h
-#define kern_fw_h
+#pragma once
 #include <libkern/c++/OSData.h>
-#include <string.h>
 
 struct FwDesc {
     const char *name;
@@ -28,5 +21,3 @@ inline const FwDesc *getFWDescByName(const char *name) {
     }
     return nullptr;
 }
-
-#endif /* kern_fw_h */

@@ -1,10 +1,5 @@
-//
-//  kern_start.cpp
-//  LegacyRed
-//
-//  Copyright © 2017 vit9696. All rights reserved.
-//  Copyright © 2022 ChefKiss Inc. All rights reserved.
-//
+//  Copyright © 2022 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
+//  details.
 
 #include "kern_wred.hpp"
 #include <Headers/kern_api.hpp>
@@ -27,7 +22,7 @@ static const char *bootargBeta[] = {
 PluginConfiguration ADDPR(config) {
     xStringify(PRODUCT_NAME),
     parseModuleVersion(xStringify(MODULE_VERSION)),
-    LiluAPI::AllowNormal | LiluAPI::AllowInstallerRecovery | LiluAPI::AllowSafeMode,
+    LiluAPI::AllowNormal | LiluAPI::AllowSafeMode,
     bootargOff,
     arrsize(bootargOff),
     bootargDebug,
@@ -35,6 +30,6 @@ PluginConfiguration ADDPR(config) {
     bootargBeta,
     arrsize(bootargBeta),
     KernelVersion::Catalina,
-    KernelVersion::Ventura,
+    KernelVersion::BigSur,
     []() { lred.init(); },
 };

@@ -1,424 +1,1342 @@
-//
-//  kern_weg.cpp
-//  WhateverRed
-//
-//  Copyright © 2017 vit9696. All rights reserved.
-//  Copyright © 2022 ChefKiss Inc. All rights reserved.
-//
+//  Copyright © 2023 ChefKiss Inc and Zorm Industries. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
+//  details.
 
-#include "kern_wred.hpp"
+#include "kern_rad.hpp"
+#include "kern_fw.hpp"
+#include "kern_netdbg.hpp"
+#include <Availability.h>
 #include <Headers/kern_api.hpp>
-#include <Headers/kern_cpu.hpp>
 #include <Headers/kern_devinfo.hpp>
+#include <Headers/kern_file.hpp>
 #include <Headers/kern_iokit.hpp>
-#include <IOKit/graphics/IOFramebuffer.h>
+#include <IOKit/IOService.h>
+#include <IOKit/acpi/IOACPIPlatformExpert.h>
 
-// This is a hack to let us access protected properties.
-struct FramebufferViewer : public IOFramebuffer {
-    static IOMemoryMap *&getVramMap(IOFramebuffer *fb) { return static_cast<FramebufferViewer *>(fb)->fVramMap; }
-};
+static const char *pathFramebuffer = "/System/Library/Extensions/AMDFramebuffer.kext/Contents/MacOS/"
+                                     "AMDFramebuffer";
+static const char *pathSupport = "/System/Library/Extensions/AMDSupport.kext/Contents/MacOS/AMDSupport";
+static const char *pathRadeonX4000HWLibs = "/System/Library/Extensions/AMDRadeonX4000HWServices.kext/Contents/PlugIns/"
+                                           "AMDRadeonX4000HWLibs.kext/Contents/MacOS/AMDRadeonX4000HWLibs";
+static const char *pathRadeonX4000 = "/System/Library/Extensions/AMDRadeonX4000.kext/Contents/MacOS/"
+                                     "AMDRadeonX4000";
+static const char *pathAMD8000Controller = "/System/Library/Extensions/AMD8000Controller.kext/Contents/MacOS/"
+											"AMD8000Controller";
 
-static const char *pathIOGraphics[] = {"/System/Library/Extensions/IOGraphicsFamily.kext/IOGraphicsFamily"};
-static const char *pathAGDPolicy[] = {"/System/Library/Extensions/AppleGraphicsControl.kext/Contents/PlugIns/"
-                                      "AppleGraphicsDevicePolicy.kext/Contents/MacOS/AppleGraphicsDevicePolicy"};
-
-static KernelPatcher::KextInfo kextIOGraphics {
-    "com.apple.iokit.IOGraphicsFamily",
-    pathIOGraphics,
-    arrsize(pathIOGraphics),
-    {true},
-    {},
-    KernelPatcher::KextInfo::Unloaded,
-};
-static KernelPatcher::KextInfo kextAGDPolicy {
-    "com.apple.driver.AppleGraphicsDevicePolicy",
-    pathAGDPolicy,
-    arrsize(pathAGDPolicy),
-    {true},
-    {},
-    KernelPatcher::KextInfo::Unloaded,
-};
-
-LRed *LRed::callbackLRED = nullptr;
-
-void LRed::init() {
-    callbackLRED = this;
-
-    // Background init fix is only necessary on 10.10 and newer.
-    // Former boot-arg name is igfxrst.
-    if (getKernelVersion() >= KernelVersion::Yosemite) {
-        PE_parse_boot_argn("gfxrst", &resetFramebuffer, sizeof(resetFramebuffer));
-        if (resetFramebuffer >= FB_TOTAL) {
-            SYSLOG("wred", "invalid igfxrset value %d, falling back to autodetect", resetFramebuffer);
-            resetFramebuffer = FB_DETECT;
-        }
-    } else {
-        resetFramebuffer = FB_NONE;
-    }
-
-    // Black screen fix is needed everywhere, but the form depends on the
-    // boot-arg. Former boot-arg name is ngfxpatch.
-    char agdp[128];
-    if (PE_parse_boot_argn("agdpmod", agdp, sizeof(agdp))) processGraphicsPolicyStr(agdp);
-
-    // Callback setup is only done here for compatibility.
-    lilu.onPatcherLoadForce(
-        [](void *user, KernelPatcher &patcher) { static_cast<LRed *>(user)->processKernel(patcher); }, this);
-
-    lilu.onKextLoadForce(
-        nullptr, 0,
-        [](void *user, KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
-            static_cast<LRed *>(user)->processKext(patcher, index, address, size);
-        },
-        this);
-
-    // Perform a background fix.
-    if (resetFramebuffer != FB_NONE) lilu.onKextLoadForce(&kextIOGraphics);
-
-    // Perform a black screen fix.
-    if (graphicsDisplayPolicyMod != AGDP_NONE_SET) lilu.onKextLoad(&kextAGDPolicy);
-
-    rad.init();
-}
-
-void LRed::deinit() { rad.deinit(); }
+LRed *LRed::callbackRAD;
 
 void LRed::processKernel(KernelPatcher &patcher) {
-    // Correct GPU properties
-    auto devInfo = DeviceInfo::create();
-    if (devInfo) {
-        devInfo->processSwitchOff();
+    KernelPatcher::RouteRequest requests[] = {
+        {"__ZN15IORegistryEntry11setPropertyEPKcPvj", wrapSetProperty, orgSetProperty},
+        {"__ZNK15IORegistryEntry11getPropertyEPKc", wrapGetProperty, orgGetProperty},
+    };
+    if (!patcher.routeMultipleLong(KernelPatcher::KernelID, requests)) { panic("RAD: Failed to route kernel symbols"); }
+}
 
-        if (graphicsDisplayPolicyMod == AGDP_DETECT) { /* Default detect only */
-            auto getAgpdMod = [this](IORegistryEntry *device) {
-                auto prop = device->getProperty("agdpmod");
-                if (prop) {
-                    DBGLOG("LRed", "found agdpmod in external GPU %s", safeString(device->getName()));
-                    const char *agdp = nullptr;
-                    auto propStr = OSDynamicCast(OSString, prop);
-                    auto propData = OSDynamicCast(OSData, prop);
-                    if (propStr) {
-                        agdp = propStr->getCStringNoCopy();
-                    } else if (propData && propData->getLength() > 0) {
-                        agdp = static_cast<const char *>(propData->getBytesNoCopy());
-                        if (agdp && agdp[propData->getLength() - 1] != '\0') {
-                            DBGLOG("LRed", "agdpmod config is not null terminated");
-                            agdp = nullptr;
-                        }
-                    }
-                    if (agdp) {
-                        processGraphicsPolicyStr(agdp);
+// Hack
+class AppleACPIPlatformExpert : IOACPIPlatformExpert {
+    friend class RAD;
+};
+
+bool RAD::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
+    if (kextRadeonFramebuffer.loadIndex == index) {
+        if (force24BppMode) process24BitOutput(patcher, kextRadeonFramebuffer, address, size);
+
+        return true;
+    } else if (kextRadeonSupport.loadIndex == index) {
+        processConnectorOverrides(patcher, address, size);
+
+        KernelPatcher::RouteRequest requests[] = {
+            {"__ZN13ATIController8TestVRAME13PCI_REG_INDEXb", doNotTestVram},
+            {"__ZN16AtiDeviceControl16notifyLinkChangeE31kAGDCRegisterLinkControlEvent_tmj", wrapNotifyLinkChange,
+                orgNotifyLinkChange},
+            {"__ZN13AtomBiosProxy19createAtomBiosProxyER16AtomBiosInitData", wrapCreateAtomBiosProxy,
+                orgCreateAtomBiosProxy},
+            {"__ZN13ATIController20populateDeviceMemoryE13PCI_REG_INDEX", wrapPopulateDeviceMemory,
+                orgPopulateDeviceMemory},
+            {"__ZNK11AtiAsicInfo26getPropertiesForUserClientEv", wrapAtiAsicInfoGetPropertiesForUserClient, orgAtiAsicInfoGetPropertiesForUserClient},
+        };
+        if (!patcher.routeMultipleLong(index, requests, address, size)) {
+            panic("RAD: Failed to route AMDSupport symbols");
+        }
+
+        /**
+         * Neutralises VRAM Info Null Check
+         */
+        uint8_t find[] = {0x48, 0x89, 0x83, 0x18, 0x01, 0x00, 0x00, 0x31, 0xc0, 0x48, 0x85, 0xc9, 0x75, 0x3e, 0x48,
+            0x8d, 0x3d, 0xa4, 0xe2, 0x01, 0x00};
+        uint8_t repl[] = {0x48, 0x89, 0x83, 0x18, 0x01, 0x00, 0x00, 0x31, 0xc0, 0x48, 0x85, 0xc9, 0x74, 0x3e, 0x48,
+            0x8d, 0x3d, 0xa4, 0xe2, 0x01, 0x00};
+        KernelPatcher::LookupPatch patch {&kextRadeonSupport, find, repl, arrsize(find), 1};
+        patcher.applyLookupPatch(&patch);
+        patcher.clearError();
+
+        return true;
+    } else if (kextRadeonX4000HWLibs.loadIndex == index) {
+        KernelPatcher::SolveRequest solveRequests[] = {
+  //          {"__ZL15deviceTypeTable", orgDeviceTypeTable},
+  //          {"__ZN11AMDFirmware14createFirmwareEPhjjPKc", orgCreateFirmware},
+  //          {"__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware", orgPutFirmware},
+            {"__ZN31AtiAppleVega10PowerTuneServicesC1EP11PP_InstanceP18PowerPlayCallbacks",
+                orgVega10PowerTuneConstructor},
+            {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTableHWLibs},
+            {"_CAILAsicCapsInitTable", orgAsicInitCapsTable},
+         //   {"_Carrizo_RLC_UCODE", orgGcRlcUcode},
+         //   {"_Carrizo_ME_UCODE", orgGcMeUcode},
+         //   {"_Carrizo_CE_UCODE", orgGcCeUcode},
+         //   {"_gc_9_4_pfp_ucode", orgGcPfpUcode},
+         //   {"_gc_9_4_mec_ucode", orgGcMecUcode},
+         //   {"_gc_9_4_mec_jt_ucode", orgGcMecJtUcode},
+         //   {"_sdma_4_1_ucode", orgSdmaUcode}, -- Neutralising Ucode for now
+        };
+        if (!patcher.solveMultiple(index, solveRequests, address, size)) {
+            panic("RAD: Failed to resolve AMDRadeonX4000HWLibs symbols");
+        }
+
+        KernelPatcher::RouteRequest requests[] = {
+            {"__ZN15AmdCailServicesC2EP11IOPCIDevice", wrapAmdCailServicesConstructor, orgAmdCailServicesConstructor},
+            {"__ZN15AmdCailServices23queryEngineRunningStateEP17CailHwEngineQueueP22CailEngineRunningState",
+                wrapQueryEngineRunningState, orgQueryEngineRunningState},
+            // {"_CAILQueryEngineRunningState", wrapCAILQueryEngineRunningState, orgCAILQueryEngineRunningState},
+            // {"_CailMonitorEngineInternalState", wrapCailMonitorEngineInternalState,
+            // orgCailMonitorEngineInternalState},
+            {"_CailMonitorPerformanceCounter", wrapCailMonitorPerformanceCounter, orgCailMonitorPerformanceCounter},
+            {"_SMUM_Initialize", wrapSMUMInitialize, orgSMUMInitialize},
+            {"__ZN25AtiApplePowerTuneServices23createPowerTuneServicesEP11PP_InstanceP18PowerPlayCallbacks",
+                wrapCreatePowerTuneServices},
+            {"_MCILDebugPrint", wrapMCILDebugPrint, orgMCILDebugPrint},
+            {"__ZN15AmdCailServices31microEngineControlLoadMicrocodeEP17CailHwEngineQueue",
+                wrapMicroEngineControlLoadMicrocode, orgMicroEngineControlLoadMicrocode},
+            {"__ZN15AmdCailServices34microEngineControlInitializeEngineEP17CailHwEngineQueueP21_CailInitializeEngine",
+                wrapMicroEngineControlInitializeEngine, orgMicroEngineControlInitializeEngine},
+            {"__ZN15AmdCailServices29microEngineControlStartEngineEP17CailHwEngineQueue",
+                wrapMicroEngineControlStartEngine, orgMicroEngineControlStartEngine},
+            {"_Cail_MCILTrace0", wrapCailMCILTrace0, orgCailMCILTrace0},
+            {"_Cail_MCILTrace1", wrapCailMCILTrace1, orgCailMCILTrace1},
+            {"_Cail_MCILTrace2", wrapCailMCILTrace0, orgCailMCILTrace0},
+//            {"_greenland_micro_engine_control", wrapGreenlandMicroEngineControl, orgGreenlandMicroEngineControl},
+//            {"_Bonaire_MicroEngineControlSdma", wrapSdmaMicroEngineControl, orgSdmaMicroEngineControl},
+            {"_SmuCz_ReadSmuVersion", wrapSmuCzReadSmuVersion, orgSmuCzReadSmuVersion},
+        };
+        if (!patcher.routeMultipleLong(index, requests, address, size)) {
+            panic("RAD: Failed to route AMDRadeonX4000HWLibs symbols");
+        }
+
+        return true;
+    } else if (kextAMD8000Controller.loadIndex == index) {
+        KernelPatcher::SolveRequest solveRequests[] = {
+            {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable},
+        };
+        if (!patcher.solveMultiple(index, solveRequests, address, size, true)) {
+            panic("RAD: Failed to resolve AMD8000Controller symbols");
+        }
+
+        KernelPatcher::RouteRequest requests[] = {
+//            {"__ZNK34AMDRadeonX6000_AmdBiosParserHelper18getVideoMemoryTypeEv", wrapGetVideoMemoryType,
+  //              orgGetVideoMemoryType},
+ //           {"__ZNK34AMDRadeonX6000_AmdBiosParserHelper22getVideoMemoryBitWidthEv", wrapGetVideoMemoryBitWidth,
+   //             orgGetVideoMemoryBitWidth},
+//            {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", wrapPopulateVramInfo},
+            {"__ZNK18CISharedController11getFamilyIdEv", wrapGetFamilyId},
+            {"__ZN13_ASIC_INFO_CI8populateDeviceInfoEv", wrapPopulateDeviceInfo,
+                orgPopulateDeviceInfo},
+//            {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
+            {"__ZN17CIRegisterService11hwReadReg32Ej", wrapHwReadReg32, orgHwReadReg32},
+        };
+
+        if (!patcher.routeMultiple(index, requests, address, size, true)) {
+            panic("RAD: Failed to route AMD8000Controller symbols");
+        }
+    return true;
+	
+    } else if (kextRadeonX4000.loadIndex == index) {
+        KernelPatcher::SolveRequest solveRequests[] = {
+            {"__ZN29AMDRadeonX4000_AMDCIPM4EnginenwEm", orgGFX7PM4EngineNew},
+            {"__ZN29AMDRadeonX4000_AMDCIPM4EngineC1Ev", orgGFX7PM4EngineConstructor},
+            {"__ZN30AMDRadeonX4000_AMDCIsDMAEnginenwEm", orgGFX7SDMAEngineNew},
+            {"__ZN30AMDRadeonX4000_AMDCIsDMAEngineC1Ev", orgGFX7SDMAEngineConstructor},
+            {"__ZZN37AMDRadeonX4000_AMDGraphicsAccelerator19createAccelChannelsEbE12channelTypes", orgChannelTypes},
+        };
+        if (!patcher.solveMultiple(index, solveRequests, address, size)) {
+            panic("RAD: Failed to resolve AMDRadeonX4000 symbols");
+        }
+
+        KernelPatcher::RouteRequest requests[] = {
+            {"__ZN27AMDRadeonX4000_AMDHWHandler8getStateEv", wrapGetState, orgGetState},
+            {"__ZN29AMDRadeonX4000_AMDCIPM4Engine23QueryComputeQueueIsIdleE18_eAMD_HW_RING_TYPE",
+                wrapQueryComputeQueueIsIdle, orgQueryComputeQueueIsIdle},
+            {"__ZN27AMDRadeonX4000_AMDHWChannel11waitForIdleEj", wrapAMDHWChannelWaitForIdle,
+                orgAMDHWChannelWaitForIdle},
+            {"__ZN28AMDRadeonX4000_AMDCIHardware17allocateHWEnginesEv", wrapAllocateHWEngines},
+            {"__ZN26AMDRadeonX4000_AMDHardware11getHWEngineE20_eAMD_HW_ENGINE_TYPE", wrapGetHWEngine, orgGetHWEngine},
+            {"__ZN28AMDRadeonX4000_AMDCIHardware32setupAndInitializeHWCapabilitiesEv",
+                wrapSetupAndInitializeHWCapabilities, orgSetupAndInitializeHWCapabilities},
+            {"__ZN29AMDRadeonX4000_AMDCIPM4Engine7powerUpEv", wrapPM4EnginePowerUp, orgPM4EnginePowerUp},
+            {"__ZN26AMDRadeonX4000_AMDHardware17dumpASICHangStateEb.cold.1", wrapDumpASICHangStateCold,
+                orgDumpASICHangStateCold},
+            {"__ZN37AMDRadeonX4000_AMDGraphicsAccelerator5startEP9IOService", wrapAccelStart, orgAccelStart},
+             {"__ZN24AMDRadeonX4000_AMDHWRing7getHeadEv", wrapGFX9RTRingGetHead, orgGFX9RTRingGetHead},
+            // {"__ZN29AMDRadeonX5000_AMDHWRegisters4readEj", wrapHwRegRead, orgHwRegRead},
+            // {"__ZN29AMDRadeonX5000_AMDHWRegisters5writeEjj", wrapHwRegWrite, orgHwRegWrite},
+            {"__ZN34AMDRadeonX4000_AMDAccelDisplayPipe20writeDiagnosisReportERPcRj",
+                wrapAccelDisplayPipeWriteDiagnosisReport, orgAccelDisplayPipeWriteDiagnosisReport},
+            {"__ZN23AMDRadeonX4000_AMDHWVMM27setMemoryAllocationsEnabledEb", wrapSetMemoryAllocationsEnabled,
+                orgSetMemoryAllocationsEnabled},
+            {"__ZN27AMDRadeonX4000_AMDHWHandler15getEventMachineEv", wrapGetEventMachine, orgGetEventMachine},
+            {"__ZN27AMDRadeonX4000_AMDHWHandler18getVMUpdateChannelEv", wrapGetVMUpdateChannel, orgGetVMUpdateChannel},
+            {"__ZN27AMDRadeonX4000_AMDHWHandler25createVMCommandBufferPoolEP30AMDRadeonX4000_AMDAccelChanneljj",
+                wrapCreateVMCommandBufferPool, orgCreateVMCommandBufferPool},
+            {"__ZN35AMDRadeonX4000_AMDCommandBufferPool10getChannelEv", wrapPoolGetChannel, orgPoolGetChannel},
+            {"__ZN30AMDRadeonX4000_AMDAccelChannel12getHWChannelEv", wrapAccelGetHWChannel, orgAccelGetHWChannel},
+            {"__ZN37AMDRadeonX4000_AMDGraphicsAccelerator19createAccelChannelsEb", wrapCreateAccelChannels,
+                orgCreateAccelChannels},
+            {"__ZN37AMDRadeonX4000_AMDGraphicsAccelerator19populateAccelConfigEP13IOAccelConfig",
+                wrapPopulateAccelConfig, orgPopulateAccelConfig},
+            {"__ZN37AMDRadeonX4000_AMDGraphicsAccelerator9powerUpHWEv", wrapPowerUpHW, orgPowerUpHW},
+            {"__ZN26AMDRadeonX4000_AMDHardware27setMemoryAllocationsEnabledEb", wrapHWsetMemoryAllocationsEnabled,
+                orgHWsetMemoryAllocationsEnabled},
+            {"__ZN37AMDRadeonX4000_AMDGraphicsAccelerator20callPlatformFunctionEPK8OSSymbolbPvS3_S3_S3_",
+                wrapAccelCallPlatformFunction, orgAccelCallPlatformFunction},
+            {"__ZN32AMDRadeonX4000_AMDHawaiiHardware7powerUpEv", wrapVega10PowerUp, orgVega10PowerUp},
+            {"__ZN30AMDRadeonX4000_AMDCIsDMAEngine5startEv", wrapSdmaEngineStart, orgSdmaEngineStart},
+            {"__ZN24AMDRadeonX4000_AMDHWRing6enableEv", wrapRtRingEnable, orgRtRingEnable},
+            {"__ZN27AMDRadeonX4000_AMDHWChannel14waitForHwStampEj", wrapWaitForHwStamp, orgWaitForHwStamp},
+            {"__ZN26AMDRadeonX4000_AMDHardware12getHWChannelE18_eAMD_CHANNEL_TYPE11SS_PRIORITYj", wrapRTGetHWChannel,
+                orgRTGetHWChannel},
+        };
+        if (!patcher.routeMultipleLong(index, requests, address, size)) {
+            panic("RAD: Failed to route AMDRadeonX4000 symbols");
+        }
+
+		return true;
+    }
+
+    return false;
+}
+
+void RAD::process24BitOutput(KernelPatcher &patcher, KernelPatcher::KextInfo &info, mach_vm_address_t address,
+    size_t size) {
+    auto bitsPerComponent = patcher.solveSymbol<int *>(info.loadIndex, "__ZL18BITS_PER_COMPONENT", address, size);
+    if (bitsPerComponent) {
+        while (bitsPerComponent && *bitsPerComponent) {
+            if (*bitsPerComponent == 10) {
+                auto ret = MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock);
+                if (ret == KERN_SUCCESS) {
+                    DBGLOG("rad", "fixing BITS_PER_COMPONENT");
+                    *bitsPerComponent = 8;
+                    MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
+                } else {
+                    NETLOG("rad", "failed to disable write protection for "
+                                  "BITS_PER_COMPONENT");
+                }
+            }
+            bitsPerComponent++;
+        }
+    } else {
+        NETLOG("rad", "failed to find BITS_PER_COMPONENT");
+        patcher.clearError();
+    }
+
+    DBGLOG("rad", "fixing pixel types");
+
+    KernelPatcher::LookupPatch pixelPatch {&info, reinterpret_cast<const uint8_t *>("--RRRRRRRRRRGGGGGGGGGGBBBBBBBBBB"),
+        reinterpret_cast<const uint8_t *>("--------RRRRRRRRGGGGGGGGBBBBBBBB"), 32, 2};
+
+    patcher.applyLookupPatch(&pixelPatch);
+    if (patcher.getError() != KernelPatcher::Error::NoError) {
+        NETLOG("rad", "failed to patch RGB mask for 24-bit output");
+        patcher.clearError();
+    }
+}
+
+void RAD::processConnectorOverrides(KernelPatcher &patcher, mach_vm_address_t address, size_t size) {
+    KernelPatcher::RouteRequest requests[] = {
+        {"__ZN14AtiBiosParser116getConnectorInfoEP13ConnectorInfoRh", wrapGetConnectorsInfoV1, orgGetConnectorsInfoV1},
+        {"__ZN14AtiBiosParser216getConnectorInfoEP13ConnectorInfoRh", wrapGetConnectorsInfoV2, orgGetConnectorsInfoV2},
+        {"__"
+         "ZN14AtiBiosParser126translateAtomConnectorInfoERN30AtiObjectInfoTable"
+         "Interface_V117AtomConnectorInfoER13ConnectorInfo",
+            wrapTranslateAtomConnectorInfoV1, orgTranslateAtomConnectorInfoV1},
+        {"__"
+         "ZN14AtiBiosParser226translateAtomConnectorInfoERN30AtiObjectInfoTable"
+         "Interface_V217AtomConnectorInfoER13ConnectorInfo",
+            wrapTranslateAtomConnectorInfoV2, orgTranslateAtomConnectorInfoV2},
+        {"__ZN13ATIController5startEP9IOService", wrapATIControllerStart, orgATIControllerStart},
+    };
+    patcher.routeMultiple(kextRadeonSupport.loadIndex, requests, address, size);
+}
+
+uint64_t RAD::wrapGetState(void *that) {
+    DBGLOG("rad", "getState this = %p", that);
+    auto ret = FunctionCast(wrapGetState, callbackRAD->orgGetState)(that);
+    DBGLOG("rad", "getState returned 0x%llX", ret);
+    return ret;
+}
+
+bool RAD::wrapInitializeTtl(void *that, void *param1) {
+    NETLOG("rad", "initializeTtl this = %p", that);
+    auto ret = FunctionCast(wrapInitializeTtl, callbackRAD->orgInitializeTtl)(that, param1);
+    NETLOG("rad", "initializeTtl returned %d", ret);
+    return ret;
+}
+
+void RAD::mergeProperty(OSDictionary *props, const char *name, OSObject *value) {
+    // The only type we could make from device properties is data.
+    // To be able to override other types we do a conversion here.
+    auto data = OSDynamicCast(OSData, value);
+    if (data) {
+        // It is hard to make a boolean even from ACPI, so we make a hack here:
+        // 1-byte OSData with 0x01 / 0x00 values becomes boolean.
+        auto val = static_cast<const uint8_t *>(data->getBytesNoCopy());
+        auto len = data->getLength();
+        if (val && len == sizeof(uint8_t)) {
+            if (val[0] == 1) {
+                props->setObject(name, kOSBooleanTrue);
+                DBGLOG("rad", "prop %s was merged as kOSBooleanTrue", name);
+                return;
+            } else if (val[0] == 0) {
+                props->setObject(name, kOSBooleanFalse);
+                DBGLOG("rad", "prop %s was merged as kOSBooleanFalse", name);
+                return;
+            }
+        }
+
+        // Consult the original value to make a decision
+        auto orgValue = props->getObject(name);
+        if (val && orgValue) {
+            DBGLOG("rad", "prop %s has original value", name);
+            if (len == sizeof(uint32_t) && OSDynamicCast(OSNumber, orgValue)) {
+                auto num = *reinterpret_cast<const uint32_t *>(val);
+                auto osnum = OSNumber::withNumber(num, 32);
+                if (osnum) {
+                    DBGLOG("rad", "prop %s was merged as number %u", name, num);
+                    props->setObject(name, osnum);
+                    osnum->release();
+                }
+                return;
+            } else if (len > 0 && val[len - 1] == '\0' && OSDynamicCast(OSString, orgValue)) {
+                auto str = reinterpret_cast<const char *>(val);
+                auto osstr = OSString::withCString(str);
+                if (osstr) {
+                    DBGLOG("rad", "prop %s was merged as string %s", name, str);
+                    props->setObject(name, osstr);
+                    osstr->release();
+                }
+                return;
+            }
+        } else {
+            DBGLOG("rad", "prop %s has no original value", name);
+        }
+    }
+
+    // Default merge as is
+    props->setObject(name, value);
+    DBGLOG("rad", "prop %s was merged", name);
+}
+
+void RAD::mergeProperties(OSDictionary *props, const char *prefix, IOService *provider) {
+    // Should be ok, but in case there are issues switch to
+    // dictionaryWithProperties();
+    auto dict = provider->getPropertyTable();
+    if (dict) {
+        auto iterator = OSCollectionIterator::withCollection(dict);
+        if (iterator) {
+            OSSymbol *propname;
+            size_t prefixlen = strlen(prefix);
+            while ((propname = OSDynamicCast(OSSymbol, iterator->getNextObject())) != nullptr) {
+                auto name = propname->getCStringNoCopy();
+                if (name && propname->getLength() > prefixlen && !strncmp(name, prefix, prefixlen)) {
+                    auto prop = dict->getObject(propname);
+                    if (prop) mergeProperty(props, name + prefixlen, prop);
+                    else { DBGLOG("rad", "prop %s was not merged due to no value", name); }
+                } else {
+                    DBGLOG("rad", "prop %s does not match %s prefix", safeString(name), prefix);
+                }
+            }
+
+            iterator->release();
+        } else {
+            NETLOG("rad", "prop merge failed to iterate over properties");
+        }
+    } else {
+        NETLOG("rad", "prop merge failed to get properties");
+    }
+}
+
+void RAD::applyPropertyFixes(IOService *service, uint32_t connectorNum) {
+    if (!service->getProperty("CFG,CFG_FB_LIMIT")) {
+        DBGLOG("rad", "setting fb limit to %u", connectorNum);
+        service->setProperty("CFG_FB_LIMIT", connectorNum, 32);
+    }
+}
+
+uint32_t RAD::wrapGetConnectorsInfoV1(void *that, RADConnectors::Connector *connectors, uint8_t *sz) {
+    NETLOG("rad", "getConnectorsInfoV1: this = %p connectors = %p sz = %p", that, connectors, sz);
+    uint32_t code = FunctionCast(wrapGetConnectorsInfoV1, callbackRAD->orgGetConnectorsInfoV1)(that, connectors, sz);
+    NETLOG("rad", "getConnectorsInfoV1 returned 0x%X", code);
+    auto props = callbackRAD->currentPropProvider.get();
+
+    if (code == 0 && sz && props && *props) {
+        callbackRAD->updateConnectorsInfo(nullptr, nullptr, *props, connectors, sz);
+    } else
+        NETLOG("rad", "getConnectorsInfoV1 failed %X or undefined %d", code, props == nullptr);
+
+    return code;
+}
+
+void RAD::updateConnectorsInfo(void *atomutils, t_getAtomObjectTableForType gettable, IOService *ctrl,
+    RADConnectors::Connector *connectors, uint8_t *sz) {
+    if (atomutils) {
+        NETLOG("rad", "getConnectorsInfo found %u connectors", *sz);
+        RADConnectors::print(connectors, *sz);
+    }
+
+    auto cons = ctrl->getProperty("connectors");
+    if (cons) {
+        auto consData = OSDynamicCast(OSData, cons);
+        if (consData) {
+            auto consPtr = consData->getBytesNoCopy();
+            auto consSize = consData->getLength();
+
+            uint32_t consCount;
+            if (WIOKit::getOSDataValue(ctrl, "connector-count", consCount)) {
+                *sz = consCount;
+                NETLOG("rad", "getConnectorsInfo got size override to %u", *sz);
+            }
+
+            if (consPtr && consSize > 0 && *sz > 0 && RADConnectors::valid(consSize, *sz)) {
+                RADConnectors::copy(connectors, *sz, static_cast<const RADConnectors::Connector *>(consPtr), consSize);
+                NETLOG("rad", "getConnectorsInfo installed %u connectors", *sz);
+                applyPropertyFixes(ctrl, *sz);
+            } else {
+                NETLOG("rad",
+                    "getConnectorsInfo conoverrides have invalid size %u "
+                    "for %u num",
+                    consSize, *sz);
+            }
+        } else {
+            NETLOG("rad", "getConnectorsInfo conoverrides have invalid type");
+        }
+    } else {
+        if (atomutils) {
+            NETLOG("rad", "getConnectorsInfo attempting to autofix connectors");
+            uint8_t sHeader = 0, displayPathNum = 0, connectorObjectNum = 0;
+            auto baseAddr =
+                static_cast<uint8_t *>(gettable(atomutils, AtomObjectTableType::Common, &sHeader)) - sizeof(uint32_t);
+            auto displayPaths = static_cast<AtomDisplayObjectPath *>(
+                gettable(atomutils, AtomObjectTableType::DisplayPath, &displayPathNum));
+            auto connectorObjects = static_cast<AtomConnectorObject *>(
+                gettable(atomutils, AtomObjectTableType::ConnectorObject, &connectorObjectNum));
+            if (displayPathNum == connectorObjectNum) {
+                autocorrectConnectors(baseAddr, displayPaths, displayPathNum, connectorObjects, connectorObjectNum,
+                    connectors, *sz);
+            } else {
+                NETLOG("rad",
+                    "getConnectorsInfo found different displaypaths %u and "
+                    "connectors %u",
+                    displayPathNum, connectorObjectNum);
+            }
+        }
+
+        applyPropertyFixes(ctrl, *sz);
+
+        const uint8_t *senseList = nullptr;
+        uint8_t senseNum = 0;
+        auto priData = OSDynamicCast(OSData, ctrl->getProperty("connector-priority"));
+        if (priData) {
+            senseList = static_cast<const uint8_t *>(priData->getBytesNoCopy());
+            senseNum = static_cast<uint8_t>(priData->getLength());
+            NETLOG("rad", "getConnectorInfo found %u senses in connector-priority", senseNum);
+            reprioritiseConnectors(senseList, senseNum, connectors, *sz);
+        } else {
+            NETLOG("rad", "getConnectorInfo leaving unchaged priority");
+        }
+    }
+
+    NETLOG("rad", "getConnectorsInfo resulting %u connectors follow", *sz);
+    RADConnectors::print(connectors, *sz);
+}
+
+uint32_t RAD::wrapTranslateAtomConnectorInfoV1(void *that, RADConnectors::AtomConnectorInfo *info,
+    RADConnectors::Connector *connector) {
+    uint32_t code = FunctionCast(wrapTranslateAtomConnectorInfoV1, callbackRAD->orgTranslateAtomConnectorInfoV1)(that,
+        info, connector);
+
+    if (code == 0 && info && connector) {
+        RADConnectors::print(connector, 1);
+
+        uint8_t sense = getSenseID(info->i2cRecord);
+        if (sense) {
+            NETLOG("rad", "translateAtomConnectorInfoV1 got sense id %02X", sense);
+
+            // We need to extract usGraphicObjIds from info->hpdRecord, which is
+            // of type ATOM_SRC_DST_TABLE_FOR_ONE_OBJECT: struct
+            // ATOM_SRC_DST_TABLE_FOR_ONE_OBJECT {
+            //   uint8_t ucNumberOfSrc;
+            //   uint16_t usSrcObjectID[ucNumberOfSrc];
+            //   uint8_t ucNumberOfDst;
+            //   uint16_t usDstObjectID[ucNumberOfDst];
+            // };
+            // The value we need is in usSrcObjectID. The structure is
+            // byte-packed.
+
+            uint8_t ucNumberOfSrc = info->hpdRecord[0];
+            for (uint8_t i = 0; i < ucNumberOfSrc; i++) {
+                auto usSrcObjectID =
+                    *reinterpret_cast<uint16_t *>(info->hpdRecord + sizeof(uint8_t) + i * sizeof(uint16_t));
+                NETLOG("rad", "translateAtomConnectorInfoV1 checking %04X object id", usSrcObjectID);
+                if (((usSrcObjectID & OBJECT_TYPE_MASK) >> OBJECT_TYPE_SHIFT) == GRAPH_OBJECT_TYPE_ENCODER) {
+                    uint8_t txmit = 0, enc = 0;
+                    if (getTxEnc(usSrcObjectID, txmit, enc))
+                        callbackRAD->autocorrectConnector(getConnectorID(info->usConnObjectId),
+                            getSenseID(info->i2cRecord), txmit, enc, connector, 1);
+                    break;
+                }
+            }
+        } else {
+            NETLOG("rad", "translateAtomConnectorInfoV1 failed to detect sense for "
+                          "translated connector");
+        }
+    }
+
+    return code;
+}
+
+void RAD::autocorrectConnectors(uint8_t *baseAddr, AtomDisplayObjectPath *displayPaths, uint8_t displayPathNum,
+    AtomConnectorObject *connectorObjects, [[maybe_unused]] uint8_t connectorObjectNum,
+    RADConnectors::Connector *connectors, uint8_t sz) {
+    for (uint8_t i = 0; i < displayPathNum; i++) {
+        if (!isEncoder(displayPaths[i].usGraphicObjIds)) {
+            NETLOG("rad", "autocorrectConnectors not encoder %X at %u", displayPaths[i].usGraphicObjIds, i);
+            continue;
+        }
+
+        uint8_t txmit = 0, enc = 0;
+        if (!getTxEnc(displayPaths[i].usGraphicObjIds, txmit, enc)) { continue; }
+
+        uint8_t sense = getSenseID(baseAddr + connectorObjects[i].usRecordOffset);
+        if (!sense) {
+            NETLOG("rad", "autocorrectConnectors failed to detect sense for %u connector", i);
+            continue;
+        }
+
+        NETLOG("rad",
+            "autocorrectConnectors found txmit %02X enc %02X sense %02X for %u "
+            "connector",
+            txmit, enc, sense, i);
+
+        autocorrectConnector(getConnectorID(displayPaths[i].usConnObjectId), sense, txmit, enc, connectors, sz);
+    }
+}
+
+void RAD::autocorrectConnector(uint8_t connector, uint8_t sense, uint8_t txmit, [[maybe_unused]] uint8_t enc,
+    RADConnectors::Connector *connectors, uint8_t sz) {
+    if (callbackRAD->dviSingleLink) {
+        if (connector != CONNECTOR_OBJECT_ID_DUAL_LINK_DVI_I && connector != CONNECTOR_OBJECT_ID_DUAL_LINK_DVI_D &&
+            connector != CONNECTOR_OBJECT_ID_LVDS) {
+            NETLOG("rad", "autocorrectConnector found unsupported connector type %02X", connector);
+            return;
+        }
+
+        auto fixTransmit = [](auto &con, uint8_t idx, uint8_t sense, uint8_t txmit) {
+            if (con.sense == sense) {
+                if (con.transmitter != txmit && (con.transmitter & 0xCF) == con.transmitter) {
+                    NETLOG("rad",
+                        "autocorrectConnector replacing txmit %02X with "
+                        "%02X for %u "
+                        "connector sense %02X",
+                        con.transmitter, txmit, idx, sense);
+                    con.transmitter = txmit;
+                }
+                return true;
+            }
+            return false;
+        };
+
+        bool isModern = RADConnectors::modern();
+        for (uint8_t j = 0; j < sz; j++) {
+            if (isModern) {
+                auto &con = (&connectors->modern)[j];
+                if (fixTransmit(con, j, sense, txmit)) break;
+            } else {
+                auto &con = (&connectors->legacy)[j];
+                if (fixTransmit(con, j, sense, txmit)) break;
+            }
+        }
+    } else
+        NETLOG("rad", "autocorrectConnector use -raddvi to enable dvi autocorrection");
+}
+
+void RAD::reprioritiseConnectors(const uint8_t *senseList, uint8_t senseNum, RADConnectors::Connector *connectors,
+    uint8_t sz) {
+    static constexpr uint32_t typeList[] = {
+        RADConnectors::ConnectorLVDS,
+        RADConnectors::ConnectorDigitalDVI,
+        RADConnectors::ConnectorHDMI,
+        RADConnectors::ConnectorDP,
+        RADConnectors::ConnectorVGA,
+    };
+    static constexpr uint8_t typeNum {static_cast<uint8_t>(arrsize(typeList))};
+
+    bool isModern = RADConnectors::modern();
+    uint16_t priCount = 1;
+    for (uint8_t i = 0; i < senseNum + typeNum + 1; i++) {
+        for (uint8_t j = 0; j < sz; j++) {
+            auto reorder = [&](auto &con) {
+                if (i == senseNum + typeNum) {
+                    if (con.priority == 0) con.priority = priCount++;
+                } else if (i < senseNum) {
+                    if (con.sense == senseList[i]) {
+                        NETLOG("rad",
+                            "reprioritiseConnectors setting priority of "
+                            "sense %02X to "
+                            "%u by sense",
+                            con.sense, priCount);
+                        con.priority = priCount++;
                         return true;
                     }
+                } else {
+                    if (con.priority == 0 && con.type == typeList[i - senseNum]) {
+                        NETLOG("rad",
+                            "reprioritiseConnectors setting priority of "
+                            "sense %02X to "
+                            "%u by type",
+                            con.sense, priCount);
+                        con.priority = priCount++;
+                    }
                 }
-
                 return false;
             };
 
-            size_t extNum = devInfo->videoExternal.size();
-            for (size_t i = 0; i < extNum; i++) {
-                if (getAgpdMod(devInfo->videoExternal[i].video)) break;
+            if ((isModern && reorder((&connectors->modern)[j])) || (!isModern && reorder((&connectors->legacy)[j]))) {
+                break;
             }
-            if (devInfo->videoBuiltin != nullptr && graphicsDisplayPolicyMod == AGDP_DETECT) /* Default detect only */
-                getAgpdMod(devInfo->videoBuiltin);
-        }
-
-        rad.processKernel(patcher);
-
-        DeviceInfo::deleter(devInfo);
-    }
-
-    // Disable mods that did not find a way to function.
-    if (resetFramebuffer == FB_DETECT) {
-        resetFramebuffer = FB_NONE;
-        kextIOGraphics.switchOff();
-    }
-
-    if ((graphicsDisplayPolicyMod & AGDP_DETECT) || graphicsDisplayPolicyMod == AGDP_NONE_SET) {
-        graphicsDisplayPolicyMod = AGDP_NONE_SET;
-        kextAGDPolicy.switchOff();
-    }
-
-    // We need to load vinfo for cleanup and copy.
-    if (resetFramebuffer == FB_COPY || resetFramebuffer == FB_ZEROFILL) {
-        auto info = reinterpret_cast<vc_info *>(patcher.solveSymbol(KernelPatcher::KernelID, "_vinfo"));
-        if (info) {
-            consoleVinfo = *info;
-            DBGLOG("LRed", "vinfo 1: %u:%u %u:%u:%u", consoleVinfo.v_height, consoleVinfo.v_width, consoleVinfo.v_depth,
-                consoleVinfo.v_rowbytes, consoleVinfo.v_type);
-            DBGLOG("LRed", "vinfo 2: %s %u:%u %u:%u:%u", consoleVinfo.v_name, consoleVinfo.v_rows,
-                consoleVinfo.v_columns, consoleVinfo.v_rowscanbytes, consoleVinfo.v_scale, consoleVinfo.v_rotate);
-            gotConsoleVinfo = true;
-        } else {
-            SYSLOG("LRed", "failed to obtain vcinfo");
-            patcher.clearError();
         }
     }
 }
 
-void LRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
-    if (kextIOGraphics.loadIndex == index) {
-        gIOFBVerboseBootPtr = patcher.solveSymbol<uint8_t *>(index, "__ZL16gIOFBVerboseBoot", address, size);
-        if (gIOFBVerboseBootPtr) {
-            KernelPatcher::RouteRequest request("__ZN13IOFramebuffer6initFBEv", wrapFramebufferInit,
-                orgFramebufferInit);
-            patcher.routeMultiple(index, &request, 1, address, size);
-        } else {
-            SYSLOG("LRed", "failed to resolve gIOFBVerboseBoot");
-            patcher.clearError();
+bool RAD::wrapSetProperty(IORegistryEntry *that, const char *aKey, void *bytes, unsigned length) {
+    if (length > 10 && aKey && reinterpret_cast<const uint32_t *>(aKey)[0] == 'edom' &&
+        reinterpret_cast<const uint16_t *>(aKey)[2] == 'l') {
+        DBGLOG("rad", "SetProperty caught model %u (%.*s)", length, length, static_cast<char *>(bytes));
+        if (*static_cast<uint32_t *>(bytes) == ' DMA' || *static_cast<uint32_t *>(bytes) == ' ITA' ||
+            *static_cast<uint32_t *>(bytes) == 'edaR') {
+            if (FunctionCast(wrapGetProperty, callbackRAD->orgGetProperty)(that, aKey)) {
+                DBGLOG("rad", "SetProperty ignored setting %s to %s", aKey, static_cast<char *>(bytes));
+                return true;
+            }
+            DBGLOG("rad", "SetProperty missing %s, fallback to %s", aKey, static_cast<char *>(bytes));
         }
-        return;
-    } else if (kextAGDPolicy.loadIndex == index) {
-        processGraphicsPolicyMods(patcher, address, size);
-        return;
     }
 
-    if (rad.processKext(patcher, index, address, size)) return;
+    return FunctionCast(wrapSetProperty, callbackRAD->orgSetProperty)(that, aKey, bytes, length);
 }
 
-void LRed::processExternalProperties(IORegistryEntry *device, DeviceInfo *info, uint32_t vendor) {
-    auto name = device->getName();
+OSObject *RAD::wrapGetProperty(IORegistryEntry *that, const char *aKey) {
+    auto obj = FunctionCast(wrapGetProperty, callbackRAD->orgGetProperty)(that, aKey);
+    auto props = OSDynamicCast(OSDictionary, obj);
 
-    // It is unclear how to properly name the GPUs, and supposedly it does not
-    // really matter. However, we will try to at least name them in a unique
-    // manner (GFX0, GFX1, ...)
-    if (device->getProperty("preserve-names") == nullptr && currentExternalGfxIndex <= MaxExternalGfxIndex &&
-        (!name || strncmp(name, "GFX", strlen("GFX")) != 0)) {
-        char name[16];
-        snprintf(name, sizeof(name), "GFX%u", currentExternalGfxIndex++);
-        WIOKit::renameDevice(device, name);
-    }
+    if (props && aKey) {
+        const char *prefix {nullptr};
+        auto provider = OSDynamicCast(IOService, that->getParentEntry(gIOServicePlane));
+        if (provider) {
+            if (aKey[0] == 'a') {
+                if (!strcmp(aKey, "aty_config")) prefix = "CFG,";
+                else if (!strcmp(aKey, "aty_properties"))
+                    prefix = "PP,";
+            } else if (aKey[0] == 'c' && !strcmp(aKey, "cail_properties")) {
+                prefix = "CAIL,";
+            }
 
-    // AAPL,slot-name is used to distinguish GPU slots in Mac Pro.
-    // NVIDIA Web Drivers have a preference panel, where they read this value
-    // and allow up to 4 GPUs. Each NVIDIA GPU is then displayed on the ECC tab.
-    // We permit more slots, since 4 is an artificial restriction. iMac on the
-    // other side has only one GPU and is not expected to have multiple slots.
-    // Here we pass AAPL,slot-name if the GPU is NVIDIA or we have more than one
-    // GPU.
-    bool wantSlot = info->videoExternal.size() > 1 || vendor == WIOKit::VendorID::NVIDIA;
-    if (wantSlot && currentExternalSlotIndex <= MaxExternalSlotIndex && !device->getProperty("AAPL,slot-name")) {
-        char name[16];
-        snprintf(name, sizeof(name), "Slot-%u", currentExternalSlotIndex++);
-        device->setProperty("AAPL,slot-name", name, sizeof("Slot-1"));
-    }
-
-    // Set the autodetected AMD GPU name here, it will later be handled by RAD
-    // to not get overridden. This is not necessary for NVIDIA, as their drivers
-    // properly detect the name.
-    if (vendor == WIOKit::VendorID::ATIAMD && !device->getProperty("model")) {
-        uint32_t dev, rev, subven, sub;
-        if (WIOKit::getOSDataValue(device, "device-id", dev) && WIOKit::getOSDataValue(device, "revision-id", rev) &&
-            WIOKit::getOSDataValue(device, "subsystem-vendor-id", subven) &&
-            WIOKit::getOSDataValue(device, "subsystem-id", sub)) {
-            auto model = getRadeonModel(dev, rev, subven, sub);
-            if (model) {
-                device->setProperty("model", const_cast<char *>(model), static_cast<unsigned>(strlen(model) + 1));
+            if (prefix) {
+                DBGLOG("rad", "GetProperty discovered property merge request for %s", aKey);
+                auto rawProps = props->copyCollection();
+                if (rawProps) {
+                    auto newProps = OSDynamicCast(OSDictionary, rawProps);
+                    if (newProps) {
+                        callbackRAD->mergeProperties(newProps, prefix, provider);
+                        that->setProperty(aKey, newProps);
+                        obj = newProps;
+                    }
+                    rawProps->release();
+                }
             }
         }
     }
 
-    // Ensure built-in.
-    if (!device->getProperty("built-in")) {
-        DBGLOG("LRed", "fixing built-in");
-        uint8_t builtBytes[] {0x00};
-        device->setProperty("built-in", builtBytes, sizeof(builtBytes));
+    return obj;
+}
+
+uint32_t RAD::wrapGetConnectorsInfoV2(void *that, RADConnectors::Connector *connectors, uint8_t *sz) {
+    NETLOG("rad", "getConnectorsInfoV2: this = %p connectors = %p sz = %p", that, connectors, sz);
+    uint32_t code = FunctionCast(wrapGetConnectorsInfoV2, callbackRAD->orgGetConnectorsInfoV2)(that, connectors, sz);
+    NETLOG("rad", "getConnectorsInfoV2 returned 0x%X", code);
+    auto props = callbackRAD->currentPropProvider.get();
+
+    if (code == 0 && sz && props && *props) callbackRAD->updateConnectorsInfo(nullptr, nullptr, *props, connectors, sz);
+    else
+        NETLOG("rad", "getConnectorsInfoV2 failed %X or undefined %d", code, props == nullptr);
+
+    return code;
+}
+
+uint32_t RAD::wrapTranslateAtomConnectorInfoV2(void *that, RADConnectors::AtomConnectorInfo *info,
+    RADConnectors::Connector *connector) {
+    uint32_t code = FunctionCast(wrapTranslateAtomConnectorInfoV2, callbackRAD->orgTranslateAtomConnectorInfoV2)(that,
+        info, connector);
+
+    if (code == 0 && info && connector) {
+        RADConnectors::print(connector, 1);
+
+        uint8_t sense = getSenseID(info->i2cRecord);
+        if (sense) {
+            NETLOG("rad", "translateAtomConnectorInfoV2 got sense id %02X", sense);
+            uint8_t txmit = 0, enc = 0;
+            if (getTxEnc(info->usGraphicObjIds, txmit, enc))
+                callbackRAD->autocorrectConnector(getConnectorID(info->usConnObjectId), getSenseID(info->i2cRecord),
+                    txmit, enc, connector, 1);
+        } else {
+            NETLOG("rad", "translateAtomConnectorInfoV2 failed to detect sense for "
+                          "translated connector");
+        }
+    }
+
+    return code;
+}
+
+void LRed::wrapAmdCailServicesConstructor(IOService *that, IOPCIDevice *provider) {
+     WIOKit::renameDevice(provider, "GFX0");
+
+    static uint8_t builtBytes[] = {0x01};
+    provider->setProperty("built-in", builtBytes, sizeof(builtBytes));
+
+    NETDBG::enabled = true;
+    NETLOG("wred", "Patching device type table");
+    PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "wred",
+        "Failed to enable kernel writing");
+    callbackWRed->orgDeviceTypeTable[0] = provider->extendedConfigRead16(kIOPCIConfigDeviceID);
+    callbackWRed->orgDeviceTypeTable[1] = 6;
+    MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
+    if (provider->getProperty("ATY,bin_image")) {
+        NETLOG("wred", "VBIOS manually overridden");
     } else {
-        DBGLOG("LRed", "found existing built-in");
+        NETLOG("wred", "Fetching VBIOS from VFCT table");
+        auto *expert = reinterpret_cast<AppleACPIPlatformExpert *>(provider->getPlatform());
+        PANIC_COND(!expert, "wred", "Failed to get AppleACPIPlatformExpert");
+
+        auto *vfctData = expert->getACPITableData("VFCT", 0);
+        PANIC_COND(!vfctData, "wred", "Failed to get VFCT from AppleACPIPlatformExpert");
+
+        auto *vfct = static_cast<const VFCT *>(vfctData->getBytesNoCopy());
+        PANIC_COND(!vfct, "wred", "VFCT OSData::getBytesNoCopy returned null");
+
+        auto *vbiosContent = static_cast<const GOPVideoBIOSHeader *>(
+            vfctData->getBytesNoCopy(vfct->vbiosImageOffset, sizeof(GOPVideoBIOSHeader)));
+        PANIC_COND(!vfct->vbiosImageOffset || !vbiosContent, "wred", "No VBIOS contained in VFCT table");
+
+        auto *vbiosPtr =
+            vfctData->getBytesNoCopy(vfct->vbiosImageOffset + sizeof(GOPVideoBIOSHeader), vbiosContent->imageLength);
+        PANIC_COND(!vbiosPtr, "wred", "Bad VFCT: Offset + Size not within buffer boundaries");
+
+        callbackWRed->vbiosData = OSData::withBytes(vbiosPtr, vbiosContent->imageLength);
+        PANIC_COND(!callbackWRed->vbiosData, "wred", "OSData::withBytes failed");
+        provider->setProperty("ATY,bin_image", callbackWRed->vbiosData);
     }
+
+    NETLOG("lred", "AmdTtlServices: Calling original constructor");
+    FunctionCast(wrapAmdTtlServicesConstructor, callbackWRed->orgAmdTtlServicesConstructor)(that, provider);
 }
 
-void LRed::processGraphicsPolicyStr(const char *agdp) {
-    DBGLOG("LRed", "agdpmod using config %s", agdp);
-    if (strstr(agdp, "detect")) {
-        graphicsDisplayPolicyMod = AGDP_DETECT_SET;
-    } else if (strstr(agdp, "ignore")) {
-        graphicsDisplayPolicyMod = AGDP_NONE_SET;
-    } else {
-        graphicsDisplayPolicyMod = AGDP_NONE_SET;
-        if (strstr(agdp, "vit9696")) graphicsDisplayPolicyMod |= AGDP_VIT9696;
-        if (strstr(agdp, "pikera")) graphicsDisplayPolicyMod |= AGDP_PIKERA;
-        if (strstr(agdp, "cfgmap")) graphicsDisplayPolicyMod |= AGDP_CFGMAP;
-    }
+void *RAD::wrapCreateAtomBiosProxy(void *param1) {
+    NETLOG("lred", "createAtomBiosProxy: param1 = %p", param1);
+    auto ret = FunctionCast(wrapCreateAtomBiosProxy, callbackRAD->orgCreateAtomBiosProxy)(param1);
+    NETLOG("rad", "createAtomBiosProxy returned %p", ret);
+    return ret;
 }
 
-void LRed::processGraphicsPolicyMods(KernelPatcher &patcher, mach_vm_address_t address, size_t size) {
-    if (graphicsDisplayPolicyMod & AGDP_VIT9696) {
-        uint8_t find[] = {0xBA, 0x05, 0x00, 0x00, 0x00};
-        uint8_t replace[] = {0xBA, 0x00, 0x00, 0x00, 0x00};
-        KernelPatcher::LookupPatch patch {&kextAGDPolicy, find, replace, sizeof(find), 1};
-
-        patcher.applyLookupPatch(&patch);
-        if (patcher.getError() != KernelPatcher::Error::NoError) {
-            SYSLOG("LRed", "failed to apply agdp vit9696's patch %d", patcher.getError());
-            patcher.clearError();
-        }
-    }
-
-    if (graphicsDisplayPolicyMod & AGDP_PIKERA) {
-        KernelPatcher::LookupPatch patch {&kextAGDPolicy, reinterpret_cast<const uint8_t *>("board-id"),
-            reinterpret_cast<const uint8_t *>("board-ix"), sizeof("board-id"), 1};
-
-        patcher.applyLookupPatch(&patch);
-        if (patcher.getError() != KernelPatcher::Error::NoError) {
-            SYSLOG("LRed", "failed to apply agdp Piker-Alpha's patch %d", patcher.getError());
-            patcher.clearError();
-        }
-    }
-
-    if (graphicsDisplayPolicyMod & AGDP_CFGMAP) {
-        // Does not function in 10.13.x, as the symbols have been stripped.
-        // Abort on usage on 10.14 or newer.
-        if (getKernelVersion() >= KernelVersion::Mojave)
-            PANIC("LRed", "adgpmod=cfgmap has no effect on 10.13.4, use agdpmod=ignore");
-        KernelPatcher::RouteRequest request("__ZN25AppleGraphicsDevicePolicy5startEP9IOService",
-            wrapGraphicsPolicyStart, orgGraphicsPolicyStart);
-        patcher.routeMultiple(kextAGDPolicy.loadIndex, &request, 1, address, size);
-    }
+IOReturn RAD::wrapPopulateDeviceMemory(void *that, uint32_t reg) {
+    DBGLOG("rad", "populateDeviceMemory: this = %p reg = 0x%X", that, reg);
+    auto ret = FunctionCast(wrapPopulateDeviceMemory, callbackRAD->orgPopulateDeviceMemory)(that, reg);
+    DBGLOG("rad", "populateDeviceMemory returned 0x%X", ret);
+    return kIOReturnSuccess;
 }
 
-bool LRed::isGraphicsPolicyModRequired(DeviceInfo *info) {
-    DBGLOG("LRed", "detecting policy");
-    // Graphics policy patches are only applicable to discrete GPUs.
-    if (info->videoExternal.size() == 0) {
-        DBGLOG("LRed", "no external gpus");
-        return false;
+uint64_t RAD::wrapMCILUpdateGfxCGPG(void *param1) {
+    NETLOG("rad", "_Cail_MCILUpdateGfxCGPG: param1 = %p", param1);
+    auto ret = FunctionCast(wrapMCILUpdateGfxCGPG, callbackRAD->orgMCILUpdateGfxCGPG)(param1);
+    NETLOG("rad", "_Cail_MCILUpdateGfxCGPG returned 0x%llX", ret);
+    return ret;
+}
+
+IOReturn RAD::wrapQueryEngineRunningState(void *that, void *param1, void *param2) {
+    NETLOG("rad", "queryEngineRunningState: this = %p param1 = %p param2 = %p", that, param1, param2);
+    NETLOG("rad", "queryEngineRunningState: *param2 = 0x%X", *static_cast<uint32_t *>(param2));
+    auto ret = FunctionCast(wrapQueryEngineRunningState, callbackRAD->orgQueryEngineRunningState)(that, param1, param2);
+    NETLOG("rad", "queryEngineRunningState: after *param2 = 0x%X", *static_cast<uint32_t *>(param2));
+    NETLOG("rad", "queryEngineRunningState returned 0x%X", ret);
+    return ret;
+}
+
+IOReturn RAD::wrapQueryComputeQueueIsIdle(void *that, uint64_t param1) {
+    NETLOG("rad", "QueryComputeQueueIsIdle: this = %p param1 = 0x%llX", that, param1);
+    auto ret = FunctionCast(wrapQueryComputeQueueIsIdle, callbackRAD->orgQueryComputeQueueIsIdle)(that, param1);
+    NETLOG("rad", "QueryComputeQueueIsIdle returned 0x%X", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapCAILQueryEngineRunningState(void *param1, uint32_t *param2, uint64_t param3) {
+    NETLOG("rad", "_CAILQueryEngineRunningState: param1 = %p param2 = %p param3 = %llX", param1, param2, param3);
+    NETLOG("rad", "_CAILQueryEngineRunningState: *param2 = 0x%X", *param2);
+    auto ret = FunctionCast(wrapCAILQueryEngineRunningState, callbackRAD->orgCAILQueryEngineRunningState)(param1,
+        param2, param3);
+    NETLOG("rad", "_CAILQueryEngineRunningState: after *param2 = 0x%X", *param2);
+    NETLOG("rad", "_CAILQueryEngineRunningState returned 0x%llX", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapCailMonitorEngineInternalState(void *that, uint32_t param1, uint32_t *param2) {
+    NETLOG("rad", "_CailMonitorEngineInternalState: this = %p param1 = 0x%X param2 = %p", that, param1, param2);
+    NETLOG("rad", "_CailMonitorEngineInternalState: *param2 = 0x%X", *param2);
+    auto ret = FunctionCast(wrapCailMonitorEngineInternalState, callbackRAD->orgCailMonitorEngineInternalState)(that,
+        param1, param2);
+    NETLOG("rad", "_CailMonitorEngineInternalState: after *param2 = 0x%X", *param2);
+    NETLOG("rad", "_CailMonitorEngineInternalState returned 0x%llX", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapCailMonitorPerformanceCounter(void *that, uint32_t *param1) {
+    NETLOG("rad", "_CailMonitorPerformanceCounter: this = %p param1 = %p", that, param1);
+    NETLOG("rad", "_CailMonitorPerformanceCounter: *param1 = 0x%X", *param1);
+    auto ret =
+        FunctionCast(wrapCailMonitorPerformanceCounter, callbackRAD->orgCailMonitorPerformanceCounter)(that, param1);
+    NETLOG("rad", "_CailMonitorPerformanceCounter: after *param1 = 0x%X", *param1);
+    NETLOG("rad", "_CailMonitorPerformanceCounter returned 0x%llX", ret);
+    return ret;
+}
+
+bool RAD::wrapAMDHWChannelWaitForIdle(void *that, uint64_t param1) {
+    NETLOG("rad", "AMDRadeonX5000_AMDHWChannel::waitForIdle: this = %p param1 = 0x%llx", that, param1);
+    auto ret = FunctionCast(wrapAMDHWChannelWaitForIdle, callbackRAD->orgAMDHWChannelWaitForIdle)(that, param1);
+    NETLOG("rad", "AMDRadeonX5000_AMDHWChannel::waitForIdle returned %d", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapSMUMInitialize(uint64_t param1, uint32_t *param2, uint64_t param3) {
+    NETLOG("rad", "_SMUM_Initialize: param1 = 0x%llX param2 = %p param3 = 0x%llX", param1, param2, param3);
+    auto ret = FunctionCast(wrapSMUMInitialize, callbackRAD->orgSMUMInitialize)(param1, param2, param3);
+    NETLOG("rad", "_SMUM_Initialize returned 0x%llX", ret);
+    return ret;
+}
+
+void *RAD::wrapCreatePowerTuneServices(void *param1, void *param2) {
+    NETLOG("rad", "createPowerTuneServices: param1 = %p param2 = %p", param1, param2);
+    auto *ret = IOMallocZero(0x18);
+    callbackRAD->orgVega10PowerTuneConstructor(ret, param1, param2);
+    return ret;
+}
+
+uint16_t RAD::wrapGetFamilyId() {
+    /**
+     * This function is hardcoded to return 0x78 which is something CI
+     * So we now hard code it to return 0x6e which presumably is Carrizo, even though this is CI and not VI
+     */
+    return 0x6E;
+}
+
+
+static bool injectedIPFirmware = false;
+/*
+IOReturn RAD::wrapPopulateDeviceInfo(void *that) {
+    NETLOG("rad", "AMD8000Controller::populateDevicefo: this = %p", that);
+    auto ret = FunctionCast(wrapPopulateDeviceInfo, callbackRAD->orgPopulateDeviceInfo)(that);
+    auto &familyId = getMember<uint32_t>(that, 0x60);
+    auto deviceId = getMember<IOPCIDevice *>(that, 0x18)->configRead16(kIOPCIConfigDeviceID);
+    auto &revision = getMember<uint32_t>(that, 0x68);
+    auto &emulatedRevision = getMember<uint32_t>(that, 0x6c);
+    NETLOG("rad",
+        "deviceId = 0x%X revision = 0x%X "
+        "emulatedRevision = 0x%X",
+        deviceId, revision, emulatedRevision);
+    familyId = 0x8e;
+    NETLOG("rad", "locating Init Caps entry");
+    MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock);
+
+    if (!injectedIPFirmware) {
+        injectedIPFirmware = true;
+        auto *asicName = getASICName();
+        auto *filename = new char[128];
+        snprintf(filename, 128, "%s_vcn.bin", asicName);
+        auto *targetFilename = callbackRAD->asicType == ASICType::Renoir ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
+        NETLOG("rad", "%s => %s", filename, targetFilename);
+
+        auto *fwDesc = getFWDescByName(filename);
+        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+
+        auto *fw = callbackRAD->orgCreateFirmware(fwDesc->var, fwDesc->size, 0x200, targetFilename);
+        NETLOG("rad", "fwDir = %p", callbackRAD->callbackFirmwareDirectory);
+        NETLOG("rad", "inserting %s!", targetFilename);
+        PANIC_COND(!callbackRAD->orgPutFirmware(callbackRAD->callbackFirmwareDirectory, 6, fw), "rad",
+            "Failed to inject ativvaxy_rv.dat firmware");
+
+        snprintf(filename, 128, "%s_rlc.bin", asicName);
+        fwDesc = getFWDescByName(filename);
+        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        PANIC_COND(fwDesc->size != callbackRAD->orgGcRlcUcode->size, "rad", "%s size mismatch", filename);
+        callbackRAD->orgGcRlcUcode->addr = 0x0;
+        memmove(callbackRAD->orgGcRlcUcode->data, fwDesc->var, fwDesc->size);
+        NETLOG("rad", "Injected %s!", filename);
+
+        snprintf(filename, 128, "%s_me.bin", asicName);
+        fwDesc = getFWDescByName(filename);
+        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        PANIC_COND(fwDesc->size != callbackRAD->orgGcMeUcode->size, "rad", "%s size mismatch", filename);
+        callbackRAD->orgGcMeUcode->addr = 0x1000;
+        memmove(callbackRAD->orgGcMeUcode->data, fwDesc->var, fwDesc->size);
+        NETLOG("rad", "Injected %s!", filename);
+
+        snprintf(filename, 128, "%s_ce.bin", asicName);
+        fwDesc = getFWDescByName(filename);
+        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        PANIC_COND(fwDesc->size != callbackRAD->orgGcCeUcode->size, "rad", "%s size mismatch", filename);
+        callbackRAD->orgGcCeUcode->addr = 0x800;
+        memmove(callbackRAD->orgGcCeUcode->data, fwDesc->var, fwDesc->size);
+        NETLOG("rad", "Injected %s!", filename);
+
+        snprintf(filename, 128, "%s_pfp.bin", asicName);
+        fwDesc = getFWDescByName(filename);
+        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        PANIC_COND(fwDesc->size != callbackRAD->orgGcPfpUcode->size, "rad", "%s size mismatch", filename);
+        callbackRAD->orgGcPfpUcode->addr = 0x1400;
+        memmove(callbackRAD->orgGcPfpUcode->data, fwDesc->var, fwDesc->size);
+        NETLOG("rad", "Injected %s!", filename);
+
+        snprintf(filename, 128, "%s_mec.bin", asicName);
+        fwDesc = getFWDescByName(filename);
+        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        PANIC_COND(fwDesc->size != callbackRAD->orgGcMecUcode->size, "rad", "%s size mismatch", filename);
+        callbackRAD->orgGcMecUcode->addr = 0x0;
+        memmove(callbackRAD->orgGcMecUcode->data, fwDesc->var, fwDesc->size);
+        NETLOG("rad", "Injected %s!", filename);
+
+        snprintf(filename, 128, "%s_mec_jt.bin", asicName);
+        fwDesc = getFWDescByName(filename);
+        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        PANIC_COND(fwDesc->size != callbackRAD->orgGcMecJtUcode->size, "rad", "%s size mismatch", filename);
+        callbackRAD->orgGcMecJtUcode->addr = 0x104A4;
+        memmove(callbackRAD->orgGcMecJtUcode->data, fwDesc->var, fwDesc->size);
+        NETLOG("rad", "Injected %s!", filename);
+
+        snprintf(filename, 128, "%s_sdma.bin", asicName);
+        fwDesc = getFWDescByName(filename);
+        PANIC_COND(!fwDesc, "rad", "Somehow %s is missing", filename);
+        PANIC_COND(fwDesc->size != callbackRAD->orgSdmaUcode->size, "rad", "%s size mismatch", filename);
+        memmove(callbackRAD->orgSdmaUcode->data, fwDesc->var, fwDesc->size);
+        NETLOG("rad", "Injected %s!", filename);
+        delete[] filename;
     }
 
-    // Graphics policy patches do harm on Apple MacBooks, see:
-    // https://github.com/acidanthera/bugtracker/issues/260
-    if (info->firmwareVendor == DeviceInfo::FirmwareVendor::Apple) {
-        DBGLOG("LRed", "apple firmware");
-        return false;
-    }
-
-    // We do not need AGDC patches on compatible devices.
-    auto boardId = BaseDeviceInfo::get().boardIdentifier;
-    DBGLOG("LRed", "board is %s", boardId);
-    const char *compatibleBoards[] {
-        "Mac-00BE6ED71E35EB86",    // iMac13,1
-        "Mac-27ADBB7B4CEE8E61",    // iMac14,2
-        "Mac-4B7AC7E43945597E",    // MacBookPro9,1
-        "Mac-77EB7D7DAF985301",    // iMac14,3
-        "Mac-C3EC7CD22292981F",    // MacBookPro10,1
-        "Mac-C9CF552659EA9913",    // ???
-        "Mac-F221BEC8",            // MacPro5,1 (and MacPro4,1)
-        "Mac-F221DCC8",            // iMac10,1
-        "Mac-F42C88C8",            // MacPro3,1
-        "Mac-FC02E91DDD3FA6A4",    // iMac13,2
-        "Mac-2BD1B31983FE1663"     // MacBookPro11,3
-    };
-    for (size_t i = 0; i < arrsize(compatibleBoards); i++) {
-        if (!strcmp(compatibleBoards[i], boardId)) {
-            DBGLOG("LRed", "disabling nvidia patches on model %s", boardId);
-            return false;
+    CailInitAsicCapEntry *initCaps = nullptr;
+    for (size_t i = 0; i < 789; i++) {
+        auto *temp = callbackRAD->orgAsicInitCapsTable + i;
+        if (temp->familyId == 0x8e && temp->deviceId == deviceId && temp->emulatedRev == emulatedRevision) {
+            initCaps = temp;
+            break;
         }
     }
+    if (!initCaps) {
+        NETLOG("rad", "Warning! Using Fallback Init Caps mechanism");
+        for (size_t i = 0; i < 789; i++) {
+            auto *temp = callbackRAD->orgAsicInitCapsTable + i;
+            if (temp->familyId == 0x8e && temp->deviceId == deviceId &&
+                (temp->emulatedRev >= wrapGetEnumeratedRevision(that) || temp->emulatedRev <= emulatedRevision)) {
+                initCaps = temp;
+                break;
+            }
+        }
+        if (!initCaps) { panic("rad: Failed to find Init Caps entry for device ID 0x%X", deviceId); }
+    }
+    callbackRAD->orgAsicCapsTable->familyId = callbackRAD->orgAsicCapsTableHWLibs->familyId = 0x8e;
+    callbackRAD->orgAsicCapsTable->deviceId = callbackRAD->orgAsicCapsTableHWLibs->deviceId = deviceId;
+    callbackRAD->orgAsicCapsTable->revision = callbackRAD->orgAsicCapsTableHWLibs->revision = revision;
+    callbackRAD->orgAsicCapsTable->pciRev = callbackRAD->orgAsicCapsTableHWLibs->pciRev = 0xFFFFFFFF;
+    callbackRAD->orgAsicCapsTable->emulatedRev = callbackRAD->orgAsicCapsTableHWLibs->emulatedRev = emulatedRevision;
+    callbackRAD->orgAsicCapsTable->caps = callbackRAD->orgAsicCapsTableHWLibs->caps = initCaps->caps;
+    MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
+    NETLOG("rad", "AMDRadeonX6000_AmdAsicInfoNavi::populateDeviceInfo returned 0x%X", ret);
+    return ret;
+}
 
+void RAD::wrapMCILDebugPrint(uint32_t level_max, char *fmt, uint64_t param3, uint64_t param4, uint64_t param5,
+    uint level) {
+    NETDBG::printf("_MCILDebugPrint PARAM1 = 0x%X: ", level_max);
+    NETDBG::printf(fmt, param3, param4, param5, level);
+    FunctionCast(wrapMCILDebugPrint, callbackRAD->orgMCILDebugPrint)(level_max, fmt, param3, param4, param5, level);
+}
+
+uint32_t RAD::wrapGetVideoMemoryType(void *that) {
+    NETLOG("rad", "getVideoMemoryType: this = %p", that);
+    auto ret = FunctionCast(wrapGetVideoMemoryType, callbackRAD->orgGetVideoMemoryType)(that);
+    NETLOG("rad", "getVideoMemoryType returned 0x%X", ret);
+    return ret != 0 ? ret : 4;
+}
+
+uint32_t RAD::wrapGetVideoMemoryBitWidth(void *that) {
+    NETLOG("rad", "getVideoMemoryBitWidth: this = %p", that);
+    auto ret = FunctionCast(wrapGetVideoMemoryBitWidth, callbackRAD->orgGetVideoMemoryBitWidth)(that);
+    NETLOG("rad",
+        "getVideoMemoryBitWidth "
+        "returned 0x%X",
+        ret);
+    return ret != 0 ? ret : 64;
+}
+
+IOReturn RAD::wrapPopulateVramInfo(void *that, void *param1) {
+    NETLOG("rad", "populateVramInfo: this = %p param1 = %p", that, param1);
+    return kIOReturnSuccess;
+}
+*/
+bool RAD::wrapAllocateHWEngines(void *that) {
+    NETLOG("rad", "allocateHWEngines: this = %p", that);
+    auto *&vtable = getMember<mach_vm_address_t *>(that, 0);
+    vtable[0x62] = reinterpret_cast<mach_vm_address_t>(wrapGetHWEngine);
+
+    auto *pm4 = callbackRAD->orgGFX7PM4EngineNew(0x198);
+    callbackRAD->orgGFX7PM4EngineConstructor(pm4);
+    getMember<void *>(that, 0x3b8) = pm4;
+
+    auto *sdma0 = callbackRAD->orgGFX7SDMAEngineNew(0x118);
+    callbackRAD->orgGFX7SDMAEngineConstructor(sdma0);
+    getMember<void *>(that, 0x3b8) = sdma0;
+	
+	auto *sdma1 = callbackRAD->orgGFX7SDMAEngineNew(0x118);
+	callbackRAD->orgGFX7SDMAEngineConstructor(sdma1);
+	getMember<void *>(that, 0x3c0) = sdma1;
+
+    auto *vce = callbackRAD->orgGFX7VCEEngineNew(0x198);
+    callbackRAD->orgGFX7VCEEngineConstructor(vce);
+    getMember<void *>(that, 0x3f8) = vce;
+	
+	//auto *samu =
+
+    NETLOG("rad", "allocateHWEngines: returning true");
     return true;
 }
 
-void LRed::wrapFramebufferInit(IOFramebuffer *fb) {
-    bool backCopy = callbackLRED->gotConsoleVinfo && callbackLRED->resetFramebuffer == FB_COPY;
-    bool zeroFill = callbackLRED->gotConsoleVinfo && callbackLRED->resetFramebuffer == FB_ZEROFILL;
-    auto &info = callbackLRED->consoleVinfo;
-
-    // Copy back usually happens in a separate call to frameBufferInit
-    // Furthermore, v_baseaddr may not be available on subsequent calls, so we
-    // have to copy
-    if (backCopy && info.v_baseaddr) {
-        // Note, this buffer is left allocated and never freed, yet there
-        // actually is no way to free it.
-        callbackLRED->consoleBuffer = Buffer::create<uint8_t>(info.v_rowbytes * info.v_height);
-        if (callbackLRED->consoleBuffer)
-            lilu_os_memcpy(callbackLRED->consoleBuffer, reinterpret_cast<uint8_t *>(info.v_baseaddr),
-                info.v_rowbytes * info.v_height);
-        else
-            SYSLOG("LRed", "console buffer allocation failure");
-        // Even if we may succeed next time, it will be unreasonably dangerous
-        info.v_baseaddr = 0;
-    }
-
-    uint8_t verboseBoot = *callbackLRED->gIOFBVerboseBootPtr;
-    // For back copy we need a console buffer and no verbose
-    backCopy = backCopy && callbackLRED->consoleBuffer && !verboseBoot;
-
-    // Now check if the resolution and parameters match
-    if (backCopy || zeroFill) {
-        IODisplayModeID mode;
-        IOIndex depth;
-        IOPixelInformation pixelInfo;
-
-        if (fb->getCurrentDisplayMode(&mode, &depth) == kIOReturnSuccess &&
-            fb->getPixelInformation(mode, depth, kIOFBSystemAperture, &pixelInfo) == kIOReturnSuccess) {
-            DBGLOG("LRed", "fb info 1: %d:%d %u:%u:%u", mode, depth, pixelInfo.bytesPerRow, pixelInfo.bytesPerPlane,
-                pixelInfo.bitsPerPixel);
-            DBGLOG("LRed", "fb info 2: %u:%u %s %u:%u:%u", pixelInfo.componentCount, pixelInfo.bitsPerComponent,
-                pixelInfo.pixelFormat, pixelInfo.flags, pixelInfo.activeWidth, pixelInfo.activeHeight);
-
-            if (info.v_rowbytes != pixelInfo.bytesPerRow || info.v_width != pixelInfo.activeWidth ||
-                info.v_height != pixelInfo.activeHeight || info.v_depth != pixelInfo.bitsPerPixel) {
-                backCopy = zeroFill = false;
-                DBGLOG("LRed", "this display has different mode");
-            }
-        } else {
-            DBGLOG("LRed", "failed to obtain display mode");
-            backCopy = zeroFill = false;
-        }
-    }
-
-    // For whatever reason not resetting Intel framebuffer (back copy mode)
-    // twice works better.
-    if (!backCopy) *callbackLRED->gIOFBVerboseBootPtr = 1;
-    FunctionCast(wrapFramebufferInit, callbackLRED->orgFramebufferInit)(fb);
-    if (!backCopy) *callbackLRED->gIOFBVerboseBootPtr = verboseBoot;
-
-    // Finish the framebuffer initialisation by filling with black or copying
-    // the image back.
-    if (FramebufferViewer::getVramMap(fb)) {
-        auto src = reinterpret_cast<uint8_t *>(callbackLRED->consoleBuffer);
-        auto dst = reinterpret_cast<uint8_t *>(FramebufferViewer::getVramMap(fb)->getVirtualAddress());
-        if (backCopy) {
-            DBGLOG("LRed", "attempting to copy...");
-            // Here you can actually draw at your will, but looks like only on
-            // Intel. On AMD you technically can draw too, but it happens for a
-            // very short while, and is not worth it.
-            lilu_os_memcpy(dst, src, info.v_rowbytes * info.v_height);
-        } else if (zeroFill) {
-            // On AMD we do a zero-fill to ensure no visual glitches.
-            DBGLOG("LRed", "doing zero-fill...");
-            memset(dst, 0, info.v_rowbytes * info.v_height);
-        }
-    }
+void *RAD::wrapGetHWEngine(void *that, uint32_t engineType) {
+    NETLOG("rad", "getHWEngine: this = %p engineType = 0x%X", that, engineType);
+    auto ret = FunctionCast(wrapGetHWEngine, callbackRAD->orgGetHWEngine)(that, engineType);
+    NETLOG("rad", "getHWEngine returned %p", ret);
+    return ret;
 }
 
-bool LRed::wrapGraphicsPolicyStart(IOService *that, IOService *provider) {
-    auto boardIdentifier = BaseDeviceInfo::get().boardIdentifier;
+void RAD::wrapSetupAndInitializeHWCapabilities(void *that) {
+    NETLOG("rad", "wrapSetupAndInitializeCapabilities: this = %p", that);
+    FunctionCast(wrapSetupAndInitializeHWCapabilities, callbackRAD->orgSetupAndInitializeHWCapabilities)(that);
+    getMember<uint64_t>(that, 0xC0) = 0;
+    NETLOG("rad", "wrapSetupAndInitializeCapabilities: done");
+}
 
-    DBGLOG("LRed", "agdp fix got board-id %s", boardIdentifier);
-    auto oldConfigMap = OSDynamicCast(OSDictionary, that->getProperty("ConfigMap"));
-    if (oldConfigMap) {
-        auto rawConfigMap = oldConfigMap->copyCollection();
-        if (rawConfigMap) {
-            auto newConfigMap = OSDynamicCast(OSDictionary, rawConfigMap);
-            if (newConfigMap) {
-                auto none = OSString::withCString("none");
-                if (none) {
-                    newConfigMap->setObject(boardIdentifier, none);
-                    none->release();
-                    that->setProperty("ConfigMap", newConfigMap);
-                }
-            } else {
-                SYSLOG("LRed", "agdp fix failed to clone ConfigMap");
-            }
-            rawConfigMap->release();
+bool RAD::wrapPM4EnginePowerUp(void *that) {
+    NETLOG("rad", "PM4EnginePowerUp: this = %p", that);
+    auto ret = FunctionCast(wrapPM4EnginePowerUp, callbackRAD->orgPM4EnginePowerUp)(that);
+    NETLOG("rad", "PM4EnginePowerUp returned %d", ret);
+    return ret;
+}
+
+void RAD::wrapDumpASICHangStateCold(uint64_t param1) {
+    NETLOG("rad", "dumpASICHangStateCold: param1 = 0x%llX", param1);
+    IOSleep(3600000);
+    FunctionCast(wrapDumpASICHangStateCold, callbackRAD->orgDumpASICHangStateCold)(param1);
+    NETLOG("rad", "dumpASICHangStateCold finished");
+}
+
+bool RAD::wrapAccelStart(void *that, IOService *provider) {
+    NETLOG("rad", "accelStart: this = %p provider = %p", that, provider);
+    callbackRAD->callbackAccelerator = that;
+    auto ret = FunctionCast(wrapAccelStart, callbackRAD->orgAccelStart)(that, provider);
+    NETLOG("rad", "accelStart returned %d", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapGFX9RTRingGetHead(void *that) {
+    NETLOG("rad", "GFX9RTRingGetHead: this = %p", that);
+    auto ret = FunctionCast(wrapGFX9RTRingGetHead, callbackRAD->orgGFX9RTRingGetHead)(that);
+    NETLOG("rad", "GFX9RTRingGetHead returned 0x%llX", ret);
+    NETLOG("rad", "RTRing->field_0x54 = 0x%X", getMember<uint32_t>(that, 0x54));
+    NETLOG("rad", "RTRing->field_0x74 = 0x%X", getMember<uint32_t>(that, 0x74));
+    NETLOG("rad", "RTRing->field_0x8c = 0x%X", getMember<uint32_t>(that, 0x8c));
+    return ret;
+}
+
+uint64_t RAD::wrapHwRegRead(void *that, uint64_t addr) {
+    NETLOG("rad", "hwRegRead: this = %p addr = 0x%llX", that, addr);
+    auto ret = FunctionCast(wrapHwRegRead, callbackRAD->orgHwRegRead)(that, addr);
+    NETLOG("rad", "hwRegRead returned 0x%llX", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapHwRegWrite(void *that, uint64_t addr, uint64_t val) {
+    NETLOG("rad", "hwRegWrite: this = %p addr = 0x%llX val = 0x%llX", that, addr, val);
+    auto ret = FunctionCast(wrapHwRegWrite, callbackRAD->orgHwRegWrite)(that, addr, val);
+    NETLOG("rad", "hwRegWrite returned 0x%llX", ret);
+    return ret;
+}
+
+void RAD::wrapAccelDisplayPipeWriteDiagnosisReport(void *that) {
+    NETLOG("rad", "AccelDisplayPipeWriteDiagnosisReport: this = %p", that);
+    // FunctionCast(wrapAccelDisplayPipeWriteDiagnosisReport,
+    // callbackRAD->orgAccelDisplayPipeWriteDiagnosisReport)(that);
+    NETLOG("rad", "AccelDisplayPipeWriteDiagnosisReport finished");
+}
+
+uint64_t RAD::wrapSetMemoryAllocationsEnabled(void *that, uint64_t param1) {
+    NETLOG("rad", "setMemoryAllocationsEnabled: this = %p param1 = 0x%llX", that, param1);
+    auto ret = FunctionCast(wrapSetMemoryAllocationsEnabled, callbackRAD->orgSetMemoryAllocationsEnabled)(that, param1);
+    NETLOG("rad", "setMemoryAllocationsEnabled returned 0x%llX", ret);
+    NETLOG("rad", "field_0x20=%llX field_0x28=%llX field_0x30=%llX", getMember<uint64_t>(that, 0x20),
+        getMember<uint64_t>(that, 0x28), getMember<uint64_t>(that, 0x30));
+    return ret;
+}
+
+uint64_t RAD::wrapGetEventMachine(void *that) {
+    NETLOG("rad", "getEventMachine: this = %p", that);
+    auto ret = FunctionCast(wrapGetEventMachine, callbackRAD->orgGetEventMachine)(that);
+    NETLOG("rad", "getEventMachine returned 0x%llX", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapGetVMUpdateChannel(void *that) {
+    NETLOG("rad", "getVMUpdateChannel: this = %p", that);
+    auto ret = FunctionCast(wrapGetVMUpdateChannel, callbackRAD->orgGetVMUpdateChannel)(that);
+    NETLOG("rad", "getVMUpdateChannel returned 0x%llX", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapCreateVMCommandBufferPool(void *that, void *param1, uint64_t param2, uint64_t param3) {
+    NETLOG("rad", "createVMCommandBufferPool: this = %p param1 = %p param2 = 0x%llX param3 = 0x%llX", that, param1,
+        param2, param3);
+    auto ret = FunctionCast(wrapCreateVMCommandBufferPool, callbackRAD->orgCreateVMCommandBufferPool)(that, param1,
+        param2, param3);
+    NETLOG("rad", "createVMCommandBufferPool returned 0x%llX", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapPoolGetChannel(void *that) {
+    NETLOG("rad", "poolGetChannel: this = %p", that);
+    auto ret = FunctionCast(wrapPoolGetChannel, callbackRAD->orgPoolGetChannel)(that);
+    NETLOG("rad", "poolGetChannel returned 0x%llX", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapAccelGetHWChannel(void *that) {
+    NETLOG("rad", "accelGetHWChannel: this = %p", that);
+    auto ret = FunctionCast(wrapAccelGetHWChannel, callbackRAD->orgAccelGetHWChannel)(that);
+    NETLOG("rad", "accelGetHWChannel returned 0x%llX", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapCreateAccelChannels(void *that, uint64_t param1) {
+    NETLOG("rad", "createAccelChannels: this = %p param1 = 0x%llX", that, param1);
+    /**
+     * Used to be a patch here to only use SDMA0, but since Carrizo and Beema/Mullins both have
+	 * SDMA1 and SDMA0 we dont need the patch
+     */
+    auto ret = FunctionCast(wrapCreateAccelChannels, callbackRAD->orgCreateAccelChannels)(that, param1);
+    NETLOG("rad", "createAccelChannels returned 0x%llX", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapPopulateAccelConfig(void *that, void *param1) {
+    NETLOG("rad", "populateAccelConfig: this = %p param1 = %p", that, param1);
+    auto ret = FunctionCast(wrapPopulateAccelConfig, callbackRAD->orgPopulateAccelConfig)(that, param1);
+    NETLOG("rad", "populateAccelConfig returned 0x%llX", ret);
+    return ret;
+}
+
+bool RAD::wrapPowerUpHW(void *that) {
+    NETLOG("rad", "powerUpHW: this = %p", that);
+    auto ret = FunctionCast(wrapPowerUpHW, callbackRAD->orgPowerUpHW)(that);
+    NETLOG("rad", "powerUpHW returned %d", ret);
+    return ret;
+}
+
+void RAD::wrapHWsetMemoryAllocationsEnabled(void *that, bool param1) {
+    NETLOG("rad", "HWsetMemoryAllocationsEnabled: this = %p param1 = %d", that, param1);
+    FunctionCast(wrapHWsetMemoryAllocationsEnabled, callbackRAD->orgHWsetMemoryAllocationsEnabled)(that, param1);
+    NETLOG("rad", "HWsetMemoryAllocationsEnabled finished");
+}
+
+uint64_t RAD::wrapAccelCallPlatformFunction(void *param1, uint64_t param2, void *param3, void *param4, void *param5,
+    void *param6, void *param7) {
+    NETLOG("rad",
+        "accelCallPlatformFunction: param1 = %p param2 = 0x%llX param3 = %p param4 = %p param5 = %p param6 = %p param7 "
+        "= %p",
+        param1, param2, param3, param4, param5, param6, param7);
+    auto ret = FunctionCast(wrapAccelCallPlatformFunction, callbackRAD->orgAccelCallPlatformFunction)(param1, param2,
+        param3, param4, param5, param6, param7);
+    NETLOG("rad", "*param4 = %X", *(uint *)param4);
+    NETLOG("rad", "accelCallPlatformFunction returned 0x%llX", ret);
+    return ret;
+}
+
+bool RAD::wrapVega10PowerUp(void *that) {
+    NETLOG("rad", "Vega10PowerUp: this = %p", that);
+    auto ret = FunctionCast(wrapVega10PowerUp, callbackRAD->orgVega10PowerUp)(that);
+    NETLOG("rad", "Vega10PowerUp returned %d", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapMicroEngineControlLoadMicrocode(void *that, void *param1) {
+    NETLOG("rad", "microEngineControlLoadMicrocode: this = %p param1 = %p", that, param1);
+    auto ret = FunctionCast(wrapMicroEngineControlLoadMicrocode, callbackRAD->orgMicroEngineControlLoadMicrocode)(that,
+        param1);
+    NETLOG("rad", "microEngineControlLoadMicrocode returned 0x%llX", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapMicroEngineControlInitializeEngine(void *that, void *param1, void *param2) {
+    NETLOG("rad", "microEngineControlInitializeEngine: this = %p param1 = %p param2 = %p", that, param1, param2);
+    auto ret = FunctionCast(wrapMicroEngineControlInitializeEngine,
+        callbackRAD->orgMicroEngineControlInitializeEngine)(that, param1, param2);
+    NETLOG("rad", "microEngineControlInitializeEngine returned 0x%llX", ret);
+    return ret;
+}
+
+uint64_t RAD::wrapMicroEngineControlStartEngine(void *that, void *param1) {
+    NETLOG("rad", "microEngineControlStartEngine: this = %p param1 = %p", that, param1);
+    auto ret =
+        FunctionCast(wrapMicroEngineControlStartEngine, callbackRAD->orgMicroEngineControlStartEngine)(that, param1);
+    NETLOG("rad", "microEngineControlStartEngine returned 0x%llX", ret);
+    return ret;
+}
+
+bool RAD::wrapSdmaEngineStart(void *that) {
+    NETLOG("rad", "sdmaEngineStart: this = %p", that);
+    auto ret = FunctionCast(wrapSdmaEngineStart, callbackRAD->orgSdmaEngineStart)(that);
+    NETLOG("rad", "sdmaEngineStart returned %d", ret);
+    return ret;
+}
+
+void RAD::wrapCailMCILTrace0(void *that) {
+    NETLOG("rad", "_Cail_MCILTrace0: this = %p", that);
+    FunctionCast(wrapCailMCILTrace0, callbackRAD->orgCailMCILTrace0)(that);
+}
+
+void RAD::wrapCailMCILTrace1(void *that) {
+    NETLOG("rad", "_Cail_MCILTrace1: this = %p", that);
+    FunctionCast(wrapCailMCILTrace1, callbackRAD->orgCailMCILTrace1)(that);
+}
+
+void RAD::wrapCailMCILTrace2(void *that) {
+    NETLOG("rad", "_Cail_MCILTrace2: this = %p", that);
+    FunctionCast(wrapCailMCILTrace2, callbackRAD->orgCailMCILTrace2)(that);
+}
+
+bool RAD::wrapWaitForHwStamp(void *that, uint64_t param1) {
+    NETLOG("rad", "waitForHwStamp: this = %p param1 = 0x%llX", that, param1);
+    auto ret = FunctionCast(wrapWaitForHwStamp, callbackRAD->orgWaitForHwStamp)(that, param1);
+    NETLOG("rad", "waitForHwStamp returned %d", ret);
+    return ret;
+}
+
+static constexpr uint32_t MAX_INSTANCE = 5;
+static constexpr uint32_t MAX_SEGMENT = 5;
+
+struct IPInstance {
+    uint32_t segments[MAX_SEGMENT];
+};
+
+struct IPBase {
+    struct IPInstance instances[MAX_INSTANCE];
+};
+
+static const struct IPBase NBIO_BASE = {
+    .instances =
+        {
+            {{0x00000000, 0x00000014, 0x00000D20, 0x00010400, 0}},
+            {{0, 0, 0, 0, 0}},
+            {{0, 0, 0, 0, 0}},
+            {{0, 0, 0, 0, 0}},
+            {{0, 0, 0, 0, 0}},
+        },
+};
+
+static constexpr uint32_t mmRCC_DEV0_EPF0_STRAP0 = 0xF;
+static constexpr uint32_t mmRCC_DEV0_EPF0_STRAP0_BASE_IDX = 2;
+#define SOC15_OFFSET(ip, inst, reg) (ip.instances[inst].segments[reg##_BASE_IDX] + reg)
+
+uint32_t RAD::wrapHwReadReg32(void *that, uint32_t reg) {
+    NETLOG("rad", "hwReadReg32: this = %p param1 = 0x%X", that, reg);
+    if (reg == 0xd31) {
+        reg = SOC15_OFFSET(NBIO_BASE, 0, mmRCC_DEV0_EPF0_STRAP0);
+        NETLOG("rad", "hwReadReg32: redirecting reg 0xd31 to 0x%X", reg);
+    }
+    auto ret = FunctionCast(wrapHwReadReg32, callbackRAD->orgHwReadReg32)(that, reg);
+    NETLOG("rad", "hwReadReg32 returned 0x%X", ret);
+    return ret;
+}
+
+uint64_t* RAD::wrapAtiAsicInfoGetPropertiesForUserClient(void* that) {
+    NETLOG("rad", "AMDSupport_AtiAsicInfo::getPropertiesForUserClient: this = %p", that);
+    auto ret = FunctionCast(wrapAtiAsicInfoGetPropertiesForUserClient, callbackRAD->orgAtiAsicInfoGetPropertiesForUserClient)(that);
+    NETLOG("rad", "AMDSupport_AtiAsicInfo::getPropertiesForUserClient: returned %p", ret);
+    return ret;
+}
+
+void RAD::wrapSmuCzReadSmuVersion(void* param1) {
+    NETLOG("rad", "_SmuCz_ReadSmuVersion: param1 = %p", param1);
+    FunctionCast(wrapSmuCzReadSmuVersion, callbackRAD->orgSmuCzReadSmuVersion)(param1);
+    NETLOG("rad", "_SmuCz_ReadSmuVersion finished");
+}
+
+bool RAD::wrapATIControllerStart(IOService *ctrl, IOService *provider) {
+    NETLOG("rad", "starting controller " PRIKADDR, CASTKADDR(current_thread()));
+
+    callbackRAD->currentPropProvider.set(provider);
+    bool r = FunctionCast(wrapATIControllerStart, callbackRAD->orgATIControllerStart)(ctrl, provider);
+    NETLOG("rad", "starting controller done %d " PRIKADDR, r, CASTKADDR(current_thread()));
+    callbackRAD->currentPropProvider.erase();
+
+    return r;
+}
+
+bool RAD::doNotTestVram([[maybe_unused]] IOService *ctrl, [[maybe_unused]] uint32_t reg,
+    [[maybe_unused]] bool retryOnFail) {
+    NETLOG("rad", "TestVRAM called! Returning true");
+    return true;
+}
+
+bool RAD::wrapNotifyLinkChange(void *atiDeviceControl, kAGDCRegisterLinkControlEvent_t event, void *eventData,
+    uint32_t eventFlags) {
+    auto ret = FunctionCast(wrapNotifyLinkChange, callbackRAD->orgNotifyLinkChange)(atiDeviceControl, event, eventData,
+        eventFlags);
+
+    if (event == kAGDCValidateDetailedTiming) {
+        auto cmd = static_cast<AGDCValidateDetailedTiming_t *>(eventData);
+        NETLOG("rad", "AGDCValidateDetailedTiming %u -> %d (%u)", cmd->framebufferIndex, ret, cmd->modeStatus);
+        if (ret == false || cmd->modeStatus < 1 || cmd->modeStatus > 3) {
+            cmd->modeStatus = 2;
+            ret = true;
         }
-    } else {
-        SYSLOG("LRed", "agdp fix failed to obtain valid ConfigMap");
     }
 
-    bool result = FunctionCast(wrapGraphicsPolicyStart, callbackLRED->orgGraphicsPolicyStart)(that, provider);
-    DBGLOG("LRed", "agdp start returned %d", result);
+    return ret;
+}
 
-    return result;
+void RAD::updateGetHWInfo(IOService *accelVideoCtx, void *hwInfo) {
+    IOService *accel, *pciDev;
+    accel = OSDynamicCast(IOService, accelVideoCtx->getParentEntry(gIOServicePlane));
+    if (accel == NULL) {
+        NETLOG("rad", "getHWInfo: no parent found for accelVideoCtx!");
+        return;
+    }
+    pciDev = OSDynamicCast(IOService, accel->getParentEntry(gIOServicePlane));
+    if (pciDev == NULL) {
+        NETLOG("rad", "getHWInfo: no parent found for accel!");
+        return;
+    }
+    uint16_t &org = getMember<uint16_t>(hwInfo, 0x4);
+    uint32_t dev = org;
+    if (!WIOKit::getOSDataValue(pciDev, "codec-device-id", dev)) { WIOKit::getOSDataValue(pciDev, "device-id", dev); }
+    NETLOG("rad", "getHWInfo: original PID: 0x%04X, replaced PID: 0x%04X", org, dev);
+    org = static_cast<uint16_t>(dev);
 }

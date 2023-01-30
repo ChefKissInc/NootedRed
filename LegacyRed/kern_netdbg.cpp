@@ -1,38 +1,19 @@
-//
-//  kern_netdbg.cpp
-//  WhateverRed
-//
-//  Created by Nyan Cat on 7/27/22.
-//  Copyright © 2022 ChefKiss Inc. All rights reserved.
-//
+//  Copyright © 2022 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
+//  details.
 
 #include "kern_netdbg.hpp"
 #include <Headers/kern_api.hpp>
+#include <Headers/kern_util.hpp>
+#include <IOKit/IOLocks.h>
 #include <netinet/in.h>
 
-in_addr_t inet_addr(uint32_t a, uint32_t b, uint32_t c, uint32_t d) {
-    auto ret = d;
-
-    ret *= 256;
-    ret += c;
-
-    ret *= 256;
-    ret += b;
-
-    ret *= 256;
-    ret += a;
-
-    return ret;
-}
-
-bool NETDBG::enabled = false;
 in_addr_t NETDBG::ip_addr = 0;
 uint32_t NETDBG::port = 0;
+bool NETDBG::enabled = false;
 
 size_t NETDBG::nprint(char *data, size_t len) {
-    int disable = 0;
-    if (enabled && PE_parse_boot_argn("netdbg_disable", &disable, sizeof(disable))) {
-        kprintf("netdbg: Disabled via boot arg\n");
+    if (enabled && PE_parse_boot_argn("wrednetdbg", &enabled, sizeof(enabled) && !enabled)) {
+        SYSLOG("netdbg", "Disabled via boot arg");
         enabled = false;
     }
 
@@ -41,24 +22,17 @@ size_t NETDBG::nprint(char *data, size_t len) {
     if (!enabled) { return 0; }
 
     if (!ip_addr || !port) {
-        uint32_t b[4] = {0};
-        uint32_t p = 0;
-        if (!PE_parse_boot_argn("netdbg_ip_1", b, sizeof(uint32_t)) ||
-            !PE_parse_boot_argn("netdbg_ip_2", b + 1, sizeof(uint32_t)) ||
-            !PE_parse_boot_argn("netdbg_ip_3", b + 2, sizeof(uint32_t)) ||
-            !PE_parse_boot_argn("netdbg_ip_4", b + 3, sizeof(uint32_t)) ||
-            !PE_parse_boot_argn("netdbg_port", &p, sizeof(uint32_t))) {
-            panic("netdbg: No IP and/or Port specified");
-            return 0;
-        }
+        uint8_t ipParts[4] = {0};
+        uint32_t port = 0;
+        char ip[64];
+        PANIC_COND(!PE_parse_boot_argn("wrednetdbgip", &ip, sizeof(ip)), "netdbg", "No IP specified");
+        PANIC_COND(sscanf(ip, "%hhu.%hhu.%hhu.%hhu:%u", &ipParts[0], &ipParts[1], &ipParts[2], &ipParts[3], &port) != 5,
+            "netdbg", "Invalid IP and/or Port specified");
 
-        ip_addr = inet_addr(b[0], b[1], b[2], b[3]);
-        port = htons(p);
+        ip_addr = ipParts[0] | (ipParts[1] << 8) | (ipParts[2] << 16) | (ipParts[3] << 24);
+        port = htons(port);
 
-        if (!ip_addr || !port) {
-            panic("netdbg: Invalid IP and/or Port specified");
-            return 0;
-        }
+        PANIC_COND(!ip_addr || !port, "netdbg", "Invalid IP and/or Port specified");
     }
 
     socket_t socket = nullptr;
@@ -117,11 +91,15 @@ size_t NETDBG::printf(const char *fmt, ...) {
 }
 
 size_t NETDBG::vprintf(const char *fmt, va_list args) {
+    static IOLock *lock = nullptr;
+    if (lock == nullptr) lock = IOLockAlloc();
+    IOLockLock(lock);
     char *data = new char[2048];
     size_t len = vsnprintf(data, 2047, fmt, args);
 
     auto ret = NETDBG::nprint(data, len);
 
     delete[] data;
+    IOLockUnlock(lock);
     return ret;
 }
