@@ -2,6 +2,8 @@
 
 An AMD iGPU support plugin for [Lilu](https://github.com/acidanthera/Lilu).
 
+The Source Code of this Original Work is licensed under the `Thou Shalt Not Profit License version 1.0`. See `LICENSE`
+
 ## ⚠️ IMPORTANT ⚠️
 
 This kernel extension currently contains remote debug log functionality through our custom "NetDbg" software. You must specify a valid NetDbg server IP or disable the functionality as described below.
@@ -18,23 +20,19 @@ Example: `wrednetdbgip=127.0.0.1:8081`
 
 Pass `wrednetdbg=0` to disable the NetDbg functionality.
 
-The Source Code of this Original Work is licensed under the `Thou Shalt Not Profit License version 1.0`. See `LICENSE`
-
-This project is under active research and development and is not yet functional, but in a close state to such.
-
-Its goal is to bring AMD iGPU support for Renoir/Raven(2)/Renoir and their derivatives, such as Picasso.
-
-However, due to the complexity of GPU drivers, especially those without public source code, adding support for non-existent logic is not possible. As a result, you must use Catalina (minimum) to Big Sur (recommended) since the required iGPU-related logic has been removed in Monterey and later, and only the aforementioned chip types.
-
-Injecting kernel extensions is not possible during the OpenCore injection stage.
-
-This is because the prelink injection fails for kernel extensions of this type, as the libraries used for them are not contained in the Boot kernel cache, which is where OpenCore injects kexts to. Instead, they're contained in the Auxiliary kernel cache.
-
 ## Introduction
 
 We are a team of three working on getting graphics acceleration for AMD iGPUs (Raven/Raven2/Renoir and their derivatives) on hackintoshes.
 
 We are patching the existing kexts in order to achieve this (mixing AMDRadeonX5000 for GCN 5 and AMDRadeonX6000 for VCN 1/2, and replacing AMDRadeonX6000Framebuffer for DCN instead of AMD10000Controller which is DCE).
+
+This project is under active research and development and is not yet functional, but in a close state to such.
+
+Its goal is to bring AMD iGPU support for Renoir/Raven(2) and their derivatives, such as Picasso.
+
+However, due to the complexity of GPU drivers, especially those without public source code, adding support for non-existent logic is not possible. As a result, you must use Catalina (minimum) to Big Sur (recommended) since the logic for supporting our iGPU chips has been removed in Monterey and later.
+
+Injecting AMD driver kernel extensions is not possible during the OpenCore injection stage. This is because the prelink injection fails for kernel extensions of this type, as the libraries used for them are not contained in the Boot kernel cache, which is where OpenCore injects kexts to. Instead, they're contained in the Auxiliary kernel cache.
 
 ## FAQ
 
@@ -42,7 +40,7 @@ We are patching the existing kexts in order to achieve this (mixing AMDRadeonX50
 
 Controller, accelerator and framebuffer are all attached and enabled, GFX engine and SDMA0 engine start up and are able to process command buffers.
 
-However, there is some weird quirk happening relating to GPUVM (GPU Virtual Memory), causing Page Faults in both GFX and ME as soon as WindowServer tries to send an acceleration command. This is the current failure point we are investigating will eventually fix.
+However, there is some weird quirk happening relating to GPUVM (GPU Virtual Memory), causing Page Faults in both GFX and ME as soon as WindowServer tries to send an acceleration command. This is the current failure point we are investigating and will eventually fix.
 
 ### ETA?
 
@@ -57,11 +55,11 @@ When it is done. It may take more than a month. But we are currently stuck on 99
 
 Everything starts out well and the AMD driver even congratulates us with the following message: `[3:0:0]: Controller is enabled, finish initialization`.
 
-However, as soon as WindowServer tries to zero the video memory, VM page faults occur and cause the SDMA0 and GFX engines halt, because they fail to read the IB (buffer that contains commands for the target MicroEngine). The AMD driver will attempt to reset the GFX/SDMA0 channels every minute or so, but the page faults persist.
+However, as soon as WindowServer tries to zero the video memory, VM page faults occur and cause the SDMA0 and GFX engines to halt, because they fail to read the IB (buffer that contains commands for the target MicroEngine). The AMD driver will attempt to reset the GFX/SDMA0 channels every minute or so, but the page faults persist.
 
 This results in a black screen for a few minutes, before the machine eventually restarts due to a watchdogd timeout since WindowServer fails to check in successfully.
 
-The X6000 branch has been abandoned for awhile now.
+The X6000 branch has been abandoned for a while because its logic is mainly designed for GFX10 (aka. GC 10), whereas our devices run GFX9.
 
 ### Collaborators
 
