@@ -22,13 +22,11 @@ Pass `wrednetdbg=0` to disable the NetDbg functionality.
 
 ## Introduction
 
-We are a team of three working on getting graphics acceleration for AMD iGPUs (Raven/Raven2/Renoir and their derivatives) on hackintoshes.
+We are a team of three working on getting graphics acceleration for AMD iGPUs (Raven/Raven2/Renoir and their derivatives, such as Picasso) on hackintoshes.
 
 We are patching the existing kexts in order to achieve this (mixing AMDRadeonX5000 for GCN 5 and AMDRadeonX6000 for VCN 1/2, and replacing AMDRadeonX6000Framebuffer for DCN instead of AMD10000Controller which is DCE).
 
 This project is under active research and development and is not yet functional, but in a close state to such.
-
-Its goal is to bring AMD iGPU support for Renoir/Raven(2) and their derivatives, such as Picasso.
 
 However, due to the complexity of GPU drivers, especially those without public source code, adding support for non-existent logic is not possible. As a result, you must use Catalina (minimum) to Big Sur (recommended) since the logic for supporting our iGPU chips has been removed in Monterey and later.
 
