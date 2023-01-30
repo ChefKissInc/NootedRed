@@ -148,14 +148,6 @@ class WRed {
     static IOReturn wrapEnableController(void *that);
     mach_vm_address_t orgControllerPowerUp {};
     static uint64_t wrapControllerPowerUp(void *that);
-    mach_vm_address_t orgPpPowerUp {};
-    static uint64_t wrapPpPowerUp(void *that);
-    mach_vm_address_t orgDalHelperPowerUp {};
-    static uint64_t wrapDalHelperPowerUp(void *that);
-    mach_vm_address_t orgSetupBootWatermarks {};
-    static uint64_t wrapSetupBootWatermarks(void *that);
-    mach_vm_address_t orgSetupLinks {};
-    static uint32_t wrapSetupLinks(void *that);
     mach_vm_address_t orgMessageAccelerator {};
     static uint64_t wrapMessageAccelerator(void *that, uint32_t param1, void *param2, void *param3, void *param4);
     mach_vm_address_t orgHwRegWrite {};

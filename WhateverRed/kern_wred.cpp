@@ -135,11 +135,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer16enableControllerEv", wrapEnableController,
                 orgEnableController},
             {"__ZN34AMDRadeonX6000_AmdRadeonController7powerUpEv", wrapControllerPowerUp, orgControllerPowerUp},
-            {"__ZN33AMDRadeonX6000_AmdPowerPlayHelper7powerUpEv", wrapPpPowerUp, orgPpPowerUp},
-            {"__ZN27AMDRadeonX6000_AmdDalHelper7powerUpEv", wrapDalHelperPowerUp, orgDalHelperPowerUp},
-            {"__ZN38AMDRadeonX6000_AmdRadeonControllerNavi19setupBootWatermarksEv", wrapSetupBootWatermarks,
-                orgSetupBootWatermarks},
-            {"__ZN34AMDRadeonX6000_AmdRadeonController10setupLinksEv", wrapSetupLinks, orgSetupLinks},
             {"__ZNK34AMDRadeonX6000_AmdRadeonController18messageAcceleratorE25_eAMDAccelIOFBRequestTypePvS1_S1_",
                 wrapMessageAccelerator, orgMessageAccelerator},
         };
@@ -881,38 +876,6 @@ uint64_t WRed::wrapControllerPowerUp(void *that) {
     NETLOG("wred", "controllerPowerUp: that = %p", that);
     auto ret = FunctionCast(wrapControllerPowerUp, callbackWRed->orgControllerPowerUp)(that);
     NETLOG("wred", "controllerPowerUp returned 0x%llX", ret);
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
-    return ret;
-}
-
-uint64_t WRed::wrapPpPowerUp(void *that) {
-    NETLOG("wred", "ppPowerUp: that = %p", that);
-    auto ret = FunctionCast(wrapPpPowerUp, callbackWRed->orgPpPowerUp)(that);
-    NETLOG("wred", "ppPowerUp returned 0x%llX", ret);
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
-    return ret;
-}
-
-uint64_t WRed::wrapDalHelperPowerUp(void *that) {
-    NETLOG("wred", "dalHelperPowerUp: that = %p", that);
-    auto ret = FunctionCast(wrapDalHelperPowerUp, callbackWRed->orgDalHelperPowerUp)(that);
-    NETLOG("wred", "dalHelperPowerUp returned 0x%llX", ret);
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
-    return ret;
-}
-
-uint64_t WRed::wrapSetupBootWatermarks(void *that) {
-    NETLOG("wred", "setupBootWatermarks: that = %p", that);
-    auto ret = FunctionCast(wrapSetupBootWatermarks, callbackWRed->orgSetupBootWatermarks)(that);
-    NETLOG("wred", "setupBootWatermarks returned 0x%llX", ret);
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
-    return ret;
-}
-
-uint32_t WRed::wrapSetupLinks(void *that) {
-    NETLOG("wred", "setupLinks: that = %p", that);
-    auto ret = FunctionCast(wrapSetupLinks, callbackWRed->orgSetupLinks)(that);
-    NETLOG("wred", "setupLinks returned 0x%X", ret);
     if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
     return ret;
 }
