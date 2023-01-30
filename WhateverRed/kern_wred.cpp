@@ -215,12 +215,12 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN29AMDRadeonX5000_AMDHWRegisters5writeEjj", wrapHwRegWrite, orgHwRegWrite},
             {"__ZN23AMDRadeonX5000_AMDHWVMM27setMemoryAllocationsEnabledEb", wrapSetMemoryAllocationsEnabled,
                 orgSetMemoryAllocationsEnabled},
-            {"__ZN26AMDRadeonX5000_AMDHardware27setMemoryAllocationsEnabledEb", wrapHwSetMemoryAllocationsEnabled,
-                orgHwSetMemoryAllocationsEnabled},
-            {"__ZN27AMDRadeonX5000_AMDHWHandler18getVMUpdateChannelEv", wrapGetVMUpdateChannel, orgGetVMUpdateChannel},
+            {"__ZN27AMDRadeonX5000_AMDHWHandler34createVidMemoryWithPhysicalAddressEyyjb15_eOP_ORIGINATOR9_eOP_TYPE",
+                wrapCreateVidMemoryWithPhysicalAddress, orgCreateVidMemoryWithPhysicalAddress},
+            {"__ZN35AMDRadeonX5000_AMDCommandBufferPool12submitBufferEy", wrapSubmitBuffer, orgSubmitBuffer},
+            {"__ZN23AMDRadeonX5000_AMDHWVMM12clearWithDMAEyy", wrapClearWithDMA, orgClearWithDMA},
             {"__ZN27AMDRadeonX5000_AMDHWHandler25createVMCommandBufferPoolEP30AMDRadeonX5000_AMDAccelChanneljj",
                 wrapCreateVMCommandBufferPool, orgCreateVMCommandBufferPool},
-            {"__ZN27AMDRadeonX5000_AMDHWHandler15getEventMachineEv", wrapGetEventMachine, orgGetEventMachine},
         };
         PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000 symbols");
@@ -890,7 +890,6 @@ uint64_t WRed::wrapControllerPowerUp(void *that) {
 uint64_t WRed::wrapMessageAccelerator(void *that, uint32_t param1, void *param2, void *param3, void *param4) {
     NETLOG("wred", "messageAccelerator: that = %p param1 = 0x%X param2 = %p param3 = %p param4 = %p", that, param1,
         param2, param3, param4);
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
     auto ret =
         FunctionCast(wrapMessageAccelerator, callbackWRed->orgMessageAccelerator)(that, param1, param2, param3, param4);
     NETLOG("wred", "messageAccelerator returned 0x%llX", ret);
@@ -935,21 +934,34 @@ uint32_t WRed::wrapSetMemoryAllocationsEnabled(void *that, bool param2) {
     return ret;
 }
 
-void WRed::wrapHwSetMemoryAllocationsEnabled(void *that, bool param2) {
-    NETLOG("wred", "hwSetMemoryAllocationsEnabled: that = %p param2 = %d", that, param2);
+void *WRed::wrapCreateVidMemoryWithPhysicalAddress(void *that, uint64_t param1, uint64_t param2, uint32_t param3,
+    bool param4, uint32_t param5, uint32_t param6) {
+    NETLOG("wred",
+        "createVidMemoryWithPhysicalAddress: that = %p param1 = 0x%llX param2 = 0x%llX param3 = 0x%X param4 = %d "
+        "param5 = 0x%X param6 = 0x%X",
+        that, param1, param2, param3, param4, param5, param6);
     if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
-    FunctionCast(wrapHwSetMemoryAllocationsEnabled, callbackWRed->orgHwSetMemoryAllocationsEnabled)(that, param2);
-    NETLOG("wred", "hwSetMemoryAllocationsEnabled finished");
+    auto ret = FunctionCast(wrapCreateVidMemoryWithPhysicalAddress,
+        callbackWRed->orgCreateVidMemoryWithPhysicalAddress)(that, param1, param2, param3, param4, param5, param6);
+    NETLOG("wred", "createVidMemoryWithPhysicalAddress returned %p", ret);
+    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
+    return ret;
+}
+
+void WRed::wrapSubmitBuffer(void *that, uint64_t param1) {
+    NETLOG("wred", "submitBuffer: that = %p param1 = 0x%llX", that, param1);
+    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
+    FunctionCast(wrapSubmitBuffer, callbackWRed->orgSubmitBuffer)(that, param1);
+    NETLOG("wred", "submitBuffer finished");
     if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
 }
 
-void *WRed::wrapGetVMUpdateChannel(void *that) {
-    NETLOG("wred", "getVMUpdateChannel: that = %p", that);
+void WRed::wrapClearWithDMA(void *that, uint64_t param1, uint64_t param2) {
+    NETLOG("wred", "clearWithDMA: that = %p param1 = 0x%llX param2 = 0x%llX", that, param1, param2);
     if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
-    auto ret = FunctionCast(wrapGetVMUpdateChannel, callbackWRed->orgGetVMUpdateChannel)(that);
-    NETLOG("wred", "getVMUpdateChannel returned %p", ret);
+    FunctionCast(wrapClearWithDMA, callbackWRed->orgClearWithDMA)(that, param1, param2);
+    NETLOG("wred", "clearWithDMA finished");
     if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
-    return ret;
 }
 
 void *WRed::wrapCreateVMCommandBufferPool(void *that, void *param1, uint32_t param2, uint32_t param3) {
@@ -959,15 +971,6 @@ void *WRed::wrapCreateVMCommandBufferPool(void *that, void *param1, uint32_t par
     auto ret = FunctionCast(wrapCreateVMCommandBufferPool, callbackWRed->orgCreateVMCommandBufferPool)(that, param1,
         param2, param3);
     NETLOG("wred", "createVMCommandBufferPool returned %p", ret);
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
-    return ret;
-}
-
-void *WRed::wrapGetEventMachine(void *that) {
-    NETLOG("wred", "getEventMachine: that = %p", that);
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
-    auto ret = FunctionCast(wrapGetEventMachine, callbackWRed->orgGetEventMachine)(that);
-    NETLOG("wred", "getEventMachine returned %p", ret);
     if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
     return ret;
 }
