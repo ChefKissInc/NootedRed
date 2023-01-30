@@ -152,4 +152,14 @@ class WRed {
     static uint64_t wrapMessageAccelerator(void *that, uint32_t param1, void *param2, void *param3, void *param4);
     mach_vm_address_t orgHwRegWrite {};
     static void wrapHwRegWrite(void *that, uint32_t regIndex, uint32_t regVal);
+    mach_vm_address_t orgSetMemoryAllocationsEnabled {};
+    static uint32_t wrapSetMemoryAllocationsEnabled(void *that, bool param2);
+    mach_vm_address_t orgHwSetMemoryAllocationsEnabled {};
+    static void wrapHwSetMemoryAllocationsEnabled(void *that, bool param2);
+    mach_vm_address_t orgGetVMUpdateChannel {};
+    static void *wrapGetVMUpdateChannel(void *that);
+    mach_vm_address_t orgCreateVMCommandBufferPool {};
+    static void *wrapCreateVMCommandBufferPool(void *that, void *param1, uint32_t param2, uint32_t param3);
+    mach_vm_address_t orgGetEventMachine {};
+    static void *wrapGetEventMachine(void *that);
 };
