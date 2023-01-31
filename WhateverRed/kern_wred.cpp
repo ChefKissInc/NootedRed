@@ -221,6 +221,10 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN23AMDRadeonX5000_AMDHWVMM12clearWithDMAEyy", wrapClearWithDMA, orgClearWithDMA},
             {"__ZN27AMDRadeonX5000_AMDHWHandler25createVMCommandBufferPoolEP30AMDRadeonX5000_AMDAccelChanneljj",
                 wrapCreateVMCommandBufferPool, orgCreateVMCommandBufferPool},
+            {"__ZN35AMDRadeonX5000_AMDCommandBufferPool16getPendingDwordsEv", wrapGetPendingDwords,
+                orgGetPendingDwords},
+            {"__ZN32AMDRadeonX5000_AMDAccelVidMemory18getPhysicalSegmentEyPy", wrapGetPhysicalSegment,
+                orgGetPhysicalSegment},
         };
         PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000 symbols");
@@ -972,5 +976,23 @@ void *WRed::wrapCreateVMCommandBufferPool(void *that, void *param1, uint32_t par
         param2, param3);
     NETLOG("wred", "createVMCommandBufferPool returned %p", ret);
     if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
+    return ret;
+}
+
+uint32_t WRed::wrapGetPendingDwords(void *that) {
+    NETLOG("wred", "getPendingDwords: that = %p", that);
+    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
+    auto ret = FunctionCast(wrapGetPendingDwords, callbackWRed->orgGetPendingDwords)(that);
+    NETLOG("wred", "getPendingDwords returned 0x%X", ret);
+    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
+    return ret;
+}
+
+uint64_t WRed::wrapGetPhysicalSegment(void *that, uint64_t param1, void *param2) {
+    NETLOG("wred", "getPhysicalSegment: that = %p param1 = 0x%llX param2 = %p", that, param1, param2);
+    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(1000); }
+    auto ret = FunctionCast(wrapGetPhysicalSegment, callbackWRed->orgGetPhysicalSegment)(that, param1, param2);
+    NETLOG("wred", "getPhysicalSegment returned 0x%llX", ret);
+    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(1000); }
     return ret;
 }

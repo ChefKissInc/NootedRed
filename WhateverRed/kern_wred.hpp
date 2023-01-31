@@ -163,4 +163,8 @@ class WRed {
     static void wrapClearWithDMA(void *that, uint64_t param1, uint64_t param2);
     mach_vm_address_t orgCreateVMCommandBufferPool {};
     static void *wrapCreateVMCommandBufferPool(void *that, void *param1, uint32_t param2, uint32_t param3);
+    mach_vm_address_t orgGetPendingDwords {};
+    static uint32_t wrapGetPendingDwords(void *that);
+    mach_vm_address_t orgGetPhysicalSegment {};
+    static uint64_t wrapGetPhysicalSegment(void *that, uint64_t param1, void *param2);
 };
