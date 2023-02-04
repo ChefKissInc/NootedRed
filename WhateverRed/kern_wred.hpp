@@ -115,7 +115,6 @@ class WRed {
     static void powerUpSDMA(void *smumData);
     static uint32_t wrapSmuRavenInitialize(void *smumData, uint32_t param2);
     static uint32_t wrapSmuRenoirInitialize(void *smumData, uint32_t param2);
-    static uint32_t pspFeatureUnsupported();
 
     /** X6000 */
     static bool wrapAccelStartX6000();
