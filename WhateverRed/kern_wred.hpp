@@ -143,27 +143,4 @@ class WRed {
     static void wrapAtiPowerPlayServicesConstructor(void *that, void *ppCallbacks);
     mach_vm_address_t orgInitWithPciInfo {};
     static bool wrapInitWithPciInfo(void *that, void *param1);
-    mach_vm_address_t orgEnableController {};
-    static IOReturn wrapEnableController(void *that);
-    mach_vm_address_t orgControllerPowerUp {};
-    static uint64_t wrapControllerPowerUp(void *that);
-    mach_vm_address_t orgMessageAccelerator {};
-    static uint64_t wrapMessageAccelerator(void *that, uint32_t param1, void *param2, void *param3, void *param4);
-    mach_vm_address_t orgHwRegWrite {};
-    static void wrapHwRegWrite(void *that, uint32_t regIndex, uint32_t regVal);
-    mach_vm_address_t orgSetMemoryAllocationsEnabled {};
-    static uint32_t wrapSetMemoryAllocationsEnabled(void *that, bool param2);
-    mach_vm_address_t orgCreateVidMemoryWithPhysicalAddress {};
-    static void *wrapCreateVidMemoryWithPhysicalAddress(void *that, uint64_t param1, uint64_t param2, uint32_t param3,
-        bool param4, uint32_t param5, uint32_t param6);
-    mach_vm_address_t orgSubmitBuffer {};
-    static void wrapSubmitBuffer(void *that, uint64_t param1);
-    mach_vm_address_t orgClearWithDMA {};
-    static void wrapClearWithDMA(void *that, uint64_t param1, uint64_t param2);
-    mach_vm_address_t orgCreateVMCommandBufferPool {};
-    static void *wrapCreateVMCommandBufferPool(void *that, void *param1, uint32_t param2, uint32_t param3);
-    mach_vm_address_t orgGetPendingDwords {};
-    static uint32_t wrapGetPendingDwords(void *that);
-    mach_vm_address_t orgGetPhysicalSegment {};
-    static uint64_t wrapGetPhysicalSegment(void *that, uint64_t param1, void *param2);
 };

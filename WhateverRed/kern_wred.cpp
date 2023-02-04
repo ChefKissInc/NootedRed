@@ -130,11 +130,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
             {"__ZN32AMDRadeonX6000_AmdRegisterAccess11hwReadReg32Ej", wrapHwReadReg32, orgHwReadReg32},
             {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo, orgInitWithPciInfo},
-            {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer16enableControllerEv", wrapEnableController,
-                orgEnableController},
-            {"__ZN34AMDRadeonX6000_AmdRadeonController7powerUpEv", wrapControllerPowerUp, orgControllerPowerUp},
-            {"__ZNK34AMDRadeonX6000_AmdRadeonController18messageAcceleratorE25_eAMDAccelIOFBRequestTypePvS1_S1_",
-                wrapMessageAccelerator, orgMessageAccelerator},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size, true), "wred",
             "Failed to route AMDRadeonX6000Framebuffer symbols");
@@ -210,19 +205,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
                 wrapUpdateContiguousPTEsWithDMAUsingAddr, orgUpdateContiguousPTEsWithDMAUsingAddr},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20initializeFamilyTypeEv", wrapInitializeFamilyType},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20allocateAMDHWDisplayEv", wrapAllocateAMDHWDisplay},
-            {"__ZN29AMDRadeonX5000_AMDHWRegisters5writeEjj", wrapHwRegWrite, orgHwRegWrite},
-            {"__ZN23AMDRadeonX5000_AMDHWVMM27setMemoryAllocationsEnabledEb", wrapSetMemoryAllocationsEnabled,
-                orgSetMemoryAllocationsEnabled},
-            {"__ZN27AMDRadeonX5000_AMDHWHandler34createVidMemoryWithPhysicalAddressEyyjb15_eOP_ORIGINATOR9_eOP_TYPE",
-                wrapCreateVidMemoryWithPhysicalAddress, orgCreateVidMemoryWithPhysicalAddress},
-            {"__ZN35AMDRadeonX5000_AMDCommandBufferPool12submitBufferEy", wrapSubmitBuffer, orgSubmitBuffer},
-            {"__ZN23AMDRadeonX5000_AMDHWVMM12clearWithDMAEyy", wrapClearWithDMA, orgClearWithDMA},
-            {"__ZN27AMDRadeonX5000_AMDHWHandler25createVMCommandBufferPoolEP30AMDRadeonX5000_AMDAccelChanneljj",
-                wrapCreateVMCommandBufferPool, orgCreateVMCommandBufferPool},
-            {"__ZN35AMDRadeonX5000_AMDCommandBufferPool16getPendingDwordsEv", wrapGetPendingDwords,
-                orgGetPendingDwords},
-            {"__ZN32AMDRadeonX5000_AMDAccelVidMemory18getPhysicalSegmentEyPy", wrapGetPhysicalSegment,
-                orgGetPhysicalSegment},
         };
         PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000 symbols");
@@ -875,32 +857,6 @@ bool WRed::wrapInitWithPciInfo(void *that, void *param1) {
     return ret;
 }
 
-IOReturn WRed::wrapEnableController(void *that) {
-    NETLOG("wred", "enableController: that = %p", that);
-    auto ret = FunctionCast(wrapEnableController, callbackWRed->orgEnableController)(that);
-    NETLOG("wred", "enableController returned 0x%X", ret);
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
-    return ret;
-}
-
-uint64_t WRed::wrapControllerPowerUp(void *that) {
-    NETLOG("wred", "controllerPowerUp: that = %p", that);
-    auto ret = FunctionCast(wrapControllerPowerUp, callbackWRed->orgControllerPowerUp)(that);
-    NETLOG("wred", "controllerPowerUp returned 0x%llX", ret);
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
-    return ret;
-}
-
-uint64_t WRed::wrapMessageAccelerator(void *that, uint32_t param1, void *param2, void *param3, void *param4) {
-    NETLOG("wred", "messageAccelerator: that = %p param1 = 0x%X param2 = %p param3 = %p param4 = %p", that, param1,
-        param2, param3, param4);
-    auto ret =
-        FunctionCast(wrapMessageAccelerator, callbackWRed->orgMessageAccelerator)(that, param1, param2, param3, param4);
-    NETLOG("wred", "messageAccelerator returned 0x%llX", ret);
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
-    return ret;
-}
-
 uint64_t WRed::wrapGetPDEValue(void *that, uint64_t level, uint64_t param2) {
     NETLOG("wred", "getPDEValue: this = %p level = 0x%llX param2 = 0x%llX", that, level, param2);
     auto ret = FunctionCast(wrapGetPDEValue, callbackWRed->orgGetPDEValue)(that, level, param2);
@@ -913,79 +869,5 @@ uint64_t WRed::wrapGetPTEValue(void *that, uint64_t level, uint64_t param2, uint
         param2, param3, param4);
     auto ret = FunctionCast(wrapGetPTEValue, callbackWRed->orgGetPTEValue)(that, level, param2, param3, param4);
     NETLOG("wred", "getPTEValue returned 0x%llX", ret);
-    return ret;
-}
-
-void WRed::wrapHwRegWrite(void *that, uint32_t regIndex, uint32_t regVal) {
-    NETLOG("wred", "hwRegWrite: that = %p regIndex = 0x%X regVal = 0x%X", that, regIndex, regVal);
-    FunctionCast(wrapHwRegWrite, callbackWRed->orgHwRegWrite)(that, regIndex, regVal);
-}
-
-uint32_t WRed::wrapSetMemoryAllocationsEnabled(void *that, bool param2) {
-    NETLOG("wred", "setMemoryAllocationsEnabled: that = %p param2 = %d", that, param2);
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
-    auto ret =
-        FunctionCast(wrapSetMemoryAllocationsEnabled, callbackWRed->orgSetMemoryAllocationsEnabled)(that, param2);
-    NETLOG("wred", "setMemoryAllocationsEnabled returned 0x%X", ret);
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
-    return ret;
-}
-
-void *WRed::wrapCreateVidMemoryWithPhysicalAddress(void *that, uint64_t param1, uint64_t param2, uint32_t param3,
-    bool param4, uint32_t param5, uint32_t param6) {
-    NETLOG("wred",
-        "createVidMemoryWithPhysicalAddress: that = %p param1 = 0x%llX param2 = 0x%llX param3 = 0x%X param4 = %d "
-        "param5 = 0x%X param6 = 0x%X",
-        that, param1, param2, param3, param4, param5, param6);
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
-    auto ret = FunctionCast(wrapCreateVidMemoryWithPhysicalAddress,
-        callbackWRed->orgCreateVidMemoryWithPhysicalAddress)(that, param1, param2, param3, param4, param5, param6);
-    NETLOG("wred", "createVidMemoryWithPhysicalAddress returned %p", ret);
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
-    return ret;
-}
-
-void WRed::wrapSubmitBuffer(void *that, uint64_t param1) {
-    NETLOG("wred", "submitBuffer: that = %p param1 = 0x%llX", that, param1);
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
-    FunctionCast(wrapSubmitBuffer, callbackWRed->orgSubmitBuffer)(that, param1);
-    NETLOG("wred", "submitBuffer finished");
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
-}
-
-void WRed::wrapClearWithDMA(void *that, uint64_t param1, uint64_t param2) {
-    NETLOG("wred", "clearWithDMA: that = %p param1 = 0x%llX param2 = 0x%llX", that, param1, param2);
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
-    FunctionCast(wrapClearWithDMA, callbackWRed->orgClearWithDMA)(that, param1, param2);
-    NETLOG("wred", "clearWithDMA finished");
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
-}
-
-void *WRed::wrapCreateVMCommandBufferPool(void *that, void *param1, uint32_t param2, uint32_t param3) {
-    NETLOG("wred", "createVMCommandBufferPool: that = %p param1 = %p param2 = 0x%X param3 = 0x%X", that, param1, param2,
-        param3);
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
-    auto ret = FunctionCast(wrapCreateVMCommandBufferPool, callbackWRed->orgCreateVMCommandBufferPool)(that, param1,
-        param2, param3);
-    NETLOG("wred", "createVMCommandBufferPool returned %p", ret);
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
-    return ret;
-}
-
-uint32_t WRed::wrapGetPendingDwords(void *that) {
-    NETLOG("wred", "getPendingDwords: that = %p", that);
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
-    auto ret = FunctionCast(wrapGetPendingDwords, callbackWRed->orgGetPendingDwords)(that);
-    NETLOG("wred", "getPendingDwords returned 0x%X", ret);
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(2000); }
-    return ret;
-}
-
-uint64_t WRed::wrapGetPhysicalSegment(void *that, uint64_t param1, void *param2) {
-    NETLOG("wred", "getPhysicalSegment: that = %p param1 = 0x%llX param2 = %p", that, param1, param2);
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(1000); }
-    auto ret = FunctionCast(wrapGetPhysicalSegment, callbackWRed->orgGetPhysicalSegment)(that, param1, param2);
-    NETLOG("wred", "getPhysicalSegment returned 0x%llX", ret);
-    if (callbackWRed->asicType == ASICType::Renoir) { IOSleep(1000); }
     return ret;
 }
