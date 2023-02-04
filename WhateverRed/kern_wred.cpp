@@ -904,14 +904,7 @@ uint64_t WRed::wrapMessageAccelerator(void *that, uint32_t param1, void *param2,
 uint64_t WRed::wrapGetPDEValue(void *that, uint64_t level, uint64_t param2) {
     NETLOG("wred", "getPDEValue: this = %p level = 0x%llX param2 = 0x%llX", that, level, param2);
     auto ret = FunctionCast(wrapGetPDEValue, callbackWRed->orgGetPDEValue)(that, level, param2);
-    auto old_ret = ret;
-    NETLOG("wred", "getPDEValue returned 0x%llX", old_ret);
-
-    // Unset AMDGPU_PDE_BFS
-    ret &= ~(0xFULL << 59);
-
-    if (old_ret != ret) { NETLOG("wred", "getPDEValue: returning 0x%llX", ret); }
-
+    NETLOG("wred", "getPDEValue returned 0x%llX", ret);
     return ret;
 }
 
