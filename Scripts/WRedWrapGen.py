@@ -12,7 +12,7 @@ def fix_type(type: str) -> str:
         ret = "uint32_t"
     elif type in ["long", "ulong", "ulonglong", "undefined8"]:
         ret = "uint64_t"
-    elif not type == "char *" and "*" in type:
+    elif type != "char *" and "*" in type:
         ret = "void *"
     else:
         ret = type
