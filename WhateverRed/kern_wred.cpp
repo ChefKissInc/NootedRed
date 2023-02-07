@@ -2,6 +2,7 @@
 //  details.
 
 #include "kern_wred.hpp"
+#include "kern_amd.hpp"
 #include "kern_fw.hpp"
 #include "kern_netdbg.hpp"
 #include <Headers/kern_api.hpp>
@@ -68,6 +69,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"_sdma_4_2_ucode", orgSdma42Ucode},
             {"_Raven_SendMsgToSmc", orgRavenSendMsgToSmc},
             {"_Renoir_SendMsgToSmc", orgRenoirSendMsgToSmc},
+            {"_Raven_SendMsgToSmcWithParameter", orgRavenSendMsgToSmcWithParam},
+            {"_Renoir_SendMsgToSmcWithParameter", orgRenoirSendMsgToSmcWithParam},
         };
         PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "wred",
             "Failed to resolve AMDRadeonX5000HWLibs symbols");
@@ -759,6 +762,7 @@ uint32_t WRed::wrapSmuRavenInitialize(void *smumData, uint32_t param2) {
     NETLOG("wred", "_SmuRaven_Initialize returned 0x%X", ret);
     callbackWRed->orgRavenSendMsgToSmc(smumData, PPSMC_MSG_PowerUpVcn);
     callbackWRed->orgRavenSendMsgToSmc(smumData, PPSMC_MSG_PowerUpSdma);
+    callbackWRed->orgRavenSendMsgToSmcWithParam(smumData, PPSMC_MSG_SetGfxCGPG, true);
     callbackWRed->orgRavenSendMsgToSmc(smumData, PPSMC_MSG_PowerGateMmHub);
     return ret;
 }
@@ -769,6 +773,7 @@ uint32_t WRed::wrapSmuRenoirInitialize(void *smumData, uint32_t param2) {
     NETLOG("wred", "_SmuRenoir_Initialize returned 0x%X", ret);
     callbackWRed->orgRenoirSendMsgToSmc(smumData, PPSMC_MSG_PowerUpVcn);
     callbackWRed->orgRenoirSendMsgToSmc(smumData, PPSMC_MSG_PowerUpSdma);
+    callbackWRed->orgRenoirSendMsgToSmcWithParam(smumData, PPSMC_MSG_SetGfxCGPG, true);
     callbackWRed->orgRenoirSendMsgToSmc(smumData, PPSMC_MSG_PowerGateMmHub);
     return ret;
 }
