@@ -650,12 +650,13 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
         PANIC_COND(!initCaps, "wred", "Failed to find Init Caps entry");
     }
 
-    callbackWRed->orgAsicCapsTable->familyId = callbackWRed->orgAsicCapsTableHWLibs->familyId = 0x8e;
-    callbackWRed->orgAsicCapsTable->deviceId = callbackWRed->orgAsicCapsTableHWLibs->deviceId = deviceId;
-    callbackWRed->orgAsicCapsTable->revision = callbackWRed->orgAsicCapsTableHWLibs->revision = revision;
-    callbackWRed->orgAsicCapsTable->pciRev = callbackWRed->orgAsicCapsTableHWLibs->pciRev = 0xFFFFFFFF;
-    callbackWRed->orgAsicCapsTable->emulatedRev = callbackWRed->orgAsicCapsTableHWLibs->emulatedRev = emulatedRevision;
-    callbackWRed->orgAsicCapsTable->caps = callbackWRed->orgAsicCapsTableHWLibs->caps = initCaps->caps;
+    callbackWRed->orgAsicCapsTableHWLibs->familyId = 0x8e;
+    callbackWRed->orgAsicCapsTableHWLibs->deviceId = deviceId;
+    callbackWRed->orgAsicCapsTableHWLibs->revision = revision;
+    callbackWRed->orgAsicCapsTableHWLibs->pciRev = 0xFFFFFFFF;
+    callbackWRed->orgAsicCapsTableHWLibs->emulatedRev = emulatedRevision;
+    callbackWRed->orgAsicCapsTableHWLibs->caps = initCaps->caps;
+    *callbackWRed->orgAsicCapsTable = *callbackWRed->orgAsicCapsTableHWLibs;
     MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
     return ret;
