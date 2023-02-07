@@ -66,8 +66,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"_gc_9_2_1_mec_jt_ucode", orgGcMecJtUcode},
             {"_sdma_4_1_ucode", orgSdma41Ucode},
             {"_sdma_4_2_ucode", orgSdma42Ucode},
-            {"_Raven_SendMsgToSmcWithParameter", orgRavenSendMsgToSmcWithParam},
-            {"_Renoir_SendMsgToSmcWithParameter", orgRenoirSendMsgToSmcWithParam},
+            {"_Raven_SendMsgToSmc", orgRavenSendMsgToSmc},
+            {"_Renoir_SendMsgToSmc", orgRenoirSendMsgToSmc},
         };
         PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "wred",
             "Failed to resolve AMDRadeonX5000HWLibs symbols");
@@ -750,15 +750,16 @@ uint32_t WRed::wrapHwReadReg32(void *that, uint32_t reg) {
         reg = 0xD2F;
         NETLOG("wred", "hwReadReg32: redirecting reg 0xD31 to 0xD2F");
     }
-    auto ret = FunctionCast(wrapHwReadReg32, callbackWRed->orgHwReadReg32)(that, reg);
-    return ret;
+    return FunctionCast(wrapHwReadReg32, callbackWRed->orgHwReadReg32)(that, reg);
 }
 
 uint32_t WRed::wrapSmuRavenInitialize(void *smumData, uint32_t param2) {
     NETLOG("wred", "_SmuRaven_Initialize: param1 = %p param2 = 0x%X", smumData, param2);
     auto ret = FunctionCast(wrapSmuRavenInitialize, callbackWRed->orgSmuRavenInitialize)(smumData, param2);
     NETLOG("wred", "_SmuRaven_Initialize returned 0x%X", ret);
-    callbackWRed->orgRavenSendMsgToSmcWithParam(smumData, PPSMC_MSG_PowerUpSdma, 0);
+    callbackWRed->orgRavenSendMsgToSmc(smumData, PPSMC_MSG_PowerUpVcn);
+    callbackWRed->orgRavenSendMsgToSmc(smumData, PPSMC_MSG_PowerUpSdma);
+    callbackWRed->orgRavenSendMsgToSmc(smumData, PPSMC_MSG_PowerGateMmHub);
     return ret;
 }
 
@@ -766,7 +767,9 @@ uint32_t WRed::wrapSmuRenoirInitialize(void *smumData, uint32_t param2) {
     NETLOG("wred", "_SmuRenoir_Initialize: param1 = %p param2 = 0x%X", smumData, param2);
     auto ret = FunctionCast(wrapSmuRenoirInitialize, callbackWRed->orgSmuRenoirInitialize)(smumData, param2);
     NETLOG("wred", "_SmuRenoir_Initialize returned 0x%X", ret);
-    callbackWRed->orgRenoirSendMsgToSmcWithParam(smumData, PPSMC_MSG_PowerUpSdma, 0);
+    callbackWRed->orgRenoirSendMsgToSmc(smumData, PPSMC_MSG_PowerUpVcn);
+    callbackWRed->orgRenoirSendMsgToSmc(smumData, PPSMC_MSG_PowerUpSdma);
+    callbackWRed->orgRenoirSendMsgToSmc(smumData, PPSMC_MSG_PowerGateMmHub);
     return ret;
 }
 

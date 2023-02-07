@@ -9,10 +9,12 @@ using t_putFirmware = bool (*)(void *that, uint32_t deviceType, void *fw);
 using t_Vega10PowerTuneConstructor = void (*)(void *that, void *param1, void *param2);
 using t_HWEngineConstructor = void (*)(void *that);
 using t_HWEngineNew = void *(*)(size_t size);
-using t_sendMsgToSmcWithParam = uint32_t (*)(void *smumData, uint32_t msgId, uint32_t parameter);
+using t_sendMsgToSmc = uint32_t (*)(void *smumData, uint32_t msgId);
 using t_pspLoadExtended = uint32_t (*)(void *, uint64_t, uint64_t, const void *, size_t);
 
+constexpr uint32_t PPSMC_MSG_PowerUpVcn = 0xC;
 constexpr uint32_t PPSMC_MSG_PowerUpSdma = 0xE;
+constexpr uint32_t PPSMC_MSG_PowerGateMmHub = 0x35;
 
 struct VFCT {
     char signature[4];

@@ -69,8 +69,8 @@ class WRed {
     GcFwConstant *orgGcMecJtUcode = nullptr;
     SdmaFwConstant *orgSdma41Ucode = nullptr;
     SdmaFwConstant *orgSdma42Ucode = nullptr;
-    t_sendMsgToSmcWithParam orgRavenSendMsgToSmcWithParam = nullptr;
-    t_sendMsgToSmcWithParam orgRenoirSendMsgToSmcWithParam = nullptr;
+    t_sendMsgToSmc orgRavenSendMsgToSmc = nullptr;
+    t_sendMsgToSmc orgRenoirSendMsgToSmc = nullptr;
     mach_vm_address_t orgSmuRavenInitialize {};
     mach_vm_address_t orgSmuRenoirInitialize {};
 
@@ -112,7 +112,6 @@ class WRed {
     static uint32_t wrapPspAsdLoad(void *pspData);
     static uint32_t wrapPspDtmLoad(void *pspData);
     static uint32_t wrapPspHdcpLoad(void *pspData);
-    static void powerUpSDMA(void *smumData);
     static uint32_t wrapSmuRavenInitialize(void *smumData, uint32_t param2);
     static uint32_t wrapSmuRenoirInitialize(void *smumData, uint32_t param2);
 
