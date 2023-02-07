@@ -22,15 +22,19 @@ Pass `wrednetdbg=0` to disable the NetDbg functionality.
 
 ## Introduction
 
-We are a team of three working on getting graphics acceleration for AMD iGPUs (Raven/Raven2/Renoir and their derivatives, such as Picasso) on hackintoshes.
+We're a 3-people team working on getting graphics acceleration working on AMD iGPU-only hackintoshes, specifically Raven/Raven2/Renoir and their derivatives, such as Picasso.
 
-We are patching the existing kexts in order to achieve this (mixing AMDRadeonX5000 for GCN 5 and AMDRadeonX6000 for VCN 1/2, and replacing AMDRadeonX6000Framebuffer for DCN instead of AMD10000Controller which is DCE).
+The existing kexts are patched to achieve this. We are mixing AMDRadeonX5000 (GCN 5 part) and AMDRadeonX6000 (VCN part), and replacing AMD10000Controller (DCE) with AMDRadeonX6000Framebuffer (DCN).
 
-This project is under active research and development and is not yet functional, but in a close state to such.
+This project is under active research and development; It is not yet functional.
 
-However, due to the complexity of GPU drivers, especially those without public source code, adding support for non-existent logic is not possible. As a result, you must use Catalina (minimum) to Big Sur (recommended) since the logic for supporting our iGPU chips has been removed in Monterey and later.
+Due to the complexity and secrecy of the Metal 2/3 drivers, adding support for non-existent logic is impossible.
 
-Injecting AMD driver kernel extensions is not possible during the OpenCore injection stage. This is because the prelink injection fails for kernel extensions of this type, as the libraries used for them are not contained in the Boot kernel cache, which is where OpenCore injects kexts to. Instead, they're contained in the Auxiliary kernel cache.
+The required logic for our iGPUs has been purged from the AMD kexts since Monterey.
+
+This cannot be resolved as injecting kexts like GPU kexts is impossible during the OpenCore injection stage. The prelink stage fails for kexts of this type as the libraries used for them are not contained in the Boot Kext Collection, which is where OpenCore injects kexts to, they're instead contained in the Auxiliary Kext Collection.
+
+You must use Big Sur since there are too many incompatibilities with older macOS kexts.
 
 ## FAQ
 

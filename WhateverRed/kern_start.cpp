@@ -29,7 +29,7 @@ PluginConfiguration ADDPR(config) {
     arrsize(bootargDebug),
     bootargBeta,
     arrsize(bootargBeta),
-    KernelVersion::Catalina,
+    KernelVersion::BigSur,
     KernelVersion::BigSur,
     []() { wred.init(); },
 };
