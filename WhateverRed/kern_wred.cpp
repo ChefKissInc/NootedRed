@@ -93,6 +93,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, orgPspCmdKmSubmit},
             {"__ZN20AtiPowerPlayServicesC2EP18PowerPlayCallbacks", wrapAtiPowerPlayServicesConstructor,
                 orgAtiPowerPlayServicesConstructor},
+            {"_smu_9_0_1_full_asic_reset", wrapSmu901FullAsicReset, orgSmu901FullAsicReset},
         };
         PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000HWLibs symbols");
@@ -872,5 +873,16 @@ uint64_t WRed::wrapGetPTEValue(void *that, uint64_t level, uint64_t param2, uint
         param2, param3, param4);
     auto ret = FunctionCast(wrapGetPTEValue, callbackWRed->orgGetPTEValue)(that, level, param2, param3, param4);
     NETLOG("wred", "getPTEValue returned 0x%llX", ret);
+    return ret;
+}
+
+uint32_t WRed::wrapSmu901FullAsicReset(void *smu, void *param2) {
+    NETLOG("wred", "_smu_9_0_1_full_asic_reset: smu = %p param2 = %p", smu, param2);
+    if (callbackWRed->asicType == ASICType::Raven || callbackWRed->asicType == ASICType::Raven2) {
+        NETLOG("wred", "_smu_9_0_1_full_asic_reset: Raven not supported");
+        return 0;
+    }
+    auto ret = FunctionCast(wrapSmu901FullAsicReset, callbackWRed->orgSmu901FullAsicReset)(smu, param2);
+    NETLOG("wred", "_smu_9_0_1_full_asic_reset returned 0x%X", ret);
     return ret;
 }
