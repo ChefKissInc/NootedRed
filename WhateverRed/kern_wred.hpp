@@ -71,8 +71,6 @@ class WRed {
     SdmaFwConstant *orgSdma42Ucode = nullptr;
     t_sendMsgToSmc orgRavenSendMsgToSmc = nullptr;
     t_sendMsgToSmc orgRenoirSendMsgToSmc = nullptr;
-    t_sendMsgToSmcWithParam orgRavenSendMsgToSmcWithParam = nullptr;
-    t_sendMsgToSmcWithParam orgRenoirSendMsgToSmcWithParam = nullptr;
     mach_vm_address_t orgSmuRavenInitialize {};
     mach_vm_address_t orgSmuRenoirInitialize {};
 
