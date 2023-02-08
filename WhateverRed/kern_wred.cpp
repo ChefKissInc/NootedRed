@@ -206,6 +206,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
                 wrapUpdateContiguousPTEsWithDMAUsingAddr, orgUpdateContiguousPTEsWithDMAUsingAddr},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20initializeFamilyTypeEv", wrapInitializeFamilyType},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20allocateAMDHWDisplayEv", wrapAllocateAMDHWDisplay},
+            {"__ZN41AMDRadeonX5000_AMDGFX9GraphicsAccelerator15newVideoContextEv", wrapNewVideoContext},
         };
         PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000 symbols");
@@ -245,6 +246,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN32AMDRadeonX6000_AMDNavi10Hardware32setupAndInitializeHWCapabilitiesEv",
                 orgSetupAndInitializeHWCapabilitiesX6000},
             {"__ZN31AMDRadeonX6000_AMDGFX10Hardware20allocateAMDHWDisplayEv", orgAllocateAMDHWDisplayX6000},
+            {"__ZN42AMDRadeonX6000_AMDGFX10GraphicsAccelerator15newVideoContextEv", orgNewVideoContextX6000},
         };
         PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "wred",
             "Failed to resolve AMDRadeonX6000 symbols");
@@ -884,5 +886,12 @@ uint32_t WRed::wrapSmu901FullAsicReset(void *smu, void *param2) {
     }
     auto ret = FunctionCast(wrapSmu901FullAsicReset, callbackWRed->orgSmu901FullAsicReset)(smu, param2);
     NETLOG("wred", "_smu_9_0_1_full_asic_reset returned 0x%X", ret);
+    return ret;
+}
+
+void *WRed::wrapNewVideoContext(void *that) {
+    NETLOG("wred", "newVideoContext: that = %p", that);
+    auto ret = FunctionCast(wrapNewVideoContext, callbackWRed->orgNewVideoContextX6000)(that);
+    NETLOG("wred", "newVideoContext returned %p", ret);
     return ret;
 }

@@ -142,6 +142,8 @@ class WRed {
     static void wrapAtiPowerPlayServicesConstructor(void *that, void *ppCallbacks);
     mach_vm_address_t orgInitWithPciInfo {};
     static bool wrapInitWithPciInfo(void *that, void *param1);
-    mach_vm_address_t orgSmu901FullAsicReset{};
-    static uint32_t wrapSmu901FullAsicReset(void * smu, void * param2);
+    mach_vm_address_t orgSmu901FullAsicReset {};
+    static uint32_t wrapSmu901FullAsicReset(void *smu, void *param2);
+    mach_vm_address_t orgNewVideoContextX6000 {};
+    static void *wrapNewVideoContext(void *that);
 };
