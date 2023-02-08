@@ -770,7 +770,6 @@ uint32_t WRed::wrapSmuRenoirInitialize(void *smumData, uint32_t param2) {
     NETLOG("wred", "_SmuRenoir_Initialize returned 0x%X", ret);
     callbackWRed->orgRenoirSendMsgToSmc(smumData, PPSMC_MSG_PowerUpVcn);
     callbackWRed->orgRenoirSendMsgToSmc(smumData, PPSMC_MSG_PowerUpSdma);
-    callbackWRed->orgRenoirSendMsgToSmc(smumData, PPSMC_MSG_PowerGateMmHub);
     return ret;
 }
 
