@@ -146,4 +146,6 @@ class WRed {
     static uint32_t wrapSmu901FullAsicReset(void *smu, void *param2);
     mach_vm_address_t orgNewVideoContextX6000 {};
     static void *wrapNewVideoContext(void *that);
+    mach_vm_address_t orgCreateSMLInterfaceX6000 {};
+    static void *wrapCreateSMLInterface(uint32_t configBit);
 };
