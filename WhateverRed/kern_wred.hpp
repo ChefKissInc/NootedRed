@@ -152,4 +152,10 @@ class WRed {
     static void wrapEventMachineIncrementStamp(void *that, uint32_t param1);
     mach_vm_address_t orgScrubEvents {};
     static void wrapScrubEvents(void *that);
+    mach_vm_address_t orgCommandPoolSubmitBuffer {};
+    static void wrapCommandPoolSubmitBuffer(void *that, uint64_t param1);
+    mach_vm_address_t orgGetPendingDwords {};
+    static uint32_t wrapGetPendingDwords(void *that);
+    mach_vm_address_t orgClearWithDMA {};
+    static void wrapClearWithDMA(void *that, uint64_t physAddr, uint64_t virtAddr);
 };

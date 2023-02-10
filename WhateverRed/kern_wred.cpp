@@ -214,6 +214,11 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN31AMDRadeonX5000_IAMDSMLInterface18createSMLInterfaceEj", wrapCreateSMLInterface},
             {"__ZN35AMDRadeonX5000_AMDCommandBufferPool14incrementStampEv", wrapPoolIncrementStamp,
                 orgPoolIncrementStamp},
+            {"__ZN35AMDRadeonX5000_AMDCommandBufferPool12submitBufferEy", wrapCommandPoolSubmitBuffer,
+                orgCommandPoolSubmitBuffer},
+            {"__ZN35AMDRadeonX5000_AMDCommandBufferPool16getPendingDwordsEv", wrapGetPendingDwords,
+                orgGetPendingDwords},
+            {"__ZN23AMDRadeonX5000_AMDHWVMM12clearWithDMAEyy", wrapClearWithDMA, orgClearWithDMA},
         };
         PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000 symbols");
@@ -919,16 +924,33 @@ void WRed::wrapPoolIncrementStamp(void *that) {
 
 void WRed::wrapEventMachineIncrementStamp(void *that, uint32_t param1) {
     NETLOG("wred", "eventMachineIncrementStamp: that = %p param1 = 0x%X", that, param1);
-    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
     FunctionCast(wrapEventMachineIncrementStamp, callbackWRed->orgEventMachineIncrementStamp)(that, param1);
     NETLOG("wred", "eventMachineIncrementStamp finished");
-    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
 }
 
 void WRed::wrapScrubEvents(void *that) {
     NETLOG("wred", "scrubEvents: that = %p", that);
-    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
     FunctionCast(wrapScrubEvents, callbackWRed->orgScrubEvents)(that);
     NETLOG("wred", "scrubEvents finished");
-    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
+}
+
+void WRed::wrapCommandPoolSubmitBuffer(void *that, uint64_t param1) {
+    NETLOG("wred", "commandPoolSubmitBuffer: that = %p param1 = 0x%llX", that, param1);
+    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(3000);
+    FunctionCast(wrapCommandPoolSubmitBuffer, callbackWRed->orgCommandPoolSubmitBuffer)(that, param1);
+    NETLOG("wred", "commandPoolSubmitBuffer finished");
+    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(3000);
+}
+
+uint32_t WRed::wrapGetPendingDwords(void *that) {
+    NETLOG("wred", "getPendingDwords: that = %p", that);
+    auto ret = FunctionCast(wrapGetPendingDwords, callbackWRed->orgGetPendingDwords)(that);
+    NETLOG("wred", "getPendingDwords returned 0x%X", ret);
+    return ret;
+}
+
+void WRed::wrapClearWithDMA(void *that, uint64_t physAddr, uint64_t virtAddr) {
+    NETLOG("wred", "clearWithDMA: that = %p physAddr = 0x%llX virtAddr = 0x%llX", that, physAddr, virtAddr);
+    FunctionCast(wrapClearWithDMA, callbackWRed->orgClearWithDMA)(that, physAddr, virtAddr);
+    NETLOG("wred", "clearWithDMA finished");
 }
