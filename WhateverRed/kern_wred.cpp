@@ -214,6 +214,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN31AMDRadeonX5000_IAMDSMLInterface18createSMLInterfaceEj", wrapCreateSMLInterface},
             {"__ZN27AMDRadeonX5000_AMDHWChannel19submitCommandBufferEP30AMD_SUBMIT_COMMAND_BUFFER_INFO",
                 wrapSubmitCommandBuffer, orgSubmitCommandBuffer},
+            {"__ZN27AMDRadeonX5000_AMDHWChannel14waitForHwStampEj", wrapWaitForHwStamp, orgWaitForHwStamp},
+            {"__ZN26AMDRadeonX5000_AMDHardware17dumpASICHangStateEb", wrapDumpASICHangState, orgDumpASICHangState},
         };
         PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000 symbols");
@@ -910,17 +912,32 @@ void *WRed::wrapCreateSMLInterface(uint32_t configBit) {
 
 void WRed::wrapAccelFIFOSubmitCommands(void *that, void *param1) {
     NETLOG("wred", "accelFIFOSubmitCommands: that = %p param1 = %p", that, param1);
-    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(2000);
     FunctionCast(wrapAccelFIFOSubmitCommands, callbackWRed->orgAccelFIFOSubmitCommands)(that, param1);
     NETLOG("wred", "accelFIFOSubmitCommands finished");
-    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(2000);
 }
 
 uint32_t WRed::wrapSubmitCommandBuffer(void *that, void *param2) {
     NETLOG("wred", "submitCommandBuffer: that = %p param2 = %p", that, param2);
-    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(2000);
+    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
     auto ret = FunctionCast(wrapSubmitCommandBuffer, callbackWRed->orgSubmitCommandBuffer)(that, param2);
     NETLOG("wred", "submitCommandBuffer returned 0x%X", ret);
-    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(2000);
+    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
     return ret;
+}
+
+bool WRed::wrapWaitForHwStamp(void *that, uint32_t param1) {
+    NETLOG("wred", "waitForHwStamp: that = %p param1 = 0x%X", that, param1);
+    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
+    auto ret = FunctionCast(wrapWaitForHwStamp, callbackWRed->orgWaitForHwStamp)(that, param1);
+    NETLOG("wred", "waitForHwStamp returned %d", ret);
+    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
+    return ret;
+}
+
+void WRed::wrapDumpASICHangState(void *that, bool param1) {
+    NETLOG("wred", "dumpASICHangState: that = %p param1 = %d", that, param1);
+    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
+    FunctionCast(wrapDumpASICHangState, callbackWRed->orgDumpASICHangState)(that, param1);
+    NETLOG("wred", "dumpASICHangState finished");
+    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
 }
