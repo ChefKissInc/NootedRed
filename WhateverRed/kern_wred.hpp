@@ -162,4 +162,8 @@ class WRed {
     static void wrapSetEventStamp(void *param1);
     mach_vm_address_t orgAccelFIFOSubmitCommands {};
     static void wrapAccelFIFOSubmitCommands(void *that, void *param1);
+    mach_vm_address_t orgWaitForRingBufferSpace {};
+    static void wrapWaitForRingBufferSpace(void *that);
+    mach_vm_address_t orgIoSetEventStamp {};
+    static void wrapIoSetEventStamp(void *that, uint32_t param1, void *param2);
 };
