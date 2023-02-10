@@ -13,6 +13,8 @@ static const char *pathRadeonX6000Framebuffer =
     "/System/Library/Extensions/AMDRadeonX6000Framebuffer.kext/Contents/MacOS/AMDRadeonX6000Framebuffer";
 static const char *pathRadeonX6000 = "/System/Library/Extensions/AMDRadeonX6000.kext/Contents/MacOS/AMDRadeonX6000";
 static const char *pathRadeonX5000 = "/System/Library/Extensions/AMDRadeonX5000.kext/Contents/MacOS/AMDRadeonX5000";
+static const char *pathIOAcceleratorFamily2 =
+    "/System/Library/Extensions/IOAcceleratorFamily2.kext/Contents/MacOS/IOAcceleratorFamily2";
 
 static KernelPatcher::KextInfo kextRadeonX5000HWLibs {"com.apple.kext.AMDRadeonX5000HWLibs", &pathRadeonX5000HWLibs, 1,
     {}, {}, KernelPatcher::KextInfo::Unloaded};
@@ -26,6 +28,9 @@ static KernelPatcher::KextInfo kextRadeonX6000 = {"com.apple.kext.AMDRadeonX6000
 static KernelPatcher::KextInfo kextRadeonX5000 {"com.apple.kext.AMDRadeonX5000", &pathRadeonX5000, 1, {}, {},
     KernelPatcher::KextInfo::Unloaded};
 
+static KernelPatcher::KextInfo kextIOAcceleratorFamily2 = {"com.apple.iokit.IOAcceleratorFamily2",
+    &pathIOAcceleratorFamily2, 1, {}, {}, KernelPatcher::KextInfo::Unloaded};
+
 WRed *WRed::callbackWRed = nullptr;
 
 void WRed::init() {
@@ -35,7 +40,7 @@ void WRed::init() {
     lilu.onKextLoadForce(&kextRadeonX6000Framebuffer);
     lilu.onKextLoadForce(&kextRadeonX6000);
     lilu.onKextLoadForce(&kextRadeonX5000);
-
+    lilu.onKextLoadForce(&kextIOAcceleratorFamily2);
     lilu.onKextLoadForce(    // For compatibility
         nullptr, 0,
         [](void *user, KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
@@ -207,6 +212,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20allocateAMDHWDisplayEv", wrapAllocateAMDHWDisplay},
             {"__ZN41AMDRadeonX5000_AMDGFX9GraphicsAccelerator15newVideoContextEv", wrapNewVideoContext},
             {"__ZN31AMDRadeonX5000_IAMDSMLInterface18createSMLInterfaceEj", wrapCreateSMLInterface},
+            {"__ZN35AMDRadeonX5000_AMDCommandBufferPool14incrementStampEv", wrapPoolIncrementStamp,
+                orgPoolIncrementStamp},
         };
         PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000 symbols");
@@ -400,6 +407,16 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             patcher.applyLookupPatch(&patch);
             patcher.clearError();
         }
+    } else if (kextIOAcceleratorFamily2.loadIndex == index) {
+        KernelPatcher::RouteRequest requests[] = {
+            {"example", wrapNothing},
+            {"__ZN24IOAccelEventMachineFast214incrementStampEi", wrapEventMachineIncrementStamp,
+                orgEventMachineIncrementStamp},
+            {"__ZN22IOGraphicsAccelerator211scrubEventsEv", wrapScrubEvents, orgScrubEvents},
+        };
+
+        PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
+            "Failed to route IOAcceleratorFamily2 symbols");
     }
 }
 
@@ -891,4 +908,28 @@ void *WRed::wrapCreateSMLInterface(uint32_t configBit) {
     auto ret = FunctionCast(wrapCreateSMLInterface, callbackWRed->orgCreateSMLInterfaceX6000)(configBit);
     NETLOG("wred", "createSMLInterface returned %p", ret);
     return ret;
+}
+
+void WRed::wrapPoolIncrementStamp(void *that) {
+    NETLOG("wred", "poolIncrementStamp: that = %p", that);
+    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
+    FunctionCast(wrapPoolIncrementStamp, callbackWRed->orgPoolIncrementStamp)(that);
+    NETLOG("wred", "poolIncrementStamp finished");
+    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
+}
+
+void WRed::wrapEventMachineIncrementStamp(void *that, uint32_t param1) {
+    NETLOG("wred", "eventMachineIncrementStamp: that = %p param1 = 0x%X", that, param1);
+    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
+    FunctionCast(wrapEventMachineIncrementStamp, callbackWRed->orgEventMachineIncrementStamp)(that, param1);
+    NETLOG("wred", "eventMachineIncrementStamp finished");
+    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
+}
+
+void WRed::wrapScrubEvents(void *that) {
+    NETLOG("wred", "scrubEvents: that = %p", that);
+    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
+    FunctionCast(wrapScrubEvents, callbackWRed->orgScrubEvents)(that);
+    NETLOG("wred", "scrubEvents finished");
+    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
 }

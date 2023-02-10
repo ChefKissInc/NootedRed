@@ -146,4 +146,10 @@ class WRed {
     static void *wrapNewVideoContext(void *that);
     mach_vm_address_t orgCreateSMLInterfaceX6000 {};
     static void *wrapCreateSMLInterface(uint32_t configBit);
+    mach_vm_address_t orgPoolIncrementStamp {};
+    static void wrapPoolIncrementStamp(void *that);
+    mach_vm_address_t orgEventMachineIncrementStamp {};
+    static void wrapEventMachineIncrementStamp(void *that, uint32_t param1);
+    mach_vm_address_t orgScrubEvents {};
+    static void wrapScrubEvents(void *that);
 };
