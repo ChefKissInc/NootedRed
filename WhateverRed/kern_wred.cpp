@@ -918,19 +918,19 @@ void WRed::wrapAccelFIFOSubmitCommands(void *that, void *param1) {
 
 uint32_t WRed::wrapSubmitCommandBuffer(void *that, void *param2) {
     NETLOG("wred", "submitCommandBuffer: that = %p param2 = %p", that, param2);
-    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
+    // if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
     auto ret = FunctionCast(wrapSubmitCommandBuffer, callbackWRed->orgSubmitCommandBuffer)(that, param2);
     NETLOG("wred", "submitCommandBuffer returned 0x%X", ret);
-    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
+    // if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
     return ret;
 }
 
 bool WRed::wrapWaitForHwStamp(void *that, uint32_t param1) {
     NETLOG("wred", "waitForHwStamp: that = %p param1 = 0x%X", that, param1);
-    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
+    // if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
     auto ret = FunctionCast(wrapWaitForHwStamp, callbackWRed->orgWaitForHwStamp)(that, param1);
     NETLOG("wred", "waitForHwStamp returned %d", ret);
-    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
+    // if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
     return ret;
 }
 
