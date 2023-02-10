@@ -212,17 +212,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20allocateAMDHWDisplayEv", wrapAllocateAMDHWDisplay},
             {"__ZN41AMDRadeonX5000_AMDGFX9GraphicsAccelerator15newVideoContextEv", wrapNewVideoContext},
             {"__ZN31AMDRadeonX5000_IAMDSMLInterface18createSMLInterfaceEj", wrapCreateSMLInterface},
-            {"__ZN35AMDRadeonX5000_AMDCommandBufferPool14incrementStampEv", wrapPoolIncrementStamp,
-                orgPoolIncrementStamp},
-            {"__ZN35AMDRadeonX5000_AMDCommandBufferPool12submitBufferEy", wrapCommandPoolSubmitBuffer,
-                orgCommandPoolSubmitBuffer},
-            {"__ZN35AMDRadeonX5000_AMDCommandBufferPool16getPendingDwordsEv", wrapGetPendingDwords,
-                orgGetPendingDwords},
-            {"__ZN23AMDRadeonX5000_AMDHWVMM12clearWithDMAEyy", wrapClearWithDMA, orgClearWithDMA},
-            {"__ZN35AMDRadeonX5000_AMDCommandBufferPool13setEventStampEP12IOAccelEvent", wrapSetEventStamp,
-                orgSetEventStamp},
-            {"__ZN30AMDRadeonX5000_AMDAccelChannel22waitForRingBufferSpaceEv", wrapWaitForRingBufferSpace,
-                orgWaitForRingBufferSpace},
+            {"__ZN27AMDRadeonX5000_AMDHWChannel19submitCommandBufferEP30AMD_SUBMIT_COMMAND_BUFFER_INFO",
+                wrapSubmitCommandBuffer, orgSubmitCommandBuffer},
         };
         PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000 symbols");
@@ -418,12 +409,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         }
     } else if (kextIOAcceleratorFamily2.loadIndex == index) {
         KernelPatcher::RouteRequest requests[] = {
-            {"__ZN24IOAccelEventMachineFast214incrementStampEi", wrapEventMachineIncrementStamp,
-                orgEventMachineIncrementStamp},
-            {"__ZN22IOGraphicsAccelerator211scrubEventsEv", wrapScrubEvents, orgScrubEvents},
             {"__ZN19IOAccelFIFOChannel214submitCommandsEP24IOAccelCommandDescriptor", wrapAccelFIFOSubmitCommands,
                 orgAccelFIFOSubmitCommands},
-            {"__ZN24IOAccelEventMachineFast213setEventStampEiP12IOAccelEvent", wrapIoSetEventStamp, orgIoSetEventStamp},
         };
 
         PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
@@ -921,67 +908,19 @@ void *WRed::wrapCreateSMLInterface(uint32_t configBit) {
     return ret;
 }
 
-void WRed::wrapPoolIncrementStamp(void *that) {
-    NETLOG("wred", "poolIncrementStamp: that = %p", that);
-    FunctionCast(wrapPoolIncrementStamp, callbackWRed->orgPoolIncrementStamp)(that);
-    NETLOG("wred", "poolIncrementStamp finished");
-}
-
-void WRed::wrapEventMachineIncrementStamp(void *that, uint32_t param1) {
-    NETLOG("wred", "eventMachineIncrementStamp: that = %p param1 = 0x%X", that, param1);
-    FunctionCast(wrapEventMachineIncrementStamp, callbackWRed->orgEventMachineIncrementStamp)(that, param1);
-    NETLOG("wred", "eventMachineIncrementStamp finished");
-}
-
-void WRed::wrapScrubEvents(void *that) {
-    NETLOG("wred", "scrubEvents: that = %p", that);
-    FunctionCast(wrapScrubEvents, callbackWRed->orgScrubEvents)(that);
-    NETLOG("wred", "scrubEvents finished");
-}
-
-void WRed::wrapCommandPoolSubmitBuffer(void *that, uint64_t param1) {
-    NETLOG("wred", "commandPoolSubmitBuffer: that = %p param1 = 0x%llX", that, param1);
-    FunctionCast(wrapCommandPoolSubmitBuffer, callbackWRed->orgCommandPoolSubmitBuffer)(that, param1);
-    NETLOG("wred", "commandPoolSubmitBuffer finished");
-}
-
-uint32_t WRed::wrapGetPendingDwords(void *that) {
-    NETLOG("wred", "getPendingDwords: that = %p", that);
-    auto ret = FunctionCast(wrapGetPendingDwords, callbackWRed->orgGetPendingDwords)(that);
-    NETLOG("wred", "getPendingDwords returned 0x%X", ret);
-    return ret;
-}
-
-void WRed::wrapClearWithDMA(void *that, uint64_t physAddr, uint64_t virtAddr) {
-    NETLOG("wred", "clearWithDMA: that = %p physAddr = 0x%llX virtAddr = 0x%llX", that, physAddr, virtAddr);
-    FunctionCast(wrapClearWithDMA, callbackWRed->orgClearWithDMA)(that, physAddr, virtAddr);
-    NETLOG("wred", "clearWithDMA finished");
-}
-
-void WRed::wrapSetEventStamp(void *param1) {
-    NETLOG("wred", "setEventStamp: param1 = %p", param1);
-    FunctionCast(wrapSetEventStamp, callbackWRed->orgSetEventStamp)(param1);
-    NETLOG("wred", "setEventStamp finished");
-}
-
 void WRed::wrapAccelFIFOSubmitCommands(void *that, void *param1) {
     NETLOG("wred", "accelFIFOSubmitCommands: that = %p param1 = %p", that, param1);
+    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(2000);
     FunctionCast(wrapAccelFIFOSubmitCommands, callbackWRed->orgAccelFIFOSubmitCommands)(that, param1);
     NETLOG("wred", "accelFIFOSubmitCommands finished");
+    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(2000);
 }
 
-void WRed::wrapWaitForRingBufferSpace(void *that) {
-    NETLOG("wred", "waitForRingBufferSpace: that = %p", that);
-    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
-    FunctionCast(wrapWaitForRingBufferSpace, callbackWRed->orgWaitForRingBufferSpace)(that);
-    NETLOG("wred", "waitForRingBufferSpace finished");
-    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
-}
-
-void WRed::wrapIoSetEventStamp(void *that, uint32_t param1, void *param2) {
-    NETLOG("wred", "ioSetEventStamp: that = %p param1 = 0x%X param2 = %p", that, param1, param2);
-    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
-    FunctionCast(wrapIoSetEventStamp, callbackWRed->orgIoSetEventStamp)(that, param1, param2);
-    NETLOG("wred", "ioSetEventStamp finished");
-    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
+uint32_t WRed::wrapSubmitCommandBuffer(void *that, void *param2) {
+    NETLOG("wred", "submitCommandBuffer: that = %p param2 = %p", that, param2);
+    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(2000);
+    auto ret = FunctionCast(wrapSubmitCommandBuffer, callbackWRed->orgSubmitCommandBuffer)(that, param2);
+    NETLOG("wred", "submitCommandBuffer returned 0x%X", ret);
+    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(2000);
+    return ret;
 }
