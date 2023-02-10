@@ -158,4 +158,8 @@ class WRed {
     static uint32_t wrapGetPendingDwords(void *that);
     mach_vm_address_t orgClearWithDMA {};
     static void wrapClearWithDMA(void *that, uint64_t physAddr, uint64_t virtAddr);
+    mach_vm_address_t orgSetEventStamp {};
+    static void wrapSetEventStamp(void *param1);
+    mach_vm_address_t orgAccelFIFOSubmitCommands {};
+    static void wrapAccelFIFOSubmitCommands(void *that, void *param1);
 };
