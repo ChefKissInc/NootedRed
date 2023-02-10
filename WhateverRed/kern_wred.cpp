@@ -72,7 +72,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"_sdma_4_1_ucode", orgSdma41Ucode},
             {"_sdma_4_2_ucode", orgSdma42Ucode},
             {"_Raven_SendMsgToSmc", orgRavenSendMsgToSmc},
-            {"_Renoir_SendMsgToSmc", orgRenoirSendMsgToSmc},
+            {"_Renoir_SendMsgToSmcWithParameter", orgRenoirSendMsgToSmcWithParameter},
         };
         PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "wred",
             "Failed to resolve AMDRadeonX5000HWLibs symbols");
@@ -787,8 +787,8 @@ uint32_t WRed::wrapSmuRenoirInitialize(void *smumData, uint32_t param2) {
     NETLOG("wred", "_SmuRenoir_Initialize: param1 = %p param2 = 0x%X", smumData, param2);
     auto ret = FunctionCast(wrapSmuRenoirInitialize, callbackWRed->orgSmuRenoirInitialize)(smumData, param2);
     NETLOG("wred", "_SmuRenoir_Initialize returned 0x%X", ret);
-    callbackWRed->orgRenoirSendMsgToSmc(smumData, PPSMC_MSG_PowerUpVcn);
-    callbackWRed->orgRenoirSendMsgToSmc(smumData, PPSMC_MSG_PowerUpSdma);
+    callbackWRed->orgRenoirSendMsgToSmcWithParameter(smumData, PPSMC_MSG_PowerUpVcn, 0);
+    callbackWRed->orgRenoirSendMsgToSmcWithParameter(smumData, PPSMC_MSG_PowerUpSdma, 0);
     return ret;
 }
 
