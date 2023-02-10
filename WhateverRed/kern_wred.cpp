@@ -409,7 +409,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         }
     } else if (kextIOAcceleratorFamily2.loadIndex == index) {
         KernelPatcher::RouteRequest requests[] = {
-            {"example", wrapNothing},
             {"__ZN24IOAccelEventMachineFast214incrementStampEi", wrapEventMachineIncrementStamp,
                 orgEventMachineIncrementStamp},
             {"__ZN22IOGraphicsAccelerator211scrubEventsEv", wrapScrubEvents, orgScrubEvents},
