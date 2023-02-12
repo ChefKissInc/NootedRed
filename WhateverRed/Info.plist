@@ -200,7 +200,7 @@
 			<key>aty_properties</key>
 			<dict>
 				<key>DalDisableDisplayID2</key>
-				<integer>1</integer>
+				<integer>0</integer>
 				<key>DalDisableLTTPR</key>
 				<integer>1</integer>
 				<key>DalSkipDetectionLT</key>
@@ -216,7 +216,7 @@
 				<key>PP_EnableUploadFirmware</key>
 				<integer>0</integer>
 				<key>PP_Falcon_QuickTransition_Enable</key>
-				<integer>1</integer>
+				<integer>0</integer>
 				<key>PP_GfxOffControl</key>
 				<integer>0</integer>
 				<key>PP_LogDumpTableBuffers</key>
