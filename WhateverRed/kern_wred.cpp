@@ -839,7 +839,7 @@ uint32_t WRed::wrapHwReadReg32(void *that, uint32_t reg) {
         NETLOG("wred", "hwReadReg32: redirecting reg 0xD31 to 0xD2F");
     }
     if (!callbackWRed->fbOffset) {
-        callbackWRed->fbOffset = FunctionCast(wrapHwReadReg32, callbackWRed->orgHwReadReg32)(that, 0x296B);
+        callbackWRed->fbOffset = FunctionCast(wrapHwReadReg32, callbackWRed->orgHwReadReg32)(that, 0x296B) << 24;
     }
     return FunctionCast(wrapHwReadReg32, callbackWRed->orgHwReadReg32)(that, reg);
 }
