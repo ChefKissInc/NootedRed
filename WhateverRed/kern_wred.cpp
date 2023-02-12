@@ -284,6 +284,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20allocateAMDHWDisplayEv", wrapAllocateAMDHWDisplay},
             {"__ZN41AMDRadeonX5000_AMDGFX9GraphicsAccelerator15newVideoContextEv", wrapNewVideoContext},
             {"__ZN31AMDRadeonX5000_IAMDSMLInterface18createSMLInterfaceEj", wrapCreateSMLInterface},
+            {"__ZN26AMDRadeonX5000_AMDHWMemory17adjustVRAMAddressEy", wrapAdjustVRAMAddress, orgAdjustVRAMAddress},
         };
         PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000 symbols");
@@ -837,6 +838,9 @@ uint32_t WRed::wrapHwReadReg32(void *that, uint32_t reg) {
         reg = 0xD2F;
         NETLOG("wred", "hwReadReg32: redirecting reg 0xD31 to 0xD2F");
     }
+    if (!callbackWRed->fbOffset) {
+        callbackWRed->fbOffset = FunctionCast(wrapHwReadReg32, callbackWRed->orgHwReadReg32)(that, 0x296B);
+    }
     return FunctionCast(wrapHwReadReg32, callbackWRed->orgHwReadReg32)(that, reg);
 }
 
@@ -970,5 +974,16 @@ void *WRed::wrapCreateSMLInterface(uint32_t configBit) {
     NETLOG("wred", "createSMLInterface: configBit = 0x%X", configBit);
     auto ret = FunctionCast(wrapCreateSMLInterface, callbackWRed->orgCreateSMLInterfaceX6000)(configBit);
     NETLOG("wred", "createSMLInterface returned %p", ret);
+    return ret;
+}
+
+uint64_t WRed::wrapAdjustVRAMAddress(void *that, uint64_t addr) {
+    NETLOG("wred", "adjustVRAMAddress: this = %p addr = 0x%llX", that, addr);
+    auto ret = FunctionCast(wrapAdjustVRAMAddress, callbackWRed->orgAdjustVRAMAddress)(that, addr);
+    NETLOG("wred", "adjustVRAMAddress returned 0x%llX", ret);
+    if (addr != ret) {
+        ret += callbackWRed->fbOffset;
+        NETLOG("wred", "adjustVRAMAddress returning 0x%llX", ret);
+    }
     return ret;
 }

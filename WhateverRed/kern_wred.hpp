@@ -146,4 +146,7 @@ class WRed {
     static void *wrapNewVideoContext(void *that);
     mach_vm_address_t orgCreateSMLInterfaceX6000 {};
     static void *wrapCreateSMLInterface(uint32_t configBit);
+    mach_vm_address_t orgAdjustVRAMAddress {};
+    static uint64_t wrapAdjustVRAMAddress(void *that, uint64_t addr);
+    uint64_t fbOffset {};
 };
