@@ -478,10 +478,10 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             patcher.clearError();
         }
     } else if (kextIOAcceleratorFamily2.loadIndex == index) {
-        KernelPatcher::RouteRequest requests[] = {};
+        // KernelPatcher::RouteRequest requests[] = {};
 
-        PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
-            "Failed to route IOAcceleratorFamily2 symbols");
+        // PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
+        //     "Failed to route IOAcceleratorFamily2 symbols");
     }
 }
 
