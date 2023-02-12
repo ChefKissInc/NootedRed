@@ -209,12 +209,22 @@
 				<integer>1</integer>
 				<key>PP_DisableULV</key>
 				<integer>0</integer>
+				<key>PP_DumpRegister</key>
+				<integer>1</integer>
+				<key>PP_DumpSMCTable</key>
+				<integer>1</integer>
 				<key>PP_EnableUploadFirmware</key>
 				<integer>0</integer>
 				<key>PP_Falcon_QuickTransition_Enable</key>
 				<integer>1</integer>
 				<key>PP_GfxOffControl</key>
 				<integer>0</integer>
+				<key>PP_LogDumpTableBuffers</key>
+				<integer>1</integer>
+				<key>PP_LogLevel</key>
+				<integer>-1</integer>
+				<key>PP_LogSource</key>
+				<integer>-1</integer>
 				<key>PP_PhmUseDummyBackEnd</key>
 				<integer>0</integer>
 				<key>PP_ToolsLogSpaceSize</key>
