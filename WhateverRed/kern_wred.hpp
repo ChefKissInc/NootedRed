@@ -146,12 +146,4 @@ class WRed {
     static void *wrapNewVideoContext(void *that);
     mach_vm_address_t orgCreateSMLInterfaceX6000 {};
     static void *wrapCreateSMLInterface(uint32_t configBit);
-    mach_vm_address_t orgAccelFIFOSubmitCommands {};
-    static void wrapAccelFIFOSubmitCommands(void *that, void *param1);
-    mach_vm_address_t orgSubmitCommandBuffer {};
-    static uint32_t wrapSubmitCommandBuffer(void *that, void *param2);
-    mach_vm_address_t orgWaitForHwStamp {};
-    static bool wrapWaitForHwStamp(void *that, uint32_t param1);
-    mach_vm_address_t orgDumpASICHangState {};
-    static void wrapDumpASICHangState(void *that, bool param1);
 };
