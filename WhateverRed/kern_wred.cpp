@@ -282,25 +282,12 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         const uint8_t repl_startHWEngines[] = {0x49, 0x89, 0xFE, 0x31, 0xDB, 0x48, 0x83, 0xFB, 0x01, 0x74, 0x50};
         static_assert(sizeof(find_startHWEngines) == sizeof(repl_startHWEngines), "Find/replace size mismatch");
 
-        const uint8_t find_sdmachannel_init[] = {0x83, 0xf8, 0x01, 0xb8, 0x21, 0x01, 0x00, 0xff, 0xb9, 0x27, 0x01, 0x00,
-            0xff, 0x0f, 0x44, 0xc8};
-        const uint8_t repl_sdmachannel_init[] = {0x83, 0xf8, 0x02, 0xb8, 0x21, 0x01, 0x00, 0xff, 0xb9, 0x27, 0x01, 0x00,
-            0xff, 0x0f, 0x44, 0xc8};
-        static_assert(sizeof(find_sdmachannel_init) == sizeof(repl_sdmachannel_init), "Find/replace size mismatch");
-
         KernelPatcher::LookupPatch patches[] = {
             /**
              * `AMDRadeonX5000_AMDHardware::startHWEngines`
              * Make for loop stop at 1 instead of 2 in order to skip starting SDMA1 engine.
              */
             {&kextRadeonX5000, find_startHWEngines, repl_startHWEngines, arrsize(find_startHWEngines), 1},
-
-            /**
-             * `AMDRadeonX5000_AMDGFX9SDMAChannel::init`
-             * Field 0x98 somehow tells the scheduler to wait for VMPT before sending user SDMA commands.
-             * Invert the check to set the SDMA1 value when on SDMA0.
-             */
-            {&kextRadeonX5000, find_sdmachannel_init, repl_sdmachannel_init, arrsize(find_sdmachannel_init), 1},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
