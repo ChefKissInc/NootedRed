@@ -41,6 +41,7 @@ class WRed {
     OSData *vbiosData = nullptr;
     ASICType asicType = ASICType::Unknown;
     void *callbackFirmwareDirectory = nullptr;
+    uint64_t fbOffset {};
 
     /** X6000Framebuffer */
     mach_vm_address_t orgPopulateDeviceInfo {};
@@ -73,12 +74,16 @@ class WRed {
     t_sendMsgToSmcWithParam orgRenoirSendMsgToSmcWithParameter = nullptr;
     mach_vm_address_t orgSmuRavenInitialize {};
     mach_vm_address_t orgSmuRenoirInitialize {};
+    mach_vm_address_t orgPspCmdKmSubmit {};
 
     /** X6000 */
     t_HWEngineNew orgVCN2EngineNewX6000 = nullptr;
     t_HWEngineConstructor orgVCN2EngineConstructorX6000 = nullptr;
     mach_vm_address_t orgSetupAndInitializeHWCapabilitiesX6000 {};
     mach_vm_address_t orgAllocateAMDHWDisplayX6000 {};
+    mach_vm_address_t orgInitWithPciInfo {};
+    mach_vm_address_t orgNewVideoContextX6000 {};
+    mach_vm_address_t orgCreateSMLInterfaceX6000 {};
 
     /** X5000 */
     t_HWEngineNew orgGFX9PM4EngineNew = nullptr;
@@ -87,6 +92,7 @@ class WRed {
     t_HWEngineConstructor orgGFX9SDMAEngineConstructor = nullptr;
     mach_vm_address_t orgSetupAndInitializeHWCapabilities {};
     mach_vm_address_t orgRTGetHWChannel {};
+    mach_vm_address_t orgAdjustVRAMAddress {};
 
     /** X6000Framebuffer */
     static IOReturn wrapPopulateDeviceInfo(void *that);
@@ -108,9 +114,13 @@ class WRed {
     static uint32_t wrapPspHdcpLoad(void *pspData);
     static uint32_t wrapSmuRavenInitialize(void *smumData, uint32_t param2);
     static uint32_t wrapSmuRenoirInitialize(void *smumData, uint32_t param2);
+    static uint32_t wrapPspCmdKmSubmit(void *pspData, void *context, void *param3, void *param4);
 
     /** X6000 */
     static bool wrapAccelStartX6000();
+    static bool wrapInitWithPciInfo(void *that, void *param1);
+    static void *wrapNewVideoContext(void *that);
+    static void *wrapCreateSMLInterface(uint32_t configBit);
 
     /** X5000 */
     static bool wrapAllocateHWEngines(void *that);
@@ -118,19 +128,5 @@ class WRed {
     static void *wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3);
     static void wrapInitializeFamilyType(void *that);
     static void *wrapAllocateAMDHWDisplay(void *that);
-    mach_vm_address_t orgPspCosLog {};
-    static void wrapPspCosLog(void *pspData, uint32_t param2, uint64_t param3, uint32_t param4, char *param5);
-    mach_vm_address_t orgPspCmdKmSubmit {};
-    static uint32_t wrapPspCmdKmSubmit(void *pspData, void *context, void *param3, void *param4);
-    mach_vm_address_t orgAtiPowerPlayServicesConstructor {};
-    static void wrapAtiPowerPlayServicesConstructor(void *that, void *ppCallbacks);
-    mach_vm_address_t orgInitWithPciInfo {};
-    static bool wrapInitWithPciInfo(void *that, void *param1);
-    mach_vm_address_t orgNewVideoContextX6000 {};
-    static void *wrapNewVideoContext(void *that);
-    mach_vm_address_t orgCreateSMLInterfaceX6000 {};
-    static void *wrapCreateSMLInterface(uint32_t configBit);
-    mach_vm_address_t orgAdjustVRAMAddress {};
     static uint64_t wrapAdjustVRAMAddress(void *that, uint64_t addr);
-    uint64_t fbOffset {};
 };
