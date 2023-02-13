@@ -260,7 +260,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         /** Patch the data so that it only starts SDMA0. */
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "wred",
             "Failed to enable kernel writing");
-        orgChannelTypes[5] = 1;
+        orgChannelTypes[5] = 1;     // Fix createAccelChannels
+        orgChannelTypes[11] = 0;    // Fix getPagingChannel
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
         KernelPatcher::RouteRequest requests[] = {
