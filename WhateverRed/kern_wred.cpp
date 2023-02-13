@@ -269,17 +269,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
                 wrapSetupAndInitializeHWCapabilities, orgSetupAndInitializeHWCapabilities},
             {"__ZN28AMDRadeonX5000_AMDRTHardware12getHWChannelE18_eAMD_CHANNEL_TYPE11SS_PRIORITYj", wrapRTGetHWChannel,
                 orgRTGetHWChannel},
-            {"__ZN29AMDRadeonX5000_AMDHWVMContext5mapVAEyP13IOAccelMemoryyyN24AMDRadeonX5000_IAMDHWVMM10VmMapFlagsE",
-                wrapMapVA, orgMapVA},
-            {"__ZN29AMDRadeonX5000_AMDHWVMContext7mapVMPTEP12AMD_VMPT_CTL15eAMD_VMPT_LEVELjyyy", wrapMapVMPT,
-                orgMapVMPT},
-            {"__ZN33AMDRadeonX5000_AMDGFX9SDMAChannel23writeWritePTEPDECommandEPjyjyyy", wrapWriteWritePTEPDECommand,
-                orgWriteWritePTEPDECommand},
-            {"__ZN25AMDRadeonX5000_AMDGFX9VMM11getPDEValueE15eAMD_VMPT_LEVELy", wrapGetPDEValue, orgGetPDEValue},
-            {"__ZN25AMDRadeonX5000_AMDGFX9VMM11getPTEValueE15eAMD_VMPT_LEVELyN24AMDRadeonX5000_IAMDHWVMM10VmMapFlagsEj",
-                wrapGetPTEValue, orgGetPTEValue},
-            {"__ZN29AMDRadeonX5000_AMDHWVMContext36updateContiguousPTEsWithDMAUsingAddrEyyyyy",
-                wrapUpdateContiguousPTEsWithDMAUsingAddr, orgUpdateContiguousPTEsWithDMAUsingAddr},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20initializeFamilyTypeEv", wrapInitializeFamilyType},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20allocateAMDHWDisplayEv", wrapAllocateAMDHWDisplay},
             {"__ZN41AMDRadeonX5000_AMDGFX9GraphicsAccelerator15newVideoContextEv", wrapNewVideoContext},
@@ -862,50 +851,6 @@ uint32_t WRed::wrapSmuRenoirInitialize(void *smumData, uint32_t param2) {
     return ret;
 }
 
-uint64_t WRed::wrapMapVA(void *that, uint64_t param1, void *memory, uint64_t param3, uint64_t sizeToMap,
-    uint64_t flags) {
-    NETLOG("wred", "mapVA: this = %p param1 = 0x%llX memory = %p param3 = 0x%llX sizeToMap = 0x%llX flags = 0x%llX",
-        that, param1, memory, param3, sizeToMap, flags);
-    auto ret = FunctionCast(wrapMapVA, callbackWRed->orgMapVA)(that, param1, memory, param3, sizeToMap, flags);
-    NETLOG("wred", "mapVA returned 0x%llX", ret);
-    return ret;
-}
-
-uint64_t WRed::wrapMapVMPT(void *that, void *vmptCtl, uint64_t vmptLevel, uint32_t param3, uint64_t param4,
-    uint64_t param5, uint64_t sizeToMap) {
-    NETLOG("wred",
-        "mapVMPT: this = %p vmptCtl = %p vmptLevel = 0x%llX param3 = 0x%X param4 = 0x%llX param5 = 0x%llX sizeToMap = "
-        "0x%llX",
-        that, vmptCtl, vmptLevel, param3, param4, param5, sizeToMap);
-    auto ret = FunctionCast(wrapMapVMPT, callbackWRed->orgMapVMPT)(that, vmptCtl, vmptLevel, param3, param4, param5,
-        sizeToMap);
-    NETLOG("wred", "mapVMPT returned 0x%llX", ret);
-    return ret;
-}
-
-uint32_t WRed::wrapWriteWritePTEPDECommand(void *that, uint32_t *buf, uint64_t pe, uint32_t count, uint64_t flags,
-    uint64_t addr, uint64_t incr) {
-    NETLOG("wred",
-        "writeWritePTEPDECommand: this = %p buf = %p pe = 0x%llX count = 0x%X flags = 0x%llX addr = 0x%llX incr = "
-        "0x%llX",
-        that, buf, pe, count, flags, addr, incr);
-    auto ret = FunctionCast(wrapWriteWritePTEPDECommand, callbackWRed->orgWriteWritePTEPDECommand)(that, buf, pe, count,
-        flags, addr, incr);
-    NETLOG("wred", "writeWritePTEPDECommand returned 0x%X", ret);
-    return ret;
-}
-
-void WRed::wrapUpdateContiguousPTEsWithDMAUsingAddr(void *that, uint64_t param1, uint64_t param2, uint64_t param3,
-    uint64_t param4, uint64_t param5) {
-    NETLOG("wred",
-        "updateContiguousPTEsWithDMAUsingAddr: this = %p param1 = 0x%llX param2 = 0x%llX param3 = 0x%llX param4 = "
-        "0x%llX param5 = 0x%llX",
-        that, param1, param2, param3, param4, param5);
-    FunctionCast(wrapUpdateContiguousPTEsWithDMAUsingAddr, callbackWRed->orgUpdateContiguousPTEsWithDMAUsingAddr)(that,
-        param1, param2, param3, param4, param5);
-    NETLOG("wred", "updateContiguousPTEsWithDMAUsingAddr finished");
-}
-
 void WRed::wrapInitializeFamilyType(void *that) { getMember<uint32_t>(that, 0x308) = 0x8E; }    // 0x8D -> 0x8E
 
 void *WRed::wrapAllocateAMDHWDisplay(void *that) {
@@ -949,21 +894,6 @@ bool WRed::wrapInitWithPciInfo(void *that, void *param1) {
     return ret;
 }
 
-uint64_t WRed::wrapGetPDEValue(void *that, uint64_t level, uint64_t param2) {
-    NETLOG("wred", "getPDEValue: this = %p level = 0x%llX param2 = 0x%llX", that, level, param2);
-    auto ret = FunctionCast(wrapGetPDEValue, callbackWRed->orgGetPDEValue)(that, level, param2);
-    NETLOG("wred", "getPDEValue returned 0x%llX", ret);
-    return ret;
-}
-
-uint64_t WRed::wrapGetPTEValue(void *that, uint64_t level, uint64_t param2, uint64_t param3, uint32_t param4) {
-    NETLOG("wred", "getPTEValue: this = %p level = 0x%llX param2 = 0x%llX param3 = 0x%llX param4 = 0x%X", that, level,
-        param2, param3, param4);
-    auto ret = FunctionCast(wrapGetPTEValue, callbackWRed->orgGetPTEValue)(that, level, param2, param3, param4);
-    NETLOG("wred", "getPTEValue returned 0x%llX", ret);
-    return ret;
-}
-
 void *WRed::wrapNewVideoContext(void *that) {
     NETLOG("wred", "newVideoContext: that = %p", that);
     auto ret = FunctionCast(wrapNewVideoContext, callbackWRed->orgNewVideoContextX6000)(that);
@@ -972,10 +902,7 @@ void *WRed::wrapNewVideoContext(void *that) {
 }
 
 void *WRed::wrapCreateSMLInterface(uint32_t configBit) {
-    NETLOG("wred", "createSMLInterface: configBit = 0x%X", configBit);
-    auto ret = FunctionCast(wrapCreateSMLInterface, callbackWRed->orgCreateSMLInterfaceX6000)(configBit);
-    NETLOG("wred", "createSMLInterface returned %p", ret);
-    return ret;
+    return FunctionCast(wrapCreateSMLInterface, callbackWRed->orgCreateSMLInterfaceX6000)(configBit);
 }
 
 uint64_t WRed::wrapAdjustVRAMAddress(void *that, uint64_t addr) {
