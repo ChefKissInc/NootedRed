@@ -52,7 +52,7 @@ class WRed {
     uint32_t *orgDeviceTypeTable = nullptr;
     mach_vm_address_t orgAmdTtlServicesConstructor {};
     mach_vm_address_t orgSmuGetHwVersion {};
-    mach_vm_address_t orgPspSwInit {}, orgGcGetHwVersion {};
+    mach_vm_address_t orgPspSwInit {};
     mach_vm_address_t orgPopulateFirmwareDirectory {};
     t_createFirmware orgCreateFirmware = nullptr;
     t_putFirmware orgPutFirmware = nullptr;

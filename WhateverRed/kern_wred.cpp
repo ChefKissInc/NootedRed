@@ -66,7 +66,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN14AmdTtlServicesC2EP11IOPCIDevice", wrapAmdTtlServicesConstructor, orgAmdTtlServicesConstructor},
             {"_smu_get_hw_version", wrapSmuGetHwVersion, orgSmuGetHwVersion},
             {"_psp_sw_init", wrapPspSwInit, orgPspSwInit},
-            {"_gc_get_hw_version", wrapGcGetHwVersion, orgGcGetHwVersion},
+            {"_gc_get_hw_version", wrapGcGetHwVersion},
             {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory,
                 orgPopulateFirmwareDirectory},
             {"__ZN25AtiApplePowerTuneServices23createPowerTuneServicesEP11PP_InstanceP18PowerPlayCallbacks",
@@ -441,6 +441,8 @@ uint32_t WRed::wrapSmuGetHwVersion(uint64_t param1, uint32_t param2) {
         case 0xB:
             [[fallthrough]];
         case 0xC:
+            [[fallthrough]];
+        case 0xD:
             DBGLOG("wred", "Spoofing SMU v11/v12 to v11");
             return 0x3;
         default:
@@ -472,21 +474,7 @@ uint32_t WRed::wrapPspSwInit(uint32_t *param1, uint32_t *param2) {
     return ret;
 }
 
-uint32_t WRed::wrapGcGetHwVersion(uint32_t *param1) {
-    auto ret = FunctionCast(wrapGcGetHwVersion, callbackWRed->orgGcGetHwVersion)(param1);
-    switch (ret & 0xFFFF00) {
-        case 0x090100:
-            [[fallthrough]];
-        case 0x090200:
-            [[fallthrough]];
-        case 0x090300:
-            DBGLOG("wred", "Spoofing GC version v9.1/v9.2/v9.3 to v9.2.1");
-            return 0x090201;
-        default:
-            DBGLOG("wred", "_gc_get_hw_version returned 0x%X", ret);
-            return ret;
-    }
-}
+uint32_t WRed::wrapGcGetHwVersion([[maybe_unused]] uint32_t *param1) { return 0x090201; }
 
 void WRed::wrapPopulateFirmwareDirectory(void *that) {
     FunctionCast(wrapPopulateFirmwareDirectory, callbackWRed->orgPopulateFirmwareDirectory)(that);
