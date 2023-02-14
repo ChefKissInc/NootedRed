@@ -130,7 +130,6 @@ class WRed {
     static bool wrapWaitForHwStamp(void *that, uint32_t param1);
     mach_vm_address_t orgCommitIndirectCommandBuffer {};
     static uint32_t wrapCommitIndirectCommandBuffer(void *that, void *param1);
-    mach_vm_address_t orgDmLoggerWrite {};
     static void wrapDmLoggerWrite(void *dalLogger, uint32_t logType, char *fmt, ...);
     mach_vm_address_t orgCmdRingWriteData {};
     static uint64_t wrapCmdRingWriteData(void *that, void *param1, uint32_t param2);
