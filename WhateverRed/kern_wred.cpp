@@ -762,10 +762,15 @@ void *WRed::wrapDalLoggerCreate(void *param1, uint64_t param2) {
     return ret;
 }
 
-void WRed::wrapDmLoggerWrite(void *dalLogger, uint32_t logType, char *param3, uint64_t param4, uint64_t param5,
-    uint64_t param6) {
+void WRed::wrapDmLoggerWrite(void *dalLogger, [[maybe_unused]] uint32_t logType, char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    auto *ns = new char[4096];
+    vsnprintf(ns, 4096, fmt, args);
+    va_end(args);
     // Make logType = 0 to enable log output
-    FunctionCast(wrapDmLoggerWrite, callbackWRed->orgDmLoggerWrite)(dalLogger, 0, param3, param4, param5, param6);
+    FunctionCast(wrapDmLoggerWrite, callbackWRed->orgDmLoggerWrite)(dalLogger, 0, ns);
+    delete[] ns;
 }
 
 uint64_t WRed::wrapCmdRingWriteData(void *that, void *param1, uint32_t param2) {
