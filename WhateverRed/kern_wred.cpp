@@ -182,6 +182,10 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN41AMDRadeonX5000_AMDGFX9GraphicsAccelerator15newVideoContextEv", wrapNewVideoContext},
             {"__ZN31AMDRadeonX5000_IAMDSMLInterface18createSMLInterfaceEj", wrapCreateSMLInterface},
             {"__ZN26AMDRadeonX5000_AMDHWMemory17adjustVRAMAddressEy", wrapAdjustVRAMAddress, orgAdjustVRAMAddress},
+            {"__ZN23AMDRadeonX5000_AMDHWVMM27setMemoryAllocationsEnabledEb", wrapSetMemoryAllocationsEnabled,
+                orgSetMemoryAllocationsEnabled},
+            {"__ZN35AMDRadeonX5000_AMDCommandBufferPool12submitBufferEy", wrapCmdPoolSubmitBuffer,
+                orgCmdPoolSubmitBuffer},
         };
         PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000 symbols");
@@ -679,4 +683,22 @@ void *WRed::wrapCreateSMLInterface(uint32_t configBit) {
 uint64_t WRed::wrapAdjustVRAMAddress(void *that, uint64_t addr) {
     auto ret = FunctionCast(wrapAdjustVRAMAddress, callbackWRed->orgAdjustVRAMAddress)(that, addr);
     return ret != addr ? ret + callbackWRed->fbOffset : ret;
+}
+
+void WRed::wrapSetMemoryAllocationsEnabled(void *that, bool param2) {
+    DBGLOG("wred", "setMemoryAllocationsEnabled: that = %p param2 = %d", that, param2);
+    callbackWRed->inSetMemoryAllocationsEnabled = true;
+    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
+    FunctionCast(wrapSetMemoryAllocationsEnabled, callbackWRed->orgSetMemoryAllocationsEnabled)(that, param2);
+    callbackWRed->inSetMemoryAllocationsEnabled = false;
+    DBGLOG("wred", "setMemoryAllocationsEnabled finished");
+    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(2000);
+}
+
+void WRed::wrapCmdPoolSubmitBuffer(void *that, uint64_t param1) {
+    DBGLOG("wred", "cmdPoolSubmitBuffer: that = %p param1 = 0x%llX", that, param1);
+    if (callbackWRed->inSetMemoryAllocationsEnabled && callbackWRed->asicType == ASICType::Renoir) IOSleep(2000);
+    FunctionCast(wrapCmdPoolSubmitBuffer, callbackWRed->orgCmdPoolSubmitBuffer)(that, param1);
+    DBGLOG("wred", "cmdPoolSubmitBuffer finished");
+    if (callbackWRed->inSetMemoryAllocationsEnabled && callbackWRed->asicType == ASICType::Renoir) IOSleep(2000);
 }

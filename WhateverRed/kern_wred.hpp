@@ -115,4 +115,10 @@ class WRed {
     static void wrapInitializeFamilyType(void *that);
     static void *wrapAllocateAMDHWDisplay(void *that);
     static uint64_t wrapAdjustVRAMAddress(void *that, uint64_t addr);
+    mach_vm_address_t orgSetMemoryAllocationsEnabled {};
+    static void wrapSetMemoryAllocationsEnabled(void *that, bool param2);
+    mach_vm_address_t orgCmdPoolSubmitBuffer {};
+    static void wrapCmdPoolSubmitBuffer(void *that, uint64_t param1);
+
+    bool inSetMemoryAllocationsEnabled = false;
 };
