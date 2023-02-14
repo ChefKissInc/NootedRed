@@ -115,7 +115,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN32AMDRadeonX6000_AmdRegisterAccess11hwReadReg32Ej", wrapHwReadReg32, orgHwReadReg32},
             {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo, orgInitWithPciInfo},
             {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", wrapDoGPUPanic},
-            {"_dal_logger_create", wrapDalLoggerCreate, orgDalLoggerCreate},
             {"_dm_logger_write", wrapDmLoggerWrite, orgDmLoggerWrite},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size, true), "wred",
@@ -755,21 +754,13 @@ uint32_t WRed::wrapCommitIndirectCommandBuffer(void *that, void *param1) {
     return ret;
 }
 
-void *WRed::wrapDalLoggerCreate(void *param1, uint64_t param2) {
-    auto ret = FunctionCast(wrapDalLoggerCreate, callbackWRed->orgDalLoggerCreate)(param1, param2);
-    // Hack _dm_logger_write to log everything
-    getMember<uint64_t>(ret, 0x20) = 0xFFFFFFFFFFFFFFFFULL;
-    return ret;
-}
-
-void WRed::wrapDmLoggerWrite(void *dalLogger, [[maybe_unused]] uint32_t logType, char *fmt, ...) {
+void WRed::wrapDmLoggerWrite(void *dalLogger, uint32_t logType, char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
     auto *ns = new char[4096];
     vsnprintf(ns, 4096, fmt, args);
     va_end(args);
-    // Make logType = 0 to enable log output
-    FunctionCast(wrapDmLoggerWrite, callbackWRed->orgDmLoggerWrite)(dalLogger, 0, ns);
+    DBGLOG("wred", "_dm_logger_write (logType = %d): %s", logType, ns);
     delete[] ns;
 }
 
