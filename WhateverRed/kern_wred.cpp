@@ -115,7 +115,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN32AMDRadeonX6000_AmdRegisterAccess11hwReadReg32Ej", wrapHwReadReg32, orgHwReadReg32},
             {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo, orgInitWithPciInfo},
             {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", wrapDoGPUPanic},
-            {"_dm_logger_write", wrapDmLoggerWrite, orgDmLoggerWrite},
+            {"_dm_logger_write", wrapDmLoggerWrite},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size, true), "wred",
             "Failed to route AMDRadeonX6000Framebuffer symbols");
