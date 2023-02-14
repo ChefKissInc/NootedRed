@@ -766,7 +766,7 @@ void WRed::wrapDmLoggerWrite([[maybe_unused]] void *dalLogger, uint32_t logType,
     vsnprintf(ns, 0x10000, fmt, args);
     va_end(args);
     const char *logTypeStr = arrsize(LogTypes) > logType ? LogTypes[logType] : "Info";
-    kprintf("[%s]\t%s", logTypeStr, ns);
+    kprintf("[%s] %s", logTypeStr, ns);
     delete[] ns;
 }
 
