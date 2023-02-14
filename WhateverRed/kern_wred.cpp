@@ -745,7 +745,7 @@ bool WRed::wrapWaitForHwStamp(void *that, uint32_t param1) {
 uint32_t WRed::wrapCommitIndirectCommandBuffer(void *that, void *param1) {
     DBGLOG("wred", "commitIndirectCommandBuffer: that = %p param1 = %p", that, param1);
     if (callbackWRed->inSetMemoryAllocationsEnabled && callbackWRed->asicType == ASICType::Renoir) {
-        DBGLOG("wred", "field_0x8 = %X", getMember<uint32_t>(param1, 0x8))
+        DBGLOG("wred", "field_0x8 = %X", getMember<uint32_t>(param1, 0x8));
         IOSleep(2000);
     }
     auto ret =
