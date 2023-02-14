@@ -133,4 +133,12 @@ class WRed {
     static void wrapDmLoggerWrite(void *dalLogger, uint32_t logType, char *fmt, ...);
     mach_vm_address_t orgCmdRingWriteData {};
     static uint64_t wrapCmdRingWriteData(void *that, void *param1, uint32_t param2);
+    mach_vm_address_t orgNewSharedX6000 {};
+    static void *wrapNewShared();
+    mach_vm_address_t orgNewSharedUserClientX6000 {};
+    static void *wrapNewSharedUserClient();
+    mach_vm_address_t orgAccelSharedUserClientStart {};
+    static bool wrapAccelSharedUserClientStartX6000(void *that, void *provider);
+    mach_vm_address_t orgAccelSharedUserClientStop {};
+    static bool wrapAccelSharedUserClientStopX6000(void *that, void *provider);
 };

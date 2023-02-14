@@ -162,6 +162,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEnginenwEm", orgGFX9SDMAEngineNew},
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngineC1Ev", orgGFX9SDMAEngineConstructor},
             {"__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator19createAccelChannelsEbE12channelTypes", orgChannelTypes},
+            {"__ZN39AMDRadeonX5000_AMDAccelSharedUserClient5startEP9IOService", orgAccelSharedUserClientStart},
+            {"__ZN39AMDRadeonX5000_AMDAccelSharedUserClient4stopEP9IOService", orgAccelSharedUserClientStop},
         };
         PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "wred",
             "Failed to resolve AMDRadeonX5000 symbols");
@@ -196,6 +198,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN33AMDRadeonX5000_AMDGFX9SDMAChannel27commitIndirectCommandBufferEP30AMD_SUBMIT_COMMAND_BUFFER_INFO",
                 wrapCommitIndirectCommandBuffer, orgCommitIndirectCommandBuffer},
             {"__ZN29AMDRadeonX5000_AMDCommandRing9writeDataEPKjj", wrapCmdRingWriteData, orgCmdRingWriteData},
+            {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator9newSharedEv", wrapNewShared},
+            {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator19newSharedUserClientEv", wrapNewSharedUserClient},
         };
         PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000 symbols");
@@ -224,12 +228,16 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN31AMDRadeonX6000_AMDGFX10Hardware20allocateAMDHWDisplayEv", orgAllocateAMDHWDisplayX6000},
             {"__ZN42AMDRadeonX6000_AMDGFX10GraphicsAccelerator15newVideoContextEv", orgNewVideoContextX6000},
             {"__ZN31AMDRadeonX6000_IAMDSMLInterface18createSMLInterfaceEj", orgCreateSMLInterfaceX6000},
+            {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator9newSharedEv", orgNewSharedX6000},
+            {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator19newSharedUserClientEv", orgNewSharedUserClientX6000},
         };
         PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "wred",
             "Failed to resolve AMDRadeonX6000 symbols");
 
         KernelPatcher::RouteRequest requests[] = {
             {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator5startEP9IOService", wrapAccelStartX6000},
+            {"__ZN39AMDRadeonX6000_AMDAccelSharedUserClient5startEP9IOService", wrapAccelSharedUserClientStartX6000},
+            {"__ZN39AMDRadeonX6000_AMDAccelSharedUserClient4stopEP9IOService", wrapAccelSharedUserClientStopX6000},
         };
         PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX6000 symbols");
@@ -780,5 +788,33 @@ uint64_t WRed::wrapCmdRingWriteData(void *that, void *param1, uint32_t param2) {
         DBGLOG("wred", "cmdRingWriteData returned 0x%llX", ret);
         IOSleep(2000);
     }
+    return ret;
+}
+
+void *WRed::wrapNewShared() {
+    auto *ret = FunctionCast(wrapNewShared, callbackWRed->orgNewSharedX6000)();
+    DBGLOG("wred", "newShared returned %p", ret);
+    return ret;
+}
+
+void *WRed::wrapNewSharedUserClient() {
+    auto *ret = FunctionCast(wrapNewSharedUserClient, callbackWRed->orgNewSharedUserClientX6000)();
+    DBGLOG("wred", "newSharedUserClient returned %p", ret);
+    return ret;
+}
+
+bool WRed::wrapAccelSharedUserClientStartX6000(void *that, void *provider) {
+    DBGLOG("wred", "AccelSharedUserClientStartX6000: that = %p provider = %p", that, provider);
+    auto ret =
+        FunctionCast(wrapAccelSharedUserClientStartX6000, callbackWRed->orgAccelSharedUserClientStart)(that, provider);
+    DBGLOG("wred", "AccelSharedUserClientStartX6000 returned %d", ret);
+    return ret;
+}
+
+bool WRed::wrapAccelSharedUserClientStopX6000(void *that, void *provider) {
+    DBGLOG("wred", "AccelSharedUserClientStopX6000: that = %p provider = %p", that, provider);
+    auto ret =
+        FunctionCast(wrapAccelSharedUserClientStopX6000, callbackWRed->orgAccelSharedUserClientStop)(that, provider);
+    DBGLOG("wred", "AccelSharedUserClientStopX6000 returned %d", ret);
     return ret;
 }
