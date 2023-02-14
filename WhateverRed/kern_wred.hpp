@@ -126,4 +126,6 @@ class WRed {
     static void wrapCmdPoolSetEventStamp(void *that, void *param1);
     mach_vm_address_t orgSubmitCommandBuffer {};
     static uint32_t wrapSubmitCommandBuffer(void *that, void *param2);
+    mach_vm_address_t orgWaitForHwStamp {};
+    static bool wrapWaitForHwStamp(void *that, uint32_t param1);
 };
