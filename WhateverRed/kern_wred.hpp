@@ -121,4 +121,5 @@ class WRed {
     static void wrapCmdPoolSubmitBuffer(void *that, uint64_t param1);
 
     bool inSetMemoryAllocationsEnabled = false;
+    static void wrapDoGPUPanic(void *that);
 };

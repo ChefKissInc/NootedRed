@@ -114,6 +114,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
             {"__ZN32AMDRadeonX6000_AmdRegisterAccess11hwReadReg32Ej", wrapHwReadReg32, orgHwReadReg32},
             {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo, orgInitWithPciInfo},
+            {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", wrapDoGPUPanic},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size, true), "wred",
             "Failed to route AMDRadeonX6000Framebuffer symbols");
@@ -701,4 +702,10 @@ void WRed::wrapCmdPoolSubmitBuffer(void *that, uint64_t param1) {
     FunctionCast(wrapCmdPoolSubmitBuffer, callbackWRed->orgCmdPoolSubmitBuffer)(that, param1);
     DBGLOG("wred", "cmdPoolSubmitBuffer finished");
     if (callbackWRed->inSetMemoryAllocationsEnabled && callbackWRed->asicType == ASICType::Renoir) IOSleep(2000);
+}
+
+void WRed::wrapDoGPUPanic(void *that) {
+    DBGLOG("wred", "doGPUPanic: that = %p", that);
+    IOSleep(3600 * 1000);
+    panic("doGPUPanic called");
 }
