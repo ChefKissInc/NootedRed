@@ -196,6 +196,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN27AMDRadeonX5000_AMDHWChannel14waitForHwStampEj", wrapWaitForHwStamp, orgWaitForHwStamp},
             {"__ZN33AMDRadeonX5000_AMDGFX9SDMAChannel27commitIndirectCommandBufferEP30AMD_SUBMIT_COMMAND_BUFFER_INFO",
                 wrapCommitIndirectCommandBuffer, orgCommitIndirectCommandBuffer},
+            {"__ZN29AMDRadeonX5000_AMDCommandRing9writeDataEPKjj", wrapCmdRingWriteData, orgCmdRingWriteData},
         };
         PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000 symbols");
@@ -762,4 +763,17 @@ void WRed::wrapDmLoggerWrite(void *dalLogger, uint32_t logType, char *param3, ui
     uint64_t param6) {
     // Make logType = 0 to enable log output
     FunctionCast(wrapDmLoggerWrite, callbackWRed->orgDmLoggerWrite)(dalLogger, 0, param3, param4, param5, param6);
+}
+
+uint64_t WRed::wrapCmdRingWriteData(void *that, void *param1, uint32_t param2) {
+    if (callbackWRed->inSetMemoryAllocationsEnabled && callbackWRed->asicType == ASICType::Renoir) {
+        DBGLOG("wred", "cmdRingWriteData: that = %p param1 = %p param2 = 0x%X", that, param1, param2);
+        IOSleep(2000);
+    }
+    auto ret = FunctionCast(wrapCmdRingWriteData, callbackWRed->orgCmdRingWriteData)(that, param1, param2);
+    if (callbackWRed->inSetMemoryAllocationsEnabled && callbackWRed->asicType == ASICType::Renoir) {
+        DBGLOG("wred", "cmdRingWriteData returned 0x%llX", ret);
+        IOSleep(2000);
+    }
+    return ret;
 }

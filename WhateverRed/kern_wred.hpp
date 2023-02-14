@@ -135,4 +135,6 @@ class WRed {
     mach_vm_address_t orgDmLoggerWrite {};
     static void wrapDmLoggerWrite(void *dalLogger, uint32_t logType, char *param3, uint64_t param4, uint64_t param5,
         uint64_t param6);
+    mach_vm_address_t orgCmdRingWriteData {};
+    static uint64_t wrapCmdRingWriteData(void *that, void *param1, uint32_t param2);
 };
