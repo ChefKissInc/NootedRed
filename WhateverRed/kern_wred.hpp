@@ -128,4 +128,6 @@ class WRed {
     static uint32_t wrapSubmitCommandBuffer(void *that, void *param2);
     mach_vm_address_t orgWaitForHwStamp {};
     static bool wrapWaitForHwStamp(void *that, uint32_t param1);
+    mach_vm_address_t orgCommitIndirectCommandBuffer {};
+    static uint32_t wrapCommitIndirectCommandBuffer(void *that, void *param1);
 };

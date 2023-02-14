@@ -192,6 +192,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN27AMDRadeonX5000_AMDHWChannel19submitCommandBufferEP30AMD_SUBMIT_COMMAND_BUFFER_INFO",
                 wrapSubmitCommandBuffer, orgSubmitCommandBuffer},
             {"__ZN27AMDRadeonX5000_AMDHWChannel14waitForHwStampEj", wrapWaitForHwStamp, orgWaitForHwStamp},
+            {"__ZN33AMDRadeonX5000_AMDGFX9SDMAChannel27commitIndirectCommandBufferEP30AMD_SUBMIT_COMMAND_BUFFER_INFO",
+                wrapCommitIndirectCommandBuffer, orgCommitIndirectCommandBuffer},
         };
         PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000 symbols");
@@ -702,7 +704,6 @@ void WRed::wrapSetMemoryAllocationsEnabled(void *that, bool param2) {
 
 void WRed::wrapCmdPoolSubmitBuffer(void *that, uint64_t param1) {
     DBGLOG("wred", "cmdPoolSubmitBuffer: that = %p param1 = 0x%llX", that, param1);
-    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
     FunctionCast(wrapCmdPoolSubmitBuffer, callbackWRed->orgCmdPoolSubmitBuffer)(that, param1);
     DBGLOG("wred", "cmdPoolSubmitBuffer finished");
 }
@@ -715,7 +716,6 @@ void WRed::wrapDoGPUPanic(void *that) {
 
 void WRed::wrapCmdPoolSetEventStamp(void *that, void *param1) {
     DBGLOG("wred", "cmdPoolSetEventStamp: that = %p param1 = %p", that, param1);
-    if (callbackWRed->inSetMemoryAllocationsEnabled && callbackWRed->asicType == ASICType::Renoir) IOSleep(2000);
     FunctionCast(wrapCmdPoolSetEventStamp, callbackWRed->orgCmdPoolSetEventStamp)(that, param1);
     DBGLOG("wred", "cmdPoolSetEventStamp finished");
     if (callbackWRed->inSetMemoryAllocationsEnabled && callbackWRed->asicType == ASICType::Renoir) IOSleep(2000);
@@ -723,7 +723,7 @@ void WRed::wrapCmdPoolSetEventStamp(void *that, void *param1) {
 
 uint32_t WRed::wrapSubmitCommandBuffer(void *that, void *param2) {
     DBGLOG("wred", "submitCommandBuffer: that = %p param2 = %p", that, param2);
-    if (callbackWRed->inSetMemoryAllocationsEnabled && callbackWRed->asicType == ASICType::Renoir) IOSleep(2000);
+    if (callbackWRed->inSetMemoryAllocationsEnabled && callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
     auto ret = FunctionCast(wrapSubmitCommandBuffer, callbackWRed->orgSubmitCommandBuffer)(that, param2);
     DBGLOG("wred", "submitCommandBuffer returned 0x%X", ret);
     if (callbackWRed->inSetMemoryAllocationsEnabled && callbackWRed->asicType == ASICType::Renoir) IOSleep(2000);
@@ -732,8 +732,19 @@ uint32_t WRed::wrapSubmitCommandBuffer(void *that, void *param2) {
 
 bool WRed::wrapWaitForHwStamp(void *that, uint32_t param1) {
     DBGLOG("wred", "waitForHwStamp: that = %p param1 = 0x%X", that, param1);
+    if (callbackWRed->inSetMemoryAllocationsEnabled && callbackWRed->asicType == ASICType::Renoir) IOSleep(2000);
     auto ret = FunctionCast(wrapWaitForHwStamp, callbackWRed->orgWaitForHwStamp)(that, param1);
     DBGLOG("wred", "waitForHwStamp returned %d", ret);
     if (!ret) IOSleep(2000);
+    return ret;
+}
+
+uint32_t WRed::wrapCommitIndirectCommandBuffer(void *that, void *param1) {
+    DBGLOG("wred", "commitIndirectCommandBuffer: that = %p param1 = %p", that, param1);
+    if (callbackWRed->inSetMemoryAllocationsEnabled && callbackWRed->asicType == ASICType::Renoir) IOSleep(2000);
+    auto ret =
+        FunctionCast(wrapCommitIndirectCommandBuffer, callbackWRed->orgCommitIndirectCommandBuffer)(that, param1);
+    DBGLOG("wred", "commitIndirectCommandBuffer returned 0x%X", ret);
+    if (callbackWRed->inSetMemoryAllocationsEnabled && callbackWRed->asicType == ASICType::Renoir) IOSleep(2000);
     return ret;
 }
