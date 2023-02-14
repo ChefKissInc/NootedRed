@@ -754,13 +754,19 @@ uint32_t WRed::wrapCommitIndirectCommandBuffer(void *that, void *param1) {
     return ret;
 }
 
-void WRed::wrapDmLoggerWrite(void *dalLogger, uint32_t logType, char *fmt, ...) {
+constexpr static const char *LogTypes[] = {"Error", "Warning", "Debug", "DC_Interface", "DTN", "Surface", "HW_Hotplug",
+    "HW_LKTN", "HW_Mode", "HW_Resume", "HW_Audio", "HW_HPDIRQ", "MST", "Scaler", "BIOS", "BWCalcs", "BWValidation",
+    "I2C_AUX", "Sync", "Backlight", "Override", "Edid", "DP_Caps", "Resource", "DML", "Mode", "Detect", "LKTN",
+    "LinkLoss", "Underflow", "InterfaceTrace", "PerfTrace", "DisplayStats"};
+
+void WRed::wrapDmLoggerWrite([[maybe_unused]] void *dalLogger, uint32_t logType, char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    auto *ns = new char[4096];
-    vsnprintf(ns, 4096, fmt, args);
+    auto *ns = new char[0x10000];
+    vsnprintf(ns, 0x10000, fmt, args);
     va_end(args);
-    DBGLOG("wred", "_dm_logger_write (logType = %d): %s", logType, ns);
+    const char *logTypeStr = LogTypes[logType];
+    DBGLOG("wred", "[%s]\t%s", logTypeStr, ns);
     delete[] ns;
 }
 
