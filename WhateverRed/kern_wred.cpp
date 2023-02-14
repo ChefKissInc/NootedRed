@@ -25,10 +25,28 @@ static KernelPatcher::KextInfo kextRadeonX6000 = {"com.apple.kext.AMDRadeonX6000
 static KernelPatcher::KextInfo kextRadeonX5000 {"com.apple.kext.AMDRadeonX5000", &pathRadeonX5000, 1, {}, {},
     KernelPatcher::KextInfo::Unloaded};
 
+static const char *pathIOGraphics[] { "/System/Library/Extensions/IOGraphicsFamily.kext/IOGraphicsFamily" };
+static const char *pathAGDPolicy[]  { "/System/Library/Extensions/AppleGraphicsControl.kext/Contents/PlugIns/AppleGraphicsDevicePolicy.kext/Contents/MacOS/AppleGraphicsDevicePolicy" };
+static const char *pathBacklight[]  { "/System/Library/Extensions/AppleBacklight.kext/Contents/MacOS/AppleBacklight" };
+static const char *pathMCCSControl[]  { "/System/Library/Extensions/AppleMCCSControl.kext/Contents/MacOS/AppleMCCSControl" };
+
+static KernelPatcher::KextInfo kextIOGraphics { "com.apple.iokit.IOGraphicsFamily", pathIOGraphics, arrsize(pathIOGraphics), {true}, {}, KernelPatcher::KextInfo::Unloaded };
+static KernelPatcher::KextInfo kextAGDPolicy  { "com.apple.driver.AppleGraphicsDevicePolicy", pathAGDPolicy, arrsize(pathAGDPolicy), {true}, {}, KernelPatcher::KextInfo::Unloaded };
+// Note: initially marked as reloadable, but I doubt it needs to be.
+static KernelPatcher::KextInfo kextBacklight { "com.apple.driver.AppleBacklight", pathBacklight, arrsize(pathBacklight), {true}, {}, KernelPatcher::KextInfo::Unloaded };
+static KernelPatcher::KextInfo kextMCCSControl { "com.apple.driver.AppleMCCSControl", pathMCCSControl, arrsize(pathMCCSControl), {true}, {}, KernelPatcher::KextInfo::Unloaded };
+
 WRed *WRed::callbackWRed = nullptr;
 
 void WRed::init() {
     callbackWRed = this;
+    	// Perform a background fix.
+	  if (resetFramebuffer != FB_NONE)
+		  lilu.onKextLoadForce(&kextIOGraphics);
+
+	  // Perform a black screen fix.
+	  if (graphicsDisplayPolicyMod != AGDP_NONE_SET)
+		  lilu.onKextLoad(&kextAGDPolicy);
 
     lilu.onKextLoadForce(&kextRadeonX5000HWLibs);
     lilu.onKextLoadForce(&kextRadeonX6000Framebuffer);
