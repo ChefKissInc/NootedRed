@@ -132,8 +132,8 @@ class WRed {
     static uint32_t wrapCommitIndirectCommandBuffer(void *that, void *param1);
     mach_vm_address_t orgDalLoggerCreate {};
     static void *wrapDalLoggerCreate(void *param1, uint64_t param2);
+    mach_vm_address_t orgDmLoggerWrite {};
+    static void wrapDmLoggerWrite(void *dalLogger, uint32_t logType, char *fmt, ...);
     mach_vm_address_t orgCmdRingWriteData {};
     static uint64_t wrapCmdRingWriteData(void *that, void *param1, uint32_t param2);
-    mach_vm_address_t orgLogToDebugConsole {};
-    static void wrapLogToDebugConsole(void *param1);
 };

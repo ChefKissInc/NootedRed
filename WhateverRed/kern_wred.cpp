@@ -116,7 +116,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo, orgInitWithPciInfo},
             {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", wrapDoGPUPanic},
             {"_dal_logger_create", wrapDalLoggerCreate, orgDalLoggerCreate},
-            {"_log_to_debug_console", wrapLogToDebugConsole, orgLogToDebugConsole},
+            {"_dm_logger_write", wrapDmLoggerWrite, orgDmLoggerWrite},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size, true), "wred",
             "Failed to route AMDRadeonX6000Framebuffer symbols");
@@ -762,6 +762,17 @@ void *WRed::wrapDalLoggerCreate(void *param1, uint64_t param2) {
     return ret;
 }
 
+void WRed::wrapDmLoggerWrite(void *dalLogger, [[maybe_unused]] uint32_t logType, char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    auto *ns = new char[4096];
+    vsnprintf(ns, 4096, fmt, args);
+    va_end(args);
+    // Make logType = 0 to enable log output
+    FunctionCast(wrapDmLoggerWrite, callbackWRed->orgDmLoggerWrite)(dalLogger, 0, ns);
+    delete[] ns;
+}
+
 uint64_t WRed::wrapCmdRingWriteData(void *that, void *param1, uint32_t param2) {
     if (callbackWRed->inSetMemoryAllocationsEnabled && callbackWRed->asicType == ASICType::Renoir) {
         DBGLOG("wred", "cmdRingWriteData: that = %p param1 = %p param2 = 0x%X", that, param1, param2);
@@ -773,8 +784,4 @@ uint64_t WRed::wrapCmdRingWriteData(void *that, void *param1, uint32_t param2) {
         IOSleep(2000);
     }
     return ret;
-}
-
-void WRed::wrapLogToDebugConsole(void *param1) {
-    DBGLOG("wred", "void log_to_debug_console(struct log_entry *) %s", getMember<char *>(param1, 0x10));
 }
