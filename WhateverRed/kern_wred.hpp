@@ -122,4 +122,8 @@ class WRed {
 
     bool inSetMemoryAllocationsEnabled = false;
     static void wrapDoGPUPanic(void *that);
+    mach_vm_address_t orgCmdPoolSetEventStamp {};
+    static void wrapCmdPoolSetEventStamp(void *that, void *param1);
+    mach_vm_address_t orgSubmitCommandBuffer {};
+    static uint32_t wrapSubmitCommandBuffer(void *that, void *param2);
 };
