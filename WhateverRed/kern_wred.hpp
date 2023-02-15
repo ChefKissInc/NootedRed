@@ -93,11 +93,10 @@ class WRed {
     static void wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider);
     static uint32_t wrapSmuGetHwVersion(uint64_t param1, uint32_t param2);
     static uint32_t wrapPspSwInit(uint32_t *param1, uint32_t *param2);
-    static uint32_t wrapGcGetHwVersion(uint32_t *param1);
+    static uint32_t wrapGcGetHwVersion();
     static void wrapPopulateFirmwareDirectory(void *that);
     static void *wrapCreatePowerTuneServices(void *that, void *param2);
-    static uint32_t wrapSmuGetFwConstants(void *param1);
-    static uint32_t wrapSmuInternalHwInit(void *param1);
+    static uint32_t hwLibsNoop();
     static uint32_t wrapSmuRavenInitialize(void *smumData, uint32_t param2);
     static uint32_t wrapSmuRenoirInitialize(void *smumData, uint32_t param2);
     static uint32_t wrapPspCmdKmSubmit(void *pspData, void *context, void *param3, void *param4);
