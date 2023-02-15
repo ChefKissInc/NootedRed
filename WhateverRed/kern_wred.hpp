@@ -60,7 +60,7 @@ class WRed {
     CailAsicCapEntry *orgAsicCapsTableHWLibs = nullptr;
     CailInitAsicCapEntry *orgAsicInitCapsTable = nullptr;
     t_sendMsgToSmc orgRavenSendMsgToSmc = nullptr;
-    t_sendMsgToSmcWithParam orgRenoirSendMsgToSmcWithParameter = nullptr;
+    t_sendMsgToSmc orgRenoirSendMsgToSmc = nullptr;
     mach_vm_address_t orgSmuRavenInitialize {};
     mach_vm_address_t orgSmuRenoirInitialize {};
     mach_vm_address_t orgPspCmdKmSubmit {};
