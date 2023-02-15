@@ -73,6 +73,8 @@ class WRed {
     mach_vm_address_t orgInitWithPciInfo {};
     mach_vm_address_t orgNewVideoContextX6000 {};
     mach_vm_address_t orgCreateSMLInterfaceX6000 {};
+    mach_vm_address_t orgNewSharedX6000 {};
+    mach_vm_address_t orgNewSharedUserClientX6000 {};
 
     /** X5000 */
     t_HWEngineNew orgGFX9PM4EngineNew = nullptr;
@@ -82,6 +84,8 @@ class WRed {
     mach_vm_address_t orgSetupAndInitializeHWCapabilities {};
     mach_vm_address_t orgRTGetHWChannel {};
     mach_vm_address_t orgAdjustVRAMAddress {};
+    mach_vm_address_t orgAccelSharedUserClientStart {};
+    mach_vm_address_t orgAccelSharedUserClientStop {};
 
     /** X6000Framebuffer */
     static IOReturn wrapPopulateDeviceInfo(void *that);
@@ -106,6 +110,8 @@ class WRed {
     static bool wrapInitWithPciInfo(void *that, void *param1);
     static void *wrapNewVideoContext(void *that);
     static void *wrapCreateSMLInterface(uint32_t configBit);
+    static bool wrapAccelSharedUserClientStartX6000(void *that, void *provider);
+    static bool wrapAccelSharedUserClientStopX6000(void *that, void *provider);
 
     /** X5000 */
     static bool wrapAllocateHWEngines(void *that);
@@ -114,30 +120,7 @@ class WRed {
     static void wrapInitializeFamilyType(void *that);
     static void *wrapAllocateAMDHWDisplay(void *that);
     static uint64_t wrapAdjustVRAMAddress(void *that, uint64_t addr);
-    mach_vm_address_t orgSetMemoryAllocationsEnabled {};
-    static void wrapSetMemoryAllocationsEnabled(void *that, bool param2);
-    mach_vm_address_t orgCmdPoolSubmitBuffer {};
-    static void wrapCmdPoolSubmitBuffer(void *that, uint64_t param1);
-
-    bool inSetMemoryAllocationsEnabled = false;
-    static void wrapDoGPUPanic(void *that);
-    mach_vm_address_t orgCmdPoolSetEventStamp {};
-    static void wrapCmdPoolSetEventStamp(void *that, void *param1);
-    mach_vm_address_t orgSubmitCommandBuffer {};
-    static uint32_t wrapSubmitCommandBuffer(void *that, void *param2);
-    mach_vm_address_t orgWaitForHwStamp {};
-    static bool wrapWaitForHwStamp(void *that, uint32_t param1);
-    mach_vm_address_t orgCommitIndirectCommandBuffer {};
-    static uint32_t wrapCommitIndirectCommandBuffer(void *that, void *param1);
     static void wrapDmLoggerWrite(void *dalLogger, uint32_t logType, char *fmt, ...);
-    mach_vm_address_t orgCmdRingWriteData {};
-    static uint64_t wrapCmdRingWriteData(void *that, void *param1, uint32_t param2);
-    mach_vm_address_t orgNewSharedX6000 {};
     static void *wrapNewShared();
-    mach_vm_address_t orgNewSharedUserClientX6000 {};
     static void *wrapNewSharedUserClient();
-    mach_vm_address_t orgAccelSharedUserClientStart {};
-    static bool wrapAccelSharedUserClientStartX6000(void *that, void *provider);
-    mach_vm_address_t orgAccelSharedUserClientStop {};
-    static bool wrapAccelSharedUserClientStopX6000(void *that, void *provider);
 };

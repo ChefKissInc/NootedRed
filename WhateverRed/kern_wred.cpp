@@ -116,7 +116,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
             {"__ZN32AMDRadeonX6000_AmdRegisterAccess11hwReadReg32Ej", wrapHwReadReg32, orgHwReadReg32},
             {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo, orgInitWithPciInfo},
-            {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", wrapDoGPUPanic},
             {"_dm_logger_write", wrapDmLoggerWrite},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size, true), "wred",
@@ -188,18 +187,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN41AMDRadeonX5000_AMDGFX9GraphicsAccelerator15newVideoContextEv", wrapNewVideoContext},
             {"__ZN31AMDRadeonX5000_IAMDSMLInterface18createSMLInterfaceEj", wrapCreateSMLInterface},
             {"__ZN26AMDRadeonX5000_AMDHWMemory17adjustVRAMAddressEy", wrapAdjustVRAMAddress, orgAdjustVRAMAddress},
-            {"__ZN23AMDRadeonX5000_AMDHWVMM27setMemoryAllocationsEnabledEb", wrapSetMemoryAllocationsEnabled,
-                orgSetMemoryAllocationsEnabled},
-            {"__ZN35AMDRadeonX5000_AMDCommandBufferPool12submitBufferEy", wrapCmdPoolSubmitBuffer,
-                orgCmdPoolSubmitBuffer},
-            {"__ZN35AMDRadeonX5000_AMDCommandBufferPool13setEventStampEP12IOAccelEvent", wrapCmdPoolSetEventStamp,
-                orgCmdPoolSetEventStamp},
-            {"__ZN27AMDRadeonX5000_AMDHWChannel19submitCommandBufferEP30AMD_SUBMIT_COMMAND_BUFFER_INFO",
-                wrapSubmitCommandBuffer, orgSubmitCommandBuffer},
-            {"__ZN27AMDRadeonX5000_AMDHWChannel14waitForHwStampEj", wrapWaitForHwStamp, orgWaitForHwStamp},
-            {"__ZN33AMDRadeonX5000_AMDGFX9SDMAChannel27commitIndirectCommandBufferEP30AMD_SUBMIT_COMMAND_BUFFER_INFO",
-                wrapCommitIndirectCommandBuffer, orgCommitIndirectCommandBuffer},
-            {"__ZN29AMDRadeonX5000_AMDCommandRing9writeDataEPKjj", wrapCmdRingWriteData, orgCmdRingWriteData},
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator9newSharedEv", wrapNewShared},
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator19newSharedUserClientEv", wrapNewSharedUserClient},
         };
@@ -693,65 +680,6 @@ uint64_t WRed::wrapAdjustVRAMAddress(void *that, uint64_t addr) {
     return ret != addr ? ret + callbackWRed->fbOffset : ret;
 }
 
-void WRed::wrapSetMemoryAllocationsEnabled(void *that, bool param2) {
-    DBGLOG("wred", "setMemoryAllocationsEnabled: that = %p param2 = %d", that, param2);
-    callbackWRed->inSetMemoryAllocationsEnabled = true;
-    FunctionCast(wrapSetMemoryAllocationsEnabled, callbackWRed->orgSetMemoryAllocationsEnabled)(that, param2);
-    callbackWRed->inSetMemoryAllocationsEnabled = false;
-    DBGLOG("wred", "setMemoryAllocationsEnabled finished");
-    if (callbackWRed->asicType == ASICType::Renoir) IOSleep(2000);
-}
-
-void WRed::wrapCmdPoolSubmitBuffer(void *that, uint64_t param1) {
-    DBGLOG("wred", "cmdPoolSubmitBuffer: that = %p param1 = 0x%llX", that, param1);
-    FunctionCast(wrapCmdPoolSubmitBuffer, callbackWRed->orgCmdPoolSubmitBuffer)(that, param1);
-    DBGLOG("wred", "cmdPoolSubmitBuffer finished");
-}
-
-void WRed::wrapDoGPUPanic(void *that) {
-    DBGLOG("wred", "doGPUPanic: that = %p", that);
-    IOSleep(3600 * 1000);
-    panic("doGPUPanic called");
-}
-
-void WRed::wrapCmdPoolSetEventStamp(void *that, void *param1) {
-    DBGLOG("wred", "cmdPoolSetEventStamp: that = %p param1 = %p", that, param1);
-    FunctionCast(wrapCmdPoolSetEventStamp, callbackWRed->orgCmdPoolSetEventStamp)(that, param1);
-    DBGLOG("wred", "cmdPoolSetEventStamp finished");
-    if (callbackWRed->inSetMemoryAllocationsEnabled && callbackWRed->asicType == ASICType::Renoir) IOSleep(2000);
-}
-
-uint32_t WRed::wrapSubmitCommandBuffer(void *that, void *param2) {
-    DBGLOG("wred", "submitCommandBuffer: that = %p param2 = %p", that, param2);
-    if (callbackWRed->inSetMemoryAllocationsEnabled && callbackWRed->asicType == ASICType::Renoir) IOSleep(1000);
-    auto ret = FunctionCast(wrapSubmitCommandBuffer, callbackWRed->orgSubmitCommandBuffer)(that, param2);
-    DBGLOG("wred", "submitCommandBuffer returned 0x%X", ret);
-    if (callbackWRed->inSetMemoryAllocationsEnabled && callbackWRed->asicType == ASICType::Renoir) IOSleep(2000);
-    return ret;
-}
-
-bool WRed::wrapWaitForHwStamp(void *that, uint32_t param1) {
-    DBGLOG("wred", "waitForHwStamp: that = %p param1 = 0x%X", that, param1);
-    if (callbackWRed->inSetMemoryAllocationsEnabled && callbackWRed->asicType == ASICType::Renoir) IOSleep(2000);
-    auto ret = FunctionCast(wrapWaitForHwStamp, callbackWRed->orgWaitForHwStamp)(that, param1);
-    DBGLOG("wred", "waitForHwStamp returned %d", ret);
-    if (!ret) IOSleep(2000);
-    return ret;
-}
-
-uint32_t WRed::wrapCommitIndirectCommandBuffer(void *that, void *param1) {
-    DBGLOG("wred", "commitIndirectCommandBuffer: that = %p param1 = %p", that, param1);
-    if (callbackWRed->inSetMemoryAllocationsEnabled && callbackWRed->asicType == ASICType::Renoir) {
-        DBGLOG("wred", "field_0x8 = %X", getMember<uint32_t>(param1, 0x8));
-        IOSleep(2000);
-    }
-    auto ret =
-        FunctionCast(wrapCommitIndirectCommandBuffer, callbackWRed->orgCommitIndirectCommandBuffer)(that, param1);
-    DBGLOG("wred", "commitIndirectCommandBuffer returned 0x%X", ret);
-    if (callbackWRed->inSetMemoryAllocationsEnabled && callbackWRed->asicType == ASICType::Renoir) IOSleep(2000);
-    return ret;
-}
-
 constexpr static const char *LogTypes[] = {"Error", "Warning", "Debug", "DC_Interface", "DTN", "Surface", "HW_Hotplug",
     "HW_LKTN", "HW_Mode", "HW_Resume", "HW_Audio", "HW_HPDIRQ", "MST", "Scaler", "BIOS", "BWCalcs", "BWValidation",
     "I2C_AUX", "Sync", "Backlight", "Override", "Edid", "DP_Caps", "Resource", "DML", "Mode", "Detect", "LKTN",
@@ -766,19 +694,6 @@ void WRed::wrapDmLoggerWrite([[maybe_unused]] void *dalLogger, uint32_t logType,
     const char *logTypeStr = arrsize(LogTypes) > logType ? LogTypes[logType] : "Info";
     kprintf("[%s] %s", logTypeStr, ns);
     delete[] ns;
-}
-
-uint64_t WRed::wrapCmdRingWriteData(void *that, void *param1, uint32_t param2) {
-    if (callbackWRed->inSetMemoryAllocationsEnabled && callbackWRed->asicType == ASICType::Renoir) {
-        DBGLOG("wred", "cmdRingWriteData: that = %p param1 = %p param2 = 0x%X", that, param1, param2);
-        IOSleep(2000);
-    }
-    auto ret = FunctionCast(wrapCmdRingWriteData, callbackWRed->orgCmdRingWriteData)(that, param1, param2);
-    if (callbackWRed->inSetMemoryAllocationsEnabled && callbackWRed->asicType == ASICType::Renoir) {
-        DBGLOG("wred", "cmdRingWriteData returned 0x%llX", ret);
-        IOSleep(2000);
-    }
-    return ret;
 }
 
 void *WRed::wrapNewShared() {
