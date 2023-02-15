@@ -74,6 +74,8 @@ class WRed {
     mach_vm_address_t orgCreateSMLInterfaceX6000 {};
     mach_vm_address_t orgNewSharedX6000 {};
     mach_vm_address_t orgNewSharedUserClientX6000 {};
+    mach_vm_address_t orgNewDisplayMachineX6000 {};
+    mach_vm_address_t orgNewDisplayPipeX6000 {};
 
     /** X5000 */
     t_HWEngineNew orgGFX9PM4EngineNew = nullptr;
@@ -122,4 +124,6 @@ class WRed {
     static void wrapDmLoggerWrite(void *dalLogger, uint32_t logType, char *fmt, ...);
     static void *wrapNewShared();
     static void *wrapNewSharedUserClient();
+    static void *wrapNewDisplayMachine();
+    static void *wrapNewDisplayPipe();
 };

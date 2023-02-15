@@ -187,6 +187,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN26AMDRadeonX5000_AMDHWMemory17adjustVRAMAddressEy", wrapAdjustVRAMAddress, orgAdjustVRAMAddress},
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator9newSharedEv", wrapNewShared},
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator19newSharedUserClientEv", wrapNewSharedUserClient},
+            {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator17newDisplayMachineEv", wrapNewDisplayMachine},
+            {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator14newDisplayPipeEv", wrapNewDisplayPipe},
         };
         PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000 symbols");
@@ -217,6 +219,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN31AMDRadeonX6000_IAMDSMLInterface18createSMLInterfaceEj", orgCreateSMLInterfaceX6000},
             {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator9newSharedEv", orgNewSharedX6000},
             {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator19newSharedUserClientEv", orgNewSharedUserClientX6000},
+            {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator17newDisplayMachineEv", orgNewDisplayMachineX6000},
+            {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator14newDisplayPipeEv", orgNewDisplayPipeX6000},
         };
         PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "wred",
             "Failed to resolve AMDRadeonX6000 symbols");
@@ -689,3 +693,9 @@ bool WRed::wrapAccelSharedUserClientStopX6000(void *that, void *provider) {
     DBGLOG("wred", "AccelSharedUserClientStopX6000 returned %d", ret);
     return ret;
 }
+
+void *WRed::wrapNewDisplayMachine() {
+    return FunctionCast(wrapNewDisplayMachine, callbackWRed->orgNewDisplayMachineX6000)();
+}
+
+void *WRed::wrapNewDisplayPipe() { return FunctionCast(wrapNewDisplayPipe, callbackWRed->orgNewDisplayPipeX6000)(); }
