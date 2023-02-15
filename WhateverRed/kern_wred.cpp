@@ -532,7 +532,7 @@ static bool injectedIPFirmware = false;
 
 IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
     auto ret = FunctionCast(wrapPopulateDeviceInfo, callbackWRed->orgPopulateDeviceInfo)(that);
-    getMember<uint32_t>(that, 0x60) = AMDGPU_FAMILY_RAVEN;
+    getMember<uint32_t>(that, 0x60) = AMDGPU_FAMILY_RV;
     auto deviceId = getMember<IOPCIDevice *>(that, 0x18)->configRead16(kIOPCIConfigDeviceID);
     auto &revision = getMember<uint32_t>(that, 0x68);
     auto &emulatedRevision = getMember<uint32_t>(that, 0x6c);
@@ -561,8 +561,7 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
     CailInitAsicCapEntry *initCaps = nullptr;
     for (size_t i = 0; i < 789; i++) {
         auto *temp = callbackWRed->orgAsicInitCapsTable + i;
-        if (temp->familyId == AMDGPU_FAMILY_RAVEN && temp->deviceId == deviceId &&
-            temp->emulatedRev == emulatedRevision) {
+        if (temp->familyId == AMDGPU_FAMILY_RV && temp->deviceId == deviceId && temp->emulatedRev == emulatedRevision) {
             initCaps = temp;
             break;
         }
@@ -571,7 +570,7 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
         DBGLOG("wred", "Warning: Using fallback Init Caps search");
         for (size_t i = 0; i < 789; i++) {
             auto *temp = callbackWRed->orgAsicInitCapsTable + i;
-            if (temp->familyId == AMDGPU_FAMILY_RAVEN && temp->deviceId == deviceId &&
+            if (temp->familyId == AMDGPU_FAMILY_RV && temp->deviceId == deviceId &&
                 (temp->emulatedRev >= wrapGetEnumeratedRevision(that) || temp->emulatedRev <= emulatedRevision)) {
                 initCaps = temp;
                 break;
@@ -580,7 +579,7 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
         PANIC_COND(!initCaps, "wred", "Failed to find Init Caps entry");
     }
 
-    callbackWRed->orgAsicCapsTableHWLibs->familyId = AMDGPU_FAMILY_RAVEN;
+    callbackWRed->orgAsicCapsTableHWLibs->familyId = AMDGPU_FAMILY_RV;
     callbackWRed->orgAsicCapsTableHWLibs->deviceId = deviceId;
     callbackWRed->orgAsicCapsTableHWLibs->revision = revision;
     callbackWRed->orgAsicCapsTableHWLibs->pciRev = 0xFFFFFFFF;
@@ -655,7 +654,7 @@ uint32_t WRed::wrapSmuRenoirInitialize(void *smumData, uint32_t param2) {
     return ret;
 }
 
-void WRed::wrapInitializeFamilyType(void *that) { getMember<uint32_t>(that, 0x308) = AMDGPU_FAMILY_RAVEN; }
+void WRed::wrapInitializeFamilyType(void *that) { getMember<uint32_t>(that, 0x308) = AMDGPU_FAMILY_RV; }
 
 void *WRed::wrapAllocateAMDHWDisplay(void *that) {
     return FunctionCast(wrapAllocateAMDHWDisplay, callbackWRed->orgAllocateAMDHWDisplayX6000)(that);

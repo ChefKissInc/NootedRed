@@ -12,7 +12,7 @@ using t_HWEngineNew = void *(*)(size_t size);
 using t_sendMsgToSmc = uint32_t (*)(void *smumData, uint32_t msgId);
 using t_pspLoadExtended = uint32_t (*)(void *, uint64_t, uint64_t, const void *, size_t);
 
-constexpr uint32_t AMDGPU_FAMILY_RAVEN = 0x8E;
+constexpr uint32_t AMDGPU_FAMILY_RV = 0x8E;
 
 constexpr uint32_t PPSMC_MSG_PowerUpVcn = 0xC;
 constexpr uint32_t PPSMC_MSG_PowerUpSdma = 0xE;
