@@ -15,6 +15,7 @@ using t_pspLoadExtended = uint32_t (*)(void *, uint64_t, uint64_t, const void *,
 
 constexpr uint32_t AMDGPU_FAMILY_RAVEN = 0x8E;
 
+constexpr uint32_t PPSMC_MSG_PowerUpVcn = 0xC;
 constexpr uint32_t PPSMC_MSG_PowerUpSdma = 0xE;
 constexpr uint32_t PPSMC_MSG_PowerGateMmHub = 0x35;
 
