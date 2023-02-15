@@ -10,7 +10,7 @@ do
         -P) fw_files=$2
             shift
         ;;
-        
+
     esac
     shift
 done

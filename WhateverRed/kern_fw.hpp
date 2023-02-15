@@ -11,7 +11,7 @@ struct FwDesc {
     const uint32_t size;
 };
 
-#define RAD_FW(fw_name, fw_data, fw_size) .name = fw_name, .data = fw_data, .size = fw_size
+#define WRED_FW(fw_name, fw_data, fw_size) .name = fw_name, .data = fw_data, .size = fw_size
 
 extern const struct FwDesc fwList[];
 extern const int fwNumber;
