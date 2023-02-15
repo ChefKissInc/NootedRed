@@ -79,6 +79,14 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"_SmuRaven_Initialize", wrapSmuRavenInitialize, orgSmuRavenInitialize},
             {"_SmuRenoir_Initialize", wrapSmuRenoirInitialize, orgSmuRenoirInitialize},
             {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, orgPspCmdKmSubmit},
+            {"_dmcu_assertion", wrapIpAssertion},
+            {"_gc_assertion", wrapIpAssertion},
+            {"_gvm_assertion", wrapIpAssertion},
+            {"_mes_assertion", wrapIpAssertion},
+            {"_psp_assertion", wrapIpAssertion},
+            {"_sdma_assertion", wrapIpAssertion},
+            {"_smu_assertion", wrapIpAssertion},
+            {"_vcn_assertion", wrapIpAssertion},
         };
         PANIC_COND(!patcher.routeMultipleLong(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000HWLibs symbols");
@@ -722,4 +730,9 @@ bool WRed::wrapAccelSharedUserClientStopX6000(void *that, void *provider) {
         FunctionCast(wrapAccelSharedUserClientStopX6000, callbackWRed->orgAccelSharedUserClientStop)(that, provider);
     DBGLOG("wred", "AccelSharedUserClientStopX6000 returned %d", ret);
     return ret;
+}
+
+void WRed::wrapIpAssertion([[maybe_unused]] void *data, uint32_t cond, char *func, char *file, uint32_t line,
+    char *msg) {
+    if (!cond) { kprintf("HWLibs assertion failed: %s %s %d %s", func, file, line, msg); }
 }

@@ -123,4 +123,5 @@ class WRed {
     static void wrapDmLoggerWrite(void *dalLogger, uint32_t logType, char *fmt, ...);
     static void *wrapNewShared();
     static void *wrapNewSharedUserClient();
+    static void wrapIpAssertion(void *data, uint32_t cond, char *func, char *file, uint32_t line, char *msg);
 };
