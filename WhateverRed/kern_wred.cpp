@@ -582,14 +582,7 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
     callbackWRed->orgCapsTableHWLibs->revision = callbackWRed->orgAsicCapsTable->revision = revision;
     callbackWRed->orgCapsTableHWLibs->emulatedRev = callbackWRed->orgAsicCapsTable->emulatedRev = emulatedRevision;
     callbackWRed->orgCapsTableHWLibs->pciRev = callbackWRed->orgAsicCapsTable->pciRev = 0xFFFFFFFF;
-    memcpy(callbackWRed->orgCapsTableHWLibs->caps, initCaps->caps, sizeof(uint32_t) * 16);
-    memcpy(callbackWRed->orgAsicCapsTable->caps, initCaps->caps, sizeof(uint32_t) * 16);
-    /** Set required caps */
-    auto setCap = [](uint32_t *caps, uint32_t cap) { caps[cap / 32] |= 1 << (cap % 32); };
-    setCap(callbackWRed->orgCapsTableHWLibs->caps, 0x162);
-    setCap(callbackWRed->orgCapsTableHWLibs->caps, 0x15E);
-    setCap(callbackWRed->orgAsicCapsTable->caps, 0x162);
-    setCap(callbackWRed->orgAsicCapsTable->caps, 0x15E);
+    callbackWRed->orgCapsTableHWLibs->caps = callbackWRed->orgAsicCapsTable->caps = initCaps->caps;
     MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
     return ret;
