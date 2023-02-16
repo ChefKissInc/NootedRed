@@ -47,7 +47,7 @@ void WRed::deinit() {
 }
 
 void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
-    if (kextRadeonX5000HWLibs.loadIndex == index && !(state & ProcessingState::X5000HWLibsLoaded)) {
+    if (kextRadeonX5000HWLibs.loadIndex == index) {
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZL15deviceTypeTable", orgDeviceTypeTable},
             {"__ZN11AMDFirmware14createFirmwareEPhjjPKc", orgCreateFirmware},
@@ -100,9 +100,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             patcher.applyLookupPatch(&patch);
             patcher.clearError();
         }
-
-        state |= ProcessingState::X5000HWLibsLoaded;
-    } else if (kextRadeonX6000Framebuffer.loadIndex == index && !(state & ProcessingState::X6000FBLoaded)) {
+    } else if (kextRadeonX6000Framebuffer.loadIndex == index) {
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable},
         };
@@ -154,9 +152,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             patcher.applyLookupPatch(&patch);
             patcher.clearError();
         }
-
-        state |= ProcessingState::X6000FBLoaded;
-    } else if (kextRadeonX5000.loadIndex == index && !(state & ProcessingState::X5000Loaded)) {
+    } else if (kextRadeonX5000.loadIndex == index) {
         uint32_t *orgChannelTypes = nullptr;
 
         KernelPatcher::SolveRequest solveRequests[] = {
@@ -212,9 +208,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             patcher.applyLookupPatch(&patch);
             patcher.clearError();
         }
-
-        state |= ProcessingState::X5000Loaded;
-    } else if (kextRadeonX6000.loadIndex == index && !(state & ProcessingState::X6000Loaded)) {
+    } else if (kextRadeonX6000.loadIndex == index) {
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZN30AMDRadeonX6000_AMDVCN2HWEnginenwEm", orgVCN2EngineNewX6000},
             {"__ZN30AMDRadeonX6000_AMDVCN2HWEngineC1Ev", orgVCN2EngineConstructorX6000},
@@ -381,8 +375,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             patcher.applyLookupPatch(&patch);
             patcher.clearError();
         }
-
-        state |= ProcessingState::X6000Loaded;
     }
 }
 

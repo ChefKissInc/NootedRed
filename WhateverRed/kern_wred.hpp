@@ -43,17 +43,6 @@ class WRed {
     void *callbackFirmwareDirectory = nullptr;
     uint64_t fbOffset {};
 
-    enum ProcessingState {
-        NothingReady,
-        KernelRouted,
-        X6000FBLoaded,
-        X5000HWLibsLoaded,
-        X6000Loaded,
-        X5000Loaded,
-        EverythingDone = KernelRouted | X6000FBLoaded | X5000HWLibsLoaded | X6000Loaded | X5000Loaded,
-    };
-    int state = {ProcessingState::NothingReady};
-
     /** X6000Framebuffer */
     mach_vm_address_t orgPopulateDeviceInfo {};
     CailAsicCapEntry *orgAsicCapsTable = nullptr;
