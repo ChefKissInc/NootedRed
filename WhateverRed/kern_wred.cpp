@@ -429,7 +429,7 @@ uint32_t WRed::wrapPspSwInit(uint32_t *param1, uint32_t *param2) {
     param1[4] = 0x0;
     param1[5] = 0x2;
     auto ret = FunctionCast(wrapPspSwInit, callbackWRed->orgPspSwInit)(param1, param2);
-    DBGLOG("wred", "_psp_sw_init returned 0x%X", ret);
+    DBGLOG("wred", "_psp_sw_init << 0x%X", ret);
     return ret;
 }
 
@@ -666,32 +666,19 @@ void WRed::wrapDmLoggerWrite([[maybe_unused]] void *dalLogger, uint32_t logType,
     delete[] ns;
 }
 
-void *WRed::wrapNewShared() {
-    auto *ret = FunctionCast(wrapNewShared, callbackWRed->orgNewSharedX6000)();
-    DBGLOG("wred", "newShared returned %p", ret);
-    return ret;
-}
+void *WRed::wrapNewShared() { return FunctionCast(wrapNewShared, callbackWRed->orgNewSharedX6000)(); }
 
 void *WRed::wrapNewSharedUserClient() {
-    auto *ret = FunctionCast(wrapNewSharedUserClient, callbackWRed->orgNewSharedUserClientX6000)();
-    DBGLOG("wred", "newSharedUserClient returned %p", ret);
-    return ret;
+    return FunctionCast(wrapNewSharedUserClient, callbackWRed->orgNewSharedUserClientX6000)();
 }
 
 bool WRed::wrapAccelSharedUserClientStartX6000(void *that, void *provider) {
-    DBGLOG("wred", "AccelSharedUserClientStartX6000: that = %p provider = %p", that, provider);
-    auto ret =
-        FunctionCast(wrapAccelSharedUserClientStartX6000, callbackWRed->orgAccelSharedUserClientStart)(that, provider);
-    DBGLOG("wred", "AccelSharedUserClientStartX6000 returned %d", ret);
-    return ret;
+    return FunctionCast(wrapAccelSharedUserClientStartX6000, callbackWRed->orgAccelSharedUserClientStart)(that,
+        provider);
 }
 
 bool WRed::wrapAccelSharedUserClientStopX6000(void *that, void *provider) {
-    DBGLOG("wred", "AccelSharedUserClientStopX6000: that = %p provider = %p", that, provider);
-    auto ret =
-        FunctionCast(wrapAccelSharedUserClientStopX6000, callbackWRed->orgAccelSharedUserClientStop)(that, provider);
-    DBGLOG("wred", "AccelSharedUserClientStopX6000 returned %d", ret);
-    return ret;
+    return FunctionCast(wrapAccelSharedUserClientStopX6000, callbackWRed->orgAccelSharedUserClientStop)(that, provider);
 }
 
 void *WRed::wrapNewDisplayMachine() {

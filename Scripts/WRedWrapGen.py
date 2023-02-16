@@ -111,20 +111,20 @@ function = [
 ]
 
 fmt_types = " ".join(
-    f"{get_fmt_name(x[1])} = {get_fmt_type(x[0])}" for x in parameters)
+    f"{get_fmt_name(x[1])}: {get_fmt_type(x[0])}" for x in parameters)
 arguments = ", ".join(x[1] for x in parameters)
 function.append(
-    f"    DBGLOG(\"wred\", \"{func_ident}: {fmt_types}\", {arguments});\n")
+    f"    DBGLOG(\"wred\", \"{func_ident} << ({fmt_types})\", {arguments});\n")
 
 if return_type == "void":
     function.append(
         f"    FunctionCast(wrap{func_ident_pascal}, callbackWRed->org{func_ident_pascal})({arguments});\n")
-    function.append(f"    DBGLOG(\"wred\", \"{func_ident} finished\");\n")
+    function.append(f"    DBGLOG(\"wred\", \"{func_ident} <<\");\n")
 else:
     function.append(
         f"    auto ret = FunctionCast(wrap{func_ident_pascal}, callbackWRed->org{func_ident_pascal})({arguments});\n")
     function.append(
-        f"    DBGLOG(\"wred\", \"{func_ident} returned {get_fmt_type(return_type)}\", ret);\n")
+        f"    DBGLOG(\"wred\", \"{func_ident} << {get_fmt_type(return_type)}\", ret);\n")
     function.append("    return ret;\n")
 
 function.append("}\n")  # -- End of function --
