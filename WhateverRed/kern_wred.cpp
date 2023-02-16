@@ -429,7 +429,7 @@ uint32_t WRed::wrapPspSwInit(uint32_t *param1, uint32_t *param2) {
     param1[4] = 0x0;
     param1[5] = 0x2;
     auto ret = FunctionCast(wrapPspSwInit, callbackWRed->orgPspSwInit)(param1, param2);
-    DBGLOG("wred", "_psp_sw_init << 0x%X", ret);
+    DBGLOG("wred", "_psp_sw_init >> 0x%X", ret);
     return ret;
 }
 
