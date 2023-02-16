@@ -84,7 +84,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware", orgPutFirmware},
             {"__ZN31AtiAppleVega10PowerTuneServicesC1EP11PP_InstanceP18PowerPlayCallbacks",
                 orgVega10PowerTuneConstructor},
-            {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTableHWLibs},
+            {"__ZL20CAIL_ASIC_CAPS_TABLE", orgCapsTableHWLibs},
             {"_CAILAsicCapsInitTable", orgAsicInitCapsTable},
             {"_Raven_SendMsgToSmc", orgRavenSendMsgToSmc},
             {"_Renoir_SendMsgToSmc", orgRenoirSendMsgToSmc},
@@ -568,19 +568,21 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
             if (temp->familyId == AMDGPU_FAMILY_RV && temp->deviceId == deviceId &&
                 (temp->emulatedRev >= wrapGetEnumeratedRevision(that) || temp->emulatedRev <= emulatedRevision)) {
                 initCaps = temp;
+                initCaps->emulatedRev = emulatedRevision;
+                initCaps->revision = revision;
+                initCaps->pciRev = 0xFFFFFFFF;
                 break;
             }
         }
         PANIC_COND(!initCaps, "wred", "Failed to find Init Caps entry");
     }
 
-    callbackWRed->orgAsicCapsTableHWLibs->familyId = AMDGPU_FAMILY_RV;
-    callbackWRed->orgAsicCapsTableHWLibs->deviceId = deviceId;
-    callbackWRed->orgAsicCapsTableHWLibs->revision = revision;
-    callbackWRed->orgAsicCapsTableHWLibs->pciRev = 0xFFFFFFFF;
-    callbackWRed->orgAsicCapsTableHWLibs->emulatedRev = emulatedRevision;
-    callbackWRed->orgAsicCapsTableHWLibs->caps = initCaps->caps;
-    *callbackWRed->orgAsicCapsTable = *callbackWRed->orgAsicCapsTableHWLibs;
+    callbackWRed->orgCapsTableHWLibs->familyId = callbackWRed->orgAsicCapsTable->familyId = AMDGPU_FAMILY_RV;
+    callbackWRed->orgCapsTableHWLibs->deviceId = callbackWRed->orgAsicCapsTable->deviceId = deviceId;
+    callbackWRed->orgCapsTableHWLibs->revision = callbackWRed->orgAsicCapsTable->revision = revision;
+    callbackWRed->orgCapsTableHWLibs->emulatedRev = callbackWRed->orgAsicCapsTable->emulatedRev = emulatedRevision;
+    callbackWRed->orgCapsTableHWLibs->pciRev = callbackWRed->orgAsicCapsTable->pciRev = 0xFFFFFFFF;
+    callbackWRed->orgCapsTableHWLibs->caps = callbackWRed->orgAsicCapsTable->caps = initCaps->caps;
     MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
     return ret;

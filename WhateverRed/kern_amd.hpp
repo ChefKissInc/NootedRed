@@ -42,12 +42,15 @@ struct CailAsicCapEntry {
     uint32_t familyId, deviceId;
     uint32_t revision, emulatedRev;
     uint32_t pciRev;
-    void *caps, *skeleton;
-};
+    uint32_t _reserved;
+    uint32_t *caps;
+    uint32_t *skeleton;
+} PACKED;
 
 struct CailInitAsicCapEntry {
     uint64_t familyId, deviceId;
     uint64_t revision, emulatedRev;
     uint64_t pciRev;
-    void *caps, *goldenCaps;
-};
+    uint32_t *caps;
+    void *goldenCaps;
+} PACKED;

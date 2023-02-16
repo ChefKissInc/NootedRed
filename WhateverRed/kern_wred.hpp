@@ -62,7 +62,7 @@ class WRed {
     t_createFirmware orgCreateFirmware = nullptr;
     t_putFirmware orgPutFirmware = nullptr;
     t_Vega10PowerTuneConstructor orgVega10PowerTuneConstructor = nullptr;
-    CailAsicCapEntry *orgAsicCapsTableHWLibs = nullptr;
+    CailAsicCapEntry *orgCapsTableHWLibs = nullptr;
     CailInitAsicCapEntry *orgAsicInitCapsTable = nullptr;
     t_sendMsgToSmc orgRavenSendMsgToSmc = nullptr;
     t_sendMsgToSmc orgRenoirSendMsgToSmc = nullptr;
