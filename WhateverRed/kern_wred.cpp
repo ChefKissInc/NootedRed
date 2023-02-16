@@ -30,6 +30,8 @@ WRed *WRed::callbackWRed = nullptr;
 void WRed::init() {
     callbackWRed = this;
 
+    lilu.onPatcherLoadForce(
+        [](void *user, KernelPatcher &patcher) { static_cast<WRed *>(user)->processPatcher(patcher); }, this);
     lilu.onKextLoadForce(&kextRadeonX5000HWLibs);
     lilu.onKextLoadForce(&kextRadeonX6000Framebuffer);
     lilu.onKextLoadForce(&kextRadeonX6000);
@@ -44,6 +46,34 @@ void WRed::init() {
 
 void WRed::deinit() {
     if (this->vbiosData) { this->vbiosData->release(); }
+}
+
+void WRed::processPatcher(KernelPatcher &patcher) {
+    KernelPatcher::RouteRequest requests[] = {
+        {"__ZN15OSMetaClassBase12safeMetaCastEPKS_PK11OSMetaClass", wrapSafeMetaCast, orgSafeMetaCast},
+    };
+    PANIC_COND(!patcher.routeMultiple(KernelPatcher::KernelID, requests), "wred",
+        "Failed to route OSMetaClassBase::safeMetaCast");
+}
+
+OSMetaClassBase *WRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const OSMetaClass *toMeta) {
+    auto ret = FunctionCast(wrapSafeMetaCast, callbackWRed->orgSafeMetaCast)(anObject, toMeta);
+    if (!ret) {
+        for (auto &ent : callbackWRed->metaClassMap) {
+            if (ent[0] == toMeta) {
+                toMeta = ent[1];
+            } else if (ent[1] == toMeta) {
+                toMeta = ent[0];
+            } else {
+                continue;
+            }
+            DBGLOG("wred", "safeMetaCast << (anObject: %p toMeta: %p)", anObject, toMeta);
+            ret = FunctionCast(wrapSafeMetaCast, callbackWRed->orgSafeMetaCast)(anObject, toMeta);
+            DBGLOG("wred", "safeMetaCast >> %p", ret);
+            break;
+        }
+    }
+    return ret;
 }
 
 void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
@@ -163,6 +193,10 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator19createAccelChannelsEbE12channelTypes", orgChannelTypes},
             {"__ZN39AMDRadeonX5000_AMDAccelSharedUserClient5startEP9IOService", orgAccelSharedUserClientStart},
             {"__ZN39AMDRadeonX5000_AMDAccelSharedUserClient4stopEP9IOService", orgAccelSharedUserClientStop},
+            {"__ZN35AMDRadeonX5000_AMDAccelVideoContext10gMetaClassE", metaClassMap[0][0]},
+            {"__ZN37AMDRadeonX5000_AMDAccelDisplayMachine10gMetaClassE", metaClassMap[1][0]},
+            {"__ZN34AMDRadeonX5000_AMDAccelDisplayPipe10gMetaClassE", metaClassMap[2][0]},
+            {"__ZN30AMDRadeonX5000_AMDAccelChannel10gMetaClassE", metaClassMap[3][1]},
         };
         PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "wred",
             "Failed to resolve AMDRadeonX5000 symbols");
@@ -221,6 +255,10 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator19newSharedUserClientEv", orgNewSharedUserClientX6000},
             {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator17newDisplayMachineEv", orgNewDisplayMachineX6000},
             {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator14newDisplayPipeEv", orgNewDisplayPipeX6000},
+            {"__ZN35AMDRadeonX6000_AMDAccelVideoContext10gMetaClassE", metaClassMap[0][1]},
+            {"__ZN37AMDRadeonX6000_AMDAccelDisplayMachine10gMetaClassE", metaClassMap[1][1]},
+            {"__ZN34AMDRadeonX6000_AMDAccelDisplayPipe10gMetaClassE", metaClassMap[2][1]},
+            {"__ZN30AMDRadeonX6000_AMDAccelChannel10gMetaClassE", metaClassMap[3][0]},
         };
         PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "wred",
             "Failed to resolve AMDRadeonX6000 symbols");

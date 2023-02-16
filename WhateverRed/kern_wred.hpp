@@ -20,6 +20,7 @@ class WRed {
 
     void init();
     void deinit();
+    void processPatcher(KernelPatcher &patcher);
     void processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size);
 
     private:
@@ -42,6 +43,11 @@ class WRed {
     ASICType asicType = ASICType::Unknown;
     void *callbackFirmwareDirectory = nullptr;
     uint64_t fbOffset {};
+
+    OSMetaClass *metaClassMap[4][2] = {{nullptr}};
+
+    mach_vm_address_t orgSafeMetaCast {};
+    static OSMetaClassBase *wrapSafeMetaCast(const OSMetaClassBase *anObject, const OSMetaClass *toMeta);
 
     /** X6000Framebuffer */
     mach_vm_address_t orgPopulateDeviceInfo {};
