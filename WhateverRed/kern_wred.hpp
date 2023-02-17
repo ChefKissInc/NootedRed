@@ -132,4 +132,6 @@ class WRed {
     static void *wrapNewSharedUserClient();
     static void *wrapNewDisplayMachine();
     static void *wrapNewDisplayPipe();
+    mach_vm_address_t orgInitDCNRegistersOffsets {};
+    static void wrapInitDCNRegistersOffsets(void *that);
 };
