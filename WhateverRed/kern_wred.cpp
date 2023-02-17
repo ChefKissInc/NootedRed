@@ -466,9 +466,24 @@ void WRed::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
 uint32_t WRed::wrapSmuGetHwVersion() { return 0x1; }    // SMU 9.0.1
 
 uint32_t WRed::wrapPspSwInit(uint32_t *param1, uint32_t *param2) {
-    param1[3] = 0x9;
-    param1[4] = 0x0;
-    param1[5] = 0x2;
+    switch (param1[3]) {
+        case 0xA:
+            DBGLOG("wred", "Spoofing PSP version v10 to v9.0.2");
+            param1[3] = 0x9;
+            param1[4] = 0x0;
+            param1[5] = 0x2;
+            break;
+        case 0xB:
+            [[fallthrough]];
+        case 0xC:
+            DBGLOG("wred", "Spoofing PSP version v11/v12 to v11");
+            param1[3] = 0xB;
+            param1[4] = 0x0;
+            param1[5] = 0x0;
+            break;
+        default:
+            break;
+    }
     auto ret = FunctionCast(wrapPspSwInit, callbackWRed->orgPspSwInit)(param1, param2);
     DBGLOG("wred", "_psp_sw_init >> 0x%X", ret);
     return ret;
