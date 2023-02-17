@@ -101,11 +101,9 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
                 orgPopulateFirmwareDirectory},
             {"__ZN25AtiApplePowerTuneServices23createPowerTuneServicesEP11PP_InstanceP18PowerPlayCallbacks",
                 wrapCreatePowerTuneServices},
-            {"_smu_get_fw_constants", hwLibsNoop},
-            {"_smu_9_0_1_check_fw_status", hwLibsNoop},
-            {"_smu_11_0_check_fw_status", hwLibsNoop},
-            {"_smu_9_0_1_unload_smu", hwLibsNoop},
-            {"_smu_11_0_unload_smu", hwLibsNoop},
+            {"_smu_get_fw_constants", wrapSmuGetFwConstants},
+            {"_smu_9_0_1_internal_hw_init", wrapSmuInternalHwInit},
+            {"_smu_11_0_internal_hw_init", wrapSmuInternalHwInit},
             {"_SmuRaven_Initialize", wrapSmuRavenInitialize, orgSmuRavenInitialize},
             {"_SmuRenoir_Initialize", wrapSmuRenoirInitialize, orgSmuRenoirInitialize},
             {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, orgPspCmdKmSubmit},
@@ -508,7 +506,7 @@ uint32_t WRed::wrapPspSwInit(uint32_t *param1, uint32_t *param2) {
     return ret;
 }
 
-uint32_t WRed::wrapGcGetHwVersion() { return 0x090201; }
+uint32_t WRed::wrapGcGetHwVersion([[maybe_unused]] uint32_t *param1) { return 0x090201; }
 
 void WRed::wrapPopulateFirmwareDirectory(void *that) {
     FunctionCast(wrapPopulateFirmwareDirectory, callbackWRed->orgPopulateFirmwareDirectory)(that);
@@ -625,7 +623,8 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
     return ret;
 }
 
-uint32_t WRed::hwLibsNoop() { return 0; }    // Always return success
+uint32_t WRed::wrapSmuGetFwConstants([[maybe_unused]] void *param1) { return 0; }    // SMC firmware's already loaded
+uint32_t WRed::wrapSmuInternalHwInit([[maybe_unused]] void *param1) { return 0; }    // Don't wait for firmware load
 IOReturn WRed::wrapPopulateVramInfo([[maybe_unused]] void *that, void *fwInfo) {
     getMember<uint32_t>(fwInfo, 0x1C) = 4;      // DDR4
     getMember<uint32_t>(fwInfo, 0x20) = 128;    // 128-bit
