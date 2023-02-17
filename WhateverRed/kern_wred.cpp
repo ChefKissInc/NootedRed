@@ -94,7 +94,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
 
         KernelPatcher::RouteRequest requests[] = {
             {"__ZN14AmdTtlServicesC2EP11IOPCIDevice", wrapAmdTtlServicesConstructor, orgAmdTtlServicesConstructor},
-            {"_smu_get_hw_version", wrapSmuGetHwVersion},
+            {"_smu_get_hw_version", wrapSmuGetHwVersion, orgSmuGetHwVersion},
             {"_psp_sw_init", wrapPspSwInit, orgPspSwInit},
             {"_gc_get_hw_version", wrapGcGetHwVersion},
             {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory,
@@ -103,7 +103,9 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
                 wrapCreatePowerTuneServices},
             {"_smu_get_fw_constants", hwLibsNoop},
             {"_smu_9_0_1_check_fw_status", hwLibsNoop},
+            {"_smu_11_0_check_fw_status", hwLibsNoop},
             {"_smu_9_0_1_unload_smu", hwLibsNoop},
+            {"_smu_11_0_unload_smu", hwLibsNoop},
             {"_SmuRaven_Initialize", wrapSmuRavenInitialize, orgSmuRavenInitialize},
             {"_SmuRenoir_Initialize", wrapSmuRenoirInitialize, orgSmuRenoirInitialize},
             {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, orgPspCmdKmSubmit},
@@ -463,7 +465,24 @@ void WRed::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
     FunctionCast(wrapAmdTtlServicesConstructor, callbackWRed->orgAmdTtlServicesConstructor)(that, provider);
 }
 
-uint32_t WRed::wrapSmuGetHwVersion() { return 0x1; }    // SMU 9.0.1
+uint32_t WRed::wrapSmuGetHwVersion(uint64_t param1, uint32_t param2) {
+    auto ret = FunctionCast(wrapSmuGetHwVersion, callbackWRed->orgSmuGetHwVersion)(param1, param2);
+    DBGLOG("wred", "_smu_get_hw_version returned 0x%X", ret);
+    switch (ret) {
+        case 0x2:
+            DBGLOG("wred", "Spoofing SMU v10 to v9.0.1");
+            return 0x1;
+        case 0xB:
+            [[fallthrough]];
+        case 0xC:
+            [[fallthrough]];
+        case 0xD:
+            DBGLOG("wred", "Spoofing SMU v11/v12 to v11");
+            return 0x3;
+        default:
+            return ret;
+    }
+}
 
 uint32_t WRed::wrapPspSwInit(uint32_t *param1, uint32_t *param2) {
     switch (param1[3]) {
