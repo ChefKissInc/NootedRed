@@ -20,15 +20,6 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(MODULE_VERSION)</string>
-	<key>GPUCompanionBundles</key>
-	<array>
-		<string>AMDShared.bundle</string>
-		<string>AMDRadeonX6000Shared.bundle</string>
-		<string>AMDRadeonX5000GLDriver.bundle</string>
-		<string>AMDRadeonVADriver2.bundle</string>
-		<string>AMDRadeonX5000MTLDriver.bundle</string>
-		<string>AMDRawCounterPlugin.bundle</string>
-	</array>
 	<key>IOKitPersonalities</key>
 	<dict>
 		<key>AMD Radeon X5000 HW Services</key>
@@ -94,6 +85,86 @@
 		</dict>
 		<key>AMDRadeonNavi10Controller</key>
 		<dict>
+			<key>ATY,Adder</key>
+			<dict>
+				<key>aty_config</key>
+				<dict>
+					<key>CFG_NO_PP</key>
+					<false/>
+					<key>CFG_PTPL2_CNT</key>
+					<integer>16</integer>
+					<key>CFG_PTPL2_MAX</key>
+					<integer>250</integer>
+					<key>CFG_PTPL2_MIN</key>
+					<integer>100</integer>
+				</dict>
+				<key>aty_properties</key>
+				<dict>
+					<key>DalEarlyTps1Pattern</key>
+					<integer>1</integer>
+					<key>PP_DiDtSQStallPatternOverride</key>
+					<integer>16383</integer>
+					<key>PP_DisableDIDT</key>
+					<integer>0</integer>
+					<key>PP_PhmUseDummyBackEnd</key>
+					<integer>0</integer>
+					<key>PP_WorkLoadPolicyMask</key>
+					<integer>32</integer>
+					<key>SMU_ActivityMonitorTable</key>
+					<data>
+					AAQABAIA6AMAAAEAAAAAAAAAAADQAQEAMP7+
+					/wAAAAAABAAAAgDoAwAAAQAAAAAAAAAAANAB
+					AQA45v//AAAAAAAAAAAAAAAAAAAAAAAAAAAA
+					AAAAAAAAAAAAAAAAAAAAEAkFAAFkPAAAAAAA
+					AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+					AA==
+					</data>
+					<key>SMU_DisallowedFeatures</key>
+					<integer>64</integer>
+				</dict>
+			</dict>
+			<key>ATY,Ikaheka</key>
+			<dict>
+				<key>aty_config</key>
+				<dict>
+					<key>CFG_LINK_BUILT_IN_MAP</key>
+					<integer>3</integer>
+					<key>CFG_NO_PP</key>
+					<false/>
+					<key>CFG_PTPL2_CNT</key>
+					<integer>16</integer>
+					<key>CFG_PTPL2_MAX</key>
+					<integer>130</integer>
+					<key>CFG_PTPL2_MIN</key>
+					<integer>50</integer>
+				</dict>
+				<key>aty_properties</key>
+				<dict>
+					<key>DalExtraDelayBacklightOff</key>
+					<integer>25</integer>
+					<key>PP_DiDtSQStallPatternOverride</key>
+					<integer>16383</integer>
+					<key>PP_DisableDIDT</key>
+					<integer>0</integer>
+					<key>PP_GfxOffControl</key>
+					<integer>0</integer>
+					<key>PP_PhmUseDummyBackEnd</key>
+					<integer>0</integer>
+					<key>PP_WorkLoadPolicyMask</key>
+					<integer>32</integer>
+					<key>SMU_ActivityMonitorTable</key>
+					<data>
+					AAAAAgIF6AMAAAAAAAAAAAAAAAAAAAEAAAD/
+					/wAAAAAAAAACAgroAwAAAQAAAAAAAAAAAAAA
+					AAAAAAAAAAD2/wAAAAAABQAAAAAAAAAAAAAA
+					AAAAAAAAAAAAAAAAAAAAAAAAABkyPAAFAAAA
+					AQAAAAAAAAAAAAAAfnAAAAAAAAAgAQYAMGkA
+					AA==
+					</data>
+					<key>SMU_DisallowedFeatures</key>
+					<integer>3012184920132</integer>
+				</dict>
+			</dict>
 			<key>CFBundleIdentifier</key>
 			<string>com.apple.kext.AMDRadeonX6000Framebuffer</string>
 			<key>IOClass</key>
@@ -117,16 +188,6 @@
 			<dict>
 				<key>CFG_CORRECT_BLPT</key>
 				<true/>
-				<key>CFG_IOP_DEBUG</key>
-				<integer>-1</integer>
-				<key>CFG_NO_PP</key>
-				<false/>
-				<key>CFG_PTPL2_CNT</key>
-				<integer>16</integer>
-				<key>CFG_PTPL2_MAX</key>
-				<integer>250</integer>
-				<key>CFG_PTPL2_MIN</key>
-				<integer>100</integer>
 				<key>CFG_TRANS_WSRV</key>
 				<true/>
 				<key>CFG_UFL_CHK</key>
@@ -142,16 +203,10 @@
 				<integer>1</integer>
 				<key>DalDisableLTTPR</key>
 				<integer>1</integer>
-				<key>DalEarlyTps1Pattern</key>
-				<integer>1</integer>
 				<key>DalSkipDetectionLT</key>
 				<integer>1</integer>
-				<key>PP_DiDtSQStallPatternOverride</key>
-				<integer>16383</integer>
 				<key>PP_DisableClockStretcher</key>
 				<integer>1</integer>
-				<key>PP_DisableDIDT</key>
-				<integer>0</integer>
 				<key>PP_DisableULV</key>
 				<integer>0</integer>
 				<key>PP_EnableUploadFirmware</key>
@@ -165,27 +220,13 @@
 				<key>PP_ToolsLogSpaceSize</key>
 				<integer>524288</integer>
 				<key>PP_WorkLoadPolicyMask</key>
-				<integer>32</integer>
-				<key>SMU_ActivityMonitorTable</key>
-				<data>
-				AAQABAIA6AMAAAEAAAAAAAAAAADQAQEAMP7+/wAAAAAA
-				BAAAAgDoAwAAAQAAAAAAAAAAANABAQA45v//AAAAAAAA
-				AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAkF
-				AAFkPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-				AAAAAA==
-				</data>
-				<key>SMU_DisallowedFeatures</key>
-				<integer>64</integer>
+				<integer>16</integer>
 			</dict>
 		</dict>
 		<key>AMDVega10GraphicsAccelerator</key>
 		<dict>
 			<key>CFBundleIdentifier</key>
 			<string>com.apple.kext.AMDRadeonX5000</string>
-			<key>GPUDCCDisplayable</key>
-			<false/>
-			<key>GPUDebugNullClientMask</key>
-			<integer>0</integer>
 			<key>GpuDebugPolicy</key>
 			<integer>0</integer>
 			<key>IOClass</key>
@@ -272,8 +313,20 @@
 			<integer>16908288</integer>
 			<key>cail_properties</key>
 			<dict>
+				<key>CAIL_DisableCailLoadUcode</key>
+				<integer>1</integer>
 				<key>CAIL_DisableGfxCGPowerGating</key>
 				<integer>1</integer>
+				<key>CAIL_DisableJpegEngine</key>
+				<integer>0</integer>
+				<key>CAIL_EnableLBPWSupport</key>
+				<integer>0</integer>
+				<key>CAIL_EnablePeerDataAperture</key>
+				<integer>0</integer>
+				<key>CAIL_EnableSecureMmFwLoading</key>
+				<integer>1</integer>
+				<key>CAIL_EnableXdmaSupport</key>
+				<integer>0</integer>
 			</dict>
 		</dict>
 		<key>com.ChefKissInc.WhateverRed</key>
