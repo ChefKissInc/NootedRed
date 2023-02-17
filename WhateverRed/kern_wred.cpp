@@ -435,6 +435,7 @@ class AppleACPIPlatformExpert : IOACPIPlatformExpert {
 void WRed::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
     static uint8_t builtBytes[] = {0x01};
     provider->setProperty("built-in", builtBytes, sizeof(builtBytes));
+    provider->setProperty("@0,AAPL,boot-display", builtBytes, sizeof(builtBytes));
 
     DBGLOG("wred", "Patching device type table");
     PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "wred",
@@ -685,7 +686,7 @@ bool WRed::wrapInitWithPciInfo(void *that, void *param1) {
     auto ret = FunctionCast(wrapInitWithPciInfo, callbackWRed->orgInitWithPciInfo)(that, param1);
     // Hack AMDRadeonX6000_AmdLogger to log everything
     getMember<uint64_t>(that, 0x28) = 0xFFFFFFFFFFFFFFFFULL;
-    getMember<uint32_t>(that, 0x30) = 0xFF;
+    getMember<uint32_t>(that, 0x30) = 0xFFFFFFFFU;
     return ret;
 }
 

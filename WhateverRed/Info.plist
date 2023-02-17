@@ -187,7 +187,7 @@
 			<key>GPUDebugNullClientMask</key>
 			<integer>0</integer>
 			<key>GpuDebugPolicy</key>
-			<integer>0</integer>
+			<integer>-1</integer>
 			<key>IOClass</key>
 			<string>AMDRadeonX5000_AMDVega10GraphicsAccelerator</string>
 			<key>IODVDBundleName</key>
