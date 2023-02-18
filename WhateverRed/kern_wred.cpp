@@ -656,7 +656,7 @@ void WRed::wrapSetupAndInitializeHWCapabilities(void *that) {
     FunctionCast(wrapSetupAndInitializeHWCapabilities, callbackWRed->orgSetupAndInitializeHWCapabilities)(that);
     FunctionCast(wrapSetupAndInitializeHWCapabilities, callbackWRed->orgSetupAndInitializeHWCapabilitiesX6000)(that);
     getMember<uint32_t>(that, 0x2C) = callbackWRed->asicType == ASICType::Renoir ? 6 : 4;    // HUBP Count
-    getMember<uint32_t>(that, 0xC0) = false;                                                 // SDMA Page Queue
+    getMember<bool>(that, 0xC0) = false;                                                     // SDMA Page Queue
 }
 
 void *WRed::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3) {
