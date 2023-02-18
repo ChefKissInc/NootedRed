@@ -246,8 +246,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZN30AMDRadeonX6000_AMDVCN2HWEnginenwEm", orgVCN2EngineNewX6000},
             {"__ZN30AMDRadeonX6000_AMDVCN2HWEngineC1Ev", orgVCN2EngineConstructorX6000},
-            {"__ZN32AMDRadeonX6000_AMDNavi10Hardware32setupAndInitializeHWCapabilitiesEv",
-                orgSetupAndInitializeHWCapabilitiesX6000},
             {"__ZN31AMDRadeonX6000_AMDGFX10Hardware20allocateAMDHWDisplayEv", orgAllocateAMDHWDisplayX6000},
             {"__ZN42AMDRadeonX6000_AMDGFX10GraphicsAccelerator15newVideoContextEv", orgNewVideoContextX6000},
             {"__ZN31AMDRadeonX6000_IAMDSMLInterface18createSMLInterfaceEj", orgCreateSMLInterfaceX6000},
@@ -348,22 +346,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         static_assert(sizeof(find_hwchannel_writeDiagnosisReport) == sizeof(repl_hwchannel_writeDiagnosisReport),
             "Find/replace size mismatch");
 
-        const uint8_t find_setupAndInitializeHWCapabilities_pt1[] = {0x4C, 0x89, 0xF7, 0xFF, 0x90, 0xA0, 0x02, 0x00,
-            0x00, 0x84, 0xC0, 0x0F, 0x84, 0x6E, 0x02, 0x00, 0x00};
-        const uint8_t repl_setupAndInitializeHWCapabilities_pt1[] = {0x4C, 0x89, 0xF7, 0xFF, 0x90, 0x98, 0x02, 0x00,
-            0x00, 0x84, 0xC0, 0x0F, 0x84, 0x6E, 0x02, 0x00, 0x00};
-        static_assert(sizeof(find_setupAndInitializeHWCapabilities_pt1) ==
-                          sizeof(repl_setupAndInitializeHWCapabilities_pt1),
-            "Find/replace size mismatch");
-
-        const uint8_t find_setupAndInitializeHWCapabilities_pt2[] = {0xFF, 0x50, 0x70, 0x85, 0xC0, 0x74, 0x0A, 0x41,
-            0xC6, 0x46, 0x28, 0x00, 0xE9, 0xB0, 0x01, 0x00, 0x00};
-        const uint8_t repl_setupAndInitializeHWCapabilities_pt2[] = {0x66, 0x90, 0x90, 0x85, 0xC0, 0x66, 0x90, 0x41,
-            0xC6, 0x46, 0x28, 0x00, 0xE9, 0xB0, 0x01, 0x00, 0x00};
-        static_assert(sizeof(find_setupAndInitializeHWCapabilities_pt2) ==
-                          sizeof(repl_setupAndInitializeHWCapabilities_pt2),
-            "Find/replace size mismatch");
-
         /**
          * HWEngine/HWChannel call HWInterface virtual methods.
          * The X5000 HWInterface virtual table offsets are
@@ -402,14 +384,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             /** Mismatched VTable Call to getScheduler. */
             {&kextRadeonX6000, find_hwchannel_writeDiagnosisReport, repl_hwchannel_writeDiagnosisReport,
                 arrsize(find_hwchannel_writeDiagnosisReport), 1},
-
-            /** Mismatched VTable Call to isDeviceValid. */
-            {&kextRadeonX6000, find_setupAndInitializeHWCapabilities_pt1, repl_setupAndInitializeHWCapabilities_pt1,
-                arrsize(find_setupAndInitializeHWCapabilities_pt1), 1},
-
-            /** Remove call to TTL. */
-            {&kextRadeonX6000, find_setupAndInitializeHWCapabilities_pt2, repl_setupAndInitializeHWCapabilities_pt2,
-                arrsize(find_setupAndInitializeHWCapabilities_pt2), 1},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
@@ -654,9 +628,11 @@ bool WRed::wrapAllocateHWEngines(void *that) {
 
 void WRed::wrapSetupAndInitializeHWCapabilities(void *that) {
     FunctionCast(wrapSetupAndInitializeHWCapabilities, callbackWRed->orgSetupAndInitializeHWCapabilities)(that);
-    FunctionCast(wrapSetupAndInitializeHWCapabilities, callbackWRed->orgSetupAndInitializeHWCapabilitiesX6000)(that);
-    getMember<uint32_t>(that, 0x2C) = callbackWRed->asicType == ASICType::Renoir ? 6 : 4;    // HUBP Count
-    getMember<bool>(that, 0xC0) = false;                                                     // SDMA Page Queue
+    if (callbackWRed->asicType != ASICType::Renoir) {
+        getMember<uint32_t>(that, 0x2C) = 4;    // Surface Count
+    }
+    getMember<bool>(that, 0xC0) = false;    // SDMA Page Queue
+    getMember<bool>(that, 0xAC) = false;    // VCE
 }
 
 void *WRed::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3) {

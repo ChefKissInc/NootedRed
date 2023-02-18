@@ -74,7 +74,6 @@ class WRed {
     /** X6000 */
     t_HWEngineNew orgVCN2EngineNewX6000 = nullptr;
     t_HWEngineConstructor orgVCN2EngineConstructorX6000 = nullptr;
-    mach_vm_address_t orgSetupAndInitializeHWCapabilitiesX6000 {};
     mach_vm_address_t orgAllocateAMDHWDisplayX6000 {};
     mach_vm_address_t orgInitWithPciInfo {};
     mach_vm_address_t orgNewVideoContextX6000 {};
