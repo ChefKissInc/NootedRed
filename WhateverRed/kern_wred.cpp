@@ -633,7 +633,7 @@ IOReturn WRed::wrapPopulateVramInfo([[maybe_unused]] void *that, void *fwInfo) {
 
 /**
  * We don't want the `AMDRadeonX6000` personality defined in the `Info.plist` to do anything.
- * We only use it to force-load `AMDRadeonX6000` and snatch the VCN symbols.
+ * We only use it to force-load `AMDRadeonX6000` and snatch the VCN/DCN symbols.
  */
 bool WRed::wrapAccelStartX6000() { return false; }
 
@@ -694,8 +694,8 @@ void *WRed::wrapAllocateAMDHWDisplay(void *that) {
     return FunctionCast(wrapAllocateAMDHWDisplay, callbackWRed->orgAllocateAMDHWDisplayX6000)(that);
 }
 
-uint32_t WRed::wrapPspCmdKmSubmit(void *pspData, void *context, void *param3, void *param4) {
-    uint32_t fwType = getMember<uint>(context, 16);
+uint32_t WRed::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4) {
+    uint32_t fwType = getMember<uint>(ctx, 16);
     // Skip loading of CP MEC JT2 FW on Renoir devices due to it being unsupported
     // See also: https://github.com/torvalds/linux/commit/f8f70c1371d304f42d4a1242d8abcbda807d0bed
     if (fwType == 6 && callbackWRed->asicType == ASICType::Renoir) {
@@ -703,14 +703,14 @@ uint32_t WRed::wrapPspCmdKmSubmit(void *pspData, void *context, void *param3, vo
         return 0;
     }
 
-    return FunctionCast(wrapPspCmdKmSubmit, callbackWRed->orgPspCmdKmSubmit)(pspData, context, param3, param4);
+    return FunctionCast(wrapPspCmdKmSubmit, callbackWRed->orgPspCmdKmSubmit)(psp, ctx, param3, param4);
 }
 
 bool WRed::wrapInitWithPciInfo(void *that, void *param1) {
     auto ret = FunctionCast(wrapInitWithPciInfo, callbackWRed->orgInitWithPciInfo)(that, param1);
     // Hack AMDRadeonX6000_AmdLogger to log everything
-    getMember<uint64_t>(that, 0x28) = 0xFFFFFFFFFFFFFFFFULL;
-    getMember<uint32_t>(that, 0x30) = 0xFFFFFFFFU;
+    getMember<uint64_t>(that, 0x28) = ~0ULL;
+    getMember<uint32_t>(that, 0x30) = 0xFF;
     return ret;
 }
 
@@ -724,7 +724,7 @@ void *WRed::wrapCreateSMLInterface(uint32_t configBit) {
 
 uint64_t WRed::wrapAdjustVRAMAddress(void *that, uint64_t addr) {
     auto ret = FunctionCast(wrapAdjustVRAMAddress, callbackWRed->orgAdjustVRAMAddress)(that, addr);
-    return ret != addr ? ret + callbackWRed->fbOffset : ret;
+    return ret != addr ? (ret + callbackWRed->fbOffset) : ret;
 }
 
 constexpr static const char *LogTypes[] = {"Error", "Warning", "Debug", "DC_Interface", "DTN", "Surface", "HW_Hotplug",
@@ -765,7 +765,6 @@ void *WRed::wrapNewDisplayMachine() {
 void *WRed::wrapNewDisplayPipe() { return FunctionCast(wrapNewDisplayPipe, callbackWRed->orgNewDisplayPipeX6000)(); }
 
 void WRed::wrapInitDCNRegistersOffsets(void *that) {
-    DBGLOG("wred", "initDCNRegistersOffsets << (that: %p)", that);
     FunctionCast(wrapInitDCNRegistersOffsets, callbackWRed->orgInitDCNRegistersOffsets)(that);
     if (callbackWRed->asicType != ASICType::Renoir) {
         DBGLOG("wred", "initDCNRegistersOffsets !! PATCHING REGISTERS FOR DCN 1.0 !!");
@@ -831,5 +830,4 @@ void WRed::wrapInitDCNRegistersOffsets(void *that) {
         getMember<uint32_t>(that, 0x48E4) = base + mmHUBPREQ2_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
         getMember<uint32_t>(that, 0x491C) = base + mmHUBPREQ3_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
     }
-    DBGLOG("wred", "initDCNRegistersOffsets >> void");
 }

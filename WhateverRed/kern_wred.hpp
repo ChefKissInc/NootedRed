@@ -83,6 +83,7 @@ class WRed {
     mach_vm_address_t orgNewSharedUserClientX6000 {};
     mach_vm_address_t orgNewDisplayMachineX6000 {};
     mach_vm_address_t orgNewDisplayPipeX6000 {};
+    mach_vm_address_t orgInitDCNRegistersOffsets {};
 
     /** X5000 */
     t_HWEngineNew orgGFX9PM4EngineNew = nullptr;
@@ -110,9 +111,9 @@ class WRed {
     static void *wrapCreatePowerTuneServices(void *that, void *param2);
     static uint32_t wrapSmuGetFwConstants(void *param1);
     static uint32_t wrapSmuInternalHwInit(void *param1);
-    static uint32_t wrapSmuRavenInitialize(void *smumData, uint32_t param2);
-    static uint32_t wrapSmuRenoirInitialize(void *smumData, uint32_t param2);
-    static uint32_t wrapPspCmdKmSubmit(void *pspData, void *context, void *param3, void *param4);
+    static uint32_t wrapSmuRavenInitialize(void *smum, uint32_t param2);
+    static uint32_t wrapSmuRenoirInitialize(void *smum, uint32_t param2);
+    static uint32_t wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4);
 
     /** X6000 */
     static bool wrapAccelStartX6000();
@@ -121,6 +122,7 @@ class WRed {
     static void *wrapCreateSMLInterface(uint32_t configBit);
     static bool wrapAccelSharedUserClientStartX6000(void *that, void *provider);
     static bool wrapAccelSharedUserClientStopX6000(void *that, void *provider);
+    static void wrapInitDCNRegistersOffsets(void *that);
 
     /** X5000 */
     static bool wrapAllocateHWEngines(void *that);
@@ -134,6 +136,4 @@ class WRed {
     static void *wrapNewSharedUserClient();
     static void *wrapNewDisplayMachine();
     static void *wrapNewDisplayPipe();
-    mach_vm_address_t orgInitDCNRegistersOffsets {};
-    static void wrapInitDCNRegistersOffsets(void *that);
 };
