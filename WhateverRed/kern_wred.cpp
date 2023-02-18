@@ -648,19 +648,15 @@ uint32_t WRed::wrapHwReadReg32(void *that, uint32_t reg) {
     return FunctionCast(wrapHwReadReg32, callbackWRed->orgHwReadReg32)(that, reg == 0xD31 ? 0xD2F : reg);
 }
 
-uint32_t WRed::wrapSmuRavenInitialize(void *smumData, uint32_t param2) {
-    auto ret = FunctionCast(wrapSmuRavenInitialize, callbackWRed->orgSmuRavenInitialize)(smumData, param2);
-    callbackWRed->orgRavenSendMsgToSmc(smumData, PPSMC_MSG_PowerUpVcn);
-    callbackWRed->orgRavenSendMsgToSmc(smumData, PPSMC_MSG_PowerUpSdma);
-    callbackWRed->orgRavenSendMsgToSmc(smumData, PPSMC_MSG_PowerGateMmHub);
+uint32_t WRed::wrapSmuRavenInitialize(void *smum, uint32_t param2) {
+    auto ret = FunctionCast(wrapSmuRavenInitialize, callbackWRed->orgSmuRavenInitialize)(smum, param2);
+    callbackWRed->orgRavenSendMsgToSmc(smum, PPSMC_MSG_PowerUpSdma);
     return ret;
 }
 
 uint32_t WRed::wrapSmuRenoirInitialize(void *smumData, uint32_t param2) {
     auto ret = FunctionCast(wrapSmuRenoirInitialize, callbackWRed->orgSmuRenoirInitialize)(smumData, param2);
-    callbackWRed->orgRenoirSendMsgToSmc(smumData, PPSMC_MSG_PowerUpVcn);
     callbackWRed->orgRenoirSendMsgToSmc(smumData, PPSMC_MSG_PowerUpSdma);
-    callbackWRed->orgRenoirSendMsgToSmc(smumData, PPSMC_MSG_PowerGateMmHub);
     return ret;
 }
 
