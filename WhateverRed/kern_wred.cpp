@@ -267,6 +267,10 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN39AMDRadeonX6000_AMDAccelSharedUserClient4stopEP9IOService", wrapAccelSharedUserClientStopX6000},
             {"__ZN30AMDRadeonX6000_AMDGFX10Display23initDCNRegistersOffsetsEv", wrapInitDCNRegistersOffsets,
                 orgInitDCNRegistersOffsets},
+            {"__ZN34AMDRadeonX6000_AMDAccelDisplayPipe23initFramebufferResourceEjP16IOAccelResource2",
+                wrapInitFramebufferResource, orgInitFramebufferResource},
+            {"__ZN27AMDRadeonX6000_AMDHWDisplay16configureDisplayEjjP17_FRAMEBUFFER_INFOP16IOAccelResource2",
+                wrapConfigureDisplay, orgConfigureDisplay},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX6000 symbols");
@@ -802,4 +806,21 @@ void WRed::wrapInitDCNRegistersOffsets(void *that) {
         getMember<uint32_t>(that, 0x48E4) = base + mmHUBPREQ2_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
         getMember<uint32_t>(that, 0x491C) = base + mmHUBPREQ3_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
     }
+}
+
+void *WRed::wrapInitFramebufferResource(void *that, uint32_t param1, void *param2) {
+    DBGLOG("wred", "initFramebufferResource << (that: %p param1: 0x%X param2: %p)", that, param1, param2);
+    auto ret =
+        FunctionCast(wrapInitFramebufferResource, callbackWRed->orgInitFramebufferResource)(that, param1, param2);
+    DBGLOG("wred", "initFramebufferResource >> %p", ret);
+    return ret;
+}
+
+bool WRed::wrapConfigureDisplay(void *that, uint32_t param1, uint32_t param2, void *param3, void *param4) {
+    DBGLOG("wred", "configureDisplay << (that: %p param1: 0x%X param2: 0x%X param3: %p param4: %p)", that, param1,
+        param2, param3, param4);
+    auto ret =
+        FunctionCast(wrapConfigureDisplay, callbackWRed->orgConfigureDisplay)(that, param1, param2, param3, param4);
+    DBGLOG("wred", "configureDisplay >> %d", ret);
+    return ret;
 }
