@@ -320,13 +320,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         static_assert(sizeof(find_hwchannel_submitCommandBuffer) == sizeof(repl_hwchannel_submitCommandBuffer),
             "Find/replace size mismatch");
 
-        const uint8_t find_hwchannel_waitForHwStamp[] = {0x49, 0x8B, 0x7D, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xA0,
-            0x02, 0x00, 0x00, 0x84, 0xC0, 0x74, 0x2E, 0x44, 0x39, 0xFB};
-        const uint8_t repl_hwchannel_waitForHwStamp[] = {0x49, 0x8B, 0x7D, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0x98,
-            0x02, 0x00, 0x00, 0x84, 0xC0, 0x74, 0x2E, 0x44, 0x39, 0xFB};
-        static_assert(sizeof(find_hwchannel_waitForHwStamp) == sizeof(repl_hwchannel_waitForHwStamp),
-            "Find/replace size mismatch");
-
         const uint8_t find_hwchannel_reset[] = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xB8, 0x03, 0x00,
             0x00, 0x49, 0x89, 0xC6, 0x48, 0x8B, 0x03};
         const uint8_t repl_hwchannel_reset[] = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC0, 0x03, 0x00,
@@ -369,11 +362,11 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         static_assert(sizeof(find_signalTransactionComplete) == sizeof(repl_signalTransactionComplete),
             "Find/replace size mismatch");
 
-        const uint8_t find_isBufferReadyForRender[] = {0x48, 0x8b, 0x07, 0xff, 0x90, 0xa0, 0x02, 0x00, 0x00, 0x84,
+        const uint8_t find_isDeviceValid[] = {0x48, 0x8b, 0x07, 0xff, 0x90, 0xa0, 0x02, 0x00, 0x00, 0x84,
             0xc0};
-        const uint8_t repl_isBufferReadyForRender[] = {0x48, 0x8b, 0x07, 0xff, 0x90, 0x98, 0x02, 0x00, 0x00, 0x84,
+        const uint8_t repl_isDeviceValid[] = {0x48, 0x8b, 0x07, 0xff, 0x90, 0x98, 0x02, 0x00, 0x00, 0x84,
             0xc0};
-        static_assert(sizeof(find_isBufferReadyForRender) == sizeof(repl_isBufferReadyForRender),
+        static_assert(sizeof(find_isDeviceValid) == sizeof(repl_isDeviceValid),
             "Find/replace size mismatch");
 
         /**
@@ -393,10 +386,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
                just NO-OP it. */
             {&kextRadeonX6000, find_hwchannel_submitCommandBuffer, repl_hwchannel_submitCommandBuffer,
                 arrsize(find_hwchannel_submitCommandBuffer), 1},
-
-            /** Mismatched VTable Call to isDeviceValid. */
-            {&kextRadeonX6000, find_hwchannel_waitForHwStamp, repl_hwchannel_waitForHwStamp,
-                arrsize(find_hwchannel_waitForHwStamp), 1},
 
             /** Mismatched VTable Call to getScheduler. */
             {&kextRadeonX6000, find_hwchannel_reset, repl_hwchannel_reset, arrsize(find_hwchannel_reset), 1},
@@ -419,9 +408,9 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {&kextRadeonX6000, find_signalTransactionComplete, repl_signalTransactionComplete,
                 arrsize(find_signalTransactionComplete), 1},
 
-            /** Mismatched VTable Call to isDeviceValid. */
-            {&kextRadeonX6000, find_isBufferReadyForRender, repl_isBufferReadyForRender,
-                arrsize(find_isBufferReadyForRender), 1},
+            /** Mismatched VTable Calls to isDeviceValid. */
+            {&kextRadeonX6000, find_isDeviceValid, repl_isDeviceValid,
+                arrsize(find_isDeviceValid), 14},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
