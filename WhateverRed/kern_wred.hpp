@@ -137,6 +137,27 @@ class WRed {
     static void *wrapNewDisplayPipe();
     mach_vm_address_t orgInitFramebufferResource {};
     static void *wrapInitFramebufferResource(void *that, uint32_t param1, void *param2);
+
+    /* HW Align Manager fixup */
+    void *hwAlignManager = nullptr;
+    mach_vm_address_t orgAllocateAMDHWAlignManager {};
+    static void *wrapAllocateAMDHWAlignManager();
+
+    void *hwAlignManagerVtableX5000 = nullptr;
+    void *hwAlignManagerVtableX6000 = nullptr;
+    t_getPreferredSwizzleMode2 orgGetPreferredSwizzleMode2 = nullptr;
+    static void adjustHWAlignManagerForX6000();
+    static void revertHWAlignManagerForX5000();
+
+    mach_vm_address_t orgAccelSharedSurfaceCopy {};
+    static uint64_t wrapAccelSharedSurfaceCopy(void *that, void *param1, uint64_t param2, void *param3);
+    mach_vm_address_t orgAllocateScanoutFB {};
+    static uint64_t wrapAllocateScanoutFB(void *that, uint32_t param1, void *param2, void *param3, void *param4);
+    mach_vm_address_t orgFillUBMSurface {};
+    static uint64_t wrapFillUBMSurface(void *that, uint32_t param1, void *param2, void *param3);
     mach_vm_address_t orgConfigureDisplay {};
     static bool wrapConfigureDisplay(void *that, uint32_t param1, uint32_t param2, void *param3, void *param4);
+    mach_vm_address_t orgGetDisplayInfo {};
+    static uint64_t wrapGetDisplayInfo(void *that, uint32_t param1, bool param2, bool param3, void *param4,
+        void *param5);
 };
