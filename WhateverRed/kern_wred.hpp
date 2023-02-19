@@ -44,6 +44,9 @@ class WRed {
     void *callbackFirmwareDirectory = nullptr;
     uint64_t fbOffset {};
     uint16_t enumeratedRevision {};
+    void *hwAlignManager = nullptr;
+    void *hwAlignManagerVtableX5000 = nullptr;
+    void *hwAlignManagerVtableX6000 = nullptr;
 
     OSMetaClass *metaClassMap[4][2] = {{nullptr}};
 
@@ -84,6 +87,12 @@ class WRed {
     mach_vm_address_t orgNewDisplayMachineX6000 {};
     mach_vm_address_t orgNewDisplayPipeX6000 {};
     mach_vm_address_t orgInitDCNRegistersOffsets {};
+    mach_vm_address_t orgGetPreferredSwizzleMode2 {};
+    mach_vm_address_t orgAccelSharedSurfaceCopy {};
+    mach_vm_address_t orgAllocateScanoutFB {};
+    mach_vm_address_t orgFillUBMSurface {};
+    mach_vm_address_t orgConfigureDisplay {};
+    mach_vm_address_t orgGetDisplayInfo {};
 
     /** X5000 */
     t_HWEngineNew orgGFX9PM4EngineNew = nullptr;
@@ -95,6 +104,7 @@ class WRed {
     mach_vm_address_t orgAdjustVRAMAddress {};
     mach_vm_address_t orgAccelSharedUserClientStart {};
     mach_vm_address_t orgAccelSharedUserClientStop {};
+    mach_vm_address_t orgAllocateAMDHWAlignManager {};
 
     /** X6000Framebuffer */
     static IOReturn wrapPopulateDeviceInfo(void *that);
@@ -123,6 +133,12 @@ class WRed {
     static bool wrapAccelSharedUserClientStartX6000(void *that, void *provider);
     static bool wrapAccelSharedUserClientStopX6000(void *that, void *provider);
     static void wrapInitDCNRegistersOffsets(void *that);
+    static uint64_t wrapAccelSharedSurfaceCopy(void *that, void *param1, uint64_t param2, void *param3);
+    static uint64_t wrapAllocateScanoutFB(void *that, uint32_t param1, void *param2, void *param3, void *param4);
+    static uint64_t wrapFillUBMSurface(void *that, uint32_t param1, void *param2, void *param3);
+    static bool wrapConfigureDisplay(void *that, uint32_t param1, uint32_t param2, void *param3, void *param4);
+    static uint64_t wrapGetDisplayInfo(void *that, uint32_t param1, bool param2, bool param3, void *param4,
+        void *param5);
 
     /** X5000 */
     static bool wrapAllocateHWEngines(void *that);
@@ -135,29 +151,8 @@ class WRed {
     static void *wrapNewSharedUserClient();
     static void *wrapNewDisplayMachine();
     static void *wrapNewDisplayPipe();
-
-    /* HW Align Manager fixup */
-    void *hwAlignManager = nullptr;
-    mach_vm_address_t orgAllocateAMDHWAlignManager {};
     static void *wrapAllocateAMDHWAlignManager();
 
-    void *hwAlignManagerVtableX5000 = nullptr;
-    void *hwAlignManagerVtableX6000 = nullptr;
-    mach_vm_address_t orgGetPreferredSwizzleMode2 {};
-    static void adjustHWAlignManagerForX6000();
-    static void revertHWAlignManagerForX5000();
-
-    mach_vm_address_t orgAccelSharedSurfaceCopy {};
-    static uint64_t wrapAccelSharedSurfaceCopy(void *that, void *param1, uint64_t param2, void *param3);
-    mach_vm_address_t orgAllocateScanoutFB {};
-    static uint64_t wrapAllocateScanoutFB(void *that, uint32_t param1, void *param2, void *param3, void *param4);
-    mach_vm_address_t orgFillUBMSurface {};
-    static uint64_t wrapFillUBMSurface(void *that, uint32_t param1, void *param2, void *param3);
-    mach_vm_address_t orgConfigureDisplay {};
-    static bool wrapConfigureDisplay(void *that, uint32_t param1, uint32_t param2, void *param3, void *param4);
-    mach_vm_address_t orgGetDisplayInfo {};
-    static uint64_t wrapGetDisplayInfo(void *that, uint32_t param1, bool param2, bool param3, void *param4,
-        void *param5);
     mach_vm_address_t orgWriteUpdateFrameBufferOffsetCommands {};
     static uint32_t wrapWriteUpdateFrameBufferOffsetCommands(void *that, uint32_t param1, void *param2, uint32_t param3,
         uint32_t param4, void *param5, void *param6, void *param7);

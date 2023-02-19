@@ -770,52 +770,45 @@ void *WRed::wrapAllocateAMDHWAlignManager() {
     return ret;
 }
 
-void WRed::adjustHWAlignManagerForX6000() {
-    getMember<void *>(callbackWRed->hwAlignManager, 0) = callbackWRed->hwAlignManagerVtableX6000;
-}
-
-void WRed::revertHWAlignManagerForX5000() {
-    getMember<void *>(callbackWRed->hwAlignManager, 0) = callbackWRed->hwAlignManagerVtableX5000;
-}
+#define HWALIGNMGR_ADJUST getMember<void *>(callbackWRed->hwAlignManager, 0) = callbackWRed->hwAlignManagerVtableX6000;
+#define HWALIGNMGR_REVERT getMember<void *>(callbackWRed->hwAlignManager, 0) = callbackWRed->hwAlignManagerVtableX5000;
 
 uint64_t WRed::wrapAccelSharedSurfaceCopy(void *that, void *param1, uint64_t param2, void *param3) {
-    adjustHWAlignManagerForX6000();
+    HWALIGNMGR_ADJUST
     auto ret =
         FunctionCast(wrapAccelSharedSurfaceCopy, callbackWRed->orgAccelSharedSurfaceCopy)(that, param1, param2, param3);
-    revertHWAlignManagerForX5000();
+    HWALIGNMGR_REVERT
     return ret;
 }
 
 uint64_t WRed::wrapAllocateScanoutFB(void *that, uint32_t param1, void *param2, void *param3, void *param4) {
-    adjustHWAlignManagerForX6000();
+    HWALIGNMGR_ADJUST
     auto ret =
         FunctionCast(wrapAllocateScanoutFB, callbackWRed->orgAllocateScanoutFB)(that, param1, param2, param3, param4);
-    revertHWAlignManagerForX5000();
+    HWALIGNMGR_REVERT
     return ret;
 }
 
 uint64_t WRed::wrapFillUBMSurface(void *that, uint32_t param1, void *param2, void *param3) {
-    adjustHWAlignManagerForX6000();
+    HWALIGNMGR_ADJUST
     auto ret = FunctionCast(wrapFillUBMSurface, callbackWRed->orgFillUBMSurface)(that, param1, param2, param3);
-    revertHWAlignManagerForX5000();
+    HWALIGNMGR_REVERT
     return ret;
 }
 
 bool WRed::wrapConfigureDisplay(void *that, uint32_t param1, uint32_t param2, void *param3, void *param4) {
-    adjustHWAlignManagerForX6000();
+    HWALIGNMGR_ADJUST
     auto ret =
         FunctionCast(wrapConfigureDisplay, callbackWRed->orgConfigureDisplay)(that, param1, param2, param3, param4);
-    revertHWAlignManagerForX5000();
-    DBGLOG("wred", "fbOffset = %lX, field1_0x8 = %X, field17_0x1e = %X", getMember<uint64_t>(param3, 0),
-        getMember<uint32_t>(param3, 8), getMember<uint8_t>(param3, 0x1e));
+    HWALIGNMGR_REVERT
     return ret;
 }
 
 uint64_t WRed::wrapGetDisplayInfo(void *that, uint32_t param1, bool param2, bool param3, void *param4, void *param5) {
-    adjustHWAlignManagerForX6000();
+    HWALIGNMGR_ADJUST
     auto ret =
         FunctionCast(wrapGetDisplayInfo, callbackWRed->orgGetDisplayInfo)(that, param1, param2, param3, param4, param5);
-    revertHWAlignManagerForX5000();
+    HWALIGNMGR_REVERT
     return ret;
 }
 
