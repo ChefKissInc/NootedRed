@@ -283,6 +283,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
                 wrapConfigureDisplay, orgConfigureDisplay},
             {"__ZN27AMDRadeonX6000_AMDHWDisplay14getDisplayInfoEjbbPvP17_FRAMEBUFFER_INFO", wrapGetDisplayInfo,
                 orgGetDisplayInfo},
+            {"__ZN34AMDRadeonX6000_AMDAccelDisplayPipe18reserveFrameBufferEyjP16IOAccelResource2",
+                wrapReserveFrameBuffer, orgReserveFrameBuffer},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX6000 symbols");
@@ -838,5 +840,12 @@ uint64_t WRed::wrapGetDisplayInfo(void *that, uint32_t param1, bool param2, bool
     auto ret =
         FunctionCast(wrapGetDisplayInfo, callbackWRed->orgGetDisplayInfo)(that, param1, param2, param3, param4, param5);
     revertHWAlignManagerForX5000();
+    return ret;
+}
+uint64_t WRed::wrapReserveFrameBuffer(void *that, uint64_t param1, uint32_t param2, void *param3) {
+    DBGLOG("wred", "reserveFrameBuffer << (that: %p param1: 0x%llX param2: 0x%X param3: %p)", that, param1, param2,
+        param3);
+    auto ret = FunctionCast(wrapReserveFrameBuffer, callbackWRed->orgReserveFrameBuffer)(that, param1, param2, param3);
+    DBGLOG("wred", "reserveFrameBuffer >> 0x%llX", ret);
     return ret;
 }
