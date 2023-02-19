@@ -158,4 +158,7 @@ class WRed {
     mach_vm_address_t orgGetDisplayInfo {};
     static uint64_t wrapGetDisplayInfo(void *that, uint32_t param1, bool param2, bool param3, void *param4,
         void *param5);
+    mach_vm_address_t orgWriteUpdateFrameBufferOffsetCommands {};
+    static uint32_t wrapWriteUpdateFrameBufferOffsetCommands(void *that, uint32_t param1, void *param2, uint32_t param3,
+        uint32_t param4, void *param5, void *param6, void *param7);
 };

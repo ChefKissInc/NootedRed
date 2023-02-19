@@ -280,6 +280,9 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
                 wrapConfigureDisplay, orgConfigureDisplay},
             {"__ZN27AMDRadeonX6000_AMDHWDisplay14getDisplayInfoEjbbPvP17_FRAMEBUFFER_INFO", wrapGetDisplayInfo,
                 orgGetDisplayInfo},
+            {"__ZN27AMDRadeonX6000_AMDHWDisplay36writeUpdateFrameBufferOffsetCommandsEjPjj17_"
+             "eAMDSwapIntervalP16IOAccelResource2S3_S3_",
+                wrapWriteUpdateFrameBufferOffsetCommands, orgWriteUpdateFrameBufferOffsetCommands},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX6000 symbols");
@@ -813,5 +816,18 @@ uint64_t WRed::wrapGetDisplayInfo(void *that, uint32_t param1, bool param2, bool
     auto ret =
         FunctionCast(wrapGetDisplayInfo, callbackWRed->orgGetDisplayInfo)(that, param1, param2, param3, param4, param5);
     revertHWAlignManagerForX5000();
+    return ret;
+}
+
+uint32_t WRed::wrapWriteUpdateFrameBufferOffsetCommands(void *that, uint32_t param1, void *param2, uint32_t param3,
+    uint32_t param4, void *param5, void *param6, void *param7) {
+    DBGLOG("wred",
+        "writeUpdateFrameBufferOffsetCommands << (that: %p param1: 0x%X param2: %p param3: 0x%X param4: 0x%X param5: "
+        "%p param6: %p param7: %p)",
+        that, param1, param2, param3, param4, param5, param6, param7);
+    auto ret =
+        FunctionCast(wrapWriteUpdateFrameBufferOffsetCommands, callbackWRed->orgWriteUpdateFrameBufferOffsetCommands)(
+            that, param1, param2, param3, param4, param5, param6, param7);
+    DBGLOG("wred", "writeUpdateFrameBufferOffsetCommands >> 0x%X", ret);
     return ret;
 }
