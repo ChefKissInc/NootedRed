@@ -135,8 +135,4 @@ class WRed {
     static void *wrapNewSharedUserClient();
     static void *wrapNewDisplayMachine();
     static void *wrapNewDisplayPipe();
-    mach_vm_address_t orgInitFramebufferResource {};
-    static void *wrapInitFramebufferResource(void *that, uint32_t param1, void *param2);
-    mach_vm_address_t orgConfigureDisplay {};
-    static bool wrapConfigureDisplay(void *that, uint32_t param1, uint32_t param2, void *param3, void *param4);
 };
