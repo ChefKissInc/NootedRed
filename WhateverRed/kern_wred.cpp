@@ -144,10 +144,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
             {"__ZN32AMDRadeonX6000_AmdRegisterAccess11hwReadReg32Ej", wrapHwReadReg32, orgHwReadReg32},
             {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo, orgInitWithPciInfo},
-            {"_dm_logger_write", wrapDmLoggerWrite},
-            {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer16getApertureRangeEi", wrapGetApertureRange,
-                orgGetApertureRange},
-            {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer12getVRAMRangeEv", wrapGetVRAMRange, orgGetVRAMRange},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX6000Framebuffer symbols");
@@ -274,8 +270,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN39AMDRadeonX6000_AMDAccelSharedUserClient4stopEP9IOService", wrapAccelSharedUserClientStopX6000},
             {"__ZN30AMDRadeonX6000_AMDGFX10Display23initDCNRegistersOffsetsEv", wrapInitDCNRegistersOffsets,
                 orgInitDCNRegistersOffsets},
-            {"__ZN34AMDRadeonX6000_AMDAccelDisplayPipe23initFramebufferResourceEjP16IOAccelResource2",
-                wrapInitFramebufferResource, orgInitFramebufferResource},
             {"__ZN29AMDRadeonX6000_AMDAccelShared11SurfaceCopyEPjyP12IOAccelEvent", wrapAccelSharedSurfaceCopy,
                 orgAccelSharedSurfaceCopy},
             {"__ZN27AMDRadeonX6000_AMDHWDisplay17allocateScanoutFBEjP16IOAccelResource2S1_Py", wrapAllocateScanoutFB,
@@ -286,8 +280,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
                 wrapConfigureDisplay, orgConfigureDisplay},
             {"__ZN27AMDRadeonX6000_AMDHWDisplay14getDisplayInfoEjbbPvP17_FRAMEBUFFER_INFO", wrapGetDisplayInfo,
                 orgGetDisplayInfo},
-            {"__ZN34AMDRadeonX6000_AMDAccelDisplayPipe18reserveFrameBufferEyjP16IOAccelResource2",
-                wrapReserveFrameBuffer, orgReserveFrameBuffer},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX6000 symbols");
@@ -672,22 +664,6 @@ uint64_t WRed::wrapAdjustVRAMAddress(void *that, uint64_t addr) {
     return ret != addr ? (ret + callbackWRed->fbOffset) : ret;
 }
 
-constexpr static const char *LogTypes[] = {"Error", "Warning", "Debug", "DC_Interface", "DTN", "Surface", "HW_Hotplug",
-    "HW_LKTN", "HW_Mode", "HW_Resume", "HW_Audio", "HW_HPDIRQ", "MST", "Scaler", "BIOS", "BWCalcs", "BWValidation",
-    "I2C_AUX", "Sync", "Backlight", "Override", "Edid", "DP_Caps", "Resource", "DML", "Mode", "Detect", "LKTN",
-    "LinkLoss", "Underflow", "InterfaceTrace", "PerfTrace", "DisplayStats"};
-
-void WRed::wrapDmLoggerWrite([[maybe_unused]] void *dalLogger, uint32_t logType, char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    auto *ns = new char[0x10000];
-    vsnprintf(ns, 0x10000, fmt, args);
-    va_end(args);
-    const char *logTypeStr = arrsize(LogTypes) > logType ? LogTypes[logType] : "Info";
-    kprintf("[%s] %s", logTypeStr, ns);
-    delete[] ns;
-}
-
 void *WRed::wrapNewShared() { return FunctionCast(wrapNewShared, callbackWRed->orgNewSharedX6000)(); }
 
 void *WRed::wrapNewSharedUserClient() {
@@ -777,14 +753,6 @@ void WRed::wrapInitDCNRegistersOffsets(void *that) {
     }
 }
 
-void *WRed::wrapInitFramebufferResource(void *that, uint32_t param1, void *param2) {
-    DBGLOG("wred", "initFramebufferResource << (that: %p param1: 0x%X param2: %p)", that, param1, param2);
-    auto ret =
-        FunctionCast(wrapInitFramebufferResource, callbackWRed->orgInitFramebufferResource)(that, param1, param2);
-    DBGLOG("wred", "initFramebufferResource >> %p", ret);
-    return ret;
-}
-
 void *WRed::wrapAllocateAMDHWAlignManager() {
     auto ret = FunctionCast(wrapAllocateAMDHWAlignManager, callbackWRed->orgAllocateAMDHWAlignManager)();
     callbackWRed->hwAlignManager = ret;
@@ -845,26 +813,5 @@ uint64_t WRed::wrapGetDisplayInfo(void *that, uint32_t param1, bool param2, bool
     auto ret =
         FunctionCast(wrapGetDisplayInfo, callbackWRed->orgGetDisplayInfo)(that, param1, param2, param3, param4, param5);
     revertHWAlignManagerForX5000();
-    return ret;
-}
-uint64_t WRed::wrapReserveFrameBuffer(void *that, uint64_t param1, uint32_t param2, void *param3) {
-    DBGLOG("wred", "reserveFrameBuffer << (that: %p param1: 0x%llX param2: 0x%X param3: %p)", that, param1, param2,
-        param3);
-    auto ret = FunctionCast(wrapReserveFrameBuffer, callbackWRed->orgReserveFrameBuffer)(that, param1, param2, param3);
-    DBGLOG("wred", "reserveFrameBuffer >> 0x%llX", ret);
-    return ret;
-}
-
-void *WRed::wrapGetApertureRange(void *that, uint32_t param1) {
-    DBGLOG("wred", "getApertureRange << (that: %p param1: 0x%X)", that, param1);
-    auto ret = FunctionCast(wrapGetApertureRange, callbackWRed->orgGetApertureRange)(that, param1);
-    DBGLOG("wred", "getApertureRange >> %p", ret);
-    return ret;
-}
-
-void *WRed::wrapGetVRAMRange(void *that) {
-    DBGLOG("wred", "getVRAMRange << (that: %p)", that);
-    auto ret = FunctionCast(wrapGetVRAMRange, callbackWRed->orgGetVRAMRange)(that);
-    DBGLOG("wred", "getVRAMRange >> %p", ret);
     return ret;
 }
