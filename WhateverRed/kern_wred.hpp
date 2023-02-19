@@ -163,4 +163,8 @@ class WRed {
         void *param5);
     mach_vm_address_t orgReserveFrameBuffer {};
     static uint64_t wrapReserveFrameBuffer(void *that, uint64_t param1, uint32_t param2, void *param3);
+    mach_vm_address_t orgGetApertureRange {};
+    static void *wrapGetApertureRange(void *that, uint32_t param1);
+    mach_vm_address_t orgGetVRAMRange {};
+    static void *wrapGetVRAMRange(void *that);
 };
