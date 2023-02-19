@@ -223,10 +223,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator19newSharedUserClientEv", wrapNewSharedUserClient},
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator17newDisplayMachineEv", wrapNewDisplayMachine},
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator14newDisplayPipeEv", wrapNewDisplayPipe},
-            {"__ZN30AMDRadeonX5000_AMDGFX9Hardware25allocateAMDHWAlignManagerEv", wrapAllocateAMDHWAlignManager,
-                orgAllocateAMDHWAlignManager},
-            {"__ZN32AMDRadeonX5000_AMDVega10HardwareC1Ev", wrapAMDRadeonX5000AMDVega10HardwareConst,
-                orgAMDRadeonX5000AMDVega10HardwareConst},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000 symbols");
@@ -261,7 +257,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN37AMDRadeonX6000_AMDAccelDisplayMachine10gMetaClassE", metaClassMap[1][1]},
             {"__ZN34AMDRadeonX6000_AMDAccelDisplayPipe10gMetaClassE", metaClassMap[2][1]},
             {"__ZN30AMDRadeonX6000_AMDAccelChannel10gMetaClassE", metaClassMap[3][0]},
-            {"__ZN31AMDRadeonX6000_AMDGFX10Hardware25allocateAMDHWAlignManagerEv", orgAllocateAMDHWAlignManagerX6000},
         };
         PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "wred",
             "Failed to resolve AMDRadeonX6000 symbols");
@@ -274,16 +269,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
                 orgInitDCNRegistersOffsets},
             {"__ZN34AMDRadeonX6000_AMDAccelDisplayPipe23initFramebufferResourceEjP16IOAccelResource2",
                 wrapInitFramebufferResource, orgInitFramebufferResource},
-            {"__ZN29AMDRadeonX6000_AMDAccelShared11SurfaceCopyEPjyP12IOAccelEvent", wrapAccelSharedSurfaceCopy,
-                orgAccelSharedSurfaceCopy},
-            {"__ZN27AMDRadeonX6000_AMDHWDisplay17allocateScanoutFBEjP16IOAccelResource2S1_Py", wrapAllocateScanoutFB,
-                orgAllocateScanoutFB},
-            {"__ZN27AMDRadeonX6000_AMDHWDisplay14fillUBMSurfaceEjP17_FRAMEBUFFER_INFOP13_UBM_SURFINFO",
-                wrapFillUBMSurface, orgFillUBMSurface},
             {"__ZN27AMDRadeonX6000_AMDHWDisplay16configureDisplayEjjP17_FRAMEBUFFER_INFOP16IOAccelResource2",
                 wrapConfigureDisplay, orgConfigureDisplay},
-            {"__ZN27AMDRadeonX6000_AMDHWDisplay14getDisplayInfoEjbbPvP17_FRAMEBUFFER_INFO", wrapGetDisplayInfo,
-                orgGetDisplayInfo},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX6000 symbols");
@@ -829,79 +816,11 @@ void *WRed::wrapInitFramebufferResource(void *that, uint32_t param1, void *param
     return ret;
 }
 
-void *WRed::wrapAllocateAMDHWAlignManager() {
-    DBGLOG("wred", "allocateAMDHWAlignManager <<");
-    auto ret = FunctionCast(wrapAllocateAMDHWAlignManager, callbackWRed->orgAllocateAMDHWAlignManager)();
-    DBGLOG("wred", "allocateAMDHWAlignManager >> %p", ret);
-    callbackWRed->hwAlignManagerX5000 = ret;
-
-    if (callbackWRed->hwAlignManagerX6000 == nullptr) {
-        DBGLOG("wred", "allocateAMDHWAlignManager !! Allocating X6000 HW Align Manager !!");
-        callbackWRed->hwAlignManagerX6000 =
-            FunctionCast(wrapAllocateAMDHWAlignManager, callbackWRed->orgAllocateAMDHWAlignManagerX6000)();
-        DBGLOG("wred", "allocateAMDHWAlignManagerX6000 >> %p", callbackWRed->hwAlignManagerX6000);
-    }
-
-    return ret;
-}
-
-void WRed::wrapAMDRadeonX5000AMDVega10HardwareConst(void *that) {
-    FunctionCast(wrapAMDRadeonX5000AMDVega10HardwareConst, callbackWRed->orgAMDRadeonX5000AMDVega10HardwareConst)(that);
-    getMember<mach_vm_address_t *>(that, 0)[96] = reinterpret_cast<mach_vm_address_t>(wrapGetHWAlignManager);
-}
-
-void *WRed::wrapGetHWAlignManager(void *that) {
-    void *ret;
-    if (callbackWRed->useX6000HWAlignManager) {
-        ret = callbackWRed->hwAlignManagerX6000;
-    } else {
-        ret = callbackWRed->hwAlignManagerX5000;
-    }
-
-    if (ret == nullptr) {
-        DBGLOG("wred", "wrapGetHWAlignManager: ret is nullptr!");
-        IOSleep(10000);
-        panic("wrapGetHWAlignManager: ret is nullptr!");
-    }
-
-    return ret;
-}
-
-uint64_t WRed::wrapAccelSharedSurfaceCopy(void *that, void *param1, uint64_t param2, void *param3) {
-    callbackWRed->useX6000HWAlignManager = true;
-    auto ret =
-        FunctionCast(wrapAccelSharedSurfaceCopy, callbackWRed->orgAccelSharedSurfaceCopy)(that, param1, param2, param3);
-    callbackWRed->useX6000HWAlignManager = false;
-    return ret;
-}
-
-uint64_t WRed::wrapAllocateScanoutFB(void *that, uint32_t param1, void *param2, void *param3, void *param4) {
-    callbackWRed->useX6000HWAlignManager = true;
-    auto ret =
-        FunctionCast(wrapAllocateScanoutFB, callbackWRed->orgAllocateScanoutFB)(that, param1, param2, param3, param4);
-    callbackWRed->useX6000HWAlignManager = false;
-    return ret;
-}
-
-uint64_t WRed::wrapFillUBMSurface(void *that, uint32_t param1, void *param2, void *param3) {
-    callbackWRed->useX6000HWAlignManager = true;
-    auto ret = FunctionCast(wrapFillUBMSurface, callbackWRed->orgFillUBMSurface)(that, param1, param2, param3);
-    callbackWRed->useX6000HWAlignManager = false;
-    return ret;
-}
-
 bool WRed::wrapConfigureDisplay(void *that, uint32_t param1, uint32_t param2, void *param3, void *param4) {
-    callbackWRed->useX6000HWAlignManager = true;
+    DBGLOG("wred", "configureDisplay << (that: %p param1: 0x%X param2: 0x%X param3: %p param4: %p)", that, param1,
+        param2, param3, param4);
     auto ret =
         FunctionCast(wrapConfigureDisplay, callbackWRed->orgConfigureDisplay)(that, param1, param2, param3, param4);
-    callbackWRed->useX6000HWAlignManager = false;
-    return ret;
-}
-
-uint64_t WRed::wrapGetDisplayInfo(void *that, uint32_t param1, bool param2, bool param3, void *param4, void *param5) {
-    callbackWRed->useX6000HWAlignManager = true;
-    auto ret =
-        FunctionCast(wrapGetDisplayInfo, callbackWRed->orgGetDisplayInfo)(that, param1, param2, param3, param4, param5);
-    callbackWRed->useX6000HWAlignManager = false;
+    DBGLOG("wred", "configureDisplay >> %d", ret);
     return ret;
 }

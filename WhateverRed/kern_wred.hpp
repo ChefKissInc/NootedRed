@@ -137,26 +137,6 @@ class WRed {
     static void *wrapNewDisplayPipe();
     mach_vm_address_t orgInitFramebufferResource {};
     static void *wrapInitFramebufferResource(void *that, uint32_t param1, void *param2);
-
-    /** HW Align Manager fixup */
-    void *hwAlignManagerX5000 = nullptr;
-    void *hwAlignManagerX6000 = nullptr;
-    bool useX6000HWAlignManager = false;
-    mach_vm_address_t orgAllocateAMDHWAlignManager {};
-    mach_vm_address_t orgAllocateAMDHWAlignManagerX6000 {};
-    static void *wrapAllocateAMDHWAlignManager();
-    mach_vm_address_t orgAMDRadeonX5000AMDVega10HardwareConst {};
-    static void wrapAMDRadeonX5000AMDVega10HardwareConst(void *that);
-    static void *wrapGetHWAlignManager(void *that);
-    mach_vm_address_t orgAccelSharedSurfaceCopy {};
-    static uint64_t wrapAccelSharedSurfaceCopy(void *that, void *param1, uint64_t param2, void *param3);
-    mach_vm_address_t orgAllocateScanoutFB {};
-    static uint64_t wrapAllocateScanoutFB(void *that, uint32_t param1, void *param2, void *param3, void *param4);
-    mach_vm_address_t orgFillUBMSurface {};
-    static uint64_t wrapFillUBMSurface(void *that, uint32_t param1, void *param2, void *param3);
     mach_vm_address_t orgConfigureDisplay {};
     static bool wrapConfigureDisplay(void *that, uint32_t param1, uint32_t param2, void *param3, void *param4);
-    mach_vm_address_t orgGetDisplayInfo {};
-    static uint64_t wrapGetDisplayInfo(void *that, uint32_t param1, bool param2, bool param3, void *param4,
-        void *param5);
 };
