@@ -145,7 +145,7 @@ class WRed {
 
     void *hwAlignManagerVtableX5000 = nullptr;
     void *hwAlignManagerVtableX6000 = nullptr;
-    t_getPreferredSwizzleMode2 orgGetPreferredSwizzleMode2 = nullptr;
+    mach_vm_address_t orgGetPreferredSwizzleMode2 {};
     static void adjustHWAlignManagerForX6000();
     static void revertHWAlignManagerForX5000();
 

@@ -10,7 +10,6 @@ using t_Vega10PowerTuneConstructor = void (*)(void *that, void *param1, void *pa
 using t_HWEngineConstructor = void (*)(void *that);
 using t_HWEngineNew = void *(*)(size_t size);
 using t_sendMsgToSmc = uint32_t (*)(void *smumData, uint32_t msgId);
-using t_getPreferredSwizzleMode2 = uint64_t (*)(void *that, void *param1);
 
 constexpr uint32_t AMDGPU_FAMILY_RV = 0x8E;
 

@@ -115,7 +115,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             0xE9, 0x51, 0xFE, 0xFF, 0xFF};
         const uint8_t repl_asic_reset[] = {0x55, 0x48, 0x89, 0xE5, 0x8B, 0x56, 0x04, 0xBE, 0x1E, 0x00, 0x00, 0x00, 0x5D,
             0xE9, 0x51, 0xFE, 0xFF, 0xFF};
-        static_assert(arrsize(find_asic_reset) == arrsize(repl_asic_reset), "Find/replace patch size mismatch");
+        static_assert(arrsize(find_asic_reset) == arrsize(repl_asic_reset));
 
         KernelPatcher::LookupPatch patches[] = {
             /**
@@ -231,7 +231,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
 
         const uint8_t find_startHWEngines[] = {0x49, 0x89, 0xFE, 0x31, 0xDB, 0x48, 0x83, 0xFB, 0x02, 0x74, 0x50};
         const uint8_t repl_startHWEngines[] = {0x49, 0x89, 0xFE, 0x31, 0xDB, 0x48, 0x83, 0xFB, 0x01, 0x74, 0x50};
-        static_assert(sizeof(find_startHWEngines) == sizeof(repl_startHWEngines), "Find/replace size mismatch");
+        static_assert(arrsize(find_startHWEngines) == arrsize(repl_startHWEngines));
 
         KernelPatcher::LookupPatch patches[] = {
             /**
@@ -287,29 +287,27 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX6000 symbols");
 
-        const uint8_t find_getGpuDebugPolicy[] = {0x48, 0x8b, 0x07, 0xff, 0x90, 0xc0, 0x03, 0x00, 0x00};
-        const uint8_t repl_getGpuDebugPolicy[] = {0x48, 0x8b, 0x07, 0xff, 0x90, 0xc8, 0x03, 0x00, 0x00};
-        static_assert(sizeof(find_getGpuDebugPolicy) == sizeof(repl_getGpuDebugPolicy), "Find/replace size mismatch");
+        const uint8_t find_getGpuDebugPolicy[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC0, 0x03, 0x00, 0x00};
+        const uint8_t repl_getGpuDebugPolicy[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC8, 0x03, 0x00, 0x00};
+        static_assert(arrsize(find_getGpuDebugPolicy) == arrsize(repl_getGpuDebugPolicy));
 
-        const uint8_t find_hwchannel_submitCommandBuffer[] = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90,
+        const uint8_t find_HWChannel_submitCommandBuffer[] = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90,
             0x30, 0x02, 0x00, 0x00, 0x48, 0x8B, 0x43, 0x50};
-        const uint8_t repl_hwchannel_submitCommandBuffer[] = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0x90, 0x90,
+        const uint8_t repl_HWChannel_submitCommandBuffer[] = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0x90, 0x90,
             0x90, 0x90, 0x90, 0x90, 0x48, 0x8B, 0x43, 0x50};
-        static_assert(sizeof(find_hwchannel_submitCommandBuffer) == sizeof(repl_hwchannel_submitCommandBuffer),
-            "Find/replace size mismatch");
+        static_assert(arrsize(find_HWChannel_submitCommandBuffer) == arrsize(repl_HWChannel_submitCommandBuffer));
 
-        const uint8_t find_enableTimestampInterrupt[] = {0x48, 0x8b, 0x07, 0xff, 0x90, 0xa0, 0x02, 0x00, 0x00};
-        const uint8_t repl_enableTimestampInterrupt[] = {0x48, 0x8b, 0x07, 0xff, 0x90, 0x98, 0x02, 0x00, 0x00};
-        static_assert(sizeof(find_enableTimestampInterrupt) == sizeof(repl_enableTimestampInterrupt),
-            "Find/replace size mismatch");
+        const uint8_t find_enableTimestampInterrupt[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0xA0, 0x02, 0x00, 0x00};
+        const uint8_t repl_enableTimestampInterrupt[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0x98, 0x02, 0x00, 0x00};
+        static_assert(arrsize(find_enableTimestampInterrupt) == arrsize(repl_enableTimestampInterrupt));
 
-        const uint8_t find_getScheduler[] = {0x48, 0x8b, 0x07, 0xff, 0x90, 0xb8, 0x03, 0x00, 0x00};
-        const uint8_t repl_getScheduler[] = {0x48, 0x8b, 0x07, 0xff, 0x90, 0xc0, 0x03, 0x00, 0x00};
-        static_assert(sizeof(find_getScheduler) == sizeof(repl_getScheduler), "Find/replace size mismatch");
+        const uint8_t find_getScheduler[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0xB8, 0x03, 0x00, 0x00};
+        const uint8_t repl_getScheduler[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC0, 0x03, 0x00, 0x00};
+        static_assert(arrsize(find_getScheduler) == arrsize(repl_getScheduler));
 
-        const uint8_t find_isDeviceValid[] = {0x48, 0x8b, 0x07, 0xff, 0x90, 0xa0, 0x02, 0x00, 0x00, 0x84, 0xc0};
-        const uint8_t repl_isDeviceValid[] = {0x48, 0x8b, 0x07, 0xff, 0x90, 0x98, 0x02, 0x00, 0x00, 0x84, 0xc0};
-        static_assert(sizeof(find_isDeviceValid) == sizeof(repl_isDeviceValid), "Find/replace size mismatch");
+        const uint8_t find_isDeviceValid[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0xA0, 0x02, 0x00, 0x00, 0x84, 0xC0};
+        const uint8_t repl_isDeviceValid[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0x98, 0x02, 0x00, 0x00, 0x84, 0xC0};
+        static_assert(arrsize(find_isDeviceValid) == arrsize(repl_isDeviceValid));
 
         /**
          * HWEngine/HWChannel call HWInterface virtual methods.
@@ -323,8 +321,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
 
             /** VTable Call to signalGPUWorkSubmitted. Doesn't exist on X5000, but looks like it isn't necessary, so we
                just NO-OP it. */
-            {&kextRadeonX6000, find_hwchannel_submitCommandBuffer, repl_hwchannel_submitCommandBuffer,
-                arrsize(find_hwchannel_submitCommandBuffer), 1},
+            {&kextRadeonX6000, find_HWChannel_submitCommandBuffer, repl_HWChannel_submitCommandBuffer,
+                arrsize(find_HWChannel_submitCommandBuffer), 1},
 
             /** Mismatched VTable Call to isDeviceValid. */
             {&kextRadeonX6000, find_enableTimestampInterrupt, repl_enableTimestampInterrupt,
@@ -593,8 +591,8 @@ void *WRed::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uin
 
 uint32_t WRed::wrapHwReadReg32(void *that, uint32_t reg) {
     if (!callbackWRed->fbOffset) {
-        auto ret = FunctionCast(wrapHwReadReg32, callbackWRed->orgHwReadReg32)(that, 0x296B);
-        callbackWRed->fbOffset = static_cast<uint64_t>(ret) << 24;
+        callbackWRed->fbOffset =
+            static_cast<uint64_t>(FunctionCast(wrapHwReadReg32, callbackWRed->orgHwReadReg32)(that, 0x296B)) << 24;
     }
     return FunctionCast(wrapHwReadReg32, callbackWRed->orgHwReadReg32)(that, reg == 0xD31 ? 0xD2F : reg);
 }
@@ -618,10 +616,9 @@ void *WRed::wrapAllocateAMDHWDisplay(void *that) {
 }
 
 uint32_t WRed::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4) {
-    uint32_t fwType = getMember<uint>(ctx, 16);
     // Skip loading of CP MEC JT2 FW on Renoir devices due to it being unsupported
     // See also: https://github.com/torvalds/linux/commit/f8f70c1371d304f42d4a1242d8abcbda807d0bed
-    if (fwType == 6 && callbackWRed->asicType == ASICType::Renoir) {
+    if (callbackWRed->asicType == ASICType::Renoir && getMember<uint>(ctx, 16) == 6) {
         DBGLOG("wred", "Skipping loading of fwType 6");
         return 0;
     }
@@ -766,15 +763,14 @@ void *WRed::wrapInitFramebufferResource(void *that, uint32_t param1, void *param
 void *WRed::wrapAllocateAMDHWAlignManager() {
     auto ret = FunctionCast(wrapAllocateAMDHWAlignManager, callbackWRed->orgAllocateAMDHWAlignManager)();
     callbackWRed->hwAlignManager = ret;
-    uint64_t vtable = getMember<uint64_t>(ret, 0);
-    callbackWRed->hwAlignManagerVtableX5000 = reinterpret_cast<void *>(vtable);
+    auto *vtable = getMember<uint8_t *>(ret, 0);
+    callbackWRed->hwAlignManagerVtableX5000 = vtable;
 
-    uint64_t newVtable = reinterpret_cast<uint64_t>(IOMallocZero(0x238));
-    memcpy(reinterpret_cast<void *>(newVtable), reinterpret_cast<void *>(vtable), 0x128);
-    *reinterpret_cast<mach_vm_address_t *>(newVtable + 0x128) =
-        reinterpret_cast<mach_vm_address_t>(callbackWRed->orgGetPreferredSwizzleMode2);
-    memcpy(reinterpret_cast<void *>(newVtable + 0x130), reinterpret_cast<void *>(vtable + 0x128), 0x230 - 0x128);
-    callbackWRed->hwAlignManagerVtableX6000 = reinterpret_cast<void *>(newVtable);
+    auto *newVtable = static_cast<uint8_t *>(IOMallocZero(0x238));
+    memcpy(newVtable, vtable, 0x128);
+    *reinterpret_cast<mach_vm_address_t *>(newVtable + 0x128) = callbackWRed->orgGetPreferredSwizzleMode2;
+    memcpy(newVtable + 0x130, vtable + 0x128, 0x230 - 0x128);
+    callbackWRed->hwAlignManagerVtableX6000 = newVtable;
     return ret;
 }
 
