@@ -449,36 +449,48 @@ void *WRed::wrapCreatePowerTuneServices(void *that, void *param2) {
 }
 
 uint16_t WRed::wrapGetEnumeratedRevision(void *that) {
-    auto *&pciDev = getMember<IOPCIDevice *>(that, 0x18);
-    auto &revision = getMember<uint32_t>(that, 0x68);
+    if (callbackWRed->asicType == ASICType::Unknown) {
+        auto *&pciDev = getMember<IOPCIDevice *>(that, 0x18);
+        auto &revision = getMember<uint32_t>(that, 0x68);
+        uint16_t enumeratedRevision = 0;
 
-    switch (pciDev->configRead16(kIOPCIConfigDeviceID)) {
-        case 0x15D8:
-            if (revision >= 0x8) {
-                callbackWRed->asicType = ASICType::Raven2;
-                return 0x79;
-            }
-            callbackWRed->asicType = ASICType::Picasso;
-            return 0x41;
-        case 0x15DD:
-            if (revision >= 0x8) {
-                callbackWRed->asicType = ASICType::Raven2;
-                return 0x79;
-            }
-            callbackWRed->asicType = ASICType::Raven;
-            return 0x10;
-        case 0x15E7:
-            [[fallthrough]];
-        case 0x164C:
-            [[fallthrough]];
-        case 0x1636:
-            [[fallthrough]];
-        case 0x1638:
-            callbackWRed->asicType = ASICType::Renoir;
-            return 0x91;
-        default:
-            PANIC("wred", "Unknown device ID for iGPU");
+        switch (pciDev->configRead16(kIOPCIConfigDeviceID)) {
+            case 0x15D8:
+                if (revision >= 0x8) {
+                    callbackWRed->asicType = ASICType::Raven2;
+                    enumeratedRevision = 0x79;
+                    break;
+                }
+                callbackWRed->asicType = ASICType::Picasso;
+                enumeratedRevision = 0x41;
+                break;
+            case 0x15DD:
+                if (revision >= 0x8) {
+                    callbackWRed->asicType = ASICType::Raven2;
+                    enumeratedRevision = 0x79;
+                    break;
+                }
+                callbackWRed->asicType = ASICType::Raven;
+                enumeratedRevision = 0x10;
+                break;
+            case 0x15E7:
+                [[fallthrough]];
+            case 0x164C:
+                [[fallthrough]];
+            case 0x1636:
+                [[fallthrough]];
+            case 0x1638:
+                callbackWRed->asicType = ASICType::Renoir;
+                enumeratedRevision = 0x91;
+                break;
+            default:
+                PANIC("wred", "Unknown device ID");
+        }
+
+        callbackWRed->enumeratedRevision = enumeratedRevision;
     }
+
+    return callbackWRed->enumeratedRevision;
 }
 
 static bool injectedIPFirmware = false;

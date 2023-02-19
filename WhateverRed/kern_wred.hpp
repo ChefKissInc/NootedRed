@@ -43,6 +43,7 @@ class WRed {
     ASICType asicType = ASICType::Unknown;
     void *callbackFirmwareDirectory = nullptr;
     uint64_t fbOffset {};
+    uint16_t enumeratedRevision {};
 
     OSMetaClass *metaClassMap[4][2] = {{nullptr}};
 
