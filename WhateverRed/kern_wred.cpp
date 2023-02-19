@@ -283,6 +283,11 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN27AMDRadeonX6000_AMDHWDisplay36writeUpdateFrameBufferOffsetCommandsEjPjj17_"
              "eAMDSwapIntervalP16IOAccelResource2S3_S3_",
                 wrapWriteUpdateFrameBufferOffsetCommands, orgWriteUpdateFrameBufferOffsetCommands},
+            {"__ZN27AMDRadeonX6000_AMDHWDisplay29getDisplayPipeTransactionFlipEjP16IOAccelResource2S1_17_"
+             "eAMDSwapIntervalP14_AMD_PIPE_FLIPb42AMDAccelDisplayPipeTransactionPipeRotationS4_",
+                wrapGetDisplayPipeTransactionFlip, orgGetDisplayPipeTransactionFlip},
+            {"__ZNK31AMDRadeonX6000_AMDAccelResource19getGPUSystemAddressEv", wrapGetGPUSystemAddress,
+                orgGetGPUSystemAddress},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX6000 symbols");
@@ -822,5 +827,30 @@ uint32_t WRed::wrapWriteUpdateFrameBufferOffsetCommands(void *that, uint32_t par
         FunctionCast(wrapWriteUpdateFrameBufferOffsetCommands, callbackWRed->orgWriteUpdateFrameBufferOffsetCommands)(
             that, param1, param2, param3, param4, param5, param6, param7);
     DBGLOG("wred", "writeUpdateFrameBufferOffsetCommands >> 0x%X", ret);
+    return ret;
+}
+
+bool WRed::wrapGetDisplayPipeTransactionFlip(void *that, uint32_t param1, void *param2, void *param3, uint32_t param4,
+    void *param5, bool param6, uint32_t param7, void *param8) {
+    DBGLOG("wred",
+        "getDisplayPipeTransactionFlip << (that: %p param1: 0x%X param2: %p param3: %p param4: 0x%X param5: %p param6: "
+        "%d param7: 0x%X param8: %p)",
+        that, param1, param2, param3, param4, param5, param6, param7, param8);
+    auto ret = FunctionCast(wrapGetDisplayPipeTransactionFlip, callbackWRed->orgGetDisplayPipeTransactionFlip)(that,
+        param1, param2, param3, param4, param5, param6, param7, param8);
+    if (param8) {
+        DBGLOG("wred", "getDisplayPipeTransactionFlip param8->field_0x58 = 0x%llX", getMember<uint64_t>(param8, 0x58));
+    }
+    if (param5) {
+        DBGLOG("wred", "getDisplayPipeTransactionFlip param5->field_0x58 = 0x%llX", getMember<uint64_t>(param5, 0x58));
+    }
+    DBGLOG("wred", "getDisplayPipeTransactionFlip >> %d", ret);
+    return ret;
+}
+
+uint64_t WRed::wrapGetGPUSystemAddress(void *that) {
+    DBGLOG("wred", "getGPUSystemAddress << (that: %p)", that);
+    auto ret = FunctionCast(wrapGetGPUSystemAddress, callbackWRed->orgGetGPUSystemAddress)(that);
+    DBGLOG("wred", "getGPUSystemAddress >> 0x%llX", ret);
     return ret;
 }
