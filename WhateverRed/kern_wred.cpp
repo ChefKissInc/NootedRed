@@ -369,6 +369,13 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         static_assert(sizeof(find_signalTransactionComplete) == sizeof(repl_signalTransactionComplete),
             "Find/replace size mismatch");
 
+        const uint8_t find_isBufferReadyForRender[] = {0x48, 0x8b, 0x07, 0xff, 0x90, 0xa0, 0x02, 0x00, 0x00, 0x84,
+            0xc0};
+        const uint8_t repl_isBufferReadyForRender[] = {0x48, 0x8b, 0x07, 0xff, 0x90, 0x98, 0x02, 0x00, 0x00, 0x84,
+            0xc0};
+        static_assert(sizeof(find_isBufferReadyForRender) == sizeof(repl_isBufferReadyForRender),
+            "Find/replace size mismatch");
+
         /**
          * HWEngine/HWChannel call HWInterface virtual methods.
          * The X5000 HWInterface virtual table offsets are
@@ -411,6 +418,10 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             /** Mismatched VTable Call to getScheduler. */
             {&kextRadeonX6000, find_signalTransactionComplete, repl_signalTransactionComplete,
                 arrsize(find_signalTransactionComplete), 1},
+
+            /** Mismatched VTable Call to isDeviceValid. */
+            {&kextRadeonX6000, find_isBufferReadyForRender, repl_isBufferReadyForRender,
+                arrsize(find_isBufferReadyForRender), 1},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
