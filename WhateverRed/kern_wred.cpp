@@ -362,6 +362,13 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         static_assert(sizeof(find_hwchannel_writeDiagnosisReport) == sizeof(repl_hwchannel_writeDiagnosisReport),
             "Find/replace size mismatch");
 
+        const uint8_t find_signalTransactionComplete[] = {0x48, 0x8b, 0x07, 0xff, 0x90, 0xb8, 0x03, 0x00, 0x00, 0x49,
+            0x8b, 0xb6, 0x50, 0x03, 0x00, 0x00};
+        const uint8_t repl_signalTransactionComplete[] = {0x48, 0x8b, 0x07, 0xff, 0x90, 0xc0, 0x03, 0x00, 0x00, 0x49,
+            0x8b, 0xb6, 0x50, 0x03, 0x00, 0x00};
+        static_assert(sizeof(find_signalTransactionComplete) == sizeof(repl_signalTransactionComplete),
+            "Find/replace size mismatch");
+
         /**
          * HWEngine/HWChannel call HWInterface virtual methods.
          * The X5000 HWInterface virtual table offsets are
@@ -400,6 +407,10 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             /** Mismatched VTable Call to getScheduler. */
             {&kextRadeonX6000, find_hwchannel_writeDiagnosisReport, repl_hwchannel_writeDiagnosisReport,
                 arrsize(find_hwchannel_writeDiagnosisReport), 1},
+
+            /** Mismatched VTable Call to getScheduler. */
+            {&kextRadeonX6000, find_signalTransactionComplete, repl_signalTransactionComplete,
+                arrsize(find_signalTransactionComplete), 1},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
