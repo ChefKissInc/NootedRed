@@ -340,12 +340,9 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         static_assert(sizeof(find_hwchannel_timestampUpdated2) == sizeof(repl_hwchannel_timestampUpdated2),
             "Find/replace size mismatch");
 
-        const uint8_t find_hwchannel_enableTimestampInterrupt[] = {0x85, 0xC0, 0x74, 0x14, 0x48, 0x8B, 0x7B, 0x18, 0x48,
-            0x8B, 0x07, 0xFF, 0x90, 0xA0, 0x02, 0x00, 0x00, 0x41, 0x89, 0xC6, 0x41, 0x80, 0xF6, 0x01};
-        const uint8_t repl_hwchannel_enableTimestampInterrupt[] = {0x85, 0xC0, 0x74, 0x14, 0x48, 0x8B, 0x7B, 0x18, 0x48,
-            0x8B, 0x07, 0xFF, 0x90, 0x98, 0x02, 0x00, 0x00, 0x41, 0x89, 0xC6, 0x41, 0x80, 0xF6, 0x01};
-        static_assert(sizeof(find_hwchannel_enableTimestampInterrupt) ==
-                          sizeof(repl_hwchannel_enableTimestampInterrupt),
+        const uint8_t find_enableTimestampInterrupt[] = {0x48, 0x8b, 0x07, 0xff, 0x90, 0xa0, 0x02, 0x00, 0x00};
+        const uint8_t repl_enableTimestampInterrupt[] = {0x48, 0x8b, 0x07, 0xff, 0x90, 0x98, 0x02, 0x00, 0x00};
+        static_assert(sizeof(find_enableTimestampInterrupt) == sizeof(repl_enableTimestampInterrupt),
             "Find/replace size mismatch");
 
         const uint8_t find_hwchannel_writeDiagnosisReport[] = {0x49, 0x8B, 0x7C, 0x24, 0x18, 0x48, 0x8B, 0x07, 0xFF,
@@ -362,12 +359,9 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         static_assert(sizeof(find_signalTransactionComplete) == sizeof(repl_signalTransactionComplete),
             "Find/replace size mismatch");
 
-        const uint8_t find_isDeviceValid[] = {0x48, 0x8b, 0x07, 0xff, 0x90, 0xa0, 0x02, 0x00, 0x00, 0x84,
-            0xc0};
-        const uint8_t repl_isDeviceValid[] = {0x48, 0x8b, 0x07, 0xff, 0x90, 0x98, 0x02, 0x00, 0x00, 0x84,
-            0xc0};
-        static_assert(sizeof(find_isDeviceValid) == sizeof(repl_isDeviceValid),
-            "Find/replace size mismatch");
+        const uint8_t find_isDeviceValid[] = {0x48, 0x8b, 0x07, 0xff, 0x90, 0xa0, 0x02, 0x00, 0x00, 0x84, 0xc0};
+        const uint8_t repl_isDeviceValid[] = {0x48, 0x8b, 0x07, 0xff, 0x90, 0x98, 0x02, 0x00, 0x00, 0x84, 0xc0};
+        static_assert(sizeof(find_isDeviceValid) == sizeof(repl_isDeviceValid), "Find/replace size mismatch");
 
         /**
          * HWEngine/HWChannel call HWInterface virtual methods.
@@ -397,8 +391,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
                 arrsize(find_hwchannel_timestampUpdated2), 1},
 
             /** Mismatched VTable Call to isDeviceValid. */
-            {&kextRadeonX6000, find_hwchannel_enableTimestampInterrupt, repl_hwchannel_enableTimestampInterrupt,
-                arrsize(find_hwchannel_enableTimestampInterrupt), 1},
+            {&kextRadeonX6000, find_enableTimestampInterrupt, repl_enableTimestampInterrupt,
+                arrsize(find_enableTimestampInterrupt), 1},
 
             /** Mismatched VTable Call to getScheduler. */
             {&kextRadeonX6000, find_hwchannel_writeDiagnosisReport, repl_hwchannel_writeDiagnosisReport,
@@ -409,8 +403,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
                 arrsize(find_signalTransactionComplete), 1},
 
             /** Mismatched VTable Calls to isDeviceValid. */
-            {&kextRadeonX6000, find_isDeviceValid, repl_isDeviceValid,
-                arrsize(find_isDeviceValid), 14},
+            {&kextRadeonX6000, find_isDeviceValid, repl_isDeviceValid, arrsize(find_isDeviceValid), 14},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
