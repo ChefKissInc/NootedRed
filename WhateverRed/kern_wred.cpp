@@ -217,8 +217,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN26AMDRadeonX5000_AMDHWMemory17adjustVRAMAddressEy", wrapAdjustVRAMAddress, orgAdjustVRAMAddress},
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator9newSharedEv", wrapNewShared},
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator19newSharedUserClientEv", wrapNewSharedUserClient},
-            {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator17newDisplayMachineEv", wrapNewDisplayMachine},
-            {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator14newDisplayPipeEv", wrapNewDisplayPipe},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware25allocateAMDHWAlignManagerEv", wrapAllocateAMDHWAlignManager,
                 orgAllocateAMDHWAlignManager},
         };
@@ -249,8 +247,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN31AMDRadeonX6000_IAMDSMLInterface18createSMLInterfaceEj", orgCreateSMLInterfaceX6000},
             {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator9newSharedEv", orgNewSharedX6000},
             {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator19newSharedUserClientEv", orgNewSharedUserClientX6000},
-            {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator17newDisplayMachineEv", orgNewDisplayMachineX6000},
-            {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator14newDisplayPipeEv", orgNewDisplayPipeX6000},
             {"__ZN35AMDRadeonX6000_AMDAccelVideoContext10gMetaClassE", metaClassMap[0][1]},
             {"__ZN37AMDRadeonX6000_AMDAccelDisplayMachine10gMetaClassE", metaClassMap[1][1]},
             {"__ZN34AMDRadeonX6000_AMDAccelDisplayPipe10gMetaClassE", metaClassMap[2][1]},
@@ -690,12 +686,6 @@ bool WRed::wrapAccelSharedUserClientStartX6000(void *that, void *provider) {
 bool WRed::wrapAccelSharedUserClientStopX6000(void *that, void *provider) {
     return FunctionCast(wrapAccelSharedUserClientStopX6000, callbackWRed->orgAccelSharedUserClientStop)(that, provider);
 }
-
-void *WRed::wrapNewDisplayMachine() {
-    return FunctionCast(wrapNewDisplayMachine, callbackWRed->orgNewDisplayMachineX6000)();
-}
-
-void *WRed::wrapNewDisplayPipe() { return FunctionCast(wrapNewDisplayPipe, callbackWRed->orgNewDisplayPipeX6000)(); }
 
 void WRed::wrapInitDCNRegistersOffsets(void *that) {
     FunctionCast(wrapInitDCNRegistersOffsets, callbackWRed->orgInitDCNRegistersOffsets)(that);

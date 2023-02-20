@@ -84,8 +84,6 @@ class WRed {
     mach_vm_address_t orgCreateSMLInterfaceX6000 {};
     mach_vm_address_t orgNewSharedX6000 {};
     mach_vm_address_t orgNewSharedUserClientX6000 {};
-    mach_vm_address_t orgNewDisplayMachineX6000 {};
-    mach_vm_address_t orgNewDisplayPipeX6000 {};
     mach_vm_address_t orgInitDCNRegistersOffsets {};
     mach_vm_address_t orgGetPreferredSwizzleMode2 {};
     mach_vm_address_t orgAccelSharedSurfaceCopy {};
@@ -149,8 +147,6 @@ class WRed {
     static uint64_t wrapAdjustVRAMAddress(void *that, uint64_t addr);
     static void *wrapNewShared();
     static void *wrapNewSharedUserClient();
-    static void *wrapNewDisplayMachine();
-    static void *wrapNewDisplayPipe();
     static void *wrapAllocateAMDHWAlignManager();
 
     mach_vm_address_t orgWriteUpdateFrameBufferOffsetCommands {};
