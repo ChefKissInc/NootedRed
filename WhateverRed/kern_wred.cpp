@@ -67,10 +67,7 @@ OSMetaClassBase *WRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const O
             } else {
                 continue;
             }
-            DBGLOG("wred", "safeMetaCast << (anObject: %p toMeta: %p)", anObject, toMeta);
-            ret = FunctionCast(wrapSafeMetaCast, callbackWRed->orgSafeMetaCast)(anObject, toMeta);
-            DBGLOG("wred", "safeMetaCast >> %p", ret);
-            break;
+            return FunctionCast(wrapSafeMetaCast, callbackWRed->orgSafeMetaCast)(anObject, toMeta);
         }
     }
     return ret;
