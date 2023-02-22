@@ -145,9 +145,15 @@ class WRed {
     static void wrapInitializeFamilyType(void *that);
     static void *wrapAllocateAMDHWDisplay(void *that);
     static uint64_t wrapAdjustVRAMAddress(void *that, uint64_t addr);
+    static void wrapDmLoggerWrite(void *dalLogger, uint32_t logType, char *fmt, ...);
     static void *wrapNewShared();
     static void *wrapNewSharedUserClient();
     static void *wrapAllocateAMDHWAlignManager();
+
+    mach_vm_address_t orgInitFramebufferResource {};
+    static void *wrapInitFramebufferResource(void *that, uint32_t param1, void *param2);
+    mach_vm_address_t orgReserveFrameBuffer {};
+    static uint64_t wrapReserveFrameBuffer(void *that, uint64_t param1, uint32_t param2, void *param3);
 
     mach_vm_address_t orgWriteUpdateFrameBufferOffsetCommands {};
     static uint32_t wrapWriteUpdateFrameBufferOffsetCommands(void *that, uint32_t param1, void *param2, uint32_t param3,
@@ -157,6 +163,10 @@ class WRed {
         uint32_t param4, void *param5, bool param6, uint32_t param7, void *param8);
     mach_vm_address_t orgGetGPUSystemAddress {};
     static uint64_t wrapGetGPUSystemAddress(void *that);
+    mach_vm_address_t orgGetApertureRange {};
+    static void *wrapGetApertureRange(void *that, uint32_t param1);
+    mach_vm_address_t orgGetVRAMRange {};
+    static void *wrapGetVRAMRange(void *that);
     mach_vm_address_t orgGenericRegSetEx {};
     static uint32_t wrapGenericRegSetEx(void *param1, uint32_t param2, uint32_t param3, uint32_t param4, uint8_t param5,
         uint32_t param6, uint32_t param7);
