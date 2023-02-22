@@ -157,4 +157,7 @@ class WRed {
         uint32_t param4, void *param5, bool param6, uint32_t param7, void *param8);
     mach_vm_address_t orgGetGPUSystemAddress {};
     static uint64_t wrapGetGPUSystemAddress(void *that);
+    mach_vm_address_t orgGenericRegSetEx {};
+    static uint32_t wrapGenericRegSetEx(void *param1, uint32_t param2, uint32_t param3, uint32_t param4, uint8_t param5,
+        uint32_t param6, uint32_t param7);
 };
