@@ -865,12 +865,6 @@ bool WRed::wrapGetDisplayPipeTransactionFlip(void *that, uint32_t param1, void *
         that, param1, param2, param3, param4, param5, param6, param7, param8);
     auto ret = FunctionCast(wrapGetDisplayPipeTransactionFlip, callbackWRed->orgGetDisplayPipeTransactionFlip)(that,
         param1, param2, param3, param4, param5, param6, param7, param8);
-    if (param8) {
-        DBGLOG("wred", "getDisplayPipeTransactionFlip param8->field_0x58 = 0x%llX", getMember<uint64_t>(param8, 0x58));
-    }
-    if (param5) {
-        DBGLOG("wred", "getDisplayPipeTransactionFlip param5->field_0x58 = 0x%llX", getMember<uint64_t>(param5, 0x58));
-    }
     DBGLOG("wred", "getDisplayPipeTransactionFlip >> %d", ret);
     return ret;
 }
