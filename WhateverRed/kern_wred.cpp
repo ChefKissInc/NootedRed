@@ -145,6 +145,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer16getApertureRangeEi", wrapGetApertureRange,
                 orgGetApertureRange},
             {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer12getVRAMRangeEv", wrapGetVRAMRange, orgGetVRAMRange},
+            {"_trace_dc_wreg", wrapTraceDcWreg},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX6000Framebuffer symbols");
@@ -900,4 +901,8 @@ void *WRed::wrapGetVRAMRange(void *that) {
     auto ret = FunctionCast(wrapGetVRAMRange, callbackWRed->orgGetVRAMRange)(that);
     DBGLOG("wred", "getVRAMRange >> %p", ret);
     return ret;
+}
+
+void WRed::wrapTraceDcWreg(void *dc_context, uint32_t regIndex, uint32_t regVal) {
+    DBGLOG("wred", "_trace_dc_wreg -- dc_context: %p regIndex: 0x%X regVal: 0x%X", dc_context, regIndex, regVal);
 }
