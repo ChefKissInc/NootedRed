@@ -145,7 +145,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer16getApertureRangeEi", wrapGetApertureRange,
                 orgGetApertureRange},
             {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer12getVRAMRangeEv", wrapGetVRAMRange, orgGetVRAMRange},
-            {"_generic_reg_set_ex", wrapGenericRegSetEx, orgGenericRegSetEx},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX6000Framebuffer symbols");
@@ -881,19 +880,6 @@ uint64_t WRed::wrapGetGPUSystemAddress(void *that) {
     DBGLOG("wred", "getGPUSystemAddress >> 0x%llX", ret);
     return ret;
 }
-
-uint32_t WRed::wrapGenericRegSetEx(void *param1, uint32_t param2, uint32_t param3, uint32_t param4, uint8_t param5,
-    uint32_t param6, uint32_t param7) {
-    DBGLOG("wred",
-        "_generic_reg_set_ex << (param1: %p param2: 0x%X param3: 0x%X param4: 0x%X param5: 0x%hhX param6: 0x%X param7: "
-        "0x%X)",
-        param1, param2, param3, param4, param5, param6, param7);
-    auto ret = FunctionCast(wrapGenericRegSetEx, callbackWRed->orgGenericRegSetEx)(param1, param2, param3, param4,
-        param5, param6, param7);
-    DBGLOG("wred", "_generic_reg_set_ex >> 0x%X", ret);
-    return ret;
-}
-
 uint64_t WRed::wrapReserveFrameBuffer(void *that, uint64_t param1, uint32_t param2, void *param3) {
     DBGLOG("wred", "reserveFrameBuffer << (that: %p param1: 0x%llX param2: 0x%X param3: %p)", that, param1, param2,
         param3);

@@ -167,7 +167,4 @@ class WRed {
     static void *wrapGetApertureRange(void *that, uint32_t param1);
     mach_vm_address_t orgGetVRAMRange {};
     static void *wrapGetVRAMRange(void *that);
-    mach_vm_address_t orgGenericRegSetEx {};
-    static uint32_t wrapGenericRegSetEx(void *param1, uint32_t param2, uint32_t param3, uint32_t param4, uint8_t param5,
-        uint32_t param6, uint32_t param7);
 };
