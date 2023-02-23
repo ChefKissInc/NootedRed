@@ -20,6 +20,15 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(MODULE_VERSION)</string>
+	<key>GPUCompanionBundles</key>
+	<array>
+		<string>AMDShared.bundle</string>
+		<string>AMDRadeonX6000Shared.bundle</string>
+		<string>AMDRadeonX5000GLDriver.bundle</string>
+		<string>AMDRadeonVADriver2.bundle</string>
+		<string>AMDRadeonX5000MTLDriver.bundle</string>
+		<string>AMDRawCounterPlugin.bundle</string>
+	</array>
 	<key>IOKitPersonalities</key>
 	<dict>
 		<key>AMD Radeon X5000 HW Services</key>
@@ -132,7 +141,7 @@
 				<key>PP_EnableUploadFirmware</key>
 				<integer>0</integer>
 				<key>PP_Falcon_QuickTransition_Enable</key>
-				<integer>0</integer>
+				<integer>1</integer>
 				<key>PP_GfxOffControl</key>
 				<integer>0</integer>
 				<key>PP_PhmUseDummyBackEnd</key>
@@ -233,8 +242,20 @@
 			<integer>16908288</integer>
 			<key>cail_properties</key>
 			<dict>
+				<key>CAIL_DisableCailLoadUcode</key>
+				<integer>1</integer>
 				<key>CAIL_DisableGfxCGPowerGating</key>
 				<integer>1</integer>
+				<key>CAIL_DisableJpegEngine</key>
+				<integer>0</integer>
+				<key>CAIL_EnableLBPWSupport</key>
+				<integer>0</integer>
+				<key>CAIL_EnablePeerDataAperture</key>
+				<integer>0</integer>
+				<key>CAIL_EnableSecureMmFwLoading</key>
+				<integer>1</integer>
+				<key>CAIL_EnableXdmaSupport</key>
+				<integer>0</integer>
 			</dict>
 		</dict>
 		<key>com.ChefKissInc.WhateverRed</key>
