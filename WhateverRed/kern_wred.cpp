@@ -299,13 +299,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         const uint8_t repl_isDeviceValid[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0x98, 0x02, 0x00, 0x00, 0x84, 0xC0};
         static_assert(arrsize(find_isDeviceValid) == arrsize(repl_isDeviceValid));
 
-        const uint8_t find_isUsingDisplayPipeTransactionForVBlankFlip[] = {0x48, 0x8b, 0x07, 0xff, 0x90, 0xc8, 0x03,
-            0x00, 0x00};
-        const uint8_t repl_isUsingDisplayPipeTransactionForVBlankFlip[] = {0x48, 0x8b, 0x07, 0xff, 0x90, 0xd0, 0x03,
-            0x00, 0x00};
-        static_assert(arrsize(find_isUsingDisplayPipeTransactionForVBlankFlip) ==
-                      arrsize(repl_isUsingDisplayPipeTransactionForVBlankFlip));
-
         /**
          * HWEngine/HWChannel call HWInterface virtual methods.
          * The X5000 HWInterface virtual table offsets are
@@ -330,11 +323,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
 
             /** Mismatched VTable Calls to isDeviceValid. */
             {&kextRadeonX6000, find_isDeviceValid, repl_isDeviceValid, arrsize(find_isDeviceValid), 14},
-
-            /** Mismatched VTable Calls to isUsingDisplayPipeTransactionForVBlankFlip. */
-            {&kextRadeonX6000, find_isUsingDisplayPipeTransactionForVBlankFlip,
-                repl_isUsingDisplayPipeTransactionForVBlankFlip,
-                arrsize(find_isUsingDisplayPipeTransactionForVBlankFlip), 2},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
