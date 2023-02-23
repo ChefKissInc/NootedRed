@@ -366,6 +366,7 @@ class AppleACPIPlatformExpert : IOACPIPlatformExpert {
 };
 
 void WRed::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
+    WIOKit::renameDevice(provider, "IGPU");
     static uint8_t builtBytes[] = {0x01};
     provider->setProperty("built-in", builtBytes, sizeof(builtBytes));
 
