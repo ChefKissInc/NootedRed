@@ -148,13 +148,4 @@ class WRed {
     static void *wrapNewShared();
     static void *wrapNewSharedUserClient();
     static void *wrapAllocateAMDHWAlignManager();
-
-    mach_vm_address_t orgWriteUpdateFrameBufferOffsetCommands {};
-    static uint32_t wrapWriteUpdateFrameBufferOffsetCommands(void *that, uint32_t param1, void *param2, uint32_t param3,
-        uint32_t param4, void *param5, void *param6, void *param7);
-    mach_vm_address_t orgGetDisplayPipeTransactionFlip {};
-    static bool wrapGetDisplayPipeTransactionFlip(void *that, uint32_t param1, void *param2, void *param3,
-        uint32_t param4, void *param5, bool param6, uint32_t param7, void *param8);
-    mach_vm_address_t orgGetGPUSystemAddress {};
-    static uint64_t wrapGetGPUSystemAddress(void *that);
 };
