@@ -182,9 +182,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         uint32_t *orgChannelTypes = nullptr;
 
         KernelPatcher::SolveRequest solveRequests[] = {
-            {"__ZN31AMDRadeonX5000_AMDGFX9PM4EnginenwEm", orgGFX9PM4EngineNew},
             {"__ZN31AMDRadeonX5000_AMDGFX9PM4EngineC1Ev", orgGFX9PM4EngineConstructor},
-            {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEnginenwEm", orgGFX9SDMAEngineNew},
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngineC1Ev", orgGFX9SDMAEngineConstructor},
             {"__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator19createAccelChannelsEbE12channelTypes", orgChannelTypes},
             {"__ZN39AMDRadeonX5000_AMDAccelSharedUserClient5startEP9IOService", orgAccelSharedUserClientStart},
@@ -240,7 +238,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         }
     } else if (kextRadeonX6000.loadIndex == index) {
         KernelPatcher::SolveRequest solveRequests[] = {
-            {"__ZN30AMDRadeonX6000_AMDVCN2HWEnginenwEm", orgVCN2EngineNewX6000},
             {"__ZN30AMDRadeonX6000_AMDVCN2HWEngineC1Ev", orgVCN2EngineConstructorX6000},
             {"__ZN31AMDRadeonX6000_AMDGFX10Hardware20allocateAMDHWDisplayEv", orgAllocateAMDHWDisplayX6000},
             {"__ZN42AMDRadeonX6000_AMDGFX10GraphicsAccelerator15newVideoContextEv", orgNewVideoContextX6000},
@@ -560,15 +557,15 @@ IOReturn WRed::wrapPopulateVramInfo([[maybe_unused]] void *that, void *fwInfo) {
 bool WRed::wrapAccelStartX6000() { return false; }
 
 bool WRed::wrapAllocateHWEngines(void *that) {
-    auto *pm4 = callbackWRed->orgGFX9PM4EngineNew(0x1E8);
+    auto *pm4 = IOMallocZero(0x1E8);
     callbackWRed->orgGFX9PM4EngineConstructor(pm4);
     getMember<void *>(that, 0x3B8) = pm4;
 
-    auto *sdma0 = callbackWRed->orgGFX9SDMAEngineNew(0x128);
+    auto *sdma0 = IOMallocZero(0x128);
     callbackWRed->orgGFX9SDMAEngineConstructor(sdma0);
     getMember<void *>(that, 0x3C0) = sdma0;
 
-    auto *vcn2 = callbackWRed->orgVCN2EngineNewX6000(0x198);
+    auto *vcn2 = IOMallocZero(0x198);
     callbackWRed->orgVCN2EngineConstructorX6000(vcn2);
     getMember<void *>(that, 0x3F8) = vcn2;
     return true;
@@ -581,7 +578,7 @@ void WRed::wrapSetupAndInitializeHWCapabilities(void *that) {
     }
     getMember<bool>(that, 0xC0) = false;    // SDMA Page Queue
     getMember<bool>(that, 0xAC) = false;    // VCE
-    getMember<bool>(that, 0xAE) = false;    // VCE 2
+    getMember<bool>(that, 0xAE) = false;    // VCE-related
 }
 
 void *WRed::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3) {

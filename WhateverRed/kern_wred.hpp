@@ -76,7 +76,6 @@ class WRed {
     mach_vm_address_t orgPspCmdKmSubmit {};
 
     /** X6000 */
-    t_HWEngineNew orgVCN2EngineNewX6000 = nullptr;
     t_HWEngineConstructor orgVCN2EngineConstructorX6000 = nullptr;
     mach_vm_address_t orgAllocateAMDHWDisplayX6000 {};
     mach_vm_address_t orgInitWithPciInfo {};
@@ -93,9 +92,7 @@ class WRed {
     mach_vm_address_t orgGetDisplayInfo {};
 
     /** X5000 */
-    t_HWEngineNew orgGFX9PM4EngineNew = nullptr;
     t_HWEngineConstructor orgGFX9PM4EngineConstructor = nullptr;
-    t_HWEngineNew orgGFX9SDMAEngineNew = nullptr;
     t_HWEngineConstructor orgGFX9SDMAEngineConstructor = nullptr;
     mach_vm_address_t orgSetupAndInitializeHWCapabilities {};
     mach_vm_address_t orgRTGetHWChannel {};
