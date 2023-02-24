@@ -601,9 +601,9 @@ uint32_t WRed::wrapSmuRavenInitialize(void *smum, uint32_t param2) {
     return ret;
 }
 
-uint32_t WRed::wrapSmuRenoirInitialize(void *smumData, uint32_t param2) {
-    auto ret = FunctionCast(wrapSmuRenoirInitialize, callbackWRed->orgSmuRenoirInitialize)(smumData, param2);
-    callbackWRed->orgRenoirSendMsgToSmc(smumData, PPSMC_MSG_PowerUpSdma);
+uint32_t WRed::wrapSmuRenoirInitialize(void *smum, uint32_t param2) {
+    auto ret = FunctionCast(wrapSmuRenoirInitialize, callbackWRed->orgSmuRenoirInitialize)(smum, param2);
+    callbackWRed->orgRenoirSendMsgToSmc(smum, PPSMC_MSG_PowerUpSdma);
     return ret;
 }
 
