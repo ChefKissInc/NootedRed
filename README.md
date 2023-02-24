@@ -12,11 +12,13 @@ We are mixing AMDRadeonX5000 for GCN 5, AMDRadeonX6000 for VCN, and AMDRadeonX60
 
 Also, if you have any AMD dGPU installed, it is likely that the VBIOS in the VFCT ACPI table will be overriden with the one from the dGPU, and the one from the iGPU will be put in its VRAM, which we do not currently handle.
 
-### How functional
+### How functional is the kext?
 
 This project is under active research and development; There will be crashes here and there, and it is incompatible with Renoir-based iGPUs (Like Cezanne, Lucienne, etc).
 
 The kext is fully functional more or less on Raven/Raven2-based iGPUs (Like Picasso).
+
+See repository issues for more information.
 
 ### On which macOS versions am I able to use this on?
 
