@@ -581,6 +581,7 @@ void WRed::wrapSetupAndInitializeHWCapabilities(void *that) {
     }
     getMember<bool>(that, 0xC0) = false;    // SDMA Page Queue
     getMember<bool>(that, 0xAC) = false;    // VCE
+    getMember<bool>(that, 0xAE) = false;    // VCE 2
 }
 
 void *WRed::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3) {
