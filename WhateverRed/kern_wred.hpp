@@ -44,9 +44,9 @@ class WRed {
     void *callbackFirmwareDirectory = nullptr;
     uint64_t fbOffset {};
 
-    void *hwAlignManager = nullptr;
-    void *hwAlignManagerVtableX5000 = nullptr;
-    void *hwAlignManagerVtableX6000 = nullptr;
+    void *hwAlignMgr = nullptr;
+    uint8_t *hwAlignMgrVtX5000 = nullptr;
+    uint8_t *hwAlignMgrVtX6000 = nullptr;
 
     OSMetaClass *metaClassMap[4][2] = {{nullptr}};
 

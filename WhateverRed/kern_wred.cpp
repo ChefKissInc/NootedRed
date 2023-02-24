@@ -730,20 +730,20 @@ void WRed::wrapInitDCNRegistersOffsets(void *that) {
 
 void *WRed::wrapAllocateAMDHWAlignManager() {
     auto ret = FunctionCast(wrapAllocateAMDHWAlignManager, callbackWRed->orgAllocateAMDHWAlignManager)();
-    callbackWRed->hwAlignManager = ret;
-    auto *vtable = getMember<uint8_t *>(ret, 0);
-    callbackWRed->hwAlignManagerVtableX5000 = vtable;
+    callbackWRed->hwAlignMgr = ret;
 
-    auto *newVtable = static_cast<uint8_t *>(IOMallocZero(0x238));
-    memcpy(newVtable, vtable, 0x128);
-    *reinterpret_cast<mach_vm_address_t *>(newVtable + 0x128) = callbackWRed->orgGetPreferredSwizzleMode2;
-    memcpy(newVtable + 0x130, vtable + 0x128, 0x230 - 0x128);
-    callbackWRed->hwAlignManagerVtableX6000 = newVtable;
+    callbackWRed->hwAlignMgrVtX5000 = getMember<uint8_t *>(ret, 0);
+    callbackWRed->hwAlignMgrVtX6000 = static_cast<uint8_t *>(IOMallocZero(0x238));
+
+    memcpy(callbackWRed->hwAlignMgrVtX6000, callbackWRed->hwAlignMgrVtX5000, 0x128);
+    *reinterpret_cast<mach_vm_address_t *>(callbackWRed->hwAlignMgrVtX6000 + 0x128) =
+        callbackWRed->orgGetPreferredSwizzleMode2;
+    memcpy(callbackWRed->hwAlignMgrVtX6000 + 0x130, callbackWRed->hwAlignMgrVtX5000 + 0x128, 0x230 - 0x128);
     return ret;
 }
 
-#define HWALIGNMGR_ADJUST getMember<void *>(callbackWRed->hwAlignManager, 0) = callbackWRed->hwAlignManagerVtableX6000;
-#define HWALIGNMGR_REVERT getMember<void *>(callbackWRed->hwAlignManager, 0) = callbackWRed->hwAlignManagerVtableX5000;
+#define HWALIGNMGR_ADJUST getMember<void *>(callbackWRed->hwAlignMgr, 0) = callbackWRed->hwAlignMgrVtX6000;
+#define HWALIGNMGR_REVERT getMember<void *>(callbackWRed->hwAlignMgr, 0) = callbackWRed->hwAlignMgrVtX5000;
 
 uint64_t WRed::wrapAccelSharedSurfaceCopy(void *that, void *param1, uint64_t param2, void *param3) {
     HWALIGNMGR_ADJUST
