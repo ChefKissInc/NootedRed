@@ -425,9 +425,10 @@ void WRed::wrapPopulateFirmwareDirectory(void *that) {
     callbackWRed->callbackFirmwareDirectory = getMember<void *>(that, 0xB8);
     auto &fwDesc = getFWDescByName("renoir_dmcub.bin");
     DBGLOG("wred", "renoir_dmcub.bin => atidmcub_0.dat");
-    auto *fwBackdoor = callbackWRed->orgCreateFirmware(fwDesc.data, fwDesc.size, 0x200, "atidmcub_0.dat");
+    auto *fwDmcub = callbackWRed->orgCreateFirmware(fwDesc.data, fwDesc.size, 0x200, "atidmcub_0.dat");
+    PANIC_COND(!fwDmcub, "wred", "Failed to create atidmcub_0.dat firmware");
     DBGLOG("wred", "inserting atidmcub_0.dat!");
-    PANIC_COND(!callbackWRed->orgPutFirmware(callbackWRed->callbackFirmwareDirectory, 6, fwBackdoor), "wred",
+    PANIC_COND(!callbackWRed->orgPutFirmware(callbackWRed->callbackFirmwareDirectory, 6, fwDmcub), "wred",
         "Failed to inject atidmcub_0.dat firmware");
 }
 
@@ -499,8 +500,9 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
         auto *targetFilename = callbackWRed->asicType == ASICType::Renoir ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
         DBGLOG("wred", "%s => %s", filename, targetFilename);
 
-        auto *fwDesc = &getFWDescByName(filename);
-        auto *fw = callbackWRed->orgCreateFirmware(fwDesc->data, fwDesc->size, 0x200, targetFilename);
+        auto &fwDesc = getFWDescByName(filename);
+        auto *fw = callbackWRed->orgCreateFirmware(fwDesc.data, fwDesc.size, 0x200, targetFilename);
+        PANIC_COND(!fw, "wred", "Failed to create '%s' firmware", targetFilename);
         DBGLOG("wred", "Inserting %s!", targetFilename);
         PANIC_COND(!callbackWRed->orgPutFirmware(callbackWRed->callbackFirmwareDirectory, 6, fw), "wred",
             "Failed to inject ativvaxy_rv.dat firmware");
