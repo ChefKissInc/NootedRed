@@ -598,12 +598,14 @@ uint32_t WRed::wrapHwReadReg32(void *that, uint32_t reg) {
 uint32_t WRed::wrapSmuRavenInitialize(void *smum, uint32_t param2) {
     auto ret = FunctionCast(wrapSmuRavenInitialize, callbackWRed->orgSmuRavenInitialize)(smum, param2);
     callbackWRed->orgRavenSendMsgToSmc(smum, PPSMC_MSG_PowerUpSdma);
+    callbackWRed->orgRavenSendMsgToSmc(smum, PPSMC_MSG_PowerGateMmHub);
     return ret;
 }
 
 uint32_t WRed::wrapSmuRenoirInitialize(void *smum, uint32_t param2) {
     auto ret = FunctionCast(wrapSmuRenoirInitialize, callbackWRed->orgSmuRenoirInitialize)(smum, param2);
     callbackWRed->orgRenoirSendMsgToSmc(smum, PPSMC_MSG_PowerUpSdma);
+    callbackWRed->orgRenoirSendMsgToSmc(smum, PPSMC_MSG_PowerGateMmHub);
     return ret;
 }
 
