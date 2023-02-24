@@ -436,28 +436,23 @@ void *WRed::wrapCreatePowerTuneServices(void *that, void *param2) {
 }
 
 uint16_t WRed::wrapGetEnumeratedRevision(void *that) {
-    if (callbackWRed->asicType != ASICType::Unknown) { return callbackWRed->enumeratedRevision; }
-
     auto revision = getMember<uint32_t>(that, 0x68);
     switch (getMember<IOPCIDevice *>(that, 0x18)->configRead16(kIOPCIConfigDeviceID)) {
         case 0x15D8:
             if (revision >= 0x8) {
                 callbackWRed->asicType = ASICType::Raven2;
-                callbackWRed->enumeratedRevision = 0x79;
-                break;
+                return 0x79;
             }
             callbackWRed->asicType = ASICType::Picasso;
-            callbackWRed->enumeratedRevision = 0x41;
-            break;
+            return 0x41;
         case 0x15DD:
             if (revision >= 0x8) {
                 callbackWRed->asicType = ASICType::Raven2;
-                callbackWRed->enumeratedRevision = 0x79;
+                return 0x79;
                 break;
             }
             callbackWRed->asicType = ASICType::Raven;
-            callbackWRed->enumeratedRevision = 0x10;
-            break;
+            return 0x10;
         case 0x15E7:
             [[fallthrough]];
         case 0x164C:
@@ -466,13 +461,10 @@ uint16_t WRed::wrapGetEnumeratedRevision(void *that) {
             [[fallthrough]];
         case 0x1638:
             callbackWRed->asicType = ASICType::Renoir;
-            callbackWRed->enumeratedRevision = 0x91;
-            break;
+            return 0x91;
         default:
             PANIC("wred", "Unknown device ID");
     }
-
-    return callbackWRed->enumeratedRevision;
 }
 
 static bool injectedIPFirmware = false;

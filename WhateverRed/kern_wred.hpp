@@ -43,7 +43,7 @@ class WRed {
     ASICType asicType = ASICType::Unknown;
     void *callbackFirmwareDirectory = nullptr;
     uint64_t fbOffset {};
-    uint16_t enumeratedRevision {};
+
     void *hwAlignManager = nullptr;
     void *hwAlignManagerVtableX5000 = nullptr;
     void *hwAlignManagerVtableX6000 = nullptr;
