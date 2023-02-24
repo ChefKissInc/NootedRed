@@ -1,6 +1,8 @@
 # WhateverRed
 
-An AMD iGPU support plugin for [Lilu](https://github.com/acidanthera/Lilu).
+An AMD iGPU support [Lilu](https://github.com/acidanthera/Lilu) plugin.
+
+Requires WhateverGreen in addition to this kext and boot args `agdpmod=pikera gfxrst=3` added.
 
 The Source Code of this Original Work is licensed under the `Thou Shalt Not Profit License version 1.0`. See `LICENSE`
 
@@ -10,7 +12,7 @@ We're a 3-people team working on getting graphics acceleration working on AMD iG
 
 The existing kexts are patched to achieve this. We are mixing AMDRadeonX5000 (GCN 5 part) and AMDRadeonX6000 (VCN part), and replacing AMD10000Controller (DCE) with AMDRadeonX6000Framebuffer (DCN).
 
-This project is under active research and development; It is not yet functional.
+This project is under active research and development; There will be crashes here and there, and it is incompatible with Renoir-based iGPUs (Like Cezanne, Lucienne, etc).
 
 Due to the complexity and secrecy of the Metal 2/3 drivers, adding support for non-existent logic is impossible.
 
@@ -24,8 +26,7 @@ You must use Big Sur since there are too many incompatibilities with older macOS
 
 ### Current Progress
 
-Acceleration works, but the internal display is blank. We're only able to control the computer from remote desktop.
-Technically still stuck at 99.9999999999999% essentially.
+The kext is fully functional more or less on Raven/Raven2-based iGPUs (Like Picasso).
 
 ### X5000 vs X6000
 
