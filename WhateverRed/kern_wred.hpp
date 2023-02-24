@@ -97,8 +97,8 @@ class WRed {
     mach_vm_address_t orgSetupAndInitializeHWCapabilities {};
     mach_vm_address_t orgRTGetHWChannel {};
     mach_vm_address_t orgAdjustVRAMAddress {};
-    mach_vm_address_t orgAccelSharedUserClientStart {};
-    mach_vm_address_t orgAccelSharedUserClientStop {};
+    mach_vm_address_t orgAccelSharedUCStart {};
+    mach_vm_address_t orgAccelSharedUCStop {};
     mach_vm_address_t orgAllocateAMDHWAlignManager {};
 
     /** X6000Framebuffer */
@@ -125,8 +125,8 @@ class WRed {
     static bool wrapInitWithPciInfo(void *that, void *param1);
     static void *wrapNewVideoContext(void *that);
     static void *wrapCreateSMLInterface(uint32_t configBit);
-    static bool wrapAccelSharedUserClientStartX6000(void *that, void *provider);
-    static bool wrapAccelSharedUserClientStopX6000(void *that, void *provider);
+    static bool wrapAccelSharedUCStartX6000(void *that, void *provider);
+    static bool wrapAccelSharedUCStopX6000(void *that, void *provider);
     static void wrapInitDCNRegistersOffsets(void *that);
     static uint64_t wrapAccelSharedSurfaceCopy(void *that, void *param1, uint64_t param2, void *param3);
     static uint64_t wrapAllocateScanoutFB(void *that, uint32_t param1, void *param2, void *param3, void *param4);

@@ -194,8 +194,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN31AMDRadeonX5000_AMDGFX9PM4EngineC1Ev", orgGFX9PM4EngineConstructor},
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngineC1Ev", orgGFX9SDMAEngineConstructor},
             {"__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator19createAccelChannelsEbE12channelTypes", orgChannelTypes},
-            {"__ZN39AMDRadeonX5000_AMDAccelSharedUserClient5startEP9IOService", orgAccelSharedUserClientStart},
-            {"__ZN39AMDRadeonX5000_AMDAccelSharedUserClient4stopEP9IOService", orgAccelSharedUserClientStop},
+            {"__ZN39AMDRadeonX5000_AMDAccelSharedUserClient5startEP9IOService", orgAccelSharedUCStart},
+            {"__ZN39AMDRadeonX5000_AMDAccelSharedUserClient4stopEP9IOService", orgAccelSharedUCStop},
             {"__ZN35AMDRadeonX5000_AMDAccelVideoContext10gMetaClassE", metaClassMap[0][0]},
             {"__ZN37AMDRadeonX5000_AMDAccelDisplayMachine10gMetaClassE", metaClassMap[1][0]},
             {"__ZN34AMDRadeonX5000_AMDAccelDisplayPipe10gMetaClassE", metaClassMap[2][0]},
@@ -265,8 +265,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
 
         KernelPatcher::RouteRequest requests[] = {
             {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator5startEP9IOService", wrapAccelStartX6000},
-            {"__ZN39AMDRadeonX6000_AMDAccelSharedUserClient5startEP9IOService", wrapAccelSharedUserClientStartX6000},
-            {"__ZN39AMDRadeonX6000_AMDAccelSharedUserClient4stopEP9IOService", wrapAccelSharedUserClientStopX6000},
+            {"__ZN39AMDRadeonX6000_AMDAccelSharedUserClient5startEP9IOService", wrapAccelSharedUCStartX6000},
+            {"__ZN39AMDRadeonX6000_AMDAccelSharedUserClient4stopEP9IOService", wrapAccelSharedUCStopX6000},
             {"__ZN30AMDRadeonX6000_AMDGFX10Display23initDCNRegistersOffsetsEv", wrapInitDCNRegistersOffsets,
                 orgInitDCNRegistersOffsets},
             {"__ZN29AMDRadeonX6000_AMDAccelShared11SurfaceCopyEPjyP12IOAccelEvent", wrapAccelSharedSurfaceCopy,
@@ -651,13 +651,12 @@ void *WRed::wrapNewSharedUserClient() {
     return FunctionCast(wrapNewSharedUserClient, callbackWRed->orgNewSharedUserClientX6000)();
 }
 
-bool WRed::wrapAccelSharedUserClientStartX6000(void *that, void *provider) {
-    return FunctionCast(wrapAccelSharedUserClientStartX6000, callbackWRed->orgAccelSharedUserClientStart)(that,
-        provider);
+bool WRed::wrapAccelSharedUCStartX6000(void *that, void *provider) {
+    return FunctionCast(wrapAccelSharedUCStartX6000, callbackWRed->orgAccelSharedUCStart)(that, provider);
 }
 
-bool WRed::wrapAccelSharedUserClientStopX6000(void *that, void *provider) {
-    return FunctionCast(wrapAccelSharedUserClientStopX6000, callbackWRed->orgAccelSharedUserClientStop)(that, provider);
+bool WRed::wrapAccelSharedUCStopX6000(void *that, void *provider) {
+    return FunctionCast(wrapAccelSharedUCStopX6000, callbackWRed->orgAccelSharedUCStop)(that, provider);
 }
 
 void WRed::wrapInitDCNRegistersOffsets(void *that) {
