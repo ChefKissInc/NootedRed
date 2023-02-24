@@ -415,7 +415,7 @@ uint32_t WRed::wrapPspSwInit(uint32_t *param1, uint32_t *param2) {
     return ret;
 }
 
-uint32_t WRed::wrapGcGetHwVersion([[maybe_unused]] uint32_t *param1) { return 0x090201; }
+uint32_t WRed::wrapGcGetHwVersion() { return 0x090201; }
 
 void WRed::wrapPopulateFirmwareDirectory(void *that) {
     FunctionCast(wrapPopulateFirmwareDirectory, callbackWRed->orgPopulateFirmwareDirectory)(that);
@@ -533,8 +533,8 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
     return ret;
 }
 
-uint32_t WRed::wrapSmuGetFwConstants([[maybe_unused]] void *param1) { return 0; }    // SMC firmware's already loaded
-uint32_t WRed::wrapSmuInternalHwInit([[maybe_unused]] void *param1) { return 0; }    // Don't wait for firmware load
+uint32_t WRed::wrapSmuGetFwConstants() { return 0; }    // SMC firmware's already loaded
+uint32_t WRed::wrapSmuInternalHwInit() { return 0; }    // Don't wait for firmware load
 IOReturn WRed::wrapPopulateVramInfo([[maybe_unused]] void *that, void *fwInfo) {
     getMember<uint32_t>(fwInfo, 0x1C) = 4;      // DDR4
     getMember<uint32_t>(fwInfo, 0x20) = 128;    // 128-bit
