@@ -449,7 +449,6 @@ uint16_t WRed::wrapGetEnumeratedRevision(void *that) {
             if (revision >= 0x8) {
                 callbackWRed->asicType = ASICType::Raven2;
                 return 0x79;
-                break;
             }
             callbackWRed->asicType = ASICType::Raven;
             return 0x10;
