@@ -145,4 +145,6 @@ class WRed {
     static void *wrapNewShared();
     static void *wrapNewSharedUserClient();
     static void *wrapAllocateAMDHWAlignManager();
+    static void wrapFlushHDPCache();
+    static void wrapProgramOrClearHDPRegisters();
 };

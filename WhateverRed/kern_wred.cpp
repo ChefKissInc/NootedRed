@@ -217,6 +217,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator19newSharedUserClientEv", wrapNewSharedUserClient},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware25allocateAMDHWAlignManagerEv", wrapAllocateAMDHWAlignManager,
                 orgAllocateAMDHWAlignManager},
+            {"__ZN30AMDRadeonX5000_AMDGFX9Hardware13flushHDPCacheEv", wrapFlushHDPCache},
+            {"__ZN30AMDRadeonX5000_AMDGFX9HWMemory26programOrClearHDPRegistersEhyyyb", wrapProgramOrClearHDPRegisters},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000 symbols");
@@ -760,3 +762,7 @@ uint64_t WRed::wrapGetDisplayInfo(void *that, uint32_t param1, bool param2, bool
     HWALIGNMGR_REVERT
     return ret;
 }
+
+void WRed::wrapFlushHDPCache() {}
+
+void WRed::wrapProgramOrClearHDPRegisters() {}
