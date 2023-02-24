@@ -26,7 +26,9 @@ Due to the complexity and secrecy of the Metal 2/3 drivers, adding support for n
 
 The required logic for our iGPUs has been purged from the AMD kexts since Monterey.
 
-This cannot be resolved cleanly as injecting kexts like GPU kexts is impossible during the OpenCore injection stage; the prelink stage fails for kexts of this type as their dependencies are not contained in the Boot Kext Collection, which is where OpenCore injects kexts to, they're instead in the Auxiliary Kext Collection.
+This cannot be resolved without breaking macOS' integrity and potentially even stability.
+
+Injecting the GPU kexts is not possible during the OpenCore injection stage. The prelink stage fails for kexts of this type as their dependencies aren't contained in the Boot Kext Collection, where OpenCore injects kexts to, they're in the Auxiliary Kext Collection.
 
 In conclusion, this kext is constricted to Big Sur since there are too many incompatibilities with older and newer macOS versions.
 
