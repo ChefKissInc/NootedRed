@@ -108,25 +108,19 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000HWLibs symbols");
 
-        const uint8_t find_asic_reset[] = {0x55, 0x48, 0x89, 0xE5, 0x8B, 0x56, 0x04, 0xBE, 0x3B, 0x00, 0x00, 0x00, 0x5D,
-            0xE9, 0x51, 0xFE, 0xFF, 0xFF};
-        const uint8_t repl_asic_reset[] = {0x55, 0x48, 0x89, 0xE5, 0x8B, 0x56, 0x04, 0xBE, 0x1E, 0x00, 0x00, 0x00, 0x5D,
-            0xE9, 0x51, 0xFE, 0xFF, 0xFF};
-        static_assert(arrsize(find_asic_reset) == arrsize(repl_asic_reset));
+        /**
+         * Patch for `_smu_9_0_1_full_asic_reset`
+         * Correct sent message to `0x1E` as the original code sends `0x3B` which is wrong for SMU 10.
+         */
+        const uint8_t find[] = {0x55, 0x48, 0x89, 0xE5, 0x8B, 0x56, 0x04, 0xBE, 0x3B, 0x00, 0x00, 0x00, 0x5D, 0xE9,
+            0x51, 0xFE, 0xFF, 0xFF};
+        const uint8_t repl[] = {0x55, 0x48, 0x89, 0xE5, 0x8B, 0x56, 0x04, 0xBE, 0x1E, 0x00, 0x00, 0x00, 0x5D, 0xE9,
+            0x51, 0xFE, 0xFF, 0xFF};
+        static_assert(arrsize(find) == arrsize(repl));
+        KernelPatcher::LookupPatch patch = {&kextRadeonX5000HWLibs, find, repl, arrsize(find), 1};
+        patcher.applyLookupPatch(&patch);
+        patcher.clearError();
 
-        KernelPatcher::LookupPatch patches[] = {
-            /**
-             * Patch for `_smu_9_0_1_full_asic_reset`
-             * This function performs a full ASIC reset.
-             * The patch corrects the sent message to `0x1E`;
-             * the original code sends `0x3B`, which is wrong for SMU 10.
-             */
-            {&kextRadeonX5000HWLibs, find_asic_reset, repl_asic_reset, arrsize(find_asic_reset), 1},
-        };
-        for (auto &patch : patches) {
-            patcher.applyLookupPatch(&patch);
-            patcher.clearError();
-        }
     } else if (kextRadeonX6000Framebuffer.loadIndex == index) {
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable},
@@ -145,24 +139,29 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX6000Framebuffer symbols");
 
+        /** Neutralise VRAM Info creation null check to proceed with Controller Core Services initialisation. */
         const uint8_t find_null_check1[] = {0x48, 0x89, 0x83, 0x90, 0x00, 0x00, 0x00, 0x48, 0x85, 0xC0, 0x0F, 0x84,
             0x89, 0x00, 0x00, 0x00, 0x48, 0x8B, 0x7B, 0x18};
         const uint8_t repl_null_check1[] = {0x48, 0x89, 0x83, 0x90, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90, 0x90, 0x90,
             0x90, 0x90, 0x90, 0x90, 0x48, 0x8B, 0x7B, 0x18};
         static_assert(arrsize(find_null_check1) == arrsize(repl_null_check1), "Find/replace patch size mismatch");
 
+        /** Neutralise PSP Firmware Info creation null check to proceed with Controller Core Services
+           initialisation. */
         const uint8_t find_null_check2[] = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00, 0x48, 0x85, 0xC0, 0x0F, 0x84,
             0xA1, 0x00, 0x00, 0x00, 0x48, 0x8B, 0x7B, 0x18};
         const uint8_t repl_null_check2[] = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90, 0x90, 0x90,
             0x90, 0x90, 0x90, 0x90, 0x48, 0x8B, 0x7B, 0x18};
         static_assert(arrsize(find_null_check2) == arrsize(repl_null_check2), "Find/replace patch size mismatch");
 
+        /** Neutralise VRAM Info null check inside `AmdAtomFwServices::getFirmwareInfo`. */
         const uint8_t find_null_check3[] = {0x48, 0x83, 0xBB, 0x90, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x84, 0x90, 0x00,
             0x00, 0x00, 0x49, 0x89, 0xF7, 0xBA, 0x60, 0x00, 0x00, 0x00};
         const uint8_t repl_null_check3[] = {0x48, 0x83, 0xBB, 0x90, 0x00, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90, 0x90,
             0x90, 0x90, 0x49, 0x89, 0xF7, 0xBA, 0x60, 0x00, 0x00, 0x00};
         static_assert(arrsize(find_null_check3) == arrsize(repl_null_check3), "Find/replace patch size mismatch");
 
+        /** Tell AGDC that we're an iGPU */
         const uint8_t find_getVendorInfo[] = {0xc7, 0x03, 0x00, 0x00, 0x03, 0x00, 0x48, 0xb8, 0x02, 0x10, 0x00, 0x00,
             0x02, 0x00, 0x00, 0x00};
         const uint8_t repl_getVendorInfo[] = {0xc7, 0x03, 0x00, 0x00, 0x03, 0x00, 0x48, 0xb8, 0x02, 0x10, 0x00, 0x00,
@@ -170,17 +169,9 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         static_assert(arrsize(find_getVendorInfo) == arrsize(repl_getVendorInfo), "Find/replace patch size mismatch");
 
         KernelPatcher::LookupPatch patches[] = {
-            /** Neutralise VRAM Info creation null check to proceed with Controller Core Services initialisation. */
             {&kextRadeonX6000Framebuffer, find_null_check1, repl_null_check1, arrsize(find_null_check1), 1},
-
-            /** Neutralise PSP Firmware Info creation null check to proceed with Controller Core Services
-               initialisation. */
             {&kextRadeonX6000Framebuffer, find_null_check2, repl_null_check2, arrsize(find_null_check2), 1},
-
-            /** Neutralise VRAM Info null check inside `AmdAtomFwServices::getFirmwareInfo`. */
             {&kextRadeonX6000Framebuffer, find_null_check3, repl_null_check3, arrsize(find_null_check3), 1},
-
-            /** Tell AGDC that we're an iGPU */
             {&kextRadeonX6000Framebuffer, find_getVendorInfo, repl_getVendorInfo, arrsize(find_getVendorInfo), 1},
         };
         for (auto &patch : patches) {
@@ -230,21 +221,16 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000 symbols");
 
-        const uint8_t find_startHWEngines[] = {0x49, 0x89, 0xFE, 0x31, 0xDB, 0x48, 0x83, 0xFB, 0x02, 0x74, 0x50};
-        const uint8_t repl_startHWEngines[] = {0x49, 0x89, 0xFE, 0x31, 0xDB, 0x48, 0x83, 0xFB, 0x01, 0x74, 0x50};
-        static_assert(arrsize(find_startHWEngines) == arrsize(repl_startHWEngines));
-
-        KernelPatcher::LookupPatch patches[] = {
-            /**
-             * `AMDRadeonX5000_AMDHardware::startHWEngines`
-             * Make for loop stop at 1 instead of 2 in order to skip starting SDMA1 engine.
-             */
-            {&kextRadeonX5000, find_startHWEngines, repl_startHWEngines, arrsize(find_startHWEngines), 1},
-        };
-        for (auto &patch : patches) {
-            patcher.applyLookupPatch(&patch);
-            patcher.clearError();
-        }
+        /**
+         * `AMDRadeonX5000_AMDHardware::startHWEngines`
+         * Make for loop stop at 1 instead of 2 since we only have one SDMA engine.
+         */
+        const uint8_t find[] = {0x49, 0x89, 0xFE, 0x31, 0xDB, 0x48, 0x83, 0xFB, 0x02, 0x74, 0x50};
+        const uint8_t repl[] = {0x49, 0x89, 0xFE, 0x31, 0xDB, 0x48, 0x83, 0xFB, 0x01, 0x74, 0x50};
+        static_assert(arrsize(find) == arrsize(repl));
+        KernelPatcher::LookupPatch patch = {&kextRadeonX5000, find, repl, arrsize(find), 1};
+        patcher.applyLookupPatch(&patch);
+        patcher.clearError();
     } else if (kextRadeonX6000.loadIndex == index) {
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZN30AMDRadeonX6000_AMDVCN2HWEngineC1Ev", orgVCN2EngineConstructorX6000},
@@ -283,51 +269,41 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX6000 symbols");
 
+        /** Mismatched VTable Calls to getGpuDebugPolicy. */
         const uint8_t find_getGpuDebugPolicy[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC0, 0x03, 0x00, 0x00};
         const uint8_t repl_getGpuDebugPolicy[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC8, 0x03, 0x00, 0x00};
         static_assert(arrsize(find_getGpuDebugPolicy) == arrsize(repl_getGpuDebugPolicy));
 
+        /** VTable Call to signalGPUWorkSubmitted. Doesn't exist on X5000, but looks like it isn't necessary, so we
+           just NO-OP it. */
         const uint8_t find_HWChannel_submitCommandBuffer[] = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90,
             0x30, 0x02, 0x00, 0x00, 0x48, 0x8B, 0x43, 0x50};
         const uint8_t repl_HWChannel_submitCommandBuffer[] = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0x90, 0x90,
             0x90, 0x90, 0x90, 0x90, 0x48, 0x8B, 0x43, 0x50};
         static_assert(arrsize(find_HWChannel_submitCommandBuffer) == arrsize(repl_HWChannel_submitCommandBuffer));
 
+        /** Mismatched VTable Call to isDeviceValid in enableTimestampInterrupt. */
         const uint8_t find_enableTimestampInterrupt[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0xA0, 0x02, 0x00, 0x00};
         const uint8_t repl_enableTimestampInterrupt[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0x98, 0x02, 0x00, 0x00};
         static_assert(arrsize(find_enableTimestampInterrupt) == arrsize(repl_enableTimestampInterrupt));
 
+        /** Mismatched VTable Calls to getScheduler. */
         const uint8_t find_getScheduler[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0xB8, 0x03, 0x00, 0x00};
         const uint8_t repl_getScheduler[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC0, 0x03, 0x00, 0x00};
         static_assert(arrsize(find_getScheduler) == arrsize(repl_getScheduler));
 
+        /** Mismatched VTable Calls to isDeviceValid. */
         const uint8_t find_isDeviceValid[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0xA0, 0x02, 0x00, 0x00, 0x84, 0xC0};
         const uint8_t repl_isDeviceValid[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0x98, 0x02, 0x00, 0x00, 0x84, 0xC0};
         static_assert(arrsize(find_isDeviceValid) == arrsize(repl_isDeviceValid));
 
-        /**
-         * HWEngine/HWChannel call HWInterface virtual methods.
-         * The X5000 HWInterface virtual table offsets are
-         * slightly different than the X6000 ones,
-         * so we have to make patches to correct the offsets.
-         */
         KernelPatcher::LookupPatch patches[] = {
-            /** Mismatched VTable Calls to getGpuDebugPolicy. */
             {&kextRadeonX6000, find_getGpuDebugPolicy, repl_getGpuDebugPolicy, arrsize(find_getGpuDebugPolicy), 28},
-
-            /** VTable Call to signalGPUWorkSubmitted. Doesn't exist on X5000, but looks like it isn't necessary, so we
-               just NO-OP it. */
             {&kextRadeonX6000, find_HWChannel_submitCommandBuffer, repl_HWChannel_submitCommandBuffer,
                 arrsize(find_HWChannel_submitCommandBuffer), 1},
-
-            /** Mismatched VTable Call to isDeviceValid. */
             {&kextRadeonX6000, find_enableTimestampInterrupt, repl_enableTimestampInterrupt,
                 arrsize(find_enableTimestampInterrupt), 1},
-
-            /** Mismatched VTable Calls to getScheduler. */
             {&kextRadeonX6000, find_getScheduler, repl_getScheduler, arrsize(find_getScheduler), 22},
-
-            /** Mismatched VTable Calls to isDeviceValid. */
             {&kextRadeonX6000, find_isDeviceValid, repl_isDeviceValid, arrsize(find_isDeviceValid), 14},
         };
         for (auto &patch : patches) {
