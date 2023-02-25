@@ -161,18 +161,10 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             0x90, 0x90, 0x49, 0x89, 0xF7, 0xBA, 0x60, 0x00, 0x00, 0x00};
         static_assert(arrsize(find_null_check3) == arrsize(repl_null_check3), "Find/replace patch size mismatch");
 
-        /** Tell AGDC that we're an iGPU */
-        const uint8_t find_getVendorInfo[] = {0xc7, 0x03, 0x00, 0x00, 0x03, 0x00, 0x48, 0xb8, 0x02, 0x10, 0x00, 0x00,
-            0x02, 0x00, 0x00, 0x00};
-        const uint8_t repl_getVendorInfo[] = {0xc7, 0x03, 0x00, 0x00, 0x03, 0x00, 0x48, 0xb8, 0x02, 0x10, 0x00, 0x00,
-            0x01, 0x00, 0x00, 0x00};
-        static_assert(arrsize(find_getVendorInfo) == arrsize(repl_getVendorInfo), "Find/replace patch size mismatch");
-
         KernelPatcher::LookupPatch patches[] = {
             {&kextRadeonX6000Framebuffer, find_null_check1, repl_null_check1, arrsize(find_null_check1), 1},
             {&kextRadeonX6000Framebuffer, find_null_check2, repl_null_check2, arrsize(find_null_check2), 1},
             {&kextRadeonX6000Framebuffer, find_null_check3, repl_null_check3, arrsize(find_null_check3), 1},
-            {&kextRadeonX6000Framebuffer, find_getVendorInfo, repl_getVendorInfo, arrsize(find_getVendorInfo), 1},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
