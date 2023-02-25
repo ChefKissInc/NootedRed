@@ -1,0 +1,7 @@
+status = ["Analyse Clang", "Build"]
+block_labels = ["Invalid", "Duplicate", "Help wanted", "Won't fix"]
+pr_stats = ["Analyse Clang", "Build"]
+delete_merged_branches = true
+use_squash_merge = true
+update_base_for_deletes = true
+up_to_date_approvals = true

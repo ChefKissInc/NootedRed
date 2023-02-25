@@ -44,8 +44,8 @@ jobs:
           tag: ${{ github.ref }}
           file_glob: true
 
-  analyze-clang:
-    name: Analyze Clang
+  analyse-clang:
+    name: Analyse Clang
     runs-on: macos-latest
     env:
       JOB_TYPE: ANALYZE
