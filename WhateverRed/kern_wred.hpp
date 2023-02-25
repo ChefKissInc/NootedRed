@@ -226,11 +226,10 @@ class WRed {
     static uint32_t wrapGcGetHwVersion();
     static void wrapPopulateFirmwareDirectory(void *that);
     static void *wrapCreatePowerTuneServices(void *that, void *param2);
-    static uint32_t wrapSmuGetFwConstants();
-    static uint32_t wrapSmuInternalHwInit();
     static uint32_t wrapSmuRavenInitialize(void *smum, uint32_t param2);
     static uint32_t wrapSmuRenoirInitialize(void *smum, uint32_t param2);
     static uint32_t wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4);
+    static uint32_t hwLibsNoop();
 
     /** X6000 */
     static bool wrapAccelStartX6000();
