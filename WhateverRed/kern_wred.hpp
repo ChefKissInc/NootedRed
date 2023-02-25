@@ -132,13 +132,14 @@ class WRed {
 
     bool getVBIOSFromVRAM(IOPCIDevice *provider) {
         uint32_t size = 256 * 1024;    // ???
-        auto *bar0 = provider->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress0, kIOMemoryMapCacheModeCopyback);
+        auto *bar0 = provider->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress0, kIOMemoryMapCacheModeWriteThrough);
         if (!bar0 || !bar0->getLength()) {
             DBGLOG("wred", "FB BAR not enabled");
+            if (bar0) { bar0->release(); }
             return false;
         }
         auto *fb = reinterpret_cast<const uint8_t *>(bar0->getVirtualAddress());
-        if (!fb || !checkAtomBios(fb, size)) {
+        if (!checkAtomBios(fb, size)) {
             DBGLOG("wred", "VRAM VBIOS is not an ATOMBIOS");
             bar0->release();
             return false;
