@@ -431,10 +431,6 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
     auto revision = getMember<uint32_t>(that, 0x68);
     auto emulatedRevision = getMember<uint32_t>(that, 0x6c);
 
-    DBGLOG("wred", "Locating Init Caps entry");
-    PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "wred",
-        "Failed to enable kernel writing");
-
     if (!injectedIPFirmware) {
         injectedIPFirmware = true;
         auto *asicName = getASICName();
@@ -453,6 +449,10 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
 
         delete[] filename;
     }
+
+    DBGLOG("wred", "Locating Init Caps entry");
+    PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "wred",
+        "Failed to enable kernel writing");
 
     CailInitAsicCapEntry *initCaps = nullptr;
     for (size_t i = 0; i < 789; i++) {
