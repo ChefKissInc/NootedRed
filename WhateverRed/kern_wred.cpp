@@ -325,10 +325,6 @@ void WRed::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
     if (provider->getProperty("ATY,bin_image")) {
         DBGLOG("wred", "VBIOS manually overridden");
     } else {
-        // DBGLOG("wred", "Fetching VBIOS from VRAM BAR");
-        IODeviceMemory *vramBar = provider->getDeviceMemoryWithIndex(0);
-        if (vramBar) { DBGLOG("wred", "VRAM BAR located at %llX", vramBar->getPhysicalAddress()); }
-
         DBGLOG("wred", "Fetching VBIOS from VFCT table");
         auto *expert = reinterpret_cast<AppleACPIPlatformExpert *>(provider->getPlatform());
         PANIC_COND(!expert, "wred", "Failed to get AppleACPIPlatformExpert");
