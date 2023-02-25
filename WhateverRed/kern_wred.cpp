@@ -4,7 +4,6 @@
 #include "kern_wred.hpp"
 #include "kern_fw.hpp"
 #include <Headers/kern_api.hpp>
-#include <IOKit/acpi/IOACPIPlatformExpert.h>
 
 static const char *pathRadeonX5000HWLibs = "/System/Library/Extensions/AMDRadeonX5000HWServices.kext/Contents/PlugIns/"
                                            "AMDRadeonX5000HWLibs.kext/Contents/MacOS/AMDRadeonX5000HWLibs";
@@ -305,11 +304,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
     }
 }
 
-// Hack
-class AppleACPIPlatformExpert : IOACPIPlatformExpert {
-    friend class WRed;
-};
-
 void WRed::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
     static uint8_t builtBytes[] = {0x01};
     provider->setProperty("built-in", builtBytes, sizeof(builtBytes));
@@ -323,27 +317,10 @@ void WRed::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
     if (provider->getProperty("ATY,bin_image")) {
         DBGLOG("wred", "VBIOS manually overridden");
     } else {
-        DBGLOG("wred", "Fetching VBIOS from VFCT table");
-        auto *expert = reinterpret_cast<AppleACPIPlatformExpert *>(provider->getPlatform());
-        PANIC_COND(!expert, "wred", "Failed to get AppleACPIPlatformExpert");
-
-        auto *vfctData = expert->getACPITableData("VFCT", 0);
-        PANIC_COND(!vfctData, "wred", "Failed to get VFCT from AppleACPIPlatformExpert");
-
-        auto *vfct = static_cast<const VFCT *>(vfctData->getBytesNoCopy());
-        PANIC_COND(!vfct, "wred", "VFCT OSData::getBytesNoCopy returned null");
-
-        auto *vbiosContent = static_cast<const GOPVideoBIOSHeader *>(
-            vfctData->getBytesNoCopy(vfct->vbiosImageOffset, sizeof(GOPVideoBIOSHeader)));
-        PANIC_COND(!vfct->vbiosImageOffset || !vbiosContent, "wred", "No VBIOS contained in VFCT table");
-
-        auto *vbiosPtr =
-            vfctData->getBytesNoCopy(vfct->vbiosImageOffset + sizeof(GOPVideoBIOSHeader), vbiosContent->imageLength);
-        PANIC_COND(!vbiosPtr, "wred", "Bad VFCT: Offset + Size not within buffer boundaries");
-
-        callbackWRed->vbiosData = OSData::withBytes(vbiosPtr, vbiosContent->imageLength);
-        PANIC_COND(!callbackWRed->vbiosData, "wred", "OSData::withBytes failed");
-        provider->setProperty("ATY,bin_image", callbackWRed->vbiosData);
+        if (!callbackWRed->getVBIOSFromVFCT(provider)) {
+            DBGLOG("wred", "Failed to get VBIOS from VFCT, trying to get it from VRAM");
+            PANIC_COND(!callbackWRed->getVBIOSFromVRAM(provider), "wred", "Failed to get VBIOS from VRAM");
+        }
     }
 
     FunctionCast(wrapAmdTtlServicesConstructor, callbackWRed->orgAmdTtlServicesConstructor)(that, provider);
