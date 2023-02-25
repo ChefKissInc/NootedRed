@@ -1,10 +1,10 @@
-# WhateverRed
+# <p align="center">WhateverRed</p> <p align="center">![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/NootInc/WhateverRed/main.yml?branch=master&logo=github&style=for-the-badge)</p>
 
-An AMD iGPU support [Lilu](https://github.com/acidanthera/Lilu) plugin.
+<p align="center">An AMD iGPU support [Lilu](https://github.com/acidanthera/Lilu) plugin.</p>
 
-The Source Code of this Original Work is licensed under the `Thou Shalt Not Profit License version 1.0`. See `LICENSE`
+<p align="center">The Source Code of this Original Work is licensed under the `Thou Shalt Not Profit License version 1.0`. See `LICENSE`</p>
 
-## FAQ
+## <p align="center">FAQ</p>
 
 ### Can I have an AMD dGPU installed on the system?
 
@@ -30,7 +30,7 @@ Injecting the GPU kexts is not possible during the OpenCore injection stage. The
 
 In conclusion, this kext is constricted to Big Sur since there are too many incompatibilities with older and newer macOS versions.
 
-## Project members
+## <p align="center">Project members</p>
 
 - [@ChefKissInc](https://github.com/ChefKissInc) | Project lead, Linux shitcode analyser and kernel extension developer. Extensive knowledge of OS inner workings
 - [@NyanCatTW1](https://github.com/NyanCatTW1) | Reverse Engineering and Python automation magician. His Ghidra RedMetaClassAnalyzer script has made the entire process way painless by automagically discovering C++ v-tables for classes.
