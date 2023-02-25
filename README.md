@@ -10,8 +10,6 @@ The Source Code of this Original Work is licensed under the `Thou Shalt Not Prof
 
 We are mixing AMDRadeonX5000 for GCN 5, AMDRadeonX6000 for VCN, and AMDRadeonX6000Framebuffer for DCN, so your system must not have a GCN 5 or RDNA AMD dGPU, as this kext will conflict with them.
 
-Also, if you have any AMD dGPU installed, it is likely that the VBIOS in the VFCT ACPI table will be overriden with the one from the dGPU, and the one from the iGPU will be put in its VRAM, which we do not currently handle.
-
 ### How functional is the kext?
 
 This project is under active research and development; There will be crashes here and there, and it is incompatible with Renoir-based iGPUs (Like Cezanne, Lucienne, etc).

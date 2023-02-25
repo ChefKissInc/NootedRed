@@ -4,6 +4,7 @@
 #pragma once
 #include "kern_amd.hpp"
 #include <Headers/kern_iokit.hpp>
+#include <IOKit/acpi/IOACPIPlatformExpert.h>
 #include <IOKit/pci/IOPCIDevice.h>
 
 enum struct ASICType {
@@ -13,6 +14,45 @@ enum struct ASICType {
     Renoir,
     Unknown,
 };
+
+// Hack
+class AppleACPIPlatformExpert : IOACPIPlatformExpert {
+    friend class WRed;
+};
+
+// https://elixir.bootlin.com/linux/latest/source/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c#L49
+static bool checkAtomBios(const uint8_t *bios, size_t size) {
+    uint16_t tmp, bios_header_start;
+
+    if (size < 0x49) {
+        DBGLOG("wred", "VBIOS size is invalid");
+        return false;
+    }
+
+    if (bios[0] != 0x55 || bios[1] != 0xAA) {
+        DBGLOG("wred", "VBIOS signature <%x %x> is invalid", bios[0], bios[1]);
+        return false;
+    }
+
+    bios_header_start = bios[0x48] | (bios[0x49] << 8);
+    if (!bios_header_start) {
+        DBGLOG("wred", "Unable to locate VBIOS header");
+        return false;
+    }
+
+    tmp = bios_header_start + 4;
+    if (size < tmp) {
+        DBGLOG("wred", "BIOS header is broken");
+        return false;
+    }
+
+    if (!memcmp(bios + tmp, "ATOM", 4) || !memcmp(bios + tmp, "MOTA", 4)) {
+        DBGLOG("wred", "ATOMBIOS detected");
+        return true;
+    }
+
+    return false;
+}
 
 class WRed {
     public:
@@ -37,6 +77,81 @@ class WRed {
             default:
                 PANIC("wred", "Unknown ASIC type");
         }
+    }
+
+    bool getVBIOSFromVFCT(IOPCIDevice *provider) {
+        DBGLOG("wred", "Fetching VBIOS from VFCT table");
+        auto *expert = reinterpret_cast<AppleACPIPlatformExpert *>(provider->getPlatform());
+        PANIC_COND(!expert, "wred", "Failed to get AppleACPIPlatformExpert");
+
+        auto *vfctData = expert->getACPITableData("VFCT", 0);
+        if (!vfctData) {
+            DBGLOG("wred", "No VFCT from AppleACPIPlatformExpert");
+            return false;
+        }
+
+        auto *vfct = static_cast<const VFCT *>(vfctData->getBytesNoCopy());
+        PANIC_COND(!vfct, "wred", "VFCT OSData::getBytesNoCopy returned null");
+
+        auto offset = vfct->vbiosImageOffset;
+
+        while (offset < vfctData->getLength()) {
+            auto *vHdr =
+                static_cast<const GOPVideoBIOSHeader *>(vfctData->getBytesNoCopy(offset, sizeof(GOPVideoBIOSHeader)));
+            if (!vHdr) {
+                DBGLOG("wred", "VFCT header out of bounds");
+                vfctData->release();
+                return false;
+            }
+
+            auto *vContent = static_cast<const uint8_t *>(
+                vfctData->getBytesNoCopy(offset + sizeof(GOPVideoBIOSHeader), vHdr->imageLength));
+            if (!vContent) {
+                DBGLOG("wred", "VFCT VBIOS image out of bounds");
+                vfctData->release();
+                return false;
+            }
+
+            offset += sizeof(GOPVideoBIOSHeader) + vHdr->imageLength;
+
+            if (vHdr->imageLength && vHdr->pciBus == provider->getBusNumber() &&
+                vHdr->pciDevice == provider->getDeviceNumber() && vHdr->pciFunction == provider->getFunctionNumber() &&
+                vHdr->vendorID == provider->configRead16(kIOPCIConfigVendorID) &&
+                vHdr->deviceID == provider->configRead16(kIOPCIConfigDeviceID)) {
+                if (!checkAtomBios(vContent, vHdr->imageLength)) {
+                    DBGLOG("wred", "VFCT VBIOS is not an ATOMBIOS");
+                    vfctData->release();
+                    return false;
+                }
+                this->vbiosData = OSData::withBytes(vContent, vHdr->imageLength);
+                PANIC_COND(!this->vbiosData, "wred", "VFCT OSData::withBytes failed");
+                provider->setProperty("ATY,bin_image", this->vbiosData);
+                vfctData->release();
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool getVBIOSFromVRAM(IOPCIDevice *provider) {
+        uint32_t size = 256 * 1024;    // ???
+        auto *bar0 = provider->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress0, kIOMemoryMapCacheModeCopyback);
+        if (!bar0 || !bar0->getLength()) {
+            DBGLOG("wred", "FB BAR not enabled");
+            return false;
+        }
+        auto *fb = reinterpret_cast<const uint8_t *>(bar0->getVirtualAddress());
+        if (!fb || !checkAtomBios(fb, size)) {
+            DBGLOG("wred", "VRAM VBIOS is not an ATOMBIOS");
+            bar0->release();
+            return false;
+        }
+        this->vbiosData = OSData::withBytes(fb, size);
+        PANIC_COND(!this->vbiosData, "wred", "VRAM OSData::withBytes failed");
+        provider->setProperty("ATY,bin_image", this->vbiosData);
+        bar0->release();
+        return true;
     }
 
     OSData *vbiosData = nullptr;
