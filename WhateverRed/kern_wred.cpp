@@ -457,17 +457,17 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
     CailInitAsicCapEntry *initCaps = nullptr;
     for (size_t i = 0; i < 789; i++) {
         auto *temp = callbackWRed->orgAsicInitCapsTable + i;
-        if (temp->familyId == AMDGPU_FAMILY_RV && temp->deviceId == deviceId && temp->emulatedRev == emulatedRevision) {
+        if (temp->familyId == AMDGPU_FAMILY_RV && temp->deviceId == deviceId && temp->revision == revision) {
             initCaps = temp;
             break;
         }
     }
+
     if (!initCaps) {
         DBGLOG("wred", "Warning: Using fallback Init Caps search");
         for (size_t i = 0; i < 789; i++) {
             auto *temp = callbackWRed->orgAsicInitCapsTable + i;
-            if (temp->familyId == AMDGPU_FAMILY_RV && temp->deviceId == deviceId &&
-                (temp->emulatedRev >= wrapGetEnumeratedRevision(that) || temp->emulatedRev <= emulatedRevision)) {
+            if (temp->familyId == AMDGPU_FAMILY_RV && temp->deviceId == deviceId) {
                 initCaps = temp;
                 initCaps->emulatedRev = emulatedRevision;
                 initCaps->revision = revision;
