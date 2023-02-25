@@ -100,7 +100,6 @@ class WRed {
                 static_cast<const GOPVideoBIOSHeader *>(vfctData->getBytesNoCopy(offset, sizeof(GOPVideoBIOSHeader)));
             if (!vHdr) {
                 DBGLOG("wred", "VFCT header out of bounds");
-                vfctData->release();
                 return false;
             }
 
@@ -108,7 +107,6 @@ class WRed {
                 vfctData->getBytesNoCopy(offset + sizeof(GOPVideoBIOSHeader), vHdr->imageLength));
             if (!vContent) {
                 DBGLOG("wred", "VFCT VBIOS image out of bounds");
-                vfctData->release();
                 return false;
             }
 
@@ -120,13 +118,11 @@ class WRed {
                 vHdr->deviceID == provider->configRead16(kIOPCIConfigDeviceID)) {
                 if (!checkAtomBios(vContent, vHdr->imageLength)) {
                     DBGLOG("wred", "VFCT VBIOS is not an ATOMBIOS");
-                    vfctData->release();
                     return false;
                 }
                 this->vbiosData = OSData::withBytes(vContent, vHdr->imageLength);
                 PANIC_COND(!this->vbiosData, "wred", "VFCT OSData::withBytes failed");
                 provider->setProperty("ATY,bin_image", this->vbiosData);
-                vfctData->release();
                 return true;
             }
         }
