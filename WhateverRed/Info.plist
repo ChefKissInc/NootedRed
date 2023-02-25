@@ -295,7 +295,5 @@
 		<key>com.apple.kpi.unsupported</key>
 		<string>10.0.0</string>
 	</dict>
-	<key>OSBundleRequired</key>
-	<string>Safe Boot</string>
 </dict>
 </plist>
