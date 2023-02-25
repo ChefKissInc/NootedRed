@@ -1,6 +1,6 @@
 # <p align="center">WhateverRed</p> <p align="center">![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/NootInc/WhateverRed/main.yml?branch=master&logo=github&style=for-the-badge)</p>
 
-<p align="center">An AMD iGPU support [Lilu](https://github.com/acidanthera/Lilu) plugin.</p>
+<p align="center">An AMD iGPU support <a href="https://github.com/acidanthera/Lilu">Lilu</a> plugin.</p>
 
 <p align="center">The Source Code of this Original Work is licensed under the `Thou Shalt Not Profit License version 1.0`. See `LICENSE`</p>
 
