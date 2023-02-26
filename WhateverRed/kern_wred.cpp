@@ -393,12 +393,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
 }
 
 void WRed::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
-    size_t index = 0;
-    auto *name = new char[512];
-    while (true) {
-        snprintf(name, 512, "GFX%zu", index++);
-        if (WIOKit::renameDevice(provider, name)) { break; }
-    }
     static uint8_t builtBytes[] = {0x01};
     provider->setProperty("built-in", builtBytes, sizeof(builtBytes));
 
