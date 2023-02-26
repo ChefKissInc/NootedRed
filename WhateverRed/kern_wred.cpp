@@ -126,7 +126,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             0xE9, 0x51, 0xFE, 0xFF, 0xFF};
         const uint8_t repl_asic_reset[] = {0x55, 0x48, 0x89, 0xE5, 0x8B, 0x56, 0x04, 0xBE, 0x1E, 0x00, 0x00, 0x00, 0x5D,
             0xE9, 0x51, 0xFE, 0xFF, 0xFF};
-        static_assert(arrsize(find_asic_reset) == arrsize(repl_asic_reset), "Find/replace patch size mismatch");
+        static_assert(arrsize(find_asic_reset) == arrsize(repl_asic_reset));
 
         /**
          * Patches for `_psp_asd_load`.
@@ -506,6 +506,10 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
     auto revision = getMember<uint32_t>(that, 0x68);
     auto emulatedRevision = getMember<uint32_t>(that, 0x6c);
 
+    DBGLOG("wred", "Locating Init Caps entry");
+    PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "wred",
+        "Failed to enable kernel writing");
+
     if (!injectedIPFirmware) {
         injectedIPFirmware = true;
         auto *asicName = getASICName();
@@ -566,10 +570,6 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
 
         delete[] filename;
     }
-
-    DBGLOG("wred", "Locating Init Caps entry");
-    PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "wred",
-        "Failed to enable kernel writing");
 
     CailInitAsicCapEntry *initCaps = nullptr;
     for (size_t i = 0; i < 789; i++) {
