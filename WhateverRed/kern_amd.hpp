@@ -9,7 +9,8 @@ using t_putFirmware = bool (*)(void *that, uint32_t deviceType, void *fw);
 using t_Vega10PowerTuneConstructor = void (*)(void *that, void *param1, void *param2);
 using t_HWEngineConstructor = void (*)(void *that);
 using t_HWEngineNew = void *(*)(size_t size);
-using t_sendMsgToSmc = uint32_t (*)(void *smumData, uint32_t msgId);
+using t_sendMsgToSmc = uint32_t (*)(void *smum, uint32_t msgId);
+using t_pspLoadExtended = uint32_t (*)(void *, uint64_t, uint64_t, const void *, size_t);
 
 constexpr uint32_t AMDGPU_FAMILY_RV = 0x8E;
 
@@ -113,4 +114,18 @@ struct CailInitAsicCapEntry {
     uint64_t pciRev;
     uint32_t *caps;
     void *goldenCaps;
+} PACKED;
+
+struct GcFwConstant {
+    const char *unknown1;
+    uint32_t unknown2, size;
+    uint32_t addr, unknown4;
+    uint32_t unknown5, unknown6;
+    uint8_t *data;
+} PACKED;
+
+struct SdmaFwConstant {
+    const char *unknown1;
+    uint32_t size, unknown2;
+    uint8_t *data;
 } PACKED;

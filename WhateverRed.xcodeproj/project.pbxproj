@@ -32,13 +32,53 @@
 		1C748C271C21952C0024EED2 /* WhateverRed.kext */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WhateverRed.kext; sourceTree = BUILT_PRODUCTS_DIR; };
 		1C748C2C1C21952C0024EED2 /* kern_start.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_start.cpp; sourceTree = "<group>"; };
 		1C748C2E1C21952C0024EED2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		402AB9A728C7840B00A55F4F /* raven_dtm.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_dtm.bin; sourceTree = "<group>"; };
+		402AB9A828C7840B00A55F4F /* renoir_dtm.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_dtm.bin; sourceTree = "<group>"; };
+		402AB9A928C7850B00A55F4F /* raven_asd.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_asd.bin; sourceTree = "<group>"; };
+		402AB9AA28C7850B00A55F4F /* renoir_asd.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_asd.bin; sourceTree = "<group>"; };
 		402AB9AC28C7863400A55F4F /* raven_vcn.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_vcn.bin; sourceTree = "<group>"; };
 		402AB9AD28C7863400A55F4F /* renoir_vcn.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_vcn.bin; sourceTree = "<group>"; };
+		402AB9AF28C78D5800A55F4F /* raven_hdcp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_hdcp.bin; sourceTree = "<group>"; };
+		402AB9B028C78D5800A55F4F /* renoir_hdcp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_hdcp.bin; sourceTree = "<group>"; };
 		402D48C228A8903C0064644D /* renoir_dmcub.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_dmcub.bin; sourceTree = "<group>"; };
+		406ED93A29293C2900D930F6 /* raven_rlc.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_rlc.bin; sourceTree = "<group>"; };
+		406ED93B29293C2900D930F6 /* raven_mec.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_mec.bin; sourceTree = "<group>"; };
+		406ED93C29293C2A00D930F6 /* raven_ce.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_ce.bin; sourceTree = "<group>"; };
+		406ED93D29293C2A00D930F6 /* renoir_ce.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_ce.bin; sourceTree = "<group>"; };
+		406ED93E29293C2A00D930F6 /* renoir_me.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_me.bin; sourceTree = "<group>"; };
+		406ED93F29293C2A00D930F6 /* raven_pfp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_pfp.bin; sourceTree = "<group>"; };
+		406ED94029293C2A00D930F6 /* renoir_mec.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_mec.bin; sourceTree = "<group>"; };
+		406ED94329293C2A00D930F6 /* renoir_pfp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_pfp.bin; sourceTree = "<group>"; };
+		406ED94429293C2A00D930F6 /* renoir_rlc.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_rlc.bin; sourceTree = "<group>"; };
+		406ED94529293C2A00D930F6 /* raven_me.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_me.bin; sourceTree = "<group>"; };
+		408BD6A2293A0D6300385B0E /* raven2_rlc.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven2_rlc.bin; sourceTree = "<group>"; };
+		408BD6A3293A0D6400385B0E /* raven2_sdma.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven2_sdma.bin; sourceTree = "<group>"; };
+		408BD6A4293A0D6400385B0E /* picasso_hdcp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = picasso_hdcp.bin; sourceTree = "<group>"; };
+		408BD6A5293A0D6400385B0E /* picasso_asd.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = picasso_asd.bin; sourceTree = "<group>"; };
 		408BD6A6293A0D6400385B0E /* picasso_vcn.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = picasso_vcn.bin; sourceTree = "<group>"; };
 		408BD6A7293A0D6400385B0E /* raven2_vcn.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven2_vcn.bin; sourceTree = "<group>"; };
+		408BD6A8293A0D6400385B0E /* picasso_ce.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = picasso_ce.bin; sourceTree = "<group>"; };
+		408BD6A9293A0D6400385B0E /* picasso_dtm.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = picasso_dtm.bin; sourceTree = "<group>"; };
+		408BD6AA293A0D6400385B0E /* raven_sdma.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_sdma.bin; sourceTree = "<group>"; };
+		408BD6AB293A0D6400385B0E /* picasso_pfp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = picasso_pfp.bin; sourceTree = "<group>"; };
+		408BD6AC293A0D6400385B0E /* raven2_hdcp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven2_hdcp.bin; sourceTree = "<group>"; };
+		408BD6AD293A0D6400385B0E /* picasso_rlc.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = picasso_rlc.bin; sourceTree = "<group>"; };
+		408BD6AE293A0D6400385B0E /* raven2_me.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven2_me.bin; sourceTree = "<group>"; };
+		408BD6AF293A0D6400385B0E /* raven2_mec.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven2_mec.bin; sourceTree = "<group>"; };
+		408BD6B0293A0D6400385B0E /* picasso_mec_jt.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = picasso_mec_jt.bin; sourceTree = "<group>"; };
+		408BD6B1293A0D6400385B0E /* raven2_dtm.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven2_dtm.bin; sourceTree = "<group>"; };
+		408BD6B2293A0D6400385B0E /* raven2_asd.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven2_asd.bin; sourceTree = "<group>"; };
+		408BD6B3293A0D6400385B0E /* raven2_mec_jt.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven2_mec_jt.bin; sourceTree = "<group>"; };
+		408BD6B4293A0D6400385B0E /* picasso_sdma.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = picasso_sdma.bin; sourceTree = "<group>"; };
+		408BD6B5293A0D6400385B0E /* picasso_mec.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = picasso_mec.bin; sourceTree = "<group>"; };
+		408BD6B6293A0D6400385B0E /* picasso_me.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = picasso_me.bin; sourceTree = "<group>"; };
+		408BD6B7293A0D6400385B0E /* raven2_ce.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven2_ce.bin; sourceTree = "<group>"; };
+		408BD6B8293A0D6400385B0E /* raven2_pfp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven2_pfp.bin; sourceTree = "<group>"; };
+		408BD6B9293A0D6400385B0E /* renoir_sdma.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_sdma.bin; sourceTree = "<group>"; };
 		408F201E288ACBB0002EEC15 /* kern_fw.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_fw.hpp; sourceTree = "<group>"; };
 		408F201F288ACBE6002EEC15 /* kern_fw.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_fw.cpp; sourceTree = "<group>"; };
+		40CFC67929294BB400748DCC /* raven_mec_jt.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_mec_jt.bin; sourceTree = "<group>"; };
+		40CFC67A29294BB400748DCC /* renoir_mec_jt.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_mec_jt.bin; sourceTree = "<group>"; };
 		CE405EBA1E49DD7100AA0B3D /* kern_compression.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_compression.hpp; sourceTree = "<group>"; };
 		CE405EBB1E49DD7100AA0B3D /* kern_disasm.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_disasm.hpp; sourceTree = "<group>"; };
 		CE405EBC1E49DD7100AA0B3D /* kern_file.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_file.hpp; sourceTree = "<group>"; };
@@ -107,10 +147,50 @@
 		408F201A288AC068002EEC15 /* Firmware */ = {
 			isa = PBXGroup;
 			children = (
+				408BD6A5293A0D6400385B0E /* picasso_asd.bin */,
+				408BD6A8293A0D6400385B0E /* picasso_ce.bin */,
+				408BD6A9293A0D6400385B0E /* picasso_dtm.bin */,
+				408BD6A4293A0D6400385B0E /* picasso_hdcp.bin */,
+				408BD6B6293A0D6400385B0E /* picasso_me.bin */,
+				408BD6B0293A0D6400385B0E /* picasso_mec_jt.bin */,
+				408BD6B5293A0D6400385B0E /* picasso_mec.bin */,
+				408BD6AB293A0D6400385B0E /* picasso_pfp.bin */,
+				408BD6AD293A0D6400385B0E /* picasso_rlc.bin */,
+				408BD6B4293A0D6400385B0E /* picasso_sdma.bin */,
 				408BD6A6293A0D6400385B0E /* picasso_vcn.bin */,
+				402AB9A928C7850B00A55F4F /* raven_asd.bin */,
+				406ED93C29293C2A00D930F6 /* raven_ce.bin */,
+				402AB9A728C7840B00A55F4F /* raven_dtm.bin */,
+				402AB9AF28C78D5800A55F4F /* raven_hdcp.bin */,
+				406ED94529293C2A00D930F6 /* raven_me.bin */,
+				40CFC67929294BB400748DCC /* raven_mec_jt.bin */,
+				406ED93B29293C2900D930F6 /* raven_mec.bin */,
+				406ED93F29293C2A00D930F6 /* raven_pfp.bin */,
+				406ED93A29293C2900D930F6 /* raven_rlc.bin */,
+				408BD6AA293A0D6400385B0E /* raven_sdma.bin */,
 				402AB9AC28C7863400A55F4F /* raven_vcn.bin */,
+				408BD6B2293A0D6400385B0E /* raven2_asd.bin */,
+				408BD6B7293A0D6400385B0E /* raven2_ce.bin */,
+				408BD6B1293A0D6400385B0E /* raven2_dtm.bin */,
+				408BD6AC293A0D6400385B0E /* raven2_hdcp.bin */,
+				408BD6AE293A0D6400385B0E /* raven2_me.bin */,
+				408BD6B3293A0D6400385B0E /* raven2_mec_jt.bin */,
+				408BD6AF293A0D6400385B0E /* raven2_mec.bin */,
+				408BD6B8293A0D6400385B0E /* raven2_pfp.bin */,
+				408BD6A2293A0D6300385B0E /* raven2_rlc.bin */,
+				408BD6A3293A0D6400385B0E /* raven2_sdma.bin */,
 				408BD6A7293A0D6400385B0E /* raven2_vcn.bin */,
+				402AB9AA28C7850B00A55F4F /* renoir_asd.bin */,
+				406ED93D29293C2A00D930F6 /* renoir_ce.bin */,
 				402D48C228A8903C0064644D /* renoir_dmcub.bin */,
+				402AB9A828C7840B00A55F4F /* renoir_dtm.bin */,
+				402AB9B028C78D5800A55F4F /* renoir_hdcp.bin */,
+				406ED93E29293C2A00D930F6 /* renoir_me.bin */,
+				40CFC67A29294BB400748DCC /* renoir_mec_jt.bin */,
+				406ED94029293C2A00D930F6 /* renoir_mec.bin */,
+				406ED94329293C2A00D930F6 /* renoir_pfp.bin */,
+				406ED94429293C2A00D930F6 /* renoir_rlc.bin */,
+				408BD6B9293A0D6400385B0E /* renoir_sdma.bin */,
 				402AB9AD28C7863400A55F4F /* renoir_vcn.bin */,
 			);
 			path = Firmware;

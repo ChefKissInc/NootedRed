@@ -180,6 +180,17 @@ class WRed {
     t_Vega10PowerTuneConstructor orgVega10PowerTuneConstructor = nullptr;
     CailAsicCapEntry *orgCapsTableHWLibs = nullptr;
     CailInitAsicCapEntry *orgAsicInitCapsTable = nullptr;
+    mach_vm_address_t orgPspAsdLoad {};
+    mach_vm_address_t orgPspDtmLoad {};
+    mach_vm_address_t orgPspHdcpLoad {};
+    GcFwConstant *orgGcRlcUcode = nullptr;
+    GcFwConstant *orgGcMeUcode = nullptr;
+    GcFwConstant *orgGcCeUcode = nullptr;
+    GcFwConstant *orgGcPfpUcode = nullptr;
+    GcFwConstant *orgGcMecUcode = nullptr;
+    GcFwConstant *orgGcMecJtUcode = nullptr;
+    SdmaFwConstant *orgSdma41Ucode = nullptr;
+    SdmaFwConstant *orgSdma412Ucode = nullptr;
     t_sendMsgToSmc orgRavenSendMsgToSmc = nullptr;
     t_sendMsgToSmc orgRenoirSendMsgToSmc = nullptr;
     mach_vm_address_t orgSmuRavenInitialize {};
@@ -225,6 +236,9 @@ class WRed {
     static uint32_t wrapGcGetHwVersion();
     static void wrapPopulateFirmwareDirectory(void *that);
     static void *wrapCreatePowerTuneServices(void *that, void *param2);
+    static uint32_t wrapPspAsdLoad(void *pspData);
+    static uint32_t wrapPspDtmLoad(void *pspData);
+    static uint32_t wrapPspHdcpLoad(void *pspData);
     static uint32_t wrapSmuRavenInitialize(void *smum, uint32_t param2);
     static uint32_t wrapSmuRenoirInitialize(void *smum, uint32_t param2);
     static uint32_t wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4);
