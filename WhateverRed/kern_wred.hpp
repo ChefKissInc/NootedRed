@@ -155,7 +155,6 @@ class WRed {
     ASICType asicType = ASICType::Unknown;
     void *callbackFirmwareDirectory = nullptr;
     uint64_t fbOffset {};
-    IOMemoryDescriptor *memDesc = nullptr;
 
     void *hwAlignMgr = nullptr;
     uint8_t *hwAlignMgrVtX5000 = nullptr;
