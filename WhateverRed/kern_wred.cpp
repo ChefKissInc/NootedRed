@@ -45,7 +45,10 @@ void WRed::init() {
 
 void WRed::deinit() {
     if (this->vbiosData) { this->vbiosData->release(); }
-    if (this->memDesc) { this->memDesc->release(); }
+    if (this->memDesc) {
+        this->memDesc->complete();
+        this->memDesc->release();
+    }
 }
 
 void WRed::processPatcher(KernelPatcher &patcher) {
@@ -522,6 +525,8 @@ uint32_t WRed::wrapHwReadReg32(void *that, uint32_t reg) {
                        << 20;
         callbackWRed->memDesc = IOMemoryDescriptor::withAddress(reinterpret_cast<void *>(callbackWRed->fbOffset),
             memSize, kIODirectionNone);    // Mark iGPU's memory as reserved
+        PANIC_COND(!callbackWRed->memDesc, "wred", "Failed to reserve iGPU's VRAM");
+        callbackWRed->memDesc->prepare();
     }
     return FunctionCast(wrapHwReadReg32, callbackWRed->orgHwReadReg32)(that, reg == 0xD31 ? 0xD2F : reg);
 }
