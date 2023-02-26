@@ -671,7 +671,7 @@ uint32_t WRed::wrapPspDtmLoad(void *pspData) {
     auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspDtmLoad);
     auto ret = org(pspData, 0, 0, fwDesc.data, fwDesc.size);
     DBGLOG("wred", "_psp_dtm_load returned 0x%X", ret);
-    return 0;
+    return ret;
 }
 
 /** Same idea as `_psp_asd_load`. */
