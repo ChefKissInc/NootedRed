@@ -393,8 +393,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
 }
 
 void WRed::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
-    static uint8_t builtBytes[] = {0x01};
-    provider->setProperty("built-in", builtBytes, sizeof(builtBytes));
+    SYSLOG("wred", "Please don't support tonymacx86.com!");
 
     DBGLOG("wred", "Patching device type table");
     PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "wred",
