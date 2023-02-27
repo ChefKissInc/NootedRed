@@ -532,71 +532,54 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
         fwDesc = &getFWDescByName(filename);
         auto *rlcFwHeader = reinterpret_cast<const RlcFwHeaderV2_1 *>(fwDesc->data);
         callbackWRed->orgGcRlcUcode->addr = 0x0;
-        PANIC_COND(callbackWRed->orgGcRlcUcode->size != rlcFwHeader->ucodeSize, "wred",
-            "%s Fw size mismatch %d (expected) vs %d (actual)", filename, callbackWRed->orgGcRlcUcode->size,
-            rlcFwHeader->ucodeSize);
-        memcpy(callbackWRed->orgGcRlcUcode->data, fwDesc->data + rlcFwHeader->ucodeOff, rlcFwHeader->ucodeSize);
+        callbackWRed->orgGcRlcUcode->size = rlcFwHeader->ucodeSize;
+        callbackWRed->orgGcRlcUcode->data = fwDesc->data + rlcFwHeader->ucodeOff;
         DBGLOG("wred", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_me.bin", asicName);
         fwDesc = &getFWDescByName(filename);
         fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc->data);
         callbackWRed->orgGcMeUcode->addr = 0x0;
-        PANIC_COND(callbackWRed->orgGcMeUcode->size != fwHeader->ucodeSize, "wred",
-            "%s Fw size mismatch %d (expected) vs %d (actual)", filename, callbackWRed->orgGcMeUcode->size,
-            fwHeader->ucodeSize);
-        memcpy(callbackWRed->orgGcMeUcode->data, fwDesc->data + fwHeader->ucodeOff, fwHeader->ucodeSize);
+        callbackWRed->orgGcMeUcode->size = fwHeader->ucodeSize;
+        callbackWRed->orgGcMeUcode->data = fwDesc->data + fwHeader->ucodeOff;
         DBGLOG("wred", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_ce.bin", asicName);
         fwDesc = &getFWDescByName(filename);
         fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc->data);
         callbackWRed->orgGcCeUcode->addr = 0x0;
-        PANIC_COND(callbackWRed->orgGcCeUcode->size != fwHeader->ucodeSize, "wred",
-            "%s Fw size mismatch %d (expected) vs %d (actual)", filename, callbackWRed->orgGcCeUcode->size,
-            fwHeader->ucodeSize);
-        memcpy(callbackWRed->orgGcCeUcode->data, fwDesc->data + fwHeader->ucodeOff, fwHeader->ucodeSize);
+        callbackWRed->orgGcCeUcode->size = fwHeader->ucodeSize;
+        callbackWRed->orgGcCeUcode->data = fwDesc->data + fwHeader->ucodeOff;
         DBGLOG("wred", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_pfp.bin", asicName);
         fwDesc = &getFWDescByName(filename);
         fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc->data);
         callbackWRed->orgGcPfpUcode->addr = 0x0;
-        PANIC_COND(callbackWRed->orgGcPfpUcode->size != fwHeader->ucodeSize, "wred",
-            "%s Fw size mismatch %d (expected) vs %d (actual)", filename, callbackWRed->orgGcPfpUcode->size,
-            fwHeader->ucodeSize);
-        memcpy(callbackWRed->orgGcPfpUcode->data, fwDesc->data + fwHeader->ucodeOff, fwHeader->ucodeSize);
+        callbackWRed->orgGcPfpUcode->size = fwHeader->ucodeSize;
+        callbackWRed->orgGcPfpUcode->data = fwDesc->data + fwHeader->ucodeOff;
         DBGLOG("wred", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_mec.bin", asicName);
         fwDesc = &getFWDescByName(filename);
         fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc->data);
         callbackWRed->orgGcMecUcode->addr = 0x0;
-        PANIC_COND(callbackWRed->orgGcMecUcode->size != fwHeader->ucodeSize, "wred",
-            "%s Fw size mismatch %d (expected) vs %d (actual)", filename, callbackWRed->orgGcMecUcode->size,
-            fwHeader->ucodeSize - fwHeader->jtSize * 4);
-        memcpy(callbackWRed->orgGcMecUcode->data, fwDesc->data + fwHeader->ucodeOff,
-            fwHeader->ucodeSize - fwHeader->jtSize * 4);
+        callbackWRed->orgGcMecUcode->size = fwHeader->ucodeSize - (fwHeader->jtSize * 4);
+        callbackWRed->orgGcMecUcode->data = fwDesc->data + fwHeader->ucodeOff;
         DBGLOG("wred", "Injected %s!", filename);
         callbackWRed->orgGcMecJtUcode->addr = fwHeader->jtOff;
-        PANIC_COND(callbackWRed->orgGcMecJtUcode->size != fwHeader->jtSize * 4, "wred",
-            "%s <jt> Fw size mismatch %d (expected) vs %d (actual)", filename, callbackWRed->orgGcMecJtUcode->size,
-            fwHeader->jtSize * 4);
-        memcpy(callbackWRed->orgGcMecJtUcode->data,
-            fwDesc->data + fwHeader->ucodeOff + (fwHeader->ucodeSize - fwHeader->jtSize * 4), fwHeader->jtSize * 4);
+        callbackWRed->orgGcMecJtUcode->size = fwHeader->jtSize * 4;
+        callbackWRed->orgGcMecJtUcode->data =
+            fwDesc->data + fwHeader->ucodeOff + (fwHeader->ucodeSize - (fwHeader->jtSize * 4));
         DBGLOG("wred", "Injected %s <jt>!", filename);
 
         snprintf(filename, 128, "%s_sdma.bin", asicName);
         fwDesc = &getFWDescByName(filename);
         auto *sdmaFwHeader = reinterpret_cast<const SdmaFwHeaderV1 *>(fwDesc->data);
-        PANIC_COND(callbackWRed->orgSdma41Ucode->size != sdmaFwHeader->ucodeSize, "wred",
-            "%s Fw size mismatch %d (expected) vs %d (actual)", filename, callbackWRed->orgSdma41Ucode->size,
-            sdmaFwHeader->ucodeSize);
-        memcpy(callbackWRed->orgSdma41Ucode->data, fwDesc->data + sdmaFwHeader->ucodeOff, sdmaFwHeader->ucodeSize);
-        PANIC_COND(callbackWRed->orgSdma412Ucode->size != sdmaFwHeader->ucodeSize, "wred",
-            "%s Fw size mismatch %d (expected) vs %d (actual)", filename, callbackWRed->orgSdma412Ucode->size,
-            sdmaFwHeader->ucodeSize);
-        memcpy(callbackWRed->orgSdma412Ucode->data, fwDesc->data + sdmaFwHeader->ucodeOff, sdmaFwHeader->ucodeSize);
+        callbackWRed->orgSdma41Ucode->size = sdmaFwHeader->ucodeSize;
+        callbackWRed->orgSdma41Ucode->data = fwDesc->data + sdmaFwHeader->ucodeOff;
+        callbackWRed->orgSdma412Ucode->size = sdmaFwHeader->ucodeSize;
+        callbackWRed->orgSdma412Ucode->data = fwDesc->data + sdmaFwHeader->ucodeOff;
         DBGLOG("wred", "Injected %s!", filename);
 
         delete[] filename;
