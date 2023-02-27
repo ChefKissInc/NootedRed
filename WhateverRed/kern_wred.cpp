@@ -503,7 +503,7 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
         auto *asicName = getASICName();
         auto *filename = new char[128];
 
-        if (callbackWRed->asicType == ASICType::Renoir || callbackWRed->asicType == ASICType::GreenSardine) {
+        if (callbackWRed->asicType >= ASICType::Renoir) {
             snprintf(filename, 128, "%s_dmcub.bin", asicName);
             DBGLOG("wred", "%s => atidmcub_0.dat", filename);
             auto &fwDesc = getFWDescByName(filename);
@@ -517,10 +517,7 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
         }
 
         snprintf(filename, 128, "%s_vcn.bin", asicName);
-        auto *targetFilename =
-            callbackWRed->asicType == ASICType::Renoir || callbackWRed->asicType == ASICType::GreenSardine ?
-                "ativvaxy_nv.dat" :
-                "ativvaxy_rv.dat";
+        auto *targetFilename = callbackWRed->asicType >= ASICType::Renoir ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
         DBGLOG("wred", "%s => %s", filename, targetFilename);
 
         auto *fwDesc = &getFWDescByName(filename);
@@ -646,7 +643,7 @@ bool WRed::wrapAllocateHWEngines(void *that) {
 
 void WRed::wrapSetupAndInitializeHWCapabilities(void *that) {
     FunctionCast(wrapSetupAndInitializeHWCapabilities, callbackWRed->orgSetupAndInitializeHWCapabilities)(that);
-    if (callbackWRed->asicType != ASICType::Renoir) {
+    if (callbackWRed->asicType < ASICType::Renoir) {
         getMember<uint32_t>(that, 0x2C) = 4;    // Surface Count
     }
     getMember<bool>(that, 0xC0) = false;    // SDMA Page Queue
@@ -736,8 +733,7 @@ void *WRed::wrapAllocateAMDHWDisplay(void *that) {
 uint32_t WRed::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4) {
     // Skip loading of CP MEC JT2 FW on Renoir devices due to it being unsupported
     // See also: https://github.com/torvalds/linux/commit/f8f70c1371d304f42d4a1242d8abcbda807d0bed
-    if ((callbackWRed->asicType == ASICType::Renoir || callbackWRed->asicType == ASICType::GreenSardine) &&
-        getMember<uint>(ctx, 16) == 6) {
+    if ((callbackWRed->asicType >= ASICType::Renoir) && getMember<uint>(ctx, 16) == 6) {
         DBGLOG("wred", "Skipping loading of fwType 6");
         return 0;
     }
@@ -782,7 +778,7 @@ bool WRed::wrapAccelSharedUCStopX6000(void *that, void *provider) {
 
 void WRed::wrapInitDCNRegistersOffsets(void *that) {
     FunctionCast(wrapInitDCNRegistersOffsets, callbackWRed->orgInitDCNRegistersOffsets)(that);
-    if (callbackWRed->asicType != ASICType::Renoir) {
+    if (callbackWRed->asicType < ASICType::Renoir) {
         DBGLOG("wred", "initDCNRegistersOffsets !! PATCHING REGISTERS FOR DCN 1.0 !!");
         auto base = getMember<uint32_t>(that, 0x4830);
         getMember<uint32_t>(that, 0x4840) = base + mmHUBPREQ0_DCSURF_PRIMARY_SURFACE_ADDRESS;
