@@ -677,7 +677,7 @@ uint32_t WRed::wrapPspDtmLoad(void *pspData) {
     auto *fwHeader = reinterpret_cast<const PspTaFwHeaderV1 *>(fwDesc.data);
     delete[] filename;
     auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspDtmLoad);
-    auto ret = org(pspData, 0, 0, fwDesc.data + fwHeader->dtm.off, fwHeader->dtm.size);
+    auto ret = org(pspData, 0, 0, fwDesc.data + fwHeader->ucodeOff + fwHeader->dtm.off, fwHeader->dtm.size);
     DBGLOG("wred", "_psp_dtm_load returned 0x%X", ret);
     return ret;
 }
@@ -691,7 +691,7 @@ uint32_t WRed::wrapPspHdcpLoad(void *pspData) {
     auto *fwHeader = reinterpret_cast<const PspTaFwHeaderV1 *>(fwDesc.data);
     delete[] filename;
     auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspHdcpLoad);
-    auto ret = org(pspData, 0, 0, fwDesc.data + fwHeader->hdcp.off, fwHeader->hdcp.size);
+    auto ret = org(pspData, 0, 0, fwDesc.data + fwHeader->ucodeOff + fwHeader->hdcp.off, fwHeader->hdcp.size);
     DBGLOG("wred", "_psp_hdcp_load returned 0x%X", ret);
     return ret;
 }
