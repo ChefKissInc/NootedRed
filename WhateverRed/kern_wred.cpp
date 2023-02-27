@@ -2,6 +2,7 @@
 //  details.
 
 #include "kern_wred.hpp"
+#include "kern_amd.hpp"
 #include "kern_fw.hpp"
 #include <Headers/kern_api.hpp>
 
@@ -444,13 +445,6 @@ uint32_t WRed::wrapGcGetHwVersion() { return 0x090201; }
 void WRed::wrapPopulateFirmwareDirectory(void *that) {
     FunctionCast(wrapPopulateFirmwareDirectory, callbackWRed->orgPopulateFirmwareDirectory)(that);
     callbackWRed->callbackFirmwareDirectory = getMember<void *>(that, 0xB8);
-    auto &fwDesc = getFWDescByName("renoir_dmcub.bin");
-    DBGLOG("wred", "renoir_dmcub.bin => atidmcub_0.dat");
-    auto *fwDmcub = callbackWRed->orgCreateFirmware(fwDesc.data, fwDesc.size, 0x200, "atidmcub_0.dat");
-    PANIC_COND(!fwDmcub, "wred", "Failed to create atidmcub_0.dat firmware");
-    DBGLOG("wred", "inserting atidmcub_0.dat!");
-    PANIC_COND(!callbackWRed->orgPutFirmware(callbackWRed->callbackFirmwareDirectory, 6, fwDmcub), "wred",
-        "Failed to inject atidmcub_0.dat firmware");
 }
 
 void *WRed::wrapCreatePowerTuneServices(void *that, void *param2) {
@@ -478,13 +472,14 @@ uint16_t WRed::wrapGetEnumeratedRevision(void *that) {
             return 0x10;
         case 0x15E7:
             [[fallthrough]];
-        case 0x164C:
-            [[fallthrough]];
-        case 0x1636:
-            [[fallthrough]];
         case 0x1638:
             callbackWRed->asicType = ASICType::Renoir;
             return 0x91;
+        case 0x164C:
+            [[fallthrough]];
+        case 0x1636:
+            callbackWRed->asicType = ASICType::GreenSardine;
+            return 0xA1;
         default:
             PANIC("wred", "Unknown device ID");
     }
@@ -508,57 +503,75 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
         auto *asicName = getASICName();
         auto *filename = new char[128];
 
+        if (callbackWRed->asicType == ASICType::Renoir || callbackWRed->asicType == ASICType::GreenSardine) {
+            snprintf(filename, 128, "%s_dmcub.bin", asicName);
+            DBGLOG("wred", "%s => atidmcub_0.dat", filename);
+            auto &fwDesc = getFWDescByName(filename);
+            auto *fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc.data);
+            auto *fwDmcub = callbackWRed->orgCreateFirmware(fwDesc.data + fwHeader->ucodeOff, fwHeader->ucodeSize,
+                0x200, "atidmcub_0.dat");
+            PANIC_COND(!fwDmcub, "wred", "Failed to create atidmcub_0.dat firmware");
+            DBGLOG("wred", "Inserting atidmcub_0.dat!");
+            PANIC_COND(!callbackWRed->orgPutFirmware(callbackWRed->callbackFirmwareDirectory, 6, fwDmcub), "wred",
+                "Failed to inject atidmcub_0.dat firmware");
+        }
+
         snprintf(filename, 128, "%s_vcn.bin", asicName);
         auto *targetFilename = callbackWRed->asicType == ASICType::Renoir ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
         DBGLOG("wred", "%s => %s", filename, targetFilename);
 
         auto *fwDesc = &getFWDescByName(filename);
-        auto *fw = callbackWRed->orgCreateFirmware(fwDesc->data, fwDesc->size, 0x200, targetFilename);
+        auto *fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc->data);
+        auto *fw = callbackWRed->orgCreateFirmware(fwDesc->data + fwHeader->ucodeOff, fwHeader->ucodeSize, 0x200,
+            targetFilename);
         PANIC_COND(!fw, "wred", "Failed to create '%s' firmware", targetFilename);
         DBGLOG("wred", "Inserting %s!", targetFilename);
         PANIC_COND(!callbackWRed->orgPutFirmware(callbackWRed->callbackFirmwareDirectory, 6, fw), "wred",
             "Failed to inject ativvaxy_rv.dat firmware");
 
         snprintf(filename, 128, "%s_rlc.bin", asicName);
-        callbackWRed->orgGcRlcUcode->addr = 0x0;
         fwDesc = &getFWDescByName(filename);
-        memmove(callbackWRed->orgGcRlcUcode->data, fwDesc->data, fwDesc->size);
+        fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc->data);
+        callbackWRed->orgGcRlcUcode->addr = 0x0;
+        callbackWRed->orgGcRlcUcode->data = fwDesc->data + fwHeader->ucodeOff;
         DBGLOG("wred", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_me.bin", asicName);
         fwDesc = &getFWDescByName(filename);
-        callbackWRed->orgGcMeUcode->addr = 0x1000;
-        memmove(callbackWRed->orgGcMeUcode->data, fwDesc->data, fwDesc->size);
+        fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc->data);
+        callbackWRed->orgGcMeUcode->addr = 0x0;
+        callbackWRed->orgGcMeUcode->data = fwDesc->data + fwHeader->ucodeOff;
         DBGLOG("wred", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_ce.bin", asicName);
         fwDesc = &getFWDescByName(filename);
-        callbackWRed->orgGcCeUcode->addr = 0x800;
-        memmove(callbackWRed->orgGcCeUcode->data, fwDesc->data, fwDesc->size);
+        fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc->data);
+        callbackWRed->orgGcCeUcode->addr = 0x0;
+        callbackWRed->orgGcCeUcode->data = fwDesc->data + fwHeader->ucodeOff;
         DBGLOG("wred", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_pfp.bin", asicName);
         fwDesc = &getFWDescByName(filename);
-        callbackWRed->orgGcPfpUcode->addr = 0x1400;
-        memmove(callbackWRed->orgGcPfpUcode->data, fwDesc->data, fwDesc->size);
+        fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc->data);
+        callbackWRed->orgGcPfpUcode->addr = 0x0;
+        callbackWRed->orgGcPfpUcode->data = fwDesc->data + fwHeader->ucodeOff;
         DBGLOG("wred", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_mec.bin", asicName);
         fwDesc = &getFWDescByName(filename);
+        fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc->data);
         callbackWRed->orgGcMecUcode->addr = 0x0;
-        memmove(callbackWRed->orgGcMecUcode->data, fwDesc->data, fwDesc->size);
+        callbackWRed->orgGcMecUcode->data = fwDesc->data + fwHeader->ucodeOff;
         DBGLOG("wred", "Injected %s!", filename);
-
-        snprintf(filename, 128, "%s_mec_jt.bin", asicName);
-        fwDesc = &getFWDescByName(filename);
-        callbackWRed->orgGcMecJtUcode->addr = 0x104A4;
-        memmove(callbackWRed->orgGcMecJtUcode->data, fwDesc->data, fwDesc->size);
+        callbackWRed->orgGcMecJtUcode->addr = fwHeader->jtOff;
+        callbackWRed->orgGcMecJtUcode->data = fwDesc->data + (fwHeader->ucodeSize - fwHeader->jtSize);
         DBGLOG("wred", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_sdma.bin", asicName);
         fwDesc = &getFWDescByName(filename);
-        memmove(callbackWRed->orgSdma41Ucode->data, fwDesc->data, fwDesc->size);
-        memmove(callbackWRed->orgSdma412Ucode->data, fwDesc->data, fwDesc->size);
+        auto *sdmaFwHeader = reinterpret_cast<const SdmaFwHeaderV1 *>(fwDesc->data);
+        callbackWRed->orgSdma41Ucode->data = fwDesc->data + sdmaFwHeader->ucodeOff;
+        callbackWRed->orgSdma412Ucode->data = fwDesc->data + sdmaFwHeader->ucodeOff;
         DBGLOG("wred", "Injected %s!", filename);
 
         delete[] filename;
@@ -647,9 +660,10 @@ uint32_t WRed::wrapPspAsdLoad(void *pspData) {
     snprintf(filename, 128, "%s_asd.bin", getASICName());
     DBGLOG("wred", "injecting %s!", filename);
     auto &fwDesc = getFWDescByName(filename);
+    auto *fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc.data);
     delete[] filename;
     auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspAsdLoad);
-    auto ret = org(pspData, 0, 0, fwDesc.data, fwDesc.size);
+    auto ret = org(pspData, 0, 0, fwDesc.data + fwHeader->ucodeOff, fwHeader->ucodeSize);
     DBGLOG("wred", "_psp_asd_load returned 0x%X", ret);
     return ret;
 }
@@ -660,9 +674,10 @@ uint32_t WRed::wrapPspDtmLoad(void *pspData) {
     snprintf(filename, 128, "%s_dtm.bin", getASICName());
     DBGLOG("wred", "injecting %s!", filename);
     auto &fwDesc = getFWDescByName(filename);
+    auto *fwHeader = reinterpret_cast<const PspTaFwHeaderV1 *>(fwDesc.data);
     delete[] filename;
     auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspDtmLoad);
-    auto ret = org(pspData, 0, 0, fwDesc.data, fwDesc.size);
+    auto ret = org(pspData, 0, 0, fwDesc.data + fwHeader->dtm.off, fwHeader->dtm.size);
     DBGLOG("wred", "_psp_dtm_load returned 0x%X", ret);
     return ret;
 }
@@ -673,9 +688,10 @@ uint32_t WRed::wrapPspHdcpLoad(void *pspData) {
     snprintf(filename, 128, "%s_hdcp.bin", getASICName());
     DBGLOG("wred", "injecting %s!", filename);
     auto &fwDesc = getFWDescByName(filename);
+    auto *fwHeader = reinterpret_cast<const PspTaFwHeaderV1 *>(fwDesc.data);
     delete[] filename;
     auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspHdcpLoad);
-    auto ret = org(pspData, 0, 0, fwDesc.data, fwDesc.size);
+    auto ret = org(pspData, 0, 0, fwDesc.data + fwHeader->hdcp.off, fwHeader->hdcp.size);
     DBGLOG("wred", "_psp_hdcp_load returned 0x%X", ret);
     return ret;
 }

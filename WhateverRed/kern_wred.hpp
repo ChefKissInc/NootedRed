@@ -12,6 +12,7 @@ enum struct ASICType {
     Raven2,
     Picasso,
     Renoir,
+    GreenSardine,
     Unknown,
 };
 
@@ -65,18 +66,9 @@ class WRed {
 
     private:
     static const char *getASICName() {
-        switch (callbackWRed->asicType) {
-            case ASICType::Picasso:
-                return "picasso";
-            case ASICType::Raven:
-                return "raven";
-            case ASICType::Raven2:
-                return "raven2";
-            case ASICType::Renoir:
-                return "renoir";
-            default:
-                PANIC("wred", "Unknown ASIC type");
-        }
+        PANIC_COND(callbackWRed->asicType == ASICType::Unknown, "wred", "Unknown ASIC type");
+        static const char *asicNames[] = {"raven", "raven2", "picasso", "renoir", "green_sardine"};
+        return asicNames[static_cast<int>(callbackWRed->asicType)];
     }
 
     bool getVBIOSFromVFCT(IOPCIDevice *provider) {

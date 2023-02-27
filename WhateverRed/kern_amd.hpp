@@ -99,6 +99,76 @@ struct GOPVideoBIOSHeader {
     uint32_t revision, imageLength;
 } PACKED;
 
+struct CommonFirmwareHeader {
+    uint32_t size;
+    uint32_t headerSize;
+    uint16_t headerMajor;
+    uint16_t headerMinor;
+    uint16_t ipMajor;
+    uint16_t ipMinor;
+    uint32_t ucodeVer;
+    uint32_t ucodeSize;
+    uint32_t ucodeOff;
+    uint32_t crc32;
+} PACKED;
+
+struct GfxFwHeaderV1 : public CommonFirmwareHeader {
+    uint32_t ucodeFeatureVer;
+    uint32_t jtOff;
+    uint32_t jtSize;
+} PACKED;
+
+struct SdmaFwHeaderV1 : public CommonFirmwareHeader {
+    uint32_t ucodeFeatureVer;
+    uint32_t ucodeChangeVer;
+    uint32_t jtOff;
+    uint32_t jtSize;
+} PACKED;
+
+struct RlcFwHeaderV2_1 : public CommonFirmwareHeader {
+    uint32_t ucodeFeatureVer;
+    uint32_t jtOff;
+    uint32_t jtSize;
+    uint32_t saveAndRestorOff;
+    uint32_t clearStateDescOff;
+    uint32_t availScratchRamLocations;
+    uint32_t regRestoreListSize;
+    uint32_t regListFmtStart;
+    uint32_t regListFmtSeparateStart;
+    uint32_t startingOffsetsStart;
+    uint32_t regListFmtSize;
+    uint32_t regListFmtArrayOff;
+    uint32_t regListSize;
+    uint32_t regListArrayOff;
+    uint32_t regListFmtSeparateSize;
+    uint32_t regListFmtSeparateArrayOff;
+    uint32_t regListSeparateSize;
+    uint32_t regListSeparateArrayOff;
+    uint32_t regListFmtDirectRegListLen;
+    uint32_t saveRestoreListCntlUcodeVer;
+    uint32_t saveRestoreListCntlFeatureVer;
+    uint32_t saveRestoreListCntlSize;
+    uint32_t saveRestoreListCntlOff;
+    uint32_t saveRestoreListGpmUcodeVer;
+    uint32_t saveRestoreListGpmFeatureVer;
+    uint32_t saveRestoreListGpmSize;
+    uint32_t saveRestoreListGpmOff;
+    uint32_t saveRestoreListSrmucode_ver;
+    uint32_t saveRestoreListSrmFeatureVer;
+    uint32_t saveRestoreListSrmSize;
+    uint32_t saveRestoreListSrmOff;
+} PACKED;
+
+struct PspFwLegacyBinDesc {
+    uint32_t fwVer;
+    uint32_t off;
+    uint32_t size;
+} PACKED;
+
+struct PspTaFwHeaderV1 : public CommonFirmwareHeader {
+    PspFwLegacyBinDesc xgmi, ras, hdcp, dtm, securedisplay;
+} PACKED;
+
 struct CailAsicCapEntry {
     uint32_t familyId, deviceId;
     uint32_t revision, emulatedRev;
@@ -121,11 +191,11 @@ struct GcFwConstant {
     uint32_t unknown2, size;
     uint32_t addr, unknown4;
     uint32_t unknown5, unknown6;
-    uint8_t *data;
+    const uint8_t *data;
 } PACKED;
 
 struct SdmaFwConstant {
     const char *unknown1;
     uint32_t size, unknown2;
-    uint8_t *data;
+    const uint8_t *data;
 } PACKED;
