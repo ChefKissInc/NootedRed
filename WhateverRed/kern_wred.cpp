@@ -747,11 +747,24 @@ void *WRed::wrapAllocateAMDHWDisplay(void *that) {
 }
 
 uint32_t WRed::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4) {
-    // Skip loading of CP MEC JT2 FW on Renoir devices due to it being unsupported
+    // Skip loading of MEC2 FW on Renoir devices due to it being unsupported
     // See also: https://github.com/torvalds/linux/commit/f8f70c1371d304f42d4a1242d8abcbda807d0bed
-    if (callbackWRed->asicType >= ASICType::Renoir && getMember<uint>(ctx, 16) == 6) {
-        DBGLOG("wred", "Skipping loading of fwType 6");
-        return 0;
+    if (callbackWRed->asicType >= ASICType::Renoir) {
+        static bool didMec1 = false;
+        switch (getMember<uint32_t>(ctx, 16)) {
+            case GFX_FW_TYPE_CP_MEC:
+                if (!didMec1) {
+                    didMec1 = true;
+                    break;
+                }
+                DBGLOG("wred", "Skipping MEC2 FW");
+                return 0;
+            case GFX_FW_TYPE_CP_MEC_ME2:
+                DBGLOG("wred", "Skipping MEC2 JT FW");
+                return 0;
+            default:
+                break;
+        }
     }
 
     return FunctionCast(wrapPspCmdKmSubmit, callbackWRed->orgPspCmdKmSubmit)(psp, ctx, param3, param4);

@@ -78,6 +78,9 @@ constexpr uint32_t mmOTG4_OTG_INTERLACE_CONTROL = 0x1D44;
 constexpr uint32_t mmOTG5_OTG_CONTROL = 0x1DC1;
 constexpr uint32_t mmOTG5_OTG_INTERLACE_CONTROL = 0x1DC4;
 
+constexpr uint32_t GFX_FW_TYPE_CP_MEC = 5;
+constexpr uint32_t GFX_FW_TYPE_CP_MEC_ME2 = 6;
+
 struct VFCT {
     char signature[4];
     uint32_t length;
