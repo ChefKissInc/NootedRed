@@ -129,7 +129,7 @@ struct RlcFwHeaderV2_1 : public CommonFirmwareHeader {
     uint32_t ucodeFeatureVer;
     uint32_t jtOff;
     uint32_t jtSize;
-    uint32_t saveAndRestorOff;
+    uint32_t saveAndRestoreOff;
     uint32_t clearStateDescOff;
     uint32_t availScratchRamLocations;
     uint32_t regRestoreListSize;
@@ -153,7 +153,7 @@ struct RlcFwHeaderV2_1 : public CommonFirmwareHeader {
     uint32_t saveRestoreListGpmFeatureVer;
     uint32_t saveRestoreListGpmSize;
     uint32_t saveRestoreListGpmOff;
-    uint32_t saveRestoreListSrmucode_ver;
+    uint32_t saveRestoreListSrmUcodeVer;
     uint32_t saveRestoreListSrmFeatureVer;
     uint32_t saveRestoreListSrmSize;
     uint32_t saveRestoreListSrmOff;
