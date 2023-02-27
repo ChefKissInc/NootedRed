@@ -187,15 +187,15 @@ struct CailInitAsicCapEntry {
 } PACKED;
 
 struct GcFwConstant {
-    const char *unknown1;
-    uint32_t unknown2, size;
+    const char *firmwareVer;
+    uint32_t featureVer, size;
     uint32_t addr, unknown4;
     uint32_t unknown5, unknown6;
-    const uint8_t *data;
+    uint8_t *data;
 } PACKED;
 
 struct SdmaFwConstant {
     const char *unknown1;
     uint32_t size, unknown2;
-    const uint8_t *data;
+    uint8_t *data;
 } PACKED;

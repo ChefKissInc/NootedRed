@@ -507,7 +507,7 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
             snprintf(filename, 128, "%s_dmcub.bin", asicName);
             DBGLOG("wred", "%s => atidmcub_0.dat", filename);
             auto &fwDesc = getFWDescByName(filename);
-            auto *fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc.data);
+            auto *fwHeader = reinterpret_cast<const CommonFirmwareHeader *>(fwDesc.data);
             auto *fwDmcub = callbackWRed->orgCreateFirmware(fwDesc.data + fwHeader->ucodeOff, fwHeader->ucodeSize,
                 0x200, "atidmcub_0.dat");
             PANIC_COND(!fwDmcub, "wred", "Failed to create atidmcub_0.dat firmware");
@@ -531,48 +531,64 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
 
         snprintf(filename, 128, "%s_rlc.bin", asicName);
         fwDesc = &getFWDescByName(filename);
-        fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc->data);
+        auto *rlcFwHeader = reinterpret_cast<const RlcFwHeaderV2_1 *>(fwDesc->data);
         callbackWRed->orgGcRlcUcode->addr = 0x0;
-        callbackWRed->orgGcRlcUcode->data = fwDesc->data + fwHeader->ucodeOff;
+        PANIC_COND(callbackWRed->orgGcRlcUcode->size != rlcFwHeader->ucodeSize, "wred", "%s Fw size mismatch %d vs %d",
+            filename, callbackWRed->orgGcRlcUcode->size, rlcFwHeader->ucodeSize);
+        memcpy(callbackWRed->orgGcRlcUcode->data, fwDesc->data + rlcFwHeader->ucodeOff, rlcFwHeader->ucodeSize);
         DBGLOG("wred", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_me.bin", asicName);
         fwDesc = &getFWDescByName(filename);
         fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc->data);
         callbackWRed->orgGcMeUcode->addr = 0x0;
-        callbackWRed->orgGcMeUcode->data = fwDesc->data + fwHeader->ucodeOff;
+        PANIC_COND(callbackWRed->orgGcMeUcode->size != fwHeader->ucodeSize, "wred", "%s Fw size mismatch %d vs %d",
+            filename, callbackWRed->orgGcMeUcode->size, fwHeader->ucodeSize);
+        memcpy(callbackWRed->orgGcMeUcode->data, fwDesc->data + fwHeader->ucodeOff, fwHeader->ucodeSize);
         DBGLOG("wred", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_ce.bin", asicName);
         fwDesc = &getFWDescByName(filename);
         fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc->data);
         callbackWRed->orgGcCeUcode->addr = 0x0;
-        callbackWRed->orgGcCeUcode->data = fwDesc->data + fwHeader->ucodeOff;
+        PANIC_COND(callbackWRed->orgGcCeUcode->size != fwHeader->ucodeSize, "wred", "%s Fw size mismatch %d vs %d",
+            filename, callbackWRed->orgGcCeUcode->size, fwHeader->ucodeSize);
+        memcpy(callbackWRed->orgGcCeUcode->data, fwDesc->data + fwHeader->ucodeOff, fwHeader->ucodeSize);
         DBGLOG("wred", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_pfp.bin", asicName);
         fwDesc = &getFWDescByName(filename);
         fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc->data);
         callbackWRed->orgGcPfpUcode->addr = 0x0;
-        callbackWRed->orgGcPfpUcode->data = fwDesc->data + fwHeader->ucodeOff;
+        PANIC_COND(callbackWRed->orgGcPfpUcode->size != fwHeader->ucodeSize, "wred", "%s Fw size mismatch %d vs %d",
+            filename, callbackWRed->orgGcPfpUcode->size, fwHeader->ucodeSize);
+        memcpy(callbackWRed->orgGcPfpUcode->data, fwDesc->data + fwHeader->ucodeOff, fwHeader->ucodeSize);
         DBGLOG("wred", "Injected %s!", filename);
 
         snprintf(filename, 128, "%s_mec.bin", asicName);
         fwDesc = &getFWDescByName(filename);
         fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc->data);
         callbackWRed->orgGcMecUcode->addr = 0x0;
-        callbackWRed->orgGcMecUcode->data = fwDesc->data + fwHeader->ucodeOff;
+        PANIC_COND(callbackWRed->orgGcMecUcode->size != fwHeader->ucodeSize, "wred", "%s Fw size mismatch %d vs %d",
+            filename, callbackWRed->orgGcMecUcode->size, fwHeader->ucodeSize);
+        memcpy(callbackWRed->orgGcMecUcode->data, fwDesc->data + fwHeader->ucodeOff, fwHeader->ucodeSize);
         DBGLOG("wred", "Injected %s!", filename);
         callbackWRed->orgGcMecJtUcode->addr = fwHeader->jtOff;
-        callbackWRed->orgGcMecJtUcode->data =
-            fwDesc->data + fwHeader->ucodeOff + (fwHeader->ucodeSize - fwHeader->jtSize * 4);
+        PANIC_COND(callbackWRed->orgGcMecJtUcode->size != fwHeader->jtSize * 4, "wred",
+            "%s <jt> Fw size mismatch %d vs %d", filename, callbackWRed->orgGcMecJtUcode->size, fwHeader->jtSize * 4);
+        memcpy(callbackWRed->orgGcMecJtUcode->data,
+            fwDesc->data + fwHeader->ucodeOff + (fwHeader->ucodeSize - fwHeader->jtSize * 4), fwHeader->jtSize * 4);
         DBGLOG("wred", "Injected %s <jt>!", filename);
 
         snprintf(filename, 128, "%s_sdma.bin", asicName);
         fwDesc = &getFWDescByName(filename);
         auto *sdmaFwHeader = reinterpret_cast<const SdmaFwHeaderV1 *>(fwDesc->data);
-        callbackWRed->orgSdma41Ucode->data = fwDesc->data + sdmaFwHeader->ucodeOff;
-        callbackWRed->orgSdma412Ucode->data = fwDesc->data + sdmaFwHeader->ucodeOff;
+        PANIC_COND(callbackWRed->orgSdma41Ucode->size != sdmaFwHeader->ucodeSize, "wred",
+            "%s Fw size mismatch %d vs %d", filename, callbackWRed->orgSdma41Ucode->size, sdmaFwHeader->ucodeSize);
+        memcpy(callbackWRed->orgSdma41Ucode->data, fwDesc->data + sdmaFwHeader->ucodeOff, sdmaFwHeader->ucodeSize);
+        PANIC_COND(callbackWRed->orgSdma412Ucode->size != sdmaFwHeader->ucodeSize, "wred",
+            "%s Fw size mismatch %d vs %d", filename, callbackWRed->orgSdma412Ucode->size, sdmaFwHeader->ucodeSize);
+        memcpy(callbackWRed->orgSdma412Ucode->data, fwDesc->data + sdmaFwHeader->ucodeOff, sdmaFwHeader->ucodeSize);
         DBGLOG("wred", "Injected %s!", filename);
 
         delete[] filename;
@@ -733,7 +749,7 @@ void *WRed::wrapAllocateAMDHWDisplay(void *that) {
 uint32_t WRed::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4) {
     // Skip loading of CP MEC JT2 FW on Renoir devices due to it being unsupported
     // See also: https://github.com/torvalds/linux/commit/f8f70c1371d304f42d4a1242d8abcbda807d0bed
-    if ((callbackWRed->asicType >= ASICType::Renoir) && getMember<uint>(ctx, 16) == 6) {
+    if (callbackWRed->asicType >= ASICType::Renoir && getMember<uint>(ctx, 16) == 6) {
         DBGLOG("wred", "Skipping loading of fwType 6");
         return 0;
     }
