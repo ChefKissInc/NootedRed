@@ -485,8 +485,6 @@ uint16_t WRed::wrapGetEnumeratedRevision(void *that) {
     }
 }
 
-static bool injectedIPFirmware = false;
-
 IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
     auto ret = FunctionCast(wrapPopulateDeviceInfo, callbackWRed->orgPopulateDeviceInfo)(that);
     getMember<uint32_t>(that, 0x60) = AMDGPU_FAMILY_RV;
@@ -498,8 +496,9 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
     PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "wred",
         "Failed to enable kernel writing");
 
-    if (!injectedIPFirmware) {
-        injectedIPFirmware = true;
+    static bool once = false;
+    if (!once) {
+        once = true;
         auto *asicName = getASICName();
         auto *filename = new char[128];
 
@@ -533,8 +532,9 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
         fwDesc = &getFWDescByName(filename);
         auto *rlcFwHeader = reinterpret_cast<const RlcFwHeaderV2_1 *>(fwDesc->data);
         callbackWRed->orgGcRlcUcode->addr = 0x0;
-        PANIC_COND(callbackWRed->orgGcRlcUcode->size != rlcFwHeader->ucodeSize, "wred", "%s Fw size mismatch %d vs %d",
-            filename, callbackWRed->orgGcRlcUcode->size, rlcFwHeader->ucodeSize);
+        PANIC_COND(callbackWRed->orgGcRlcUcode->size != rlcFwHeader->ucodeSize, "wred",
+            "%s Fw size mismatch %d (expected) vs %d (actual)", filename, callbackWRed->orgGcRlcUcode->size,
+            rlcFwHeader->ucodeSize);
         memcpy(callbackWRed->orgGcRlcUcode->data, fwDesc->data + rlcFwHeader->ucodeOff, rlcFwHeader->ucodeSize);
         DBGLOG("wred", "Injected %s!", filename);
 
@@ -542,8 +542,9 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
         fwDesc = &getFWDescByName(filename);
         fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc->data);
         callbackWRed->orgGcMeUcode->addr = 0x0;
-        PANIC_COND(callbackWRed->orgGcMeUcode->size != fwHeader->ucodeSize, "wred", "%s Fw size mismatch %d vs %d",
-            filename, callbackWRed->orgGcMeUcode->size, fwHeader->ucodeSize);
+        PANIC_COND(callbackWRed->orgGcMeUcode->size != fwHeader->ucodeSize, "wred",
+            "%s Fw size mismatch %d (expected) vs %d (actual)", filename, callbackWRed->orgGcMeUcode->size,
+            fwHeader->ucodeSize);
         memcpy(callbackWRed->orgGcMeUcode->data, fwDesc->data + fwHeader->ucodeOff, fwHeader->ucodeSize);
         DBGLOG("wred", "Injected %s!", filename);
 
@@ -551,8 +552,9 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
         fwDesc = &getFWDescByName(filename);
         fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc->data);
         callbackWRed->orgGcCeUcode->addr = 0x0;
-        PANIC_COND(callbackWRed->orgGcCeUcode->size != fwHeader->ucodeSize, "wred", "%s Fw size mismatch %d vs %d",
-            filename, callbackWRed->orgGcCeUcode->size, fwHeader->ucodeSize);
+        PANIC_COND(callbackWRed->orgGcCeUcode->size != fwHeader->ucodeSize, "wred",
+            "%s Fw size mismatch %d (expected) vs %d (actual)", filename, callbackWRed->orgGcCeUcode->size,
+            fwHeader->ucodeSize);
         memcpy(callbackWRed->orgGcCeUcode->data, fwDesc->data + fwHeader->ucodeOff, fwHeader->ucodeSize);
         DBGLOG("wred", "Injected %s!", filename);
 
@@ -560,8 +562,9 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
         fwDesc = &getFWDescByName(filename);
         fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc->data);
         callbackWRed->orgGcPfpUcode->addr = 0x0;
-        PANIC_COND(callbackWRed->orgGcPfpUcode->size != fwHeader->ucodeSize, "wred", "%s Fw size mismatch %d vs %d",
-            filename, callbackWRed->orgGcPfpUcode->size, fwHeader->ucodeSize);
+        PANIC_COND(callbackWRed->orgGcPfpUcode->size != fwHeader->ucodeSize, "wred",
+            "%s Fw size mismatch %d (expected) vs %d (actual)", filename, callbackWRed->orgGcPfpUcode->size,
+            fwHeader->ucodeSize);
         memcpy(callbackWRed->orgGcPfpUcode->data, fwDesc->data + fwHeader->ucodeOff, fwHeader->ucodeSize);
         DBGLOG("wred", "Injected %s!", filename);
 
@@ -569,13 +572,16 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
         fwDesc = &getFWDescByName(filename);
         fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc->data);
         callbackWRed->orgGcMecUcode->addr = 0x0;
-        PANIC_COND(callbackWRed->orgGcMecUcode->size != fwHeader->ucodeSize, "wred", "%s Fw size mismatch %d vs %d",
-            filename, callbackWRed->orgGcMecUcode->size, fwHeader->ucodeSize);
-        memcpy(callbackWRed->orgGcMecUcode->data, fwDesc->data + fwHeader->ucodeOff, fwHeader->ucodeSize);
+        PANIC_COND(callbackWRed->orgGcMecUcode->size != fwHeader->ucodeSize, "wred",
+            "%s Fw size mismatch %d (expected) vs %d (actual)", filename, callbackWRed->orgGcMecUcode->size,
+            fwHeader->ucodeSize - fwHeader->jtSize * 4);
+        memcpy(callbackWRed->orgGcMecUcode->data, fwDesc->data + fwHeader->ucodeOff,
+            fwHeader->ucodeSize - fwHeader->jtSize * 4);
         DBGLOG("wred", "Injected %s!", filename);
         callbackWRed->orgGcMecJtUcode->addr = fwHeader->jtOff;
         PANIC_COND(callbackWRed->orgGcMecJtUcode->size != fwHeader->jtSize * 4, "wred",
-            "%s <jt> Fw size mismatch %d vs %d", filename, callbackWRed->orgGcMecJtUcode->size, fwHeader->jtSize * 4);
+            "%s <jt> Fw size mismatch %d (expected) vs %d (actual)", filename, callbackWRed->orgGcMecJtUcode->size,
+            fwHeader->jtSize * 4);
         memcpy(callbackWRed->orgGcMecJtUcode->data,
             fwDesc->data + fwHeader->ucodeOff + (fwHeader->ucodeSize - fwHeader->jtSize * 4), fwHeader->jtSize * 4);
         DBGLOG("wred", "Injected %s <jt>!", filename);
@@ -584,10 +590,12 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
         fwDesc = &getFWDescByName(filename);
         auto *sdmaFwHeader = reinterpret_cast<const SdmaFwHeaderV1 *>(fwDesc->data);
         PANIC_COND(callbackWRed->orgSdma41Ucode->size != sdmaFwHeader->ucodeSize, "wred",
-            "%s Fw size mismatch %d vs %d", filename, callbackWRed->orgSdma41Ucode->size, sdmaFwHeader->ucodeSize);
+            "%s Fw size mismatch %d (expected) vs %d (actual)", filename, callbackWRed->orgSdma41Ucode->size,
+            sdmaFwHeader->ucodeSize);
         memcpy(callbackWRed->orgSdma41Ucode->data, fwDesc->data + sdmaFwHeader->ucodeOff, sdmaFwHeader->ucodeSize);
         PANIC_COND(callbackWRed->orgSdma412Ucode->size != sdmaFwHeader->ucodeSize, "wred",
-            "%s Fw size mismatch %d vs %d", filename, callbackWRed->orgSdma412Ucode->size, sdmaFwHeader->ucodeSize);
+            "%s Fw size mismatch %d (expected) vs %d (actual)", filename, callbackWRed->orgSdma412Ucode->size,
+            sdmaFwHeader->ucodeSize);
         memcpy(callbackWRed->orgSdma412Ucode->data, fwDesc->data + sdmaFwHeader->ucodeOff, sdmaFwHeader->ucodeSize);
         DBGLOG("wred", "Injected %s!", filename);
 
