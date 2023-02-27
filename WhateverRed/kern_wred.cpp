@@ -671,8 +671,8 @@ uint32_t WRed::wrapPspAsdLoad(void *pspData) {
 /** Same idea as `_psp_asd_load`. */
 uint32_t WRed::wrapPspDtmLoad(void *pspData) {
     auto *filename = new char[128];
-    snprintf(filename, 128, "%s_dtm.bin", getASICName());
-    DBGLOG("wred", "injecting %s!", filename);
+    snprintf(filename, 128, "%s_ta.bin", getASICName());
+    DBGLOG("wred", "Injecting %s <dtm>!", filename);
     auto &fwDesc = getFWDescByName(filename);
     auto *fwHeader = reinterpret_cast<const PspTaFwHeaderV1 *>(fwDesc.data);
     delete[] filename;
@@ -685,8 +685,8 @@ uint32_t WRed::wrapPspDtmLoad(void *pspData) {
 /** Same idea as `_psp_asd_load`. */
 uint32_t WRed::wrapPspHdcpLoad(void *pspData) {
     auto *filename = new char[128];
-    snprintf(filename, 128, "%s_hdcp.bin", getASICName());
-    DBGLOG("wred", "injecting %s!", filename);
+    snprintf(filename, 128, "%s_ta.bin", getASICName());
+    DBGLOG("wred", "Injecting %s <hdcp>!", filename);
     auto &fwDesc = getFWDescByName(filename);
     auto *fwHeader = reinterpret_cast<const PspTaFwHeaderV1 *>(fwDesc.data);
     delete[] filename;
