@@ -564,8 +564,9 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
         callbackWRed->orgGcMecUcode->data = fwDesc->data + fwHeader->ucodeOff;
         DBGLOG("wred", "Injected %s!", filename);
         callbackWRed->orgGcMecJtUcode->addr = fwHeader->jtOff;
-        callbackWRed->orgGcMecJtUcode->data = fwDesc->data + (fwHeader->ucodeSize - fwHeader->jtSize);
-        DBGLOG("wred", "Injected %s!", filename);
+        callbackWRed->orgGcMecJtUcode->data =
+            fwDesc->data + fwHeader->ucodeOff + (fwHeader->ucodeSize - fwHeader->jtSize);
+        DBGLOG("wred", "Injected %s <jt>!", filename);
 
         snprintf(filename, 128, "%s_sdma.bin", asicName);
         fwDesc = &getFWDescByName(filename);
