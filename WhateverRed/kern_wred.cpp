@@ -517,7 +517,10 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
         }
 
         snprintf(filename, 128, "%s_vcn.bin", asicName);
-        auto *targetFilename = callbackWRed->asicType == ASICType::Renoir ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
+        auto *targetFilename =
+            callbackWRed->asicType == ASICType::Renoir || callbackWRed->asicType == ASICType::GreenSardine ?
+                "ativvaxy_nv.dat" :
+                "ativvaxy_rv.dat";
         DBGLOG("wred", "%s => %s", filename, targetFilename);
 
         auto *fwDesc = &getFWDescByName(filename);
