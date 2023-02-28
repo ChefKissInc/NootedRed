@@ -470,14 +470,14 @@ uint16_t WRed::wrapGetEnumeratedRevision(void *that) {
             }
             callbackWRed->asicType = ASICType::Raven;
             return 0x10;
-        case 0x15E7:
-            [[fallthrough]];
-        case 0x1638:
-            callbackWRed->asicType = ASICType::Renoir;
-            return 0x91;
         case 0x164C:
             [[fallthrough]];
         case 0x1636:
+            callbackWRed->asicType = ASICType::Renoir;
+            return 0x91;
+        case 0x15E7:
+            [[fallthrough]];
+        case 0x1638:
             callbackWRed->asicType = ASICType::GreenSardine;
             return 0xA1;
         default:
