@@ -496,9 +496,9 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
     PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "wred",
         "Failed to enable kernel writing");
 
-    static bool once = false;
-    if (!once) {
-        once = true;
+    if (!callbackWRed->firmwaresInjected) {
+        callbackWRed->firmwaresInjected = true;
+        DBGLOG("wred", "Injecting firmwares");
         auto *asicName = getASICName();
         auto *filename = new char[128];
 
@@ -583,6 +583,8 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
         DBGLOG("wred", "Injected %s!", filename);
 
         delete[] filename;
+    } else {
+        DBGLOG("wred", "Firmwares already injected. Skipping");
     }
 
     CailInitAsicCapEntry *initCaps = nullptr;

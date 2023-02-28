@@ -261,4 +261,6 @@ class WRed {
     static void *wrapNewShared();
     static void *wrapNewSharedUserClient();
     static void *wrapAllocateAMDHWAlignManager();
+
+    bool firmwaresInjected = false;
 };
