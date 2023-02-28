@@ -666,6 +666,13 @@ void WRed::wrapSetupAndInitializeHWCapabilities(void *that) {
  * Complementary to `_psp_asd_load` patch-set.
  */
 uint32_t WRed::wrapPspAsdLoad(void *pspData) {
+    // ASD fails to load on Renoir/GS, returning a status of 0x34.
+    // However, in our tests, Linux worked without loading ASD, so we just skip loading it on Renoir/GS.
+    if (callbackWRed->asicType == ASICType::Renoir || callbackWRed->asicType == ASICType::GreenSardine) {
+        DBGLOG("wred", "Skipping _psp_asd_load by returning 0");
+        return 0;
+    }
+
     auto *filename = new char[128];
     snprintf(filename, 128, "%s_asd.bin", getASICName());
     DBGLOG("wred", "injecting %s!", filename);
