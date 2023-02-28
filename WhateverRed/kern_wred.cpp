@@ -528,7 +528,12 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
         PANIC_COND(!callbackWRed->orgPutFirmware(callbackWRed->callbackFirmwareDirectory, 6, fw), "wred",
             "Failed to inject ativvaxy_rv.dat firmware");
 
-        snprintf(filename, 128, "%s_rlc.bin", asicName);
+        auto devRev = getMember<IOPCIDevice *>(that, 0x18)->configRead8(kIOPCIConfigRevisionID);
+        auto *rlcFilenameToLoad = callbackWRed->asicType == ASICType::Picasso &&
+                                          ((devRev >= 0xC8 && devRev <= 0xCF) || (devRev >= 0xD8 && devRev <= 0xDF)) ?
+                                      "%s_rlc_am4.bin" :
+                                      "%s_rlc.bin";
+        snprintf(filename, 128, rlcFilenameToLoad, asicName);
         fwDesc = &getFWDescByName(filename);
         auto *rlcFwHeader = reinterpret_cast<const RlcFwHeaderV2_1 *>(fwDesc->data);
         callbackWRed->orgGcRlcUcode->addr = 0x0;
