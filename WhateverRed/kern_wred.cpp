@@ -415,6 +415,9 @@ void WRed::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
         }
     }
 
+    callbackWRed->rmmio = provider->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5);
+    PANIC_COND(!callbackWRed->rmmio || !callbackWRed->rmmio->getLength(), "wred", "Failed to map RMMIO");
+
     FunctionCast(wrapAmdTtlServicesConstructor, callbackWRed->orgAmdTtlServicesConstructor)(that, provider);
 }
 
@@ -533,10 +536,13 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
             "Failed to inject ativvaxy_rv.dat firmware");
 
         auto devRev = getMember<IOPCIDevice *>(that, 0x18)->configRead8(kIOPCIConfigRevisionID);
-        auto *rlcFilenameToLoad = callbackWRed->asicType == ASICType::Picasso &&
-                                          ((devRev >= 0xC8 && devRev <= 0xCF) || (devRev >= 0xD8 && devRev <= 0xDF)) ?
-                                      "%s_rlc_am4.bin" :
-                                      "%s_rlc.bin";
+        auto *rlcFilenameToLoad =
+            callbackWRed->asicType == ASICType::Picasso &&
+                    ((devRev >= 0xC8 && devRev <= 0xCF) || (devRev >= 0xD8 && devRev <= 0xDF)) ?
+                "%s_rlc_am4.bin" :
+            callbackWRed->asicType == ASICType::Raven && callbackWRed->readSmcVersion() >= 0x41E2B ?
+                "%s_kicker_rlc.bin" :
+                "%s_rlc.bin";
         snprintf(filename, 128, rlcFilenameToLoad, asicName);
         fwDesc = &getFWDescByName(filename);
         auto *rlcFwHeader = reinterpret_cast<const RlcFwHeaderV2_1 *>(fwDesc->data);

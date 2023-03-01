@@ -32,6 +32,7 @@
 		1C748C271C21952C0024EED2 /* WhateverRed.kext */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WhateverRed.kext; sourceTree = BUILT_PRODUCTS_DIR; };
 		1C748C2C1C21952C0024EED2 /* kern_start.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_start.cpp; sourceTree = "<group>"; };
 		1C748C2E1C21952C0024EED2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		404BCDA029AFB4FD00978114 /* raven_kicker_rlc.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_kicker_rlc.bin; sourceTree = "<group>"; };
 		4083A12929AC9F42003379D3 /* green_sardine_ce.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = green_sardine_ce.bin; sourceTree = "<group>"; };
 		4083A12A29AC9F42003379D3 /* green_sardine_pfp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = green_sardine_pfp.bin; sourceTree = "<group>"; };
 		4083A12B29AC9F42003379D3 /* raven2_pfp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven2_pfp.bin; sourceTree = "<group>"; };
@@ -172,6 +173,7 @@
 				4083A14129AC9F43003379D3 /* picasso_vcn.bin */,
 				4083A13529AC9F42003379D3 /* raven_asd.bin */,
 				4083A12D29AC9F42003379D3 /* raven_ce.bin */,
+				404BCDA029AFB4FD00978114 /* raven_kicker_rlc.bin */,
 				4083A12F29AC9F42003379D3 /* raven_me.bin */,
 				4083A14029AC9F43003379D3 /* raven_mec.bin */,
 				4083A13E29AC9F43003379D3 /* raven_pfp.bin */,

@@ -143,10 +143,45 @@ class WRed {
         return true;
     }
 
+    uint32_t readReg32(uint32_t reg) {
+        PANIC_COND((reg + 1) * 4 > callbackWRed->rmmio->getLength(), "wred", "RMMIO read out of bounds");
+        return reinterpret_cast<uint32_t *>(callbackWRed->rmmio->getVirtualAddress())[reg];
+    }
+
+    void writeReg32(uint32_t reg, uint32_t val) {
+        PANIC_COND((reg + 1) * 4 > callbackWRed->rmmio->getLength(), "wred", "RMMIO write out of bounds");
+        reinterpret_cast<uint32_t *>(callbackWRed->rmmio->getVirtualAddress())[reg] = val;
+    }
+
+    uint32_t readSmcVersion() {
+        auto smuWaitForResp = [=]() {
+            uint32_t ret = 0;
+            for (uint32_t i = 0; i < AMDGPU_MAX_USEC_TIMEOUT; i++) {
+                ret = this->readReg32(MP_BASE + mmMP1_SMN_C2PMSG_90);
+                if (ret != 0) return ret;
+
+                IOSleep(1);
+            }
+
+            return ret;
+        };
+
+        PANIC_COND(smuWaitForResp() != 1, "wred", "Msg issuing pre-check failed; SMU may be in an improper state");
+
+        this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_90, 0);
+        this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_82, 0);
+        this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_66, PPSMC_MSG_GetSmuVersion);
+
+        PANIC_COND(smuWaitForResp() != 1, "wred", "No response from SMU");
+
+        return this->readReg32(MP_BASE + mmMP1_SMN_C2PMSG_82) >> 8;
+    }
+
     OSData *vbiosData = nullptr;
     ASICType asicType = ASICType::Unknown;
     void *callbackFirmwareDirectory = nullptr;
     uint64_t fbOffset {};
+    IOMemoryMap *rmmio = nullptr;
 
     void *hwAlignMgr = nullptr;
     uint8_t *hwAlignMgrVtX5000 = nullptr;
