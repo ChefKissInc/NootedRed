@@ -28,6 +28,7 @@ static KernelPatcher::KextInfo kextRadeonX5000 {"com.apple.kext.AMDRadeonX5000",
 WRed *WRed::callbackWRed = nullptr;
 
 void WRed::init() {
+    SYSLOG("wred", "Please don't support tonymacx86.com!");
     callbackWRed = this;
 
     lilu.onPatcherLoadForce(
@@ -394,7 +395,10 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
 }
 
 void WRed::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
-    SYSLOG("wred", "Please don't support tonymacx86.com!");
+    WIOKit::renameDevice(provider, "IGPU");
+    WIOKit::awaitPublishing(provider);
+    static uint8_t builtin[] = {0x01};
+    provider->setProperty("built-in", builtin, sizeof(builtin));
 
     DBGLOG("wred", "Patching device type table");
     PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "wred",
