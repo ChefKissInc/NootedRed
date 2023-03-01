@@ -143,7 +143,7 @@
 				<key>PP_Falcon_QuickTransition_Enable</key>
 				<integer>1</integer>
 				<key>PP_GfxOffControl</key>
-				<integer>0</integer>
+				<integer>1</integer>
 				<key>PP_PhmUseDummyBackEnd</key>
 				<integer>0</integer>
 				<key>PP_ToolsLogSpaceSize</key>
