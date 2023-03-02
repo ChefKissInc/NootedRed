@@ -624,8 +624,45 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
 
 uint32_t WRed::hwLibsNoop() { return 0; }    // Always return success
 IOReturn WRed::wrapPopulateVramInfo([[maybe_unused]] void *that, void *fwInfo) {
-    getMember<uint32_t>(fwInfo, 0x1C) = 4;      // DDR4
-    getMember<uint32_t>(fwInfo, 0x20) = 128;    // 128-bit
+    auto *vbios = static_cast<const uint8_t *>(callbackWRed->vbiosData->getBytesNoCopy());
+    auto base = *reinterpret_cast<const uint16_t *>(vbios + ATOM_ROM_TABLE_PTR);
+    auto dataTable = *reinterpret_cast<const uint16_t *>(vbios + base + ATOM_ROM_DATA_PTR);
+    auto *mdt = reinterpret_cast<const uint16_t *>(vbios + dataTable + 4);
+    uint32_t channelCount = 1;
+    if (mdt[0x1E]) {
+        DBGLOG("wred", "Fetching VRAM info from iGPU System Info");
+        uint32_t offset = 0x1E * 2 + 4;
+        auto index = *reinterpret_cast<const uint16_t *>(vbios + dataTable + offset);
+        auto *table = reinterpret_cast<const IgpSystemInfo *>(vbios + index);
+        switch (table->header.formatRev) {
+            case 1:
+                switch (table->header.contentRev) {
+                    case 11:
+                        [[fallthrough]];
+                    case 12:
+                        if (table->infoV11.umaChannelCount) channelCount = table->infoV11.umaChannelCount;
+                        break;
+                    default:
+                        DBGLOG("wred", "Unsupported contentRev %d", table->header.contentRev);
+                }
+            case 2:
+                switch (table->header.contentRev) {
+                    case 1:
+                        [[fallthrough]];
+                    case 2:
+                        if (table->infoV2.umaChannelCount) channelCount = table->infoV2.umaChannelCount;
+                        break;
+                    default:
+                        DBGLOG("wred", "Unsupported contentRev %d", table->header.contentRev);
+                }
+            default:
+                DBGLOG("wred", "Unsupported formatRev %d", table->header.formatRev);
+        }
+    } else {
+        DBGLOG("wred", "No iGPU System Info in Master Data Table");
+    }
+    getMember<uint32_t>(fwInfo, 0x1C) = 4;                    // VRAM Type (DDR4)
+    getMember<uint32_t>(fwInfo, 0x20) = channelCount * 64;    // VRAM Width (64-bit channels)
     return kIOReturnSuccess;
 }
 
