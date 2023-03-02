@@ -158,22 +158,17 @@ class WRed {
             uint32_t ret = 0;
             for (uint32_t i = 0; i < AMDGPU_MAX_USEC_TIMEOUT; i++) {
                 ret = this->readReg32(MP_BASE + mmMP1_SMN_C2PMSG_90);
-                if (ret != 0) return ret;
-
+                if (ret != 0) break;
                 IOSleep(1);
             }
-
             return ret;
         };
 
         PANIC_COND(smuWaitForResp() != 1, "wred", "Msg issuing pre-check failed; SMU may be in an improper state");
-
-        this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_90, 0);
-        this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_82, 0);
-        this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_66, PPSMC_MSG_GetSmuVersion);
-
+        this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_90, 0);                          // Status
+        this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_82, 0);                          // Param
+        this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_66, PPSMC_MSG_GetSmuVersion);    // Message
         PANIC_COND(smuWaitForResp() != 1, "wred", "No response from SMU");
-
         return this->readReg32(MP_BASE + mmMP1_SMN_C2PMSG_82) >> 8;
     }
 

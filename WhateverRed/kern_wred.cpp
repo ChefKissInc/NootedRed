@@ -492,6 +492,22 @@ uint16_t WRed::wrapGetEnumeratedRevision(void *that) {
     }
 }
 
+inline void injectGFXFirmware(const char *filename, GcFwConstant *fw, GcFwConstant *jt = nullptr) {
+    auto &fwDesc = getFWDescByName(filename);
+    auto *fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc.data);
+    fw->addr = 0x0;
+    fw->size = fwHeader->ucodeSize;
+    fw->data = fwDesc.data + fwHeader->ucodeOff;
+    DBGLOG("wred", "Injected %s!", filename);
+
+    if (jt) {
+        jt->addr = fwHeader->jtOff;
+        jt->size = fwHeader->jtSize * 4;
+        jt->data = fwDesc.data + fwHeader->ucodeOff + (fwHeader->ucodeSize - (fwHeader->jtSize * 4));
+        DBGLOG("wred", "Injected %s <jt>!", filename);
+    }
+}
+
 IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
     auto ret = FunctionCast(wrapPopulateDeviceInfo, callbackWRed->orgPopulateDeviceInfo)(that);
     getMember<uint32_t>(that, 0x60) = AMDGPU_FAMILY_RV;
@@ -544,49 +560,20 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
                 "%s_kicker_rlc.bin" :
                 "%s_rlc.bin";
         snprintf(filename, 128, rlcFilenameToLoad, asicName);
-        fwDesc = &getFWDescByName(filename);
-        auto *rlcFwHeader = reinterpret_cast<const RlcFwHeaderV2_1 *>(fwDesc->data);
-        callbackWRed->orgGcRlcUcode->addr = 0x0;
-        callbackWRed->orgGcRlcUcode->size = rlcFwHeader->ucodeSize;
-        callbackWRed->orgGcRlcUcode->data = fwDesc->data + rlcFwHeader->ucodeOff;
-        DBGLOG("wred", "Injected %s!", filename);
+        // TODO: Inject all parts of RLC firmware
+        injectGFXFirmware(filename, callbackWRed->orgGcRlcUcode);
 
         snprintf(filename, 128, "%s_me.bin", asicName);
-        fwDesc = &getFWDescByName(filename);
-        fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc->data);
-        callbackWRed->orgGcMeUcode->addr = 0x0;
-        callbackWRed->orgGcMeUcode->size = fwHeader->ucodeSize;
-        callbackWRed->orgGcMeUcode->data = fwDesc->data + fwHeader->ucodeOff;
-        DBGLOG("wred", "Injected %s!", filename);
+        injectGFXFirmware(filename, callbackWRed->orgGcMeUcode);
 
         snprintf(filename, 128, "%s_ce.bin", asicName);
-        fwDesc = &getFWDescByName(filename);
-        fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc->data);
-        callbackWRed->orgGcCeUcode->addr = 0x0;
-        callbackWRed->orgGcCeUcode->size = fwHeader->ucodeSize;
-        callbackWRed->orgGcCeUcode->data = fwDesc->data + fwHeader->ucodeOff;
-        DBGLOG("wred", "Injected %s!", filename);
+        injectGFXFirmware(filename, callbackWRed->orgGcCeUcode);
 
         snprintf(filename, 128, "%s_pfp.bin", asicName);
-        fwDesc = &getFWDescByName(filename);
-        fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc->data);
-        callbackWRed->orgGcPfpUcode->addr = 0x0;
-        callbackWRed->orgGcPfpUcode->size = fwHeader->ucodeSize;
-        callbackWRed->orgGcPfpUcode->data = fwDesc->data + fwHeader->ucodeOff;
-        DBGLOG("wred", "Injected %s!", filename);
+        injectGFXFirmware(filename, callbackWRed->orgGcPfpUcode);
 
         snprintf(filename, 128, "%s_mec.bin", asicName);
-        fwDesc = &getFWDescByName(filename);
-        fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc->data);
-        callbackWRed->orgGcMecUcode->addr = 0x0;
-        callbackWRed->orgGcMecUcode->size = fwHeader->ucodeSize - (fwHeader->jtSize * 4);
-        callbackWRed->orgGcMecUcode->data = fwDesc->data + fwHeader->ucodeOff;
-        DBGLOG("wred", "Injected %s!", filename);
-        callbackWRed->orgGcMecJtUcode->addr = fwHeader->jtOff;
-        callbackWRed->orgGcMecJtUcode->size = fwHeader->jtSize * 4;
-        callbackWRed->orgGcMecJtUcode->data =
-            fwDesc->data + fwHeader->ucodeOff + (fwHeader->ucodeSize - (fwHeader->jtSize * 4));
-        DBGLOG("wred", "Injected %s <jt>!", filename);
+        injectGFXFirmware(filename, callbackWRed->orgGcMecUcode, callbackWRed->orgGcMecJtUcode);
 
         snprintf(filename, 128, "%s_sdma.bin", asicName);
         fwDesc = &getFWDescByName(filename);
