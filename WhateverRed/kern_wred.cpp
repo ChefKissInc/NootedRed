@@ -97,11 +97,7 @@ OSMetaClassBase *WRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const O
         for (auto &ent : callbackWRed->metaClassMap) {
             if (ent[0] == toMeta) {
                 return FunctionCast(wrapSafeMetaCast, callbackWRed->orgSafeMetaCast)(anObject, ent[1]);
-            }
-        }
-
-        for (auto &ent : callbackWRed->metaClassMap) {
-            if (ent[1] == toMeta) {
+            } else if (ent[1] == toMeta) {
                 return FunctionCast(wrapSafeMetaCast, callbackWRed->orgSafeMetaCast)(anObject, ent[0]);
             }
         }
