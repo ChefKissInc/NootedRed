@@ -117,7 +117,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, orgPspCmdKmSubmit},
             {"_psp_bootloader_is_sos_running_3_1", hwLibsNoop},
             {"_psp_bootloader_load_sos", hwLibsNoop},
-            {"_psp_bootloader_load_sos_3_1", hwLibsNoop},
+            {"_psp_bootloader_load_sysdrv_3_1", hwLibsNoop},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000HWLibs symbols");
