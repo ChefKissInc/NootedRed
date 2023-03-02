@@ -4,6 +4,7 @@
 #include "kern_wred.hpp"
 #include "kern_amd.hpp"
 #include <Headers/kern_api.hpp>
+#include <Headers/kern_devinfo.hpp>
 
 static const char *pathRadeonX5000HWLibs = "/System/Library/Extensions/AMDRadeonX5000HWServices.kext/Contents/PlugIns/"
                                            "AMDRadeonX5000HWLibs.kext/Contents/MacOS/AMDRadeonX5000HWLibs";
@@ -49,6 +50,33 @@ void WRed::deinit() {
 }
 
 void WRed::processPatcher(KernelPatcher &patcher) {
+    auto *devInfo = DeviceInfo::create();
+    PANIC_COND(!devInfo, "wred", "Failed to create DeviceInfo");
+    devInfo->processSwitchOff();
+    PANIC_COND(!devInfo->videoBuiltin, "wred", "videoBuiltin null");
+    auto *obj = OSDynamicCast(IOPCIDevice, devInfo->videoBuiltin);
+    PANIC_COND(obj, "wred", "videoBuiltin is not IOPCIDevice");
+    PANIC_COND(WIOKit::readPCIConfigValue(obj, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD, "wred",
+        "videoBuiltin is not AMD");
+
+    WIOKit::renameDevice(obj, "IGPU");
+    WIOKit::awaitPublishing(obj);
+    static uint8_t builtin[] = {0x01};
+    obj->setProperty("built-in", builtin, sizeof(builtin));
+    // TODO: Fix model name
+
+    if (obj->getProperty("ATY,bin_image")) {
+        DBGLOG("wred", "VBIOS manually overridden");
+    } else {
+        if (!callbackWRed->getVBIOSFromVFCT(obj)) {
+            DBGLOG("wred", "Failed to get VBIOS from VFCT, trying to get it from VRAM");
+            PANIC_COND(!callbackWRed->getVBIOSFromVRAM(obj), "wred", "Failed to get VBIOS from VRAM");
+        }
+    }
+
+    callbackWRed->rmmio = obj->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5);
+    PANIC_COND(!callbackWRed->rmmio || !callbackWRed->rmmio->getLength(), "wred", "Failed to map RMMIO");
+
     KernelPatcher::RouteRequest requests[] = {
         {"__ZN15OSMetaClassBase12safeMetaCastEPKS_PK11OSMetaClass", wrapSafeMetaCast, orgSafeMetaCast},
     };
@@ -405,28 +433,12 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
 }
 
 void WRed::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
-    WIOKit::renameDevice(provider, "IGPU");
-    WIOKit::awaitPublishing(provider);
-    static uint8_t builtin[] = {0x01};
-    provider->setProperty("built-in", builtin, sizeof(builtin));
-
     DBGLOG("wred", "Patching device type table");
     PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "wred",
         "Failed to enable kernel writing");
-    callbackWRed->orgDeviceTypeTable[0] = provider->extendedConfigRead16(kIOPCIConfigDeviceID);
+    callbackWRed->orgDeviceTypeTable[0] = WIOKit::readPCIConfigValue(provider, WIOKit::kIOPCIConfigDeviceID);
     callbackWRed->orgDeviceTypeTable[1] = 6;
     MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
-    if (provider->getProperty("ATY,bin_image")) {
-        DBGLOG("wred", "VBIOS manually overridden");
-    } else {
-        if (!callbackWRed->getVBIOSFromVFCT(provider)) {
-            DBGLOG("wred", "Failed to get VBIOS from VFCT, trying to get it from VRAM");
-            PANIC_COND(!callbackWRed->getVBIOSFromVRAM(provider), "wred", "Failed to get VBIOS from VRAM");
-        }
-    }
-
-    callbackWRed->rmmio = provider->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5);
-    PANIC_COND(!callbackWRed->rmmio || !callbackWRed->rmmio->getLength(), "wred", "Failed to map RMMIO");
 
     FunctionCast(wrapAmdTtlServicesConstructor, callbackWRed->orgAmdTtlServicesConstructor)(that, provider);
 }
@@ -464,7 +476,7 @@ void *WRed::wrapCreatePowerTuneServices(void *that, void *param2) {
 
 uint16_t WRed::wrapGetEnumeratedRevision(void *that) {
     auto revision = getMember<uint32_t>(that, 0x68);
-    switch (getMember<IOPCIDevice *>(that, 0x18)->configRead16(kIOPCIConfigDeviceID)) {
+    switch (WIOKit::readPCIConfigValue(getMember<IOPCIDevice *>(that, 0x18), WIOKit::kIOPCIConfigDeviceID)) {
         case 0x15D8:
             if (revision >= 0x8) {
                 callbackWRed->asicType = ASICType::Raven2;
@@ -497,7 +509,7 @@ uint16_t WRed::wrapGetEnumeratedRevision(void *that) {
 IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
     auto ret = FunctionCast(wrapPopulateDeviceInfo, callbackWRed->orgPopulateDeviceInfo)(that);
     getMember<uint32_t>(that, 0x60) = AMDGPU_FAMILY_RV;
-    auto deviceId = getMember<IOPCIDevice *>(that, 0x18)->configRead16(kIOPCIConfigDeviceID);
+    auto deviceId = WIOKit::readPCIConfigValue(getMember<IOPCIDevice *>(that, 0x18), WIOKit::kIOPCIConfigDeviceID);
     auto revision = getMember<uint32_t>(that, 0x68);
     auto emulatedRevision = getMember<uint32_t>(that, 0x6c);
 

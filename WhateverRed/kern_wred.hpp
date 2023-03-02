@@ -9,12 +9,12 @@
 #include <IOKit/pci/IOPCIDevice.h>
 
 enum struct ASICType {
+    Unknown,
     Raven,
     Raven2,
     Picasso,
     Renoir,
     GreenSardine,
-    Unknown,
 };
 
 // Hack
@@ -72,9 +72,9 @@ class WRed {
         return asicNames[static_cast<int>(callbackWRed->asicType)];
     }
 
-    bool getVBIOSFromVFCT(IOPCIDevice *provider) {
+    bool getVBIOSFromVFCT(IOPCIDevice *obj) {
         DBGLOG("wred", "Fetching VBIOS from VFCT table");
-        auto *expert = reinterpret_cast<AppleACPIPlatformExpert *>(provider->getPlatform());
+        auto *expert = reinterpret_cast<AppleACPIPlatformExpert *>(obj->getPlatform());
         PANIC_COND(!expert, "wred", "Failed to get AppleACPIPlatformExpert");
 
         auto *vfctData = expert->getACPITableData("VFCT", 0);
@@ -105,17 +105,17 @@ class WRed {
 
             offset += sizeof(GOPVideoBIOSHeader) + vHdr->imageLength;
 
-            if (vHdr->imageLength && vHdr->pciBus == provider->getBusNumber() &&
-                vHdr->pciDevice == provider->getDeviceNumber() && vHdr->pciFunction == provider->getFunctionNumber() &&
-                vHdr->vendorID == provider->configRead16(kIOPCIConfigVendorID) &&
-                vHdr->deviceID == provider->configRead16(kIOPCIConfigDeviceID)) {
+            if (vHdr->imageLength && vHdr->pciBus == obj->getBusNumber() && vHdr->pciDevice == obj->getDeviceNumber() &&
+                vHdr->pciFunction == obj->getFunctionNumber() &&
+                vHdr->vendorID == obj->configRead16(kIOPCIConfigVendorID) &&
+                vHdr->deviceID == obj->configRead16(kIOPCIConfigDeviceID)) {
                 if (!checkAtomBios(vContent, vHdr->imageLength)) {
                     DBGLOG("wred", "VFCT VBIOS is not an ATOMBIOS");
                     return false;
                 }
                 this->vbiosData = OSData::withBytes(vContent, vHdr->imageLength);
                 PANIC_COND(!this->vbiosData, "wred", "VFCT OSData::withBytes failed");
-                provider->setProperty("ATY,bin_image", this->vbiosData);
+                obj->setProperty("ATY,bin_image", this->vbiosData);
                 return true;
             }
         }
