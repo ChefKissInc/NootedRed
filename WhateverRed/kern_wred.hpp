@@ -285,7 +285,7 @@ class WRed {
     /** X5000HWLibs */
     static void wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider);
     static uint32_t wrapSmuGetHwVersion();
-    static uint32_t wrapPspSwInit(uint32_t *param1, uint32_t *param2);
+    static uint32_t wrapPspSwInit(uint32_t *inputData, void *outputData);
     static uint32_t wrapGcGetHwVersion();
     static void wrapPopulateFirmwareDirectory(void *that);
     static void *wrapCreatePowerTuneServices(void *that, void *param2);
