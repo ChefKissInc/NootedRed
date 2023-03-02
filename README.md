@@ -6,7 +6,7 @@ The Source Code of this Original Work is licensed under the `Thou Shalt Not Prof
 
 ## The following parts of the source code have been taken from [WhateverGreen](https://github.com/Acidanthera/WhateverGreen)
 
-- Apple Graphics Device Polcy (AGDP) Piker-Alpha (agdpmod=pikera) patch
+- Apple Graphics Device Policy (AGDP) Piker-Alpha (agdpmod=pikera) patch
 
 ## FAQ
 
