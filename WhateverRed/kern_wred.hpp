@@ -69,7 +69,7 @@ class WRed {
     static const char *getASICName() {
         PANIC_COND(callbackWRed->asicType == ASICType::Unknown, "wred", "Unknown ASIC type");
         static const char *asicNames[] = {"raven", "raven2", "picasso", "renoir", "green_sardine"};
-        return asicNames[static_cast<int>(callbackWRed->asicType)];
+        return asicNames[static_cast<int>(callbackWRed->asicType) - 1];
     }
 
     bool getVBIOSFromVFCT(IOPCIDevice *obj) {
