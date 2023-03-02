@@ -62,7 +62,7 @@ void WRed::processPatcher(KernelPatcher &patcher) {
     devInfo->processSwitchOff();
     PANIC_COND(!devInfo->videoBuiltin, "wred", "videoBuiltin null");
     auto *obj = OSDynamicCast(IOPCIDevice, devInfo->videoBuiltin);
-    PANIC_COND(obj, "wred", "videoBuiltin is not IOPCIDevice");
+    PANIC_COND(!obj, "wred", "videoBuiltin is not IOPCIDevice");
     PANIC_COND(WIOKit::readPCIConfigValue(obj, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD, "wred",
         "videoBuiltin is not AMD");
 
