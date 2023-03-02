@@ -3,6 +3,7 @@
 
 #pragma once
 #include "kern_amd.hpp"
+#include "kern_fw.hpp"
 #include <Headers/kern_iokit.hpp>
 #include <IOKit/acpi/IOACPIPlatformExpert.h>
 #include <IOKit/pci/IOPCIDevice.h>
@@ -170,6 +171,36 @@ class WRed {
         this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_66, PPSMC_MSG_GetSmuVersion);    // Message
         PANIC_COND(smuWaitForResp() != 1, "wred", "No response from SMU");
         return this->readReg32(MP_BASE + mmMP1_SMN_C2PMSG_82) >> 8;
+    }
+
+    inline static void injectGFXFirmware(const char *filename, GcFwConstant *fw, GcFwConstant *jt = nullptr) {
+        auto &fwDesc = getFWDescByName(filename);
+        auto *fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc.data);
+        fw->addr = 0x0;
+        fw->size = fwHeader->ucodeSize;
+        fw->data = fwDesc.data + fwHeader->ucodeOff;
+        DBGLOG("wred", "Injected %s!", filename);
+
+        if (jt) {
+            jt->addr = fwHeader->jtOff;
+            jt->size = fwHeader->jtSize * 4;
+            jt->data = fwDesc.data + fwHeader->ucodeOff + (fwHeader->ucodeSize - (fwHeader->jtSize * 4));
+            DBGLOG("wred", "Injected %s <jt>!", filename);
+        }
+    }
+
+    inline const char *rlcFilenameToLoad(IOPCIDevice *provider) {
+        uint8_t rev = provider->configRead8(kIOPCIConfigRevisionID);
+        switch (this->asicType) {
+            case ASICType::Picasso:
+                if ((rev >= 0xC8 && rev <= 0xCF) || (rev >= 0xD8 && rev <= 0xDF)) { return "%s_rlc_am4.bin"; }
+                return "%s_rlc.bin";
+            case ASICType::Raven:
+                if (callbackWRed->readSmcVersion() >= 0x41E2B) { return "%s_kicker_rlc.bin"; }
+                [[fallthrough]];
+            default:
+                return "%s_rlc.bin";
+        }
     }
 
     OSData *vbiosData = nullptr;

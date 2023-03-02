@@ -3,7 +3,6 @@
 
 #include "kern_wred.hpp"
 #include "kern_amd.hpp"
-#include "kern_fw.hpp"
 #include <Headers/kern_api.hpp>
 
 static const char *pathRadeonX5000HWLibs = "/System/Library/Extensions/AMDRadeonX5000HWServices.kext/Contents/PlugIns/"
@@ -492,22 +491,6 @@ uint16_t WRed::wrapGetEnumeratedRevision(void *that) {
     }
 }
 
-inline void injectGFXFirmware(const char *filename, GcFwConstant *fw, GcFwConstant *jt = nullptr) {
-    auto &fwDesc = getFWDescByName(filename);
-    auto *fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc.data);
-    fw->addr = 0x0;
-    fw->size = fwHeader->ucodeSize;
-    fw->data = fwDesc.data + fwHeader->ucodeOff;
-    DBGLOG("wred", "Injected %s!", filename);
-
-    if (jt) {
-        jt->addr = fwHeader->jtOff;
-        jt->size = fwHeader->jtSize * 4;
-        jt->data = fwDesc.data + fwHeader->ucodeOff + (fwHeader->ucodeSize - (fwHeader->jtSize * 4));
-        DBGLOG("wred", "Injected %s <jt>!", filename);
-    }
-}
-
 IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
     auto ret = FunctionCast(wrapPopulateDeviceInfo, callbackWRed->orgPopulateDeviceInfo)(that);
     getMember<uint32_t>(that, 0x60) = AMDGPU_FAMILY_RV;
@@ -551,27 +534,15 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
         PANIC_COND(!callbackWRed->orgPutFirmware(callbackWRed->callbackFirmwareDirectory, 6, fw), "wred",
             "Failed to inject ativvaxy_rv.dat firmware");
 
-        auto devRev = getMember<IOPCIDevice *>(that, 0x18)->configRead8(kIOPCIConfigRevisionID);
-        auto *rlcFilenameToLoad =
-            callbackWRed->asicType == ASICType::Picasso &&
-                    ((devRev >= 0xC8 && devRev <= 0xCF) || (devRev >= 0xD8 && devRev <= 0xDF)) ?
-                "%s_rlc_am4.bin" :
-            callbackWRed->asicType == ASICType::Raven && callbackWRed->readSmcVersion() >= 0x41E2B ?
-                "%s_kicker_rlc.bin" :
-                "%s_rlc.bin";
-        snprintf(filename, 128, rlcFilenameToLoad, asicName);
+        snprintf(filename, 128, callbackWRed->rlcFilenameToLoad(getMember<IOPCIDevice *>(that, 0x18)), asicName);
         // TODO: Inject all parts of RLC firmware
         injectGFXFirmware(filename, callbackWRed->orgGcRlcUcode);
-
         snprintf(filename, 128, "%s_me.bin", asicName);
         injectGFXFirmware(filename, callbackWRed->orgGcMeUcode);
-
         snprintf(filename, 128, "%s_ce.bin", asicName);
         injectGFXFirmware(filename, callbackWRed->orgGcCeUcode);
-
         snprintf(filename, 128, "%s_pfp.bin", asicName);
         injectGFXFirmware(filename, callbackWRed->orgGcPfpUcode);
-
         snprintf(filename, 128, "%s_mec.bin", asicName);
         injectGFXFirmware(filename, callbackWRed->orgGcMecUcode, callbackWRed->orgGcMecJtUcode);
 
