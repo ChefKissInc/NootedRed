@@ -6,8 +6,8 @@
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_devinfo.hpp>
 
-static const char *pathAGDPolicy = "/System/Library/Extensions/AppleGraphicsControl.kext/Contents/PlugIns/"
-                                   "AppleGraphicsDevicePolicy.kext/Contents/MacOS/AppleGraphicsDevicePolicy";
+static const char *pathAGDP = "/System/Library/Extensions/AppleGraphicsControl.kext/Contents/PlugIns/"
+                              "AppleGraphicsDevicePolicy.kext/Contents/MacOS/AppleGraphicsDevicePolicy";
 
 static const char *pathRadeonX5000HWLibs = "/System/Library/Extensions/AMDRadeonX5000HWServices.kext/Contents/PlugIns/"
                                            "AMDRadeonX5000HWLibs.kext/Contents/MacOS/AMDRadeonX5000HWLibs";
@@ -16,19 +16,19 @@ static const char *pathRadeonX6000Framebuffer =
 static const char *pathRadeonX6000 = "/System/Library/Extensions/AMDRadeonX6000.kext/Contents/MacOS/AMDRadeonX6000";
 static const char *pathRadeonX5000 = "/System/Library/Extensions/AMDRadeonX5000.kext/Contents/MacOS/AMDRadeonX5000";
 
-static KernelPatcher::KextInfo kextAGDPolicy {"com.apple.driver.AppleGraphicsDevicePolicy", &pathAGDPolicy, 1, {true},
-    {}, KernelPatcher::KextInfo::Unloaded};
-
-static KernelPatcher::KextInfo kextRadeonX5000HWLibs {"com.apple.kext.AMDRadeonX5000HWLibs", &pathRadeonX5000HWLibs, 1,
-    {true}, {}, KernelPatcher::KextInfo::Unloaded};
-
-static KernelPatcher::KextInfo kextRadeonX6000Framebuffer {"com.apple.kext.AMDRadeonX6000Framebuffer",
-    &pathRadeonX6000Framebuffer, 1, {true}, {}, KernelPatcher::KextInfo::Unloaded};
-
-static KernelPatcher::KextInfo kextRadeonX6000 = {"com.apple.kext.AMDRadeonX6000", &pathRadeonX6000, 1, {true}, {},
+static KernelPatcher::KextInfo kextAGDP {"com.apple.driver.AppleGraphicsDevicePolicy", &pathAGDP, 1, {true}, {},
     KernelPatcher::KextInfo::Unloaded};
 
-static KernelPatcher::KextInfo kextRadeonX5000 {"com.apple.kext.AMDRadeonX5000", &pathRadeonX5000, 1, {true}, {},
+static KernelPatcher::KextInfo kextRadeonX5000HWLibs {"com.apple.kext.AMDRadeonX5000HWLibs", &pathRadeonX5000HWLibs, 1,
+    {}, {}, KernelPatcher::KextInfo::Unloaded};
+
+static KernelPatcher::KextInfo kextRadeonX6000Framebuffer {"com.apple.kext.AMDRadeonX6000Framebuffer",
+    &pathRadeonX6000Framebuffer, 1, {}, {}, KernelPatcher::KextInfo::Unloaded};
+
+static KernelPatcher::KextInfo kextRadeonX6000 = {"com.apple.kext.AMDRadeonX6000", &pathRadeonX6000, 1, {}, {},
+    KernelPatcher::KextInfo::Unloaded};
+
+static KernelPatcher::KextInfo kextRadeonX5000 {"com.apple.kext.AMDRadeonX5000", &pathRadeonX5000, 1, {}, {},
     KernelPatcher::KextInfo::Unloaded};
 
 WRed *WRed::callbackWRed = nullptr;
@@ -39,6 +39,7 @@ void WRed::init() {
 
     lilu.onPatcherLoadForce(
         [](void *user, KernelPatcher &patcher) { static_cast<WRed *>(user)->processPatcher(patcher); }, this);
+    lilu.onKextLoadForce(&kextAGDP);
     lilu.onKextLoadForce(&kextRadeonX5000HWLibs);
     lilu.onKextLoadForce(&kextRadeonX6000Framebuffer);
     lilu.onKextLoadForce(&kextRadeonX6000);
@@ -108,8 +109,8 @@ OSMetaClassBase *WRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const O
 }
 
 void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
-    if (kextAGDPolicy.loadIndex == index) {
-        KernelPatcher::LookupPatch patch {&kextAGDPolicy, reinterpret_cast<const uint8_t *>("board-id"),
+    if (kextAGDP.loadIndex == index) {
+        KernelPatcher::LookupPatch patch {&kextAGDP, reinterpret_cast<const uint8_t *>("board-id"),
             reinterpret_cast<const uint8_t *>("board-ix"), sizeof("board-id"), 1};
 
         patcher.applyLookupPatch(&patch);
