@@ -6,6 +6,9 @@
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_devinfo.hpp>
 
+static const char *pathAGDPolicy = "/System/Library/Extensions/AppleGraphicsControl.kext/Contents/PlugIns/"
+                                   "AppleGraphicsDevicePolicy.kext/Contents/MacOS/AppleGraphicsDevicePolicy";
+
 static const char *pathRadeonX5000HWLibs = "/System/Library/Extensions/AMDRadeonX5000HWServices.kext/Contents/PlugIns/"
                                            "AMDRadeonX5000HWLibs.kext/Contents/MacOS/AMDRadeonX5000HWLibs";
 static const char *pathRadeonX6000Framebuffer =
@@ -13,16 +16,19 @@ static const char *pathRadeonX6000Framebuffer =
 static const char *pathRadeonX6000 = "/System/Library/Extensions/AMDRadeonX6000.kext/Contents/MacOS/AMDRadeonX6000";
 static const char *pathRadeonX5000 = "/System/Library/Extensions/AMDRadeonX5000.kext/Contents/MacOS/AMDRadeonX5000";
 
+static KernelPatcher::KextInfo kextAGDPolicy {"com.apple.driver.AppleGraphicsDevicePolicy", &pathAGDPolicy, 1, {true},
+    {}, KernelPatcher::KextInfo::Unloaded};
+
 static KernelPatcher::KextInfo kextRadeonX5000HWLibs {"com.apple.kext.AMDRadeonX5000HWLibs", &pathRadeonX5000HWLibs, 1,
-    {}, {}, KernelPatcher::KextInfo::Unloaded};
+    {true}, {}, KernelPatcher::KextInfo::Unloaded};
 
 static KernelPatcher::KextInfo kextRadeonX6000Framebuffer {"com.apple.kext.AMDRadeonX6000Framebuffer",
-    &pathRadeonX6000Framebuffer, 1, {}, {}, KernelPatcher::KextInfo::Unloaded};
+    &pathRadeonX6000Framebuffer, 1, {true}, {}, KernelPatcher::KextInfo::Unloaded};
 
-static KernelPatcher::KextInfo kextRadeonX6000 = {"com.apple.kext.AMDRadeonX6000", &pathRadeonX6000, 1, {}, {},
+static KernelPatcher::KextInfo kextRadeonX6000 = {"com.apple.kext.AMDRadeonX6000", &pathRadeonX6000, 1, {true}, {},
     KernelPatcher::KextInfo::Unloaded};
 
-static KernelPatcher::KextInfo kextRadeonX5000 {"com.apple.kext.AMDRadeonX5000", &pathRadeonX5000, 1, {}, {},
+static KernelPatcher::KextInfo kextRadeonX5000 {"com.apple.kext.AMDRadeonX5000", &pathRadeonX5000, 1, {true}, {},
     KernelPatcher::KextInfo::Unloaded};
 
 WRed *WRed::callbackWRed = nullptr;
@@ -102,7 +108,16 @@ OSMetaClassBase *WRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const O
 }
 
 void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
-    if (kextRadeonX5000HWLibs.loadIndex == index) {
+    if (kextAGDPolicy.loadIndex == index) {
+        KernelPatcher::LookupPatch patch {&kextAGDPolicy, reinterpret_cast<const uint8_t *>("board-id"),
+            reinterpret_cast<const uint8_t *>("board-ix"), sizeof("board-id"), 1};
+
+        patcher.applyLookupPatch(&patch);
+        if (patcher.getError() != KernelPatcher::Error::NoError) {
+            SYSLOG("wred", "Failed to apply Piker-Alpha's AGDP patch: %d", patcher.getError());
+            patcher.clearError();
+        }
+    } else if (kextRadeonX5000HWLibs.loadIndex == index) {
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZL15deviceTypeTable", orgDeviceTypeTable},
             {"__ZN11AMDFirmware14createFirmwareEPhjjPKc", orgCreateFirmware},

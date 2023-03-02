@@ -4,6 +4,10 @@ An AMD iGPU support [Lilu](https://github.com/acidanthera/Lilu) plugin.
 
 The Source Code of this Original Work is licensed under the `Thou Shalt Not Profit License version 1.0`. See `LICENSE`
 
+## The following parts of the source code have been taken from [WhateverGreen](https://github.com/Acidanthera/WhateverGreen)
+
+- Apple Graphics Device Polcy (AGDP) Piker-Alpha (agdpmod=pikera) patch
+
 ## FAQ
 
 ### Can I have an AMD dGPU installed on the system?
