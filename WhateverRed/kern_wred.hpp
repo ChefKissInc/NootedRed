@@ -281,6 +281,7 @@ class WRed {
     static uint16_t wrapGetEnumeratedRevision(void *that);
     static IOReturn wrapPopulateVramInfo(void *that, void *fwInfo);
     static uint32_t wrapHwReadReg32(void *that, uint32_t param1);
+    static void wrapDoGPUPanic();
 
     /** X5000HWLibs */
     static void wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider);

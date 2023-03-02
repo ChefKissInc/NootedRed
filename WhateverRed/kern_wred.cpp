@@ -94,7 +94,7 @@ void WRed::processPatcher(KernelPatcher &patcher) {
 OSMetaClassBase *WRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const OSMetaClass *toMeta) {
     auto ret = FunctionCast(wrapSafeMetaCast, callbackWRed->orgSafeMetaCast)(anObject, toMeta);
     if (!ret) {
-        for (auto &ent : callbackWRed->metaClassMap) {
+        for (const auto &ent : callbackWRed->metaClassMap) {
             if (ent[0] == toMeta) {
                 return FunctionCast(wrapSafeMetaCast, callbackWRed->orgSafeMetaCast)(anObject, ent[1]);
             } else if (ent[1] == toMeta) {
@@ -267,6 +267,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
             {"__ZN32AMDRadeonX6000_AmdRegisterAccess11hwReadReg32Ej", wrapHwReadReg32, orgHwReadReg32},
             {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo, orgInitWithPciInfo},
+            {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", wrapDoGPUPanic},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX6000Framebuffer symbols");
@@ -919,4 +920,9 @@ uint64_t WRed::wrapGetDisplayInfo(void *that, uint32_t param1, bool param2, bool
         FunctionCast(wrapGetDisplayInfo, callbackWRed->orgGetDisplayInfo)(that, param1, param2, param3, param4, param5);
     HWALIGNMGR_REVERT
     return ret;
+}
+
+void WRed::wrapDoGPUPanic() {
+    DBGLOG("wred", "doGPUPanic << ()");
+    while (true) { IOSleep(3600000); }
 }
