@@ -216,7 +216,6 @@ class WRed {
 
     OSData *vbiosData = nullptr;
     ASICType asicType = ASICType::Unknown;
-    void *callbackFirmwareDirectory = nullptr;
     uint64_t fbOffset {};
     IOMemoryMap *rmmio = nullptr;
     volatile uint32_t *rmmioPtr = nullptr;
