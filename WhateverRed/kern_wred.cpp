@@ -197,6 +197,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"_psp_bootloader_is_sos_running_3_1", hwLibsNoop},
             {"_psp_bootloader_load_sos", hwLibsNoop},
             {"_psp_bootloader_load_sysdrv_3_1", hwLibsNoop},
+            {"_psp_xgmi_is_support", hwLibsUnsupported},
+            {"_psp_rap_is_supported", hwLibsUnsupported},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000HWLibs symbols");
@@ -627,7 +629,8 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
     return ret;
 }
 
-uint32_t WRed::hwLibsNoop() { return 0; }    // Always return success
+uint32_t WRed::hwLibsNoop() { return 0; }           // Always return success
+uint32_t WRed::hwLibsUnsupported() { return 4; }    // Always return unsupported
 
 IOReturn WRed::wrapPopulateVramInfo([[maybe_unused]] void *that, void *fwInfo) {
     auto *vbios = static_cast<const uint8_t *>(callbackWRed->vbiosData->getBytesNoCopy());
@@ -711,7 +714,7 @@ void WRed::wrapSetupAndInitializeHWCapabilities(void *that) {
 uint32_t WRed::wrapPspAsdLoad(void *pspData) {
     char filename[128];
     snprintf(filename, 128, "%s_asd.bin", getASICName());
-    DBGLOG("wred", "injecting %s!", filename);
+    DBGLOG("wred", "Injecting %s!", filename);
     auto &fwDesc = getFWDescByName(filename);
     auto *fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc.data);
     auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspAsdLoad);
@@ -807,7 +810,7 @@ bool WRed::wrapInitWithPciInfo(void *that, void *param1) {
     auto ret = FunctionCast(wrapInitWithPciInfo, callbackWRed->orgInitWithPciInfo)(that, param1);
     // Hack AMDRadeonX6000_AmdLogger to log everything
     getMember<uint64_t>(that, 0x28) = ~0ULL;
-    getMember<uint32_t>(that, 0x30) = ~0U;
+    getMember<uint32_t>(that, 0x30) = 0xFF;
     return ret;
 }
 
