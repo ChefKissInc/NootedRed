@@ -85,6 +85,42 @@ void WRed::processPatcher(KernelPatcher &patcher) {
     PANIC_COND(!callbackWRed->rmmio || !callbackWRed->rmmio->getLength(), "wred", "Failed to map RMMIO");
     callbackWRed->rmmioPtr = reinterpret_cast<uint32_t *>(callbackWRed->rmmio->getVirtualAddress());
 
+    auto revision = (callbackWRed->readReg32(0xD2F) & 0xF000000) >> 0x18;
+    switch (WIOKit::readPCIConfigValue(obj, WIOKit::kIOPCIConfigDeviceID)) {
+        case 0x15D8:
+            if (revision >= 0x8) {
+                callbackWRed->asicType = ASICType::Raven2;
+                callbackWRed->enumeratedRevision = 0x79;
+                break;
+            }
+            callbackWRed->asicType = ASICType::Picasso;
+            callbackWRed->enumeratedRevision = 0x41;
+            break;
+        case 0x15DD:
+            if (revision >= 0x8) {
+                callbackWRed->asicType = ASICType::Raven2;
+                callbackWRed->enumeratedRevision = 0x79;
+                break;
+            }
+            callbackWRed->asicType = ASICType::Raven;
+            callbackWRed->enumeratedRevision = 0x10;
+            break;
+        case 0x164C:
+            [[fallthrough]];
+        case 0x1636:
+            callbackWRed->asicType = ASICType::Renoir;
+            callbackWRed->enumeratedRevision = 0x91;
+            break;
+        case 0x15E7:
+            [[fallthrough]];
+        case 0x1638:
+            callbackWRed->asicType = ASICType::GreenSardine;
+            callbackWRed->enumeratedRevision = 0xA1;
+            break;
+        default:
+            PANIC("wred", "Unknown device ID");
+    }
+
     KernelPatcher::RouteRequest requests[] = {
         {"__ZN15OSMetaClassBase12safeMetaCastEPKS_PK11OSMetaClass", wrapSafeMetaCast, orgSafeMetaCast},
     };
@@ -489,37 +525,7 @@ void *WRed::wrapCreatePowerTuneServices(void *that, void *param2) {
     return ret;
 }
 
-uint16_t WRed::wrapGetEnumeratedRevision(void *that) {
-    auto revision = getMember<uint32_t>(that, 0x68);
-    switch (WIOKit::readPCIConfigValue(getMember<IOPCIDevice *>(that, 0x18), WIOKit::kIOPCIConfigDeviceID)) {
-        case 0x15D8:
-            if (revision >= 0x8) {
-                callbackWRed->asicType = ASICType::Raven2;
-                return 0x79;
-            }
-            callbackWRed->asicType = ASICType::Picasso;
-            return 0x41;
-        case 0x15DD:
-            if (revision >= 0x8) {
-                callbackWRed->asicType = ASICType::Raven2;
-                return 0x79;
-            }
-            callbackWRed->asicType = ASICType::Raven;
-            return 0x10;
-        case 0x164C:
-            [[fallthrough]];
-        case 0x1636:
-            callbackWRed->asicType = ASICType::Renoir;
-            return 0x91;
-        case 0x15E7:
-            [[fallthrough]];
-        case 0x1638:
-            callbackWRed->asicType = ASICType::GreenSardine;
-            return 0xA1;
-        default:
-            PANIC("wred", "Unknown device ID");
-    }
-}
+uint16_t WRed::wrapGetEnumeratedRevision() { return callbackWRed->enumeratedRevision; }
 
 IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
     auto ret = FunctionCast(wrapPopulateDeviceInfo, callbackWRed->orgPopulateDeviceInfo)(that);

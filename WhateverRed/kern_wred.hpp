@@ -220,6 +220,7 @@ class WRed {
     uint64_t fbOffset {};
     IOMemoryMap *rmmio = nullptr;
     volatile uint32_t *rmmioPtr = nullptr;
+    uint16_t enumeratedRevision {};
 
     void *hwAlignMgr = nullptr;
     uint8_t *hwAlignMgrVtX5000 = nullptr;
@@ -290,7 +291,7 @@ class WRed {
 
     /** X6000Framebuffer */
     static IOReturn wrapPopulateDeviceInfo(void *that);
-    static uint16_t wrapGetEnumeratedRevision(void *that);
+    static uint16_t wrapGetEnumeratedRevision();
     static IOReturn wrapPopulateVramInfo(void *that, void *fwInfo);
     static uint32_t wrapHwReadReg32(void *that, uint32_t param1);
     static void wrapDoGPUPanic();
