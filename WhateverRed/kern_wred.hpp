@@ -200,8 +200,8 @@ class WRed {
         }
     }
 
-    inline const char *rlcFilenameToLoad(IOPCIDevice *provider) {
-        uint8_t rev = provider->configRead8(kIOPCIConfigRevisionID);
+    inline const char *rlcFilenameToLoad() {
+        uint8_t rev = videoBuiltin->configRead8(kIOPCIConfigRevisionID);
         switch (this->asicType) {
             case ASICType::Picasso:
                 if ((rev >= 0xC8 && rev <= 0xCF) || (rev >= 0xD8 && rev <= 0xDF)) { return "%s_rlc_am4.bin"; }
@@ -220,6 +220,7 @@ class WRed {
     IOMemoryMap *rmmio = nullptr;
     volatile uint32_t *rmmioPtr = nullptr;
     uint16_t enumeratedRevision {};
+    IOPCIDevice *videoBuiltin = nullptr;
 
     void *hwAlignMgr = nullptr;
     uint8_t *hwAlignMgrVtX5000 = nullptr;

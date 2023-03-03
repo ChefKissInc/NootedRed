@@ -65,6 +65,7 @@ void WRed::processPatcher(KernelPatcher &patcher) {
     PANIC_COND(!obj, "wred", "videoBuiltin is not IOPCIDevice");
     PANIC_COND(WIOKit::readPCIConfigValue(obj, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD, "wred",
         "videoBuiltin is not AMD");
+    callbackWRed->videoBuiltin = obj;
 
     WIOKit::renameDevice(obj, "IGPU");
     WIOKit::awaitPublishing(obj);
@@ -200,6 +201,32 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000HWLibs symbols");
 
+        PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "wred",
+            "Failed to enable kernel writing");
+        char filename[128];
+        auto *asicName = callbackWRed->getASICName();
+        // TODO: Inject all parts of RLC firmware
+        snprintf(filename, 128, callbackWRed->rlcFilenameToLoad(), asicName);
+        injectGFXFirmware(filename, callbackWRed->orgGcRlcUcode);
+        snprintf(filename, 128, "%s_me.bin", asicName);
+        injectGFXFirmware(filename, callbackWRed->orgGcMeUcode);
+        snprintf(filename, 128, "%s_ce.bin", asicName);
+        injectGFXFirmware(filename, callbackWRed->orgGcCeUcode);
+        snprintf(filename, 128, "%s_pfp.bin", asicName);
+        injectGFXFirmware(filename, callbackWRed->orgGcPfpUcode);
+        snprintf(filename, 128, "%s_mec.bin", asicName);
+        injectGFXFirmware(filename, callbackWRed->orgGcMecUcode, callbackWRed->orgGcMecJtUcode);
+
+        snprintf(filename, 128, "%s_sdma.bin", asicName);
+        auto &fwDesc = getFWDescByName(filename);
+        auto *sdmaFwHeader = reinterpret_cast<const SdmaFwHeaderV1 *>(fwDesc.data);
+        callbackWRed->orgSdma41Ucode->size = sdmaFwHeader->ucodeSize;
+        callbackWRed->orgSdma41Ucode->data = fwDesc.data + sdmaFwHeader->ucodeOff;
+        callbackWRed->orgSdma412Ucode->size = sdmaFwHeader->ucodeSize;
+        callbackWRed->orgSdma412Ucode->data = fwDesc.data + sdmaFwHeader->ucodeOff;
+        DBGLOG("wred", "Injected %s!", filename);
+        MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
+
         /**
          * Patch for `_smu_9_0_1_full_asic_reset`
          * Correct sent message to `0x1E` as the original code sends `0x3B` which is wrong for SMU 10.
@@ -289,7 +316,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             patcher.applyLookupPatch(&patch);
             patcher.clearError();
         }
-
     } else if (kextRadeonX6000Framebuffer.loadIndex == index) {
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable},
@@ -519,7 +545,7 @@ void WRed::wrapPopulateFirmwareDirectory(void *that) {
     auto *fwDir = getMember<void *>(that, 0xB8);
 
     auto *asicName = getASICName();
-    auto *filename = new char[128];
+    char filename[128];
 
     if (callbackWRed->asicType >= ASICType::Renoir) {
         snprintf(filename, 128, "%s_dmcub.bin", asicName);
@@ -538,36 +564,13 @@ void WRed::wrapPopulateFirmwareDirectory(void *that) {
     auto *targetFilename = callbackWRed->asicType >= ASICType::Renoir ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
     DBGLOG("wred", "%s => %s", filename, targetFilename);
 
-    auto *fwDesc = &getFWDescByName(filename);
-    auto *fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc->data);
+    auto &fwDesc = getFWDescByName(filename);
+    auto *fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc.data);
     auto *fw =
-        callbackWRed->orgCreateFirmware(fwDesc->data + fwHeader->ucodeOff, fwHeader->ucodeSize, 0x200, targetFilename);
+        callbackWRed->orgCreateFirmware(fwDesc.data + fwHeader->ucodeOff, fwHeader->ucodeSize, 0x200, targetFilename);
     PANIC_COND(!fw, "wred", "Failed to create '%s' firmware", targetFilename);
     DBGLOG("wred", "Inserting %s!", targetFilename);
     PANIC_COND(!callbackWRed->orgPutFirmware(fwDir, 6, fw), "wred", "Failed to inject ativvaxy_rv.dat firmware");
-
-    snprintf(filename, 128, callbackWRed->rlcFilenameToLoad(getMember<IOPCIDevice *>(that, 0x18)), asicName);
-    // TODO: Inject all parts of RLC firmware
-    injectGFXFirmware(filename, callbackWRed->orgGcRlcUcode);
-    snprintf(filename, 128, "%s_me.bin", asicName);
-    injectGFXFirmware(filename, callbackWRed->orgGcMeUcode);
-    snprintf(filename, 128, "%s_ce.bin", asicName);
-    injectGFXFirmware(filename, callbackWRed->orgGcCeUcode);
-    snprintf(filename, 128, "%s_pfp.bin", asicName);
-    injectGFXFirmware(filename, callbackWRed->orgGcPfpUcode);
-    snprintf(filename, 128, "%s_mec.bin", asicName);
-    injectGFXFirmware(filename, callbackWRed->orgGcMecUcode, callbackWRed->orgGcMecJtUcode);
-
-    snprintf(filename, 128, "%s_sdma.bin", asicName);
-    fwDesc = &getFWDescByName(filename);
-    auto *sdmaFwHeader = reinterpret_cast<const SdmaFwHeaderV1 *>(fwDesc->data);
-    callbackWRed->orgSdma41Ucode->size = sdmaFwHeader->ucodeSize;
-    callbackWRed->orgSdma41Ucode->data = fwDesc->data + sdmaFwHeader->ucodeOff;
-    callbackWRed->orgSdma412Ucode->size = sdmaFwHeader->ucodeSize;
-    callbackWRed->orgSdma412Ucode->data = fwDesc->data + sdmaFwHeader->ucodeOff;
-    DBGLOG("wred", "Injected %s!", filename);
-
-    delete[] filename;
 }
 
 void *WRed::wrapCreatePowerTuneServices(void *that, void *param2) {
@@ -625,6 +628,7 @@ IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
 }
 
 uint32_t WRed::hwLibsNoop() { return 0; }    // Always return success
+
 IOReturn WRed::wrapPopulateVramInfo([[maybe_unused]] void *that, void *fwInfo) {
     auto *vbios = static_cast<const uint8_t *>(callbackWRed->vbiosData->getBytesNoCopy());
     auto base = *reinterpret_cast<const uint16_t *>(vbios + ATOM_ROM_TABLE_PTR);
@@ -705,12 +709,11 @@ void WRed::wrapSetupAndInitializeHWCapabilities(void *that) {
  * Complementary to `_psp_asd_load` patch-set.
  */
 uint32_t WRed::wrapPspAsdLoad(void *pspData) {
-    auto *filename = new char[128];
+    char filename[128];
     snprintf(filename, 128, "%s_asd.bin", getASICName());
     DBGLOG("wred", "injecting %s!", filename);
     auto &fwDesc = getFWDescByName(filename);
     auto *fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc.data);
-    delete[] filename;
     auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspAsdLoad);
     auto ret = org(pspData, 0, 0, fwDesc.data + fwHeader->ucodeOff, fwHeader->ucodeSize);
     DBGLOG("wred", "_psp_asd_load returned 0x%X", ret);
@@ -719,12 +722,11 @@ uint32_t WRed::wrapPspAsdLoad(void *pspData) {
 
 /** Same idea as `_psp_asd_load`. */
 uint32_t WRed::wrapPspDtmLoad(void *pspData) {
-    auto *filename = new char[128];
+    char filename[128];
     snprintf(filename, 128, "%s_ta.bin", getASICName());
     DBGLOG("wred", "Injecting %s <dtm>!", filename);
     auto &fwDesc = getFWDescByName(filename);
     auto *fwHeader = reinterpret_cast<const PspTaFwHeaderV1 *>(fwDesc.data);
-    delete[] filename;
     auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspDtmLoad);
     auto ret = org(pspData, 0, 0, fwDesc.data + fwHeader->ucodeOff + fwHeader->dtm.off, fwHeader->dtm.size);
     DBGLOG("wred", "_psp_dtm_load returned 0x%X", ret);
@@ -733,12 +735,11 @@ uint32_t WRed::wrapPspDtmLoad(void *pspData) {
 
 /** Same idea as `_psp_asd_load`. */
 uint32_t WRed::wrapPspHdcpLoad(void *pspData) {
-    auto *filename = new char[128];
+    char filename[128];
     snprintf(filename, 128, "%s_ta.bin", getASICName());
     DBGLOG("wred", "Injecting %s <hdcp>!", filename);
     auto &fwDesc = getFWDescByName(filename);
     auto *fwHeader = reinterpret_cast<const PspTaFwHeaderV1 *>(fwDesc.data);
-    delete[] filename;
     auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspHdcpLoad);
     auto ret = org(pspData, 0, 0, fwDesc.data + fwHeader->ucodeOff + fwHeader->hdcp.off, fwHeader->hdcp.size);
     DBGLOG("wred", "_psp_hdcp_load returned 0x%X", ret);
