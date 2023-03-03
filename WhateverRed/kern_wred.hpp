@@ -157,7 +157,6 @@ class WRed {
     void writeReg32(uint32_t reg, uint32_t val) {
         if (reg * 4 < this->rmmio->getLength()) {
             this->rmmioPtr[reg] = val;
-            return;
         } else {
             this->rmmioPtr[mmPCIE_INDEX2] = reg;
             *(this->rmmioPtr + mmPCIE_INDEX2);
