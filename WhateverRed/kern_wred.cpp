@@ -83,6 +83,7 @@ void WRed::processPatcher(KernelPatcher &patcher) {
 
     callbackWRed->rmmio = obj->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5);
     PANIC_COND(!callbackWRed->rmmio || !callbackWRed->rmmio->getLength(), "wred", "Failed to map RMMIO");
+    callbackWRed->rmmioPtr = reinterpret_cast<uint32_t *>(callbackWRed->rmmio->getVirtualAddress());
 
     KernelPatcher::RouteRequest requests[] = {
         {"__ZN15OSMetaClassBase12safeMetaCastEPKS_PK11OSMetaClass", wrapSafeMetaCast, orgSafeMetaCast},

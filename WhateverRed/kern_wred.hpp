@@ -145,13 +145,25 @@ class WRed {
     }
 
     uint32_t readReg32(uint32_t reg) {
-        PANIC_COND((reg + 1) * 4 > callbackWRed->rmmio->getLength(), "wred", "RMMIO read out of bounds");
-        return reinterpret_cast<uint32_t *>(callbackWRed->rmmio->getVirtualAddress())[reg];
+        if (reg * 4 < this->rmmio->getLength()) {
+            return this->rmmioPtr[reg];
+        } else {
+            this->rmmioPtr[mmPCIE_INDEX2] = reg;
+            *(this->rmmioPtr + mmPCIE_INDEX2);
+            return this->rmmioPtr[mmPCIE_DATA2];
+        }
     }
 
     void writeReg32(uint32_t reg, uint32_t val) {
-        PANIC_COND((reg + 1) * 4 > callbackWRed->rmmio->getLength(), "wred", "RMMIO write out of bounds");
-        reinterpret_cast<uint32_t *>(callbackWRed->rmmio->getVirtualAddress())[reg] = val;
+        if (reg * 4 < this->rmmio->getLength()) {
+            this->rmmioPtr[reg] = val;
+            return;
+        } else {
+            this->rmmioPtr[mmPCIE_INDEX2] = reg;
+            *(this->rmmioPtr + mmPCIE_INDEX2);
+            this->rmmioPtr[mmPCIE_DATA2] = val;
+            *(this->rmmioPtr + mmPCIE_DATA2);
+        }
     }
 
     uint32_t readSmcVersion() {
@@ -208,6 +220,7 @@ class WRed {
     void *callbackFirmwareDirectory = nullptr;
     uint64_t fbOffset {};
     IOMemoryMap *rmmio = nullptr;
+    volatile uint32_t *rmmioPtr = nullptr;
 
     void *hwAlignMgr = nullptr;
     uint8_t *hwAlignMgrVtX5000 = nullptr;
