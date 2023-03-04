@@ -162,24 +162,16 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
                 orgVega10PowerTuneConstructor},
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgCapsTableHWLibs},
             {"_CAILAsicCapsInitTable", orgAsicInitCapsTable},
-            {"_gc_9_2_1_rlc_ucode", orgGcRlcUcode},
-            {"_gc_9_2_1_me_ucode", orgGcMeUcode},
-            {"_gc_9_2_1_ce_ucode", orgGcCeUcode},
-            {"_gc_9_2_1_pfp_ucode", orgGcPfpUcode},
-            {"_gc_9_2_1_mec_ucode", orgGcMecUcode},
-            {"_gc_9_2_1_mec_jt_ucode", orgGcMecJtUcode},
-            {"_sdma_4_1_ucode", orgSdma41Ucode},
-            {"_sdma_4_1_2_ucode", orgSdma412Ucode},
             {"_Raven_SendMsgToSmc", orgRavenSendMsgToSmc},
             {"_Renoir_SendMsgToSmc", orgRenoirSendMsgToSmc},
+            {"__ZN20AMDFirmwareDirectoryC1Ej", orgAMDFirmwareDirectoryConstructor},
         };
         PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "wred",
             "Failed to resolve AMDRadeonX5000HWLibs symbols");
 
         KernelPatcher::RouteRequest requests[] = {
             {"__ZN14AmdTtlServicesC2EP11IOPCIDevice", wrapAmdTtlServicesConstructor, orgAmdTtlServicesConstructor},
-            {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory,
-                orgPopulateFirmwareDirectory},
+            {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory},
             {"__ZN25AtiApplePowerTuneServices23createPowerTuneServicesEP11PP_InstanceP18PowerPlayCallbacks",
                 wrapCreatePowerTuneServices},
             {"_gc_get_hw_version", wrapGcGetHwVersion},
@@ -193,41 +185,12 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"_psp_bootloader_load_sysdrv_3_1", hwLibsNoop},
             {"_psp_xgmi_is_support", hwLibsUnsupported},
             {"_psp_rap_is_supported", hwLibsUnsupported},
-            {"_psp_asd_load", wrapPspAsdLoad, orgPspAsdLoad},
-            {"_psp_dtm_load", wrapPspDtmLoad, orgPspDtmLoad},
-            {"_psp_hdcp_load", wrapPspHdcpLoad, orgPspHdcpLoad},
             {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, orgPspCmdKmSubmit},
             {"_SmuRaven_Initialize", wrapSmuRavenInitialize, orgSmuRavenInitialize},
             {"_SmuRenoir_Initialize", wrapSmuRenoirInitialize, orgSmuRenoirInitialize},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "wred",
             "Failed to route AMDRadeonX5000HWLibs symbols");
-
-        PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "wred",
-            "Failed to enable kernel writing");
-        char filename[128];
-        auto *asicName = callbackWRed->getASICName();
-        // TODO: Inject all parts of RLC firmware
-        snprintf(filename, 128, callbackWRed->rlcFilenameToLoad(), asicName);
-        injectGFXFirmware(filename, callbackWRed->orgGcRlcUcode);
-        snprintf(filename, 128, "%s_me.bin", asicName);
-        injectGFXFirmware(filename, callbackWRed->orgGcMeUcode);
-        snprintf(filename, 128, "%s_ce.bin", asicName);
-        injectGFXFirmware(filename, callbackWRed->orgGcCeUcode);
-        snprintf(filename, 128, "%s_pfp.bin", asicName);
-        injectGFXFirmware(filename, callbackWRed->orgGcPfpUcode);
-        snprintf(filename, 128, "%s_mec.bin", asicName);
-        injectGFXFirmware(filename, callbackWRed->orgGcMecUcode, callbackWRed->orgGcMecJtUcode);
-
-        snprintf(filename, 128, "%s_sdma.bin", asicName);
-        auto &fwDesc = getFWDescByName(filename);
-        auto *sdmaFwHeader = reinterpret_cast<const SdmaFwHeaderV1 *>(fwDesc.data);
-        callbackWRed->orgSdma41Ucode->size = sdmaFwHeader->ucodeSize;
-        callbackWRed->orgSdma41Ucode->data = fwDesc.data + sdmaFwHeader->ucodeOff;
-        callbackWRed->orgSdma412Ucode->size = sdmaFwHeader->ucodeSize;
-        callbackWRed->orgSdma412Ucode->data = fwDesc.data + sdmaFwHeader->ucodeOff;
-        DBGLOG("wred", "Injected %s!", filename);
-        MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
         /**
          * Patch for `_smu_9_0_1_full_asic_reset`
@@ -239,80 +202,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             0xE9, 0x51, 0xFE, 0xFF, 0xFF};
         static_assert(arrsize(find_asic_reset) == arrsize(repl_asic_reset));
 
-        /**
-         * Patches for `_psp_asd_load`.
-         * `_psp_asd_load` loads a hardcoded ASD firmware binary
-         * included in the kext as `_psp_asd_bin`.
-         * The copied data isn't in a table, it is a single
-         * binary copied over to the PSP private memory.
-         * We can't replicate such logic in any AMDGPU kext function,
-         * as the memory accesses to GPU data is inaccessible
-         * from external kexts, therefore, we have to do a hack.
-         * The hack is very straight forward; we have replaced the
-         * assembly that loads hardcoded values from
-         *     `lea rsi, [_psp_asd_bin]`
-         *     `mov edx, 0x2c100`
-         *     `mov rdi, r15`
-         *     `call _memcpy`
-         * to
-         *     `mov rsi, rcx`
-         *     `mov rdx, r8`
-         *     `mov rdi, r15`
-         *     `call _memcpy`
-         * so that it gets the pointer and size from parameter 4 and 5.
-         * Register choice was because the parameter 2 and 3 registers
-         * get overwritten before this call to memcpy
-         * The hack we came up with looks like terrible practice,
-         * but this will have to do.
-         * Pain.
-         */
-        const uint8_t find_load_asd_pt1[] = {0x0f, 0x85, 0x83, 0x00, 0x00, 0x00, 0x48, 0x8d, 0x35, 0xf7, 0x93, 0xf4,
-            0x00, 0xba, 0x00, 0xc1, 0x02, 0x00, 0x4c, 0x89, 0xff, 0xe8, 0xf2, 0xa6, 0x56, 0x02};
-        const uint8_t repl_load_asd_pt1[] = {0x0f, 0x85, 0x83, 0x00, 0x00, 0x00, 0x48, 0x8b, 0xf1, 0x4c, 0x89, 0xc2,
-            0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x4c, 0x89, 0xff, 0xe8, 0xf2, 0xa6, 0x56, 0x02};
-        static_assert(arrsize(find_load_asd_pt1) == arrsize(repl_load_asd_pt1));
-        const uint8_t find_load_asd_pt2[] = {0x44, 0x89, 0x66, 0x08, 0x48, 0xc7, 0x46, 0x0c, 0x00, 0xc1, 0x02, 0x00,
-            0x48, 0xc7, 0x46, 0x14, 0x00, 0x00, 0x00, 0x00};
-        const uint8_t repl_load_asd_pt2[] = {0x44, 0x89, 0x66, 0x08, 0x4c, 0x89, 0x84, 0x26, 0x0c, 0x00, 0x00, 0x00,
-            0x48, 0xc7, 0x46, 0x14, 0x00, 0x00, 0x00, 0x00};
-        static_assert(arrsize(find_load_asd_pt2) == arrsize(repl_load_asd_pt2));
-
-        /**
-         * Patches for `_psp_dtm_load`.
-         * Same idea as `_psp_asd_load`.
-         */
-        const uint8_t find_load_dtm_pt1[] = {0x48, 0x8b, 0xbb, 0xf8, 0x0a, 0x00, 0x00, 0x48, 0x8d, 0x35, 0x47, 0x4f,
-            0xf7, 0x00, 0xba, 0x00, 0x21, 0x00, 0x00, 0xe8, 0x45, 0xa1, 0x56, 0x02, 0x48, 0x8d, 0xb5, 0x70, 0xfc, 0xff,
-            0xff};
-        const uint8_t repl_load_dtm_pt1[] = {0x48, 0x8b, 0xbb, 0xf8, 0x0a, 0x00, 0x00, 0x48, 0x8b, 0xf1, 0x49, 0x8b,
-            0xd0, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0xe8, 0x45, 0xa1, 0x56, 0x02, 0x48, 0x8d, 0xb5, 0x70, 0xfc, 0xff,
-            0xff};
-        static_assert(arrsize(find_load_dtm_pt1) == arrsize(repl_load_dtm_pt1));
-        const uint8_t find_load_dtm_pt2[] = {0x44, 0x89, 0x76, 0x08, 0xc7, 0x46, 0x0c, 0x00, 0x21, 0x00, 0x00, 0x48,
-            0x8b, 0x83, 0xb8, 0x2d, 0x00, 0x00};
-        const uint8_t repl_load_dtm_pt2[] = {0x44, 0x89, 0x76, 0x08, 0x44, 0x89, 0x86, 0x0c, 0x00, 0x00, 0x00, 0x48,
-            0x8b, 0x83, 0xb8, 0x2d, 0x00, 0x00};
-        static_assert(arrsize(find_load_dtm_pt2) == arrsize(repl_load_dtm_pt2));
-
-        /**
-         * Patch for `_psp_hdcp_load`.
-         * Same idea as `_psp_asd_load`.
-         */
-        const uint8_t find_load_hdcp[] = {0x48, 0x8d, 0x35, 0x0d, 0xa4, 0xf7, 0x00, 0xba, 0x00, 0x61, 0x00, 0x00, 0xe8,
-            0x0b, 0x26, 0x5a, 0x02, 0x48, 0x8d, 0xb5, 0x60, 0xfc, 0xff, 0xff, 0xc7, 0x06, 0x01, 0x00, 0x00, 0x00, 0x89,
-            0x5e, 0x04, 0x48, 0xc1, 0xeb, 0x20, 0x89, 0x5e, 0x08, 0xc7, 0x46, 0x0c, 0x00, 0x61, 0x00, 0x00};
-        const uint8_t repl_load_hdcp[] = {0x48, 0x89, 0xce, 0x66, 0x90, 0x66, 0x90, 0x41, 0x8b, 0xd0, 0x66, 0x90, 0xe8,
-            0x0b, 0x26, 0x5a, 0x02, 0x48, 0x8d, 0xb5, 0x60, 0xfc, 0xff, 0xff, 0xc7, 0x06, 0x01, 0x00, 0x00, 0x00, 0x89,
-            0x5e, 0x04, 0x48, 0xc1, 0xeb, 0x20, 0x89, 0x5e, 0x08, 0x44, 0x89, 0x86, 0x0c, 0x00, 0x00, 0x00};
-        static_assert(arrsize(find_load_hdcp) == arrsize(repl_load_hdcp));
-
         KernelPatcher::LookupPatch patches[] = {
             {&kextRadeonX5000HWLibs, find_asic_reset, repl_asic_reset, arrsize(find_asic_reset), 1},
-            {&kextRadeonX5000HWLibs, find_load_asd_pt1, repl_load_asd_pt1, arrsize(find_load_asd_pt1), 1},
-            {&kextRadeonX5000HWLibs, find_load_asd_pt2, repl_load_asd_pt2, arrsize(find_load_asd_pt2), 1},
-            {&kextRadeonX5000HWLibs, find_load_dtm_pt1, repl_load_dtm_pt1, arrsize(find_load_dtm_pt1), 1},
-            {&kextRadeonX5000HWLibs, find_load_dtm_pt2, repl_load_dtm_pt2, arrsize(find_load_dtm_pt2), 1},
-            {&kextRadeonX5000HWLibs, find_load_hdcp, repl_load_hdcp, arrsize(find_load_hdcp), 1},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
@@ -516,7 +407,7 @@ void WRed::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
     PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "wred",
         "Failed to enable kernel writing");
     callbackWRed->orgDeviceTypeTable[0] = WIOKit::readPCIConfigValue(provider, WIOKit::kIOPCIConfigDeviceID);
-    callbackWRed->orgDeviceTypeTable[1] = 6;
+    callbackWRed->orgDeviceTypeTable[1] = 0;
     MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
     FunctionCast(wrapAmdTtlServicesConstructor, callbackWRed->orgAmdTtlServicesConstructor)(that, provider);
@@ -540,27 +431,19 @@ uint32_t WRed::wrapPspSwInit(uint32_t *inputData, void *outputData) {
     return ret;
 }
 
-uint32_t WRed::wrapGcGetHwVersion() { return 0x090201; }
+uint32_t WRed::wrapGcGetHwVersion() {
+    if (callbackWRed->asicType >= ASICType::Renoir) { return 0x090400; }
+    return 0x090201;
+}
 
 void WRed::wrapPopulateFirmwareDirectory(void *that) {
-    FunctionCast(wrapPopulateFirmwareDirectory, callbackWRed->orgPopulateFirmwareDirectory)(that);
-    auto *fwDir = getMember<void *>(that, 0xB8);
+    auto *fwDir = IOMallocZero(0xD8);
+    callbackWRed->orgAMDFirmwareDirectoryConstructor(fwDir, 3);
+    getMember<void *>(that, 0xB8) = fwDir;
 
     auto *asicName = getASICName();
     char filename[128];
-
-    if (callbackWRed->asicType >= ASICType::Renoir) {
-        snprintf(filename, 128, "%s_dmcub.bin", asicName);
-        DBGLOG("wred", "%s => atidmcub_0.dat", filename);
-        auto &fwDesc = getFWDescByName(filename);
-        auto *fwHeader = reinterpret_cast<const CommonFirmwareHeader *>(fwDesc.data);
-        auto *fwDmcub = callbackWRed->orgCreateFirmware(fwDesc.data + fwHeader->ucodeOff, fwHeader->ucodeSize, 0x200,
-            "atidmcub_0.dat");
-        PANIC_COND(!fwDmcub, "wred", "Failed to create atidmcub_0.dat firmware");
-        DBGLOG("wred", "Inserting atidmcub_0.dat!");
-        PANIC_COND(!callbackWRed->orgPutFirmware(fwDir, 6, fwDmcub), "wred",
-            "Failed to inject atidmcub_0.dat firmware");
-    }
+    memset(filename, 0, 128);
 
     snprintf(filename, 128, "%s_vcn.bin", asicName);
     auto *targetFilename = callbackWRed->asicType >= ASICType::Renoir ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
@@ -572,7 +455,20 @@ void WRed::wrapPopulateFirmwareDirectory(void *that) {
         callbackWRed->orgCreateFirmware(fwDesc.data + fwHeader->ucodeOff, fwHeader->ucodeSize, 0x200, targetFilename);
     PANIC_COND(!fw, "wred", "Failed to create '%s' firmware", targetFilename);
     DBGLOG("wred", "Inserting %s!", targetFilename);
-    PANIC_COND(!callbackWRed->orgPutFirmware(fwDir, 6, fw), "wred", "Failed to inject ativvaxy_rv.dat firmware");
+    PANIC_COND(!callbackWRed->orgPutFirmware(fwDir, 0, fw), "wred", "Failed to inject ativvaxy_rv.dat firmware");
+
+    if (callbackWRed->asicType >= ASICType::Renoir) {
+        snprintf(filename, 128, "%s_dmcub.bin", asicName);
+        DBGLOG("wred", "%s => atidmcub_0.dat", filename);
+        auto &fwDesc = getFWDescByName(filename);
+        auto *fwHeader = reinterpret_cast<const CommonFirmwareHeader *>(fwDesc.data);
+        auto *fwDmcub = callbackWRed->orgCreateFirmware(fwDesc.data + fwHeader->ucodeOff, fwHeader->ucodeSize, 0x200,
+            "atidmcub_0.dat");
+        PANIC_COND(!fwDmcub, "wred", "Failed to create atidmcub_0.dat firmware");
+        DBGLOG("wred", "Inserting atidmcub_0.dat!");
+        PANIC_COND(!callbackWRed->orgPutFirmware(fwDir, 0, fwDmcub), "wred",
+            "Failed to inject atidmcub_0.dat firmware");
+    }
 }
 
 void *WRed::wrapCreatePowerTuneServices(void *that, void *param2) {
@@ -699,54 +595,11 @@ bool WRed::wrapAllocateHWEngines(void *that) {
 void WRed::wrapSetupAndInitializeHWCapabilities(void *that) {
     FunctionCast(wrapSetupAndInitializeHWCapabilities, callbackWRed->orgSetupAndInitializeHWCapabilities)(that);
     if (callbackWRed->asicType < ASICType::Renoir) {
-        getMember<uint32_t>(that, 0x2C) = 4;    // Surface Count
+        getMember<uint32_t>(that, 0x2C) = 4;    // Surface Count (?)
     }
     getMember<bool>(that, 0xC0) = false;    // SDMA Page Queue
     getMember<bool>(that, 0xAC) = false;    // VCE
     getMember<bool>(that, 0xAE) = false;    // VCE-related
-}
-
-/**
- * Hack: Add custom param 4 and 5 (pointer to firmware and size)
- * aka RCX and R8 registers
- * Complementary to `_psp_asd_load` patch-set.
- */
-uint32_t WRed::wrapPspAsdLoad(void *pspData) {
-    char filename[128];
-    snprintf(filename, 128, "%s_asd.bin", getASICName());
-    DBGLOG("wred", "Injecting %s!", filename);
-    auto &fwDesc = getFWDescByName(filename);
-    auto *fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc.data);
-    auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspAsdLoad);
-    auto ret = org(pspData, 0, 0, fwDesc.data + fwHeader->ucodeOff, fwHeader->ucodeSize);
-    DBGLOG("wred", "_psp_asd_load returned 0x%X", ret);
-    return ret;
-}
-
-/** Same idea as `_psp_asd_load`. */
-uint32_t WRed::wrapPspDtmLoad(void *pspData) {
-    char filename[128];
-    snprintf(filename, 128, "%s_ta.bin", getASICName());
-    DBGLOG("wred", "Injecting %s <dtm>!", filename);
-    auto &fwDesc = getFWDescByName(filename);
-    auto *fwHeader = reinterpret_cast<const PspTaFwHeaderV1 *>(fwDesc.data);
-    auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspDtmLoad);
-    auto ret = org(pspData, 0, 0, fwDesc.data + fwHeader->ucodeOff + fwHeader->dtm.off, fwHeader->dtm.size);
-    DBGLOG("wred", "_psp_dtm_load returned 0x%X", ret);
-    return ret;
-}
-
-/** Same idea as `_psp_asd_load`. */
-uint32_t WRed::wrapPspHdcpLoad(void *pspData) {
-    char filename[128];
-    snprintf(filename, 128, "%s_ta.bin", getASICName());
-    DBGLOG("wred", "Injecting %s <hdcp>!", filename);
-    auto &fwDesc = getFWDescByName(filename);
-    auto *fwHeader = reinterpret_cast<const PspTaFwHeaderV1 *>(fwDesc.data);
-    auto *org = reinterpret_cast<t_pspLoadExtended>(callbackWRed->orgPspHdcpLoad);
-    auto ret = org(pspData, 0, 0, fwDesc.data + fwHeader->ucodeOff + fwHeader->hdcp.off, fwHeader->hdcp.size);
-    DBGLOG("wred", "_psp_hdcp_load returned 0x%X", ret);
-    return ret;
 }
 
 void *WRed::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3) {

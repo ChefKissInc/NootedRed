@@ -4,6 +4,7 @@
 #pragma once
 #include <Headers/kern_util.hpp>
 
+using t_AMDFirmwareDirectoryConstructor = void (*)(void *that, uint32_t);
 using t_createFirmware = void *(*)(const void *data, uint32_t size, uint32_t param3, const char *filename);
 using t_putFirmware = bool (*)(void *that, uint32_t deviceType, void *fw);
 using t_Vega10PowerTuneConstructor = void (*)(void *that, void *param1, void *param2);

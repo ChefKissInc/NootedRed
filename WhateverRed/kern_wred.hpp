@@ -165,55 +165,6 @@ class WRed {
         }
     }
 
-    uint32_t readSmcVersion() {
-        auto smuWaitForResp = [=]() {
-            uint32_t ret = 0;
-            for (uint32_t i = 0; i < AMDGPU_MAX_USEC_TIMEOUT; i++) {
-                ret = this->readReg32(MP_BASE + mmMP1_SMN_C2PMSG_90);
-                if (ret != 0) break;
-                IOSleep(1);
-            }
-            return ret;
-        };
-
-        PANIC_COND(smuWaitForResp() != 1, "wred", "Msg issuing pre-check failed; SMU may be in an improper state");
-        this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_90, 0);                          // Status
-        this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_82, 0);                          // Param
-        this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_66, PPSMC_MSG_GetSmuVersion);    // Message
-        PANIC_COND(smuWaitForResp() != 1, "wred", "No response from SMU");
-        return this->readReg32(MP_BASE + mmMP1_SMN_C2PMSG_82) >> 8;
-    }
-
-    inline static void injectGFXFirmware(const char *filename, GcFwConstant *fw, GcFwConstant *jt = nullptr) {
-        auto &fwDesc = getFWDescByName(filename);
-        auto *fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc.data);
-        fw->addr = 0x0;
-        fw->size = fwHeader->ucodeSize;
-        fw->data = fwDesc.data + fwHeader->ucodeOff;
-        DBGLOG("wred", "Injected %s!", filename);
-
-        if (jt) {
-            jt->addr = fwHeader->jtOff;
-            jt->size = fwHeader->jtSize;
-            jt->data = fwDesc.data + fwHeader->ucodeOff + fwHeader->jtOff;
-            DBGLOG("wred", "Injected %s <jt>!", filename);
-        }
-    }
-
-    inline const char *rlcFilenameToLoad() {
-        uint8_t rev = videoBuiltin->configRead8(kIOPCIConfigRevisionID);
-        switch (this->asicType) {
-            case ASICType::Picasso:
-                if ((rev >= 0xC8 && rev <= 0xCF) || (rev >= 0xD8 && rev <= 0xDF)) { return "%s_rlc_am4.bin"; }
-                return "%s_rlc.bin";
-            case ASICType::Raven:
-                if (callbackWRed->readSmcVersion() >= 0x41E2B) { return "%s_kicker_rlc.bin"; }
-                [[fallthrough]];
-            default:
-                return "%s_rlc.bin";
-        }
-    }
-
     OSData *vbiosData = nullptr;
     ASICType asicType = ASICType::Unknown;
     uint64_t fbOffset {};
@@ -240,23 +191,12 @@ class WRed {
     uint32_t *orgDeviceTypeTable = nullptr;
     mach_vm_address_t orgAmdTtlServicesConstructor {};
     mach_vm_address_t orgPspSwInit {};
-    mach_vm_address_t orgPopulateFirmwareDirectory {};
+    t_AMDFirmwareDirectoryConstructor orgAMDFirmwareDirectoryConstructor = nullptr;
     t_createFirmware orgCreateFirmware = nullptr;
     t_putFirmware orgPutFirmware = nullptr;
     t_Vega10PowerTuneConstructor orgVega10PowerTuneConstructor = nullptr;
     CailAsicCapEntry *orgCapsTableHWLibs = nullptr;
     CailInitAsicCapEntry *orgAsicInitCapsTable = nullptr;
-    mach_vm_address_t orgPspAsdLoad {};
-    mach_vm_address_t orgPspDtmLoad {};
-    mach_vm_address_t orgPspHdcpLoad {};
-    GcFwConstant *orgGcRlcUcode = nullptr;
-    GcFwConstant *orgGcMeUcode = nullptr;
-    GcFwConstant *orgGcCeUcode = nullptr;
-    GcFwConstant *orgGcPfpUcode = nullptr;
-    GcFwConstant *orgGcMecUcode = nullptr;
-    GcFwConstant *orgGcMecJtUcode = nullptr;
-    SdmaFwConstant *orgSdma41Ucode = nullptr;
-    SdmaFwConstant *orgSdma412Ucode = nullptr;
     t_sendMsgToSmc orgRavenSendMsgToSmc = nullptr;
     t_sendMsgToSmc orgRenoirSendMsgToSmc = nullptr;
     mach_vm_address_t orgSmuRavenInitialize {};
@@ -303,9 +243,6 @@ class WRed {
     static uint32_t wrapGcGetHwVersion();
     static void wrapPopulateFirmwareDirectory(void *that);
     static void *wrapCreatePowerTuneServices(void *that, void *param2);
-    static uint32_t wrapPspAsdLoad(void *pspData);
-    static uint32_t wrapPspDtmLoad(void *pspData);
-    static uint32_t wrapPspHdcpLoad(void *pspData);
     static uint32_t wrapSmuRavenInitialize(void *smum, uint32_t param2);
     static uint32_t wrapSmuRenoirInitialize(void *smum, uint32_t param2);
     static uint32_t wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4);
