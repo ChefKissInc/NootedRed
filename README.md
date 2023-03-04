@@ -1,12 +1,10 @@
 # WhateverRed ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/NootInc/WhateverRed/main.yml?branch=master&logo=github&style=for-the-badge)
 
+Through hard work come great results.
+
 An AMD iGPU support [Lilu](https://github.com/acidanthera/Lilu) plugin.
 
-The Source Code of this Original Work is licensed under the `Thou Shalt Not Profit License version 1.0`. See `LICENSE`
-
-## The following parts of the source code have been taken from [WhateverGreen](https://github.com/Acidanthera/WhateverGreen)
-
-- Apple Graphics Device Policy (AGDP) Piker-Alpha (agdpmod=pikera) patch
+The Source Code of this Original Work is licensed under the `Thou Shalt Not Profit License version 1.0`. See [`LICENSE`](https://github.com/NootInc/WhateverRed/blob/master/LICENSE)
 
 ## FAQ
 
@@ -30,7 +28,7 @@ The required logic for our iGPUs has been purged from the AMD kexts since Monter
 
 This cannot be resolved without breaking macOS' integrity and potentially even stability.
 
-Injecting the GPU kexts is not possible during the OpenCore injection stage. The prelink stage fails for kexts of this type as their dependencies aren't contained in the Boot Kext Collection, where OpenCore injects kexts to, they're in the Auxiliary Kext Collection.
+Injecting the GPU kexts is not possible during the OpenCore injection stage. The prelink stage fails for kexts of this type as their dependencies aren't contained in the Boot Kext Collection, where OpenCore injects kexts to, they're in the System Kext Collection.
 
 In conclusion, this kext is constricted to Big Sur since there are too many incompatibilities with older and newer macOS versions.
 
@@ -38,3 +36,7 @@ In conclusion, this kext is constricted to Big Sur since there are too many inco
 
 - [@ChefKissInc](https://github.com/ChefKissInc) | Project lead, Linux shitcode analyser and kernel extension developer. Extensive knowledge of OS inner workings
 - [@NyanCatTW1](https://github.com/NyanCatTW1) | Reverse Engineering and Python automation magician. His Ghidra RedMetaClassAnalyzer script has made the entire process way painless by automagically discovering C++ v-tables for classes.
+
+## Credits
+
+[Pike R. Alpha](https://github.com/Piker-Alpha) for the Apple Device Graphics Policy patch
