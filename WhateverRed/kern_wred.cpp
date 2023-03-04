@@ -34,7 +34,7 @@ static KernelPatcher::KextInfo kextRadeonX5000 {"com.apple.kext.AMDRadeonX5000",
 WRed *WRed::callbackWRed = nullptr;
 
 void WRed::init() {
-    SYSLOG("wred", "Please don't support tonymacx86.com!");
+    SYSLOG(MODULE_SHORT, "Please don't support tonymacx86.com!");
     callbackWRed = this;
 
     lilu.onPatcherLoadForce(
@@ -58,12 +58,12 @@ void WRed::deinit() {
 
 void WRed::processPatcher(KernelPatcher &patcher) {
     auto *devInfo = DeviceInfo::create();
-    PANIC_COND(!devInfo, "wred", "Failed to create DeviceInfo");
+    PANIC_COND(!devInfo, MODULE_SHORT, "Failed to create DeviceInfo");
     devInfo->processSwitchOff();
-    PANIC_COND(!devInfo->videoBuiltin, "wred", "videoBuiltin null");
+    PANIC_COND(!devInfo->videoBuiltin, MODULE_SHORT, "videoBuiltin null");
     auto *obj = OSDynamicCast(IOPCIDevice, devInfo->videoBuiltin);
-    PANIC_COND(!obj, "wred", "videoBuiltin is not IOPCIDevice");
-    PANIC_COND(WIOKit::readPCIConfigValue(obj, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD, "wred",
+    PANIC_COND(!obj, MODULE_SHORT, "videoBuiltin is not IOPCIDevice");
+    PANIC_COND(WIOKit::readPCIConfigValue(obj, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD, MODULE_SHORT,
         "videoBuiltin is not AMD");
     callbackWRed->videoBuiltin = obj;
 
@@ -74,58 +74,58 @@ void WRed::processPatcher(KernelPatcher &patcher) {
     // TODO: Fix model name
 
     if (obj->getProperty("ATY,bin_image")) {
-        DBGLOG("wred", "VBIOS manually overridden");
+        DBGLOG(MODULE_SHORT, "VBIOS manually overridden");
     } else {
         if (!callbackWRed->getVBIOSFromVFCT(obj)) {
-            DBGLOG("wred", "Failed to get VBIOS from VFCT, trying to get it from VRAM");
-            PANIC_COND(!callbackWRed->getVBIOSFromVRAM(obj), "wred", "Failed to get VBIOS from VRAM");
+            DBGLOG(MODULE_SHORT, "Failed to get VBIOS from VFCT, trying to get it from VRAM");
+            PANIC_COND(!callbackWRed->getVBIOSFromVRAM(obj), MODULE_SHORT, "Failed to get VBIOS from VRAM");
         }
     }
 
     callbackWRed->rmmio = obj->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5, kIOMemoryMapCacheModeWriteThrough);
-    PANIC_COND(!callbackWRed->rmmio || !callbackWRed->rmmio->getLength(), "wred", "Failed to map RMMIO");
+    PANIC_COND(!callbackWRed->rmmio || !callbackWRed->rmmio->getLength(), MODULE_SHORT, "Failed to map RMMIO");
     callbackWRed->rmmioPtr = reinterpret_cast<uint32_t *>(callbackWRed->rmmio->getVirtualAddress());
 
     auto revision = (callbackWRed->readReg32(0xD2F) & 0xF000000) >> 0x18;
     switch (WIOKit::readPCIConfigValue(obj, WIOKit::kIOPCIConfigDeviceID)) {
         case 0x15D8:
             if (revision >= 0x8) {
-                callbackWRed->asicType = ASICType::Raven2;
+                callbackWRed->chipType = ChipType::Raven2;
                 callbackWRed->enumeratedRevision = 0x79;
                 break;
             }
-            callbackWRed->asicType = ASICType::Picasso;
+            callbackWRed->chipType = ChipType::Picasso;
             callbackWRed->enumeratedRevision = 0x41;
             break;
         case 0x15DD:
             if (revision >= 0x8) {
-                callbackWRed->asicType = ASICType::Raven2;
+                callbackWRed->chipType = ChipType::Raven2;
                 callbackWRed->enumeratedRevision = 0x79;
                 break;
             }
-            callbackWRed->asicType = ASICType::Raven;
+            callbackWRed->chipType = ChipType::Raven;
             callbackWRed->enumeratedRevision = 0x10;
             break;
         case 0x164C:
             [[fallthrough]];
         case 0x1636:
-            callbackWRed->asicType = ASICType::Renoir;
+            callbackWRed->chipType = ChipType::Renoir;
             callbackWRed->enumeratedRevision = 0x91;
             break;
         case 0x15E7:
             [[fallthrough]];
         case 0x1638:
-            callbackWRed->asicType = ASICType::GreenSardine;
+            callbackWRed->chipType = ChipType::GreenSardine;
             callbackWRed->enumeratedRevision = 0xA1;
             break;
         default:
-            PANIC("wred", "Unknown device ID");
+            PANIC(MODULE_SHORT, "Unknown device ID");
     }
 
     KernelPatcher::RouteRequest requests[] = {
         {"__ZN15OSMetaClassBase12safeMetaCastEPKS_PK11OSMetaClass", wrapSafeMetaCast, orgSafeMetaCast},
     };
-    PANIC_COND(!patcher.routeMultiple(KernelPatcher::KernelID, requests), "wred",
+    PANIC_COND(!patcher.routeMultiple(KernelPatcher::KernelID, requests), MODULE_SHORT,
         "Failed to route OSMetaClassBase::safeMetaCast");
 }
 
@@ -147,12 +147,10 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
     if (kextAGDP.loadIndex == index) {
         KernelPatcher::LookupPatch patch {&kextAGDP, reinterpret_cast<const uint8_t *>("board-id"),
             reinterpret_cast<const uint8_t *>("board-ix"), sizeof("board-id"), 1};
-
         patcher.applyLookupPatch(&patch);
-        if (patcher.getError() != KernelPatcher::Error::NoError) {
-            SYSLOG("wred", "Failed to apply Piker-Alpha's AGDP patch: %d", patcher.getError());
-            patcher.clearError();
-        }
+        SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, MODULE_SHORT,
+            "Failed to apply Piker-Alpha's AGDP patch: %d", patcher.getError());
+        patcher.clearError();
     } else if (kextRadeonX5000HWLibs.loadIndex == index) {
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZL15deviceTypeTable", orgDeviceTypeTable},
@@ -166,7 +164,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"_Renoir_SendMsgToSmc", orgRenoirSendMsgToSmc},
             {"__ZN20AMDFirmwareDirectoryC1Ej", orgAMDFirmwareDirectoryConstructor},
         };
-        PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "wred",
+        PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), MODULE_SHORT,
             "Failed to resolve AMDRadeonX5000HWLibs symbols");
 
         KernelPatcher::RouteRequest requests[] = {
@@ -189,7 +187,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"_SmuRaven_Initialize", wrapSmuRavenInitialize, orgSmuRavenInitialize},
             {"_SmuRenoir_Initialize", wrapSmuRenoirInitialize, orgSmuRenoirInitialize},
         };
-        PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "wred",
+        PANIC_COND(!patcher.routeMultiple(index, requests, address, size), MODULE_SHORT,
             "Failed to route AMDRadeonX5000HWLibs symbols");
 
         /**
@@ -213,7 +211,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable},
         };
-        PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size, true), "wred",
+        PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size, true), MODULE_SHORT,
             "Failed to resolve AMDRadeonX6000Framebuffer symbols");
 
         KernelPatcher::RouteRequest requests[] = {
@@ -225,7 +223,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo, orgInitWithPciInfo},
             {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", wrapDoGPUPanic},
         };
-        PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "wred",
+        PANIC_COND(!patcher.routeMultiple(index, requests, address, size), MODULE_SHORT,
             "Failed to route AMDRadeonX6000Framebuffer symbols");
 
         /** Neutralise VRAM Info creation null check to proceed with Controller Core Services initialisation. */
@@ -281,11 +279,11 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN34AMDRadeonX5000_AMDAccelDisplayPipe10gMetaClassE", metaClassMap[2][0]},
             {"__ZN30AMDRadeonX5000_AMDAccelChannel10gMetaClassE", metaClassMap[3][1]},
         };
-        PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "wred",
+        PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), MODULE_SHORT,
             "Failed to resolve AMDRadeonX5000 symbols");
 
         /** Patch the data so that it only starts SDMA0. */
-        PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "wred",
+        PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, MODULE_SHORT,
             "Failed to enable kernel writing");
         orgChannelTypes[5] = 1;     // Fix createAccelChannels
         orgChannelTypes[11] = 0;    // Fix getPagingChannel
@@ -307,7 +305,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware25allocateAMDHWAlignManagerEv", wrapAllocateAMDHWAlignManager,
                 orgAllocateAMDHWAlignManager},
         };
-        PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "wred",
+        PANIC_COND(!patcher.routeMultiple(index, requests, address, size), MODULE_SHORT,
             "Failed to route AMDRadeonX5000 symbols");
 
         /**
@@ -335,7 +333,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN33AMDRadeonX6000_AMDHWAlignManager224getPreferredSwizzleMode2EP33_ADDR2_COMPUTE_SURFACE_INFO_INPUT",
                 orgGetPreferredSwizzleMode2},
         };
-        PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "wred",
+        PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), MODULE_SHORT,
             "Failed to resolve AMDRadeonX6000 symbols");
 
         KernelPatcher::RouteRequest requests[] = {
@@ -355,7 +353,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN27AMDRadeonX6000_AMDHWDisplay14getDisplayInfoEjbbPvP17_FRAMEBUFFER_INFO", wrapGetDisplayInfo,
                 orgGetDisplayInfo},
         };
-        PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "wred",
+        PANIC_COND(!patcher.routeMultiple(index, requests, address, size), MODULE_SHORT,
             "Failed to route AMDRadeonX6000 symbols");
 
         /** Mismatched VTable Calls to getGpuDebugPolicy. */
@@ -403,8 +401,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
 }
 
 void WRed::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
-    DBGLOG("wred", "Patching device type table");
-    PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "wred",
+    DBGLOG(MODULE_SHORT, "Patching device type table");
+    PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, MODULE_SHORT,
         "Failed to enable kernel writing");
     callbackWRed->orgDeviceTypeTable[0] = WIOKit::readPCIConfigValue(provider, WIOKit::kIOPCIConfigDeviceID);
     callbackWRed->orgDeviceTypeTable[1] = 0;
@@ -416,7 +414,7 @@ void WRed::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
 uint32_t WRed::wrapSmuGetHwVersion() { return 0x1; }
 
 uint32_t WRed::wrapPspSwInit(uint32_t *inputData, void *outputData) {
-    if (callbackWRed->asicType < ASICType::Renoir) {
+    if (callbackWRed->chipType < ChipType::Renoir) {
         inputData[3] = 0x9;
         inputData[4] = 0x0;
         inputData[5] = 0x2;
@@ -427,12 +425,12 @@ uint32_t WRed::wrapPspSwInit(uint32_t *inputData, void *outputData) {
         inputData[5] = 0x0;
     }
     auto ret = FunctionCast(wrapPspSwInit, callbackWRed->orgPspSwInit)(inputData, outputData);
-    DBGLOG("wred", "_psp_sw_init >> 0x%X", ret);
+    DBGLOG(MODULE_SHORT, "_psp_sw_init >> 0x%X", ret);
     return ret;
 }
 
 uint32_t WRed::wrapGcGetHwVersion() {
-    if (callbackWRed->asicType >= ASICType::Renoir) { return 0x090400; }
+    if (callbackWRed->chipType >= ChipType::Renoir) { return 0x090400; }
     return 0x090201;
 }
 
@@ -443,30 +441,29 @@ void WRed::wrapPopulateFirmwareDirectory(void *that) {
 
     auto *asicName = getASICName();
     char filename[128];
-    memset(filename, 0, 128);
 
     snprintf(filename, 128, "%s_vcn.bin", asicName);
-    auto *targetFilename = callbackWRed->asicType >= ASICType::Renoir ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
-    DBGLOG("wred", "%s => %s", filename, targetFilename);
+    auto *targetFilename = callbackWRed->chipType >= ChipType::Renoir ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
+    DBGLOG(MODULE_SHORT, "%s => %s", filename, targetFilename);
 
     auto &fwDesc = getFWDescByName(filename);
     auto *fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc.data);
     auto *fw =
         callbackWRed->orgCreateFirmware(fwDesc.data + fwHeader->ucodeOff, fwHeader->ucodeSize, 0x200, targetFilename);
-    PANIC_COND(!fw, "wred", "Failed to create '%s' firmware", targetFilename);
-    DBGLOG("wred", "Inserting %s!", targetFilename);
-    PANIC_COND(!callbackWRed->orgPutFirmware(fwDir, 0, fw), "wred", "Failed to inject ativvaxy_rv.dat firmware");
+    PANIC_COND(!fw, MODULE_SHORT, "Failed to create '%s' firmware", targetFilename);
+    DBGLOG(MODULE_SHORT, "Inserting %s!", targetFilename);
+    PANIC_COND(!callbackWRed->orgPutFirmware(fwDir, 0, fw), MODULE_SHORT, "Failed to inject ativvaxy_rv.dat firmware");
 
-    if (callbackWRed->asicType >= ASICType::Renoir) {
+    if (callbackWRed->chipType >= ChipType::Renoir) {
         snprintf(filename, 128, "%s_dmcub.bin", asicName);
-        DBGLOG("wred", "%s => atidmcub_0.dat", filename);
+        DBGLOG(MODULE_SHORT, "%s => atidmcub_0.dat", filename);
         auto &fwDesc = getFWDescByName(filename);
         auto *fwHeader = reinterpret_cast<const CommonFirmwareHeader *>(fwDesc.data);
         auto *fwDmcub = callbackWRed->orgCreateFirmware(fwDesc.data + fwHeader->ucodeOff, fwHeader->ucodeSize, 0x200,
             "atidmcub_0.dat");
-        PANIC_COND(!fwDmcub, "wred", "Failed to create atidmcub_0.dat firmware");
-        DBGLOG("wred", "Inserting atidmcub_0.dat!");
-        PANIC_COND(!callbackWRed->orgPutFirmware(fwDir, 0, fwDmcub), "wred",
+        PANIC_COND(!fwDmcub, MODULE_SHORT, "Failed to create atidmcub_0.dat firmware");
+        DBGLOG(MODULE_SHORT, "Inserting atidmcub_0.dat!");
+        PANIC_COND(!callbackWRed->orgPutFirmware(fwDir, 0, fwDmcub), MODULE_SHORT,
             "Failed to inject atidmcub_0.dat firmware");
     }
 }
@@ -535,7 +532,7 @@ IOReturn WRed::wrapPopulateVramInfo([[maybe_unused]] void *that, void *fwInfo) {
     auto *mdt = reinterpret_cast<const uint16_t *>(vbios + dataTable + 4);
     uint32_t channelCount = 1;
     if (mdt[0x1E]) {
-        DBGLOG("wred", "Fetching VRAM info from iGPU System Info");
+        DBGLOG(MODULE_SHORT, "Fetching VRAM info from iGPU System Info");
         uint32_t offset = 0x1E * 2 + 4;
         auto index = *reinterpret_cast<const uint16_t *>(vbios + dataTable + offset);
         auto *table = reinterpret_cast<const IgpSystemInfo *>(vbios + index);
@@ -548,7 +545,7 @@ IOReturn WRed::wrapPopulateVramInfo([[maybe_unused]] void *that, void *fwInfo) {
                         if (table->infoV11.umaChannelCount) channelCount = table->infoV11.umaChannelCount;
                         break;
                     default:
-                        DBGLOG("wred", "Unsupported contentRev %d", table->header.contentRev);
+                        DBGLOG(MODULE_SHORT, "Unsupported contentRev %d", table->header.contentRev);
                 }
             case 2:
                 switch (table->header.contentRev) {
@@ -558,13 +555,13 @@ IOReturn WRed::wrapPopulateVramInfo([[maybe_unused]] void *that, void *fwInfo) {
                         if (table->infoV2.umaChannelCount) channelCount = table->infoV2.umaChannelCount;
                         break;
                     default:
-                        DBGLOG("wred", "Unsupported contentRev %d", table->header.contentRev);
+                        DBGLOG(MODULE_SHORT, "Unsupported contentRev %d", table->header.contentRev);
                 }
             default:
-                DBGLOG("wred", "Unsupported formatRev %d", table->header.formatRev);
+                DBGLOG(MODULE_SHORT, "Unsupported formatRev %d", table->header.formatRev);
         }
     } else {
-        DBGLOG("wred", "No iGPU System Info in Master Data Table");
+        DBGLOG(MODULE_SHORT, "No iGPU System Info in Master Data Table");
     }
     getMember<uint32_t>(fwInfo, 0x1C) = 4;                    // VRAM Type (DDR4)
     getMember<uint32_t>(fwInfo, 0x20) = channelCount * 64;    // VRAM Width (64-bit channels)
@@ -594,7 +591,7 @@ bool WRed::wrapAllocateHWEngines(void *that) {
 
 void WRed::wrapSetupAndInitializeHWCapabilities(void *that) {
     FunctionCast(wrapSetupAndInitializeHWCapabilities, callbackWRed->orgSetupAndInitializeHWCapabilities)(that);
-    if (callbackWRed->asicType < ASICType::Renoir) {
+    if (callbackWRed->chipType < ChipType::Renoir) {
         getMember<uint32_t>(that, 0x2C) = 4;    // Surface Count (?)
     }
     getMember<bool>(that, 0xC0) = false;    // SDMA Page Queue
@@ -638,7 +635,7 @@ void *WRed::wrapAllocateAMDHWDisplay(void *that) {
 uint32_t WRed::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4) {
     // Skip loading of MEC2 FW on Renoir devices due to it being unsupported
     // See also: https://github.com/torvalds/linux/commit/f8f70c1371d304f42d4a1242d8abcbda807d0bed
-    if (callbackWRed->asicType >= ASICType::Renoir) {
+    if (callbackWRed->chipType >= ChipType::Renoir) {
         static bool didMec1 = false;
         switch (getMember<uint32_t>(ctx, 16)) {
             case GFX_FW_TYPE_CP_MEC:
@@ -646,10 +643,10 @@ uint32_t WRed::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *para
                     didMec1 = true;
                     break;
                 }
-                DBGLOG("wred", "Skipping MEC2 FW");
+                DBGLOG(MODULE_SHORT, "Skipping MEC2 FW");
                 return 0;
             case GFX_FW_TYPE_CP_MEC_ME2:
-                DBGLOG("wred", "Skipping MEC2 JT FW");
+                DBGLOG(MODULE_SHORT, "Skipping MEC2 JT FW");
                 return 0;
             default:
                 break;
@@ -696,8 +693,8 @@ bool WRed::wrapAccelSharedUCStopX6000(void *that, void *provider) {
 
 void WRed::wrapInitDCNRegistersOffsets(void *that) {
     FunctionCast(wrapInitDCNRegistersOffsets, callbackWRed->orgInitDCNRegistersOffsets)(that);
-    if (callbackWRed->asicType < ASICType::Renoir) {
-        DBGLOG("wred", "initDCNRegistersOffsets !! PATCHING REGISTERS FOR DCN 1.0 !!");
+    if (callbackWRed->chipType < ChipType::Renoir) {
+        DBGLOG(MODULE_SHORT, "initDCNRegistersOffsets !! PATCHING REGISTERS FOR DCN 1.0 !!");
         auto base = getMember<uint32_t>(that, 0x4830);
         getMember<uint32_t>(that, 0x4840) = base + mmHUBPREQ0_DCSURF_PRIMARY_SURFACE_ADDRESS;
         getMember<uint32_t>(that, 0x4878) = base + mmHUBPREQ1_DCSURF_PRIMARY_SURFACE_ADDRESS;
@@ -819,6 +816,6 @@ uint64_t WRed::wrapGetDisplayInfo(void *that, uint32_t param1, bool param2, bool
 }
 
 void WRed::wrapDoGPUPanic() {
-    DBGLOG("wred", "doGPUPanic << ()");
+    DBGLOG(MODULE_SHORT, "doGPUPanic << ()");
     while (true) { IOSleep(3600000); }
 }
