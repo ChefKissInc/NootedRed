@@ -162,6 +162,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         void *goldenSettingsRaven2 = nullptr;
         void *goldenSettingsPicasso = nullptr;
         void *goldenSettingsRenoir = nullptr;
+        uint32_t *orgDeviceTypeTable = nullptr;
 
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZL15deviceTypeTable", orgDeviceTypeTable},
@@ -188,8 +189,14 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, MODULE_SHORT,
             "Failed to enable kernel writing");
-        orgAsicInitCapsTable[0].deviceId = orgCapsTableHWLibs[0].deviceId =
-            WIOKit::readPCIConfigValue(callbackWRed->videoBuiltin, WIOKit::kIOPCIConfigDeviceID);
+
+        auto deviceId = WIOKit::readPCIConfigValue(callbackWRed->videoBuiltin, WIOKit::kIOPCIConfigDeviceID);
+        DBGLOG(MODULE_SHORT, "Patching device type table");
+        orgDeviceTypeTable[0] = deviceId;
+        orgDeviceTypeTable[1] = 0;
+
+        DBGLOG(MODULE_SHORT, "Patching HWLibs caps tables");
+        orgAsicInitCapsTable[0].deviceId = orgCapsTableHWLibs[0].deviceId = deviceId;
         orgAsicInitCapsTable[0].revision = orgCapsTableHWLibs[0].revision = callbackWRed->revision;
         orgAsicInitCapsTable[0].emulatedRev = orgCapsTableHWLibs[0].emulatedRev =
             callbackWRed->enumeratedRevision + callbackWRed->revision;
@@ -219,7 +226,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
         KernelPatcher::RouteRequest requests[] = {
-            {"__ZN14AmdTtlServicesC2EP11IOPCIDevice", wrapAmdTtlServicesConstructor, orgAmdTtlServicesConstructor},
             {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory},
             {"__ZN25AtiApplePowerTuneServices23createPowerTuneServicesEP11PP_InstanceP18PowerPlayCallbacks",
                 wrapCreatePowerTuneServices},
@@ -259,10 +265,10 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             patcher.clearError();
         }
     } else if (kextRadeonX6000Framebuffer.loadIndex == index) {
-        static uint32_t ddiCapsRavenFB[16] = {0x800005U, 0x500011FE, 0x80000, 0x11001000, 0x200, 0x68000001, 0x20000000,
+        static uint32_t ddiCapsRaven[16] = {0x800005U, 0x500011FE, 0x80000, 0x11001000, 0x200, 0x68000001, 0x20000000,
             0x4002, 0x22420001, 0x9E20E10, 0x2000120, 0x0, 0x0, 0x0, 0x0, 0x0};
 
-        static uint32_t ddiCapsRenoirFB[16] = {0x800005, 0x500011FE, 0x80000, 0x11001000, 0x200, 0x68000001, 0x20000000,
+        static uint32_t ddiCapsRenoir[16] = {0x800005, 0x500011FE, 0x80000, 0x11001000, 0x200, 0x68000001, 0x20000000,
             0x4002, 0x22420001, 0x9E20E18, 0x2000120, 0x0, 0x0, 0x0, 0x0, 0x0};
 
         CailAsicCapEntry *orgAsicCapsTable = nullptr;
@@ -275,7 +281,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, MODULE_SHORT,
             "Failed to enable kernel writing");
-        orgAsicCapsTable[0].caps = callbackWRed->chipType < ChipType::Renoir ? ddiCapsRavenFB : ddiCapsRenoirFB;
+        DBGLOG(MODULE_SHORT, "Patching X6000FB caps table");
+        orgAsicCapsTable[0].caps = callbackWRed->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir;
         orgAsicCapsTable[0].deviceId =
             WIOKit::readPCIConfigValue(callbackWRed->videoBuiltin, WIOKit::kIOPCIConfigDeviceID);
         orgAsicCapsTable[0].revision = callbackWRed->revision;
@@ -467,17 +474,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             patcher.clearError();
         }
     }
-}
-
-void WRed::wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider) {
-    DBGLOG(MODULE_SHORT, "Patching device type table");
-    PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, MODULE_SHORT,
-        "Failed to enable kernel writing");
-    callbackWRed->orgDeviceTypeTable[0] = WIOKit::readPCIConfigValue(provider, WIOKit::kIOPCIConfigDeviceID);
-    callbackWRed->orgDeviceTypeTable[1] = 0;
-    MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
-
-    FunctionCast(wrapAmdTtlServicesConstructor, callbackWRed->orgAmdTtlServicesConstructor)(that, provider);
 }
 
 uint32_t WRed::wrapSmuGetHwVersion() { return 0x1; }

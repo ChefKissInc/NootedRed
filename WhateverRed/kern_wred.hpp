@@ -190,8 +190,6 @@ class WRed {
     mach_vm_address_t orgHwReadReg32 {};
 
     /** X5000HWLibs */
-    uint32_t *orgDeviceTypeTable = nullptr;
-    mach_vm_address_t orgAmdTtlServicesConstructor {};
     mach_vm_address_t orgPspSwInit {};
     t_AMDFirmwareDirectoryConstructor orgAMDFirmwareDirectoryConstructor = nullptr;
     t_createFirmware orgCreateFirmware = nullptr;
@@ -237,7 +235,6 @@ class WRed {
     static void wrapDoGPUPanic();
 
     /** X5000HWLibs */
-    static void wrapAmdTtlServicesConstructor(void *that, IOPCIDevice *provider);
     static uint32_t wrapSmuGetHwVersion();
     static uint32_t wrapPspSwInit(uint32_t *inputData, void *outputData);
     static uint32_t wrapGcGetHwVersion();
