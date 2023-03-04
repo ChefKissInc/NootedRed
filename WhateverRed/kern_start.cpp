@@ -39,14 +39,12 @@ PluginConfiguration ADDPR(config) {
 OSDefineMetaClassAndStructors(PRODUCT_NAME, IOService);
 
 IOService *PRODUCT_NAME::probe(IOService *provider, SInt32 *score) {
-    ADDPR(selfInstance) = this;
     setProperty("VersionInfo", kextVersion);
     auto service = IOService::probe(provider, score);
     return ADDPR(startSuccess) ? service : nullptr;
 }
 
 bool PRODUCT_NAME::start(IOService *provider) {
-    ADDPR(selfInstance) = this;
     if (!IOService::start(provider)) {
         SYSLOG("init", "Failed to start the parent");
         return false;
@@ -58,9 +56,15 @@ bool PRODUCT_NAME::start(IOService *provider) {
             SYSLOG("init", "Failed to get Drivers property");
             return false;
         }
-        auto *drivers = OSDynamicCast(OSArray, prop->copyCollection());
-        if (!drivers) {
+        auto *propCopy = prop->copyCollection();
+        if (!propCopy) {
             SYSLOG("init", "Failed to copy Drivers property");
+            return false;
+        }
+        auto *drivers = OSDynamicCast(OSArray, propCopy);
+        if (!drivers) {
+            SYSLOG("init", "Failed to cast Drivers property");
+            OSSafeReleaseNULL(propCopy);
             return false;
         }
         if (!gIOCatalogue->addDrivers(drivers)) {
@@ -74,9 +78,4 @@ bool PRODUCT_NAME::start(IOService *provider) {
     return ADDPR(startSuccess);
 }
 
-void PRODUCT_NAME::stop(IOService *provider) {
-    ADDPR(selfInstance) = nullptr;
-    IOService::stop(provider);
-}
-
-PRODUCT_NAME *ADDPR(selfInstance) = nullptr;
+void PRODUCT_NAME::stop(IOService *provider) { IOService::stop(provider); }

@@ -19,8 +19,6 @@ class EXPORT PRODUCT_NAME : public IOService {
     void stop(IOService *provider) override;
 };
 
-extern PRODUCT_NAME *ADDPR(selfInstance);
-
 enum struct ChipType {
     Unknown,
     Raven,
