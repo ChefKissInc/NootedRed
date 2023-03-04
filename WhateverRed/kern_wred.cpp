@@ -86,10 +86,10 @@ void WRed::processPatcher(KernelPatcher &patcher) {
     PANIC_COND(!callbackWRed->rmmio || !callbackWRed->rmmio->getLength(), MODULE_SHORT, "Failed to map RMMIO");
     callbackWRed->rmmioPtr = reinterpret_cast<uint32_t *>(callbackWRed->rmmio->getVirtualAddress());
 
-    auto revision = (callbackWRed->readReg32(0xD2F) & 0xF000000) >> 0x18;
+    callbackWRed->revision = (callbackWRed->readReg32(0xD2F) & 0xF000000) >> 0x18;
     switch (WIOKit::readPCIConfigValue(obj, WIOKit::kIOPCIConfigDeviceID)) {
         case 0x15D8:
-            if (revision >= 0x8) {
+            if (callbackWRed->revision >= 0x8) {
                 callbackWRed->chipType = ChipType::Raven2;
                 callbackWRed->enumeratedRevision = 0x79;
                 break;
@@ -98,7 +98,7 @@ void WRed::processPatcher(KernelPatcher &patcher) {
             callbackWRed->enumeratedRevision = 0x41;
             break;
         case 0x15DD:
-            if (revision >= 0x8) {
+            if (callbackWRed->revision >= 0x8) {
                 callbackWRed->chipType = ChipType::Raven2;
                 callbackWRed->enumeratedRevision = 0x79;
                 break;
@@ -152,6 +152,17 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             "Failed to apply Piker-Alpha's AGDP patch: %d", patcher.getError());
         patcher.clearError();
     } else if (kextRadeonX5000HWLibs.loadIndex == index) {
+        CailAsicCapEntry *orgCapsTableHWLibs = nullptr;
+        CailInitAsicCapEntry *orgAsicInitCapsTable = nullptr;
+        uint32_t *ddiCapsRaven = nullptr;
+        uint32_t *ddiCapsRaven2 = nullptr;
+        uint32_t *ddiCapsPicasso = nullptr;
+        uint32_t *ddiCapsRenoir = nullptr;
+        void *goldenSettingsRaven = nullptr;
+        void *goldenSettingsRaven2 = nullptr;
+        void *goldenSettingsPicasso = nullptr;
+        void *goldenSettingsRenoir = nullptr;
+
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZL15deviceTypeTable", orgDeviceTypeTable},
             {"__ZN11AMDFirmware14createFirmwareEPhjjPKc", orgCreateFirmware},
@@ -163,9 +174,49 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"_Raven_SendMsgToSmc", orgRavenSendMsgToSmc},
             {"_Renoir_SendMsgToSmc", orgRenoirSendMsgToSmc},
             {"__ZN20AMDFirmwareDirectoryC1Ej", orgAMDFirmwareDirectoryConstructor},
+            {"_RAVEN1_GoldenSettings_A0", goldenSettingsRaven},
+            {"_RAVEN2_GoldenSettings_A0", goldenSettingsRaven2},
+            {"_PICASSO_GoldenSettings_A0", goldenSettingsPicasso},
+            {"_RENOIR_GoldenSettings_A0", goldenSettingsRenoir},
+            {"_CAIL_DDI_CAPS_RAVEN_A0", ddiCapsRaven},
+            {"_CAIL_DDI_CAPS_RAVEN2_A0", ddiCapsRaven2},
+            {"_CAIL_DDI_CAPS_PICASSO_A0", ddiCapsPicasso},
+            {"_CAIL_DDI_CAPS_RENOIR_A0", ddiCapsRenoir},
         };
         PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), MODULE_SHORT,
             "Failed to resolve AMDRadeonX5000HWLibs symbols");
+
+        PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, MODULE_SHORT,
+            "Failed to enable kernel writing");
+        orgAsicInitCapsTable[0].deviceId = orgCapsTableHWLibs[0].deviceId =
+            WIOKit::readPCIConfigValue(callbackWRed->videoBuiltin, WIOKit::kIOPCIConfigDeviceID);
+        orgAsicInitCapsTable[0].revision = orgCapsTableHWLibs[0].revision = callbackWRed->revision;
+        orgAsicInitCapsTable[0].emulatedRev = orgCapsTableHWLibs[0].emulatedRev =
+            callbackWRed->enumeratedRevision + callbackWRed->revision;
+        orgAsicInitCapsTable[0].pciRev = orgCapsTableHWLibs[0].pciRev = 0xFFFFFFFF;
+        switch (callbackWRed->chipType) {
+            case ChipType::Raven:
+                orgAsicInitCapsTable[0].caps = orgCapsTableHWLibs[0].caps = ddiCapsRaven;
+                orgAsicInitCapsTable[0].goldenCaps = goldenSettingsRaven;
+                break;
+            case ChipType::Raven2:
+                orgAsicInitCapsTable[0].caps = orgCapsTableHWLibs[0].caps = ddiCapsRaven2;
+                orgAsicInitCapsTable[0].goldenCaps = goldenSettingsRaven2;
+                break;
+            case ChipType::Picasso:
+                orgAsicInitCapsTable[0].caps = orgCapsTableHWLibs[0].caps = ddiCapsPicasso;
+                orgAsicInitCapsTable[0].goldenCaps = goldenSettingsPicasso;
+                break;
+            case ChipType::Renoir:
+                [[fallthrough]];
+            case ChipType::GreenSardine:
+                orgAsicInitCapsTable[0].caps = orgCapsTableHWLibs[0].caps = ddiCapsRenoir;
+                orgAsicInitCapsTable[0].goldenCaps = goldenSettingsRenoir;
+                break;
+            default:
+                PANIC(MODULE_SHORT, "Unknown ASIC type %d", callbackWRed->chipType);
+        }
+        MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
         KernelPatcher::RouteRequest requests[] = {
             {"__ZN14AmdTtlServicesC2EP11IOPCIDevice", wrapAmdTtlServicesConstructor, orgAmdTtlServicesConstructor},
@@ -208,11 +259,29 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             patcher.clearError();
         }
     } else if (kextRadeonX6000Framebuffer.loadIndex == index) {
+        static uint32_t ddiCapsRavenFB[16] = {0x800005U, 0x500011FE, 0x80000, 0x11001000, 0x200, 0x68000001, 0x20000000,
+            0x4002, 0x22420001, 0x9E20E10, 0x2000120, 0x0, 0x0, 0x0, 0x0, 0x0};
+
+        static uint32_t ddiCapsRenoirFB[16] = {0x800005, 0x500011FE, 0x80000, 0x11001000, 0x200, 0x68000001, 0x20000000,
+            0x4002, 0x22420001, 0x9E20E18, 0x2000120, 0x0, 0x0, 0x0, 0x0, 0x0};
+
+        CailAsicCapEntry *orgAsicCapsTable = nullptr;
+
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable},
         };
         PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size, true), MODULE_SHORT,
             "Failed to resolve AMDRadeonX6000Framebuffer symbols");
+
+        PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, MODULE_SHORT,
+            "Failed to enable kernel writing");
+        orgAsicCapsTable[0].caps = callbackWRed->chipType < ChipType::Renoir ? ddiCapsRavenFB : ddiCapsRenoirFB;
+        orgAsicCapsTable[0].deviceId =
+            WIOKit::readPCIConfigValue(callbackWRed->videoBuiltin, WIOKit::kIOPCIConfigDeviceID);
+        orgAsicCapsTable[0].revision = callbackWRed->revision;
+        orgAsicCapsTable[0].emulatedRev = callbackWRed->enumeratedRevision + callbackWRed->revision;
+        orgAsicCapsTable[0].pciRev = 0xFFFFFFFF;
+        MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
         KernelPatcher::RouteRequest requests[] = {
             {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", wrapPopulateVramInfo},
@@ -479,46 +548,6 @@ uint16_t WRed::wrapGetEnumeratedRevision() { return callbackWRed->enumeratedRevi
 IOReturn WRed::wrapPopulateDeviceInfo(void *that) {
     auto ret = FunctionCast(wrapPopulateDeviceInfo, callbackWRed->orgPopulateDeviceInfo)(that);
     getMember<uint32_t>(that, 0x60) = AMDGPU_FAMILY_RV;
-    auto deviceId = WIOKit::readPCIConfigValue(getMember<IOPCIDevice *>(that, 0x18), WIOKit::kIOPCIConfigDeviceID);
-    auto revision = getMember<uint32_t>(that, 0x68);
-    auto emulatedRevision = getMember<uint32_t>(that, 0x6c);
-
-    DBGLOG("wred", "Locating Init Caps entry");
-    PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "wred",
-        "Failed to enable kernel writing");
-
-    CailInitAsicCapEntry *initCaps = nullptr;
-    for (size_t i = 0; i < 789; i++) {
-        auto *temp = callbackWRed->orgAsicInitCapsTable + i;
-        if (temp->familyId == AMDGPU_FAMILY_RV && temp->deviceId == deviceId && temp->revision == revision) {
-            initCaps = temp;
-            break;
-        }
-    }
-
-    if (!initCaps) {
-        DBGLOG("wred", "Warning: Using fallback Init Caps search");
-        for (size_t i = 0; i < 789; i++) {
-            auto *temp = callbackWRed->orgAsicInitCapsTable + i;
-            if (temp->familyId == AMDGPU_FAMILY_RV && temp->deviceId == deviceId) {
-                initCaps = temp;
-                initCaps->emulatedRev = emulatedRevision;
-                initCaps->revision = revision;
-                initCaps->pciRev = 0xFFFFFFFF;
-                break;
-            }
-        }
-        PANIC_COND(!initCaps, "wred", "Failed to find Init Caps entry");
-    }
-
-    callbackWRed->orgCapsTableHWLibs->familyId = callbackWRed->orgAsicCapsTable->familyId = AMDGPU_FAMILY_RV;
-    callbackWRed->orgCapsTableHWLibs->deviceId = callbackWRed->orgAsicCapsTable->deviceId = deviceId;
-    callbackWRed->orgCapsTableHWLibs->revision = callbackWRed->orgAsicCapsTable->revision = revision;
-    callbackWRed->orgCapsTableHWLibs->emulatedRev = callbackWRed->orgAsicCapsTable->emulatedRev = emulatedRevision;
-    callbackWRed->orgCapsTableHWLibs->pciRev = callbackWRed->orgAsicCapsTable->pciRev = 0xFFFFFFFF;
-    callbackWRed->orgCapsTableHWLibs->caps = callbackWRed->orgAsicCapsTable->caps = initCaps->caps;
-    MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
-
     return ret;
 }
 

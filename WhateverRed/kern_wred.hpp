@@ -173,6 +173,7 @@ class WRed {
     IOMemoryMap *rmmio = nullptr;
     volatile uint32_t *rmmioPtr = nullptr;
     uint16_t enumeratedRevision {};
+    uint16_t revision {};
     IOPCIDevice *videoBuiltin = nullptr;
 
     void *hwAlignMgr = nullptr;
@@ -186,7 +187,6 @@ class WRed {
 
     /** X6000Framebuffer */
     mach_vm_address_t orgPopulateDeviceInfo {};
-    CailAsicCapEntry *orgAsicCapsTable = nullptr;
     mach_vm_address_t orgHwReadReg32 {};
 
     /** X5000HWLibs */
@@ -197,8 +197,6 @@ class WRed {
     t_createFirmware orgCreateFirmware = nullptr;
     t_putFirmware orgPutFirmware = nullptr;
     t_Vega10PowerTuneConstructor orgVega10PowerTuneConstructor = nullptr;
-    CailAsicCapEntry *orgCapsTableHWLibs = nullptr;
-    CailInitAsicCapEntry *orgAsicInitCapsTable = nullptr;
     t_sendMsgToSmc orgRavenSendMsgToSmc = nullptr;
     t_sendMsgToSmc orgRenoirSendMsgToSmc = nullptr;
     mach_vm_address_t orgSmuRavenInitialize {};
