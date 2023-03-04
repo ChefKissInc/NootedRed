@@ -565,6 +565,7 @@ IOReturn WRed::wrapPopulateVramInfo([[maybe_unused]] void *that, void *fwInfo) {
                         break;
                     default:
                         DBGLOG(MODULE_SHORT, "Unsupported contentRev %d", table->header.contentRev);
+                        break;
                 }
             case 2:
                 switch (table->header.contentRev) {
@@ -575,9 +576,11 @@ IOReturn WRed::wrapPopulateVramInfo([[maybe_unused]] void *that, void *fwInfo) {
                         break;
                     default:
                         DBGLOG(MODULE_SHORT, "Unsupported contentRev %d", table->header.contentRev);
+                        break;
                 }
             default:
                 DBGLOG(MODULE_SHORT, "Unsupported formatRev %d", table->header.formatRev);
+                break;
         }
     } else {
         DBGLOG(MODULE_SHORT, "No iGPU System Info in Master Data Table");
