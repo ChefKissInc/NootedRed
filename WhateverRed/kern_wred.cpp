@@ -39,22 +39,20 @@ void WRed::init() {
 
     lilu.onPatcherLoadForce(
         [](void *user, KernelPatcher &patcher) { static_cast<WRed *>(user)->processPatcher(patcher); }, this);
-    lilu.onKextLoadForce(&kextAGDP);
-    lilu.onKextLoadForce(&kextRadeonX5000HWLibs);
-    lilu.onKextLoadForce(&kextRadeonX6000Framebuffer);
-    lilu.onKextLoadForce(&kextRadeonX6000);
-    lilu.onKextLoadForce(&kextRadeonX5000);
-    lilu.onKextLoadForce(    // For compatibility
+    lilu.onKextLoadForce(
         nullptr, 0,
         [](void *user, KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
             static_cast<WRed *>(user)->processKext(patcher, index, address, size);
         },
         this);
+    lilu.onKextLoad(&kextAGDP);
+    lilu.onKextLoadForce(&kextRadeonX5000HWLibs);
+    lilu.onKextLoadForce(&kextRadeonX6000Framebuffer);
+    lilu.onKextLoadForce(&kextRadeonX6000);
+    lilu.onKextLoadForce(&kextRadeonX5000);
 }
 
-void WRed::deinit() {
-    if (this->vbiosData) { this->vbiosData->release(); }
-}
+void WRed::deinit() { OSSafeReleaseNULL(this->vbiosData); }
 
 void WRed::processPatcher(KernelPatcher &patcher) {
     auto *devInfo = DeviceInfo::create();
@@ -303,7 +301,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             0x89, 0x00, 0x00, 0x00, 0x48, 0x8B, 0x7B, 0x18};
         const uint8_t repl_null_check1[] = {0x48, 0x89, 0x83, 0x90, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90, 0x90, 0x90,
             0x90, 0x90, 0x90, 0x90, 0x48, 0x8B, 0x7B, 0x18};
-        static_assert(arrsize(find_null_check1) == arrsize(repl_null_check1), "Find/replace patch size mismatch");
+        static_assert(arrsize(find_null_check1) == arrsize(repl_null_check1));
 
         /** Neutralise PSP Firmware Info creation null check to proceed with Controller Core Services
            initialisation. */
@@ -311,21 +309,21 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             0xA1, 0x00, 0x00, 0x00, 0x48, 0x8B, 0x7B, 0x18};
         const uint8_t repl_null_check2[] = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90, 0x90, 0x90,
             0x90, 0x90, 0x90, 0x90, 0x48, 0x8B, 0x7B, 0x18};
-        static_assert(arrsize(find_null_check2) == arrsize(repl_null_check2), "Find/replace patch size mismatch");
+        static_assert(arrsize(find_null_check2) == arrsize(repl_null_check2));
 
         /** Neutralise VRAM Info null check inside `AmdAtomFwServices::getFirmwareInfo`. */
         const uint8_t find_null_check3[] = {0x48, 0x83, 0xBB, 0x90, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x84, 0x90, 0x00,
             0x00, 0x00, 0x49, 0x89, 0xF7, 0xBA, 0x60, 0x00, 0x00, 0x00};
         const uint8_t repl_null_check3[] = {0x48, 0x83, 0xBB, 0x90, 0x00, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90, 0x90,
             0x90, 0x90, 0x49, 0x89, 0xF7, 0xBA, 0x60, 0x00, 0x00, 0x00};
-        static_assert(arrsize(find_null_check3) == arrsize(repl_null_check3), "Find/replace patch size mismatch");
+        static_assert(arrsize(find_null_check3) == arrsize(repl_null_check3));
 
         /** Tell AGDC that we're an iGPU */
         const uint8_t find_getVendorInfo[] = {0xC7, 0x03, 0x00, 0x00, 0x03, 0x00, 0x48, 0xB8, 0x02, 0x10, 0x00, 0x00,
             0x02, 0x00, 0x00, 0x00};
         const uint8_t repl_getVendorInfo[] = {0xC7, 0x03, 0x00, 0x00, 0x03, 0x00, 0x48, 0xB8, 0x02, 0x10, 0x00, 0x00,
             0x01, 0x00, 0x00, 0x00};
-        static_assert(arrsize(find_getVendorInfo) == arrsize(repl_getVendorInfo), "Find/replace patch size mismatch");
+        static_assert(arrsize(find_getVendorInfo) == arrsize(repl_getVendorInfo));
 
         KernelPatcher::LookupPatch patches[] = {
             {&kextRadeonX6000Framebuffer, find_null_check1, repl_null_check1, arrsize(find_null_check1), 1},
@@ -502,7 +500,7 @@ void WRed::wrapPopulateFirmwareDirectory(void *that) {
 
     auto *asicName = getASICName();
     char filename[128];
-
+    memset(filename, 0, arrsize(filename));
     snprintf(filename, 128, "%s_vcn.bin", asicName);
     auto *targetFilename = callbackWRed->chipType >= ChipType::Renoir ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
     DBGLOG(MODULE_SHORT, "%s => %s", filename, targetFilename);

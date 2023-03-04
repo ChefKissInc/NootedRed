@@ -130,19 +130,19 @@ class WRed {
         auto *bar0 = provider->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress0, kIOMemoryMapCacheModeWriteThrough);
         if (!bar0 || !bar0->getLength()) {
             DBGLOG(MODULE_SHORT, "FB BAR not enabled");
-            if (bar0) { bar0->release(); }
+            OSSafeReleaseNULL(bar0);
             return false;
         }
         auto *fb = reinterpret_cast<const uint8_t *>(bar0->getVirtualAddress());
         if (!checkAtomBios(fb, size)) {
             DBGLOG(MODULE_SHORT, "VRAM VBIOS is not an ATOMBIOS");
-            bar0->release();
+            OSSafeReleaseNULL(bar0);
             return false;
         }
         this->vbiosData = OSData::withBytes(fb, size);
         PANIC_COND(!this->vbiosData, MODULE_SHORT, "VRAM OSData::withBytes failed");
         provider->setProperty("ATY,bin_image", this->vbiosData);
-        bar0->release();
+        OSSafeReleaseNULL(bar0);
         return true;
     }
 
