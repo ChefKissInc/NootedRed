@@ -194,8 +194,8 @@ class WRed {
 
         if (jt) {
             jt->addr = fwHeader->jtOff;
-            jt->size = fwHeader->jtSize * 4;
-            jt->data = fwDesc.data + fwHeader->ucodeOff + (fwHeader->ucodeSize - (fwHeader->jtSize * 4));
+            jt->size = fwHeader->jtSize;
+            jt->data = fwDesc.data + fwHeader->ucodeOff + fwHeader->jtOff;
             DBGLOG("wred", "Injected %s <jt>!", filename);
         }
     }
