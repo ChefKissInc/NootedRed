@@ -162,7 +162,6 @@ class WRed {
             return this->rmmioPtr[reg];
         } else {
             this->rmmioPtr[mmPCIE_INDEX2] = reg;
-            *(this->rmmioPtr + mmPCIE_INDEX2);
             return this->rmmioPtr[mmPCIE_DATA2];
         }
     }
@@ -172,9 +171,7 @@ class WRed {
             this->rmmioPtr[reg] = val;
         } else {
             this->rmmioPtr[mmPCIE_INDEX2] = reg;
-            *(this->rmmioPtr + mmPCIE_INDEX2);
             this->rmmioPtr[mmPCIE_DATA2] = val;
-            *(this->rmmioPtr + mmPCIE_DATA2);
         }
     }
 
