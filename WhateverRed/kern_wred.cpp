@@ -58,8 +58,7 @@ void WRed::processPatcher(KernelPatcher &patcher) {
     KernelPatcher::RouteRequest requests[] = {
         {"__ZN15OSMetaClassBase12safeMetaCastEPKS_PK11OSMetaClass", wrapSafeMetaCast, orgSafeMetaCast},
     };
-    PANIC_COND(!patcher.routeMultiple(KernelPatcher::KernelID, requests), MODULE_SHORT,
-        "Failed to route OSMetaClassBase::safeMetaCast");
+    assert(patcher.routeMultiple(KernelPatcher::KernelID, requests));
 
     auto *devInfo = DeviceInfo::create();
     if (!devInfo) {
@@ -81,8 +80,7 @@ void WRed::processPatcher(KernelPatcher &patcher) {
         DeviceInfo::deleter(devInfo);
         return;
     }
-    PANIC_COND(WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD, MODULE_SHORT,
-        "videoBuiltin is not AMD");
+    assert(WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigVendorID) == WIOKit::VendorID::ATIAMD);
 
     callbackWRed->iGPU = iGPU;
 
@@ -98,12 +96,12 @@ void WRed::processPatcher(KernelPatcher &patcher) {
     } else {
         if (!callbackWRed->getVBIOSFromVFCT(iGPU)) {
             SYSLOG(MODULE_SHORT, "Failed to get VBIOS from VFCT.");
-            PANIC_COND(!callbackWRed->getVBIOSFromVRAM(iGPU), MODULE_SHORT, "Failed to get VBIOS from VRAM");
+            assert(callbackWRed->getVBIOSFromVRAM(iGPU));
         }
     }
 
     callbackWRed->rmmio = iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5);
-    PANIC_COND(!callbackWRed->rmmio || !callbackWRed->rmmio->getLength(), MODULE_SHORT, "Failed to map RMMIO");
+    assert(callbackWRed->rmmio && callbackWRed->rmmio->getLength());
     callbackWRed->rmmioPtr = reinterpret_cast<uint32_t *>(callbackWRed->rmmio->getVirtualAddress());
 
     callbackWRed->fbOffset = static_cast<uint64_t>(callbackWRed->readReg32(0x296B)) << 24;
@@ -201,11 +199,9 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"_CAIL_DDI_CAPS_PICASSO_A0", ddiCapsPicasso},
             {"_CAIL_DDI_CAPS_RENOIR_A0", ddiCapsRenoir},
         };
-        PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), MODULE_SHORT,
-            "Failed to resolve AMDRadeonX5000HWLibs symbols");
+        assert(patcher.solveMultiple(index, solveRequests, address, size));
 
-        PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, MODULE_SHORT,
-            "Failed to enable kernel writing");
+        assert(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) == KERN_SUCCESS);
         auto deviceId = WIOKit::readPCIConfigValue(callbackWRed->iGPU, WIOKit::kIOPCIConfigDeviceID);
         DBGLOG(MODULE_SHORT, "Patching device type table");
         orgDeviceTypeTable[0] = deviceId;
@@ -261,8 +257,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"_SmuRaven_Initialize", wrapSmuRavenInitialize, orgSmuRavenInitialize},
             {"_SmuRenoir_Initialize", wrapSmuRenoirInitialize, orgSmuRenoirInitialize},
         };
-        PANIC_COND(!patcher.routeMultiple(index, requests, address, size), MODULE_SHORT,
-            "Failed to route AMDRadeonX5000HWLibs symbols");
+        assert(patcher.routeMultiple(index, requests, address, size));
 
         /**
          * Patch for `_smu_9_0_1_full_asic_reset`
@@ -287,11 +282,9 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable},
         };
-        PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size, true), MODULE_SHORT,
-            "Failed to resolve AMDRadeonX6000Framebuffer symbols");
+        assert(patcher.solveMultiple(index, solveRequests, address, size));
 
-        PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, MODULE_SHORT,
-            "Failed to enable kernel writing");
+        assert(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) == KERN_SUCCESS);
         DBGLOG(MODULE_SHORT, "Patching X6000FB caps table");
         orgAsicCapsTable[0].familyId = AMDGPU_FAMILY_RV;
         orgAsicCapsTable[0].caps = callbackWRed->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir;
@@ -310,8 +303,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo, orgInitWithPciInfo},
             {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", wrapDoGPUPanic},
         };
-        PANIC_COND(!patcher.routeMultiple(index, requests, address, size), MODULE_SHORT,
-            "Failed to route AMDRadeonX6000Framebuffer symbols");
+        assert(patcher.routeMultiple(index, requests, address, size));
 
         /** Neutralise VRAM Info creation null check to proceed with Controller Core Services initialisation. */
         const uint8_t find_null_check1[] = {0x48, 0x89, 0x83, 0x90, 0x00, 0x00, 0x00, 0x48, 0x85, 0xC0, 0x0F, 0x84,
@@ -366,12 +358,10 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN34AMDRadeonX5000_AMDAccelDisplayPipe10gMetaClassE", metaClassMap[2][0]},
             {"__ZN30AMDRadeonX5000_AMDAccelChannel10gMetaClassE", metaClassMap[3][1]},
         };
-        PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), MODULE_SHORT,
-            "Failed to resolve AMDRadeonX5000 symbols");
+        assert(patcher.solveMultiple(index, solveRequests, address, size));
 
         /** Patch the data so that it only starts SDMA0. */
-        PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, MODULE_SHORT,
-            "Failed to enable kernel writing");
+        assert(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) == KERN_SUCCESS);
         orgChannelTypes[5] = 1;     // Fix createAccelChannels
         orgChannelTypes[11] = 0;    // Fix getPagingChannel
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
@@ -392,8 +382,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware25allocateAMDHWAlignManagerEv", wrapAllocateAMDHWAlignManager,
                 orgAllocateAMDHWAlignManager},
         };
-        PANIC_COND(!patcher.routeMultiple(index, requests, address, size), MODULE_SHORT,
-            "Failed to route AMDRadeonX5000 symbols");
+        assert(patcher.routeMultiple(index, requests, address, size));
 
         /**
          * `AMDRadeonX5000_AMDHardware::startHWEngines`
@@ -420,8 +409,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN33AMDRadeonX6000_AMDHWAlignManager224getPreferredSwizzleMode2EP33_ADDR2_COMPUTE_SURFACE_INFO_INPUT",
                 orgGetPreferredSwizzleMode2},
         };
-        PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), MODULE_SHORT,
-            "Failed to resolve AMDRadeonX6000 symbols");
+        assert(patcher.solveMultiple(index, solveRequests, address, size));
 
         KernelPatcher::RouteRequest requests[] = {
             {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator5startEP9IOService", wrapAccelStartX6000},
@@ -440,8 +428,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN27AMDRadeonX6000_AMDHWDisplay14getDisplayInfoEjbbPvP17_FRAMEBUFFER_INFO", wrapGetDisplayInfo,
                 orgGetDisplayInfo},
         };
-        PANIC_COND(!patcher.routeMultiple(index, requests, address, size), MODULE_SHORT,
-            "Failed to route AMDRadeonX6000 symbols");
+        assert(patcher.routeMultiple(index, requests, address, size));
 
         /** Mismatched VTable Calls to getGpuDebugPolicy. */
         const uint8_t find_getGpuDebugPolicy[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC0, 0x03, 0x00, 0x00};
@@ -524,11 +511,11 @@ void WRed::wrapPopulateFirmwareDirectory(void *that) {
 
     auto &fwDesc = getFWDescByName(filename);
     auto *fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc.data);
-    auto *fw =
+    auto *vcnFw =
         callbackWRed->orgCreateFirmware(fwDesc.data + fwHeader->ucodeOff, fwHeader->ucodeSize, 0x200, targetFilename);
-    PANIC_COND(!fw, MODULE_SHORT, "Failed to create '%s' firmware", targetFilename);
+    assert(vcnFw);
     DBGLOG(MODULE_SHORT, "Inserting %s!", targetFilename);
-    PANIC_COND(!callbackWRed->orgPutFirmware(fwDir, 0, fw), MODULE_SHORT, "Failed to inject ativvaxy_rv.dat firmware");
+    assert(callbackWRed->orgPutFirmware(fwDir, 0, vcnFw));
 
     if (callbackWRed->chipType >= ChipType::Renoir) {
         snprintf(filename, 128, "%s_dmcub.bin", asicName);
@@ -537,10 +524,9 @@ void WRed::wrapPopulateFirmwareDirectory(void *that) {
         auto *fwHeader = reinterpret_cast<const CommonFirmwareHeader *>(fwDesc.data);
         auto *fwDmcub = callbackWRed->orgCreateFirmware(fwDesc.data + fwHeader->ucodeOff, fwHeader->ucodeSize, 0x200,
             "atidmcub_0.dat");
-        PANIC_COND(!fwDmcub, MODULE_SHORT, "Failed to create atidmcub_0.dat firmware");
+        assert(fwDmcub);
         DBGLOG(MODULE_SHORT, "Inserting atidmcub_0.dat!");
-        PANIC_COND(!callbackWRed->orgPutFirmware(fwDir, 0, fwDmcub), MODULE_SHORT,
-            "Failed to inject atidmcub_0.dat firmware");
+        assert(callbackWRed->orgPutFirmware(fwDir, 0, fwDmcub));
     }
 }
 

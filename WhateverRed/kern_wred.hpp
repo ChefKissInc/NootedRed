@@ -80,7 +80,7 @@ class WRed {
 
     private:
     static const char *getASICName() {
-        PANIC_COND(callbackWRed->chipType == ChipType::Unknown, MODULE_SHORT, "Unknown ASIC type");
+        assert(callbackWRed->chipType != ChipType::Unknown);
         static const char *asicNames[] = {"raven", "raven2", "picasso", "renoir", "green_sardine"};
         return asicNames[static_cast<int>(callbackWRed->chipType) - 1];
     }
@@ -88,7 +88,7 @@ class WRed {
     bool getVBIOSFromVFCT(IOPCIDevice *obj) {
         DBGLOG(MODULE_SHORT, "Fetching VBIOS from VFCT table");
         auto *expert = reinterpret_cast<AppleACPIPlatformExpert *>(obj->getPlatform());
-        PANIC_COND(!expert, MODULE_SHORT, "Failed to get AppleACPIPlatformExpert");
+        assert(expert);
 
         auto *vfctData = expert->getACPITableData("VFCT", 0);
         if (!vfctData) {
@@ -97,7 +97,7 @@ class WRed {
         }
 
         auto *vfct = static_cast<const VFCT *>(vfctData->getBytesNoCopy());
-        PANIC_COND(!vfct, MODULE_SHORT, "VFCT OSData::getBytesNoCopy returned null");
+        assert(vfct);
 
         auto offset = vfct->vbiosImageOffset;
 
@@ -127,7 +127,7 @@ class WRed {
                     return false;
                 }
                 this->vbiosData = OSData::withBytes(vContent, vHdr->imageLength);
-                PANIC_COND(!this->vbiosData, MODULE_SHORT, "VFCT OSData::withBytes failed");
+                assert(this->vbiosData);
                 obj->setProperty("ATY,bin_image", this->vbiosData);
                 return true;
             }
@@ -151,7 +151,7 @@ class WRed {
             return false;
         }
         this->vbiosData = OSData::withBytes(fb, size);
-        PANIC_COND(!this->vbiosData, MODULE_SHORT, "VRAM OSData::withBytes failed");
+        assert(this->vbiosData);
         provider->setProperty("ATY,bin_image", this->vbiosData);
         OSSafeReleaseNULL(bar0);
         return true;
