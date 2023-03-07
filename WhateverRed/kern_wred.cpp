@@ -633,7 +633,7 @@ uint32_t WRed::wrapHwReadReg32(void *that, uint32_t reg) {
         callbackWRed->fbOffset =
             static_cast<uint64_t>(FunctionCast(wrapHwReadReg32, callbackWRed->orgHwReadReg32)(that, 0x296B)) << 24;
     }
-    return FunctionCast(wrapHwReadReg32, callbackWRed->orgHwReadReg32)(that, reg == 0xD31 ? 0xD2F : reg);
+    return reg == 0xD31 ? callbackWRed->revision : FunctionCast(wrapHwReadReg32, callbackWRed->orgHwReadReg32)(that, reg);
 }
 
 uint32_t WRed::wrapSmuRavenInitialize(void *smum, uint32_t param2) {
