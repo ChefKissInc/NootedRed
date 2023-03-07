@@ -3,6 +3,7 @@
 
 #include "kern_wred.hpp"
 #include "kern_amd.hpp"
+#include "kern_model.hpp"
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_devinfo.hpp>
 
@@ -91,7 +92,9 @@ void WRed::processPatcher(KernelPatcher &patcher) {
 
     static uint8_t builtin[] = {0x01};
     iGPU->setProperty("built-in", builtin, sizeof(builtin));
-    // TODO: Fix model name
+    auto deviceId = WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigDeviceID);
+    auto *model = getBranding(deviceId, WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigRevisionID));
+    if (model) { iGPU->setProperty("model", model); }
 
     if (UNLIKELY(iGPU->getProperty("ATY,bin_image"))) {
         DBGLOG(MODULE_SHORT, "VBIOS manually overridden");
@@ -108,7 +111,7 @@ void WRed::processPatcher(KernelPatcher &patcher) {
 
     callbackWRed->fbOffset = static_cast<uint64_t>(callbackWRed->readReg32(0x296B)) << 24;
     callbackWRed->revision = (callbackWRed->readReg32(0xD2F) & 0xF000000) >> 0x18;
-    switch (WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigDeviceID)) {
+    switch (deviceId) {
         case 0x15D8:
             if (callbackWRed->revision >= 0x8) {
                 callbackWRed->chipType = ChipType::Raven2;
@@ -535,11 +538,11 @@ void WRed::wrapPopulateFirmwareDirectory(void *that) {
         DBGLOG(MODULE_SHORT, "%s => atidmcub_0.dat", filename);
         auto &fwDesc = getFWDescByName(filename);
         auto *fwHeader = reinterpret_cast<const CommonFirmwareHeader *>(fwDesc.data);
-        auto *fwDmcub = callbackWRed->orgCreateFirmware(fwDesc.data + fwHeader->ucodeOff, fwHeader->ucodeSize, 0x200,
+        fw = callbackWRed->orgCreateFirmware(fwDesc.data + fwHeader->ucodeOff, fwHeader->ucodeSize, 0x200,
             "atidmcub_0.dat");
-        PANIC_COND(!fwDmcub, MODULE_SHORT, "Failed to create atidmcub_0.dat firmware");
+        PANIC_COND(!fw, MODULE_SHORT, "Failed to create atidmcub_0.dat firmware");
         DBGLOG(MODULE_SHORT, "Inserting atidmcub_0.dat!");
-        PANIC_COND(!callbackWRed->orgPutFirmware(fwDir, 0, fwDmcub), MODULE_SHORT,
+        PANIC_COND(!callbackWRed->orgPutFirmware(fwDir, 0, fw), MODULE_SHORT,
             "Failed to inject atidmcub_0.dat firmware");
     }
 }
