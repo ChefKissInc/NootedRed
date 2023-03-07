@@ -55,39 +55,57 @@ void WRed::init() {
 void WRed::deinit() { OSSafeReleaseNULL(this->vbiosData); }
 
 void WRed::processPatcher(KernelPatcher &patcher) {
-    auto *devInfo = DeviceInfo::create();
-    PANIC_COND(!devInfo, MODULE_SHORT, "Failed to create DeviceInfo");
-    devInfo->processSwitchOff();
-    PANIC_COND(!devInfo->videoBuiltin, MODULE_SHORT, "videoBuiltin null");
-    auto *obj = OSDynamicCast(IOPCIDevice, devInfo->videoBuiltin);
-    PANIC_COND(!obj, MODULE_SHORT, "videoBuiltin is not IOPCIDevice");
-    PANIC_COND(WIOKit::readPCIConfigValue(obj, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD, MODULE_SHORT,
-        "videoBuiltin is not AMD");
-    callbackWRed->videoBuiltin = obj;
+    KernelPatcher::RouteRequest requests[] = {
+        {"__ZN15OSMetaClassBase12safeMetaCastEPKS_PK11OSMetaClass", wrapSafeMetaCast, orgSafeMetaCast},
+    };
+    PANIC_COND(!patcher.routeMultiple(KernelPatcher::KernelID, requests), MODULE_SHORT,
+        "Failed to route OSMetaClassBase::safeMetaCast");
 
-    WIOKit::renameDevice(obj, "IGPU");
-    WIOKit::awaitPublishing(obj);
+    auto *devInfo = DeviceInfo::create();
+    if (!devInfo) {
+        SYSLOG(MODULE_SHORT, "Failed to create DeviceInfo");
+        return;
+    }
+
+    devInfo->processSwitchOff();
+    if (!devInfo->videoBuiltin) {
+        SYSLOG(MODULE_SHORT, "videoBuiltin null");
+        DeviceInfo::deleter(devInfo);
+        return;
+    }
+    auto *iGPU = OSDynamicCast(IOPCIDevice, devInfo->videoBuiltin);
+    if (!iGPU) {
+        SYSLOG(MODULE_SHORT, "videoBuiltin is not IOPCIDevice");
+        DeviceInfo::deleter(devInfo);
+        return;
+    }
+    PANIC_COND(WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD, MODULE_SHORT,
+        "videoBuiltin is not AMD");
+    callbackWRed->videoBuiltin = iGPU;
+
+    WIOKit::renameDevice(iGPU, "IGPU");
+    WIOKit::awaitPublishing(iGPU);
 
     static uint8_t builtin[] = {0x01};
-    obj->setProperty("built-in", builtin, sizeof(builtin));
+    iGPU->setProperty("built-in", builtin, sizeof(builtin));
     // TODO: Fix model name
 
-    if (obj->getProperty("ATY,bin_image")) {
+    if (UNLIKELY(iGPU->getProperty("ATY,bin_image"))) {
         DBGLOG(MODULE_SHORT, "VBIOS manually overridden");
     } else {
-        if (!callbackWRed->getVBIOSFromVFCT(obj)) {
-            DBGLOG(MODULE_SHORT, "Failed to get VBIOS from VFCT, trying to get it from VRAM");
-            PANIC_COND(!callbackWRed->getVBIOSFromVRAM(obj), MODULE_SHORT, "Failed to get VBIOS from VRAM");
+        if (!callbackWRed->getVBIOSFromVFCT(iGPU)) {
+            SYSLOG(MODULE_SHORT, "Failed to get VBIOS from VFCT.");
+            PANIC_COND(!callbackWRed->getVBIOSFromVRAM(iGPU), MODULE_SHORT, "Failed to get VBIOS from VRAM");
         }
     }
 
-    callbackWRed->rmmio = obj->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5);
+    callbackWRed->rmmio = iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5);
     PANIC_COND(!callbackWRed->rmmio || !callbackWRed->rmmio->getLength(), MODULE_SHORT, "Failed to map RMMIO");
     callbackWRed->rmmioPtr = reinterpret_cast<uint32_t *>(callbackWRed->rmmio->getVirtualAddress());
 
     callbackWRed->fbOffset = static_cast<uint64_t>(callbackWRed->readReg32(0x296B)) << 24;
     callbackWRed->revision = (callbackWRed->readReg32(0xD2F) & 0xF000000) >> 0x18;
-    switch (WIOKit::readPCIConfigValue(obj, WIOKit::kIOPCIConfigDeviceID)) {
+    switch (WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigDeviceID)) {
         case 0x15D8:
             if (callbackWRed->revision >= 0x8) {
                 callbackWRed->chipType = ChipType::Raven2;
@@ -122,11 +140,7 @@ void WRed::processPatcher(KernelPatcher &patcher) {
             PANIC(MODULE_SHORT, "Unknown device ID");
     }
 
-    KernelPatcher::RouteRequest requests[] = {
-        {"__ZN15OSMetaClassBase12safeMetaCastEPKS_PK11OSMetaClass", wrapSafeMetaCast, orgSafeMetaCast},
-    };
-    PANIC_COND(!patcher.routeMultiple(KernelPatcher::KernelID, requests), MODULE_SHORT,
-        "Failed to route OSMetaClassBase::safeMetaCast");
+    DeviceInfo::deleter(devInfo);
 }
 
 OSMetaClassBase *WRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const OSMetaClass *toMeta) {
