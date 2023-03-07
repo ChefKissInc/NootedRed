@@ -208,30 +208,30 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         orgDeviceTypeTable[1] = 0;
 
         DBGLOG(MODULE_SHORT, "Patching HWLibs caps tables");
-        orgAsicInitCapsTable[0].familyId = orgAsicCapsTable[0].familyId = AMDGPU_FAMILY_RV;
-        orgAsicInitCapsTable[0].deviceId = orgAsicCapsTable[0].deviceId = deviceId;
-        orgAsicInitCapsTable[0].revision = orgAsicCapsTable[0].revision = callbackWRed->revision;
-        orgAsicInitCapsTable[0].emulatedRev = orgAsicCapsTable[0].emulatedRev =
+        orgAsicInitCapsTable->familyId = orgAsicCapsTable->familyId = AMDGPU_FAMILY_RV;
+        orgAsicInitCapsTable->deviceId = orgAsicCapsTable->deviceId = deviceId;
+        orgAsicInitCapsTable->revision = orgAsicCapsTable->revision = callbackWRed->revision;
+        orgAsicInitCapsTable->emulatedRev = orgAsicCapsTable->emulatedRev =
             callbackWRed->enumeratedRevision + callbackWRed->revision;
-        orgAsicInitCapsTable[0].pciRev = orgAsicCapsTable[0].pciRev = 0xFFFFFFFF;
+        orgAsicInitCapsTable->pciRev = orgAsicCapsTable->pciRev = 0xFFFFFFFF;
         switch (callbackWRed->chipType) {
             case ChipType::Raven:
-                orgAsicInitCapsTable[0].caps = orgAsicCapsTable[0].caps = ddiCapsRaven;
-                orgAsicInitCapsTable[0].goldenCaps = goldenSettingsRaven;
+                orgAsicInitCapsTable->caps = orgAsicCapsTable->caps = ddiCapsRaven;
+                orgAsicInitCapsTable->goldenCaps = goldenSettingsRaven;
                 break;
             case ChipType::Raven2:
-                orgAsicInitCapsTable[0].caps = orgAsicCapsTable[0].caps = ddiCapsRaven2;
-                orgAsicInitCapsTable[0].goldenCaps = goldenSettingsRaven2;
+                orgAsicInitCapsTable->caps = orgAsicCapsTable->caps = ddiCapsRaven2;
+                orgAsicInitCapsTable->goldenCaps = goldenSettingsRaven2;
                 break;
             case ChipType::Picasso:
-                orgAsicInitCapsTable[0].caps = orgAsicCapsTable[0].caps = ddiCapsPicasso;
-                orgAsicInitCapsTable[0].goldenCaps = goldenSettingsPicasso;
+                orgAsicInitCapsTable->caps = orgAsicCapsTable->caps = ddiCapsPicasso;
+                orgAsicInitCapsTable->goldenCaps = goldenSettingsPicasso;
                 break;
             case ChipType::Renoir:
                 [[fallthrough]];
             case ChipType::GreenSardine:
-                orgAsicInitCapsTable[0].caps = orgAsicCapsTable[0].caps = ddiCapsRenoir;
-                orgAsicInitCapsTable[0].goldenCaps = goldenSettingsRenoir;
+                orgAsicInitCapsTable->caps = orgAsicCapsTable->caps = ddiCapsRenoir;
+                orgAsicInitCapsTable->goldenCaps = goldenSettingsRenoir;
                 break;
             default:
                 PANIC(MODULE_SHORT, "Unknown ASIC type %d", callbackWRed->chipType);
@@ -286,12 +286,12 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
 
         assert(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) == KERN_SUCCESS);
         DBGLOG(MODULE_SHORT, "Patching X6000FB caps table");
-        orgAsicCapsTable[0].familyId = AMDGPU_FAMILY_RV;
-        orgAsicCapsTable[0].caps = callbackWRed->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir;
-        orgAsicCapsTable[0].deviceId = WIOKit::readPCIConfigValue(callbackWRed->iGPU, WIOKit::kIOPCIConfigDeviceID);
-        orgAsicCapsTable[0].revision = callbackWRed->revision;
-        orgAsicCapsTable[0].emulatedRev = callbackWRed->enumeratedRevision + callbackWRed->revision;
-        orgAsicCapsTable[0].pciRev = 0xFFFFFFFF;
+        orgAsicCapsTable->familyId = AMDGPU_FAMILY_RV;
+        orgAsicCapsTable->caps = callbackWRed->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir;
+        orgAsicCapsTable->deviceId = WIOKit::readPCIConfigValue(callbackWRed->iGPU, WIOKit::kIOPCIConfigDeviceID);
+        orgAsicCapsTable->revision = callbackWRed->revision;
+        orgAsicCapsTable->emulatedRev = callbackWRed->enumeratedRevision + callbackWRed->revision;
+        orgAsicCapsTable->pciRev = 0xFFFFFFFF;
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
         KernelPatcher::RouteRequest requests[] = {
