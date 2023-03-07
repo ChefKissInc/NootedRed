@@ -68,11 +68,13 @@ void WRed::processPatcher(KernelPatcher &patcher) {
     }
 
     devInfo->processSwitchOff();
+
     if (!devInfo->videoBuiltin) {
         SYSLOG(MODULE_SHORT, "videoBuiltin null");
         DeviceInfo::deleter(devInfo);
         return;
     }
+
     auto *iGPU = OSDynamicCast(IOPCIDevice, devInfo->videoBuiltin);
     if (!iGPU) {
         SYSLOG(MODULE_SHORT, "videoBuiltin is not IOPCIDevice");
@@ -81,7 +83,8 @@ void WRed::processPatcher(KernelPatcher &patcher) {
     }
     PANIC_COND(WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD, MODULE_SHORT,
         "videoBuiltin is not AMD");
-    callbackWRed->videoBuiltin = iGPU;
+
+    callbackWRed->iGPU = iGPU;
 
     WIOKit::renameDevice(iGPU, "IGPU");
     WIOKit::awaitPublishing(iGPU);
@@ -203,7 +206,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, MODULE_SHORT,
             "Failed to enable kernel writing");
-        auto deviceId = WIOKit::readPCIConfigValue(callbackWRed->videoBuiltin, WIOKit::kIOPCIConfigDeviceID);
+        auto deviceId = WIOKit::readPCIConfigValue(callbackWRed->iGPU, WIOKit::kIOPCIConfigDeviceID);
         DBGLOG(MODULE_SHORT, "Patching device type table");
         orgDeviceTypeTable[0] = deviceId;
         orgDeviceTypeTable[1] = 0;
@@ -292,8 +295,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         DBGLOG(MODULE_SHORT, "Patching X6000FB caps table");
         orgAsicCapsTable[0].familyId = AMDGPU_FAMILY_RV;
         orgAsicCapsTable[0].caps = callbackWRed->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir;
-        orgAsicCapsTable[0].deviceId =
-            WIOKit::readPCIConfigValue(callbackWRed->videoBuiltin, WIOKit::kIOPCIConfigDeviceID);
+        orgAsicCapsTable[0].deviceId = WIOKit::readPCIConfigValue(callbackWRed->iGPU, WIOKit::kIOPCIConfigDeviceID);
         orgAsicCapsTable[0].revision = callbackWRed->revision;
         orgAsicCapsTable[0].emulatedRev = callbackWRed->enumeratedRevision + callbackWRed->revision;
         orgAsicCapsTable[0].pciRev = 0xFFFFFFFF;

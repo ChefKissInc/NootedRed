@@ -182,7 +182,7 @@ class WRed {
     volatile uint32_t *rmmioPtr = nullptr;
     uint16_t enumeratedRevision {};
     uint16_t revision {};
-    IOPCIDevice *videoBuiltin = nullptr;
+    IOPCIDevice *iGPU = nullptr;
 
     void *hwAlignMgr = nullptr;
     uint8_t *hwAlignMgrVtX5000 = nullptr;
