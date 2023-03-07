@@ -81,7 +81,7 @@ void WRed::processPatcher(KernelPatcher &patcher) {
         }
     }
 
-    callbackWRed->rmmio = obj->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5, kIOMemoryMapCacheModeWriteThrough);
+    callbackWRed->rmmio = obj->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5);
     PANIC_COND(!callbackWRed->rmmio || !callbackWRed->rmmio->getLength(), MODULE_SHORT, "Failed to map RMMIO");
     callbackWRed->rmmioPtr = reinterpret_cast<uint32_t *>(callbackWRed->rmmio->getVirtualAddress());
 
