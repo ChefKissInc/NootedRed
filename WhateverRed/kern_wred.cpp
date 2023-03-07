@@ -85,6 +85,7 @@ void WRed::processPatcher(KernelPatcher &patcher) {
     PANIC_COND(!callbackWRed->rmmio || !callbackWRed->rmmio->getLength(), MODULE_SHORT, "Failed to map RMMIO");
     callbackWRed->rmmioPtr = reinterpret_cast<uint32_t *>(callbackWRed->rmmio->getVirtualAddress());
 
+    callbackWRed->fbOffset = static_cast<uint64_t>(callbackWRed->readReg32(0x296B)) << 24;
     callbackWRed->revision = (callbackWRed->readReg32(0xD2F) & 0xF000000) >> 0x18;
     switch (WIOKit::readPCIConfigValue(obj, WIOKit::kIOPCIConfigDeviceID)) {
         case 0x15D8:
@@ -629,11 +630,8 @@ void *WRed::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uin
 }
 
 uint32_t WRed::wrapHwReadReg32(void *that, uint32_t reg) {
-    if (!callbackWRed->fbOffset) {
-        callbackWRed->fbOffset =
-            static_cast<uint64_t>(FunctionCast(wrapHwReadReg32, callbackWRed->orgHwReadReg32)(that, 0x296B)) << 24;
-    }
-    return reg == 0xD31 ? callbackWRed->revision : FunctionCast(wrapHwReadReg32, callbackWRed->orgHwReadReg32)(that, reg);
+    return reg == 0xD31 ? callbackWRed->revision :
+                          FunctionCast(wrapHwReadReg32, callbackWRed->orgHwReadReg32)(that, reg);
 }
 
 uint32_t WRed::wrapSmuRavenInitialize(void *smum, uint32_t param2) {
