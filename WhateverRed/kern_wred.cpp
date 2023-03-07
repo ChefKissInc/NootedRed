@@ -567,6 +567,7 @@ IOReturn WRed::wrapPopulateVramInfo([[maybe_unused]] void *that, void *fwInfo) {
                         DBGLOG(MODULE_SHORT, "Unsupported contentRev %d", table->header.contentRev);
                         break;
                 }
+                break;
             case 2:
                 switch (table->header.contentRev) {
                     case 1:
@@ -578,6 +579,7 @@ IOReturn WRed::wrapPopulateVramInfo([[maybe_unused]] void *that, void *fwInfo) {
                         DBGLOG(MODULE_SHORT, "Unsupported contentRev %d", table->header.contentRev);
                         break;
                 }
+                break;
             default:
                 DBGLOG(MODULE_SHORT, "Unsupported formatRev %d", table->header.formatRev);
                 break;
