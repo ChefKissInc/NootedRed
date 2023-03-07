@@ -110,17 +110,17 @@ inline const char *getBranding(uint16_t dev, uint16_t rev) {
 
     switch (dev) {
         case 0x15D8:
-            return "AMD Radeon RX Vega X (Picasso)";
+            return "AMD Radeon Vega (Picasso)";
         case 0x15DD:
-            return "AMD Radeon RX Vega X (Raven Ridge)";
+            return "AMD Radeon Vega (Raven Ridge)";
         case 0x164C:
-            return "AMD Radeon RX Vega X (Lucienne)";
+            return "AMD Radeon Vega (Lucienne)";
         case 0x1636:
-            return "AMD Radeon RX Vega X (Renoir)";
+            return "AMD Radeon Vega (Renoir)";
         case 0x15E7:
-            return "AMD Radeon RX Vega X (Barcelo)";
+            return "AMD Radeon Vega (Barcelo)";
         case 0x1638:
-            return "AMD Radeon RX Vega X (Cezanne)";
+            return "AMD Radeon Vega (Cezanne)";
         default:
             return nullptr;
     }
