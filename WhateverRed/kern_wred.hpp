@@ -16,10 +16,8 @@ class EXPORT PRODUCT_NAME : public IOService {
     public:
     IOService *probe(IOService *provider, SInt32 *score) override;
     bool start(IOService *provider) override;
-    void stop(IOService *provider) override;
 };
 
-extern PRODUCT_NAME *ADDPR(selfInstance);
 
 enum struct ChipType {
     Unknown,
