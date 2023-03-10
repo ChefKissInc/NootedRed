@@ -18,7 +18,6 @@ class EXPORT PRODUCT_NAME : public IOService {
     bool start(IOService *provider) override;
 };
 
-
 enum struct ChipType {
     Unknown,
     Raven,

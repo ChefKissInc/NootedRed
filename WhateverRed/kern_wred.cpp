@@ -40,17 +40,17 @@ void WRed::init() {
 
     lilu.onPatcherLoadForce(
         [](void *user, KernelPatcher &patcher) { static_cast<WRed *>(user)->processPatcher(patcher); }, this);
+    lilu.onKextLoad(&kextAGDP);
+    lilu.onKextLoadForce(&kextRadeonX5000HWLibs);
+    lilu.onKextLoadForce(&kextRadeonX6000);
+    lilu.onKextLoadForce(&kextRadeonX5000);
+    lilu.onKextLoadForce(&kextRadeonX6000Framebuffer);
     lilu.onKextLoadForce(
         nullptr, 0,
         [](void *user, KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
             static_cast<WRed *>(user)->processKext(patcher, index, address, size);
         },
         this);
-    lilu.onKextLoad(&kextAGDP);
-    lilu.onKextLoadForce(&kextRadeonX5000HWLibs);
-    lilu.onKextLoadForce(&kextRadeonX6000Framebuffer);
-    lilu.onKextLoadForce(&kextRadeonX6000);
-    lilu.onKextLoadForce(&kextRadeonX5000);
 }
 
 void WRed::deinit() { OSSafeReleaseNULL(this->vbiosData); }
@@ -510,7 +510,8 @@ uint32_t WRed::wrapPspSwInit(uint32_t *inputData, void *outputData) {
 
 uint32_t WRed::wrapGcGetHwVersion() {
     if (callbackWRed->chipType >= ChipType::Renoir) { return 0x090400; }
-    return 0x090201;
+    if (callbackWRed->chipType >= ChipType::Raven2) { return 0x090201; }
+    return 0x090001;
 }
 
 void WRed::wrapPopulateFirmwareDirectory(void *that) {
@@ -520,7 +521,6 @@ void WRed::wrapPopulateFirmwareDirectory(void *that) {
 
     auto *asicName = getASICName();
     char filename[128];
-    memset(filename, 0, arrsize(filename));
     snprintf(filename, 128, "%s_vcn.bin", asicName);
     auto *targetFilename = callbackWRed->chipType >= ChipType::Renoir ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
     DBGLOG(MODULE_SHORT, "%s => %s", filename, targetFilename);
