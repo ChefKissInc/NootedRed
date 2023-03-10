@@ -21,8 +21,8 @@ class EXPORT PRODUCT_NAME : public IOService {
 enum struct ChipType {
     Unknown,
     Raven,
-    Raven2,
     Picasso,
+    Raven2,
     Renoir,
     GreenSardine,
 };
