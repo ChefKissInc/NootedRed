@@ -177,6 +177,7 @@ class WRed {
     uint64_t fbOffset {};
     IOMemoryMap *rmmio = nullptr;
     volatile uint32_t *rmmioPtr = nullptr;
+    uint32_t deviceId {};
     uint16_t enumeratedRevision {};
     uint16_t revision {};
     IOPCIDevice *iGPU = nullptr;

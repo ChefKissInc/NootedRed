@@ -92,8 +92,8 @@ void WRed::processPatcher(KernelPatcher &patcher) {
 
     static uint8_t builtin[] = {0x01};
     iGPU->setProperty("built-in", builtin, sizeof(builtin));
-    auto deviceId = WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigDeviceID);
-    auto *model = getBranding(deviceId, WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigRevisionID));
+    callbackWRed->deviceId = WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigDeviceID);
+    auto *model = getBranding(callbackWRed->deviceId, WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigRevisionID));
     if (model) { iGPU->setProperty("model", model); }
 
     if (UNLIKELY(iGPU->getProperty("ATY,bin_image"))) {
@@ -111,7 +111,7 @@ void WRed::processPatcher(KernelPatcher &patcher) {
 
     callbackWRed->fbOffset = static_cast<uint64_t>(callbackWRed->readReg32(0x296B)) << 24;
     callbackWRed->revision = (callbackWRed->readReg32(0xD2F) & 0xF000000) >> 0x18;
-    switch (deviceId) {
+    switch (callbackWRed->deviceId) {
         case 0x15D8:
             if (callbackWRed->revision >= 0x8) {
                 callbackWRed->chipType = ChipType::Raven2;
@@ -209,14 +209,13 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, MODULE_SHORT,
             "Failed to enable kernel writing");
-        auto deviceId = WIOKit::readPCIConfigValue(callbackWRed->iGPU, WIOKit::kIOPCIConfigDeviceID);
         DBGLOG(MODULE_SHORT, "Patching device type table");
         orgDeviceTypeTable[0] = deviceId;
         orgDeviceTypeTable[1] = 0;
 
         DBGLOG(MODULE_SHORT, "Patching HWLibs caps tables");
         orgAsicInitCapsTable->familyId = orgAsicCapsTable->familyId = AMDGPU_FAMILY_RV;
-        orgAsicInitCapsTable->deviceId = orgAsicCapsTable->deviceId = deviceId;
+        orgAsicInitCapsTable->deviceId = orgAsicCapsTable->deviceId = callbackWRed->deviceId;
         orgAsicInitCapsTable->revision = orgAsicCapsTable->revision = callbackWRed->revision;
         orgAsicInitCapsTable->emulatedRev = orgAsicCapsTable->emulatedRev =
             callbackWRed->enumeratedRevision + callbackWRed->revision;
@@ -298,7 +297,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         DBGLOG(MODULE_SHORT, "Patching X6000FB caps table");
         orgAsicCapsTable->familyId = AMDGPU_FAMILY_RV;
         orgAsicCapsTable->caps = callbackWRed->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir;
-        orgAsicCapsTable->deviceId = WIOKit::readPCIConfigValue(callbackWRed->iGPU, WIOKit::kIOPCIConfigDeviceID);
+        orgAsicCapsTable->deviceId = callbackWRed->deviceId;
         orgAsicCapsTable->revision = callbackWRed->revision;
         orgAsicCapsTable->emulatedRev = callbackWRed->enumeratedRevision + callbackWRed->revision;
         orgAsicCapsTable->pciRev = 0xFFFFFFFF;
@@ -649,7 +648,7 @@ void *WRed::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uin
 }
 
 uint32_t WRed::wrapHwReadReg32(void *that, uint32_t reg) {
-    return reg == 0xD31 ? callbackWRed->revision :
+    return reg == 0xD31 ? ((callbackWRed->revision << 24) + callbackWRed->deviceId) :
                           FunctionCast(wrapHwReadReg32, callbackWRed->orgHwReadReg32)(that, reg);
 }
 
