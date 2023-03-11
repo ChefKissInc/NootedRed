@@ -56,12 +56,6 @@ void WRed::init() {
 void WRed::deinit() { OSSafeReleaseNULL(this->vbiosData); }
 
 void WRed::processPatcher(KernelPatcher &patcher) {
-    KernelPatcher::RouteRequest requests[] = {
-        {"__ZN15OSMetaClassBase12safeMetaCastEPKS_PK11OSMetaClass", wrapSafeMetaCast, orgSafeMetaCast},
-    };
-    PANIC_COND(!patcher.routeMultiple(KernelPatcher::KernelID, requests), MODULE_SHORT,
-        "Failed to route OSMetaClassBase::safeMetaCast");
-
     auto *devInfo = DeviceInfo::create();
     if (!devInfo) {
         SYSLOG(MODULE_SHORT, "Failed to create DeviceInfo");
@@ -70,18 +64,22 @@ void WRed::processPatcher(KernelPatcher &patcher) {
 
     devInfo->processSwitchOff();
 
-    if (!devInfo->videoBuiltin) {
+    auto *videoBuiltin = devInfo->videoBuiltin;
+    if (!videoBuiltin) {
         SYSLOG(MODULE_SHORT, "videoBuiltin null");
-        DeviceInfo::deleter(devInfo);
-        return;
+        for (size_t i = 0; i < devInfo->videoExternal.size(); i++) {
+            if (!OSDynamicCast(IOPCIDevice, devInfo->videoExternal[i].video)) { continue; }
+            if (WIOKit::readPCIConfigValue(devInfo->videoExternal[i].video, WIOKit::kIOPCIConfigVendorID) ==
+                WIOKit::VendorID::ATIAMD) {
+                videoBuiltin = devInfo->videoExternal[i].video;
+                break;
+            }
+        }
     }
 
-    auto *iGPU = OSDynamicCast(IOPCIDevice, devInfo->videoBuiltin);
-    if (!iGPU) {
-        SYSLOG(MODULE_SHORT, "videoBuiltin is not IOPCIDevice");
-        DeviceInfo::deleter(devInfo);
-        return;
-    }
+    PANIC_COND(!videoBuiltin, MODULE_SHORT, "videoBuiltin null");
+    auto *iGPU = OSDynamicCast(IOPCIDevice, videoBuiltin);
+    PANIC_COND(!iGPU, MODULE_SHORT, "videoBuiltin is not IOPCIDevice");
     PANIC_COND(WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD, MODULE_SHORT,
         "videoBuiltin is not AMD");
 
@@ -116,19 +114,19 @@ void WRed::processPatcher(KernelPatcher &patcher) {
             if (callbackWRed->revision >= 0x8) {
                 callbackWRed->chipType = ChipType::Raven2;
                 callbackWRed->enumeratedRevision = 0x79;
-                break;
+            } else {
+                callbackWRed->chipType = ChipType::Picasso;
+                callbackWRed->enumeratedRevision = 0x41;
             }
-            callbackWRed->chipType = ChipType::Picasso;
-            callbackWRed->enumeratedRevision = 0x41;
             break;
         case 0x15DD:
             if (callbackWRed->revision >= 0x8) {
                 callbackWRed->chipType = ChipType::Raven2;
                 callbackWRed->enumeratedRevision = 0x79;
-                break;
+            } else {
+                callbackWRed->chipType = ChipType::Raven;
+                callbackWRed->enumeratedRevision = 0x10;
             }
-            callbackWRed->chipType = ChipType::Raven;
-            callbackWRed->enumeratedRevision = 0x10;
             break;
         case 0x164C:
             [[fallthrough]];
@@ -147,6 +145,12 @@ void WRed::processPatcher(KernelPatcher &patcher) {
     }
 
     DeviceInfo::deleter(devInfo);
+
+    KernelPatcher::RouteRequest requests[] = {
+        {"__ZN15OSMetaClassBase12safeMetaCastEPKS_PK11OSMetaClass", wrapSafeMetaCast, orgSafeMetaCast},
+    };
+    PANIC_COND(!patcher.routeMultiple(KernelPatcher::KernelID, requests), MODULE_SHORT,
+        "Failed to route OSMetaClassBase::safeMetaCast");
 }
 
 OSMetaClassBase *WRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const OSMetaClass *toMeta) {
