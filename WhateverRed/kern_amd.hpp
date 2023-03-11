@@ -17,7 +17,6 @@ constexpr uint32_t AMDGPU_FAMILY_RV = 0x8E;
 
 constexpr uint32_t PPSMC_MSG_GetSmuVersion = 0x2;
 constexpr uint32_t PPSMC_MSG_PowerUpSdma = 0xE;
-constexpr uint32_t PPSMC_MSG_PowerGateMmHub = 0x35;
 
 constexpr uint32_t mmHUBP0_DCSURF_ADDR_CONFIG = 0x55A;
 constexpr uint32_t mmHUBP0_DCSURF_PRI_VIEWPORT_DIMENSION = 0x55D;
