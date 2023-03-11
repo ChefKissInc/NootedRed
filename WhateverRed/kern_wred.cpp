@@ -652,8 +652,7 @@ void *WRed::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uin
 }
 
 uint32_t WRed::wrapHwReadReg32(void *that, uint32_t reg) {
-    return reg == 0xD31 ? ((callbackWRed->revision << 24) + callbackWRed->deviceId) :
-                          FunctionCast(wrapHwReadReg32, callbackWRed->orgHwReadReg32)(that, reg);
+    return FunctionCast(wrapHwReadReg32, callbackWRed->orgHwReadReg32)(that, reg == 0xD31 ? 0xD2F : reg);
 }
 
 uint32_t WRed::wrapSmuRavenInitialize(void *smum, uint32_t param2) {
