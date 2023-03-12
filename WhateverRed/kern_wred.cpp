@@ -194,6 +194,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware", orgPutFirmware},
             {"__ZN31AtiAppleVega10PowerTuneServicesC1EP11PP_InstanceP18PowerPlayCallbacks",
                 orgVega10PowerTuneConstructor},
+            {"__ZN31AtiAppleVega20PowerTuneServicesC1EP11PP_InstanceP18PowerPlayCallbacks",
+                orgVega20PowerTuneConstructor},
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable},
             {"_CAILAsicCapsInitTable", orgAsicInitCapsTable},
             {"_Raven_SendMsgToSmc", orgRavenSendMsgToSmc},
@@ -386,6 +388,9 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN32AMDRadeonX5000_AMDVega10Hardware17allocateHWEnginesEv", wrapAllocateHWEngines},
             {"__ZN32AMDRadeonX5000_AMDVega10Hardware32setupAndInitializeHWCapabilitiesEv",
                 wrapSetupAndInitializeHWCapabilities, orgSetupAndInitializeHWCapabilities},
+            {"__ZN32AMDRadeonX5000_AMDVega20Hardware17allocateHWEnginesEv", wrapAllocateHWEngines},
+            {"__ZN32AMDRadeonX5000_AMDVega20Hardware32setupAndInitializeHWCapabilitiesEv",
+                wrapSetupAndInitializeHWCapabilities, orgSetupAndInitializeHWCapabilitiesVega20},
             {"__ZN28AMDRadeonX5000_AMDRTHardware12getHWChannelE18_eAMD_CHANNEL_TYPE11SS_PRIORITYj", wrapRTGetHWChannel,
                 orgRTGetHWChannel},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20initializeFamilyTypeEv", wrapInitializeFamilyType},
@@ -548,7 +553,11 @@ void WRed::wrapPopulateFirmwareDirectory(void *that) {
 
 void *WRed::wrapCreatePowerTuneServices(void *that, void *param2) {
     auto *ret = IOMallocZero(0x18);
-    callbackWRed->orgVega10PowerTuneConstructor(ret, that, param2);
+    if (callbackWRed->chipType >= ChipType::Renoir) {
+        callbackWRed->orgVega20PowerTuneConstructor(ret, that, param2);
+    } else {
+        callbackWRed->orgVega10PowerTuneConstructor(ret, that, param2);
+    }
     return ret;
 }
 
@@ -633,7 +642,9 @@ bool WRed::wrapAllocateHWEngines(void *that) {
 }
 
 void WRed::wrapSetupAndInitializeHWCapabilities(void *that) {
-    FunctionCast(wrapSetupAndInitializeHWCapabilities, callbackWRed->orgSetupAndInitializeHWCapabilities)(that);
+    FunctionCast(wrapSetupAndInitializeHWCapabilities, callbackWRed->chipType >= ChipType::Renoir ?
+                                                           callbackWRed->orgSetupAndInitializeHWCapabilitiesVega20 :
+                                                           callbackWRed->orgSetupAndInitializeHWCapabilities)(that);
     if (callbackWRed->chipType < ChipType::Renoir) {
         getMember<uint32_t>(that, 0x2C) = 4;    // Surface Count (?)
     }

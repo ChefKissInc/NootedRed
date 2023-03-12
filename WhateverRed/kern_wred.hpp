@@ -200,7 +200,8 @@ class WRed {
     t_AMDFirmwareDirectoryConstructor orgAMDFirmwareDirectoryConstructor = nullptr;
     t_createFirmware orgCreateFirmware = nullptr;
     t_putFirmware orgPutFirmware = nullptr;
-    t_Vega10PowerTuneConstructor orgVega10PowerTuneConstructor = nullptr;
+    t_VegaXPowerTuneConstructor orgVega10PowerTuneConstructor = nullptr;
+    t_VegaXPowerTuneConstructor orgVega20PowerTuneConstructor = nullptr;
     t_sendMsgToSmc orgRavenSendMsgToSmc = nullptr;
     t_sendMsgToSmc orgRenoirSendMsgToSmc = nullptr;
     mach_vm_address_t orgSmuRavenInitialize {};
@@ -232,6 +233,7 @@ class WRed {
     mach_vm_address_t orgAccelSharedUCStart {};
     mach_vm_address_t orgAccelSharedUCStop {};
     mach_vm_address_t orgAllocateAMDHWAlignManager {};
+    mach_vm_address_t orgSetupAndInitializeHWCapabilitiesVega20 {};
 
     /** X6000Framebuffer */
     static IOReturn wrapPopulateDeviceInfo(void *that);
