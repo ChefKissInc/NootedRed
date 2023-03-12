@@ -192,8 +192,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZL15deviceTypeTable", orgDeviceTypeTable},
             {"__ZN11AMDFirmware14createFirmwareEPhjjPKc", orgCreateFirmware},
             {"__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware", orgPutFirmware},
-            {"__ZN31AtiAppleVega12PowerTuneServicesC1EP11PP_InstanceP18PowerPlayCallbacks",
-                orgVega12PowerTuneConstructor},
+            {"__ZN31AtiAppleVega10PowerTuneServicesC1EP11PP_InstanceP18PowerPlayCallbacks",
+                orgVega10PowerTuneConstructor},
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable},
             {"_CAILAsicCapsInitTable", orgAsicInitCapsTable},
             {"_Raven_SendMsgToSmc", orgRavenSendMsgToSmc},
@@ -383,8 +383,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
         KernelPatcher::RouteRequest requests[] = {
-            {"__ZN32AMDRadeonX5000_AMDVega12Hardware17allocateHWEnginesEv", wrapAllocateHWEngines},
-            {"__ZN32AMDRadeonX5000_AMDVega12Hardware32setupAndInitializeHWCapabilitiesEv",
+            {"__ZN32AMDRadeonX5000_AMDVega10Hardware17allocateHWEnginesEv", wrapAllocateHWEngines},
+            {"__ZN32AMDRadeonX5000_AMDVega10Hardware32setupAndInitializeHWCapabilitiesEv",
                 wrapSetupAndInitializeHWCapabilities, orgSetupAndInitializeHWCapabilities},
             {"__ZN28AMDRadeonX5000_AMDRTHardware12getHWChannelE18_eAMD_CHANNEL_TYPE11SS_PRIORITYj", wrapRTGetHWChannel,
                 orgRTGetHWChannel},
@@ -548,7 +548,7 @@ void WRed::wrapPopulateFirmwareDirectory(void *that) {
 
 void *WRed::wrapCreatePowerTuneServices(void *that, void *param2) {
     auto *ret = IOMallocZero(0x18);
-    callbackWRed->orgVega12PowerTuneConstructor(ret, that, param2);
+    callbackWRed->orgVega10PowerTuneConstructor(ret, that, param2);
     return ret;
 }
 

@@ -162,7 +162,7 @@
 					<key>GpuDebugPolicy</key>
 					<integer>0</integer>
 					<key>IOClass</key>
-					<string>AMDRadeonX5000_AMDVega12GraphicsAccelerator</string>
+					<string>AMDRadeonX5000_AMDVega10GraphicsAccelerator</string>
 					<key>IODVDBundleName</key>
 					<string>AMDRadeonVADriver2</string>
 					<key>IOGVACodec</key>
