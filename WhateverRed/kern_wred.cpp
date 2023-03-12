@@ -511,11 +511,7 @@ uint32_t WRed::wrapPspSwInit(uint32_t *inputData, void *outputData) {
     return ret;
 }
 
-uint32_t WRed::wrapGcGetHwVersion() {
-    if (callbackWRed->chipType >= ChipType::Renoir) { return 0x090400; }
-    if (callbackWRed->chipType >= ChipType::Raven2) { return 0x090201; }
-    return 0x090001;
-}
+uint32_t WRed::wrapGcGetHwVersion() { return 0x090400; }
 
 void WRed::wrapPopulateFirmwareDirectory(void *that) {
     auto *fwDir = IOMallocZero(0xD8);
