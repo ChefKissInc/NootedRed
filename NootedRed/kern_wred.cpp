@@ -4,6 +4,7 @@
 #include "kern_wred.hpp"
 #include "kern_amd.hpp"
 #include "kern_model.hpp"
+#include "kern_patches.hpp"
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_devinfo.hpp>
 
@@ -169,12 +170,10 @@ OSMetaClassBase *WRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const O
 
 void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextAGDP.loadIndex == index) {
-        const uint8_t find[] = {0x83, 0xF8, 0x02};
-        const uint8_t repl[] = {0x83, 0xF8, 0x00};
         KernelPatcher::LookupPatch patches[] = {
-            {&kextAGDP, reinterpret_cast<const uint8_t *>("board-id"), reinterpret_cast<const uint8_t *>("board-ix"),
-                sizeof("board-id"), 1},
-            {&kextAGDP, find, repl, arrsize(find), 1},
+            {&kextAGDP, reinterpret_cast<const uint8_t *>(kAGDPBoardIDKeyOriginal),
+                reinterpret_cast<const uint8_t *>(kAGDPBoardIDKeyPatched), arrsize(kAGDPBoardIDKeyOriginal), 1},
+            {&kextAGDP, kAGDPFBCountCheckOriginal, kAGDPFBCountCheckPatched, arrsize(kAGDPFBCountCheckOriginal), 1},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
@@ -185,14 +184,10 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
     } else if (kextRadeonX5000HWLibs.loadIndex == index) {
         CailAsicCapEntry *orgAsicCapsTable = nullptr;
         CailInitAsicCapEntry *orgAsicInitCapsTable = nullptr;
-        uint32_t *ddiCapsRaven = nullptr;
-        uint32_t *ddiCapsRaven2 = nullptr;
-        uint32_t *ddiCapsPicasso = nullptr;
-        uint32_t *ddiCapsRenoir = nullptr;
-        void *goldenSettingsRaven = nullptr;
-        void *goldenSettingsRaven2 = nullptr;
-        void *goldenSettingsPicasso = nullptr;
-        void *goldenSettingsRenoir = nullptr;
+        uint32_t *ddiCapsRaven = nullptr, *ddiCapsRaven2 = nullptr;
+        uint32_t *ddiCapsPicasso = nullptr, *ddiCapsRenoir = nullptr;
+        void *goldenSettingsRaven = nullptr, *goldenSettingsRaven2 = nullptr;
+        void *goldenSettingsPicasso = nullptr, *goldenSettingsRenoir = nullptr;
         uint32_t *orgDeviceTypeTable = nullptr;
 
         KernelPatcher::SolveRequest solveRequests[] = {
@@ -222,11 +217,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, MODULE_SHORT,
             "Failed to enable kernel writing");
-        DBGLOG(MODULE_SHORT, "Patching device type table");
         orgDeviceTypeTable[0] = deviceId;
         orgDeviceTypeTable[1] = 0;
-
-        DBGLOG(MODULE_SHORT, "Patching HWLibs caps tables");
         orgAsicInitCapsTable->familyId = orgAsicCapsTable->familyId = AMDGPU_FAMILY_RV;
         orgAsicInitCapsTable->deviceId = orgAsicCapsTable->deviceId = callbackWRed->deviceId;
         orgAsicInitCapsTable->revision = orgAsicCapsTable->revision = callbackWRed->revision;
@@ -253,6 +245,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
                 orgAsicInitCapsTable->goldenCaps = goldenSettingsRenoir;
                 break;
             default:
+                MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
                 PANIC(MODULE_SHORT, "Unknown ASIC type %d", callbackWRed->chipType);
         }
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
@@ -279,24 +272,11 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), MODULE_SHORT,
             "Failed to route AMDRadeonX5000HWLibs symbols");
 
-        /**
-         * Patch for `_smu_9_0_1_full_asic_reset`
-         * Correct sent message to `0x1E` as the original code sends `0x3B` which is wrong for SMU 10/12.
-         */
-        const uint8_t find[] = {0x55, 0x48, 0x89, 0xE5, 0x8B, 0x56, 0x04, 0xBE, 0x3B, 0x00, 0x00, 0x00, 0x5D, 0xE9,
-            0x51, 0xFE, 0xFF, 0xFF};
-        const uint8_t repl[] = {0x55, 0x48, 0x89, 0xE5, 0x8B, 0x56, 0x04, 0xBE, 0x1E, 0x00, 0x00, 0x00, 0x5D, 0xE9,
-            0x51, 0xFE, 0xFF, 0xFF};
-        static_assert(arrsize(find) == arrsize(repl));
-        KernelPatcher::LookupPatch patch = {&kextRadeonX5000HWLibs, find, repl, arrsize(find), 1};
+        KernelPatcher::LookupPatch patch = {&kextRadeonX5000HWLibs, kFullAsicResetPatched, kFullAsicResetOriginal,
+            arrsize(kFullAsicResetPatched), 1};
         patcher.applyLookupPatch(&patch);
         patcher.clearError();
     } else if (kextRadeonX6000Framebuffer.loadIndex == index) {
-        static const uint32_t ddiCapsRaven[16] = {0x800005U, 0x500011FEU, 0x80000U, 0x11001000U, 0x200U, 0x68000001U,
-            0x20000000, 0x4002U, 0x22420001U, 0x9E20E10U, 0x2000120U, 0x0U, 0x0U, 0x0U, 0x0U, 0x0U};
-        static const uint32_t ddiCapsRenoir[16] = {0x800005U, 0x500011FEU, 0x80000U, 0x11001000U, 0x200U, 0x68000001U,
-            0x20000000, 0x4002U, 0x22420001U, 0x9E20E18U, 0x2000120U, 0x0U, 0x0U, 0x0U, 0x0U, 0x0U};
-
         CailAsicCapEntry *orgAsicCapsTable = nullptr;
 
         KernelPatcher::SolveRequest solveRequests[] = {
@@ -307,7 +287,6 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, MODULE_SHORT,
             "Failed to enable kernel writing");
-        DBGLOG(MODULE_SHORT, "Patching X6000FB caps table");
         orgAsicCapsTable->familyId = AMDGPU_FAMILY_RV;
         orgAsicCapsTable->caps = callbackWRed->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir;
         orgAsicCapsTable->deviceId = callbackWRed->deviceId;
@@ -328,40 +307,15 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), MODULE_SHORT,
             "Failed to route AMDRadeonX6000Framebuffer symbols");
 
-        /** Neutralise VRAM Info creation null check to proceed with Controller Core Services initialisation. */
-        const uint8_t find_null_check1[] = {0x48, 0x89, 0x83, 0x90, 0x00, 0x00, 0x00, 0x48, 0x85, 0xC0, 0x0F, 0x84,
-            0x89, 0x00, 0x00, 0x00, 0x48, 0x8B, 0x7B, 0x18};
-        const uint8_t repl_null_check1[] = {0x48, 0x89, 0x83, 0x90, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90, 0x90, 0x90,
-            0x90, 0x90, 0x90, 0x90, 0x48, 0x8B, 0x7B, 0x18};
-        static_assert(arrsize(find_null_check1) == arrsize(repl_null_check1));
-
-        /** Neutralise PSP Firmware Info creation null check to proceed with Controller Core Services
-           initialisation. */
-        const uint8_t find_null_check2[] = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00, 0x48, 0x85, 0xC0, 0x0F, 0x84,
-            0xA1, 0x00, 0x00, 0x00, 0x48, 0x8B, 0x7B, 0x18};
-        const uint8_t repl_null_check2[] = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90, 0x90, 0x90,
-            0x90, 0x90, 0x90, 0x90, 0x48, 0x8B, 0x7B, 0x18};
-        static_assert(arrsize(find_null_check2) == arrsize(repl_null_check2));
-
-        /** Neutralise VRAM Info null check inside `AmdAtomFwServices::getFirmwareInfo`. */
-        const uint8_t find_null_check3[] = {0x48, 0x83, 0xBB, 0x90, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x84, 0x90, 0x00,
-            0x00, 0x00, 0x49, 0x89, 0xF7, 0xBA, 0x60, 0x00, 0x00, 0x00};
-        const uint8_t repl_null_check3[] = {0x48, 0x83, 0xBB, 0x90, 0x00, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90, 0x90,
-            0x90, 0x90, 0x49, 0x89, 0xF7, 0xBA, 0x60, 0x00, 0x00, 0x00};
-        static_assert(arrsize(find_null_check3) == arrsize(repl_null_check3));
-
-        /** Tell AGDC that we're an iGPU */
-        const uint8_t find_getVendorInfo[] = {0xC7, 0x03, 0x00, 0x00, 0x03, 0x00, 0x48, 0xB8, 0x02, 0x10, 0x00, 0x00,
-            0x02, 0x00, 0x00, 0x00};
-        const uint8_t repl_getVendorInfo[] = {0xC7, 0x03, 0x00, 0x00, 0x03, 0x00, 0x48, 0xB8, 0x02, 0x10, 0x00, 0x00,
-            0x01, 0x00, 0x00, 0x00};
-        static_assert(arrsize(find_getVendorInfo) == arrsize(repl_getVendorInfo));
-
         KernelPatcher::LookupPatch patches[] = {
-            {&kextRadeonX6000Framebuffer, find_null_check1, repl_null_check1, arrsize(find_null_check1), 1},
-            {&kextRadeonX6000Framebuffer, find_null_check2, repl_null_check2, arrsize(find_null_check2), 1},
-            {&kextRadeonX6000Framebuffer, find_null_check3, repl_null_check3, arrsize(find_null_check3), 1},
-            {&kextRadeonX6000Framebuffer, find_getVendorInfo, repl_getVendorInfo, arrsize(find_getVendorInfo), 1},
+            {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheck1Original, kAmdAtomVramInfoNullCheck1Patched,
+                arrsize(kAmdAtomVramInfoNullCheck1Original), 1},
+            {&kextRadeonX6000Framebuffer, kAmdAtomPspDirectoryNullCheckOriginal, kAmdAtomPspDirectoryNullCheckPatched,
+                arrsize(kAmdAtomPspDirectoryNullCheckOriginal), 1},
+            {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheck2Original, kAmdAtomVramInfoNullCheck2Patched,
+                arrsize(kAmdAtomVramInfoNullCheck2Original), 1},
+            {&kextRadeonX6000Framebuffer, kAgdcServicesGetVendorInfoOriginal, kAgdcServicesGetVendorInfoPatched,
+                arrsize(kAgdcServicesGetVendorInfoOriginal), 1},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
@@ -413,14 +367,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), MODULE_SHORT,
             "Failed to route AMDRadeonX5000 symbols");
 
-        /**
-         * `AMDRadeonX5000_AMDHardware::startHWEngines`
-         * Make for loop stop at 1 instead of 2 since we only have one SDMA engine.
-         */
-        const uint8_t find[] = {0x49, 0x89, 0xFE, 0x31, 0xDB, 0x48, 0x83, 0xFB, 0x02, 0x74, 0x50};
-        const uint8_t repl[] = {0x49, 0x89, 0xFE, 0x31, 0xDB, 0x48, 0x83, 0xFB, 0x01, 0x74, 0x50};
-        static_assert(arrsize(find) == arrsize(repl));
-        KernelPatcher::LookupPatch patch = {&kextRadeonX5000, find, repl, arrsize(find), 1};
+        KernelPatcher::LookupPatch patch = {&kextRadeonX5000, kStartHWEnginesOriginal, kStartHWEnginesPatched,
+            arrsize(kStartHWEnginesOriginal), 1};
         patcher.applyLookupPatch(&patch);
         patcher.clearError();
     } else if (kextRadeonX6000.loadIndex == index) {
@@ -461,41 +409,15 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), MODULE_SHORT,
             "Failed to route AMDRadeonX6000 symbols");
 
-        /** Mismatched VTable Calls to getGpuDebugPolicy. */
-        const uint8_t find_getGpuDebugPolicy[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC0, 0x03, 0x00, 0x00};
-        const uint8_t repl_getGpuDebugPolicy[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC8, 0x03, 0x00, 0x00};
-        static_assert(arrsize(find_getGpuDebugPolicy) == arrsize(repl_getGpuDebugPolicy));
-
-        /** VTable Call to signalGPUWorkSubmitted. Doesn't exist on X5000, but looks like it isn't necessary, so we
-           just NO-OP it. */
-        const uint8_t find_HWChannel_submitCommandBuffer[] = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90,
-            0x30, 0x02, 0x00, 0x00, 0x48, 0x8B, 0x43, 0x50};
-        const uint8_t repl_HWChannel_submitCommandBuffer[] = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0x90, 0x90,
-            0x90, 0x90, 0x90, 0x90, 0x48, 0x8B, 0x43, 0x50};
-        static_assert(arrsize(find_HWChannel_submitCommandBuffer) == arrsize(repl_HWChannel_submitCommandBuffer));
-
-        /** Mismatched VTable Call to isDeviceValid in enableTimestampInterrupt. */
-        const uint8_t find_enableTimestampInterrupt[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0xA0, 0x02, 0x00, 0x00};
-        const uint8_t repl_enableTimestampInterrupt[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0x98, 0x02, 0x00, 0x00};
-        static_assert(arrsize(find_enableTimestampInterrupt) == arrsize(repl_enableTimestampInterrupt));
-
-        /** Mismatched VTable Calls to getScheduler. */
-        const uint8_t find_getScheduler[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0xB8, 0x03, 0x00, 0x00};
-        const uint8_t repl_getScheduler[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0xC0, 0x03, 0x00, 0x00};
-        static_assert(arrsize(find_getScheduler) == arrsize(repl_getScheduler));
-
-        /** Mismatched VTable Calls to isDeviceValid. */
-        const uint8_t find_isDeviceValid[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0xA0, 0x02, 0x00, 0x00, 0x84, 0xC0};
-        const uint8_t repl_isDeviceValid[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0x98, 0x02, 0x00, 0x00, 0x84, 0xC0};
-        static_assert(arrsize(find_isDeviceValid) == arrsize(repl_isDeviceValid));
-
         KernelPatcher::LookupPatch patches[] = {
-            {&kextRadeonX6000, find_getGpuDebugPolicy, repl_getGpuDebugPolicy, arrsize(find_getGpuDebugPolicy), 28},
-            {&kextRadeonX6000, find_HWChannel_submitCommandBuffer, repl_HWChannel_submitCommandBuffer,
-                arrsize(find_HWChannel_submitCommandBuffer), 1},
-            {&kextRadeonX6000, find_enableTimestampInterrupt, repl_enableTimestampInterrupt,
-                arrsize(find_enableTimestampInterrupt), 1},
-            {&kextRadeonX6000, find_getScheduler, repl_getScheduler, arrsize(find_getScheduler), 22},
+            {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal, kGetGpuDebugPolicyCallPatched,
+                arrsize(kGetGpuDebugPolicyCallOriginal), 28},
+            {&kextRadeonX6000, kHWChannelSubmitCommandBufferOriginal, kHWChannelSubmitCommandBufferPatched,
+                arrsize(kHWChannelSubmitCommandBufferOriginal), 1},
+            {&kextRadeonX6000, kEnableTimestampInterruptOriginal, kEnableTimestampInterruptPatched,
+                arrsize(kEnableTimestampInterruptOriginal), 1},
+            {&kextRadeonX6000, kGetSchedulerCallOriginal, kGetSchedulerCallPatched, arrsize(kGetSchedulerCallOriginal),
+                22},
             {&kextRadeonX6000, find_isDeviceValid, repl_isDeviceValid, arrsize(find_isDeviceValid), 14},
         };
         for (auto &patch : patches) {
