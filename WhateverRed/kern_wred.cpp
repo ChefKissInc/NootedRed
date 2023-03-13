@@ -169,12 +169,19 @@ OSMetaClassBase *WRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const O
 
 void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextAGDP.loadIndex == index) {
-        KernelPatcher::LookupPatch patch {&kextAGDP, reinterpret_cast<const uint8_t *>("board-id"),
-            reinterpret_cast<const uint8_t *>("board-ix"), sizeof("board-id"), 1};
-        patcher.applyLookupPatch(&patch);
-        SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, MODULE_SHORT,
-            "Failed to apply Piker-Alpha's AGDP patch: %d", patcher.getError());
-        patcher.clearError();
+        const uint8_t find[] = {0x83, 0xF8, 0x02};
+        const uint8_t repl[] = {0x83, 0xF8, 0x00};
+        KernelPatcher::LookupPatch patches[] = {
+            {&kextAGDP, reinterpret_cast<const uint8_t *>("board-id"), reinterpret_cast<const uint8_t *>("board-ix"),
+                sizeof("board-id"), 1},
+            {&kextAGDP, find, repl, sizeof(find), 1},
+        };
+        for (auto &patch : patches) {
+            patcher.applyLookupPatch(&patch);
+            SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, MODULE_SHORT,
+                "Failed to apply AGDP patch: %d", patcher.getError());
+            patcher.clearError();
+        }
     } else if (kextRadeonX5000HWLibs.loadIndex == index) {
         CailAsicCapEntry *orgAsicCapsTable = nullptr;
         CailInitAsicCapEntry *orgAsicInitCapsTable = nullptr;
