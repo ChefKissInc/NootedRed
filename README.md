@@ -6,6 +6,8 @@ An AMD iGPU support [Lilu](https://github.com/acidanthera/Lilu) plugin.
 
 The Source Code of this Original Work is licensed under the `Thou Shalt Not Profit License version 1.0`. See [`LICENSE`](https://github.com/NootInc/NootedRed/blob/master/LICENSE)
 
+Thanks [Acidanthera](https://github.com/Acidanthera) for the Navi FB backlight code in [WhateverGreen](https://github.com/Acidanthera/WhateverGreen).
+
 ## FAQ
 
 ### Can I have an AMD dGPU installed on the system?
@@ -31,6 +33,10 @@ This cannot be resolved without breaking macOS' integrity and potentially even s
 Injecting the GPU kexts is not possible during the OpenCore injection stage. The prelink stage fails for kexts of this type as their dependencies aren't contained in the Boot Kext Collection, where OpenCore injects kexts to, they're in the System Kext Collection.
 
 In conclusion, this kext is constricted to Big Sur since there are too many incompatibilities with older and newer macOS versions.
+
+### I get a panic saying "Failed to get VBIOS from VRAM", how can I fix it?
+
+Ensure Legacy Boot/CSM is disabled in your BIOS settings.
 
 ## Project members
 

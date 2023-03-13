@@ -15,7 +15,7 @@ struct DevicePair {
     size_t modelNum;
 };
 
-static constexpr Model dev15d8[] = {
+static constexpr Model dev15D8[] = {
     {0x00, "AMD Radeon RX Vega 8 Graphics WS"},
     {0x91, "AMD Radeon Vega 3 Graphics"},
     {0x91, "AMD Ryzen Embedded R1606G with Radeon Vega Gfx"},
@@ -59,7 +59,7 @@ static constexpr Model dev15d8[] = {
     {0xE4, "AMD Ryzen Embedded R1102G with Radeon Vega Gfx"},
 };
 
-static constexpr Model dev15dd[] = {
+static constexpr Model dev15DD[] = {
     {0x81, "AMD Ryzen Embedded V1807B with Radeon Vega Gfx"},
     {0x82, "AMD Ryzen Embedded V1756B with Radeon Vega Gfx"},
     {0x83, "AMD Ryzen Embedded V1605B with Radeon Vega Gfx"},
@@ -93,8 +93,8 @@ static constexpr Model dev15dd[] = {
 };
 
 static constexpr DevicePair devices[] = {
-    {0x15d8, dev15d8, arrsize(dev15d8)},
-    {0x15dd, dev15dd, arrsize(dev15dd)},
+    {0x15D8, dev15D8, arrsize(dev15D8)},
+    {0x15DD, dev15DD, arrsize(dev15DD)},
 };
 
 inline const char *getBranding(uint16_t dev, uint16_t rev) {

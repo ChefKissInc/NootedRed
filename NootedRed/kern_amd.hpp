@@ -4,14 +4,8 @@
 #pragma once
 #include <Headers/kern_util.hpp>
 
-using t_AMDFirmwareDirectoryConstructor = void (*)(void *that, uint32_t);
-using t_createFirmware = void *(*)(const void *data, uint32_t size, uint32_t param3, const char *filename);
-using t_putFirmware = bool (*)(void *that, uint32_t deviceType, void *fw);
-using t_VegaXPowerTuneConstructor = void (*)(void *that, void *param1, void *param2);
 using t_HWEngineConstructor = void (*)(void *that);
 using t_HWEngineNew = void *(*)(size_t size);
-using t_sendMsgToSmc = uint32_t (*)(void *smum, uint32_t msgId);
-using t_pspLoadExtended = uint32_t (*)(void *, uint64_t, uint64_t, const void *, size_t);
 
 constexpr uint32_t AMDGPU_FAMILY_RV = 0x8E;
 
