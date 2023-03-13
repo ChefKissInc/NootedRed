@@ -418,7 +418,8 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
                 arrsize(kEnableTimestampInterruptOriginal), 1},
             {&kextRadeonX6000, kGetSchedulerCallOriginal, kGetSchedulerCallPatched, arrsize(kGetSchedulerCallOriginal),
                 22},
-            {&kextRadeonX6000, find_isDeviceValid, repl_isDeviceValid, arrsize(find_isDeviceValid), 14},
+            {&kextRadeonX6000, kIsDeviceValidCallOriginal, kIsDeviceValidCallPatched,
+                arrsize(kIsDeviceValidCallOriginal), 14},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
