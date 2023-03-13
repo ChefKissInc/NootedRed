@@ -14,8 +14,7 @@ static const uint8_t kAGDPFBCountCheckPatched[] = {0x83, 0xF8, 0x00};
 
 /**
  * `AppleGraphicsDevicePolicy::start`
- * Symbols are stripped so function is unknown.
- * Removes framebuffer count >= 2 check.
+ * Neutralise access to AGDP configuration by board identifier.
  */
 static const char kAGDPBoardIDKeyOriginal[] = "board-id";
 static const char kAGDPBoardIDKeyPatched[] = "applesux";

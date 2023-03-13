@@ -36,7 +36,3 @@ In conclusion, this kext is constricted to Big Sur since there are too many inco
 
 - [@ChefKissInc](https://github.com/ChefKissInc) | Project lead, Linux shitcode analyser and kernel extension developer. Extensive knowledge of OS inner workings
 - [@NyanCatTW1](https://github.com/NyanCatTW1) | Reverse Engineering and Python automation magician. His Ghidra RedMetaClassAnalyzer script has made the entire process way painless by automagically discovering C++ v-tables for classes.
-
-## Credits
-
-[Pike R. Alpha](https://github.com/Piker-Alpha) for the Apple Device Graphics Policy patch
