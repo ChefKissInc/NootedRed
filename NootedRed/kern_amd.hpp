@@ -215,53 +215,6 @@ struct SdmaFwConstant {
     const uint8_t *data;
 } PACKED;
 
-struct AtomCommonTableHeader {
-    uint16_t structureSize;
-    uint8_t formatRev;
-    uint8_t contentRev;
-} PACKED;
-
-constexpr uint32_t ATOM_ROM_TABLE_PTR = 0x48;
-constexpr uint32_t ATOM_ROM_DATA_PTR = 0x20;
-
-struct IgpSystemInfoV11 : public AtomCommonTableHeader {
-    uint32_t vbiosMisc;
-    uint32_t gpuCapInfo;
-    uint32_t systemConfig;
-    uint32_t cpuCapInfo;
-    uint16_t gpuclkSsPercentage;
-    uint16_t gpuclkSsType;
-    uint16_t lvdsSsPercentage;
-    uint16_t lvdsSsRate10hz;
-    uint16_t hdmiSsPercentage;
-    uint16_t hdmiSsRate10hz;
-    uint16_t dviSsPercentage;
-    uint16_t dviSsRate10hz;
-    uint16_t dpPhyOverride;
-    uint16_t lvdsMisc;
-    uint16_t backlightPwmHz;
-    uint8_t memoryType;
-    uint8_t umaChannelCount;
-} PACKED;
-
-struct IgpSystemInfoV2 : public AtomCommonTableHeader {
-    uint32_t vbiosMisc;
-    uint32_t gpuCapInfo;
-    uint32_t systemConfig;
-    uint32_t cpuCapInfo;
-    uint16_t gpuclkSsPercentage;
-    uint16_t gpuclkSsType;
-    uint16_t dpPhyOverride;
-    uint8_t memoryType;
-    uint8_t umaChannelCount;
-} PACKED;
-
-union IgpSystemInfo {
-    AtomCommonTableHeader header;
-    IgpSystemInfoV11 infoV11;
-    IgpSystemInfoV2 infoV2;
-};
-
 static const uint32_t ddiCapsRaven[16] = {0x800005U, 0x500011FEU, 0x80000U, 0x11001000U, 0x200U, 0x68000001U,
     0x20000000, 0x4002U, 0x22420001U, 0x9E20E10U, 0x2000120U, 0x0U, 0x0U, 0x0U, 0x0U, 0x0U};
 static const uint32_t ddiCapsRenoir[16] = {0x800005U, 0x500011FEU, 0x80000U, 0x11001000U, 0x200U, 0x68000001U,
