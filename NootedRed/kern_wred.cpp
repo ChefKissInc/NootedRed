@@ -461,7 +461,7 @@ void WRed::wrapPopulateFirmwareDirectory(void *that) {
     DBGLOG(MODULE_SHORT, "%s => %s", filename, targetFilename);
 
     auto &fwDesc = getFWDescByName(filename);
-    auto *fwHeader = reinterpret_cast<const GfxFwHeaderV1 *>(fwDesc.data);
+    auto *fwHeader = reinterpret_cast<const CommonFirmwareHeader *>(fwDesc.data);
     auto *fw =
         callbackWRed->orgCreateFirmware(fwDesc.data + fwHeader->ucodeOff, fwHeader->ucodeSize, 0x200, targetFilename);
     PANIC_COND(!fw, MODULE_SHORT, "Failed to create '%s' firmware", targetFilename);

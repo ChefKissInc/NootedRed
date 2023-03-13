@@ -93,27 +93,6 @@ constexpr uint32_t mmMP1_SMN_C2PMSG_66 = 0x282;
 constexpr uint32_t mmPCIE_INDEX2 = 0xE;
 constexpr uint32_t mmPCIE_DATA2 = 0xF;
 
-struct VFCT {
-    char signature[4];
-    uint32_t length;
-    uint8_t revision, checksum;
-    char oemId[6];
-    char oemTableId[8];
-    uint32_t oemRevision;
-    char creatorId[4];
-    uint32_t creatorRevision;
-    char tableUUID[16];
-    uint32_t vbiosImageOffset, lib1ImageOffset;
-    uint32_t reserved[4];
-} PACKED;
-
-struct GOPVideoBIOSHeader {
-    uint32_t pciBus, pciDevice, pciFunction;
-    uint16_t vendorID, deviceID;
-    uint16_t ssvId, ssId;
-    uint32_t revision, imageLength;
-} PACKED;
-
 struct CommonFirmwareHeader {
     uint32_t size;
     uint32_t headerSize;
@@ -125,63 +104,6 @@ struct CommonFirmwareHeader {
     uint32_t ucodeSize;
     uint32_t ucodeOff;
     uint32_t crc32;
-} PACKED;
-
-struct GfxFwHeaderV1 : public CommonFirmwareHeader {
-    uint32_t ucodeFeatureVer;
-    uint32_t jtOff;
-    uint32_t jtSize;
-} PACKED;
-
-struct SdmaFwHeaderV1 : public CommonFirmwareHeader {
-    uint32_t ucodeFeatureVer;
-    uint32_t ucodeChangeVer;
-    uint32_t jtOff;
-    uint32_t jtSize;
-} PACKED;
-
-struct RlcFwHeaderV2_1 : public CommonFirmwareHeader {
-    uint32_t ucodeFeatureVer;
-    uint32_t jtOff;
-    uint32_t jtSize;
-    uint32_t saveAndRestoreOff;
-    uint32_t clearStateDescOff;
-    uint32_t availScratchRamLocations;
-    uint32_t regRestoreListSize;
-    uint32_t regListFmtStart;
-    uint32_t regListFmtSeparateStart;
-    uint32_t startingOffsetsStart;
-    uint32_t regListFmtSize;
-    uint32_t regListFmtArrayOff;
-    uint32_t regListSize;
-    uint32_t regListArrayOff;
-    uint32_t regListFmtSeparateSize;
-    uint32_t regListFmtSeparateArrayOff;
-    uint32_t regListSeparateSize;
-    uint32_t regListSeparateArrayOff;
-    uint32_t regListFmtDirectRegListLen;
-    uint32_t saveRestoreListCntlUcodeVer;
-    uint32_t saveRestoreListCntlFeatureVer;
-    uint32_t saveRestoreListCntlSize;
-    uint32_t saveRestoreListCntlOff;
-    uint32_t saveRestoreListGpmUcodeVer;
-    uint32_t saveRestoreListGpmFeatureVer;
-    uint32_t saveRestoreListGpmSize;
-    uint32_t saveRestoreListGpmOff;
-    uint32_t saveRestoreListSrmUcodeVer;
-    uint32_t saveRestoreListSrmFeatureVer;
-    uint32_t saveRestoreListSrmSize;
-    uint32_t saveRestoreListSrmOff;
-} PACKED;
-
-struct PspFwLegacyBinDesc {
-    uint32_t fwVer;
-    uint32_t off;
-    uint32_t size;
-} PACKED;
-
-struct PspTaFwHeaderV1 : public CommonFirmwareHeader {
-    PspFwLegacyBinDesc xgmi, ras, hdcp, dtm, securedisplay;
 } PACKED;
 
 struct CailAsicCapEntry {
