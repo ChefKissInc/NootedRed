@@ -89,7 +89,7 @@ void WRed::processPatcher(KernelPatcher &patcher) {
     WIOKit::awaitPublishing(iGPU);
 
     static uint8_t builtin[] = {0x01};
-    iGPU->setProperty("built-in", builtin, sizeof(builtin));
+    iGPU->setProperty("built-in", builtin, arrsize(builtin));
     callbackWRed->deviceId = WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigDeviceID);
     auto *model = getBranding(callbackWRed->deviceId, WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigRevisionID));
     if (model) { iGPU->setProperty("model", model); }
@@ -174,7 +174,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         KernelPatcher::LookupPatch patches[] = {
             {&kextAGDP, reinterpret_cast<const uint8_t *>("board-id"), reinterpret_cast<const uint8_t *>("board-ix"),
                 sizeof("board-id"), 1},
-            {&kextAGDP, find, repl, sizeof(find), 1},
+            {&kextAGDP, find, repl, arrsize(find), 1},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-target_file="${PROJECT_DIR}/WhateverRed/kern_fw.cpp"
+target_file="${PROJECT_DIR}/NootedRed/kern_fw.cpp"
 if [ -f "$target_file" ]; then
     rm -f "$target_file"
 fi

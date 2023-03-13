@@ -108,7 +108,7 @@
 				<integer>16</integer>
 			</dict>
 		</dict>
-		<key>com.ChefKissInc.WhateverRed</key>
+		<key>com.ChefKissInc.NootedRed</key>
 		<dict>
 			<key>CFBundleIdentifier</key>
 			<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>

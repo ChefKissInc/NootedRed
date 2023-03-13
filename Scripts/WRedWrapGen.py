@@ -80,8 +80,8 @@ def locate_line(lines: list[str], needle: str) -> int:
     raise AssertionError()
 
 
-cpp_path: str = "./WhateverRed/kern_wred.cpp"
-hpp_path: str = "./WhateverRed/kern_wred.hpp"
+cpp_path: str = "./NootedRed/kern_wred.cpp"
+hpp_path: str = "./NootedRed/kern_wred.hpp"
 
 with open(cpp_path) as cpp_file:
     cpp_lines: list[str] = cpp_file.readlines()

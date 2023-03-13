@@ -1,10 +1,10 @@
-# WhateverRed ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/NootInc/WhateverRed/main.yml?branch=master&logo=github&style=for-the-badge)
+# NootedRed ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/NootInc/NootedRed/main.yml?branch=master&logo=github&style=for-the-badge)
 
 Through hard work come great results.
 
 An AMD iGPU support [Lilu](https://github.com/acidanthera/Lilu) plugin.
 
-The Source Code of this Original Work is licensed under the `Thou Shalt Not Profit License version 1.0`. See [`LICENSE`](https://github.com/NootInc/WhateverRed/blob/master/LICENSE)
+The Source Code of this Original Work is licensed under the `Thou Shalt Not Profit License version 1.0`. See [`LICENSE`](https://github.com/NootInc/NootedRed/blob/master/LICENSE)
 
 ## FAQ
 

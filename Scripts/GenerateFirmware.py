@@ -4,7 +4,7 @@ import struct
 import sys
 
 header = '''
-//  WhateverRed
+//  NootedRed
 //
 //  Copyright © 2023 ChefKiss Inc. All rights reserved.
 
