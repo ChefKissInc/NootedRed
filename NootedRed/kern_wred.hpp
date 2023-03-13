@@ -4,6 +4,7 @@
 #pragma once
 #include "kern_amd.hpp"
 #include "kern_fw.hpp"
+#include "kern_vbios.hpp"
 #include <Headers/kern_iokit.hpp>
 #include <IOKit/acpi/IOACPIPlatformExpert.h>
 #include <IOKit/pci/IOPCIDevice.h>

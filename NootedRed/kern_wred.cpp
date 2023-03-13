@@ -2,10 +2,8 @@
 //  details.
 
 #include "kern_wred.hpp"
-#include "kern_amd.hpp"
 #include "kern_model.hpp"
 #include "kern_patches.hpp"
-#include "kern_vbios.hpp"
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_devinfo.hpp>
 
