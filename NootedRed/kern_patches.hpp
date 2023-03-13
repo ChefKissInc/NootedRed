@@ -17,7 +17,7 @@ static const uint8_t kAGDPFBCountCheckPatched[] = {0x83, 0xF8, 0x00};
  * Neutralise access to AGDP configuration by board identifier.
  */
 static const char kAGDPBoardIDKeyOriginal[] = "board-id";
-static const char kAGDPBoardIDKeyPatched[] = "applesux";
+static const char kAGDPBoardIDKeyPatched[] = "applehax";
 
 /**
  * `_smu_9_0_1_full_asic_reset`
