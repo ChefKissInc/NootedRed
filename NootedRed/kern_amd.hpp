@@ -76,14 +76,6 @@ constexpr uint32_t mmOTG5_OTG_INTERLACE_CONTROL = 0x1DC4;
 constexpr uint32_t GFX_FW_TYPE_CP_MEC = 5;
 constexpr uint32_t GFX_FW_TYPE_CP_MEC_ME2 = 6;
 
-constexpr uint32_t MP_BASE = 0x16000;
-
-constexpr uint32_t AMDGPU_MAX_USEC_TIMEOUT = 100000;
-
-constexpr uint32_t mmMP1_SMN_C2PMSG_90 = 0x29A;
-constexpr uint32_t mmMP1_SMN_C2PMSG_82 = 0x292;
-constexpr uint32_t mmMP1_SMN_C2PMSG_66 = 0x282;
-
 constexpr uint32_t mmPCIE_INDEX2 = 0xE;
 constexpr uint32_t mmPCIE_DATA2 = 0xF;
 
