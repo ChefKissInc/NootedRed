@@ -151,7 +151,7 @@ void X6000FB::updatePwmMaxBrightnessFromInternalDisplay() {
         return;
     }
 
-    auto *display = IOService::waitForMatchingService(matching);
+    auto *display = IOService::waitForMatchingService(matching, 1000000);
     if (!display) {
         DBGLOG("x6000fb", "updatePwmMaxBrightnessFromInternalDisplay null matching");
         OSSafeReleaseNULL(matching);
@@ -161,6 +161,7 @@ void X6000FB::updatePwmMaxBrightnessFromInternalDisplay() {
     OSDictionary *ioDispParam = OSDynamicCast(OSDictionary, display->getProperty("IODisplayParameters"));
     if (!ioDispParam) {
         DBGLOG("x6000fb", "updatePwmMaxBrightnessFromInternalDisplay null IODisplayParameters");
+        OSSafeReleaseNULL(display);
         OSSafeReleaseNULL(matching);
         return;
     }
@@ -168,6 +169,7 @@ void X6000FB::updatePwmMaxBrightnessFromInternalDisplay() {
     OSDictionary *linearBrightness = OSDynamicCast(OSDictionary, ioDispParam->getObject("linear-brightness"));
     if (!linearBrightness) {
         DBGLOG("x6000fb", "linear-brightness property is null");
+        OSSafeReleaseNULL(display);
         OSSafeReleaseNULL(matching);
         return;
     }
@@ -175,6 +177,7 @@ void X6000FB::updatePwmMaxBrightnessFromInternalDisplay() {
     OSNumber *maxBrightness = OSDynamicCast(OSNumber, linearBrightness->getObject("max"));
     if (!maxBrightness) {
         DBGLOG("x6000fb", "max property is null");
+        OSSafeReleaseNULL(display);
         OSSafeReleaseNULL(matching);
         return;
     }
@@ -182,6 +185,7 @@ void X6000FB::updatePwmMaxBrightnessFromInternalDisplay() {
     callback->maxPwmBacklightLvl = maxBrightness->unsigned32BitValue();
     DBGLOG("x6000fb", "Got max brightness: 0x%x", callback->maxPwmBacklightLvl);
 
+    OSSafeReleaseNULL(display);
     OSSafeReleaseNULL(matching);
 }
 
