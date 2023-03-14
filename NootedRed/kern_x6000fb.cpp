@@ -85,16 +85,10 @@ IOReturn X6000FB::wrapPopulateDeviceInfo(void *that) {
 }
 
 IOReturn X6000FB::wrapPopulateVramInfo([[maybe_unused]] void *that, void *fwInfo) {
-    auto *vbios = static_cast<const uint8_t *>(WRed::callback->vbiosData->getBytesNoCopy());
-    auto base = *reinterpret_cast<const uint16_t *>(vbios + ATOM_ROM_TABLE_PTR);
-    auto dataTable = *reinterpret_cast<const uint16_t *>(vbios + base + ATOM_ROM_DATA_PTR);
-    auto *mdt = reinterpret_cast<const uint16_t *>(vbios + dataTable + 4);
     uint32_t channelCount = 1;
-    if (mdt[0x1E]) {
+    auto *table = WRed::callback->getVBIOSDataTable<IgpSystemInfo>(0x1E);
+    if (table) {
         DBGLOG("x6000fb", "Fetching VRAM info from iGPU System Info");
-        uint32_t offset = 0x1E * 2 + 4;
-        auto index = *reinterpret_cast<const uint16_t *>(vbios + dataTable + offset);
-        auto *table = reinterpret_cast<const IgpSystemInfo *>(vbios + index);
         switch (table->header.formatRev) {
             case 1:
                 switch (table->header.contentRev) {
