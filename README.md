@@ -10,7 +10,7 @@ Thanks [Acidanthera](https://github.com/Acidanthera) for the Navi FB backlight c
 
 ## Recommendations
 
-- Add [SSDT-PNLF.aml](Assets/SSDT-PNLF.aml) by [@ChefKissInc](https://github.com/ChefKissInc) and [@ExtremeXT](https://github.com/ExtremeXT) and compile and add [SSDT-ALS0.aml](https://github.com/Acidanthera/OpenCorePkg/blob/master/Docs/AcpiSamples/Source/SSDT-ALS0.dsl) along with [SMCLightSensor.kext](https://github.com/Acidanthera/VirtualSMC) by [Acidanthera](https://github.com/Acidanthera) for backlight functionality (both desktop and laptop).
+- Add [SSDT-PNLF.aml](Assets/SSDT-PNLF.aml) by [@ChefKissInc](https://github.com/ChefKissInc) and [@ExtremeXT](https://github.com/ExtremeXT) and compile and add [SSDT-ALS0.aml](https://github.com/Acidanthera/OpenCorePkg/blob/master/Docs/AcpiSamples/Source/SSDT-ALS0.dsl) (NOTE: only if you have no ambient light sensor) along with [SMCLightSensor.kext](https://github.com/Acidanthera/VirtualSMC) by [Acidanthera](https://github.com/Acidanthera) for backlight functionality (both desktop and laptop).
 - Use `MacBookPro16,3`, `MacBookPro16,4` or `MacPro7,1` SMBIOS.
 - Add [AGPMInjector.kext](Assets/AGPMInjector.kext.zip) by [Visual](https://github.com/ChefKissInc). Supports only `MacBookPro16,3`, `MacBookPro16,4` or `MacPro7,1` SMBIOS
 
