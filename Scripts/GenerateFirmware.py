@@ -70,7 +70,7 @@ def process_files(target_file, dir):
         target_file_handle.write("const struct FwDesc fwList[] = {")
 
         for file in files:
-            target_file_handle.write('{WRED_FW("')
+            target_file_handle.write('{NRED_FW("')
             target_file_handle.write(file)
             target_file_handle.write('", ')
             fw_var_name = format_file_name(file)

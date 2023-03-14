@@ -30,7 +30,7 @@ static const uint8_t kFullAsicResetPatched[] = {0x55, 0x48, 0x89, 0xE5, 0x8B, 0x
 
 /**
  * `AmdAtomFwServices::initializeAtomDataTable`
- * Neutralise AmdAtomVramInfo creation null check.
+ * Neutralise `AmdAtomVramInfo` creation null check.
  * We don't have this entry in our VBIOS.
  */
 const uint8_t kAmdAtomVramInfoNullCheck1Original[] = {0x48, 0x89, 0x83, 0x90, 0x00, 0x00, 0x00, 0x48, 0x85, 0xC0, 0x0F,
@@ -40,7 +40,7 @@ const uint8_t kAmdAtomVramInfoNullCheck1Patched[] = {0x48, 0x89, 0x83, 0x90, 0x0
 
 /**
  * `AmdAtomFwServices::initializeAtomDataTable`
- * Neutralise AmdAtomPspDirectory creation null check.
+ * Neutralise `AmdAtomPspDirectory` creation null check.
  * We don't have this entry in our VBIOS.
  */
 const uint8_t kAmdAtomPspDirectoryNullCheckOriginal[] = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00, 0x48, 0x85, 0xC0,
@@ -50,7 +50,7 @@ const uint8_t kAmdAtomPspDirectoryNullCheckPatched[] = {0x48, 0x89, 0x83, 0x88, 
 
 /**
  * `AmdAtomFwServices::getFirmwareInfo`
- * Neutralise AmdAtomVramInfo null check.
+ * Neutralise `AmdAtomVramInfo` null check.
  */
 const uint8_t kAmdAtomVramInfoNullCheck2Original[] = {0x48, 0x83, 0xBB, 0x90, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x84, 0x90,
     0x00, 0x00, 0x00, 0x49, 0x89, 0xF7, 0xBA, 0x60, 0x00, 0x00, 0x00};

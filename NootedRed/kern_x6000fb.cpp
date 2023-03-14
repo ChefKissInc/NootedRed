@@ -2,8 +2,8 @@
 //  details.
 
 #include "kern_x6000fb.hpp"
+#include "kern_nred.hpp"
 #include "kern_patches.hpp"
-#include "kern_wred.hpp"
 #include <Headers/kern_api.hpp>
 
 static const char *pathRadeonX6000Framebuffer =
@@ -32,10 +32,10 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "x6000fb",
             "Failed to enable kernel writing");
         orgAsicCapsTable->familyId = AMDGPU_FAMILY_RV;
-        orgAsicCapsTable->caps = WRed::callback->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir;
-        orgAsicCapsTable->deviceId = WRed::callback->deviceId;
-        orgAsicCapsTable->revision = WRed::callback->revision;
-        orgAsicCapsTable->emulatedRev = WRed::callback->enumeratedRevision + WRed::callback->revision;
+        orgAsicCapsTable->caps = NRed::callback->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir;
+        orgAsicCapsTable->deviceId = NRed::callback->deviceId;
+        orgAsicCapsTable->revision = NRed::callback->revision;
+        orgAsicCapsTable->emulatedRev = NRed::callback->enumeratedRevision + NRed::callback->revision;
         orgAsicCapsTable->pciRev = 0xFFFFFFFF;
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
@@ -76,7 +76,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
     return false;
 }
 
-uint16_t X6000FB::wrapGetEnumeratedRevision() { return WRed::callback->enumeratedRevision; }
+uint16_t X6000FB::wrapGetEnumeratedRevision() { return NRed::callback->enumeratedRevision; }
 
 IOReturn X6000FB::wrapPopulateDeviceInfo(void *that) {
     auto ret = FunctionCast(wrapPopulateDeviceInfo, callback->orgPopulateDeviceInfo)(that);
@@ -86,7 +86,7 @@ IOReturn X6000FB::wrapPopulateDeviceInfo(void *that) {
 
 IOReturn X6000FB::wrapPopulateVramInfo([[maybe_unused]] void *that, void *fwInfo) {
     uint32_t channelCount = 1;
-    auto *table = WRed::callback->getVBIOSDataTable<IgpSystemInfo>(0x1E);
+    auto *table = NRed::callback->getVBIOSDataTable<IgpSystemInfo>(0x1E);
     if (table) {
         DBGLOG("x6000fb", "Fetching VRAM info from iGPU System Info");
         switch (table->header.formatRev) {

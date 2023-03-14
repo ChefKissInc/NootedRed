@@ -2,8 +2,8 @@
 //  details.
 
 #include "kern_x5000.hpp"
+#include "kern_nred.hpp"
 #include "kern_patches.hpp"
-#include "kern_wred.hpp"
 #include "kern_x6000.hpp"
 #include <Headers/kern_api.hpp>
 
@@ -29,10 +29,10 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
             {"__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator19createAccelChannelsEbE12channelTypes", orgChannelTypes},
             {"__ZN39AMDRadeonX5000_AMDAccelSharedUserClient5startEP9IOService", orgAccelSharedUCStart},
             {"__ZN39AMDRadeonX5000_AMDAccelSharedUserClient4stopEP9IOService", orgAccelSharedUCStop},
-            {"__ZN35AMDRadeonX5000_AMDAccelVideoContext10gMetaClassE", WRed::callback->metaClassMap[0][0]},
-            {"__ZN37AMDRadeonX5000_AMDAccelDisplayMachine10gMetaClassE", WRed::callback->metaClassMap[1][0]},
-            {"__ZN34AMDRadeonX5000_AMDAccelDisplayPipe10gMetaClassE", WRed::callback->metaClassMap[2][0]},
-            {"__ZN30AMDRadeonX5000_AMDAccelChannel10gMetaClassE", WRed::callback->metaClassMap[3][1]},
+            {"__ZN35AMDRadeonX5000_AMDAccelVideoContext10gMetaClassE", NRed::callback->metaClassMap[0][0]},
+            {"__ZN37AMDRadeonX5000_AMDAccelDisplayMachine10gMetaClassE", NRed::callback->metaClassMap[1][0]},
+            {"__ZN34AMDRadeonX5000_AMDAccelDisplayPipe10gMetaClassE", NRed::callback->metaClassMap[2][0]},
+            {"__ZN30AMDRadeonX5000_AMDAccelChannel10gMetaClassE", NRed::callback->metaClassMap[3][1]},
         };
         PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "x5000", "Failed to resolve symbols");
 
@@ -91,10 +91,10 @@ bool X5000::wrapAllocateHWEngines(void *that) {
 }
 
 void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
-    FunctionCast(wrapSetupAndInitializeHWCapabilities, WRed::callback->chipType >= ChipType::Renoir ?
+    FunctionCast(wrapSetupAndInitializeHWCapabilities, NRed::callback->chipType >= ChipType::Renoir ?
                                                            callback->orgSetupAndInitializeHWCapabilitiesVega20 :
                                                            callback->orgSetupAndInitializeHWCapabilities)(that);
-    if (WRed::callback->chipType < ChipType::Renoir) {
+    if (NRed::callback->chipType < ChipType::Renoir) {
         getMember<uint32_t>(that, 0x2C) = 4;    // Surface Count (?)
     }
     getMember<bool>(that, 0xC0) = false;    // SDMA Page Queue
@@ -123,7 +123,7 @@ void *X5000::wrapCreateSMLInterface(uint32_t configBit) {
 
 uint64_t X5000::wrapAdjustVRAMAddress(void *that, uint64_t addr) {
     auto ret = FunctionCast(wrapAdjustVRAMAddress, callback->orgAdjustVRAMAddress)(that, addr);
-    return ret != addr ? (ret + WRed::callback->fbOffset) : ret;
+    return ret != addr ? (ret + NRed::callback->fbOffset) : ret;
 }
 
 void *X5000::wrapNewShared() { return FunctionCast(wrapNewShared, X6000::callback->orgNewShared)(); }
@@ -134,14 +134,14 @@ void *X5000::wrapNewSharedUserClient() {
 
 void *X5000::wrapAllocateAMDHWAlignManager() {
     auto ret = FunctionCast(wrapAllocateAMDHWAlignManager, callback->orgAllocateAMDHWAlignManager)();
-    WRed::callback->hwAlignMgr = ret;
+    NRed::callback->hwAlignMgr = ret;
 
-    WRed::callback->hwAlignMgrVtX5000 = getMember<uint8_t *>(ret, 0);
-    WRed::callback->hwAlignMgrVtX6000 = static_cast<uint8_t *>(IOMallocZero(0x238));
+    NRed::callback->hwAlignMgrVtX5000 = getMember<uint8_t *>(ret, 0);
+    NRed::callback->hwAlignMgrVtX6000 = static_cast<uint8_t *>(IOMallocZero(0x238));
 
-    memcpy(WRed::callback->hwAlignMgrVtX6000, WRed::callback->hwAlignMgrVtX5000, 0x128);
-    *reinterpret_cast<mach_vm_address_t *>(WRed::callback->hwAlignMgrVtX6000 + 0x128) =
+    memcpy(NRed::callback->hwAlignMgrVtX6000, NRed::callback->hwAlignMgrVtX5000, 0x128);
+    *reinterpret_cast<mach_vm_address_t *>(NRed::callback->hwAlignMgrVtX6000 + 0x128) =
         X6000::callback->orgGetPreferredSwizzleMode2;
-    memcpy(WRed::callback->hwAlignMgrVtX6000 + 0x130, WRed::callback->hwAlignMgrVtX5000 + 0x128, 0x230 - 0x128);
+    memcpy(NRed::callback->hwAlignMgrVtX6000 + 0x130, NRed::callback->hwAlignMgrVtX5000 + 0x128, 0x230 - 0x128);
     return ret;
 }

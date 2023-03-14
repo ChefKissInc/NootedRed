@@ -2,8 +2,8 @@
 //  details.
 
 #include "kern_hwlibs.hpp"
+#include "kern_nred.hpp"
 #include "kern_patches.hpp"
-#include "kern_wred.hpp"
 #include <Headers/kern_api.hpp>
 
 static const char *pathRadeonX5000HWLibs = "/System/Library/Extensions/AMDRadeonX5000HWServices.kext/Contents/PlugIns/"
@@ -56,15 +56,15 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "hwlibs",
             "Failed to enable kernel writing");
-        orgDeviceTypeTable[0] = WRed::callback->deviceId;
+        orgDeviceTypeTable[0] = NRed::callback->deviceId;
         orgDeviceTypeTable[1] = 0;
         orgAsicInitCapsTable->familyId = orgAsicCapsTable->familyId = AMDGPU_FAMILY_RV;
-        orgAsicInitCapsTable->deviceId = orgAsicCapsTable->deviceId = WRed::callback->deviceId;
-        orgAsicInitCapsTable->revision = orgAsicCapsTable->revision = WRed::callback->revision;
+        orgAsicInitCapsTable->deviceId = orgAsicCapsTable->deviceId = NRed::callback->deviceId;
+        orgAsicInitCapsTable->revision = orgAsicCapsTable->revision = NRed::callback->revision;
         orgAsicInitCapsTable->emulatedRev = orgAsicCapsTable->emulatedRev =
-            WRed::callback->enumeratedRevision + WRed::callback->revision;
+            NRed::callback->enumeratedRevision + NRed::callback->revision;
         orgAsicInitCapsTable->pciRev = orgAsicCapsTable->pciRev = 0xFFFFFFFF;
-        switch (WRed::callback->chipType) {
+        switch (NRed::callback->chipType) {
             case ChipType::Raven:
                 orgAsicInitCapsTable->caps = orgAsicCapsTable->caps = ddiCapsRaven;
                 orgAsicInitCapsTable->goldenCaps = goldenSettingsRaven;
@@ -85,7 +85,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
                 break;
             default:
                 MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
-                PANIC("hwlibs", "Unknown ASIC type %d", WRed::callback->chipType);
+                PANIC("hwlibs", "Unknown ASIC type %d", NRed::callback->chipType);
         }
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
@@ -124,7 +124,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
 uint32_t X5000HWLibs::wrapSmuGetHwVersion() { return 0x1; }
 
 uint32_t X5000HWLibs::wrapPspSwInit(uint32_t *inputData, void *outputData) {
-    if (WRed::callback->chipType < ChipType::Renoir) {
+    if (NRed::callback->chipType < ChipType::Renoir) {
         inputData[3] = 0x9;
         inputData[4] = 0x0;
         inputData[5] = 0x2;
@@ -146,10 +146,10 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
     callback->orgAMDFirmwareDirectoryConstructor(fwDir, 3);
     getMember<void *>(that, 0xB8) = fwDir;
 
-    auto *asicName = WRed::getASICName();
+    auto *asicName = NRed::getASICName();
     char filename[128];
     snprintf(filename, 128, "%s_vcn.bin", asicName);
-    auto *targetFilename = WRed::callback->chipType >= ChipType::Renoir ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
+    auto *targetFilename = NRed::callback->chipType >= ChipType::Renoir ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
     DBGLOG("hwlibs", "%s => %s", filename, targetFilename);
 
     auto &fwDesc = getFWDescByName(filename);
@@ -160,7 +160,7 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
     DBGLOG("hwlibs", "Inserting %s!", targetFilename);
     PANIC_COND(!callback->orgPutFirmware(fwDir, 0, fw), "hwlibs", "Failed to inject ativvaxy_rv.dat firmware");
 
-    if (WRed::callback->chipType >= ChipType::Renoir) {
+    if (NRed::callback->chipType >= ChipType::Renoir) {
         snprintf(filename, 128, "%s_dmcub.bin", asicName);
         DBGLOG("hwlibs", "%s => atidmcub_0.dat", filename);
         auto &fwDesc = getFWDescByName(filename);
@@ -175,7 +175,7 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
 
 void *X5000HWLibs::wrapCreatePowerTuneServices(void *that, void *param2) {
     auto *ret = IOMallocZero(0x18);
-    if (WRed::callback->chipType >= ChipType::Renoir) {
+    if (NRed::callback->chipType >= ChipType::Renoir) {
         callback->orgVega20PowerTuneConstructor(ret, that, param2);
     } else {
         callback->orgVega10PowerTuneConstructor(ret, that, param2);
@@ -201,7 +201,7 @@ uint32_t X5000HWLibs::wrapSmuRenoirInitialize(void *smum, uint32_t param2) {
 uint32_t X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4) {
     // Skip loading of MEC2 FW on Renoir devices due to it being unsupported
     // See also: https://github.com/torvalds/linux/commit/f8f70c1371d304f42d4a1242d8abcbda807d0bed
-    if (WRed::callback->chipType >= ChipType::Renoir) {
+    if (NRed::callback->chipType >= ChipType::Renoir) {
         static bool didMec1 = false;
         switch (getMember<uint32_t>(ctx, 16)) {
             case GFX_FW_TYPE_CP_MEC:

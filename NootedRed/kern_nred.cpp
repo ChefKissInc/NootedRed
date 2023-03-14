@@ -1,7 +1,7 @@
 //  Copyright © 2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
 //  details.
 
-#include "kern_wred.hpp"
+#include "kern_nred.hpp"
 #include "kern_hwlibs.hpp"
 #include "kern_model.hpp"
 #include "kern_patches.hpp"
@@ -23,23 +23,23 @@ static KernelPatcher::KextInfo kextBacklight {"com.apple.driver.AppleBacklight",
 static KernelPatcher::KextInfo kextMCCSControl {"com.apple.driver.AppleMCCSControl", &pathMCCSControl, 1, {true}, {},
     KernelPatcher::KextInfo::Unloaded};
 
-WRed *WRed::callback = nullptr;
+NRed *NRed::callback = nullptr;
 
 static X6000FB x6000fb;
 static X5000HWLibs hwlibs;
 static X5000 x5000;
 static X6000 x6000;
 
-void WRed::init() {
+void NRed::init() {
     SYSLOG(MODULE_SHORT, "Please don't support tonymacx86.com!");
     callback = this;
 
     lilu.onPatcherLoadForce(
-        [](void *user, KernelPatcher &patcher) { static_cast<WRed *>(user)->processPatcher(patcher); }, this);
+        [](void *user, KernelPatcher &patcher) { static_cast<NRed *>(user)->processPatcher(patcher); }, this);
     lilu.onKextLoadForce(
         nullptr, 0,
         [](void *user, KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
-            static_cast<WRed *>(user)->processKext(patcher, index, address, size);
+            static_cast<NRed *>(user)->processKext(patcher, index, address, size);
         },
         this);
     lilu.onKextLoad(&kextAGDP);
@@ -51,9 +51,9 @@ void WRed::init() {
     x6000.init();
 }
 
-void WRed::deinit() { OSSafeReleaseNULL(this->vbiosData); }
+void NRed::deinit() { OSSafeReleaseNULL(this->vbiosData); }
 
-void WRed::processPatcher(KernelPatcher &patcher) {
+void NRed::processPatcher(KernelPatcher &patcher) {
     auto *devInfo = DeviceInfo::create();
     if (!devInfo) {
         SYSLOG(MODULE_SHORT, "Failed to create DeviceInfo");
@@ -170,7 +170,7 @@ void WRed::processPatcher(KernelPatcher &patcher) {
         "Failed to route OSMetaClassBase::safeMetaCast");
 }
 
-OSMetaClassBase *WRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const OSMetaClass *toMeta) {
+OSMetaClassBase *NRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const OSMetaClass *toMeta) {
     auto ret = FunctionCast(wrapSafeMetaCast, callback->orgSafeMetaCast)(anObject, toMeta);
     if (!ret) {
         for (const auto &ent : callback->metaClassMap) {
@@ -184,7 +184,7 @@ OSMetaClassBase *WRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const O
     return ret;
 }
 
-void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
+void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextAGDP.loadIndex == index) {
         KernelPatcher::LookupPatch patches[] = {
             {&kextAGDP, reinterpret_cast<const uint8_t *>(kAGDPBoardIDKeyOriginal),
@@ -252,9 +252,9 @@ static ApplePanelData appleBacklightData[] = {
                      0x0E, 0x07, 0x10}},
 };
 
-size_t WRed::wrapFunctionReturnZero() { return 0; }
+size_t NRed::wrapFunctionReturnZero() { return 0; }
 
-bool WRed::wrapApplePanelSetDisplay(IOService *that, IODisplay *display) {
+bool NRed::wrapApplePanelSetDisplay(IOService *that, IODisplay *display) {
     static bool once = false;
     if (!once) {
         once = true;

@@ -31,7 +31,7 @@ enum struct ChipType {
 
 // Hack
 class AppleACPIPlatformExpert : IOACPIPlatformExpert {
-    friend class WRed;
+    friend class NRed;
 };
 
 // https://elixir.bootlin.com/linux/latest/source/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c#L49
@@ -68,14 +68,14 @@ static bool checkAtomBios(const uint8_t *bios, size_t size) {
     return false;
 }
 
-class WRed {
+class NRed {
     friend class X6000FB;
     friend class X5000HWLibs;
     friend class X6000;
     friend class X5000;
 
     public:
-    static WRed *callback;
+    static NRed *callback;
 
     void init();
     void deinit();

@@ -7,8 +7,8 @@
 //
 
 #include "kern_x6000.hpp"
+#include "kern_nred.hpp"
 #include "kern_patches.hpp"
-#include "kern_wred.hpp"
 #include "kern_x5000.hpp"
 #include <Headers/kern_api.hpp>
 
@@ -33,10 +33,10 @@ bool X6000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
             {"__ZN31AMDRadeonX6000_IAMDSMLInterface18createSMLInterfaceEj", orgCreateSMLInterface},
             {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator9newSharedEv", orgNewShared},
             {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator19newSharedUserClientEv", orgNewSharedUserClient},
-            {"__ZN35AMDRadeonX6000_AMDAccelVideoContext10gMetaClassE", WRed::callback->metaClassMap[0][1]},
-            {"__ZN37AMDRadeonX6000_AMDAccelDisplayMachine10gMetaClassE", WRed::callback->metaClassMap[1][1]},
-            {"__ZN34AMDRadeonX6000_AMDAccelDisplayPipe10gMetaClassE", WRed::callback->metaClassMap[2][1]},
-            {"__ZN30AMDRadeonX6000_AMDAccelChannel10gMetaClassE", WRed::callback->metaClassMap[3][0]},
+            {"__ZN35AMDRadeonX6000_AMDAccelVideoContext10gMetaClassE", NRed::callback->metaClassMap[0][1]},
+            {"__ZN37AMDRadeonX6000_AMDAccelDisplayMachine10gMetaClassE", NRed::callback->metaClassMap[1][1]},
+            {"__ZN34AMDRadeonX6000_AMDAccelDisplayPipe10gMetaClassE", NRed::callback->metaClassMap[2][1]},
+            {"__ZN30AMDRadeonX6000_AMDAccelChannel10gMetaClassE", NRed::callback->metaClassMap[3][0]},
             {"__ZN33AMDRadeonX6000_AMDHWAlignManager224getPreferredSwizzleMode2EP33_ADDR2_COMPUTE_SURFACE_INFO_INPUT",
                 orgGetPreferredSwizzleMode2},
         };
@@ -100,7 +100,7 @@ bool X6000::wrapAccelSharedUCStopX6000(void *that, void *provider) {
 
 void X6000::wrapInitDCNRegistersOffsets(void *that) {
     FunctionCast(wrapInitDCNRegistersOffsets, callback->orgInitDCNRegistersOffsets)(that);
-    if (WRed::callback->chipType < ChipType::Renoir) {
+    if (NRed::callback->chipType < ChipType::Renoir) {
         DBGLOG("x6000", "initDCNRegistersOffsets !! PATCHING REGISTERS FOR DCN 1.0 !!");
         auto base = getMember<uint32_t>(that, 0x4830);
         getMember<uint32_t>(that, 0x4840) = base + mmHUBPREQ0_DCSURF_PRIMARY_SURFACE_ADDRESS;
@@ -166,8 +166,8 @@ void X6000::wrapInitDCNRegistersOffsets(void *that) {
     }
 }
 
-#define HWALIGNMGR_ADJUST getMember<void *>(WRed::callback->hwAlignMgr, 0) = WRed::callback->hwAlignMgrVtX6000;
-#define HWALIGNMGR_REVERT getMember<void *>(WRed::callback->hwAlignMgr, 0) = WRed::callback->hwAlignMgrVtX5000;
+#define HWALIGNMGR_ADJUST getMember<void *>(NRed::callback->hwAlignMgr, 0) = NRed::callback->hwAlignMgrVtX6000;
+#define HWALIGNMGR_REVERT getMember<void *>(NRed::callback->hwAlignMgr, 0) = NRed::callback->hwAlignMgrVtX5000;
 
 uint64_t X6000::wrapAccelSharedSurfaceCopy(void *that, void *param1, uint64_t param2, void *param3) {
     HWALIGNMGR_ADJUST
