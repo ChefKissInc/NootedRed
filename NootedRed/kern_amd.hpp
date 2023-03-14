@@ -117,20 +117,6 @@ struct CailInitAsicCapEntry {
     const void *goldenCaps;
 } PACKED;
 
-struct GcFwConstant {
-    const char *firmwareVer;
-    uint32_t featureVer, size;
-    uint32_t addr, unknown4;
-    uint32_t unknown5, unknown6;
-    const uint8_t *data;
-} PACKED;
-
-struct SdmaFwConstant {
-    const char *unknown1;
-    uint32_t size, unknown2;
-    const uint8_t *data;
-} PACKED;
-
 static const uint32_t ddiCapsRaven[16] = {0x800005U, 0x500011FEU, 0x80000U, 0x11001000U, 0x200U, 0x68000001U,
     0x20000000, 0x4002U, 0x22420001U, 0x9E20E10U, 0x2000120U, 0x0U, 0x0U, 0x0U, 0x0U, 0x0U};
 static const uint32_t ddiCapsRenoir[16] = {0x800005U, 0x500011FEU, 0x80000U, 0x11001000U, 0x200U, 0x68000001U,
