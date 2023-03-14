@@ -10,7 +10,7 @@
 #include <IOKit/graphics/IOFramebuffer.h>
 #include <IOKit/pci/IOPCIDevice.h>
 
-#define MODULE_SHORT "wred"
+#define MODULE_SHORT "nred"
 
 class EXPORT PRODUCT_NAME : public IOService {
     OSDeclareDefaultStructors(PRODUCT_NAME);
