@@ -198,8 +198,6 @@ class WRed {
     mach_vm_address_t orgSafeMetaCast {0};
     static OSMetaClassBase *wrapSafeMetaCast(const OSMetaClassBase *anObject, const OSMetaClass *toMeta);
 
-    bool applePanelDisplaySet {false};
-
     mach_vm_address_t orgApplePanelSetDisplay {0};
 
     static size_t wrapFunctionReturnZero();

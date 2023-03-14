@@ -187,7 +187,7 @@ void WRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             const uint8_t find[] = {"F%uT%04x"};
             const uint8_t replace[] = {"F%uTxxxx"};
             KernelPatcher::LookupPatch patch = {&kextBacklight, find, replace, sizeof(find), 1};
-            DBGLOG("weg", "applying backlight patch");
+            DBGLOG(MODULE_SHORT, "applying backlight patch");
             patcher.applyLookupPatch(&patch);
         }
         return;
@@ -237,8 +237,9 @@ static ApplePanelData appleBacklightData[] = {
 size_t WRed::wrapFunctionReturnZero() { return 0; }
 
 bool WRed::wrapApplePanelSetDisplay(IOService *that, IODisplay *display) {
-    if (!callback->applePanelDisplaySet) {
-        callback->applePanelDisplaySet = true;
+    static bool once = false;
+    if (!once) {
+        once = true;
         auto panels = OSDynamicCast(OSDictionary, that->getProperty("ApplePanels"));
         if (panels) {
             auto rawPanels = panels->copyCollection();
@@ -251,7 +252,7 @@ bool WRed::wrapApplePanelSetDisplay(IOService *that, IODisplay *display) {
                         panels->setObject(entry.deviceName, pd);
                         // No release required by current AppleBacklight implementation.
                     } else {
-                        SYSLOG("weg", "panel start cannot allocate %s data", entry.deviceName);
+                        SYSLOG(MODULE_SHORT, "Panel start cannot allocate %s data", entry.deviceName);
                     }
                 }
                 that->setProperty("ApplePanels", panels);
@@ -259,12 +260,12 @@ bool WRed::wrapApplePanelSetDisplay(IOService *that, IODisplay *display) {
 
             if (rawPanels) { rawPanels->release(); }
         } else {
-            SYSLOG("weg", "panel start has no panels");
+            SYSLOG(MODULE_SHORT, "Panel start has no panels");
         }
     }
 
     bool result = FunctionCast(wrapApplePanelSetDisplay, callback->orgApplePanelSetDisplay)(that, display);
-    DBGLOG("weg", "panel display set returned %d", result);
+    DBGLOG(MODULE_SHORT, "Panel display set returned %d", result);
 
     return result;
 }
