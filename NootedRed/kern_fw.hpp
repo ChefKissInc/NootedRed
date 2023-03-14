@@ -20,5 +20,5 @@ inline const FwDesc &getFWDescByName(const char *name) {
     for (int i = 0; i < fwNumber; i++) {
         if (strcmp(fwList[i].name, name) == 0) { return fwList[i]; }
     }
-    PANIC("wred", "getFWDescByName: fw %s not found", name);
+    PANIC("wred", "getFWDescByName: '%s' not found", name);
 }

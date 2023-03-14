@@ -13,16 +13,15 @@
 
 static const char *pathAGDP = "/System/Library/Extensions/AppleGraphicsControl.kext/Contents/PlugIns/"
                               "AppleGraphicsDevicePolicy.kext/Contents/MacOS/AppleGraphicsDevicePolicy";
-static const char *pathBacklight[] {"/System/Library/Extensions/AppleBacklight.kext/Contents/MacOS/AppleBacklight"};
-static const char *pathMCCSControl[] {
-    "/System/Library/Extensions/AppleMCCSControl.kext/Contents/MacOS/AppleMCCSControl"};
+static const char *pathBacklight = "/System/Library/Extensions/AppleBacklight.kext/Contents/MacOS/AppleBacklight";
+static const char *pathMCCSControl = "/System/Library/Extensions/AppleMCCSControl.kext/Contents/MacOS/AppleMCCSControl";
 
 static KernelPatcher::KextInfo kextAGDP {"com.apple.driver.AppleGraphicsDevicePolicy", &pathAGDP, 1, {true}, {},
     KernelPatcher::KextInfo::Unloaded};
-static KernelPatcher::KextInfo kextBacklight {"com.apple.driver.AppleBacklight", pathBacklight, arrsize(pathBacklight),
-    {true}, {}, KernelPatcher::KextInfo::Unloaded};
-static KernelPatcher::KextInfo kextMCCSControl {"com.apple.driver.AppleMCCSControl", pathMCCSControl,
-    arrsize(pathMCCSControl), {true}, {}, KernelPatcher::KextInfo::Unloaded};
+static KernelPatcher::KextInfo kextBacklight {"com.apple.driver.AppleBacklight", &pathBacklight, 1, {true}, {},
+    KernelPatcher::KextInfo::Unloaded};
+static KernelPatcher::KextInfo kextMCCSControl {"com.apple.driver.AppleMCCSControl", &pathMCCSControl, 1, {true}, {},
+    KernelPatcher::KextInfo::Unloaded};
 
 WRed *WRed::callback = nullptr;
 
