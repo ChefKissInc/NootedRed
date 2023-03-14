@@ -8,6 +8,12 @@ The Source Code of this Original Work is licensed under the `Thou Shalt Not Prof
 
 Thanks [Acidanthera](https://github.com/Acidanthera) for the Navi FB backlight code in [WhateverGreen](https://github.com/Acidanthera/WhateverGreen).
 
+## Recommendations
+
+- Add [SSDT-PNLF.aml](Assets/SSDT-PNLF.aml) by [@ChefKissInc](https://github.com/ChefKissInc) and [@ExtremeXT](https://github.com/ExtremeXT)
+- Use `MacBookPro16,3`, `MacBookPro16,4` or `MacPro7,1` SMBIOS
+- Add [AGPMInjector.kext](Assets/AGPMInjector.kext.zip) by [Visual](https://github.com/ChefKissInc). Supports only `MacBookPro16,3`, `MacBookPro16,4` or `MacPro7,1` SMBIOS.
+
 ## FAQ
 
 ### Can I have an AMD dGPU installed on the system?
