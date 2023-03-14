@@ -34,6 +34,9 @@ struct AtomCommonTableHeader {
 constexpr uint32_t ATOM_ROM_TABLE_PTR = 0x48;
 constexpr uint32_t ATOM_ROM_DATA_PTR = 0x20;
 
+constexpr uint32_t ATOM_ROM_SIZE_OFFSET = 0x2;
+constexpr uint32_t ATOM_ROM_CHECKSUM_OFFSET = 0x21;
+
 struct IgpSystemInfoV11 : public AtomCommonTableHeader {
     uint32_t vbiosMisc;
     uint32_t gpuCapInfo;

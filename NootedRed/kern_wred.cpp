@@ -101,6 +101,7 @@ void WRed::processPatcher(KernelPatcher &patcher) {
         }
     }
 
+    DBGLOG(MODULE_SHORT, "Fixing VBIOS connectors");
     auto *objInfo = callback->getVBIOSDataTable<DispObjInfoTableV1_4>(0x16);
     auto n = objInfo->pathCount;
     for (size_t i = 0, j = 0; i < n; i++) {
@@ -112,6 +113,12 @@ void WRed::processPatcher(KernelPatcher &patcher) {
             objInfo->pathCount--;
         }
     }
+    DBGLOG(MODULE_SHORT, "Fixing VBIOS checksum");
+    auto *data = const_cast<uint8_t *>(static_cast<const uint8_t *>(callback->vbiosData->getBytesNoCopy()));
+    auto size = static_cast<size_t>(data[ATOM_ROM_SIZE_OFFSET]) * 512;
+    char checksum = 0;
+    for (size_t i = 0; i < size; i++) { checksum += data[i]; }
+    data[ATOM_ROM_CHECKSUM_OFFSET] -= checksum;
 
     callback->rmmio = iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5);
     PANIC_COND(!callback->rmmio || !callback->rmmio->getLength(), MODULE_SHORT, "Failed to map RMMIO");
