@@ -71,3 +71,22 @@ union IgpSystemInfo {
     IgpSystemInfoV11 infoV11;
     IgpSystemInfoV2 infoV2;
 };
+
+struct AtomDispObjPathV2 {
+    uint16_t dispObjId;
+    uint16_t dispRecordOff;
+    uint16_t encoderObjId;
+    uint16_t extEncoderObjId;
+    uint16_t encoderRecordOff;
+    uint16_t extEncoderRecordOff;
+    uint16_t devTag;
+    uint8_t priorityId;
+    uint8_t _reserved;
+} PACKED;
+
+struct DispObjInfoTableV1_4 : public AtomCommonTableHeader {
+    uint16_t supportedDevices;
+    uint8_t pathCount;
+    uint8_t _reserved;
+    AtomDispObjPathV2 dispPaths[8];
+} PACKED;

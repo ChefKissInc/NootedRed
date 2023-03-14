@@ -101,6 +101,18 @@ void WRed::processPatcher(KernelPatcher &patcher) {
         }
     }
 
+    auto *objInfo = callback->getVBIOSDataTable<DispObjInfoTableV1_4>(0x16);
+    auto n = objInfo->pathCount;
+    for (size_t i = 0, j = 0; i < n; i++) {
+        // Skip invalid device tags and TV/CV support
+        if ((objInfo->supportedDevices & objInfo->dispPaths[i].devTag) &&
+            !(objInfo->dispPaths[i].devTag == (1 << 2) || objInfo->dispPaths[i].devTag == (1 << 8))) {
+            objInfo->dispPaths[j++] = objInfo->dispPaths[i];
+        } else {
+            objInfo->pathCount--;
+        }
+    }
+
     callback->rmmio = iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5);
     PANIC_COND(!callback->rmmio || !callback->rmmio->getLength(), MODULE_SHORT, "Failed to map RMMIO");
     callback->rmmioPtr = reinterpret_cast<uint32_t *>(callback->rmmio->getVirtualAddress());
