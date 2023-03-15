@@ -20,13 +20,15 @@ class X6000FB {
     mach_vm_address_t orgInitWithPciInfo {0};
     t_DceDriverSetBacklight orgDceDriverSetBacklight {nullptr};
     mach_vm_address_t orgDcePanelCntlHwInit {0};
-    mach_vm_address_t orgAMDRadeonX6000AmdRadeonFramebufferSetAttribute {0};
-    mach_vm_address_t orgAMDRadeonX6000AmdRadeonFramebufferGetAttribute {0};
-    uint32_t curPwmBacklightLvl = 0;
-    uint32_t maxPwmBacklightLvl = 0xff7b;
-    void *panelCntlPtr = NULL;
+    mach_vm_address_t orgFramebufferSetAttribute {0};
+    mach_vm_address_t orgFramebufferGetAttribute {0};
+    uint32_t curPwmBacklightLvl {0};
+    uint32_t maxPwmBacklightLvl {0xFF7B};
+    void *panelCntlPtr {nullptr};
+    IONotifier *dispNotif {nullptr};
 
-    void updatePwmMaxBrightnessFromInternalDisplay();
+    static bool OnAppleBacklightDisplayLoad(void *target, void *refCon, IOService *newService, IONotifier *notifier);
+    void registerDispMaxBrightnessNotif();
 
     static IOReturn wrapPopulateDeviceInfo(void *that);
     static uint16_t wrapGetEnumeratedRevision();
@@ -34,9 +36,9 @@ class X6000FB {
     static uint32_t wrapHwReadReg32(void *that, uint32_t param1);
     static bool wrapInitWithPciInfo(void *that, void *param1);
     static void wrapDoGPUPanic();
-    static uint32_t wrapDcePanelCntlHwInit(void *panel_cntl);
-    static IOReturn wrapAMDRadeonX6000AmdRadeonFramebufferSetAttribute(IOService *framebuffer, IOIndex connectIndex,
-        IOSelect attribute, uintptr_t value);
-    static IOReturn wrapAMDRadeonX6000AmdRadeonFramebufferGetAttribute(IOService *framebuffer, IOIndex connectIndex,
-        IOSelect attribute, uintptr_t *value);
+    static uint32_t wrapDcePanelCntlHwInit(void *panelCntl);
+    static IOReturn wrapFramebufferSetAttribute(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
+        uintptr_t value);
+    static IOReturn wrapFramebufferGetAttribute(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
+        uintptr_t *value);
 };

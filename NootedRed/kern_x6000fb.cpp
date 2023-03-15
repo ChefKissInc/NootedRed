@@ -48,10 +48,10 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
             {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo, orgInitWithPciInfo},
             {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", wrapDoGPUPanic},
             {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit, orgDcePanelCntlHwInit},
-            {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25setAttributeForConnectionEijm",
-                wrapAMDRadeonX6000AmdRadeonFramebufferSetAttribute, orgAMDRadeonX6000AmdRadeonFramebufferSetAttribute},
-            {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25getAttributeForConnectionEijPm",
-                wrapAMDRadeonX6000AmdRadeonFramebufferGetAttribute, orgAMDRadeonX6000AmdRadeonFramebufferGetAttribute},
+            {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25setAttributeForConnectionEijm", wrapFramebufferSetAttribute,
+                orgFramebufferSetAttribute},
+            {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25getAttributeForConnectionEijPm", wrapFramebufferGetAttribute,
+                orgFramebufferGetAttribute},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "x6000fb", "Failed to route symbols");
 
@@ -79,6 +79,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
 uint16_t X6000FB::wrapGetEnumeratedRevision() { return NRed::callback->enumeratedRevision; }
 
 IOReturn X6000FB::wrapPopulateDeviceInfo(void *that) {
+    if (!callback->dispNotif) { callback->registerDispMaxBrightnessNotif(); }
     auto ret = FunctionCast(wrapPopulateDeviceInfo, callback->orgPopulateDeviceInfo)(that);
     getMember<uint32_t>(that, 0x60) = AMDGPU_FAMILY_RV;
     return ret;
@@ -138,84 +139,81 @@ bool X6000FB::wrapInitWithPciInfo(void *that, void *param1) {
     return ret;
 }
 
-void X6000FB::updatePwmMaxBrightnessFromInternalDisplay() {
-    auto *matching = IOService::serviceMatching("AppleBacklightDisplay");
-    if (!matching) {
-        DBGLOG("x6000fb", "updatePwmMaxBrightnessFromInternalDisplay null AppleBacklightDisplay");
-        return;
+bool X6000FB::OnAppleBacklightDisplayLoad([[maybe_unused]] void *target, [[maybe_unused]] void *refCon,
+    IOService *newService, [[maybe_unused]] IONotifier *notifier) {
+    OSDictionary *params = OSDynamicCast(OSDictionary, newService->getProperty("IODisplayParameters"));
+    if (!params) {
+        DBGLOG("x6000fb", "OnAppleBacklightDisplayLoad: No 'IODisplayParameters' property");
+        return false;
     }
 
-    auto *display = IOService::waitForMatchingService(matching, 1000000);
-    if (!display) {
-        DBGLOG("x6000fb", "updatePwmMaxBrightnessFromInternalDisplay null matching");
-        OSSafeReleaseNULL(matching);
-        return;
-    }
-
-    OSDictionary *ioDispParam = OSDynamicCast(OSDictionary, display->getProperty("IODisplayParameters"));
-    if (!ioDispParam) {
-        DBGLOG("x6000fb", "updatePwmMaxBrightnessFromInternalDisplay null IODisplayParameters");
-        OSSafeReleaseNULL(display);
-        OSSafeReleaseNULL(matching);
-        return;
-    }
-
-    OSDictionary *linearBrightness = OSDynamicCast(OSDictionary, ioDispParam->getObject("linear-brightness"));
+    OSDictionary *linearBrightness = OSDynamicCast(OSDictionary, params->getObject("linear-brightness"));
     if (!linearBrightness) {
-        DBGLOG("x6000fb", "linear-brightness property is null");
-        OSSafeReleaseNULL(display);
-        OSSafeReleaseNULL(matching);
-        return;
+        DBGLOG("x6000fb", "OnAppleBacklightDisplayLoad: No 'linear-brightness' property");
+        return false;
     }
 
     OSNumber *maxBrightness = OSDynamicCast(OSNumber, linearBrightness->getObject("max"));
     if (!maxBrightness) {
-        DBGLOG("x6000fb", "max property is null");
-        OSSafeReleaseNULL(display);
-        OSSafeReleaseNULL(matching);
-        return;
+        DBGLOG("x6000fb", "OnAppleBacklightDisplayLoad: No 'max' property");
+        return false;
     }
 
     callback->maxPwmBacklightLvl = maxBrightness->unsigned32BitValue();
-    DBGLOG("x6000fb", "Got max brightness: 0x%x", callback->maxPwmBacklightLvl);
+    DBGLOG("x6000fb", "OnAppleBacklightDisplayLoad: Max brightness: 0x%X", callback->maxPwmBacklightLvl);
 
-    OSSafeReleaseNULL(display);
+    return true;
+}
+
+void X6000FB::registerDispMaxBrightnessNotif() {
+    auto *matching = IOService::serviceMatching("AppleBacklightDisplay");
+    if (!matching) {
+        DBGLOG("x6000fb", "registerDispMaxBrightnessNotif: Failed to create match dictionary");
+        return;
+    }
+
+    callback->dispNotif =
+        IOService::addMatchingNotification(gIOFirstMatchNotification, matching, OnAppleBacklightDisplayLoad, nullptr);
+    DBGLOG_COND(!callback->dispNotif, "x6000fb", "registerDispMaxBrightnessNotif: Failed to register notification");
     OSSafeReleaseNULL(matching);
 }
 
-uint32_t X6000FB::wrapDcePanelCntlHwInit(void *panel_cntl) {
-    callback->panelCntlPtr = panel_cntl;
-    callback->updatePwmMaxBrightnessFromInternalDisplay();    // read max brightness value from IOReg
-    uint32_t ret = FunctionCast(wrapDcePanelCntlHwInit, callback->orgDcePanelCntlHwInit)(panel_cntl);
-    return ret;
+void X6000FB::wrapDoGPUPanic() {
+    DBGLOG("x6000fb", "doGPUPanic << ()");
+    while (true) { IOSleep(3600000); }
 }
 
-IOReturn X6000FB::wrapAMDRadeonX6000AmdRadeonFramebufferSetAttribute(IOService *framebuffer, IOIndex connectIndex,
-    IOSelect attribute, uintptr_t value) {
-    IOReturn ret = FunctionCast(wrapAMDRadeonX6000AmdRadeonFramebufferSetAttribute,
-        callback->orgAMDRadeonX6000AmdRadeonFramebufferSetAttribute)(framebuffer, connectIndex, attribute, value);
-    if (attribute != (UInt32)'bklt') { return ret; }
+uint32_t X6000FB::wrapDcePanelCntlHwInit(void *panelCntl) {
+    callback->panelCntlPtr = panelCntl;
+    return FunctionCast(wrapDcePanelCntlHwInit, callback->orgDcePanelCntlHwInit)(panelCntl);
+}
 
-    if (callback->maxPwmBacklightLvl == 0) {
-        DBGLOG("x6000fb", "wrapAMDRadeonX6000AmdRadeonFramebufferSetAttribute zero maxPwmBacklightLvl");
-        return 0;
+IOReturn X6000FB::wrapFramebufferSetAttribute(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
+    uintptr_t value) {
+    auto ret = FunctionCast(wrapFramebufferSetAttribute, callback->orgFramebufferSetAttribute)(framebuffer,
+        connectIndex, attribute, value);
+    if (attribute != static_cast<UInt32>('bklt')) { return ret; }
+
+    if (!callback->maxPwmBacklightLvl) {
+        DBGLOG("x6000fb", "wrapFramebufferSetAttribute: maxPwmBacklightLvl is 0");
+        return kIOReturnSuccess;
     }
 
-    if (callback->panelCntlPtr == nullptr) {
-        DBGLOG("x6000fb", "wrapAMDRadeonX6000AmdRadeonFramebufferSetAttribute null panel cntl");
-        return 0;
+    if (!callback->panelCntlPtr) {
+        DBGLOG("x6000fb", "wrapFramebufferSetAttribute: panelCntl is null");
+        return kIOReturnSuccess;
     }
 
-    if (callback->orgDceDriverSetBacklight == nullptr) {
-        DBGLOG("x6000fb", "wrapAMDRadeonX6000AmdRadeonFramebufferSetAttribute null orgDcLinkSetBacklightLevel");
-        return 0;
+    if (!callback->orgDceDriverSetBacklight) {
+        DBGLOG("x6000fb", "wrapFramebufferSetAttribute: orgDceDriverSetBacklight is null");
+        return kIOReturnSuccess;
     }
 
     // Set the backlight
-    callback->curPwmBacklightLvl = (uint32_t)value;
-    uint32_t btlper = callback->curPwmBacklightLvl * 100 / callback->maxPwmBacklightLvl;
-    uint32_t pwmval = 0;
-    if (btlper >= 100) {
+    callback->curPwmBacklightLvl = static_cast<uint32_t>(value);
+    uint32_t percentage = callback->curPwmBacklightLvl * 100 / callback->maxPwmBacklightLvl;
+    uint32_t pwmValue = 0;
+    if (percentage >= 100) {
         // This is from the dmcu_set_backlight_level function of Linux source
         // ...
         // if (backlight_pwm_u16_16 & 0x10000)
@@ -224,28 +222,23 @@ IOReturn X6000FB::wrapAMDRadeonX6000AmdRadeonFramebufferSetAttribute(IOService *
         // 	   backlight_8_bit = (backlight_pwm_u16_16 >> 8) & 0xFF;
         // ...
         // The max brightness should have 0x10000 bit set
-        pwmval = 0x1FF00;
+        pwmValue = 0x1FF00;
     } else {
-        pwmval = ((btlper * 0xFF) / 100) << 8U;
+        pwmValue = ((percentage * 0xFF) / 100) << 8U;
     }
 
-    callback->orgDceDriverSetBacklight(callback->panelCntlPtr, pwmval);
-    return 0;
+    callback->orgDceDriverSetBacklight(callback->panelCntlPtr, pwmValue);
+    return kIOReturnSuccess;
 }
 
-IOReturn X6000FB::wrapAMDRadeonX6000AmdRadeonFramebufferGetAttribute(IOService *framebuffer, IOIndex connectIndex,
-    IOSelect attribute, uintptr_t *value) {
-    IOReturn ret = FunctionCast(wrapAMDRadeonX6000AmdRadeonFramebufferGetAttribute,
-        callback->orgAMDRadeonX6000AmdRadeonFramebufferGetAttribute)(framebuffer, connectIndex, attribute, value);
-    if (attribute == (UInt32)'bklt') {
-        // enable the backlight feature of AMD navi10 driver
+IOReturn X6000FB::wrapFramebufferGetAttribute(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
+    uintptr_t *value) {
+    auto ret = FunctionCast(wrapFramebufferGetAttribute, callback->orgFramebufferGetAttribute)(framebuffer,
+        connectIndex, attribute, value);
+    if (attribute == static_cast<UInt32>('bklt')) {
+        // Enable the backlight feature of AMD navi10 driver
         *value = callback->curPwmBacklightLvl;
-        ret = 0;
+        return kIOReturnSuccess;
     }
     return ret;
-}
-
-void X6000FB::wrapDoGPUPanic() {
-    DBGLOG("x6000fb", "doGPUPanic << ()");
-    while (true) { IOSleep(3600000); }
 }

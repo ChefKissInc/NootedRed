@@ -20,15 +20,6 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(MODULE_VERSION)</string>
-	<key>GPUCompanionBundles</key>
-	<array>
-		<string>AMDShared.bundle</string>
-		<string>AMDRadeonX6000Shared.bundle</string>
-		<string>AMDRadeonX5000GLDriver.bundle</string>
-		<string>AMDRadeonVADriver2.bundle</string>
-		<string>AMDRadeonX5000MTLDriver.bundle</string>
-		<string>AMDRawCounterPlugin.bundle</string>
-	</array>
 	<key>IOKitPersonalities</key>
 	<dict>
 		<key>AMDGPUWrangler</key>
