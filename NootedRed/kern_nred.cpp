@@ -63,47 +63,34 @@ void NRed::processPatcher(KernelPatcher &patcher) {
 
     devInfo->processSwitchOff();
 
-    auto *videoBuiltin = devInfo->videoBuiltin;
-    if (!videoBuiltin) {
-        SYSLOG(MODULE_SHORT, "videoBuiltin null");
-        for (size_t i = 0; i < devInfo->videoExternal.size(); i++) {
-            if (!OSDynamicCast(IOPCIDevice, devInfo->videoExternal[i].video)) { continue; }
-            if (WIOKit::readPCIConfigValue(devInfo->videoExternal[i].video, WIOKit::kIOPCIConfigVendorID) ==
-                WIOKit::VendorID::ATIAMD) {
-                videoBuiltin = devInfo->videoExternal[i].video;
-                break;
-            }
-        }
-    }
-
-    PANIC_COND(!videoBuiltin, MODULE_SHORT, "videoBuiltin null");
-    auto *iGPU = OSDynamicCast(IOPCIDevice, videoBuiltin);
+    PANIC_COND(!devInfo->videoBuiltin, MODULE_SHORT, "videoBuiltin null");
+    auto *iGPU = OSDynamicCast(IOPCIDevice, devInfo->videoBuiltin);
     PANIC_COND(!iGPU, MODULE_SHORT, "videoBuiltin is not IOPCIDevice");
     PANIC_COND(WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD, MODULE_SHORT,
         "videoBuiltin is not AMD");
 
-    callback->iGPU = iGPU;
+    this->iGPU = iGPU;
 
     WIOKit::renameDevice(iGPU, "IGPU");
     WIOKit::awaitPublishing(iGPU);
 
     static uint8_t builtin[] = {0x01};
     iGPU->setProperty("built-in", builtin, arrsize(builtin));
-    callback->deviceId = WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigDeviceID);
-    auto *model = getBranding(callback->deviceId, WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigRevisionID));
+    this->deviceId = WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigDeviceID);
+    auto *model = getBranding(this->deviceId, WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigRevisionID));
     if (model) { iGPU->setProperty("model", model); }
 
     if (UNLIKELY(iGPU->getProperty("ATY,bin_image"))) {
         DBGLOG(MODULE_SHORT, "VBIOS manually overridden");
     } else {
-        if (!callback->getVBIOSFromVFCT(iGPU)) {
+        if (!this->getVBIOSFromVFCT(iGPU)) {
             SYSLOG(MODULE_SHORT, "Failed to get VBIOS from VFCT.");
-            PANIC_COND(!callback->getVBIOSFromVRAM(iGPU), MODULE_SHORT, "Failed to get VBIOS from VRAM");
+            PANIC_COND(!this->getVBIOSFromVRAM(iGPU), MODULE_SHORT, "Failed to get VBIOS from VRAM");
         }
     }
 
     DBGLOG(MODULE_SHORT, "Fixing VBIOS connectors");
-    auto *objInfo = callback->getVBIOSDataTable<DispObjInfoTableV1_4>(0x16);
+    auto *objInfo = this->getVBIOSDataTable<DispObjInfoTableV1_4>(0x16);
     auto n = objInfo->pathCount;
     for (size_t i = 0, j = 0; i < n; i++) {
         // Skip invalid device tags and TV/CV support
@@ -115,52 +102,11 @@ void NRed::processPatcher(KernelPatcher &patcher) {
         }
     }
     DBGLOG(MODULE_SHORT, "Fixing VBIOS checksum");
-    auto *data = const_cast<uint8_t *>(static_cast<const uint8_t *>(callback->vbiosData->getBytesNoCopy()));
+    auto *data = const_cast<uint8_t *>(static_cast<const uint8_t *>(this->vbiosData->getBytesNoCopy()));
     auto size = static_cast<size_t>(data[ATOM_ROM_SIZE_OFFSET]) * 512;
     char checksum = 0;
     for (size_t i = 0; i < size; i++) { checksum += data[i]; }
     data[ATOM_ROM_CHECKSUM_OFFSET] -= checksum;
-
-    callback->rmmio = iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5);
-    PANIC_COND(!callback->rmmio || !callback->rmmio->getLength(), MODULE_SHORT, "Failed to map RMMIO");
-    callback->rmmioPtr = reinterpret_cast<uint32_t *>(callback->rmmio->getVirtualAddress());
-
-    callback->fbOffset = static_cast<uint64_t>(callback->readReg32(0x296B)) << 24;
-    callback->revision = (callback->readReg32(0xD2F) & 0xF000000) >> 0x18;
-    switch (callback->deviceId) {
-        case 0x15D8:
-            if (callback->revision >= 0x8) {
-                callback->chipType = ChipType::Raven2;
-                callback->enumeratedRevision = 0x79;
-                break;
-            }
-            callback->chipType = ChipType::Picasso;
-            callback->enumeratedRevision = 0x41;
-            break;
-        case 0x15DD:
-            if (callback->revision >= 0x8) {
-                callback->chipType = ChipType::Raven2;
-                callback->enumeratedRevision = 0x79;
-                break;
-            }
-            callback->chipType = ChipType::Raven;
-            callback->enumeratedRevision = 0x10;
-            break;
-        case 0x164C:
-            [[fallthrough]];
-        case 0x1636:
-            callback->chipType = ChipType::Renoir;
-            callback->enumeratedRevision = 0x91;
-            break;
-        case 0x15E7:
-            [[fallthrough]];
-        case 0x1638:
-            callback->chipType = ChipType::GreenSardine;
-            callback->enumeratedRevision = 0xA1;
-            break;
-        default:
-            PANIC(MODULE_SHORT, "Unknown device ID");
-    }
 
     DeviceInfo::deleter(devInfo);
 
@@ -226,6 +172,49 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
 }
 
 void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
+    if (UNLIKELY(!this->rmmio || !this->rmmio->getLength())) {
+        this->rmmio = this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5);
+        PANIC_COND(!this->rmmio || !this->rmmio->getLength(), MODULE_SHORT, "Failed to map RMMIO");
+        this->rmmioPtr = reinterpret_cast<uint32_t *>(this->rmmio->getVirtualAddress());
+
+        this->fbOffset = static_cast<uint64_t>(this->readReg32(0x296B)) << 24;
+        this->revision = (this->readReg32(0xD2F) & 0xF000000) >> 0x18;
+        switch (this->deviceId) {
+            case 0x15D8:
+                if (this->revision >= 0x8) {
+                    this->chipType = ChipType::Raven2;
+                    this->enumeratedRevision = 0x79;
+                    break;
+                }
+                this->chipType = ChipType::Picasso;
+                this->enumeratedRevision = 0x41;
+                break;
+            case 0x15DD:
+                if (this->revision >= 0x8) {
+                    this->chipType = ChipType::Raven2;
+                    this->enumeratedRevision = 0x79;
+                    break;
+                }
+                this->chipType = ChipType::Raven;
+                this->enumeratedRevision = 0x10;
+                break;
+            case 0x164C:
+                [[fallthrough]];
+            case 0x1636:
+                this->chipType = ChipType::Renoir;
+                this->enumeratedRevision = 0x91;
+                break;
+            case 0x15E7:
+                [[fallthrough]];
+            case 0x1638:
+                this->chipType = ChipType::GreenSardine;
+                this->enumeratedRevision = 0xA1;
+                break;
+            default:
+                PANIC(MODULE_SHORT, "Unknown device ID");
+        }
+    }
+
     if (kextAGDP.loadIndex == index) {
         KernelPatcher::LookupPatch patches[] = {
             {&kextAGDP, reinterpret_cast<const uint8_t *>(kAGDPBoardIDKeyOriginal),
