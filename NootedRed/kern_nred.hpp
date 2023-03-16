@@ -21,12 +21,12 @@ class EXPORT PRODUCT_NAME : public IOService {
 };
 
 enum struct ChipType {
-    Unknown,
     Raven,
     Picasso,
     Raven2,
     Renoir,
     GreenSardine,
+    Unknown,
 };
 
 // Hack
@@ -83,10 +83,10 @@ class NRed {
     void processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size);
 
     private:
-    static const char *getASICName() {
-        PANIC_COND(callback->chipType == ChipType::Unknown, MODULE_SHORT, "Unknown ASIC type");
-        static const char *asicNames[] = {"raven", "raven2", "picasso", "renoir", "green_sardine"};
-        return asicNames[static_cast<int>(callback->chipType) - 1];
+    static const char *getChipName() {
+        PANIC_COND(callback->chipType == ChipType::Unknown, MODULE_SHORT, "Unknown chip type");
+        static const char *chipNames[] = {"raven", "raven2", "picasso", "renoir", "green_sardine"};
+        return chipNames[static_cast<int>(callback->chipType)];
     }
 
     bool getVBIOSFromVFCT(IOPCIDevice *obj) {

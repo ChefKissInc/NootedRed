@@ -131,19 +131,19 @@ void NRed::processPatcher(KernelPatcher &patcher) {
             if (callback->revision >= 0x8) {
                 callback->chipType = ChipType::Raven2;
                 callback->enumeratedRevision = 0x79;
-            } else {
-                callback->chipType = ChipType::Picasso;
-                callback->enumeratedRevision = 0x41;
+                break;
             }
+            callback->chipType = ChipType::Picasso;
+            callback->enumeratedRevision = 0x41;
             break;
         case 0x15DD:
             if (callback->revision >= 0x8) {
                 callback->chipType = ChipType::Raven2;
                 callback->enumeratedRevision = 0x79;
-            } else {
-                callback->chipType = ChipType::Raven;
-                callback->enumeratedRevision = 0x10;
+                break;
             }
+            callback->chipType = ChipType::Raven;
+            callback->enumeratedRevision = 0x10;
             break;
         case 0x164C:
             [[fallthrough]];

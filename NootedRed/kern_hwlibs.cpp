@@ -16,7 +16,7 @@ X5000HWLibs *X5000HWLibs::callback = nullptr;
 
 void X5000HWLibs::init() {
     callback = this;
-    lilu.onKextLoadForce(&kextRadeonX5000HWLibs);
+    lilu.onKextLoad(&kextRadeonX5000HWLibs);
     DBGLOG("hwlibs", "Initialised");
 }
 
@@ -146,9 +146,9 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
     callback->orgAMDFirmwareDirectoryConstructor(fwDir, 3);
     getMember<void *>(that, 0xB8) = fwDir;
 
-    auto *asicName = NRed::getASICName();
+    auto *chipName = NRed::getChipName();
     char filename[128];
-    snprintf(filename, 128, "%s_vcn.bin", asicName);
+    snprintf(filename, 128, "%s_vcn.bin", chipName);
     auto *targetFilename = NRed::callback->chipType >= ChipType::Renoir ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
     DBGLOG("hwlibs", "%s => %s", filename, targetFilename);
 
@@ -161,7 +161,7 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
     PANIC_COND(!callback->orgPutFirmware(fwDir, 0, fw), "hwlibs", "Failed to inject ativvaxy_rv.dat firmware");
 
     if (NRed::callback->chipType >= ChipType::Renoir) {
-        snprintf(filename, 128, "%s_dmcub.bin", asicName);
+        snprintf(filename, 128, "%s_dmcub.bin", chipName);
         DBGLOG("hwlibs", "%s => atidmcub_0.dat", filename);
         auto &fwDesc = getFWDescByName(filename);
         auto *fwHeader = reinterpret_cast<const CommonFirmwareHeader *>(fwDesc.data);

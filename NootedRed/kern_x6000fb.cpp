@@ -17,6 +17,7 @@ X6000FB *X6000FB::callback = nullptr;
 void X6000FB::init() {
     callback = this;
     lilu.onKextLoadForce(&kextRadeonX6000Framebuffer);
+    DBGLOG("x6000fb", "Initialised");
 }
 
 bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {

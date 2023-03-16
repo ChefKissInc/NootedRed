@@ -16,7 +16,8 @@ X5000 *X5000::callback = nullptr;
 
 void X5000::init() {
     callback = this;
-    lilu.onKextLoadForce(&kextRadeonX5000);
+    lilu.onKextLoad(&kextRadeonX5000);
+    DBGLOG("x5000", "Initialised");
 }
 
 bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {

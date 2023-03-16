@@ -21,7 +21,8 @@ X6000 *X6000::callback = nullptr;
 
 void X6000::init() {
     callback = this;
-    lilu.onKextLoadForce(&kextRadeonX6000);
+    lilu.onKextLoad(&kextRadeonX6000);
+    DBGLOG("x6000", "Initialised");
 }
 
 bool X6000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
