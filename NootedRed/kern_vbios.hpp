@@ -1,7 +1,8 @@
 //  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
 //  details.
 
-#pragma once
+#ifndef kern_vbios_hpp
+#define kern_vbios_hpp
 #include <Headers/kern_util.hpp>
 
 struct VFCT {
@@ -93,3 +94,5 @@ struct DispObjInfoTableV1_4 : public AtomCommonTableHeader {
     uint8_t _reserved;
     AtomDispObjPathV2 dispPaths[8];
 } PACKED;
+
+#endif /* kern_vbios_hpp */

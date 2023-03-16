@@ -1,7 +1,8 @@
 //  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
 //  details.
 
-#pragma once
+#ifndef kern_amd_hpp
+#define kern_amd_hpp
 #include <Headers/kern_util.hpp>
 
 using t_HWEngineConstructor = void (*)(void *that);
@@ -121,3 +122,5 @@ enum AMDReturn : uint32_t {
     kAMDReturnResourcesExhausted,
     kAMDReturnUnsupported,
 };
+
+#endif /* kern_amd.hpp */

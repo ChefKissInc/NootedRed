@@ -1,7 +1,8 @@
 //  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
 //  details.
 
-#pragma once
+#ifndef kern_x6000fb_hpp
+#define kern_x6000fb_hpp
 #include <Headers/kern_patcher.hpp>
 #include <Headers/kern_util.hpp>
 #include <IOKit/graphics/IOFramebuffer.h>
@@ -42,3 +43,5 @@ class X6000FB {
     static IOReturn wrapFramebufferGetAttribute(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
         uintptr_t *value);
 };
+
+#endif /* kern_x6000fb_hpp */

@@ -1,7 +1,8 @@
 //  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
 //  details.
 
-#pragma once
+#ifndef kern_patches_hpp
+#define kern_patches_hpp
 #include <Headers/kern_util.hpp>
 
 /**
@@ -127,3 +128,5 @@ static_assert(arrsize(kEnableTimestampInterruptOriginal) == arrsize(kEnableTimes
 static_assert(arrsize(kGetSchedulerCallOriginal) == arrsize(kGetSchedulerCallPatched));
 static_assert(arrsize(kIsDeviceValidCallOriginal) == arrsize(kIsDeviceValidCallPatched));
 static_assert(arrsize(kCoreLSKDOriginal) == arrsize(kCoreLSKDPatched));
+
+#endif /* kern_patches_hpp */

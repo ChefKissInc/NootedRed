@@ -1,7 +1,8 @@
 //  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
 //  details.
 
-#pragma once
+#ifndef kern_hwlibs_hpp
+#define kern_hwlibs_hpp
 #include "kern_amd.hpp"
 #include <Headers/kern_patcher.hpp>
 #include <Headers/kern_util.hpp>
@@ -42,3 +43,5 @@ class X5000HWLibs {
     static AMDReturn hwLibsNoop();
     static AMDReturn hwLibsUnsupported();
 };
+
+#endif /* kern_hwlibs_hpp */

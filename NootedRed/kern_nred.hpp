@@ -1,7 +1,8 @@
 //  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
 //  details.
 
-#pragma once
+#ifndef kern_nred_hpp
+#define kern_nred_hpp
 #include "kern_amd.hpp"
 #include "kern_fw.hpp"
 #include "kern_vbios.hpp"
@@ -223,3 +224,5 @@ class NRed {
     static void csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset_t page_offset, const void *data,
         int *validated_p, int *tainted_p, int *nx_p);
 };
+
+#endif /* AMDRadeonX6000_hpp */
