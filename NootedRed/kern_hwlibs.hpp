@@ -32,13 +32,13 @@ class X5000HWLibs {
     mach_vm_address_t orgPspCmdKmSubmit {0};
 
     static uint32_t wrapSmuGetHwVersion();
-    static uint32_t wrapPspSwInit(uint32_t *inputData, void *outputData);
+    static AMDReturn wrapPspSwInit(uint32_t *inputData, void *outputData);
     static uint32_t wrapGcGetHwVersion();
     static void wrapPopulateFirmwareDirectory(void *that);
     static void *wrapCreatePowerTuneServices(void *that, void *param2);
-    static uint32_t wrapSmuRavenInitialize(void *smum, uint32_t param2);
-    static uint32_t wrapSmuRenoirInitialize(void *smum, uint32_t param2);
-    static uint32_t wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4);
-    static uint32_t hwLibsNoop();
-    static uint32_t hwLibsUnsupported();
+    static AMDReturn wrapSmuRavenInitialize(void *smum, uint32_t param2);
+    static AMDReturn wrapSmuRenoirInitialize(void *smum, uint32_t param2);
+    static AMDReturn wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4);
+    static AMDReturn hwLibsNoop();
+    static AMDReturn hwLibsUnsupported();
 };

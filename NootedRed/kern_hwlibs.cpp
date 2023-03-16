@@ -103,7 +103,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
 
 uint32_t X5000HWLibs::wrapSmuGetHwVersion() { return 0x1; }
 
-uint32_t X5000HWLibs::wrapPspSwInit(uint32_t *inputData, void *outputData) {
+AMDReturn X5000HWLibs::wrapPspSwInit(uint32_t *inputData, void *outputData) {
     if (NRed::callback->chipType < ChipType::Renoir) {
         inputData[3] = 0x9;
         inputData[4] = 0x0;
@@ -163,24 +163,23 @@ void *X5000HWLibs::wrapCreatePowerTuneServices(void *that, void *param2) {
     return ret;
 }
 
-uint32_t X5000HWLibs::hwLibsNoop() { return 0; }           // Always return success
-uint32_t X5000HWLibs::hwLibsUnsupported() { return 4; }    // Always return unsupported
+AMDReturn X5000HWLibs::hwLibsNoop() { return kAMDReturnSuccess; }
+AMDReturn X5000HWLibs::hwLibsUnsupported() { return kAMDReturnUnsupported; }
 
-uint32_t X5000HWLibs::wrapSmuRavenInitialize(void *smum, uint32_t param2) {
+AMDReturn X5000HWLibs::wrapSmuRavenInitialize(void *smum, uint32_t param2) {
     auto ret = FunctionCast(wrapSmuRavenInitialize, callback->orgSmuRavenInitialize)(smum, param2);
     callback->orgRavenSendMsgToSmc(smum, PPSMC_MSG_PowerUpSdma);
     return ret;
 }
 
-uint32_t X5000HWLibs::wrapSmuRenoirInitialize(void *smum, uint32_t param2) {
+AMDReturn X5000HWLibs::wrapSmuRenoirInitialize(void *smum, uint32_t param2) {
     auto ret = FunctionCast(wrapSmuRenoirInitialize, callback->orgSmuRenoirInitialize)(smum, param2);
     callback->orgRenoirSendMsgToSmc(smum, PPSMC_MSG_PowerUpSdma);
     return ret;
 }
 
-uint32_t X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4) {
-    // Skip loading of MEC2 FW on Renoir devices due to it being unsupported
-    // See also: https://github.com/torvalds/linux/commit/f8f70c1371d304f42d4a1242d8abcbda807d0bed
+AMDReturn X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4) {
+    // Upstream patch: https://github.com/torvalds/linux/commit/f8f70c1371d304f42d4a1242d8abcbda807d0bed
     if (NRed::callback->chipType >= ChipType::Renoir) {
         static bool didMec1 = false;
         switch (getMember<uint32_t>(ctx, 16)) {
@@ -190,10 +189,10 @@ uint32_t X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, voi
                     break;
                 }
                 DBGLOG("hwlibs", "Skipping MEC2 FW");
-                return 0;
+                return kAMDReturnSuccess;
             case GFX_FW_TYPE_CP_MEC_ME2:
                 DBGLOG("hwlibs", "Skipping MEC2 JT FW");
-                return 0;
+                return kAMDReturnSuccess;
             default:
                 break;
         }

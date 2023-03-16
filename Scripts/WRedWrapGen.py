@@ -8,7 +8,7 @@ def fix_type(type: str) -> str:
         ret = "uint8_t"
     elif type in ["short", "ushort", "undefined2"]:
         ret = "uint16_t"
-    elif type in ["int", "uint", "undefined4", "AMDReturn"]:
+    elif type in ["int", "uint", "undefined4"]:
         ret = "uint32_t"
     elif type in ["long", "ulong", "ulonglong", "undefined8"]:
         ret = "uint64_t"
@@ -43,6 +43,7 @@ def get_fmt_type(type: str) -> str:
     table = {
         "uint64_t": "0x%llX",
         "uint32_t": "0x%X",
+        "AMDReturn": "0x%X",
         "uint16_t": "0x%hX",
         "uint8_t": "0x%hhX",
         "bool": "%d",
