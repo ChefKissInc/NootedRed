@@ -16,7 +16,7 @@ X5000 *X5000::callback = nullptr;
 
 void X5000::init() {
     callback = this;
-    lilu.onKextLoad(&kextRadeonX5000);
+    lilu.onKextLoadForce(&kextRadeonX5000);
     DBGLOG("x5000", "Initialised");
 }
 

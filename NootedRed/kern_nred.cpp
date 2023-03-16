@@ -34,6 +34,7 @@ static X6000 x6000;
 void NRed::init() {
     SYSLOG(MODULE_SHORT, "Please don't support tonymacx86.com!");
     callback = this;
+    SYSLOG_COND(checkKernelArgument("-wreddbg"), MODULE_SHORT, "Using legacy debug flags. Update your EFI!");
 
     lilu.onPatcherLoadForce(
         [](void *user, KernelPatcher &patcher) { static_cast<NRed *>(user)->processPatcher(patcher); }, this);
@@ -47,9 +48,11 @@ void NRed::init() {
     lilu.onKextLoad(&kextBacklight);
     lilu.onKextLoadForce(&kextMCCSControl);
     x6000fb.init();
-    hwlibs.init();
-    x5000.init();
-    x6000.init();
+    if (!(lilu.getRunMode() & LiluAPI::RunningInstallerRecovery)) {
+        hwlibs.init();
+        x6000.init();
+        x5000.init();
+    }
 }
 
 void NRed::deinit() {
@@ -250,9 +253,11 @@ void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         return;
     }
     if (x6000fb.processKext(patcher, index, address, size)) { return; }
-    if (hwlibs.processKext(patcher, index, address, size)) { return; }
-    if (x6000.processKext(patcher, index, address, size)) { return; }
-    if (x5000.processKext(patcher, index, address, size)) { return; }
+    if (!(lilu.getRunMode() & LiluAPI::RunningInstallerRecovery)) {
+        if (hwlibs.processKext(patcher, index, address, size)) { return; }
+        if (x6000.processKext(patcher, index, address, size)) { return; }
+        if (x5000.processKext(patcher, index, address, size)) { return; }
+    }
 }
 
 struct ApplePanelData {

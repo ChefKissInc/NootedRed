@@ -21,7 +21,7 @@ X6000 *X6000::callback = nullptr;
 
 void X6000::init() {
     callback = this;
-    lilu.onKextLoad(&kextRadeonX6000);
+    lilu.onKextLoadForce(&kextRadeonX6000);
     DBGLOG("x6000", "Initialised");
 }
 

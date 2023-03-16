@@ -16,7 +16,7 @@ X5000HWLibs *X5000HWLibs::callback = nullptr;
 
 void X5000HWLibs::init() {
     callback = this;
-    lilu.onKextLoad(&kextRadeonX5000HWLibs);
+    lilu.onKextLoadForce(&kextRadeonX5000HWLibs);
     DBGLOG("hwlibs", "Initialised");
 }
 
