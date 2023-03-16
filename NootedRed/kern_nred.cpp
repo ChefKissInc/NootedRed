@@ -131,7 +131,7 @@ void NRed::processPatcher(KernelPatcher &patcher) {
     }
 
     PANIC_COND(!patcher.routeMultipleLong(KernelPatcher::KernelID, requests, num), MODULE_SHORT,
-        "Failed to route OSMetaClassBase::safeMetaCast");
+        "Failed to route kernel symbols");
 }
 
 OSMetaClassBase *NRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const OSMetaClass *toMeta) {
