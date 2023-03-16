@@ -10,6 +10,7 @@
 #include "kern_x6000fb.hpp"
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_devinfo.hpp>
+#include <IOKit/IODeviceTreeSupport.h>
 
 static const char *pathAGDP = "/System/Library/Extensions/AppleGraphicsControl.kext/Contents/PlugIns/"
                               "AppleGraphicsDevicePolicy.kext/Contents/MacOS/AppleGraphicsDevicePolicy";
@@ -165,8 +166,23 @@ void NRed::processPatcher(KernelPatcher &patcher) {
 
     KernelPatcher::RouteRequest requests[] = {
         {"__ZN15OSMetaClassBase12safeMetaCastEPKS_PK11OSMetaClass", wrapSafeMetaCast, orgSafeMetaCast},
+        {"_cs_validate_page", csValidatePage, orgCsValidatePage},
     };
-    PANIC_COND(!patcher.routeMultiple(KernelPatcher::KernelID, requests), MODULE_SHORT,
+
+    size_t num = arrsize(requests);
+    if (lilu.getRunMode() & LiluAPI::RunningNormal) {
+        auto *entry = IORegistryEntry::fromPath("/", gIODTPlane);
+        if (entry) {
+            DBGLOG(MODULE_SHORT, "Setting hwgva-id to iMacPro1,1");
+            entry->setProperty("hwgva-id", const_cast<char *>("Mac-7BA5B2D9E42DDD94"),
+                static_cast<uint32_t>(sizeof("Mac-7BA5B2D9E42DDD94")));
+            entry->release();
+        }
+    } else {
+        --num;
+    }
+
+    PANIC_COND(!patcher.routeMultiple(KernelPatcher::KernelID, requests, num), MODULE_SHORT,
         "Failed to route OSMetaClassBase::safeMetaCast");
 }
 
@@ -182,6 +198,31 @@ OSMetaClassBase *NRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const O
         }
     }
     return ret;
+}
+
+void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset_t page_offset, const void *data,
+    int *validated_p, int *tainted_p, int *nx_p) {
+    FunctionCast(csValidatePage, callback->orgCsValidatePage)(vp, pager, page_offset, data, validated_p, tainted_p,
+        nx_p);
+
+    char path[PATH_MAX];
+    int pathlen = PATH_MAX;
+    if (!vn_getpath(vp, path, &pathlen)) {
+        if (UserPatcher::matchSharedCachePath(path)) {
+            if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kDRMModelOriginal,
+                    arrsize(kDRMModelOriginal), BaseDeviceInfo::get().modelIdentifier, 20)))
+                DBGLOG(MODULE_SHORT, "Patched relaxed DRM model");
+
+            if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kBoardIdOriginal,
+                    arrsize(kBoardIdOriginal), kBoardIdPatched, arrsize(kBoardIdPatched))))
+                DBGLOG(MODULE_SHORT, "Patched 'board-id' -> 'hwgva-id'");
+        } else if ((UNLIKELY(!strncmp(path, kCoreLSKDMSEPath, arrsize(kCoreLSKDMSEPath))) ||
+                       UNLIKELY(!strncmp(path, kCoreLSKDPath, arrsize(kCoreLSKDPath))))) {
+            if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kCoreLSKDOriginal,
+                    arrsize(kCoreLSKDOriginal), kCoreLSKDPatched, arrsize(kCoreLSKDPatched))))
+                DBGLOG(MODULE_SHORT, "Patched streaming CPUID to haswell");
+        }
+    }
 }
 
 void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
