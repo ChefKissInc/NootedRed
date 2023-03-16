@@ -52,63 +52,65 @@ void NRed::init() {
     x6000.init();
 }
 
-void NRed::deinit() { OSSafeReleaseNULL(this->vbiosData); }
+void NRed::deinit() {
+    OSSafeReleaseNULL(this->vbiosData);
+    OSSafeReleaseNULL(this->rmmio);
+}
 
 void NRed::processPatcher(KernelPatcher &patcher) {
     auto *devInfo = DeviceInfo::create();
-    if (!devInfo) {
-        SYSLOG(MODULE_SHORT, "Failed to create DeviceInfo");
-        return;
-    }
+    if (devInfo) {
+        devInfo->processSwitchOff();
 
-    devInfo->processSwitchOff();
+        PANIC_COND(!devInfo->videoBuiltin, MODULE_SHORT, "videoBuiltin null");
+        auto *iGPU = OSDynamicCast(IOPCIDevice, devInfo->videoBuiltin);
+        PANIC_COND(!iGPU, MODULE_SHORT, "videoBuiltin is not IOPCIDevice");
+        PANIC_COND(WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD,
+            MODULE_SHORT, "videoBuiltin is not AMD");
 
-    PANIC_COND(!devInfo->videoBuiltin, MODULE_SHORT, "videoBuiltin null");
-    auto *iGPU = OSDynamicCast(IOPCIDevice, devInfo->videoBuiltin);
-    PANIC_COND(!iGPU, MODULE_SHORT, "videoBuiltin is not IOPCIDevice");
-    PANIC_COND(WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD, MODULE_SHORT,
-        "videoBuiltin is not AMD");
+        this->iGPU = iGPU;
 
-    this->iGPU = iGPU;
+        WIOKit::renameDevice(iGPU, "IGPU");
+        WIOKit::awaitPublishing(iGPU);
 
-    WIOKit::renameDevice(iGPU, "IGPU");
-    WIOKit::awaitPublishing(iGPU);
+        static uint8_t builtin[] = {0x01};
+        iGPU->setProperty("built-in", builtin, arrsize(builtin));
+        this->deviceId = WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigDeviceID);
+        auto *model = getBranding(this->deviceId, WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigRevisionID));
+        if (model) { iGPU->setProperty("model", model); }
 
-    static uint8_t builtin[] = {0x01};
-    iGPU->setProperty("built-in", builtin, arrsize(builtin));
-    this->deviceId = WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigDeviceID);
-    auto *model = getBranding(this->deviceId, WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigRevisionID));
-    if (model) { iGPU->setProperty("model", model); }
-
-    if (UNLIKELY(iGPU->getProperty("ATY,bin_image"))) {
-        DBGLOG(MODULE_SHORT, "VBIOS manually overridden");
-    } else {
-        if (!this->getVBIOSFromVFCT(iGPU)) {
-            SYSLOG(MODULE_SHORT, "Failed to get VBIOS from VFCT.");
-            PANIC_COND(!this->getVBIOSFromVRAM(iGPU), MODULE_SHORT, "Failed to get VBIOS from VRAM");
-        }
-    }
-
-    DBGLOG(MODULE_SHORT, "Fixing VBIOS connectors");
-    auto *objInfo = this->getVBIOSDataTable<DispObjInfoTableV1_4>(0x16);
-    auto n = objInfo->pathCount;
-    for (size_t i = 0, j = 0; i < n; i++) {
-        // Skip invalid device tags and TV/CV support
-        if ((objInfo->supportedDevices & objInfo->dispPaths[i].devTag) &&
-            !(objInfo->dispPaths[i].devTag == (1 << 2) || objInfo->dispPaths[i].devTag == (1 << 8))) {
-            objInfo->dispPaths[j++] = objInfo->dispPaths[i];
+        if (UNLIKELY(iGPU->getProperty("ATY,bin_image"))) {
+            DBGLOG(MODULE_SHORT, "VBIOS manually overridden");
         } else {
-            objInfo->pathCount--;
+            if (!this->getVBIOSFromVFCT(iGPU)) {
+                SYSLOG(MODULE_SHORT, "Failed to get VBIOS from VFCT.");
+                PANIC_COND(!this->getVBIOSFromVRAM(iGPU), MODULE_SHORT, "Failed to get VBIOS from VRAM");
+            }
         }
-    }
-    DBGLOG(MODULE_SHORT, "Fixing VBIOS checksum");
-    auto *data = const_cast<uint8_t *>(static_cast<const uint8_t *>(this->vbiosData->getBytesNoCopy()));
-    auto size = static_cast<size_t>(data[ATOM_ROM_SIZE_OFFSET]) * 512;
-    char checksum = 0;
-    for (size_t i = 0; i < size; i++) { checksum += data[i]; }
-    data[ATOM_ROM_CHECKSUM_OFFSET] -= checksum;
 
-    DeviceInfo::deleter(devInfo);
+        DBGLOG(MODULE_SHORT, "Fixing VBIOS connectors");
+        auto *objInfo = this->getVBIOSDataTable<DispObjInfoTableV1_4>(0x16);
+        auto n = objInfo->pathCount;
+        for (size_t i = 0, j = 0; i < n; i++) {
+            // Skip invalid device tags and TV/CV support
+            if ((objInfo->supportedDevices & objInfo->dispPaths[i].devTag) &&
+                !(objInfo->dispPaths[i].devTag == (1 << 2) || objInfo->dispPaths[i].devTag == (1 << 8))) {
+                objInfo->dispPaths[j++] = objInfo->dispPaths[i];
+            } else {
+                objInfo->pathCount--;
+            }
+        }
+        DBGLOG(MODULE_SHORT, "Fixing VBIOS checksum");
+        auto *data = const_cast<uint8_t *>(static_cast<const uint8_t *>(this->vbiosData->getBytesNoCopy()));
+        auto size = static_cast<size_t>(data[ATOM_ROM_SIZE_OFFSET]) * 512;
+        char checksum = 0;
+        for (size_t i = 0; i < size; i++) { checksum += data[i]; }
+        data[ATOM_ROM_CHECKSUM_OFFSET] -= checksum;
+
+        DeviceInfo::deleter(devInfo);
+    } else {
+        SYSLOG(MODULE_SHORT, "Failed to create DeviceInfo");
+    }
 
     KernelPatcher::RouteRequest requests[] = {
         {"__ZN15OSMetaClassBase12safeMetaCastEPKS_PK11OSMetaClass", wrapSafeMetaCast, orgSafeMetaCast},
@@ -125,7 +127,7 @@ void NRed::processPatcher(KernelPatcher &patcher) {
             entry->release();
         }
     } else {
-        --num;
+        num -= 1;
     }
 
     PANIC_COND(!patcher.routeMultipleLong(KernelPatcher::KernelID, requests, num), MODULE_SHORT,
@@ -138,7 +140,7 @@ OSMetaClassBase *NRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const O
         for (const auto &ent : callback->metaClassMap) {
             if (ent[0] == toMeta) {
                 return FunctionCast(wrapSafeMetaCast, callback->orgSafeMetaCast)(anObject, ent[1]);
-            } else if (ent[1] == toMeta) {
+            } else if (UNLIKELY(ent[1] == toMeta)) {
                 return FunctionCast(wrapSafeMetaCast, callback->orgSafeMetaCast)(anObject, ent[0]);
             }
         }
