@@ -182,7 +182,7 @@ void NRed::processPatcher(KernelPatcher &patcher) {
         --num;
     }
 
-    PANIC_COND(!patcher.routeMultiple(KernelPatcher::KernelID, requests, num), MODULE_SHORT,
+    PANIC_COND(!patcher.routeMultipleLong(KernelPatcher::KernelID, requests, num), MODULE_SHORT,
         "Failed to route OSMetaClassBase::safeMetaCast");
 }
 
