@@ -24,10 +24,8 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
     if (kextRadeonX5000HWLibs.loadIndex == index) {
         CailAsicCapEntry *orgAsicCapsTable = nullptr;
         CailInitAsicCapEntry *orgAsicInitCapsTable = nullptr;
-        uint32_t *ddiCapsRaven = nullptr, *ddiCapsRaven2 = nullptr;
-        uint32_t *ddiCapsPicasso = nullptr, *ddiCapsRenoir = nullptr;
-        void *goldenSettingsRaven = nullptr, *goldenSettingsRaven2 = nullptr;
-        void *goldenSettingsPicasso = nullptr, *goldenSettingsRenoir = nullptr;
+        void *goldenSettings[static_cast<int>(ChipType::Unknown)] = {nullptr};
+        uint32_t *ddiCaps[static_cast<int>(ChipType::Unknown)] = {nullptr};
         uint32_t *orgDeviceTypeTable = nullptr;
 
         KernelPatcher::SolveRequest solveRequests[] = {
@@ -43,17 +41,18 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"_Raven_SendMsgToSmc", orgRavenSendMsgToSmc},
             {"_Renoir_SendMsgToSmc", orgRenoirSendMsgToSmc},
             {"__ZN20AMDFirmwareDirectoryC1Ej", orgAMDFirmwareDirectoryConstructor},
-            {"_RAVEN1_GoldenSettings_A0", goldenSettingsRaven},
-            {"_RAVEN2_GoldenSettings_A0", goldenSettingsRaven2},
-            {"_PICASSO_GoldenSettings_A0", goldenSettingsPicasso},
-            {"_RENOIR_GoldenSettings_A0", goldenSettingsRenoir},
-            {"_CAIL_DDI_CAPS_RAVEN_A0", ddiCapsRaven},
-            {"_CAIL_DDI_CAPS_RAVEN2_A0", ddiCapsRaven2},
-            {"_CAIL_DDI_CAPS_PICASSO_A0", ddiCapsPicasso},
-            {"_CAIL_DDI_CAPS_RENOIR_A0", ddiCapsRenoir},
+            {"_RAVEN1_GoldenSettings_A0", goldenSettings[static_cast<int>(ChipType::Raven)]},
+            {"_RAVEN2_GoldenSettings_A0", goldenSettings[static_cast<int>(ChipType::Raven2)]},
+            {"_PICASSO_GoldenSettings_A0", goldenSettings[static_cast<int>(ChipType::Picasso)]},
+            {"_RENOIR_GoldenSettings_A0", goldenSettings[static_cast<int>(ChipType::Renoir)]},
+            {"_CAIL_DDI_CAPS_RAVEN_A0", ddiCaps[static_cast<int>(ChipType::Raven)]},
+            {"_CAIL_DDI_CAPS_RAVEN2_A0", ddiCaps[static_cast<int>(ChipType::Raven2)]},
+            {"_CAIL_DDI_CAPS_PICASSO_A0", ddiCaps[static_cast<int>(ChipType::Picasso)]},
+            {"_CAIL_DDI_CAPS_RENOIR_A0", ddiCaps[static_cast<int>(ChipType::Renoir)]},
         };
         PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "hwlibs", "Failed to resolve symbols");
 
+        PANIC_COND(NRed::callback->chipType == ChipType::Unknown, "hwlibs", "Unknown chip type");
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "hwlibs",
             "Failed to enable kernel writing");
         orgDeviceTypeTable[0] = NRed::callback->deviceId;
@@ -64,29 +63,10 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         orgAsicInitCapsTable->emulatedRev = orgAsicCapsTable->emulatedRev =
             NRed::callback->enumeratedRevision + NRed::callback->revision;
         orgAsicInitCapsTable->pciRev = orgAsicCapsTable->pciRev = 0xFFFFFFFF;
-        switch (NRed::callback->chipType) {
-            case ChipType::Raven:
-                orgAsicInitCapsTable->caps = orgAsicCapsTable->caps = ddiCapsRaven;
-                orgAsicInitCapsTable->goldenCaps = goldenSettingsRaven;
-                break;
-            case ChipType::Raven2:
-                orgAsicInitCapsTable->caps = orgAsicCapsTable->caps = ddiCapsRaven2;
-                orgAsicInitCapsTable->goldenCaps = goldenSettingsRaven2;
-                break;
-            case ChipType::Picasso:
-                orgAsicInitCapsTable->caps = orgAsicCapsTable->caps = ddiCapsPicasso;
-                orgAsicInitCapsTable->goldenCaps = goldenSettingsPicasso;
-                break;
-            case ChipType::Renoir:
-                [[fallthrough]];
-            case ChipType::GreenSardine:
-                orgAsicInitCapsTable->caps = orgAsicCapsTable->caps = ddiCapsRenoir;
-                orgAsicInitCapsTable->goldenCaps = goldenSettingsRenoir;
-                break;
-            default:
-                MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
-                PANIC("hwlibs", "Unknown ASIC type %d", NRed::callback->chipType);
-        }
+        auto index = static_cast<int>(
+            NRed::callback->chipType == ChipType::GreenSardine ? ChipType::Renoir : NRed::callback->chipType);
+        orgAsicInitCapsTable->caps = orgAsicCapsTable->caps = ddiCaps[index];
+        orgAsicInitCapsTable->goldenCaps = goldenSettings[index];
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
         KernelPatcher::RouteRequest requests[] = {
