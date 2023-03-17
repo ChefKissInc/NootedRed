@@ -21,13 +21,13 @@ class X5000HWLibs {
 
     private:
     mach_vm_address_t orgPspSwInit {0};
-    t_AMDFirmwareDirectoryConstructor orgAMDFirmwareDirectoryConstructor = nullptr;
-    t_createFirmware orgCreateFirmware = nullptr;
-    t_putFirmware orgPutFirmware = nullptr;
-    t_VegaXPowerTuneConstructor orgVega10PowerTuneConstructor = nullptr;
-    t_VegaXPowerTuneConstructor orgVega20PowerTuneConstructor = nullptr;
-    t_sendMsgToSmc orgRavenSendMsgToSmc = nullptr;
-    t_sendMsgToSmc orgRenoirSendMsgToSmc = nullptr;
+    t_AMDFirmwareDirectoryConstructor orgAMDFirmwareDirectoryConstructor {nullptr};
+    t_createFirmware orgCreateFirmware {nullptr};
+    t_putFirmware orgPutFirmware {nullptr};
+    t_VegaXPowerTuneConstructor orgVega10PowerTuneConstructor {nullptr};
+    t_VegaXPowerTuneConstructor orgVega20PowerTuneConstructor {nullptr};
+    t_sendMsgToSmc orgRavenSendMsgToSmc {nullptr};
+    t_sendMsgToSmc orgRenoirSendMsgToSmc {nullptr};
     mach_vm_address_t orgSmuRavenInitialize {0};
     mach_vm_address_t orgSmuRenoirInitialize {0};
     mach_vm_address_t orgPspCmdKmSubmit {0};

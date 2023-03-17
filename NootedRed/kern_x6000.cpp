@@ -17,7 +17,7 @@ static const char *pathRadeonX6000 = "/System/Library/Extensions/AMDRadeonX6000.
 static KernelPatcher::KextInfo kextRadeonX6000 = {"com.apple.kext.AMDRadeonX6000", &pathRadeonX6000, 1, {}, {},
     KernelPatcher::KextInfo::Unloaded};
 
-X6000 *X6000::callback = nullptr;
+X6000 *X6000::callback {nullptr};
 
 void X6000::init() {
     callback = this;
@@ -28,18 +28,18 @@ void X6000::init() {
 bool X6000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonX6000.loadIndex == index) {
         KernelPatcher::SolveRequest solveRequests[] = {
-            {"__ZN30AMDRadeonX6000_AMDVCN2HWEngineC1Ev", orgVCN2EngineConstructor},
-            {"__ZN31AMDRadeonX6000_AMDGFX10Hardware20allocateAMDHWDisplayEv", orgAllocateAMDHWDisplay},
-            {"__ZN42AMDRadeonX6000_AMDGFX10GraphicsAccelerator15newVideoContextEv", orgNewVideoContext},
-            {"__ZN31AMDRadeonX6000_IAMDSMLInterface18createSMLInterfaceEj", orgCreateSMLInterface},
-            {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator9newSharedEv", orgNewShared},
-            {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator19newSharedUserClientEv", orgNewSharedUserClient},
+            {"__ZN30AMDRadeonX6000_AMDVCN2HWEngineC1Ev", this->orgVCN2EngineConstructor},
+            {"__ZN31AMDRadeonX6000_AMDGFX10Hardware20allocateAMDHWDisplayEv", this->orgAllocateAMDHWDisplay},
+            {"__ZN42AMDRadeonX6000_AMDGFX10GraphicsAccelerator15newVideoContextEv", this->orgNewVideoContext},
+            {"__ZN31AMDRadeonX6000_IAMDSMLInterface18createSMLInterfaceEj", this->orgCreateSMLInterface},
+            {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator9newSharedEv", this->orgNewShared},
+            {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator19newSharedUserClientEv", this->orgNewSharedUserClient},
             {"__ZN35AMDRadeonX6000_AMDAccelVideoContext10gMetaClassE", NRed::callback->metaClassMap[0][1]},
             {"__ZN37AMDRadeonX6000_AMDAccelDisplayMachine10gMetaClassE", NRed::callback->metaClassMap[1][1]},
             {"__ZN34AMDRadeonX6000_AMDAccelDisplayPipe10gMetaClassE", NRed::callback->metaClassMap[2][1]},
             {"__ZN30AMDRadeonX6000_AMDAccelChannel10gMetaClassE", NRed::callback->metaClassMap[3][0]},
             {"__ZN33AMDRadeonX6000_AMDHWAlignManager224getPreferredSwizzleMode2EP33_ADDR2_COMPUTE_SURFACE_INFO_INPUT",
-                orgGetPreferredSwizzleMode2},
+                this->orgGetPreferredSwizzleMode2},
         };
         PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "x6000", "Failed to resolve symbols");
 
@@ -48,17 +48,17 @@ bool X6000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
             {"__ZN39AMDRadeonX6000_AMDAccelSharedUserClient5startEP9IOService", wrapAccelSharedUCStartX6000},
             {"__ZN39AMDRadeonX6000_AMDAccelSharedUserClient4stopEP9IOService", wrapAccelSharedUCStopX6000},
             {"__ZN30AMDRadeonX6000_AMDGFX10Display23initDCNRegistersOffsetsEv", wrapInitDCNRegistersOffsets,
-                orgInitDCNRegistersOffsets},
+                this->orgInitDCNRegistersOffsets},
             {"__ZN29AMDRadeonX6000_AMDAccelShared11SurfaceCopyEPjyP12IOAccelEvent", wrapAccelSharedSurfaceCopy,
-                orgAccelSharedSurfaceCopy},
+                this->orgAccelSharedSurfaceCopy},
             {"__ZN27AMDRadeonX6000_AMDHWDisplay17allocateScanoutFBEjP16IOAccelResource2S1_Py", wrapAllocateScanoutFB,
-                orgAllocateScanoutFB},
+                this->orgAllocateScanoutFB},
             {"__ZN27AMDRadeonX6000_AMDHWDisplay14fillUBMSurfaceEjP17_FRAMEBUFFER_INFOP13_UBM_SURFINFO",
-                wrapFillUBMSurface, orgFillUBMSurface},
+                wrapFillUBMSurface, this->orgFillUBMSurface},
             {"__ZN27AMDRadeonX6000_AMDHWDisplay16configureDisplayEjjP17_FRAMEBUFFER_INFOP16IOAccelResource2",
-                wrapConfigureDisplay, orgConfigureDisplay},
+                wrapConfigureDisplay, this->orgConfigureDisplay},
             {"__ZN27AMDRadeonX6000_AMDHWDisplay14getDisplayInfoEjbbPvP17_FRAMEBUFFER_INFO", wrapGetDisplayInfo,
-                orgGetDisplayInfo},
+                this->orgGetDisplayInfo},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "x6000", "Failed to route symbols");
 
@@ -101,7 +101,7 @@ bool X6000::wrapAccelSharedUCStopX6000(void *that, void *provider) {
 
 void X6000::wrapInitDCNRegistersOffsets(void *that) {
     FunctionCast(wrapInitDCNRegistersOffsets, callback->orgInitDCNRegistersOffsets)(that);
-    if (NRed::callback->chipType < ChipType::Renoir) {
+    if (NRed::callback->chipType < kChipTypeRenoir) {
         DBGLOG("x6000", "initDCNRegistersOffsets !! PATCHING REGISTERS FOR DCN 1.0 !!");
         auto base = getMember<uint32_t>(that, 0x4830);
         getMember<uint32_t>(that, 0x4840) = base + mmHUBPREQ0_DCSURF_PRIMARY_SURFACE_ADDRESS;

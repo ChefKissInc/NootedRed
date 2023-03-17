@@ -12,7 +12,7 @@ static const char *pathRadeonX6000Framebuffer =
 static KernelPatcher::KextInfo kextRadeonX6000Framebuffer {"com.apple.kext.AMDRadeonX6000Framebuffer",
     &pathRadeonX6000Framebuffer, 1, {}, {}, KernelPatcher::KextInfo::Unloaded};
 
-X6000FB *X6000FB::callback = nullptr;
+X6000FB *X6000FB::callback {nullptr};
 
 void X6000FB::init() {
     callback = this;
@@ -22,39 +22,43 @@ void X6000FB::init() {
 
 bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonX6000Framebuffer.loadIndex == index) {
-        CailAsicCapEntry *orgAsicCapsTable = nullptr;
+        CailAsicCapEntry *orgAsicCapsTable {nullptr};
 
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable},
-            {"_dce_driver_set_backlight", orgDceDriverSetBacklight},
+            {"_dce_driver_set_backlight", this->orgDceDriverSetBacklight},
         };
         PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "x6000fb", "Failed to resolve symbols");
-
-        PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "x6000fb",
-            "Failed to enable kernel writing");
-        orgAsicCapsTable->familyId = AMDGPU_FAMILY_RV;
-        orgAsicCapsTable->caps = NRed::callback->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir;
-        orgAsicCapsTable->deviceId = NRed::callback->deviceId;
-        orgAsicCapsTable->revision = NRed::callback->revision;
-        orgAsicCapsTable->emulatedRev = NRed::callback->enumeratedRevision + NRed::callback->revision;
-        orgAsicCapsTable->pciRev = 0xFFFFFFFF;
-        MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
         KernelPatcher::RouteRequest requests[] = {
             {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", wrapPopulateVramInfo},
             {"__ZN30AMDRadeonX6000_AmdAsicInfoNavi18populateDeviceInfoEv", wrapPopulateDeviceInfo,
-                orgPopulateDeviceInfo},
+                this->orgPopulateDeviceInfo},
             {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
-            {"__ZN32AMDRadeonX6000_AmdRegisterAccess11hwReadReg32Ej", wrapHwReadReg32, orgHwReadReg32},
-            {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo, orgInitWithPciInfo},
+            {"__ZN32AMDRadeonX6000_AmdRegisterAccess11hwReadReg32Ej", wrapHwReadReg32, this->orgHwReadReg32},
+            {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo,
+                this->orgInitWithPciInfo},
             {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", wrapDoGPUPanic},
-            {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit, orgDcePanelCntlHwInit},
+            {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit, this->orgDcePanelCntlHwInit},
             {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25setAttributeForConnectionEijm", wrapFramebufferSetAttribute,
-                orgFramebufferSetAttribute},
+                this->orgFramebufferSetAttribute},
             {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25getAttributeForConnectionEijPm", wrapFramebufferGetAttribute,
-                orgFramebufferGetAttribute},
+                this->orgFramebufferGetAttribute},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "x6000fb", "Failed to route symbols");
+
+        if (MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) == KERN_SUCCESS) {
+            orgAsicCapsTable->familyId = kASICFamilyRaven;
+            orgAsicCapsTable->caps = NRed::callback->chipType < kChipTypeRenoir ? ddiCapsRaven : ddiCapsRenoir;
+            orgAsicCapsTable->deviceId = NRed::callback->deviceId;
+            orgAsicCapsTable->revision = NRed::callback->revision;
+            orgAsicCapsTable->emulatedRev = NRed::callback->enumeratedRevision + NRed::callback->revision;
+            orgAsicCapsTable->pciRev = 0xFFFFFFFF;
+            MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
+            DBGLOG("x6000fb", "Applied DDI Caps patches");
+        } else {
+            SYSLOG("x6000fb", "Failed to apply DDI Caps patches");
+        }
 
         KernelPatcher::LookupPatch patches[] = {
             {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheck1Original, kAmdAtomVramInfoNullCheck1Patched,
@@ -82,7 +86,7 @@ uint16_t X6000FB::wrapGetEnumeratedRevision() { return NRed::callback->enumerate
 IOReturn X6000FB::wrapPopulateDeviceInfo(void *that) {
     if (!callback->dispNotif) { callback->registerDispMaxBrightnessNotif(); }
     auto ret = FunctionCast(wrapPopulateDeviceInfo, callback->orgPopulateDeviceInfo)(that);
-    getMember<uint32_t>(that, 0x60) = AMDGPU_FAMILY_RV;
+    getMember<uint32_t>(that, 0x60) = kASICFamilyRaven;
     return ret;
 }
 

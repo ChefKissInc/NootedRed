@@ -8,7 +8,7 @@
 using t_HWEngineConstructor = void (*)(void *that);
 using t_HWEngineNew = void *(*)(size_t size);
 
-constexpr uint32_t AMDGPU_FAMILY_RV = 0x8E;
+constexpr uint32_t kASICFamilyRaven = 0x8E;
 
 constexpr uint32_t PPSMC_MSG_PowerUpSdma = 0xE;
 
@@ -121,5 +121,10 @@ enum AMDReturn : uint32_t {
     kAMDReturnResourcesExhausted,
     kAMDReturnUnsupported,
 };
+
+struct CailDeviceTypeEntry {
+    uint32_t deviceId;
+    uint32_t deviceType;
+} PACKED;
 
 #endif /* kern_amd.hpp */

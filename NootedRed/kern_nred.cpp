@@ -24,7 +24,7 @@ static KernelPatcher::KextInfo kextBacklight {"com.apple.driver.AppleBacklight",
 static KernelPatcher::KextInfo kextMCCSControl {"com.apple.driver.AppleMCCSControl", &pathMCCSControl, 1, {true}, {},
     KernelPatcher::KextInfo::Unloaded};
 
-NRed *NRed::callback = nullptr;
+NRed *NRed::callback {nullptr};
 
 static X6000FB x6000fb;
 static X5000HWLibs hwlibs;
@@ -66,28 +66,26 @@ void NRed::processPatcher(KernelPatcher &patcher) {
         devInfo->processSwitchOff();
 
         PANIC_COND(!devInfo->videoBuiltin, MODULE_SHORT, "videoBuiltin null");
-        auto *iGPU = OSDynamicCast(IOPCIDevice, devInfo->videoBuiltin);
-        PANIC_COND(!iGPU, MODULE_SHORT, "videoBuiltin is not IOPCIDevice");
+        this->iGPU = OSDynamicCast(IOPCIDevice, devInfo->videoBuiltin);
+        PANIC_COND(!this->iGPU, MODULE_SHORT, "videoBuiltin is not IOPCIDevice");
         PANIC_COND(WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD,
             MODULE_SHORT, "videoBuiltin is not AMD");
 
-        this->iGPU = iGPU;
-
-        WIOKit::renameDevice(iGPU, "IGPU");
-        WIOKit::awaitPublishing(iGPU);
+        WIOKit::renameDevice(this->iGPU, "IGPU");
+        WIOKit::awaitPublishing(this->iGPU);
 
         static uint8_t builtin[] = {0x01};
-        iGPU->setProperty("built-in", builtin, arrsize(builtin));
-        this->deviceId = WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigDeviceID);
+        this->iGPU->setProperty("built-in", builtin, arrsize(builtin));
+        this->deviceId = WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigDeviceID);
         auto *model = getBranding(this->deviceId, WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigRevisionID));
-        if (model) { iGPU->setProperty("model", model); }
+        if (model) { this->iGPU->setProperty("model", model); }
 
-        if (UNLIKELY(iGPU->getProperty("ATY,bin_image"))) {
+        if (UNLIKELY(this->iGPU->getProperty("ATY,bin_image"))) {
             DBGLOG(MODULE_SHORT, "VBIOS manually overridden");
         } else {
-            if (!this->getVBIOSFromVFCT(iGPU)) {
+            if (!this->getVBIOSFromVFCT(this->iGPU)) {
                 SYSLOG(MODULE_SHORT, "Failed to get VBIOS from VFCT.");
-                PANIC_COND(!this->getVBIOSFromVRAM(iGPU), MODULE_SHORT, "Failed to get VBIOS from VRAM");
+                PANIC_COND(!this->getVBIOSFromVRAM(this->iGPU), MODULE_SHORT, "Failed to get VBIOS from VRAM");
             }
         }
 
@@ -116,8 +114,8 @@ void NRed::processPatcher(KernelPatcher &patcher) {
     }
 
     KernelPatcher::RouteRequest requests[] = {
-        {"__ZN15OSMetaClassBase12safeMetaCastEPKS_PK11OSMetaClass", wrapSafeMetaCast, orgSafeMetaCast},
-        {"_cs_validate_page", csValidatePage, orgCsValidatePage},
+        {"__ZN15OSMetaClassBase12safeMetaCastEPKS_PK11OSMetaClass", wrapSafeMetaCast, this->orgSafeMetaCast},
+        {"_cs_validate_page", csValidatePage, this->orgCsValidatePage},
     };
 
     size_t num = arrsize(requests);
@@ -187,32 +185,32 @@ void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         switch (this->deviceId) {
             case 0x15D8:
                 if (this->revision >= 0x8) {
-                    this->chipType = ChipType::Raven2;
+                    this->chipType = kChipTypeRaven2;
                     this->enumeratedRevision = 0x79;
                     break;
                 }
-                this->chipType = ChipType::Picasso;
+                this->chipType = kChipTypePicasso;
                 this->enumeratedRevision = 0x41;
                 break;
             case 0x15DD:
                 if (this->revision >= 0x8) {
-                    this->chipType = ChipType::Raven2;
+                    this->chipType = kChipTypeRaven2;
                     this->enumeratedRevision = 0x79;
                     break;
                 }
-                this->chipType = ChipType::Raven;
+                this->chipType = kChipTypeRaven;
                 this->enumeratedRevision = 0x10;
                 break;
             case 0x164C:
                 [[fallthrough]];
             case 0x1636:
-                this->chipType = ChipType::Renoir;
+                this->chipType = kChipTypeRenoir;
                 this->enumeratedRevision = 0x91;
                 break;
             case 0x15E7:
                 [[fallthrough]];
             case 0x1638:
-                this->chipType = ChipType::GreenSardine;
+                this->chipType = kChipTypeGreenSardine;
                 this->enumeratedRevision = 0xA1;
                 break;
             default:
