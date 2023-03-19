@@ -73,6 +73,15 @@ void NRed::processPatcher(KernelPatcher &patcher) {
 
         WIOKit::renameDevice(this->iGPU, "IGPU");
         WIOKit::awaitPublishing(this->iGPU);
+        char name[256] = {0};
+        for (size_t i = 0, ii = 0; i < devInfo->videoExternal.size(); i++) {
+            auto *device = OSDynamicCast(IOPCIDevice, devInfo->videoExternal[i].video);
+            if (device) {
+                snprintf(name, arrsize(name), "GFX%zu", ii++);
+                WIOKit::renameDevice(device, name);
+                WIOKit::awaitPublishing(device);
+            }
+        }
 
         static uint8_t builtin[] = {0x01};
         this->iGPU->setProperty("built-in", builtin, arrsize(builtin));
