@@ -22,7 +22,7 @@ void X6000FB::init() {
 
 bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonX6000Framebuffer.loadIndex == index) {
-        CailAsicCapEntry *orgAsicCapsTable {nullptr};
+        CailAsicCapEntry *orgAsicCapsTable = nullptr;
 
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable},
@@ -48,8 +48,8 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "x6000fb", "Failed to route symbols");
 
         if (MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) == KERN_SUCCESS) {
-            orgAsicCapsTable->familyId = kASICFamilyRaven;
-            orgAsicCapsTable->caps = NRed::callback->chipType < kChipTypeRenoir ? ddiCapsRaven : ddiCapsRenoir;
+            orgAsicCapsTable->familyId = AMDGPU_FAMILY_RAVEN;
+            orgAsicCapsTable->caps = NRed::callback->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir;
             orgAsicCapsTable->deviceId = NRed::callback->deviceId;
             orgAsicCapsTable->revision = NRed::callback->revision;
             orgAsicCapsTable->emulatedRev = NRed::callback->enumeratedRevision + NRed::callback->revision;
@@ -86,7 +86,7 @@ uint16_t X6000FB::wrapGetEnumeratedRevision() { return NRed::callback->enumerate
 IOReturn X6000FB::wrapPopulateDeviceInfo(void *that) {
     if (!callback->dispNotif) { callback->registerDispMaxBrightnessNotif(); }
     auto ret = FunctionCast(wrapPopulateDeviceInfo, callback->orgPopulateDeviceInfo)(that);
-    getMember<uint32_t>(that, 0x60) = kASICFamilyRaven;
+    getMember<uint32_t>(that, 0x60) = AMDGPU_FAMILY_RAVEN;
     return ret;
 }
 

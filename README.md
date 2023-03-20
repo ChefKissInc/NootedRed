@@ -8,9 +8,14 @@ The Source Code of this Original Work is licensed under the `Thou Shalt Not Prof
 
 Thanks [Acidanthera](https://github.com/Acidanthera) for the AppleBacklight code and UnfairGVA patches in [WhateverGreen](https://github.com/Acidanthera/WhateverGreen).
 
+## Project members
+
+- [@ChefKissInc](https://github.com/ChefKissInc) | Project lead, Linux shitcode analyser and kernel extension developer. Extensive knowledge of OS inner workings
+- [@NyanCatTW1](https://github.com/NyanCatTW1) | Reverse Engineering and Python automation magician. His Ghidra RedMetaClassAnalyzer script has made the entire process way painless by automagically discovering C++ v-tables for classes.
+
 ## Recommendations
 
-- Add [SSDT-PNLF.aml](Assets/SSDT-PNLF.aml) by [@ChefKissInc](https://github.com/ChefKissInc) and [@ExtremeXT](https://github.com/ExtremeXT) and compile and add [SSDT-ALS0.aml](https://github.com/Acidanthera/OpenCorePkg/blob/master/Docs/AcpiSamples/Source/SSDT-ALS0.dsl) (NOTE: only if you have no ambient light sensor) along with [SMCLightSensor.kext](https://github.com/Acidanthera/VirtualSMC) by [Acidanthera](https://github.com/Acidanthera) for backlight functionality (both desktop and laptop).
+- Add [SSDT-PNLF.aml](Assets/SSDT-PNLF.aml) by [@ChefKissInc](https://github.com/ChefKissInc) and [@ExtremeXT](https://github.com/ExtremeXT) and compile and add [SSDT-ALS0.aml](https://github.com/Acidanthera/OpenCorePkg/blob/master/Docs/AcpiSamples/Source/SSDT-ALS0.dsl) (NOTE: only if you have no ambient light sensor) along with [SMCLightSensor.kext](https://github.com/Acidanthera/VirtualSMC) by [Acidanthera](https://github.com/Acidanthera) for backlight functionality (usually laptop-only).
 - Use `MacBookPro16,3`, `MacBookPro16,4` or `MacPro7,1` SMBIOS.
 - Add [AGPMInjector.kext](Assets/AGPMInjector.kext.zip) by [Visual](https://github.com/ChefKissInc). Supports only `MacBookPro16,3`, `MacBookPro16,4` or `MacPro7,1` SMBIOS
 
@@ -43,8 +48,3 @@ In conclusion, this kext is constricted to Big Sur since there are too many inco
 ### I get a panic saying "Failed to get VBIOS from VRAM", how can I fix it?
 
 Ensure Legacy Boot/CSM is disabled in your BIOS settings.
-
-## Project members
-
-- [@ChefKissInc](https://github.com/ChefKissInc) | Project lead, Linux shitcode analyser and kernel extension developer. Extensive knowledge of OS inner workings
-- [@NyanCatTW1](https://github.com/NyanCatTW1) | Reverse Engineering and Python automation magician. His Ghidra RedMetaClassAnalyzer script has made the entire process way painless by automagically discovering C++ v-tables for classes.

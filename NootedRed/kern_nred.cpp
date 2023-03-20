@@ -10,7 +10,6 @@
 #include "kern_x6000fb.hpp"
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_devinfo.hpp>
-#include <IOKit/IODeviceTreeSupport.h>
 
 static const char *pathAGDP = "/System/Library/Extensions/AppleGraphicsControl.kext/Contents/PlugIns/"
                               "AppleGraphicsDevicePolicy.kext/Contents/MacOS/AppleGraphicsDevicePolicy";
@@ -34,7 +33,8 @@ static X6000 x6000;
 void NRed::init() {
     SYSLOG(MODULE_SHORT, "Please don't support tonymacx86.com!");
     callback = this;
-    SYSLOG_COND(checkKernelArgument("-wreddbg"), MODULE_SHORT, "Using legacy debug flags. Update your EFI!");
+    SYSLOG_COND(checkKernelArgument("-wreddbg"), MODULE_SHORT,
+        "You're using the legacy WRed debug flag. Update your EFI");
 
     lilu.onPatcherLoadForce(
         [](void *user, KernelPatcher &patcher) { static_cast<NRed *>(user)->processPatcher(patcher); }, this);
@@ -44,15 +44,13 @@ void NRed::init() {
             static_cast<NRed *>(user)->processKext(patcher, index, address, size);
         },
         this);
-    lilu.onKextLoad(&kextAGDP);
-    lilu.onKextLoad(&kextBacklight);
+    lilu.onKextLoadForce(&kextAGDP);
+    lilu.onKextLoadForce(&kextBacklight);
     lilu.onKextLoadForce(&kextMCCSControl);
     x6000fb.init();
-    if (!(lilu.getRunMode() & LiluAPI::RunningInstallerRecovery)) {
-        hwlibs.init();
-        x6000.init();
-        x5000.init();
-    }
+    hwlibs.init();
+    x6000.init();
+    x5000.init();
 }
 
 void NRed::deinit() {
@@ -179,32 +177,32 @@ void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         switch (this->deviceId) {
             case 0x15D8:
                 if (this->revision >= 0x8) {
-                    this->chipType = kChipTypeRaven2;
+                    this->chipType = ChipType::Raven2;
                     this->enumeratedRevision = 0x79;
                     break;
                 }
-                this->chipType = kChipTypePicasso;
+                this->chipType = ChipType::Picasso;
                 this->enumeratedRevision = 0x41;
                 break;
             case 0x15DD:
                 if (this->revision >= 0x8) {
-                    this->chipType = kChipTypeRaven2;
+                    this->chipType = ChipType::Raven2;
                     this->enumeratedRevision = 0x79;
                     break;
                 }
-                this->chipType = kChipTypeRaven;
+                this->chipType = ChipType::Raven;
                 this->enumeratedRevision = 0x10;
                 break;
             case 0x164C:
                 [[fallthrough]];
             case 0x1636:
-                this->chipType = kChipTypeRenoir;
+                this->chipType = ChipType::Renoir;
                 this->enumeratedRevision = 0x91;
                 break;
             case 0x15E7:
                 [[fallthrough]];
             case 0x1638:
-                this->chipType = kChipTypeGreenSardine;
+                this->chipType = ChipType::GreenSardine;
                 this->enumeratedRevision = 0xA1;
                 break;
             default:
@@ -245,11 +243,9 @@ void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         return;
     }
     if (x6000fb.processKext(patcher, index, address, size)) { return; }
-    if (!(lilu.getRunMode() & LiluAPI::RunningInstallerRecovery)) {
-        if (hwlibs.processKext(patcher, index, address, size)) { return; }
-        if (x6000.processKext(patcher, index, address, size)) { return; }
-        if (x5000.processKext(patcher, index, address, size)) { return; }
-    }
+    if (hwlibs.processKext(patcher, index, address, size)) { return; }
+    if (x6000.processKext(patcher, index, address, size)) { return; }
+    if (x5000.processKext(patcher, index, address, size)) { return; }
 }
 
 struct ApplePanelData {

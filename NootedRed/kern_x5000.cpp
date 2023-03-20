@@ -22,7 +22,7 @@ void X5000::init() {
 
 bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonX5000.loadIndex == index) {
-        uint32_t *orgChannelTypes {nullptr};
+        uint32_t *orgChannelTypes = nullptr;
 
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZN31AMDRadeonX5000_AMDGFX9PM4EngineC1Ev", this->orgGFX9PM4EngineConstructor},
@@ -94,10 +94,10 @@ bool X5000::wrapAllocateHWEngines(void *that) {
 }
 
 void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
-    FunctionCast(wrapSetupAndInitializeHWCapabilities, NRed::callback->chipType >= kChipTypeRenoir ?
+    FunctionCast(wrapSetupAndInitializeHWCapabilities, NRed::callback->chipType >= ChipType::Renoir ?
                                                            callback->orgSetupAndInitializeHWCapabilitiesVega20 :
                                                            callback->orgSetupAndInitializeHWCapabilities)(that);
-    if (NRed::callback->chipType < kChipTypeRenoir) {
+    if (NRed::callback->chipType < ChipType::Renoir) {
         getMember<uint32_t>(that, 0x2C) = 4;    // Surface Count (?)
     }
     getMember<bool>(that, 0xC0) = false;    // SDMA Page Queue
@@ -110,7 +110,7 @@ void *X5000::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, ui
     return FunctionCast(wrapRTGetHWChannel, callback->orgRTGetHWChannel)(that, param1, param2, param3);
 }
 
-void X5000::wrapInitializeFamilyType(void *that) { getMember<uint32_t>(that, 0x308) = kASICFamilyRaven; }
+void X5000::wrapInitializeFamilyType(void *that) { getMember<uint32_t>(that, 0x308) = AMDGPU_FAMILY_RAVEN; }
 
 void *X5000::wrapAllocateAMDHWDisplay(void *that) {
     return FunctionCast(wrapAllocateAMDHWDisplay, X6000::callback->orgAllocateAMDHWDisplay)(that);

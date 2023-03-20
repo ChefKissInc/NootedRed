@@ -96,7 +96,7 @@ bool X6000::wrapAccelSharedUCStopX6000(void *that, void *provider) {
 
 void X6000::wrapInitDCNRegistersOffsets(void *that) {
     FunctionCast(wrapInitDCNRegistersOffsets, callback->orgInitDCNRegistersOffsets)(that);
-    if (NRed::callback->chipType < kChipTypeRenoir) {
+    if (NRed::callback->chipType < ChipType::Renoir) {
         DBGLOG("x6000", "initDCNRegistersOffsets !! PATCHING REGISTERS FOR DCN 1.0 !!");
         auto base = getMember<uint32_t>(that, 0x4830);
         getMember<uint32_t>(that, 0x4840) = base + mmHUBPREQ0_DCSURF_PRIMARY_SURFACE_ADDRESS;

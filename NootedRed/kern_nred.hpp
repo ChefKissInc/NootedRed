@@ -21,13 +21,13 @@ class EXPORT PRODUCT_NAME : public IOService {
     bool start(IOService *provider) override;
 };
 
-enum ChipType : uint32_t {
-    kChipTypeRaven = 0,
-    kChipTypeRaven2,
-    kChipTypePicasso,
-    kChipTypeRenoir,
-    kChipTypeGreenSardine,
-    kChipTypeUnknown,
+enum struct ChipType : uint32_t {
+    Raven = 0,
+    Raven2,
+    Picasso,
+    Renoir,
+    GreenSardine,
+    Unknown,
 };
 
 // Hack
@@ -85,7 +85,7 @@ class NRed {
 
     private:
     static const char *getChipName() {
-        PANIC_COND(callback->chipType == kChipTypeUnknown, MODULE_SHORT, "Unknown chip type");
+        PANIC_COND(callback->chipType == ChipType::Unknown, MODULE_SHORT, "Unknown chip type");
         static const char *chipNames[] = {"raven", "raven2", "picasso", "renoir", "green_sardine"};
         return chipNames[static_cast<int>(callback->chipType)];
     }
@@ -197,7 +197,7 @@ class NRed {
     }
 
     OSData *vbiosData {nullptr};
-    ChipType chipType = kChipTypeUnknown;
+    ChipType chipType = ChipType::Unknown;
     uint64_t fbOffset {0};
     IOMemoryMap *rmmio {nullptr};
     volatile uint32_t *rmmioPtr {nullptr};
