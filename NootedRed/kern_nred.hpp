@@ -11,8 +11,6 @@
 #include <IOKit/graphics/IOFramebuffer.h>
 #include <IOKit/pci/IOPCIDevice.h>
 
-#define MODULE_SHORT "nred"
-
 class EXPORT PRODUCT_NAME : public IOService {
     OSDeclareDefaultStructors(PRODUCT_NAME);
 
@@ -40,29 +38,29 @@ static bool checkAtomBios(const uint8_t *bios, size_t size) {
     uint16_t tmp, bios_header_start;
 
     if (size < 0x49) {
-        DBGLOG(MODULE_SHORT, "VBIOS size is invalid");
+        DBGLOG("nred", "VBIOS size is invalid");
         return false;
     }
 
     if (bios[0] != 0x55 || bios[1] != 0xAA) {
-        DBGLOG(MODULE_SHORT, "VBIOS signature <%x %x> is invalid", bios[0], bios[1]);
+        DBGLOG("nred", "VBIOS signature <%x %x> is invalid", bios[0], bios[1]);
         return false;
     }
 
     bios_header_start = bios[0x48] | (bios[0x49] << 8);
     if (!bios_header_start) {
-        DBGLOG(MODULE_SHORT, "Unable to locate VBIOS header");
+        DBGLOG("nred", "Unable to locate VBIOS header");
         return false;
     }
 
     tmp = bios_header_start + 4;
     if (size < tmp) {
-        DBGLOG(MODULE_SHORT, "BIOS header is broken");
+        DBGLOG("nred", "BIOS header is broken");
         return false;
     }
 
     if (!memcmp(bios + tmp, "ATOM", 4) || !memcmp(bios + tmp, "MOTA", 4)) {
-        DBGLOG(MODULE_SHORT, "ATOMBIOS detected");
+        DBGLOG("nred", "ATOMBIOS detected");
         return true;
     }
 
@@ -85,24 +83,24 @@ class NRed {
 
     private:
     static const char *getChipName() {
-        PANIC_COND(callback->chipType == ChipType::Unknown, MODULE_SHORT, "Unknown chip type");
+        PANIC_COND(callback->chipType == ChipType::Unknown, "nred", "Unknown chip type");
         static const char *chipNames[] = {"raven", "raven2", "picasso", "renoir", "green_sardine"};
         return chipNames[static_cast<int>(callback->chipType)];
     }
 
     bool getVBIOSFromVFCT(IOPCIDevice *obj) {
-        DBGLOG(MODULE_SHORT, "Fetching VBIOS from VFCT table");
+        DBGLOG("nred", "Fetching VBIOS from VFCT table");
         auto *expert = reinterpret_cast<AppleACPIPlatformExpert *>(obj->getPlatform());
-        PANIC_COND(!expert, MODULE_SHORT, "Failed to get AppleACPIPlatformExpert");
+        PANIC_COND(!expert, "nred", "Failed to get AppleACPIPlatformExpert");
 
         auto *vfctData = expert->getACPITableData("VFCT", 0);
         if (!vfctData) {
-            DBGLOG(MODULE_SHORT, "No VFCT from AppleACPIPlatformExpert");
+            DBGLOG("nred", "No VFCT from AppleACPIPlatformExpert");
             return false;
         }
 
         auto *vfct = static_cast<const VFCT *>(vfctData->getBytesNoCopy());
-        PANIC_COND(!vfct, MODULE_SHORT, "VFCT OSData::getBytesNoCopy returned null");
+        PANIC_COND(!vfct, "nred", "VFCT OSData::getBytesNoCopy returned null");
 
         auto offset = vfct->vbiosImageOffset;
 
@@ -110,14 +108,14 @@ class NRed {
             auto *vHdr =
                 static_cast<const GOPVideoBIOSHeader *>(vfctData->getBytesNoCopy(offset, sizeof(GOPVideoBIOSHeader)));
             if (!vHdr) {
-                DBGLOG(MODULE_SHORT, "VFCT header out of bounds");
+                DBGLOG("nred", "VFCT header out of bounds");
                 return false;
             }
 
             auto *vContent = static_cast<const uint8_t *>(
                 vfctData->getBytesNoCopy(offset + sizeof(GOPVideoBIOSHeader), vHdr->imageLength));
             if (!vContent) {
-                DBGLOG(MODULE_SHORT, "VFCT VBIOS image out of bounds");
+                DBGLOG("nred", "VFCT VBIOS image out of bounds");
                 return false;
             }
 
@@ -128,11 +126,11 @@ class NRed {
                 vHdr->vendorID == obj->configRead16(kIOPCIConfigVendorID) &&
                 vHdr->deviceID == obj->configRead16(kIOPCIConfigDeviceID)) {
                 if (!checkAtomBios(vContent, vHdr->imageLength)) {
-                    DBGLOG(MODULE_SHORT, "VFCT VBIOS is not an ATOMBIOS");
+                    DBGLOG("nred", "VFCT VBIOS is not an ATOMBIOS");
                     return false;
                 }
                 this->vbiosData = OSData::withBytes(vContent, vHdr->imageLength);
-                PANIC_COND(!this->vbiosData, MODULE_SHORT, "VFCT OSData::withBytes failed");
+                PANIC_COND(!this->vbiosData, "nred", "VFCT OSData::withBytes failed");
                 obj->setProperty("ATY,bin_image", this->vbiosData);
                 return true;
             }
@@ -145,18 +143,18 @@ class NRed {
         uint32_t size = 256 * 1024;    // ???
         auto *bar0 = provider->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress0, kIOMemoryMapCacheModeWriteThrough);
         if (!bar0 || !bar0->getLength()) {
-            DBGLOG(MODULE_SHORT, "FB BAR not enabled");
+            DBGLOG("nred", "FB BAR not enabled");
             OSSafeReleaseNULL(bar0);
             return false;
         }
         auto *fb = reinterpret_cast<const uint8_t *>(bar0->getVirtualAddress());
         if (!checkAtomBios(fb, size)) {
-            DBGLOG(MODULE_SHORT, "VRAM VBIOS is not an ATOMBIOS");
+            DBGLOG("nred", "VRAM VBIOS is not an ATOMBIOS");
             OSSafeReleaseNULL(bar0);
             return false;
         }
         this->vbiosData = OSData::withBytes(fb, size);
-        PANIC_COND(!this->vbiosData, MODULE_SHORT, "VRAM OSData::withBytes failed");
+        PANIC_COND(!this->vbiosData, "nred", "VRAM OSData::withBytes failed");
         provider->setProperty("ATY,bin_image", this->vbiosData);
         OSSafeReleaseNULL(bar0);
         return true;

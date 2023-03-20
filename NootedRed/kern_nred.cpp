@@ -31,10 +31,9 @@ static X5000 x5000;
 static X6000 x6000;
 
 void NRed::init() {
-    SYSLOG(MODULE_SHORT, "Please don't support tonymacx86.com!");
+    SYSLOG("nred", "Please don't support tonymacx86.com!");
     callback = this;
-    SYSLOG_COND(checkKernelArgument("-wreddbg"), MODULE_SHORT,
-        "You're using the legacy WRed debug flag. Update your EFI");
+    SYSLOG_COND(checkKernelArgument("-wreddbg"), "nred", "You're using the legacy WRed debug flag. Update your EFI");
 
     lilu.onPatcherLoadForce(
         [](void *user, KernelPatcher &patcher) { static_cast<NRed *>(user)->processPatcher(patcher); }, this);
@@ -63,11 +62,11 @@ void NRed::processPatcher(KernelPatcher &patcher) {
     if (devInfo) {
         devInfo->processSwitchOff();
 
-        PANIC_COND(!devInfo->videoBuiltin, MODULE_SHORT, "videoBuiltin null");
+        PANIC_COND(!devInfo->videoBuiltin, "nred", "videoBuiltin null");
         this->iGPU = OSDynamicCast(IOPCIDevice, devInfo->videoBuiltin);
-        PANIC_COND(!this->iGPU, MODULE_SHORT, "videoBuiltin is not IOPCIDevice");
-        PANIC_COND(WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD,
-            MODULE_SHORT, "videoBuiltin is not AMD");
+        PANIC_COND(!this->iGPU, "nred", "videoBuiltin is not IOPCIDevice");
+        PANIC_COND(WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD, "nred",
+            "videoBuiltin is not AMD");
 
         WIOKit::renameDevice(this->iGPU, "IGPU");
         WIOKit::awaitPublishing(this->iGPU);
@@ -88,15 +87,15 @@ void NRed::processPatcher(KernelPatcher &patcher) {
         if (model) { this->iGPU->setProperty("model", model); }
 
         if (UNLIKELY(this->iGPU->getProperty("ATY,bin_image"))) {
-            DBGLOG(MODULE_SHORT, "VBIOS manually overridden");
+            DBGLOG("nred", "VBIOS manually overridden");
         } else {
             if (!this->getVBIOSFromVFCT(this->iGPU)) {
-                SYSLOG(MODULE_SHORT, "Failed to get VBIOS from VFCT.");
-                PANIC_COND(!this->getVBIOSFromVRAM(this->iGPU), MODULE_SHORT, "Failed to get VBIOS from VRAM");
+                SYSLOG("nred", "Failed to get VBIOS from VFCT.");
+                PANIC_COND(!this->getVBIOSFromVRAM(this->iGPU), "nred", "Failed to get VBIOS from VRAM");
             }
         }
 
-        DBGLOG(MODULE_SHORT, "Fixing VBIOS connectors");
+        DBGLOG("nred", "Fixing VBIOS connectors");
         auto *objInfo = this->getVBIOSDataTable<DispObjInfoTableV1_4>(0x16);
         auto n = objInfo->pathCount;
         for (size_t i = 0, j = 0; i < n; i++) {
@@ -108,7 +107,7 @@ void NRed::processPatcher(KernelPatcher &patcher) {
                 objInfo->pathCount--;
             }
         }
-        DBGLOG(MODULE_SHORT, "Fixing VBIOS checksum");
+        DBGLOG("nred", "Fixing VBIOS checksum");
         auto *data = const_cast<uint8_t *>(static_cast<const uint8_t *>(this->vbiosData->getBytesNoCopy()));
         auto size = static_cast<size_t>(data[ATOM_ROM_SIZE_OFFSET]) * 512;
         char checksum = 0;
@@ -117,7 +116,7 @@ void NRed::processPatcher(KernelPatcher &patcher) {
 
         DeviceInfo::deleter(devInfo);
     } else {
-        SYSLOG(MODULE_SHORT, "Failed to create DeviceInfo");
+        SYSLOG("nred", "Failed to create DeviceInfo");
     }
 
     KernelPatcher::RouteRequest requests[] = {
@@ -127,7 +126,7 @@ void NRed::processPatcher(KernelPatcher &patcher) {
 
     size_t num = arrsize(requests);
     if (!(lilu.getRunMode() & LiluAPI::RunningNormal)) { num -= 1; }
-    PANIC_COND(!patcher.routeMultipleLong(KernelPatcher::KernelID, requests, num), MODULE_SHORT,
+    PANIC_COND(!patcher.routeMultipleLong(KernelPatcher::KernelID, requests, num), "nred",
         "Failed to route kernel symbols");
 }
 
@@ -156,12 +155,12 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
         if (UserPatcher::matchSharedCachePath(path)) {
             if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kDRMModelOriginal,
                     arrsize(kDRMModelOriginal), BaseDeviceInfo::get().modelIdentifier, 20)))
-                DBGLOG(MODULE_SHORT, "Patched relaxed DRM model");
+                DBGLOG("nred", "Patched relaxed DRM model");
         } else if ((UNLIKELY(!strncmp(path, kCoreLSKDMSEPath, arrsize(kCoreLSKDMSEPath))) ||
                        UNLIKELY(!strncmp(path, kCoreLSKDPath, arrsize(kCoreLSKDPath))))) {
             if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kCoreLSKDOriginal,
                     arrsize(kCoreLSKDOriginal), kCoreLSKDPatched, arrsize(kCoreLSKDPatched))))
-                DBGLOG(MODULE_SHORT, "Patched streaming CPUID to haswell");
+                DBGLOG("nred", "Patched streaming CPUID to haswell");
         }
     }
 }
@@ -169,7 +168,7 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
 void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (UNLIKELY(!this->rmmio || !this->rmmio->getLength())) {
         this->rmmio = this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5);
-        PANIC_COND(!this->rmmio || !this->rmmio->getLength(), MODULE_SHORT, "Failed to map RMMIO");
+        PANIC_COND(!this->rmmio || !this->rmmio->getLength(), "nred", "Failed to map RMMIO");
         this->rmmioPtr = reinterpret_cast<uint32_t *>(this->rmmio->getVirtualAddress());
 
         this->fbOffset = static_cast<uint64_t>(this->readReg32(0x296B)) << 24;
@@ -206,7 +205,7 @@ void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
                 this->enumeratedRevision = 0xA1;
                 break;
             default:
-                PANIC(MODULE_SHORT, "Unknown device ID");
+                PANIC("nred", "Unknown device ID");
         }
     }
 
@@ -218,8 +217,8 @@ void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
-            SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, MODULE_SHORT,
-                "Failed to apply AGDP patch: %d", patcher.getError());
+            SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "nred", "Failed to apply AGDP patch: %d",
+                patcher.getError());
             patcher.clearError();
         }
         return;
@@ -230,7 +229,7 @@ void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             const uint8_t find[] = {"F%uT%04x"};
             const uint8_t replace[] = {"F%uTxxxx"};
             KernelPatcher::LookupPatch patch = {&kextBacklight, find, replace, sizeof(find), 1};
-            DBGLOG(MODULE_SHORT, "applying backlight patch");
+            DBGLOG("nred", "applying backlight patch");
             patcher.applyLookupPatch(&patch);
         }
         return;
@@ -295,7 +294,7 @@ bool NRed::wrapApplePanelSetDisplay(IOService *that, IODisplay *display) {
                         panels->setObject(entry.deviceName, pd);
                         // No release required by current AppleBacklight implementation.
                     } else {
-                        SYSLOG(MODULE_SHORT, "Panel start cannot allocate %s data", entry.deviceName);
+                        SYSLOG("nred", "Panel start cannot allocate %s data", entry.deviceName);
                     }
                 }
                 that->setProperty("ApplePanels", panels);
@@ -303,12 +302,12 @@ bool NRed::wrapApplePanelSetDisplay(IOService *that, IODisplay *display) {
 
             if (rawPanels) { rawPanels->release(); }
         } else {
-            SYSLOG(MODULE_SHORT, "Panel start has no panels");
+            SYSLOG("nred", "Panel start has no panels");
         }
     }
 
     bool result = FunctionCast(wrapApplePanelSetDisplay, callback->orgApplePanelSetDisplay)(that, display);
-    DBGLOG(MODULE_SHORT, "Panel display set returned %d", result);
+    DBGLOG("nred", "Panel display set returned %d", result);
 
     return result;
 }

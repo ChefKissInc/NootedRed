@@ -115,17 +115,17 @@ fmt_types = " ".join(
     f"{get_fmt_name(x[1])}: {get_fmt_type(x[0])}" for x in parameters)
 arguments = ", ".join(x[1] for x in parameters)
 function.append(
-    f"    DBGLOG(MODULE_SHORT, \"{func_ident} << ({fmt_types})\", {arguments});\n")
+    f"    DBGLOG("nred", \"{func_ident} << ({fmt_types})\", {arguments});\n")
 
 if return_type == "void":
     function.append(
         f"    FunctionCast(wrap{func_ident_pascal}, callback->org{func_ident_pascal})({arguments});\n")
-    function.append(f"    DBGLOG(MODULE_SHORT, \"{func_ident} >> void\");\n")
+    function.append(f"    DBGLOG("nred", \"{func_ident} >> void\");\n")
 else:
     function.append(
         f"    auto ret = FunctionCast(wrap{func_ident_pascal}, callback->org{func_ident_pascal})({arguments});\n")
     function.append(
-        f"    DBGLOG(MODULE_SHORT, \"{func_ident} >> {get_fmt_type(return_type)}\", ret);\n")
+        f"    DBGLOG("nred", \"{func_ident} >> {get_fmt_type(return_type)}\", ret);\n")
     function.append("    return ret;\n")
 
 function.append("}\n")  # -- End of function --
