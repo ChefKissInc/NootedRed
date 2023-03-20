@@ -1,10 +1,5 @@
-//
-//  kern_x6000.cpp
-//  NootedRed
-//
-//  Created by Visual on 13/3/23.
-//  Copyright © 2023 VisualDevelopment. All rights reserved.
-//
+//  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
+//  details.
 
 #include "kern_x6000.hpp"
 #include "kern_nred.hpp"
