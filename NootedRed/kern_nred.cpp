@@ -16,14 +16,19 @@ static const char *pathAGDP = "/System/Library/Extensions/AppleGraphicsControl.k
 static const char *pathBacklight = "/System/Library/Extensions/AppleBacklight.kext/Contents/MacOS/AppleBacklight";
 static const char *pathMCCSControl = "/System/Library/Extensions/AppleMCCSControl.kext/Contents/MacOS/AppleMCCSControl";
 
-static KernelPatcher::KextInfo kextAGDP {"com.apple.driver.AppleGraphicsDevicePolicy", &pathAGDP, 1, {true}, {},
-    KernelPatcher::KextInfo::Unloaded};
-static KernelPatcher::KextInfo kextBacklight {"com.apple.driver.AppleBacklight", &pathBacklight, 1, {true}, {},
-    KernelPatcher::KextInfo::Unloaded};
-static KernelPatcher::KextInfo kextMCCSControl {"com.apple.driver.AppleMCCSControl", &pathMCCSControl, 1, {true}, {},
-    KernelPatcher::KextInfo::Unloaded};
+static KernelPatcher::KextInfo kextList[] = {
+    {"com.apple.driver.AppleGraphicsDevicePolicy", &pathAGDP, 1, {true}, {}, KernelPatcher::KextInfo::Unloaded},
+    {"com.apple.driver.AppleBacklight", &pathBacklight, 1, {true}, {}, KernelPatcher::KextInfo::Unloaded},
+    {"com.apple.driver.AppleMCCSControl", &pathMCCSControl, 1, {true}, {}, KernelPatcher::KextInfo::Unloaded},
+};
 
-NRed *NRed::callback {nullptr};
+enum KextIndex {
+    AGDP,
+    AppleBacklight,
+    MCCSControl,
+};
+
+NRed *NRed::callback = nullptr;
 
 static X6000FB x6000fb;
 static X5000HWLibs hwlibs;
@@ -43,18 +48,11 @@ void NRed::init() {
             static_cast<NRed *>(user)->processKext(patcher, index, address, size);
         },
         this);
-    lilu.onKextLoadForce(&kextAGDP);
-    lilu.onKextLoadForce(&kextBacklight);
-    lilu.onKextLoadForce(&kextMCCSControl);
+    lilu.onKextLoadForce(kextList, arrsize(kextList));
     x6000fb.init();
     hwlibs.init();
     x6000.init();
     x5000.init();
-}
-
-void NRed::deinit() {
-    OSSafeReleaseNULL(this->vbiosData);
-    OSSafeReleaseNULL(this->rmmio);
 }
 
 void NRed::processPatcher(KernelPatcher &patcher) {
@@ -153,14 +151,15 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
     int pathlen = PATH_MAX;
     if (!vn_getpath(vp, path, &pathlen)) {
         if (UserPatcher::matchSharedCachePath(path)) {
-            if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kDRMModelOriginal,
-                    arrsize(kDRMModelOriginal), BaseDeviceInfo::get().modelIdentifier, 20)))
-                DBGLOG("nred", "Patched relaxed DRM model");
+            if (UNLIKELY(
+                    KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kVideoToolboxDRMModelOriginal,
+                        arrsize(kVideoToolboxDRMModelOriginal), BaseDeviceInfo::get().modelIdentifier, 22)))
+                DBGLOG("nred", "Relaxed VideoToolbox DRM model check");
         } else if ((UNLIKELY(!strncmp(path, kCoreLSKDMSEPath, arrsize(kCoreLSKDMSEPath))) ||
                        UNLIKELY(!strncmp(path, kCoreLSKDPath, arrsize(kCoreLSKDPath))))) {
             if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kCoreLSKDOriginal,
                     arrsize(kCoreLSKDOriginal), kCoreLSKDPatched, arrsize(kCoreLSKDPatched))))
-                DBGLOG("nred", "Patched streaming CPUID to haswell");
+                DBGLOG("nred", "Patched streaming CPUID to Haswell");
         }
     }
 }
@@ -209,11 +208,12 @@ void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         }
     }
 
-    if (kextAGDP.loadIndex == index) {
+    if (kextList[KextIndex::AGDP].loadIndex == index) {
         KernelPatcher::LookupPatch patches[] = {
-            {&kextAGDP, reinterpret_cast<const uint8_t *>(kAGDPBoardIDKeyOriginal),
+            {&kextList[KextIndex::AGDP], reinterpret_cast<const uint8_t *>(kAGDPBoardIDKeyOriginal),
                 reinterpret_cast<const uint8_t *>(kAGDPBoardIDKeyPatched), arrsize(kAGDPBoardIDKeyOriginal), 1},
-            {&kextAGDP, kAGDPFBCountCheckOriginal, kAGDPFBCountCheckPatched, arrsize(kAGDPFBCountCheckOriginal), 1},
+            {&kextList[KextIndex::AGDP], kAGDPFBCountCheckOriginal, kAGDPFBCountCheckPatched,
+                arrsize(kAGDPFBCountCheckOriginal), 1},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
@@ -221,30 +221,31 @@ void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
                 patcher.getError());
             patcher.clearError();
         }
-        return;
-    } else if (kextBacklight.loadIndex == index) {
+    } else if (kextList[KextIndex::AppleBacklight].loadIndex == index) {
         KernelPatcher::RouteRequest request {"__ZN15AppleIntelPanel10setDisplayEP9IODisplay", wrapApplePanelSetDisplay,
             orgApplePanelSetDisplay};
-        if (patcher.routeMultiple(kextBacklight.loadIndex, &request, 1, address, size)) {
+        if (patcher.routeMultiple(kextList[KextIndex::AppleBacklight].loadIndex, &request, 1, address, size)) {
             const uint8_t find[] = {"F%uT%04x"};
             const uint8_t replace[] = {"F%uTxxxx"};
-            KernelPatcher::LookupPatch patch = {&kextBacklight, find, replace, sizeof(find), 1};
+            KernelPatcher::LookupPatch patch = {&kextList[KextIndex::AppleBacklight], find, replace, sizeof(find), 1};
             DBGLOG("nred", "applying backlight patch");
             patcher.applyLookupPatch(&patch);
         }
-        return;
-    } else if (kextMCCSControl.loadIndex == index) {
+    } else if (kextList[KextIndex::MCCSControl].loadIndex == index) {
         KernelPatcher::RouteRequest request[] = {
             {"__ZN25AppleMCCSControlGibraltar5probeEP9IOServicePi", wrapFunctionReturnZero},
             {"__ZN21AppleMCCSControlCello5probeEP9IOServicePi", wrapFunctionReturnZero},
         };
         patcher.routeMultiple(index, request, address, size);
-        return;
+    } else if (x6000fb.processKext(patcher, index, address, size)) {
+        DBGLOG("nred", "Processed x6000fb");
+    } else if (hwlibs.processKext(patcher, index, address, size)) {
+        DBGLOG("nred", "Processed hwlibs");
+    } else if (x6000.processKext(patcher, index, address, size)) {
+        DBGLOG("nred", "Processed x6000");
+    } else if (x5000.processKext(patcher, index, address, size)) {
+        DBGLOG("nred", "Processed x5000");
     }
-    if (x6000fb.processKext(patcher, index, address, size)) { return; }
-    if (hwlibs.processKext(patcher, index, address, size)) { return; }
-    if (x6000.processKext(patcher, index, address, size)) { return; }
-    if (x5000.processKext(patcher, index, address, size)) { return; }
 }
 
 struct ApplePanelData {

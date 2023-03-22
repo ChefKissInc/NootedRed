@@ -12,12 +12,11 @@ static const char *pathRadeonX6000 = "/System/Library/Extensions/AMDRadeonX6000.
 static KernelPatcher::KextInfo kextRadeonX6000 = {"com.apple.kext.AMDRadeonX6000", &pathRadeonX6000, 1, {}, {},
     KernelPatcher::KextInfo::Unloaded};
 
-X6000 *X6000::callback {nullptr};
+X6000 *X6000::callback = nullptr;
 
 void X6000::init() {
     callback = this;
     lilu.onKextLoadForce(&kextRadeonX6000);
-    DBGLOG("x6000", "Initialised");
 }
 
 bool X6000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {

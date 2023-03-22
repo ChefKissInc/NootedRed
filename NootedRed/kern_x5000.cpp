@@ -12,12 +12,11 @@ static const char *pathRadeonX5000 = "/System/Library/Extensions/AMDRadeonX5000.
 static KernelPatcher::KextInfo kextRadeonX5000 {"com.apple.kext.AMDRadeonX5000", &pathRadeonX5000, 1, {}, {},
     KernelPatcher::KextInfo::Unloaded};
 
-X5000 *X5000::callback {nullptr};
+X5000 *X5000::callback = nullptr;
 
 void X5000::init() {
     callback = this;
     lilu.onKextLoadForce(&kextRadeonX5000);
-    DBGLOG("x5000", "Initialised");
 }
 
 bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
@@ -59,13 +58,12 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "x5000", "Failed to route symbols");
 
-        if (MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) == KERN_SUCCESS) {
-            orgChannelTypes[5] = 1;     // Fix createAccelChannels so that it only starts SDMA0
-            orgChannelTypes[11] = 0;    // Fix getPagingChannel so that it gets SDMA0
-            MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
-        } else {
-            SYSLOG("x5000", "Failed to apply SDMA1 patches");
-        }
+        PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "x5000",
+            "Failed to enable kernel writing");
+        orgChannelTypes[5] = 1;     // Fix createAccelChannels so that it only starts SDMA0
+        orgChannelTypes[11] = 0;    // Fix getPagingChannel so that it gets SDMA0
+        MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
+        DBGLOG("x5000", "Applied SDMA1 patches");
 
         KernelPatcher::LookupPatch patch = {&kextRadeonX5000, kStartHWEnginesOriginal, kStartHWEnginesPatched,
             arrsize(kStartHWEnginesOriginal), 1};

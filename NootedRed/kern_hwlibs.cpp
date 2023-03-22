@@ -12,12 +12,11 @@ static const char *pathRadeonX5000HWLibs = "/System/Library/Extensions/AMDRadeon
 static KernelPatcher::KextInfo kextRadeonX5000HWLibs {"com.apple.kext.AMDRadeonX5000HWLibs", &pathRadeonX5000HWLibs, 1,
     {}, {}, KernelPatcher::KextInfo::Unloaded};
 
-X5000HWLibs *X5000HWLibs::callback {nullptr};
+X5000HWLibs *X5000HWLibs::callback = nullptr;
 
 void X5000HWLibs::init() {
     callback = this;
     lilu.onKextLoadForce(&kextRadeonX5000HWLibs);
-    DBGLOG("hwlibs", "Initialised");
 }
 
 bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
@@ -77,22 +76,19 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         goldenSettings[static_cast<uint32_t>(ChipType::GreenSardine)] =
             goldenSettings[static_cast<uint32_t>(ChipType::Renoir)];
 
-        if (MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) == KERN_SUCCESS) {
-            *orgDeviceTypeTable = {.deviceId = NRed::callback->deviceId, .deviceType = 0};
-            orgAsicInitCapsTable->familyId = orgAsicCapsTable->familyId = AMDGPU_FAMILY_RAVEN;
-            orgAsicInitCapsTable->deviceId = orgAsicCapsTable->deviceId = NRed::callback->deviceId;
-            orgAsicInitCapsTable->revision = orgAsicCapsTable->revision = NRed::callback->revision;
-            orgAsicInitCapsTable->emulatedRev = orgAsicCapsTable->emulatedRev =
-                static_cast<uint32_t>(NRed::callback->enumeratedRevision) + NRed::callback->revision;
-            orgAsicInitCapsTable->pciRev = orgAsicCapsTable->pciRev = 0xFFFFFFFF;
-            orgAsicInitCapsTable->caps = orgAsicCapsTable->caps =
-                ddiCaps[static_cast<uint32_t>(NRed::callback->chipType)];
-            orgAsicInitCapsTable->goldenCaps = goldenSettings[static_cast<uint32_t>(NRed::callback->chipType)];
-            MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
-            DBGLOG("hwlibs", "Applied DDI Caps patches");
-        } else {
-            SYSLOG("hwlibs", "Failed to apply DDI Caps patches");
-        }
+        PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "hwlibs",
+            "Failed to enable kernel writing");
+        *orgDeviceTypeTable = {.deviceId = NRed::callback->deviceId, .deviceType = 0};
+        orgAsicInitCapsTable->familyId = orgAsicCapsTable->familyId = AMDGPU_FAMILY_RAVEN;
+        orgAsicInitCapsTable->deviceId = orgAsicCapsTable->deviceId = NRed::callback->deviceId;
+        orgAsicInitCapsTable->revision = orgAsicCapsTable->revision = NRed::callback->revision;
+        orgAsicInitCapsTable->emulatedRev = orgAsicCapsTable->emulatedRev =
+            static_cast<uint32_t>(NRed::callback->enumeratedRevision) + NRed::callback->revision;
+        orgAsicInitCapsTable->pciRev = orgAsicCapsTable->pciRev = 0xFFFFFFFF;
+        orgAsicInitCapsTable->caps = orgAsicCapsTable->caps = ddiCaps[static_cast<uint32_t>(NRed::callback->chipType)];
+        orgAsicInitCapsTable->goldenCaps = goldenSettings[static_cast<uint32_t>(NRed::callback->chipType)];
+        MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
+        DBGLOG("hwlibs", "Applied DDI Caps patches");
 
         KernelPatcher::LookupPatch patch = {&kextRadeonX5000HWLibs, kFullAsicResetPatched, kFullAsicResetOriginal,
             arrsize(kFullAsicResetPatched), 1};

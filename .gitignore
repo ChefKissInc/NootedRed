@@ -43,3 +43,4 @@ DerivedData/
 .cache/
 CompilationDatabase/
 compile_commands.json
+clang_analyze

@@ -12,12 +12,11 @@ static const char *pathRadeonX6000Framebuffer =
 static KernelPatcher::KextInfo kextRadeonX6000Framebuffer {"com.apple.kext.AMDRadeonX6000Framebuffer",
     &pathRadeonX6000Framebuffer, 1, {}, {}, KernelPatcher::KextInfo::Unloaded};
 
-X6000FB *X6000FB::callback {nullptr};
+X6000FB *X6000FB::callback = nullptr;
 
 void X6000FB::init() {
     callback = this;
     lilu.onKextLoadForce(&kextRadeonX6000Framebuffer);
-    DBGLOG("x6000fb", "Initialised");
 }
 
 bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
@@ -47,19 +46,6 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "x6000fb", "Failed to route symbols");
 
-        if (MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) == KERN_SUCCESS) {
-            orgAsicCapsTable->familyId = AMDGPU_FAMILY_RAVEN;
-            orgAsicCapsTable->caps = NRed::callback->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir;
-            orgAsicCapsTable->deviceId = NRed::callback->deviceId;
-            orgAsicCapsTable->revision = NRed::callback->revision;
-            orgAsicCapsTable->emulatedRev = NRed::callback->enumeratedRevision + NRed::callback->revision;
-            orgAsicCapsTable->pciRev = 0xFFFFFFFF;
-            MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
-            DBGLOG("x6000fb", "Applied DDI Caps patches");
-        } else {
-            SYSLOG("x6000fb", "Failed to apply DDI Caps patches");
-        }
-
         KernelPatcher::LookupPatch patches[] = {
             {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheck1Original, kAmdAtomVramInfoNullCheck1Patched,
                 arrsize(kAmdAtomVramInfoNullCheck1Original), 1},
@@ -74,6 +60,17 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
             patcher.applyLookupPatch(&patch);
             patcher.clearError();
         }
+
+        PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "x5000",
+            "Failed to enable kernel writing");
+        orgAsicCapsTable->familyId = AMDGPU_FAMILY_RAVEN;
+        orgAsicCapsTable->caps = NRed::callback->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir;
+        orgAsicCapsTable->deviceId = NRed::callback->deviceId;
+        orgAsicCapsTable->revision = NRed::callback->revision;
+        orgAsicCapsTable->emulatedRev = NRed::callback->enumeratedRevision + NRed::callback->revision;
+        orgAsicCapsTable->pciRev = 0xFFFFFFFF;
+        MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
+        DBGLOG("x6000fb", "Applied DDI Caps patches");
 
         return true;
     }
