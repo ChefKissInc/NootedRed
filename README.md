@@ -8,6 +8,14 @@ The Source Code of this Original Work is licensed under the `Thou Shalt Not Prof
 
 Thanks [Acidanthera](https://github.com/Acidanthera) for the AppleBacklight code and UnfairGVA patches in [WhateverGreen](https://github.com/Acidanthera/WhateverGreen).
 
+**External websites NOT endorsed by us which mention and/or link to Noot and its projects include, but are not limited to,**
+
+- tonymacx86.com,
+- technopat.com,
+- and olarila.com.
+
+Reasons include, but are not limited to, large suspicion due to unrecommended methodology, techniques and methods of distribution, inappropriate behaviour, stealing work, lack of credits and lazy handling of hackintosh issues. We would recommend not supporting websites like those.
+
 ## Project members
 
 - [@ChefKissInc](https://github.com/ChefKissInc) | Project lead, Linux shitcode analyser and kernel extension developer. Extensive knowledge of OS inner workings
