@@ -10,6 +10,7 @@
 #include "kern_x6000fb.hpp"
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_devinfo.hpp>
+#include <IOKit/IODeviceTreeSupport.h>
 
 static const char *pathAGDP = "/System/Library/Extensions/AppleGraphicsControl.kext/Contents/PlugIns/"
                               "AppleGraphicsDevicePolicy.kext/Contents/MacOS/AppleGraphicsDevicePolicy";
@@ -123,7 +124,17 @@ void NRed::processPatcher(KernelPatcher &patcher) {
     };
 
     size_t num = arrsize(requests);
-    if (!(lilu.getRunMode() & LiluAPI::RunningNormal)) { num -= 1; }
+    if (lilu.getRunMode() & LiluAPI::RunningNormal) {
+        auto *entry = IORegistryEntry::fromPath("/", gIODTPlane);
+        if (entry) {
+            DBGLOG("nred", "Setting hwgva-id to iMacPro1,1");
+            entry->setProperty("hwgva-id", const_cast<char *>("Mac-7BA5B2D9E42DDD94"),
+                static_cast<uint32_t>(sizeof("Mac-7BA5B2D9E42DDD94")));
+            entry->release();
+        }
+    } else {
+        num -= 1;
+    }
     PANIC_COND(!patcher.routeMultipleLong(KernelPatcher::KernelID, requests, num), "nred",
         "Failed to route kernel symbols");
 }
@@ -155,6 +166,10 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
                     KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kVideoToolboxDRMModelOriginal,
                         arrsize(kVideoToolboxDRMModelOriginal), BaseDeviceInfo::get().modelIdentifier, 22)))
                 DBGLOG("nred", "Relaxed VideoToolbox DRM model check");
+
+            if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kBoardIdOriginal,
+                    arrsize(kBoardIdOriginal), kBoardIdPatched, arrsize(kBoardIdPatched))))
+                DBGLOG("nred", "Patched 'board-id' -> 'hwgva-id'");
         } else if (UNLIKELY(!strncmp(path, kCoreLSKDMSEPath, arrsize(kCoreLSKDMSEPath))) ||
                    UNLIKELY(!strncmp(path, kCoreLSKDPath, arrsize(kCoreLSKDPath)))) {
             if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kCoreLSKDOriginal,
