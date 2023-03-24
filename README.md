@@ -11,7 +11,7 @@ Thanks [Acidanthera](https://github.com/Acidanthera) for the AppleBacklight code
 **External websites NOT endorsed by us which mention and/or link to Noot and its projects include, but are not limited to,**
 
 - tonymacx86.com,
-- technopat.com,
+- technopat.net (technopat.net/sosyal),
 - and olarila.com.
 
 Reasons include, but are not limited to, large suspicion due to unrecommended methodology, techniques and methods of distribution, inappropriate behaviour, stealing work, lack of credits and lazy handling of hackintosh issues. We would recommend not supporting websites like those.
