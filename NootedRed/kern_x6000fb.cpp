@@ -43,6 +43,8 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
                 this->orgFramebufferSetAttribute},
             {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25getAttributeForConnectionEijPm", wrapFramebufferGetAttribute,
                 this->orgFramebufferGetAttribute},
+            {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
+                this->orgGetNumberOfConnectors},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "x6000fb", "Failed to route symbols");
 
@@ -243,4 +245,24 @@ IOReturn X6000FB::wrapFramebufferGetAttribute(IOService *framebuffer, IOIndex co
         return kIOReturnSuccess;
     }
     return ret;
+}
+
+uint32_t X6000FB::wrapGetNumberOfConnectors(void *that) {
+    static bool once = false;
+    if (!once) {
+        once = true;
+        DBGLOG("nred", "Fixing VBIOS connectors");
+        struct DispObjInfoTableV1_4 *objInfo = getMember<DispObjInfoTableV1_4 *>(that, 0x28);
+        auto n = objInfo->pathCount;
+        for (size_t i = 0, j = 0; i < n; i++) {
+            // Skip invalid device tags and TV/CV support
+            if ((objInfo->supportedDevices & objInfo->dispPaths[i].devTag) &&
+                !((objInfo->dispPaths[i].devTag == (1 << 2)) || (objInfo->dispPaths[i].devTag == (1 << 8)))) {
+                objInfo->dispPaths[j++] = objInfo->dispPaths[i];
+            } else {
+                objInfo->pathCount--;
+            }
+        }
+    }
+    return FunctionCast(wrapGetNumberOfConnectors, callback->orgGetNumberOfConnectors)(that);
 }

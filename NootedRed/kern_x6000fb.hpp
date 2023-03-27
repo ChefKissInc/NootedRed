@@ -27,6 +27,7 @@ class X6000FB {
     uint32_t maxPwmBacklightLvl {0xFF7B};
     void *panelCntlPtr {nullptr};
     IONotifier *dispNotif {nullptr};
+    mach_vm_address_t orgGetNumberOfConnectors {0};
 
     static bool OnAppleBacklightDisplayLoad(void *target, void *refCon, IOService *newService, IONotifier *notifier);
     void registerDispMaxBrightnessNotif();
@@ -42,6 +43,7 @@ class X6000FB {
         uintptr_t value);
     static IOReturn wrapFramebufferGetAttribute(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
         uintptr_t *value);
+    static uint32_t wrapGetNumberOfConnectors(void *that);
 };
 
 #endif /* kern_x6000fb_hpp */

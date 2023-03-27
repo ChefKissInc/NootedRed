@@ -91,25 +91,6 @@ void NRed::processPatcher(KernelPatcher &patcher) {
             }
         }
 
-        DBGLOG("nred", "Fixing VBIOS connectors");
-        auto *objInfo = this->getVBIOSDataTable<DispObjInfoTableV1_4>(0x16);
-        auto n = objInfo->pathCount;
-        for (size_t i = 0, j = 0; i < n; i++) {
-            // Skip invalid device tags and TV/CV support
-            if ((objInfo->supportedDevices & objInfo->dispPaths[i].devTag) &&
-                !(objInfo->dispPaths[i].devTag == (1 << 2) || objInfo->dispPaths[i].devTag == (1 << 8))) {
-                objInfo->dispPaths[j++] = objInfo->dispPaths[i];
-            } else {
-                objInfo->pathCount--;
-            }
-        }
-        DBGLOG("nred", "Fixing VBIOS checksum");
-        auto *data = const_cast<uint8_t *>(static_cast<const uint8_t *>(this->vbiosData->getBytesNoCopy()));
-        auto size = static_cast<size_t>(data[ATOM_ROM_SIZE_OFFSET]) * 512;
-        char checksum = 0;
-        for (size_t i = 0; i < size; i++) { checksum += data[i]; }
-        data[ATOM_ROM_CHECKSUM_OFFSET] -= checksum;
-
         DeviceInfo::deleter(devInfo);
     } else {
         SYSLOG("nred", "Failed to create DeviceInfo");
