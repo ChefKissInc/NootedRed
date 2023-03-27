@@ -17,17 +17,12 @@ static const char *pathAGDP = "/System/Library/Extensions/AppleGraphicsControl.k
 static const char *pathBacklight = "/System/Library/Extensions/AppleBacklight.kext/Contents/MacOS/AppleBacklight";
 static const char *pathMCCSControl = "/System/Library/Extensions/AppleMCCSControl.kext/Contents/MacOS/AppleMCCSControl";
 
-static KernelPatcher::KextInfo kextList[] = {
-    {"com.apple.driver.AppleGraphicsDevicePolicy", &pathAGDP, 1, {true}, {}, KernelPatcher::KextInfo::Unloaded},
-    {"com.apple.driver.AppleBacklight", &pathBacklight, 1, {true}, {}, KernelPatcher::KextInfo::Unloaded},
-    {"com.apple.driver.AppleMCCSControl", &pathMCCSControl, 1, {true}, {}, KernelPatcher::KextInfo::Unloaded},
-};
-
-enum KextIndex {
-    AGDP,
-    AppleBacklight,
-    MCCSControl,
-};
+static KernelPatcher::KextInfo kextAGDP {"com.apple.driver.AppleGraphicsDevicePolicy", &pathAGDP, 1, {true}, {},
+    KernelPatcher::KextInfo::Unloaded};
+static KernelPatcher::KextInfo kextBacklight {"com.apple.driver.AppleBacklight", &pathBacklight, 1, {true}, {},
+    KernelPatcher::KextInfo::Unloaded};
+static KernelPatcher::KextInfo kextMCCSControl {"com.apple.driver.AppleMCCSControl", &pathMCCSControl, 1, {true}, {},
+    KernelPatcher::KextInfo::Unloaded};
 
 NRed *NRed::callback = nullptr;
 
@@ -49,7 +44,9 @@ void NRed::init() {
             static_cast<NRed *>(user)->processKext(patcher, index, address, size);
         },
         this);
-    lilu.onKextLoadForce(kextList, arrsize(kextList));
+    lilu.onKextLoadForce(&kextAGDP);
+    lilu.onKextLoadForce(&kextBacklight);
+    lilu.onKextLoadForce(&kextMCCSControl);
     x6000fb.init();
     hwlibs.init();
     x6000.init();
@@ -223,12 +220,11 @@ void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         }
     }
 
-    if (kextList[KextIndex::AGDP].loadIndex == index) {
+    if (kextAGDP.loadIndex == index) {
         KernelPatcher::LookupPatch patches[] = {
-            {&kextList[KextIndex::AGDP], reinterpret_cast<const uint8_t *>(kAGDPBoardIDKeyOriginal),
+            {&kextAGDP, reinterpret_cast<const uint8_t *>(kAGDPBoardIDKeyOriginal),
                 reinterpret_cast<const uint8_t *>(kAGDPBoardIDKeyPatched), arrsize(kAGDPBoardIDKeyOriginal), 1},
-            {&kextList[KextIndex::AGDP], kAGDPFBCountCheckOriginal, kAGDPFBCountCheckPatched,
-                arrsize(kAGDPFBCountCheckOriginal), 1},
+            {&kextAGDP, kAGDPFBCountCheckOriginal, kAGDPFBCountCheckPatched, arrsize(kAGDPFBCountCheckOriginal), 1},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
@@ -236,17 +232,17 @@ void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
                 patcher.getError());
             patcher.clearError();
         }
-    } else if (kextList[KextIndex::AppleBacklight].loadIndex == index) {
+    } else if (kextBacklight.loadIndex == index) {
         KernelPatcher::RouteRequest request {"__ZN15AppleIntelPanel10setDisplayEP9IODisplay", wrapApplePanelSetDisplay,
             orgApplePanelSetDisplay};
-        if (patcher.routeMultiple(kextList[KextIndex::AppleBacklight].loadIndex, &request, 1, address, size)) {
+        if (patcher.routeMultiple(kextBacklight.loadIndex, &request, 1, address, size)) {
             const uint8_t find[] = {"F%uT%04x"};
             const uint8_t replace[] = {"F%uTxxxx"};
-            KernelPatcher::LookupPatch patch = {&kextList[KextIndex::AppleBacklight], find, replace, sizeof(find), 1};
+            KernelPatcher::LookupPatch patch = {&kextBacklight, find, replace, sizeof(find), 1};
             DBGLOG("nred", "applying backlight patch");
             patcher.applyLookupPatch(&patch);
         }
-    } else if (kextList[KextIndex::MCCSControl].loadIndex == index) {
+    } else if (kextMCCSControl.loadIndex == index) {
         KernelPatcher::RouteRequest request[] = {
             {"__ZN25AppleMCCSControlGibraltar5probeEP9IOServicePi", wrapFunctionReturnZero},
             {"__ZN21AppleMCCSControlCello5probeEP9IOServicePi", wrapFunctionReturnZero},

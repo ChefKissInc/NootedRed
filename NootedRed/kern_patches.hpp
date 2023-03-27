@@ -10,8 +10,8 @@
  * Symbols are stripped so function is unknown.
  * Removes framebuffer count >= 2 check.
  */
-static const uint8_t kAGDPFBCountCheckOriginal[] = {0x83, 0xF8, 0x02};
-static const uint8_t kAGDPFBCountCheckPatched[] = {0x83, 0xF8, 0x00};
+static const uint8_t kAGDPFBCountCheckOriginal[] = {0x02, 0x00, 0x00, 0x83, 0xF8, 0x02};
+static const uint8_t kAGDPFBCountCheckPatched[] = {0x02, 0x00, 0x00, 0x83, 0xF8, 0x00};
 
 /**
  * `AppleGraphicsDevicePolicy::start`
@@ -34,9 +34,9 @@ static const uint8_t kFullAsicResetPatched[] = {0x55, 0x48, 0x89, 0xE5, 0x8B, 0x
  * Neutralise `AmdAtomVramInfo` creation null check.
  * We don't have this entry in our VBIOS.
  */
-static const uint8_t kAmdAtomVramInfoNullCheck1Original[] = {0x48, 0x89, 0x83, 0x90, 0x00, 0x00, 0x00, 0x48, 0x85, 0xC0,
+static const uint8_t kAmdAtomVramInfoNullCheckOriginal[] = {0x48, 0x89, 0x83, 0x90, 0x00, 0x00, 0x00, 0x48, 0x85, 0xC0,
     0x0F, 0x84, 0x89, 0x00, 0x00, 0x00, 0x48, 0x8B, 0x7B, 0x18};
-static const uint8_t kAmdAtomVramInfoNullCheck1Patched[] = {0x48, 0x89, 0x83, 0x90, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90,
+static const uint8_t kAmdAtomVramInfoNullCheckPatched[] = {0x48, 0x89, 0x83, 0x90, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90,
     0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x48, 0x8B, 0x7B, 0x18};
 
 /**
@@ -53,9 +53,9 @@ static const uint8_t kAmdAtomPspDirectoryNullCheckPatched[] = {0x48, 0x89, 0x83,
  * `AmdAtomFwServices::getFirmwareInfo`
  * Neutralise `AmdAtomVramInfo` null check.
  */
-static const uint8_t kAmdAtomVramInfoNullCheck2Original[] = {0x48, 0x83, 0xBB, 0x90, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x84,
+static const uint8_t kGetFirmwareInfoNullCheckOriginal[] = {0x48, 0x83, 0xBB, 0x90, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x84,
     0x90, 0x00, 0x00, 0x00, 0x49, 0x89, 0xF7, 0xBA, 0x60, 0x00, 0x00, 0x00};
-static const uint8_t kAmdAtomVramInfoNullCheck2Patched[] = {0x48, 0x83, 0xBB, 0x90, 0x00, 0x00, 0x00, 0x00, 0x90, 0x90,
+static const uint8_t kGetFirmwareInfoNullCheckPatched[] = {0x48, 0x83, 0xBB, 0x90, 0x00, 0x00, 0x00, 0x00, 0x90, 0x90,
     0x90, 0x90, 0x90, 0x90, 0x49, 0x89, 0xF7, 0xBA, 0x60, 0x00, 0x00, 0x00};
 
 /**
@@ -116,9 +116,9 @@ static const uint8_t kCoreLSKDPatched[] = {0xC7, 0xC0, 0xC3, 0x06, 0x03, 0x00, 0
 static_assert(arrsize(kAGDPFBCountCheckOriginal) == arrsize(kAGDPFBCountCheckPatched));
 static_assert(arrsize(kAGDPBoardIDKeyOriginal) == arrsize(kAGDPBoardIDKeyPatched));
 static_assert(arrsize(kFullAsicResetOriginal) == arrsize(kFullAsicResetPatched));
-static_assert(arrsize(kAmdAtomVramInfoNullCheck1Original) == arrsize(kAmdAtomVramInfoNullCheck1Patched));
+static_assert(arrsize(kAmdAtomVramInfoNullCheckOriginal) == arrsize(kAmdAtomVramInfoNullCheckPatched));
 static_assert(arrsize(kAmdAtomPspDirectoryNullCheckOriginal) == arrsize(kAmdAtomPspDirectoryNullCheckPatched));
-static_assert(arrsize(kAmdAtomVramInfoNullCheck2Original) == arrsize(kAmdAtomVramInfoNullCheck2Patched));
+static_assert(arrsize(kGetFirmwareInfoNullCheckOriginal) == arrsize(kGetFirmwareInfoNullCheckPatched));
 static_assert(arrsize(kAgdcServicesGetVendorInfoOriginal) == arrsize(kAgdcServicesGetVendorInfoPatched));
 static_assert(arrsize(kStartHWEnginesOriginal) == arrsize(kStartHWEnginesPatched));
 static_assert(arrsize(kGetGpuDebugPolicyCallOriginal) == arrsize(kGetGpuDebugPolicyCallPatched));

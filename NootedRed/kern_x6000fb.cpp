@@ -47,12 +47,12 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "x6000fb", "Failed to route symbols");
 
         KernelPatcher::LookupPatch patches[] = {
-            {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheck1Original, kAmdAtomVramInfoNullCheck1Patched,
-                arrsize(kAmdAtomVramInfoNullCheck1Original), 1},
+            {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckOriginal, kAmdAtomVramInfoNullCheckPatched,
+                arrsize(kAmdAtomVramInfoNullCheckOriginal), 1},
             {&kextRadeonX6000Framebuffer, kAmdAtomPspDirectoryNullCheckOriginal, kAmdAtomPspDirectoryNullCheckPatched,
                 arrsize(kAmdAtomPspDirectoryNullCheckOriginal), 1},
-            {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheck2Original, kAmdAtomVramInfoNullCheck2Patched,
-                arrsize(kAmdAtomVramInfoNullCheck2Original), 1},
+            {&kextRadeonX6000Framebuffer, kGetFirmwareInfoNullCheckOriginal, kGetFirmwareInfoNullCheckPatched,
+                arrsize(kGetFirmwareInfoNullCheckOriginal), 1},
             {&kextRadeonX6000Framebuffer, kAgdcServicesGetVendorInfoOriginal, kAgdcServicesGetVendorInfoPatched,
                 arrsize(kAgdcServicesGetVendorInfoOriginal), 1},
         };
