@@ -81,8 +81,18 @@ def locate_line(lines: list[str], needle: str) -> int:
     raise AssertionError()
 
 
-cpp_path: str = "./NootedRed/kern_nred.cpp"
-hpp_path: str = "./NootedRed/kern_nred.hpp"
+moduleToClass = {
+    "hwlibs": "X5000HWLibs",
+    "x5000": "X5000",
+    "x6000": "X6000",
+    "x6000fb": "X6000FB",
+}
+
+module = input("Filename without extension: ./NootedRed/kern_")
+assert module in moduleToClass
+className = moduleToClass[module]
+cpp_path: str = f"./NootedRed/kern_{module}.cpp"
+hpp_path: str = f"./NootedRed/kern_{module}.hpp"
 
 with open(cpp_path) as cpp_file:
     cpp_lines: list[str] = cpp_file.readlines()
@@ -108,35 +118,33 @@ params_stringified = ", ".join([" ".join(x) for x in parameters])
 target_line = len(cpp_lines)
 function = [
     "\n",
-    f"{return_type} NRed::wrap{func_ident_pascal}({params_stringified}) {{\n",
+    f"{return_type} {className}::wrap{func_ident_pascal}({params_stringified}) {{\n",
 ]
 
 fmt_types = " ".join(
     f"{get_fmt_name(x[1])}: {get_fmt_type(x[0])}" for x in parameters)
 arguments = ", ".join(x[1] for x in parameters)
 function.append(
-    f"    DBGLOG("nred", \"{func_ident} << ({fmt_types})\", {arguments});\n")
+    f"    DBGLOG(\"{module}\", \"{func_ident} << ({fmt_types})\", {arguments});\n")
 
 if return_type == "void":
     function.append(
         f"    FunctionCast(wrap{func_ident_pascal}, callback->org{func_ident_pascal})({arguments});\n")
-    function.append(f"    DBGLOG("nred", \"{func_ident} >> void\");\n")
+    function.append(f"    DBGLOG(\"{module}\", \"{func_ident} >> void\");\n")
 else:
     function.append(
         f"    auto ret = FunctionCast(wrap{func_ident_pascal}, callback->org{func_ident_pascal})({arguments});\n")
     function.append(
-        f"    DBGLOG("nred", \"{func_ident} >> {get_fmt_type(return_type)}\", ret);\n")
+        f"    DBGLOG(\"{module}\", \"{func_ident} >> {get_fmt_type(return_type)}\", ret);\n")
     function.append("    return ret;\n")
 
 function.append("}\n")  # -- End of function --
-function.append("\n")
 
 cpp_lines[target_line:target_line] = function  # Extend at index
 
-kext: str = input("Kext: ").strip()
 symbol: str = input("Symbol: ").strip()
 target_line: int = locate_line(
-    cpp_lines, f"Failed to route {kext} symbols")
+    cpp_lines, "Failed to route symbols")
 
 while not cpp_lines[target_line].endswith("};\n"):
     target_line -= 1
@@ -147,12 +155,18 @@ cpp_lines.insert(
     target_line, f"{indent}    {{\"{symbol}\", wrap{func_ident_pascal}, org{func_ident_pascal}}},\n")
 
 target_line = len(hpp_lines) - 1
-while hpp_lines[target_line] != "};\n":
+while "wrap" not in hpp_lines[target_line]:
     target_line -= 1
-
+target_line += 1
 hpp_lines[target_line:target_line] = [
-    f"    mach_vm_address_t org{func_ident_pascal}{{}};\n",
     f"    static {return_type} wrap{func_ident_pascal}({params_stringified});\n",
+]
+
+while not hpp_lines[target_line].startswith("    mach_vm_address_t org"):
+    target_line -= 1
+target_line += 1
+hpp_lines[target_line:target_line] = [
+    f"    mach_vm_address_t org{func_ident_pascal} {{0}};\n",
 ]
 
 with open(cpp_path, "w") as f:
