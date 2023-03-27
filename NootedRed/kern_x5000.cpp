@@ -98,9 +98,10 @@ void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
     if (NRed::callback->chipType < ChipType::Renoir) {
         getMember<uint32_t>(that, 0x2C) = 4;    // Surface Count (?)
     }
-    getMember<bool>(that, 0xC0) = false;    // SDMA Page Queue
-    getMember<bool>(that, 0xAC) = false;    // VCE
-    getMember<bool>(that, 0xAE) = false;    // VCE-related
+    getMember<bool>(that, 0xC0) = false;        // SDMA Page Queue
+    getMember<bool>(that, 0xAC) = false;        // VCE (?)
+    getMember<bool>(that, 0xAE) = false;        // UVD (?)
+    getMember<bool>(that, 0xAF) = true;         // VCN (?)
 }
 
 void *X5000::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3) {
