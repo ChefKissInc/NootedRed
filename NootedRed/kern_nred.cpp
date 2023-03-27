@@ -161,7 +161,7 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
         if (UserPatcher::matchSharedCachePath(path)) {
             if (UNLIKELY(
                     KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kVideoToolboxDRMModelOriginal,
-                        arrsize(kVideoToolboxDRMModelOriginal), BaseDeviceInfo::get().modelIdentifier, 22)))
+                        arrsize(kVideoToolboxDRMModelOriginal), BaseDeviceInfo::get().modelIdentifier, 20)))
                 DBGLOG("nred", "Relaxed VideoToolbox DRM model check");
 
             if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kBoardIdOriginal,
