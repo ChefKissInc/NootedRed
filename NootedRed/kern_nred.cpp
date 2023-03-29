@@ -80,7 +80,9 @@ void NRed::processPatcher(KernelPatcher &patcher) {
         this->iGPU->setProperty("built-in", builtin, arrsize(builtin));
         this->deviceId = WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigDeviceID);
         auto *model = getBranding(this->deviceId, WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigRevisionID));
-        if (model) { this->iGPU->setProperty("model", model); }
+        if (model) {
+            this->iGPU->setProperty("model", const_cast<char *>(model), static_cast<uint32_t>(strlen(model) + 1));
+        }
 
         if (UNLIKELY(this->iGPU->getProperty("ATY,bin_image"))) {
             DBGLOG("nred", "VBIOS manually overridden");
