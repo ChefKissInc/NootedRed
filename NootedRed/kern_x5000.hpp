@@ -24,11 +24,10 @@ class X5000 {
     mach_vm_address_t orgAccelSharedUCStart {0};
     mach_vm_address_t orgAccelSharedUCStop {0};
     mach_vm_address_t orgAllocateAMDHWAlignManager {0};
-    mach_vm_address_t orgSetupAndInitializeHWCapabilitiesVega20 {0};
 
     static bool wrapAllocateHWEngines(void *that);
     static void wrapSetupAndInitializeHWCapabilities(void *that);
-    static void *wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3);
+    static void *wrapRTGetHWChannel(void *that, uint32_t channelType, uint32_t priority, uint32_t engineType);
     static void wrapInitializeFamilyType(void *that);
     static void *wrapAllocateAMDHWDisplay(void *that);
     static uint64_t wrapAdjustVRAMAddress(void *that, uint64_t addr);

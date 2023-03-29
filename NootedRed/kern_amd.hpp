@@ -92,6 +92,24 @@ struct CommonFirmwareHeader {
     uint32_t crc32;
 } PACKED;
 
+struct GPUInfoFirmware {
+    uint32_t gcNumSe;
+    uint32_t gcNumCuPerSh;
+    uint32_t gcNumShPerSe;
+    uint32_t gcNumRbPerSe;
+    uint32_t gcNumTccs;
+    uint32_t gcNumGprs;
+    uint32_t gcNumMaxGsThds;
+    uint32_t gcGsTableDepth;
+    uint32_t gcGsPrimBuffDepth;
+    uint32_t gcParameterCacheDepth;
+    uint32_t gcDoubleOffchipLdsBuffer;
+    uint32_t gcWaveSize;
+    uint32_t gcMaxWavesPerSimd;
+    uint32_t gcMaxScratchSlotsPerCu;
+    uint32_t gcLdsSize;
+} PACKED;
+
 struct CailAsicCapEntry {
     uint32_t familyId, deviceId;
     uint32_t revision, emulatedRev;

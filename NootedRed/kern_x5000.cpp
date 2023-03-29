@@ -33,16 +33,18 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
             {"__ZN37AMDRadeonX5000_AMDAccelDisplayMachine10gMetaClassE", NRed::callback->metaClassMap[1][0]},
             {"__ZN34AMDRadeonX5000_AMDAccelDisplayPipe10gMetaClassE", NRed::callback->metaClassMap[2][0]},
             {"__ZN30AMDRadeonX5000_AMDAccelChannel10gMetaClassE", NRed::callback->metaClassMap[3][1]},
+            {"__ZN30AMDRadeonX5000_AMDGFX9Hardware32setupAndInitializeHWCapabilitiesEv",
+                this->orgSetupAndInitializeHWCapabilities},
         };
         PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "x5000", "Failed to resolve symbols");
 
         KernelPatcher::RouteRequest requests[] = {
             {"__ZN32AMDRadeonX5000_AMDVega10Hardware17allocateHWEnginesEv", wrapAllocateHWEngines},
             {"__ZN32AMDRadeonX5000_AMDVega10Hardware32setupAndInitializeHWCapabilitiesEv",
-                wrapSetupAndInitializeHWCapabilities, this->orgSetupAndInitializeHWCapabilities},
+                wrapSetupAndInitializeHWCapabilities},
             {"__ZN32AMDRadeonX5000_AMDVega20Hardware17allocateHWEnginesEv", wrapAllocateHWEngines},
             {"__ZN32AMDRadeonX5000_AMDVega20Hardware32setupAndInitializeHWCapabilitiesEv",
-                wrapSetupAndInitializeHWCapabilities, this->orgSetupAndInitializeHWCapabilitiesVega20},
+                wrapSetupAndInitializeHWCapabilities},
             {"__ZN28AMDRadeonX5000_AMDRTHardware12getHWChannelE18_eAMD_CHANNEL_TYPE11SS_PRIORITYj", wrapRTGetHWChannel,
                 this->orgRTGetHWChannel},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20initializeFamilyTypeEv", wrapInitializeFamilyType},
@@ -91,22 +93,73 @@ bool X5000::wrapAllocateHWEngines(void *that) {
     return true;
 }
 
-void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
-    FunctionCast(wrapSetupAndInitializeHWCapabilities, NRed::callback->chipType >= ChipType::Renoir ?
-                                                           callback->orgSetupAndInitializeHWCapabilitiesVega20 :
-                                                           callback->orgSetupAndInitializeHWCapabilities)(that);
-    if (NRed::callback->chipType < ChipType::Renoir) {
-        getMember<uint32_t>(that, 0x2C) = 4;    // Surface Count (?)
-    }
-    getMember<bool>(that, 0xC0) = false;        // SDMA Page Queue
-    getMember<bool>(that, 0xAC) = false;        // VCE (?)
-    getMember<bool>(that, 0xAE) = false;        // UVD (?)
-    getMember<bool>(that, 0xAF) = true;         // VCN (?)
+enum HWCapability : uint64_t {
+    DisplayPipeCount = 0x04,     // uint32_t
+    EnabledRBMask = 0x10,        // uint32_t
+    ActiveRBCount = 0x14,        // uint32_t
+    SECount = 0x34,              // uint32_t
+    SAPerSE = 0x3C,              // uint32_t
+    MaxCU = 0x70,                // uint32_t
+    ActiveCUCount = 0x74,        // uint32_t
+    HasUVD0 = 0x84,              // bool
+    HasUVD1 = 0x85,              // bool
+    HasVCE = 0x86,               // bool
+    HasVCN0 = 0x87,              // bool
+    HasVCN1 = 0x88,              // bool
+    HasHDCP = 0x8D,              // bool
+    Unknown1 = 0x94,             // bool
+    Unknown2 = 0x97,             // bool
+    HasSDMAPageQueue = 0x98,     // bool
+    GPUDCCDisplayable = 0x99,    // bool
+    HasXGMI = 0x9A,              // bool
+};
+
+template<typename T>
+static inline void setHWCapability(void *that, HWCapability capability, T value) {
+    getMember<T>(that, 0x28 + capability) = value;
 }
 
-void *X5000::wrapRTGetHWChannel(void *that, uint32_t param1, uint32_t param2, uint32_t param3) {
-    if (param1 == 2 && param2 == 0 && param3 == 0) { param2 = 2; }    // Redirect SDMA1 retrieval to SDMA0
-    return FunctionCast(wrapRTGetHWChannel, callback->orgRTGetHWChannel)(that, param1, param2, param3);
+void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
+    auto isRavenDerivative = NRed::callback->chipType < ChipType::Renoir;
+
+    auto *chipName = isRavenDerivative ? NRed::getChipName() : "renoir";
+    char filename[512] = {0};
+    snprintf(filename, 128, "%s_gpu_info.bin", chipName);
+    auto &fwDesc = getFWDescByName(filename);
+    auto *header = reinterpret_cast<const CommonFirmwareHeader *>(fwDesc.data);
+    auto *gpuInfo = reinterpret_cast<const GPUInfoFirmware *>(fwDesc.data + header->ucodeOff);
+
+    setHWCapability<uint32_t>(that, HWCapability::SECount, gpuInfo->gcNumSe);
+    setHWCapability<uint32_t>(that, HWCapability::SAPerSE, gpuInfo->gcNumShPerSe);
+    setHWCapability<uint32_t>(that, HWCapability::MaxCU, gpuInfo->gcNumCuPerSh);
+
+    FunctionCast(wrapSetupAndInitializeHWCapabilities, callback->orgSetupAndInitializeHWCapabilities)(that);
+
+    uint32_t activeRB = gpuInfo->gcNumRbPerSe / gpuInfo->gcNumShPerSe;
+    setHWCapability<uint32_t>(that, HWCapability::ActiveRBCount, activeRB);
+    setHWCapability<uint32_t>(that, HWCapability::EnabledRBMask, (1U << activeRB) - 1);
+    setHWCapability<uint32_t>(that, HWCapability::ActiveCUCount, 4);
+    setHWCapability<uint32_t>(that, HWCapability::DisplayPipeCount, isRavenDerivative ? 4 : 6);
+    setHWCapability<bool>(that, HWCapability::HasUVD0, false);
+    setHWCapability<bool>(that, HWCapability::HasUVD1, false);
+    setHWCapability<bool>(that, HWCapability::HasVCE, false);
+    setHWCapability<bool>(that, HWCapability::HasVCN0, true);
+    setHWCapability<bool>(that, HWCapability::HasVCN1, false);
+    setHWCapability<bool>(that, HWCapability::HasHDCP, true);
+    setHWCapability<bool>(that, HWCapability::Unknown1, true);     // Set to true in Vega10
+    setHWCapability<bool>(that, HWCapability::Unknown2, false);    // Set to false in Vega10
+    setHWCapability<bool>(that, HWCapability::HasSDMAPageQueue, false);
+    setHWCapability<bool>(that, HWCapability::GPUDCCDisplayable, true);
+    setHWCapability<bool>(that, HWCapability::HasXGMI, false);
+}
+
+void *X5000::wrapRTGetHWChannel(void *that, uint32_t channelType, uint32_t priority, uint32_t engineType) {
+    // Redirect SDMA1 retrieval to SDMA0
+    if (channelType == 2) {
+        priority = 2;
+        engineType = 0;
+    }
+    return FunctionCast(wrapRTGetHWChannel, callback->orgRTGetHWChannel)(that, channelType, priority, engineType);
 }
 
 void X5000::wrapInitializeFamilyType(void *that) { getMember<uint32_t>(that, 0x308) = AMDGPU_FAMILY_RAVEN; }

@@ -44,6 +44,10 @@
 		1C748C2E1C21952C0024EED2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		401A3D3829BF7D2D00B5A76A /* kern_patches.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_patches.hpp; sourceTree = "<group>"; };
 		40364DB529B79DFD0070A2B4 /* kern_model.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_model.hpp; sourceTree = "<group>"; };
+		40588A8E29D369C400F042E9 /* raven_gpu_info.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_gpu_info.bin; sourceTree = "<group>"; };
+		40588A8F29D369C400F042E9 /* renoir_gpu_info.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_gpu_info.bin; sourceTree = "<group>"; };
+		40588A9029D369C400F042E9 /* raven2_gpu_info.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven2_gpu_info.bin; sourceTree = "<group>"; };
+		40588A9129D369C400F042E9 /* picasso_gpu_info.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = picasso_gpu_info.bin; sourceTree = "<group>"; };
 		4083A13429AC9F42003379D3 /* raven2_vcn.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven2_vcn.bin; sourceTree = "<group>"; };
 		4083A13D29AC9F43003379D3 /* renoir_dmcub.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_dmcub.bin; sourceTree = "<group>"; };
 		4083A14129AC9F43003379D3 /* picasso_vcn.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = picasso_vcn.bin; sourceTree = "<group>"; };
@@ -143,10 +147,14 @@
 			children = (
 				4083A14F29AC9F43003379D3 /* green_sardine_dmcub.bin */,
 				4083A15029AC9F44003379D3 /* green_sardine_vcn.bin */,
+				40588A9129D369C400F042E9 /* picasso_gpu_info.bin */,
 				4083A14129AC9F43003379D3 /* picasso_vcn.bin */,
+				40588A8E29D369C400F042E9 /* raven_gpu_info.bin */,
 				4083A15329AC9F44003379D3 /* raven_vcn.bin */,
+				40588A9029D369C400F042E9 /* raven2_gpu_info.bin */,
 				4083A13429AC9F42003379D3 /* raven2_vcn.bin */,
 				4083A13D29AC9F43003379D3 /* renoir_dmcub.bin */,
+				40588A8F29D369C400F042E9 /* renoir_gpu_info.bin */,
 				4083A14229AC9F43003379D3 /* renoir_vcn.bin */,
 			);
 			path = Firmware;
