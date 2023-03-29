@@ -255,9 +255,8 @@ uint32_t X6000FB::wrapGetNumberOfConnectors(void *that) {
         struct DispObjInfoTableV1_4 *objInfo = getMember<DispObjInfoTableV1_4 *>(that, 0x28);
         auto n = objInfo->pathCount;
         for (size_t i = 0, j = 0; i < n; i++) {
-            // Skip invalid device tags and TV/CV support
-            if ((objInfo->supportedDevices & objInfo->dispPaths[i].devTag) &&
-                !((objInfo->dispPaths[i].devTag == (1 << 2)) || (objInfo->dispPaths[i].devTag == (1 << 8)))) {
+            // Skip invalid device tags
+            if (objInfo->supportedDevices & objInfo->dispPaths[i].devTag) {
                 objInfo->dispPaths[j++] = objInfo->dispPaths[i];
             } else {
                 objInfo->pathCount--;

@@ -92,7 +92,7 @@ struct DispObjInfoTableV1_4 : public AtomCommonTableHeader {
     uint16_t supportedDevices;
     uint8_t pathCount;
     uint8_t _reserved;
-    AtomDispObjPathV2 dispPaths[8];
+    AtomDispObjPathV2 dispPaths[];
 } PACKED;
 
 #endif /* kern_vbios_hpp */
