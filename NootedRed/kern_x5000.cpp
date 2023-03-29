@@ -94,19 +94,19 @@ bool X5000::wrapAllocateHWEngines(void *that) {
 }
 
 enum HWCapability : uint64_t {
-    DisplayPipeCount = 0x04,     // uint32_t
-    EnabledRBMask = 0x10,        // uint32_t
-    ActiveRBCount = 0x14,        // uint32_t
-    SECount = 0x34,              // uint32_t
-    SAPerSE = 0x3C,              // uint32_t
-    MaxCU = 0x70,                // uint32_t
-    ActiveCUCount = 0x74,        // uint32_t
-    HasUVD0 = 0x84,              // bool
-    HasUVD1 = 0x85,              // bool
-    HasVCE = 0x86,               // bool
-    HasVCN0 = 0x87,              // bool
-    HasVCN1 = 0x88,              // bool
-    HasSDMAPageQueue = 0x98,     // bool
+    DisplayPipeCount = 0x04,    // uint32_t
+    EnabledRBMask = 0x10,       // uint32_t
+    ActiveRBCount = 0x14,       // uint32_t
+    SECount = 0x34,             // uint32_t
+    SAPerSE = 0x3C,             // uint32_t
+    MaxCU = 0x70,               // uint32_t
+    ActiveCUCount = 0x74,       // uint32_t
+    HasUVD0 = 0x84,             // bool
+    HasUVD1 = 0x85,             // bool
+    HasVCE = 0x86,              // bool
+    HasVCN0 = 0x87,             // bool
+    HasVCN1 = 0x88,             // bool
+    HasSDMAPageQueue = 0x98,    // bool
 };
 
 template<typename T>
