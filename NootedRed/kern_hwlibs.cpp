@@ -124,9 +124,11 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
     auto *fwDir = getMember<void *>(that, 0xB8) = IOMallocZero(0xD8);
     callback->orgAMDFirmwareDirectoryConstructor(fwDir, 3);
 
-    auto *filename = NRed::callback->chipType >= ChipType::Renoir ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
+    auto isRenoirDerivative = NRed::callback->chipType >= ChipType::Renoir;
+    auto *filename = isRenoirDerivative ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
     auto &fwDesc = getFWDescByName(filename);
-    auto *fw = callback->orgCreateFirmware(fwDesc.data, fwDesc.size, 0x200, filename);
+    uint32_t ipVersion = isRenoirDerivative ? 0x0202 : 0x0100;    // VCN 2.2, VCN 1.0
+    auto *fw = callback->orgCreateFirmware(fwDesc.data, fwDesc.size, ipVersion, filename);
     PANIC_COND(!fw, "hwlibs", "Failed to create '%s' firmware", filename);
     DBGLOG("hwlibs", "Inserting %s!", filename);
     PANIC_COND(!callback->orgPutFirmware(fwDir, 0, fw), "hwlibs", "Failed to inject %s firmware", filename);
