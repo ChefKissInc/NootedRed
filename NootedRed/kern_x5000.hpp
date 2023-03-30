@@ -16,8 +16,8 @@ class X5000 {
     bool processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size);
 
     private:
-    t_HWEngineConstructor orgGFX9PM4EngineConstructor {nullptr};
-    t_HWEngineConstructor orgGFX9SDMAEngineConstructor {nullptr};
+    t_GenericConstructor orgGFX9PM4EngineConstructor {nullptr};
+    t_GenericConstructor orgGFX9SDMAEngineConstructor {nullptr};
     mach_vm_address_t orgSetupAndInitializeHWCapabilities {0};
     mach_vm_address_t orgRTGetHWChannel {0};
     mach_vm_address_t orgAdjustVRAMAddress {0};

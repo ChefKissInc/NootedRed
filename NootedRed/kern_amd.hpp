@@ -5,7 +5,7 @@
 #define kern_amd_hpp
 #include <Headers/kern_util.hpp>
 
-using t_HWEngineConstructor = void (*)(void *that);
+using t_GenericConstructor = void (*)(void *that);
 
 constexpr uint32_t AMDGPU_FAMILY_RAVEN = 0x8E;
 

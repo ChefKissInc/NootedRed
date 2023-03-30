@@ -16,7 +16,7 @@ class X6000 {
     bool processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size);
 
     private:
-    t_HWEngineConstructor orgVCN2EngineConstructor {nullptr};
+    t_GenericConstructor orgVCN2EngineConstructor {nullptr};
     mach_vm_address_t orgAllocateAMDHWDisplay {0};
     mach_vm_address_t orgNewVideoContext {0};
     mach_vm_address_t orgCreateSMLInterface {0};
