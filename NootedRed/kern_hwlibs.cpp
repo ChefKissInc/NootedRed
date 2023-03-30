@@ -121,35 +121,15 @@ AMDReturn X5000HWLibs::wrapPspSwInit(uint32_t *inputData, void *outputData) {
 uint32_t X5000HWLibs::wrapGcGetHwVersion() { return 0x090400; }
 
 void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
-    auto *fwDir = IOMallocZero(0xD8);
+    auto *fwDir = getMember<void *>(that, 0xB8) = IOMallocZero(0xD8);
     callback->orgAMDFirmwareDirectoryConstructor(fwDir, 3);
-    getMember<void *>(that, 0xB8) = fwDir;
 
-    auto *chipName = NRed::getChipName();
-    char filename[128];
-    snprintf(filename, 128, "%s_vcn.bin", chipName);
-    auto *targetFilename = NRed::callback->chipType >= ChipType::Renoir ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
-    DBGLOG("hwlibs", "%s => %s", filename, targetFilename);
-
+    auto *filename = NRed::callback->chipType >= ChipType::Renoir ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
     auto &fwDesc = getFWDescByName(filename);
-    auto *fwHeader = reinterpret_cast<const CommonFirmwareHeader *>(fwDesc.data);
-    auto *fw =
-        callback->orgCreateFirmware(fwDesc.data + fwHeader->ucodeOff, fwHeader->ucodeSize, 0x200, targetFilename);
-    PANIC_COND(!fw, "hwlibs", "Failed to create '%s' firmware", targetFilename);
-    DBGLOG("hwlibs", "Inserting %s!", targetFilename);
-    PANIC_COND(!callback->orgPutFirmware(fwDir, 0, fw), "hwlibs", "Failed to inject ativvaxy_rv.dat firmware");
-
-    if (NRed::callback->chipType >= ChipType::Renoir) {
-        snprintf(filename, 128, "%s_dmcub.bin", chipName);
-        DBGLOG("hwlibs", "%s => atidmcub_0.dat", filename);
-        auto &fwDesc = getFWDescByName(filename);
-        auto *fwHeader = reinterpret_cast<const CommonFirmwareHeader *>(fwDesc.data);
-        fw =
-            callback->orgCreateFirmware(fwDesc.data + fwHeader->ucodeOff, fwHeader->ucodeSize, 0x200, "atidmcub_0.dat");
-        PANIC_COND(!fw, "hwlibs", "Failed to create atidmcub_0.dat firmware");
-        DBGLOG("hwlibs", "Inserting atidmcub_0.dat!");
-        PANIC_COND(!callback->orgPutFirmware(fwDir, 0, fw), "hwlibs", "Failed to inject atidmcub_0.dat firmware");
-    }
+    auto *fw = callback->orgCreateFirmware(fwDesc.data, fwDesc.size, 0x200, filename);
+    PANIC_COND(!fw, "hwlibs", "Failed to create '%s' firmware", filename);
+    DBGLOG("hwlibs", "Inserting %s!", filename);
+    PANIC_COND(!callback->orgPutFirmware(fwDir, 0, fw), "hwlibs", "Failed to inject %s firmware", filename);
 }
 
 void *X5000HWLibs::wrapCreatePowerTuneServices(void *that, void *param2) {
