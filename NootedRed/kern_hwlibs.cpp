@@ -61,7 +61,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"_smu_9_0_1_check_fw_status", hwLibsNoop},
             {"_smu_9_0_1_unload_smu", hwLibsNoop},
             {"_psp_sw_init", wrapPspSwInit, this->orgPspSwInit},
-            {"_psp_bootloader_is_sos_running", hwLibsNoop},
+            {"_psp_bootloader_is_sos_running", hwLibsUnsupported},
             {"_psp_bootloader_load_sos", hwLibsNoop},
             {"_psp_bootloader_load_sysdrv_3_1", hwLibsNoop},
             {"_psp_xgmi_is_support", hwLibsUnsupported},
@@ -69,6 +69,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit},
             {"_SmuRaven_Initialize", wrapSmuRavenInitialize, this->orgSmuRavenInitialize},
             {"_SmuRenoir_Initialize", wrapSmuRenoirInitialize, this->orgSmuRenoirInitialize},
+            {"_psp_cos_wait_for", wrapPspCosWaitFor, orgPspCosWaitFor},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "hwlibs", "Failed to route symbols");
 
@@ -107,7 +108,6 @@ AMDReturn X5000HWLibs::wrapPspSwInit(uint32_t *inputData, void *outputData) {
     if (NRed::callback->chipType < ChipType::Renoir) {
         inputData[3] = 0x9;
         inputData[5] = 0x2;
-
     } else {
         inputData[3] = 0xB;
         inputData[5] = 0x0;
@@ -180,4 +180,9 @@ AMDReturn X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, vo
     }
 
     return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(psp, ctx, param3, param4);
+}
+
+AMDReturn X5000HWLibs::wrapPspCosWaitFor(void *cos, uint64_t param2, uint64_t param3, uint64_t param4) {
+    IOSleep(20);    // There might be a handshake issue with the hardware, requiring delay
+    return FunctionCast(wrapPspCosWaitFor, callback->orgPspCosWaitFor)(cos, param2, param3, param4);
 }
