@@ -2,7 +2,7 @@
 
 Through hard work come great results.
 
-An AMD iGPU support [Lilu](https://github.com/acidanthera/Lilu) plugin.
+An AMD iGPU support [Lilu](https://github.com/acidanthera/Lilu) (1.6.4+) plugin.
 
 The Source Code of this Original Work is licensed under the `Thou Shalt Not Profit License version 1.0`. See [`LICENSE`](https://github.com/NootInc/NootedRed/blob/master/LICENSE)
 
@@ -53,6 +53,10 @@ Injecting the GPU kexts is not possible during the OpenCore injection stage. The
 
 In conclusion, this kext is constricted to Big Sur since there are too many incompatibilities with older and newer macOS versions.
 
-### I get a panic saying "Failed to get VBIOS from VRAM", how can I fix it?
+### I get a panic saying "Failed to get VBIOS from VRAM", how can I fix this?
 
 Ensure Legacy Boot/CSM is disabled in your BIOS settings.
+
+### I get stuck on gIOScreenLockState 3, how can I fix this?
+
+Ensure you have VRAM size larger or equal to 512MiB. Recommended VRAM size is 1GiB or larger. (Use a tool like Smokeless-UAMF if there's no option, or options are lacking).
