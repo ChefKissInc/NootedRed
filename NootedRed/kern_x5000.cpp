@@ -87,24 +87,19 @@ bool X5000::wrapAllocateHWEngines(void *that) {
 }
 
 enum HWCapability : uint64_t {
-    DisplayPipeCount = 0x04,     // uint32_t
-    EnabledRBMask = 0x10,        // uint32_t
-    ActiveRBCount = 0x14,        // uint32_t
-    SECount = 0x34,              // uint32_t
-    SAPerSE = 0x3C,              // uint32_t
-    MaxCU = 0x70,                // uint32_t
-    ActiveCUCount = 0x74,        // uint32_t
-    HasUVD0 = 0x84,              // bool
-    HasUVD1 = 0x85,              // bool
-    HasVCE = 0x86,               // bool
-    HasVCN0 = 0x87,              // bool
-    HasVCN1 = 0x88,              // bool
-    HasHDCP = 0x8D,              // bool
-    Unknown1 = 0x94,             // bool
-    Unknown2 = 0x97,             // bool
-    HasSDMAPageQueue = 0x98,     // bool
-    GPUDCCDisplayable = 0x99,    // bool
-    HasXGMI = 0x9A,              // bool
+    DisplayPipeCount = 0x04,    // uint32_t
+    EnabledRBMask = 0x10,       // uint32_t
+    ActiveRBCount = 0x14,       // uint32_t
+    SECount = 0x34,             // uint32_t
+    SAPerSE = 0x3C,             // uint32_t
+    MaxCU = 0x70,               // uint32_t
+    HasUVD0 = 0x84,             // bool
+    HasUVD1 = 0x85,             // bool
+    HasVCE = 0x86,              // bool
+    HasVCN0 = 0x87,             // bool
+    HasVCN1 = 0x88,             // bool
+    HasHDCP = 0x8D,             // bool
+    HasSDMAPageQueue = 0x98,    // bool
 };
 
 template<typename T>
@@ -125,13 +120,12 @@ void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
     setHWCapability<uint32_t>(that, HWCapability::SECount, gpuInfo->gcNumSe);
     setHWCapability<uint32_t>(that, HWCapability::SAPerSE, gpuInfo->gcNumShPerSe);
     setHWCapability<uint32_t>(that, HWCapability::MaxCU, gpuInfo->gcNumCuPerSh);
-
-    FunctionCast(wrapSetupAndInitializeHWCapabilities, callback->orgSetupAndInitializeHWCapabilities)(that);
-
     uint32_t activeRB = gpuInfo->gcNumRbPerSe / gpuInfo->gcNumShPerSe;
     setHWCapability<uint32_t>(that, HWCapability::ActiveRBCount, activeRB);
     setHWCapability<uint32_t>(that, HWCapability::EnabledRBMask, (1U << activeRB) - 1);
-    setHWCapability<uint32_t>(that, HWCapability::ActiveCUCount, 4);
+
+    FunctionCast(wrapSetupAndInitializeHWCapabilities, callback->orgSetupAndInitializeHWCapabilities)(that);
+
     setHWCapability<uint32_t>(that, HWCapability::DisplayPipeCount, isRavenDerivative ? 4 : 6);
     setHWCapability<bool>(that, HWCapability::HasUVD0, false);
     setHWCapability<bool>(that, HWCapability::HasUVD1, false);
@@ -139,11 +133,7 @@ void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
     setHWCapability<bool>(that, HWCapability::HasVCN0, true);
     setHWCapability<bool>(that, HWCapability::HasVCN1, false);
     setHWCapability<bool>(that, HWCapability::HasHDCP, true);
-    setHWCapability<bool>(that, HWCapability::Unknown1, true);     // Set to true in Vega10
-    setHWCapability<bool>(that, HWCapability::Unknown2, false);    // Set to false in Vega10
     setHWCapability<bool>(that, HWCapability::HasSDMAPageQueue, false);
-    setHWCapability<bool>(that, HWCapability::GPUDCCDisplayable, true);
-    setHWCapability<bool>(that, HWCapability::HasXGMI, false);
 }
 
 void *X5000::wrapRTGetHWChannel(void *that, uint32_t channelType, uint32_t priority, uint32_t engineType) {
