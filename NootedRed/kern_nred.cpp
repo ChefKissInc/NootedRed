@@ -81,10 +81,11 @@ void NRed::processPatcher(KernelPatcher &patcher) {
         this->deviceId = WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigDeviceID);
         auto *model = getBranding(this->deviceId, WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigRevisionID));
         if (model) {
-            this->iGPU->setProperty("model", const_cast<char *>(model), static_cast<uint32_t>(strlen(model) + 1));
+            auto len = static_cast<uint32_t>(strlen(model) + 1);
+            this->iGPU->setProperty("model", const_cast<char *>(model), len);
+            this->iGPU->setProperty("ATY,FamilyName", const_cast<char *>(model) + 4, 7);            // Radeon
+            this->iGPU->setProperty("ATY,DeviceName", const_cast<char *>(model) + 11, len - 11);    // Vega ...
         }
-        this->iGPU->setProperty("ATY,FamilyName", const_cast<char *>("Radeon"), 7);
-        this->iGPU->setProperty("ATY,DeviceName", const_cast<char *>("Raven"), 6);
 
         if (UNLIKELY(this->iGPU->getProperty("ATY,bin_image"))) {
             DBGLOG("nred", "VBIOS manually overridden");

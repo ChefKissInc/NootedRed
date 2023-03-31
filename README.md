@@ -59,4 +59,4 @@ Ensure Legacy Boot/CSM is disabled in your BIOS settings.
 
 ### I get stuck on gIOScreenLockState 3, how can I fix this?
 
-Ensure you have VRAM size larger or equal to 512MiB. Recommended VRAM size is 1GiB or larger. (Use a tool like Smokeless-UAMF if there's no option, or options are lacking).
+Ensure you have VRAM size larger or equal to 512MiB. Recommended VRAM size is 1GiB or larger. (Use a tool like Smokeless-UMAF if there's no option, or options are lacking).

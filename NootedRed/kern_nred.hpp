@@ -139,14 +139,14 @@ class NRed {
     }
 
     bool getVBIOSFromVRAM(IOPCIDevice *provider) {
-        uint32_t size = 256 * 1024;    // ???
-        auto *bar0 = provider->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress0, kIOMemoryMapCacheModeWriteThrough);
+        auto *bar0 = provider->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress0);
         if (!bar0 || !bar0->getLength()) {
             DBGLOG("nred", "FB BAR not enabled");
             OSSafeReleaseNULL(bar0);
             return false;
         }
         auto *fb = reinterpret_cast<const uint8_t *>(bar0->getVirtualAddress());
+        uint32_t size = 256 * 1024;    // ???
         if (!checkAtomBios(fb, size)) {
             DBGLOG("nred", "VRAM VBIOS is not an ATOMBIOS");
             OSSafeReleaseNULL(bar0);
