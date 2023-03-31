@@ -88,11 +88,9 @@ bool X5000::wrapAllocateHWEngines(void *that) {
 
 enum HWCapability : uint64_t {
     DisplayPipeCount = 0x04,    // uint32_t
-    EnabledRBMask = 0x10,       // uint32_t
-    ActiveRBCount = 0x14,       // uint32_t
     SECount = 0x34,             // uint32_t
-    SAPerSE = 0x3C,             // uint32_t
-    MaxCU = 0x70,               // uint32_t
+    SHPerSE = 0x3C,             // uint32_t
+    CUPerSH = 0x70,             // uint32_t
     HasUVD0 = 0x84,             // bool
     HasUVD1 = 0x85,             // bool
     HasVCE = 0x86,              // bool
@@ -118,11 +116,8 @@ void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
     auto *gpuInfo = reinterpret_cast<const GPUInfoFirmware *>(fwDesc.data + header->ucodeOff);
 
     setHWCapability<uint32_t>(that, HWCapability::SECount, gpuInfo->gcNumSe);
-    setHWCapability<uint32_t>(that, HWCapability::SAPerSE, gpuInfo->gcNumShPerSe);
-    setHWCapability<uint32_t>(that, HWCapability::MaxCU, gpuInfo->gcNumCuPerSh);
-    uint32_t activeRB = gpuInfo->gcNumRbPerSe / gpuInfo->gcNumShPerSe;
-    setHWCapability<uint32_t>(that, HWCapability::ActiveRBCount, activeRB);
-    setHWCapability<uint32_t>(that, HWCapability::EnabledRBMask, (1U << activeRB) - 1);
+    setHWCapability<uint32_t>(that, HWCapability::SHPerSE, gpuInfo->gcNumShPerSe);
+    setHWCapability<uint32_t>(that, HWCapability::CUPerSH, gpuInfo->gcNumCuPerSh);
 
     FunctionCast(wrapSetupAndInitializeHWCapabilities, callback->orgSetupAndInitializeHWCapabilities)(that);
 
