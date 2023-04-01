@@ -33,8 +33,6 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware", this->orgPutFirmware},
             {"__ZN31AtiAppleVega10PowerTuneServicesC1EP11PP_InstanceP18PowerPlayCallbacks",
                 this->orgVega10PowerTuneConstructor},
-            {"__ZN31AtiAppleVega20PowerTuneServicesC1EP11PP_InstanceP18PowerPlayCallbacks",
-                this->orgVega20PowerTuneConstructor},
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable},
             {"_CAILAsicCapsInitTable", orgAsicInitCapsTable},
             {"_Raven_SendMsgToSmc", this->orgRavenSendMsgToSmc},
@@ -136,11 +134,7 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
 
 void *X5000HWLibs::wrapCreatePowerTuneServices(void *that, void *param2) {
     auto *ret = IOMallocZero(0x18);
-    if (NRed::callback->chipType >= ChipType::Renoir) {
-        callback->orgVega20PowerTuneConstructor(ret, that, param2);
-    } else {
-        callback->orgVega10PowerTuneConstructor(ret, that, param2);
-    }
+    callback->orgVega10PowerTuneConstructor(ret, that, param2);
     return ret;
 }
 

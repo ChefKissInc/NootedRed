@@ -25,7 +25,6 @@ class X5000HWLibs {
     t_createFirmware orgCreateFirmware {nullptr};
     t_putFirmware orgPutFirmware {nullptr};
     t_VegaXPowerTuneConstructor orgVega10PowerTuneConstructor {nullptr};
-    t_VegaXPowerTuneConstructor orgVega20PowerTuneConstructor {nullptr};
     t_sendMsgToSmc orgRavenSendMsgToSmc {nullptr};
     t_sendMsgToSmc orgRenoirSendMsgToSmc {nullptr};
     mach_vm_address_t orgSmuRavenInitialize {0};
