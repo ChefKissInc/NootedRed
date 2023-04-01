@@ -137,9 +137,11 @@ uint32_t X6000FB::wrapHwReadReg32(void *that, uint32_t reg) {
 
 bool X6000FB::wrapInitWithPciInfo(void *that, void *param1) {
     auto ret = FunctionCast(wrapInitWithPciInfo, callback->orgInitWithPciInfo)(that, param1);
-    // Hack AMDRadeonX6000_AmdLogger to log everything
-    getMember<uint64_t>(that, 0x28) = ~0ULL;
-    getMember<uint32_t>(that, 0x30) = 0xFF;
+    if (ADDPR(debugEnabled)) {
+        // Hack AMDRadeonX6000_AmdLogger to log everything
+        getMember<uint64_t>(that, 0x28) = ~0ULL;
+        getMember<uint32_t>(that, 0x30) = 0xFF;
+    }
     return ret;
 }
 
