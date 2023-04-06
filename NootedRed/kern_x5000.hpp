@@ -19,7 +19,7 @@ class X5000 {
     t_GenericConstructor orgGFX9PM4EngineConstructor {nullptr};
     t_GenericConstructor orgGFX9SDMAEngineConstructor {nullptr};
     mach_vm_address_t orgSetupAndInitializeHWCapabilities {0};
-    mach_vm_address_t orgRTGetHWChannel {0};
+    mach_vm_address_t orgGetHWChannel {0};
     mach_vm_address_t orgAdjustVRAMAddress {0};
     mach_vm_address_t orgAccelSharedUCStart {0};
     mach_vm_address_t orgAccelSharedUCStop {0};
@@ -27,7 +27,7 @@ class X5000 {
 
     static bool wrapAllocateHWEngines(void *that);
     static void wrapSetupAndInitializeHWCapabilities(void *that);
-    static void *wrapRTGetHWChannel(void *that, uint32_t channelType, uint32_t priority, uint32_t engineType);
+    static void *wrapGetHWChannel(void *that, uint32_t engineType, uint32_t ringId);
     static void wrapInitializeFamilyType(void *that);
     static void *wrapAllocateAMDHWDisplay(void *that);
     static uint64_t wrapAdjustVRAMAddress(void *that, uint64_t addr);

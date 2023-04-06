@@ -45,8 +45,8 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
             {"__ZN32AMDRadeonX5000_AMDVega20Hardware17allocateHWEnginesEv", wrapAllocateHWEngines},
             {"__ZN32AMDRadeonX5000_AMDVega20Hardware32setupAndInitializeHWCapabilitiesEv",
                 wrapSetupAndInitializeHWCapabilities},
-            {"__ZN28AMDRadeonX5000_AMDRTHardware12getHWChannelE18_eAMD_CHANNEL_TYPE11SS_PRIORITYj", wrapRTGetHWChannel,
-                this->orgRTGetHWChannel},
+            {"__ZN26AMDRadeonX5000_AMDHardware12getHWChannelE20_eAMD_HW_ENGINE_TYPE18_eAMD_HW_RING_TYPE",
+                wrapGetHWChannel, this->orgGetHWChannel},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20initializeFamilyTypeEv", wrapInitializeFamilyType},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20allocateAMDHWDisplayEv", wrapAllocateAMDHWDisplay},
             {"__ZN41AMDRadeonX5000_AMDGFX9GraphicsAccelerator15newVideoContextEv", wrapNewVideoContext},
@@ -129,13 +129,9 @@ void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
     setHWCapability<bool>(that, HWCapability::HasSDMAPageQueue, false);
 }
 
-void *X5000::wrapRTGetHWChannel(void *that, uint32_t channelType, uint32_t priority, uint32_t engineType) {
-    // Redirect SDMA1 retrieval to SDMA0
-    if (channelType == 2) {
-        priority = 2;
-        engineType = 0;
-    }
-    return FunctionCast(wrapRTGetHWChannel, callback->orgRTGetHWChannel)(that, channelType, priority, engineType);
+void *X5000::wrapGetHWChannel(void *that, uint32_t engineType, uint32_t ringId) {
+    /** Redirect SDMA1 engine type to SDMA0 */
+    return FunctionCast(wrapGetHWChannel, callback->orgGetHWChannel)(that, (engineType == 2) ? 1 : engineType, ringId);
 }
 
 void X5000::wrapInitializeFamilyType(void *that) { getMember<uint32_t>(that, 0x308) = AMDGPU_FAMILY_RAVEN; }
