@@ -21,6 +21,8 @@ void X5000HWLibs::init() {
 
 bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonX5000HWLibs.loadIndex == index) {
+        NRed::callback->setRMMIOIfNecessary();
+
         CailAsicCapEntry *orgAsicCapsTable = nullptr;
         CailInitAsicCapEntry *orgAsicInitCapsTable = nullptr;
         const void *goldenSettings[static_cast<uint32_t>(ChipType::Unknown)] = {nullptr};

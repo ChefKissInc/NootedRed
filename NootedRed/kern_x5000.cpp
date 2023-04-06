@@ -21,6 +21,8 @@ void X5000::init() {
 
 bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonX5000.loadIndex == index) {
+        NRed::callback->setRMMIOIfNecessary();
+
         uint32_t *orgChannelTypes = nullptr;
 
         KernelPatcher::SolveRequest solveRequests[] = {
@@ -161,14 +163,14 @@ void *X5000::wrapNewSharedUserClient() {
 
 void *X5000::wrapAllocateAMDHWAlignManager() {
     auto ret = FunctionCast(wrapAllocateAMDHWAlignManager, callback->orgAllocateAMDHWAlignManager)();
-    NRed::callback->hwAlignMgr = ret;
+    callback->hwAlignMgr = ret;
 
-    NRed::callback->hwAlignMgrVtX5000 = getMember<uint8_t *>(ret, 0);
-    NRed::callback->hwAlignMgrVtX6000 = static_cast<uint8_t *>(IOMallocZero(0x238));
+    callback->hwAlignMgrVtX5000 = getMember<uint8_t *>(ret, 0);
+    callback->hwAlignMgrVtX6000 = static_cast<uint8_t *>(IOMallocZero(0x238));
 
-    memcpy(NRed::callback->hwAlignMgrVtX6000, NRed::callback->hwAlignMgrVtX5000, 0x128);
-    *reinterpret_cast<mach_vm_address_t *>(NRed::callback->hwAlignMgrVtX6000 + 0x128) =
+    memcpy(callback->hwAlignMgrVtX6000, callback->hwAlignMgrVtX5000, 0x128);
+    *reinterpret_cast<mach_vm_address_t *>(callback->hwAlignMgrVtX6000 + 0x128) =
         X6000::callback->orgGetPreferredSwizzleMode2;
-    memcpy(NRed::callback->hwAlignMgrVtX6000 + 0x130, NRed::callback->hwAlignMgrVtX5000 + 0x128, 0x230 - 0x128);
+    memcpy(callback->hwAlignMgrVtX6000 + 0x130, callback->hwAlignMgrVtX5000 + 0x128, 0x230 - 0x128);
     return ret;
 }

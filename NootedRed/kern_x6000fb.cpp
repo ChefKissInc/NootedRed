@@ -21,6 +21,8 @@ void X6000FB::init() {
 
 bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonX6000Framebuffer.loadIndex == index) {
+        NRed::callback->setRMMIOIfNecessary();
+
         CailAsicCapEntry *orgAsicCapsTable = nullptr;
 
         KernelPatcher::SolveRequest solveRequests[] = {

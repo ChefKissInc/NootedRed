@@ -21,6 +21,8 @@ void X6000::init() {
 
 bool X6000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextRadeonX6000.loadIndex == index) {
+        NRed::callback->setRMMIOIfNecessary();
+
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZN30AMDRadeonX6000_AMDVCN2HWEngineC1Ev", this->orgVCN2EngineConstructor},
             {"__ZN31AMDRadeonX6000_AMDGFX10Hardware20allocateAMDHWDisplayEv", this->orgAllocateAMDHWDisplay},
@@ -161,8 +163,8 @@ void X6000::wrapInitDCNRegistersOffsets(void *that) {
     }
 }
 
-#define HWALIGNMGR_ADJUST getMember<void *>(NRed::callback->hwAlignMgr, 0) = NRed::callback->hwAlignMgrVtX6000;
-#define HWALIGNMGR_REVERT getMember<void *>(NRed::callback->hwAlignMgr, 0) = NRed::callback->hwAlignMgrVtX5000;
+#define HWALIGNMGR_ADJUST getMember<void *>(X5000::callback->hwAlignMgr, 0) = X5000::callback->hwAlignMgrVtX6000;
+#define HWALIGNMGR_REVERT getMember<void *>(X5000::callback->hwAlignMgr, 0) = X5000::callback->hwAlignMgrVtX5000;
 
 uint64_t X6000::wrapAccelSharedSurfaceCopy(void *that, void *param1, uint64_t param2, void *param3) {
     HWALIGNMGR_ADJUST

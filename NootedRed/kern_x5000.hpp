@@ -24,6 +24,9 @@ class X5000 {
     mach_vm_address_t orgAccelSharedUCStart {0};
     mach_vm_address_t orgAccelSharedUCStop {0};
     mach_vm_address_t orgAllocateAMDHWAlignManager {0};
+    void *hwAlignMgr {nullptr};
+    uint8_t *hwAlignMgrVtX5000 {nullptr};
+    uint8_t *hwAlignMgrVtX6000 {nullptr};
 
     static bool wrapAllocateHWEngines(void *that);
     static void wrapSetupAndInitializeHWCapabilities(void *that);

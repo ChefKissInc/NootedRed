@@ -162,7 +162,7 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
     }
 }
 
-void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
+void NRed::setRMMIOIfNecessary() {
     if (UNLIKELY(!this->rmmio || !this->rmmio->getLength())) {
         this->rmmio = this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5);
         PANIC_COND(!this->rmmio || !this->rmmio->getLength(), "nred", "Failed to map RMMIO");
@@ -205,7 +205,9 @@ void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
                 PANIC("nred", "Unknown device ID");
         }
     }
+}
 
+void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextAGDP.loadIndex == index) {
         KernelPatcher::LookupPatch patches[] = {
             {&kextAGDP, reinterpret_cast<const uint8_t *>(kAGDPBoardIDKeyOriginal),
@@ -234,14 +236,16 @@ void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN21AppleMCCSControlCello5probeEP9IOServicePi", wrapFunctionReturnZero},
         };
         patcher.routeMultiple(index, request, address, size);
-    } else if (x6000fb.processKext(patcher, index, address, size)) {
-        DBGLOG("nred", "Processed x6000fb");
-    } else if (hwlibs.processKext(patcher, index, address, size)) {
-        DBGLOG("nred", "Processed hwlibs");
-    } else if (x6000.processKext(patcher, index, address, size)) {
-        DBGLOG("nred", "Processed x6000");
-    } else if (x5000.processKext(patcher, index, address, size)) {
-        DBGLOG("nred", "Processed x5000");
+    } else {
+        if (x6000fb.processKext(patcher, index, address, size)) {
+            DBGLOG("nred", "Processed AMDRadeonX6000Framebuffer");
+        } else if (hwlibs.processKext(patcher, index, address, size)) {
+            DBGLOG("nred", "Processed AMDRadeonX5000HWLibs");
+        } else if (x6000.processKext(patcher, index, address, size)) {
+            DBGLOG("nred", "Processed AMDRadeonX6000");
+        } else if (x5000.processKext(patcher, index, address, size)) {
+            DBGLOG("nred", "Processed AMDRadeonX5000");
+        }
     }
 }
 
