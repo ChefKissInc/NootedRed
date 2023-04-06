@@ -236,16 +236,14 @@ void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             {"__ZN21AppleMCCSControlCello5probeEP9IOServicePi", wrapFunctionReturnZero},
         };
         patcher.routeMultiple(index, request, address, size);
-    } else {
-        if (x6000fb.processKext(patcher, index, address, size)) {
-            DBGLOG("nred", "Processed AMDRadeonX6000Framebuffer");
-        } else if (hwlibs.processKext(patcher, index, address, size)) {
-            DBGLOG("nred", "Processed AMDRadeonX5000HWLibs");
-        } else if (x6000.processKext(patcher, index, address, size)) {
-            DBGLOG("nred", "Processed AMDRadeonX6000");
-        } else if (x5000.processKext(patcher, index, address, size)) {
-            DBGLOG("nred", "Processed AMDRadeonX5000");
-        }
+    } else if (x6000fb.processKext(patcher, index, address, size)) {
+        DBGLOG("nred", "Processed AMDRadeonX6000Framebuffer");
+    } else if (hwlibs.processKext(patcher, index, address, size)) {
+        DBGLOG("nred", "Processed AMDRadeonX5000HWLibs");
+    } else if (x6000.processKext(patcher, index, address, size)) {
+        DBGLOG("nred", "Processed AMDRadeonX6000");
+    } else if (x5000.processKext(patcher, index, address, size)) {
+        DBGLOG("nred", "Processed AMDRadeonX5000");
     }
 }
 
