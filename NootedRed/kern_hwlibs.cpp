@@ -68,10 +68,12 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"_SmuRenoir_Initialize", wrapSmuRenoirInitialize, this->orgSmuRenoirInitialize},
             {"_psp_cos_wait_for", wrapPspCosWaitFor, orgPspCosWaitFor},
             {"_ttlDevSetAsicResetMode", wrapTtlDevSetAsicResetMode, orgTtlDevSetAsicResetMode},
+            {"_smu_9_0_1_full_asic_reset", hwLibsNoop},
         };
-        PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "hwlibs", "Failed to route symbols");
-
+        auto count = arrsize(requests);
         auto isRavenDerivative = NRed::callback->chipType < ChipType::Renoir;
+        if (isRavenDerivative) { count--; }
+        PANIC_COND(!patcher.routeMultiple(index, requests, count, address, size), "hwlibs", "Failed to route symbols");
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "hwlibs",
             "Failed to enable kernel writing");
@@ -88,8 +90,8 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("hwlibs", "Applied DDI Caps patches");
 
-        PANIC_COND(!KernelPatcher::findAndReplace(orgSmuFullAsicReset, PAGE_SIZE, kFullAsicResetOriginal,
-                       kFullAsicResetPatched),
+        PANIC_COND(!isRavenDerivative && !KernelPatcher::findAndReplace(orgSmuFullAsicReset, PAGE_SIZE,
+                                             kFullAsicResetOriginal, kFullAsicResetPatched),
             "hwlibs", "Failed to patch _smu_9_0_1_full_asic_reset");
 
         return true;
