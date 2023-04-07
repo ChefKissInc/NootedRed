@@ -27,6 +27,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         CailInitAsicCapEntry *orgAsicInitCapsTable = nullptr;
         const void *goldenSettings[static_cast<uint32_t>(ChipType::Unknown)] = {nullptr};
         CailDeviceTypeEntry *orgDeviceTypeTable = nullptr;
+        uint8_t *orgSmuFullAsicReset = nullptr;
 
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZL15deviceTypeTable", orgDeviceTypeTable},
@@ -43,6 +44,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"_RAVEN2_GoldenSettings_A0", goldenSettings[static_cast<uint32_t>(ChipType::Raven2)]},
             {"_PICASSO_GoldenSettings_A0", goldenSettings[static_cast<uint32_t>(ChipType::Picasso)]},
             {"_RENOIR_GoldenSettings_A0", goldenSettings[static_cast<uint32_t>(ChipType::Renoir)]},
+            {"_smu_9_0_1_full_asic_reset", orgSmuFullAsicReset},
         };
         PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "hwlibs", "Failed to resolve symbols");
 
@@ -86,10 +88,9 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("hwlibs", "Applied DDI Caps patches");
 
-        KernelPatcher::LookupPatch patch = {&kextRadeonX5000HWLibs, kFullAsicResetPatched, kFullAsicResetOriginal,
-            arrsize(kFullAsicResetPatched), 1};
-        patcher.applyLookupPatch(&patch);
-        patcher.clearError();
+        PANIC_COND(!KernelPatcher::findAndReplace(orgSmuFullAsicReset, PAGE_SIZE, kFullAsicResetOriginal,
+                       kFullAsicResetPatched),
+            "hwlibs", "Failed to patch _smu_9_0_1_full_asic_reset");
 
         return true;
     }
