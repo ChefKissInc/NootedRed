@@ -65,6 +65,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"_SmuRaven_Initialize", wrapSmuRavenInitialize, this->orgSmuRavenInitialize},
             {"_SmuRenoir_Initialize", wrapSmuRenoirInitialize, this->orgSmuRenoirInitialize},
             {"_psp_cos_wait_for", wrapPspCosWaitFor, orgPspCosWaitFor},
+            {"_ttlDevSetAsicResetMode", wrapTtlDevSetAsicResetMode, orgTtlDevSetAsicResetMode},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "hwlibs", "Failed to route symbols");
 
@@ -170,4 +171,9 @@ AMDReturn X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, vo
 AMDReturn X5000HWLibs::wrapPspCosWaitFor(void *cos, uint64_t param2, uint64_t param3, uint64_t param4) {
     IOSleep(20);    // There might be a handshake issue with the hardware, requiring delay
     return FunctionCast(wrapPspCosWaitFor, callback->orgPspCosWaitFor)(cos, param2, param3, param4);
+}
+
+void X5000HWLibs::wrapTtlDevSetAsicResetMode(void *ttl, uint32_t mode) {
+    DBGLOG("hwlibs", "_ttlDevSetAsicResetMode << (ttl: %p mode: 0x%X)", ttl, mode);
+    FunctionCast(wrapTtlDevSetAsicResetMode, callback->orgTtlDevSetAsicResetMode)(ttl, 3);
 }
