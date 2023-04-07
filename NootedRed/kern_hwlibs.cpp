@@ -72,7 +72,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         };
         auto count = arrsize(requests);
         auto isRavenDerivative = NRed::callback->chipType < ChipType::Renoir;
-        if (isRavenDerivative) { count--; }
+        if (!isRavenDerivative) { count--; }
         PANIC_COND(!patcher.routeMultiple(index, requests, count, address, size), "hwlibs", "Failed to route symbols");
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "hwlibs",
