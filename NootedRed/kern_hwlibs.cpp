@@ -99,14 +99,9 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
 uint32_t X5000HWLibs::wrapSmuGetHwVersion() { return 0x1; }
 
 AMDReturn X5000HWLibs::wrapPspSwInit(uint32_t *inputData, void *outputData) {
-    if (NRed::callback->chipType < ChipType::Renoir) {
-        inputData[3] = 0x9;
-        inputData[5] = 0x2;
-    } else {
-        inputData[3] = 0xB;
-        inputData[5] = 0x0;
-    }
+    inputData[3] = 0x9;
     inputData[4] = 0x0;
+    inputData[5] = 0x2;
     auto ret = FunctionCast(wrapPspSwInit, callback->orgPspSwInit)(inputData, outputData);
     DBGLOG("hwlibs", "_psp_sw_init >> 0x%X", ret);
     return ret;
