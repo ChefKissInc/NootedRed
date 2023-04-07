@@ -21,8 +21,8 @@ class EXPORT PRODUCT_NAME : public IOService {
 
 enum struct ChipType : uint32_t {
     Raven = 0,
-    Raven2,
     Picasso,
+    Raven2,
     Renoir,
     GreenSardine,
     Unknown,
