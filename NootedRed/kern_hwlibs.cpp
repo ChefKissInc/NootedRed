@@ -26,7 +26,6 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         CailAsicCapEntry *orgAsicCapsTable = nullptr;
         CailInitAsicCapEntry *orgAsicInitCapsTable = nullptr;
         const void *goldenSettings[static_cast<uint32_t>(ChipType::Unknown)] = {nullptr};
-        const uint32_t *ddiCaps[static_cast<uint32_t>(ChipType::Unknown)] = {nullptr};
         CailDeviceTypeEntry *orgDeviceTypeTable = nullptr;
 
         KernelPatcher::SolveRequest solveRequests[] = {
@@ -40,10 +39,6 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"_Raven_SendMsgToSmc", this->orgRavenSendMsgToSmc},
             {"_Renoir_SendMsgToSmc", this->orgRenoirSendMsgToSmc},
             {"__ZN20AMDFirmwareDirectoryC1Ej", this->orgAMDFirmwareDirectoryConstructor},
-            {"_CAIL_DDI_CAPS_RAVEN_A0", ddiCaps[static_cast<uint32_t>(ChipType::Raven)]},
-            {"_CAIL_DDI_CAPS_RAVEN2_A0", ddiCaps[static_cast<uint32_t>(ChipType::Raven2)]},
-            {"_CAIL_DDI_CAPS_PICASSO_A0", ddiCaps[static_cast<uint32_t>(ChipType::Picasso)]},
-            {"_CAIL_DDI_CAPS_RENOIR_A0", ddiCaps[static_cast<uint32_t>(ChipType::Renoir)]},
             {"_RAVEN1_GoldenSettings_A0", goldenSettings[static_cast<uint32_t>(ChipType::Raven)]},
             {"_RAVEN2_GoldenSettings_A0", goldenSettings[static_cast<uint32_t>(ChipType::Raven2)]},
             {"_PICASSO_GoldenSettings_A0", goldenSettings[static_cast<uint32_t>(ChipType::Picasso)]},
@@ -73,9 +68,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "hwlibs", "Failed to route symbols");
 
-        ddiCaps[static_cast<uint32_t>(ChipType::GreenSardine)] = ddiCaps[static_cast<uint32_t>(ChipType::Renoir)];
-        goldenSettings[static_cast<uint32_t>(ChipType::GreenSardine)] =
-            goldenSettings[static_cast<uint32_t>(ChipType::Renoir)];
+        auto isRavenDerivative = NRed::callback->chipType < ChipType::Renoir;
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "hwlibs",
             "Failed to enable kernel writing");
@@ -86,8 +79,9 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         orgAsicInitCapsTable->emulatedRev = orgAsicCapsTable->emulatedRev =
             static_cast<uint32_t>(NRed::callback->enumeratedRevision) + NRed::callback->revision;
         orgAsicInitCapsTable->pciRev = orgAsicCapsTable->pciRev = 0xFFFFFFFF;
-        orgAsicInitCapsTable->caps = orgAsicCapsTable->caps = ddiCaps[static_cast<uint32_t>(NRed::callback->chipType)];
-        orgAsicInitCapsTable->goldenCaps = goldenSettings[static_cast<uint32_t>(NRed::callback->chipType)];
+        orgAsicInitCapsTable->caps = orgAsicCapsTable->caps = isRavenDerivative ? ddiCapsRaven : ddiCapsRenoir;
+        orgAsicInitCapsTable->goldenCaps =
+            goldenSettings[static_cast<uint32_t>(isRavenDerivative ? NRed::callback->chipType : ChipType::Renoir)];
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("hwlibs", "Applied DDI Caps patches");
 
@@ -127,8 +121,8 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
     auto isRenoirDerivative = NRed::callback->chipType >= ChipType::Renoir;
     auto *filename = isRenoirDerivative ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
     auto &fwDesc = getFWDescByName(filename);
-    uint32_t ipVersion = isRenoirDerivative ? 0x0202 : 0x0100;    // VCN 2.2, VCN 1.0
-    auto *fw = callback->orgCreateFirmware(fwDesc.data, fwDesc.size, ipVersion, filename);
+    /** VCN 2.2, VCN 1.0 */
+    auto *fw = callback->orgCreateFirmware(fwDesc.data, fwDesc.size, isRenoirDerivative ? 0x0202 : 0x0100, filename);
     PANIC_COND(!fw, "hwlibs", "Failed to create '%s' firmware", filename);
     DBGLOG("hwlibs", "Inserting %s!", filename);
     PANIC_COND(!callback->orgPutFirmware(fwDir, 0, fw), "hwlibs", "Failed to inject %s firmware", filename);
