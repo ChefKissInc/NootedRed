@@ -144,4 +144,16 @@ struct CailDeviceTypeEntry {
     uint32_t deviceType;
 } PACKED;
 
+static const uint32_t ravenDevAttrFlags = 0x49;
+
+struct DeviceCapabilityEntry {
+    uint64_t familyId, deviceId;
+    uint64_t internalRevision, externalRevision;
+    const void *swipInfo, *swipInfoMinimal;
+    const uint32_t *devAttrFlags;
+    const void *goldenRegisterSetings, *doorbellRange;
+} PACKED;
+
+constexpr uint64_t DEVICE_CAP_ENTRY_REV_DONT_CARE = 0xDEADCAFEU;
+
 #endif /* kern_amd.hpp */

@@ -25,9 +25,12 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
 
         CailAsicCapEntry *orgAsicCapsTable = nullptr;
         CailInitAsicCapEntry *orgAsicInitCapsTable = nullptr;
-        const void *goldenSettings[static_cast<uint32_t>(ChipType::Unknown)] = {nullptr};
+        const void *goldenSettings[static_cast<uint32_t>(ChipType::Unknown) - 1] = {nullptr};
         CailDeviceTypeEntry *orgDeviceTypeTable = nullptr;
         uint8_t *orgSmuFullAsicReset = nullptr;
+        DeviceCapabilityEntry *deviceCapabilityTbl = nullptr;
+        const void *swipInfo[3] = {nullptr}, *goldenRegisterSettings[3] = {nullptr};
+        const void *swipInfoMinimal = nullptr, *devDoorbellRangeNotSupported = nullptr;
 
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZL15deviceTypeTable", orgDeviceTypeTable},
@@ -45,6 +48,15 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"_PICASSO_GoldenSettings_A0", goldenSettings[static_cast<uint32_t>(ChipType::Picasso)]},
             {"_RENOIR_GoldenSettings_A0", goldenSettings[static_cast<uint32_t>(ChipType::Renoir)]},
             {"_smu_9_0_1_full_asic_reset", orgSmuFullAsicReset},
+            {"_DeviceCapabilityTbl", deviceCapabilityTbl},
+            {"_swipInfoRaven", swipInfo[0]},
+            {"_swipInfoRaven2", swipInfo[1]},
+            {"_swipInfoRenoir", swipInfo[2]},
+            {"_swipInfoMinimalInit", swipInfoMinimal},
+            {"_devDoorbellRangeNotSupported", devDoorbellRangeNotSupported},
+            {"_ravenGoldenRegisterSettings", goldenRegisterSettings[0]},
+            {"_raven2GoldenRegisterSettings", goldenRegisterSettings[1]},
+            {"_renoirGoldenRegisterSettings", goldenRegisterSettings[2]},
         };
         PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "hwlibs", "Failed to resolve symbols");
 
@@ -69,7 +81,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"_psp_cos_wait_for", wrapPspCosWaitFor, orgPspCosWaitFor},
             {"_ttlDevSetAsicResetMode", wrapTtlDevSetAsicResetMode, orgTtlDevSetAsicResetMode},
             {"_smu_9_0_1_full_asic_reset", hwLibsNoop},
-        };
+        };    // NOTE: IF YOU ADD A NEW WRAP, YOU WILL HAVE TO ADD IT BEFORE THE LINE ABOVE
         auto count = arrsize(requests);
         auto isRavenDerivative = NRed::callback->chipType < ChipType::Renoir;
         if (!isRavenDerivative) { count--; }
@@ -87,6 +99,18 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         orgAsicInitCapsTable->caps = orgAsicCapsTable->caps = isRavenDerivative ? ddiCapsRaven : ddiCapsRenoir;
         orgAsicInitCapsTable->goldenCaps =
             goldenSettings[static_cast<uint32_t>(isRavenDerivative ? NRed::callback->chipType : ChipType::Renoir)];
+
+        deviceCapabilityTbl->familyId = AMDGPU_FAMILY_RAVEN;
+        deviceCapabilityTbl->deviceId = NRed::callback->deviceId;
+        deviceCapabilityTbl->internalRevision = deviceCapabilityTbl->externalRevision = DEVICE_CAP_ENTRY_REV_DONT_CARE;
+        auto capTblIndex = NRed::callback->chipType < ChipType::Raven2 ? 0 :
+                           NRed::callback->chipType < ChipType::Renoir ? 1 :
+                                                                         2;
+        deviceCapabilityTbl->swipInfo = swipInfo[capTblIndex];
+        deviceCapabilityTbl->swipInfoMinimal = swipInfoMinimal;
+        deviceCapabilityTbl->devAttrFlags = &ravenDevAttrFlags;
+        deviceCapabilityTbl->goldenRegisterSetings = goldenRegisterSettings[capTblIndex];
+        deviceCapabilityTbl->doorbellRange = devDoorbellRangeNotSupported;
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("hwlibs", "Applied DDI Caps patches");
 
