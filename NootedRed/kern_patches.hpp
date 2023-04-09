@@ -147,6 +147,30 @@ static const uint8_t kWriteUvdGpcomVcpuData0Patched[] = {0xBE, 0xC4, 0x81, 0x00,
 static const uint8_t kWriteUvdGpcomVcpuData1Original[] = {0xBE, 0x05, 0x05, 0x00, 0x00, 0xFF, 0x50, 0x20};
 static const uint8_t kWriteUvdGpcomVcpuData1Patched[] = {0xBE, 0xC5, 0x81, 0x00, 0x00, 0xFF, 0x50, 0x20};
 
+/** `Vcn2EncCommand::addEncodePacket` */
+static const uint8_t kAddEncodePacketOriginal[] = {0xBE, 0x0F, 0x00, 0x00, 0x00, 0xBA, 0x2C, 0x00, 0x00, 0x00};
+static const uint8_t kAddEncodePacketPatched[] = {0xBE, 0x0B, 0x00, 0x00, 0x00, 0xBA, 0x2C, 0x00, 0x00, 0x00};
+
+/** `Vcn2EncCommand::addSliceHeaderPacket` */
+static const uint8_t kAddSliceHeaderPacketOriginal[] = {0xBE, 0x0B, 0x00, 0x00, 0x00, 0xBA, 0xC0, 0x00, 0x00, 0x00};
+static const uint8_t kAddSliceHeaderPacketPatched[] = {0xBE, 0x0A, 0x00, 0x00, 0x00, 0xBA, 0xC0, 0x00, 0x00, 0x00};
+
+/** `Vcn2EncCommand::addIntraRefreshPacket` */
+static const uint8_t kAddIntraRefreshPacketOriginal[] = {0xBE, 0x10, 0x00, 0x00, 0x00, 0xBA, 0x0C, 0x00, 0x00, 0x00};
+static const uint8_t kAddIntraRefreshPacketPatched[] = {0xBE, 0x0C, 0x00, 0x00, 0x00, 0xBA, 0x0C, 0x00, 0x00, 0x00};
+
+/** `Vcn2EncCommand::addContextBufferPacket` */
+static const uint8_t kAddContextBufferPacketOriginal[] = {0xBE, 0x11, 0x00, 0x00, 0x00, 0xBA, 0x58, 0x02, 0x00, 0x00};
+static const uint8_t kAddContextBufferPacketPatched[] = {0xBE, 0x0D, 0x00, 0x00, 0x00, 0xBA, 0x58, 0x02, 0x00, 0x00};
+
+/** `Vcn2EncCommand::addBitstreamBufferPacket` */
+static const uint8_t kAddBitstreamBufferPacketOriginal[] = {0xBE, 0x12, 0x00, 0x00, 0x00, 0xBA, 0x14, 0x00, 0x00, 0x00};
+static const uint8_t kAddBitstreamBufferPacketPatched[] = {0xBE, 0x0E, 0x00, 0x00, 0x00, 0xBA, 0x14, 0x00, 0x00, 0x00};
+
+/** `Vcn2EncCommand::addFeedbackBufferPacket` */
+static const uint8_t kAddFeedbackBufferPacketOriginal[] = {0xBE, 0x15, 0x00, 0x00, 0x00, 0xBA, 0x14, 0x00, 0x00, 0x00};
+static const uint8_t kAddFeedbackBufferPacketPatched[] = {0xBE, 0x10, 0x00, 0x00, 0x00, 0xBA, 0x14, 0x00, 0x00, 0x00};
+
 static_assert(arrsize(kAGDPFBCountCheckOriginal) == arrsize(kAGDPFBCountCheckPatched));
 static_assert(arrsize(kAGDPBoardIDKeyOriginal) == arrsize(kAGDPBoardIDKeyPatched));
 static_assert(arrsize(kFullAsicResetOriginal) == arrsize(kFullAsicResetPatched));
@@ -166,5 +190,11 @@ static_assert(arrsize(kWriteUvdEngineStartOriginal) == arrsize(kWriteUvdEngineSt
 static_assert(arrsize(kWriteUvdGpcomVcpuCmdOriginal) == arrsize(kWriteUvdGpcomVcpuCmdPatched));
 static_assert(arrsize(kWriteUvdGpcomVcpuData0Original) == arrsize(kWriteUvdGpcomVcpuData0Patched));
 static_assert(arrsize(kWriteUvdGpcomVcpuData1Original) == arrsize(kWriteUvdGpcomVcpuData1Patched));
+static_assert(arrsize(kAddEncodePacketOriginal) == arrsize(kAddEncodePacketPatched));
+static_assert(arrsize(kAddSliceHeaderPacketOriginal) == arrsize(kAddSliceHeaderPacketPatched));
+static_assert(arrsize(kAddIntraRefreshPacketOriginal) == arrsize(kAddIntraRefreshPacketPatched));
+static_assert(arrsize(kAddContextBufferPacketOriginal) == arrsize(kAddContextBufferPacketPatched));
+static_assert(arrsize(kAddBitstreamBufferPacketOriginal) == arrsize(kAddBitstreamBufferPacketPatched));
+static_assert(arrsize(kAddFeedbackBufferPacketOriginal) == arrsize(kAddFeedbackBufferPacketPatched));
 
 #endif /* kern_patches_hpp */
