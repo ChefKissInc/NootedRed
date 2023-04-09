@@ -116,6 +116,17 @@ static const uint8_t kChannelTypesOriginal[] = {0x00, 0x00, 0x00, 0x00, 0x01, 0x
 static const uint8_t kCailAsicCapsTableOriginal[] = {0x98, 0x67, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00,
     0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00};
 
+/**
+ * `VAAcceleratorInfo::identify`
+ * AMDRadeonVADriver2.bundle
+ * The device info identification fails, as the device id is not present in the function.
+ * Patch fallback "error" value (0x12) to Navi 10 (0xC).
+ */
+static const uint8_t kVAAcceleratorInfoIdentifyOriginal[] = {0xBB, 0x12, 0x00, 0x00, 0x00, 0x89, 0xD8, 0x48, 0x83, 0xC4,
+    0x08};
+static const uint8_t kVAAcceleratorInfoIdentifyPatched[] = {0xBB, 0xC, 0x00, 0x00, 0x00, 0x89, 0xD8, 0x48, 0x83, 0xC4,
+    0x08};
+
 static_assert(arrsize(kAGDPFBCountCheckOriginal) == arrsize(kAGDPFBCountCheckPatched));
 static_assert(arrsize(kAGDPBoardIDKeyOriginal) == arrsize(kAGDPBoardIDKeyPatched));
 static_assert(arrsize(kFullAsicResetOriginal) == arrsize(kFullAsicResetPatched));
@@ -129,5 +140,6 @@ static_assert(arrsize(kEnableTimestampInterruptOriginal) == arrsize(kEnableTimes
 static_assert(arrsize(kGetSchedulerCallOriginal) == arrsize(kGetSchedulerCallPatched));
 static_assert(arrsize(kIsDeviceValidCallOriginal) == arrsize(kIsDeviceValidCallPatched));
 static_assert(arrsize(kCoreLSKDOriginal) == arrsize(kCoreLSKDPatched));
+static_assert(arrsize(kVAAcceleratorInfoIdentifyOriginal) == arrsize(kVAAcceleratorInfoIdentifyPatched));
 
 #endif /* kern_patches_hpp */

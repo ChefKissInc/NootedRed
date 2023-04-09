@@ -168,6 +168,11 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
             if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kBoardIdOriginal,
                     arrsize(kBoardIdOriginal), kBoardIdPatched, arrsize(kBoardIdPatched))))
                 DBGLOG("nred", "Patched 'board-id' -> 'hwgva-id'");
+
+            if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
+                    kVAAcceleratorInfoIdentifyOriginal, arrsize(kVAAcceleratorInfoIdentifyOriginal),
+                    kVAAcceleratorInfoIdentifyPatched, arrsize(kVAAcceleratorInfoIdentifyPatched))))
+                DBGLOG("nred", "Patched VAAcceleratorInfo::identify");
         } else if (UNLIKELY(!strncmp(path, kCoreLSKDMSEPath, arrsize(kCoreLSKDMSEPath))) ||
                    UNLIKELY(!strncmp(path, kCoreLSKDPath, arrsize(kCoreLSKDPath)))) {
             if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kCoreLSKDOriginal,
