@@ -171,6 +171,13 @@ static const uint8_t kAddBitstreamBufferPacketPatched[] = {0xBE, 0x0E, 0x00, 0x0
 static const uint8_t kAddFeedbackBufferPacketOriginal[] = {0xBE, 0x15, 0x00, 0x00, 0x00, 0xBA, 0x14, 0x00, 0x00, 0x00};
 static const uint8_t kAddFeedbackBufferPacketPatched[] = {0xBE, 0x10, 0x00, 0x00, 0x00, 0xBA, 0x14, 0x00, 0x00, 0x00};
 
+/** `Vcn2EncAvcCommand::buildGeneralCommand` */
+static const uint8_t kBuildGeneralCommandOriginal[] = {0x41, 0x01, 0xC4, 0x41, 0x80, 0x7F, 0x14, 0x00, 0x74, 0x0B, 0x4C,
+    0x89, 0xF7};
+static const uint8_t kBuildGeneralCommandPatched[] = {0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,
+    0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,
+    0x90, 0x90, 0x90, 0x90, 0x90, 0x90};
+
 static_assert(arrsize(kAGDPFBCountCheckOriginal) == arrsize(kAGDPFBCountCheckPatched));
 static_assert(arrsize(kAGDPBoardIDKeyOriginal) == arrsize(kAGDPBoardIDKeyPatched));
 static_assert(arrsize(kFullAsicResetOriginal) == arrsize(kFullAsicResetPatched));
@@ -196,5 +203,6 @@ static_assert(arrsize(kAddIntraRefreshPacketOriginal) == arrsize(kAddIntraRefres
 static_assert(arrsize(kAddContextBufferPacketOriginal) == arrsize(kAddContextBufferPacketPatched));
 static_assert(arrsize(kAddBitstreamBufferPacketOriginal) == arrsize(kAddBitstreamBufferPacketPatched));
 static_assert(arrsize(kAddFeedbackBufferPacketOriginal) == arrsize(kAddFeedbackBufferPacketPatched));
+static_assert(arrsize(kBuildGeneralCommandOriginal) < arrsize(kBuildGeneralCommandPatched));
 
 #endif /* kern_patches_hpp */

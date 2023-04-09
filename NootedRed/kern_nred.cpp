@@ -228,6 +228,11 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
                         kAddFeedbackBufferPacketOriginal, arrsize(kAddFeedbackBufferPacketOriginal),
                         kAddFeedbackBufferPacketPatched, arrsize(kAddFeedbackBufferPacketPatched))))
                     DBGLOG("nred", "Patched addFeedbackBufferPacket");
+
+                if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
+                        kBuildGeneralCommandOriginal, arrsize(kBuildGeneralCommandOriginal),
+                        kBuildGeneralCommandPatched, arrsize(kBuildGeneralCommandPatched))))
+                    DBGLOG("nred", "Patched buildGeneralCommand");
             }
         } else if (UNLIKELY(!strncmp(path, kCoreLSKDMSEPath, arrsize(kCoreLSKDMSEPath))) ||
                    UNLIKELY(!strncmp(path, kCoreLSKDPath, arrsize(kCoreLSKDPath)))) {
