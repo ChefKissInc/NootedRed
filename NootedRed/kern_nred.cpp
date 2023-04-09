@@ -12,11 +12,14 @@
 #include <Headers/kern_devinfo.hpp>
 #include <IOKit/IODeviceTreeSupport.h>
 
+static const char *pathIOGraphics = "/System/Library/Extensions/IOGraphicsFamily.kext/IOGraphicsFamily";
 static const char *pathAGDP = "/System/Library/Extensions/AppleGraphicsControl.kext/Contents/PlugIns/"
                               "AppleGraphicsDevicePolicy.kext/Contents/MacOS/AppleGraphicsDevicePolicy";
 static const char *pathBacklight = "/System/Library/Extensions/AppleBacklight.kext/Contents/MacOS/AppleBacklight";
 static const char *pathMCCSControl = "/System/Library/Extensions/AppleMCCSControl.kext/Contents/MacOS/AppleMCCSControl";
 
+static KernelPatcher::KextInfo kextIOGraphics {"com.apple.iokit.IOGraphicsFamily", &pathIOGraphics, 1, {true}, {},
+    KernelPatcher::KextInfo::Unloaded};
 static KernelPatcher::KextInfo kextAGDP {"com.apple.driver.AppleGraphicsDevicePolicy", &pathAGDP, 1, {true}, {},
     KernelPatcher::KextInfo::Unloaded};
 static KernelPatcher::KextInfo kextBacklight {"com.apple.driver.AppleBacklight", &pathBacklight, 1, {true}, {},
@@ -120,6 +123,19 @@ void NRed::processPatcher(KernelPatcher &patcher) {
     }
     PANIC_COND(!patcher.routeMultipleLong(KernelPatcher::KernelID, requests, num), "nred",
         "Failed to route kernel symbols");
+
+    auto info = reinterpret_cast<vc_info *>(patcher.solveSymbol(KernelPatcher::KernelID, "_vinfo"));
+    if (info) {
+        consoleVinfo = *info;
+        DBGLOG("nred", "VInfo 1: %u:%u %u:%u:%u", consoleVinfo.v_height, consoleVinfo.v_width, consoleVinfo.v_depth,
+            consoleVinfo.v_rowbytes, consoleVinfo.v_type);
+        DBGLOG("nred", "VInfo 2: %s %u:%u %u:%u:%u", consoleVinfo.v_name, consoleVinfo.v_rows, consoleVinfo.v_columns,
+            consoleVinfo.v_rowscanbytes, consoleVinfo.v_scale, consoleVinfo.v_rotate);
+        gotConsoleVinfo = true;
+    } else {
+        SYSLOG("nred", "Failed to obtain _vinfo");
+        patcher.clearError();
+    }
 }
 
 OSMetaClassBase *NRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const OSMetaClass *toMeta) {
@@ -208,7 +224,17 @@ void NRed::setRMMIOIfNecessary() {
 }
 
 void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
-    if (kextAGDP.loadIndex == index) {
+    if (kextIOGraphics.loadIndex == index) {
+        this->gIOFBVerboseBootPtr = patcher.solveSymbol<uint8_t *>(index, "__ZL16gIOFBVerboseBoot", address, size);
+        if (this->gIOFBVerboseBootPtr) {
+            KernelPatcher::RouteRequest request {"__ZN13IOFramebuffer6initFBEv", wrapFramebufferInit,
+                this->orgFramebufferInit};
+            patcher.routeMultiple(index, &request, 1, address, size);
+        } else {
+            SYSLOG("nred", "failed to resolve gIOFBVerboseBoot");
+            patcher.clearError();
+        }
+    } else if (kextAGDP.loadIndex == index) {
         KernelPatcher::LookupPatch patches[] = {
             {&kextAGDP, reinterpret_cast<const uint8_t *>(kAGDPBoardIDKeyOriginal),
                 reinterpret_cast<const uint8_t *>(kAGDPBoardIDKeyPatched), arrsize(kAGDPBoardIDKeyOriginal), 1},
@@ -310,4 +336,43 @@ bool NRed::wrapApplePanelSetDisplay(IOService *that, IODisplay *display) {
     DBGLOG("nred", "Panel display set returned %d", result);
 
     return result;
+}
+
+void NRed::wrapFramebufferInit(IOFramebuffer *fb) {
+    auto zeroFill = callback->gotConsoleVinfo;
+    auto &info = callback->consoleVinfo;
+    auto verboseBoot = *callback->gIOFBVerboseBootPtr;
+
+    if (zeroFill) {
+        IODisplayModeID mode;
+        IOIndex depth;
+        IOPixelInformation pixelInfo;
+
+        if (fb->getCurrentDisplayMode(&mode, &depth) == kIOReturnSuccess &&
+            fb->getPixelInformation(mode, depth, kIOFBSystemAperture, &pixelInfo) == kIOReturnSuccess) {
+            DBGLOG("nred", "FB info 1: %d:%d %u:%u:%u", mode, depth, pixelInfo.bytesPerRow, pixelInfo.bytesPerPlane,
+                pixelInfo.bitsPerPixel);
+            DBGLOG("nred", "FB info 2: %u:%u %s %u:%u:%u", pixelInfo.componentCount, pixelInfo.bitsPerComponent,
+                pixelInfo.pixelFormat, pixelInfo.flags, pixelInfo.activeWidth, pixelInfo.activeHeight);
+
+            if (info.v_rowbytes != pixelInfo.bytesPerRow || info.v_width != pixelInfo.activeWidth ||
+                info.v_height != pixelInfo.activeHeight || info.v_depth != pixelInfo.bitsPerPixel) {
+                zeroFill = false;
+                DBGLOG("nred", "This display has different mode");
+            }
+        } else {
+            DBGLOG("nred", "Failed to obtain display mode");
+            zeroFill = false;
+        }
+    }
+
+    *callback->gIOFBVerboseBootPtr = 1;
+    FunctionCast(wrapFramebufferInit, callback->orgFramebufferInit)(fb);
+    *callback->gIOFBVerboseBootPtr = verboseBoot;
+
+    if (FramebufferViewer::getVRAMMap(fb) && zeroFill) {
+        DBGLOG("nred", "Doing zero-fill...");
+        auto dst = reinterpret_cast<uint8_t *>(FramebufferViewer::getVRAMMap(fb)->getVirtualAddress());
+        memset(dst, 0, info.v_rowbytes * info.v_height);
+    }
 }

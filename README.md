@@ -6,7 +6,7 @@ An AMD iGPU support [Lilu](https://github.com/acidanthera/Lilu) (1.6.4+) plugin.
 
 The Source Code of this Original Work is licensed under the `Thou Shalt Not Profit License version 1.0`. See [`LICENSE`](https://github.com/NootInc/NootedRed/blob/master/LICENSE)
 
-Thanks [Acidanthera](https://github.com/Acidanthera) for the AppleBacklight code and UnfairGVA patches in [WhateverGreen](https://github.com/Acidanthera/WhateverGreen).
+Thanks [Acidanthera](https://github.com/Acidanthera) for the AppleBacklight code, framebuffer init zero-fill fix, and UnfairGVA patches in [WhateverGreen](https://github.com/Acidanthera/WhateverGreen).
 
 **External websites NOT endorsed by us which mention and/or link to Noot and its projects include, but are not limited to,**
 
