@@ -170,63 +170,52 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
                 DBGLOG("nred", "Patched 'board-id' -> 'hwgva-id'");
 
             if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
-                    kVAAcceleratorInfoIdentifyOriginal, arrsize(kVAAcceleratorInfoIdentifyOriginal),
-                    kVAAcceleratorInfoIdentifyPatched, arrsize(kVAAcceleratorInfoIdentifyPatched))))
+                    kVAAcceleratorInfoIdentifyOriginal, kVAAcceleratorInfoIdentifyPatched)))
                 DBGLOG("nred", "Patched VAAcceleratorInfo::identify");
 
             if (callback->chipType < ChipType::Renoir) {
                 if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kWriteUvdNoOpOriginal,
-                        arrsize(kWriteUvdNoOpOriginal), kWriteUvdNoOpPatched, arrsize(kWriteUvdNoOpPatched))))
+                        kWriteUvdNoOpPatched)))
                     DBGLOG("nred", "Patched writeUvdNoOp");
 
                 if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
-                        kWriteUvdEngineStartOriginal, arrsize(kWriteUvdEngineStartOriginal),
-                        kWriteUvdEngineStartPatched, arrsize(kWriteUvdEngineStartPatched))))
+                        kWriteUvdEngineStartOriginal, kWriteUvdEngineStartPatched)))
                     DBGLOG("nred", "Patched writeUvdEngineStart");
 
                 if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
-                        kWriteUvdGpcomVcpuCmdOriginal, arrsize(kWriteUvdGpcomVcpuCmdOriginal),
-                        kWriteUvdGpcomVcpuCmdPatched, arrsize(kWriteUvdGpcomVcpuCmdPatched))))
+                        kWriteUvdGpcomVcpuCmdOriginal, kWriteUvdGpcomVcpuCmdPatched)))
                     DBGLOG("nred", "Patched writeUvdGpcomVcpuCmdOriginal");
 
                 if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
-                        kWriteUvdGpcomVcpuData0Original, arrsize(kWriteUvdGpcomVcpuData0Original),
-                        kWriteUvdGpcomVcpuData0Patched, arrsize(kWriteUvdGpcomVcpuData0Patched))))
+                        kWriteUvdGpcomVcpuData0Original, kWriteUvdGpcomVcpuData0Patched)))
                     DBGLOG("nred", "Patched writeUvdGpcomVcpuData0Original");
 
                 if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
-                        kWriteUvdGpcomVcpuData1Original, arrsize(kWriteUvdGpcomVcpuData1Original),
-                        kWriteUvdGpcomVcpuData1Patched, arrsize(kWriteUvdGpcomVcpuData1Patched))))
+                        kWriteUvdGpcomVcpuData1Original, kWriteUvdGpcomVcpuData1Patched)))
                     DBGLOG("nred", "Patched writeUvdGpcomVcpuData1Original");
 
                 if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
-                        kAddEncodePacketOriginal, arrsize(kAddEncodePacketOriginal), kAddEncodePacketPatched,
-                        arrsize(kAddEncodePacketPatched))))
+                        kAddEncodePacketOriginal, kAddEncodePacketPatched)))
                     DBGLOG("nred", "Patched addEncodePacket");
 
                 if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
-                        kAddSliceHeaderPacketOriginal, arrsize(kAddSliceHeaderPacketOriginal),
-                        kAddSliceHeaderPacketPatched, arrsize(kAddSliceHeaderPacketPatched))))
+                        kAddSliceHeaderPacketOriginal, kAddSliceHeaderPacketPatched)))
                     DBGLOG("nred", "Patched addSliceHeaderPacket");
 
                 if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
-                        kAddIntraRefreshPacketOriginal, arrsize(kAddIntraRefreshPacketOriginal),
-                        kAddIntraRefreshPacketPatched, arrsize(kAddIntraRefreshPacketPatched))))
+                        kAddIntraRefreshPacketOriginal, kAddIntraRefreshPacketPatched)))
                     DBGLOG("nred", "Patched addIntraRefreshPacket");
 
                 if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
-                        kAddContextBufferPacketOriginal, arrsize(kAddContextBufferPacketOriginal),
-                        kAddContextBufferPacketPatched, arrsize(kAddContextBufferPacketPatched))))
+                        kAddContextBufferPacketOriginal, kAddContextBufferPacketPatched)))
                     DBGLOG("nred", "Patched addContextBufferPacket");
 
                 if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
-                        kAddBitstreamBufferPacketOriginal, arrsize(kAddBitstreamBufferPacketOriginal),
-                        kAddBitstreamBufferPacketPatched, arrsize(kAddBitstreamBufferPacketPatched))))
+                        kAddBitstreamBufferPacketOriginal, kAddBitstreamBufferPacketPatched)))
                     DBGLOG("nred", "Patched addBitstreamBufferPacket");
 
                 if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
-                        kAddFeedbackBufferPacketOriginal, arrsize(kAddFeedbackBufferPacketOriginal),
-                        kAddFeedbackBufferPacketPatched, arrsize(kAddFeedbackBufferPacketPatched))))
+                        kAddFeedbackBufferPacketOriginal, kAddFeedbackBufferPacketPatched)))
                     DBGLOG("nred", "Patched addFeedbackBufferPacket");
 
                 if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
