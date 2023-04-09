@@ -173,6 +173,32 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
                     kVAAcceleratorInfoIdentifyOriginal, arrsize(kVAAcceleratorInfoIdentifyOriginal),
                     kVAAcceleratorInfoIdentifyPatched, arrsize(kVAAcceleratorInfoIdentifyPatched))))
                 DBGLOG("nred", "Patched VAAcceleratorInfo::identify");
+
+            if (callback->chipType < ChipType::Renoir) {
+                if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kWriteUvdNoOpOriginal,
+                        arrsize(kWriteUvdNoOpOriginal), kWriteUvdNoOpPatched, arrsize(kWriteUvdNoOpPatched))))
+                    DBGLOG("nred", "Patched writeUvdNoOp");
+
+                if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
+                        kWriteUvdEngineStartOriginal, arrsize(kWriteUvdEngineStartOriginal),
+                        kWriteUvdEngineStartPatched, arrsize(kWriteUvdEngineStartPatched))))
+                    DBGLOG("nred", "Patched writeUvdEngineStart");
+
+                if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
+                        kWriteUvdGpcomVcpuCmdOriginal, arrsize(kWriteUvdGpcomVcpuCmdOriginal),
+                        kWriteUvdGpcomVcpuCmdPatched, arrsize(kWriteUvdGpcomVcpuCmdPatched))))
+                    DBGLOG("nred", "Patched writeUvdGpcomVcpuCmdOriginal");
+
+                if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
+                        kWriteUvdGpcomVcpuData0Original, arrsize(kWriteUvdGpcomVcpuData0Original),
+                        kWriteUvdGpcomVcpuData0Patched, arrsize(kWriteUvdGpcomVcpuData0Patched))))
+                    DBGLOG("nred", "Patched writeUvdGpcomVcpuData0Original");
+
+                if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
+                        kWriteUvdGpcomVcpuData1Original, arrsize(kWriteUvdGpcomVcpuData1Original),
+                        kWriteUvdGpcomVcpuData1Patched, arrsize(kWriteUvdGpcomVcpuData1Patched))))
+                    DBGLOG("nred", "Patched writeUvdGpcomVcpuData1Original");
+            }
         } else if (UNLIKELY(!strncmp(path, kCoreLSKDMSEPath, arrsize(kCoreLSKDMSEPath))) ||
                    UNLIKELY(!strncmp(path, kCoreLSKDPath, arrsize(kCoreLSKDPath)))) {
             if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kCoreLSKDOriginal,

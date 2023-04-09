@@ -127,6 +127,26 @@ static const uint8_t kVAAcceleratorInfoIdentifyOriginal[] = {0xBB, 0x12, 0x00, 0
 static const uint8_t kVAAcceleratorInfoIdentifyPatched[] = {0xBB, 0xC, 0x00, 0x00, 0x00, 0x89, 0xD8, 0x48, 0x83, 0xC4,
     0x08};
 
+/** `Vcn2DecCommand::writeUvdNoOp` */
+static const uint8_t kWriteUvdNoOpOriginal[] = {0xBE, 0x3F, 0x05, 0x00, 0x00, 0xFF, 0x50, 0x20};
+static const uint8_t kWriteUvdNoOpPatched[] = {0xBE, 0xFF, 0x81, 0x00, 0x00, 0xFF, 0x50, 0x20};
+
+/** `Vcn2DecCommand::writeUvdEngineStart` */
+static const uint8_t kWriteUvdEngineStartOriginal[] = {0xBE, 0x06, 0x05, 0x00, 0x00, 0xFF, 0x50, 0x20};
+static const uint8_t kWriteUvdEngineStartPatched[] = {0xBE, 0xC6, 0x81, 0x00, 0x00, 0xFF, 0x50, 0x20};
+
+/** `Vcn2DecCommand::writeUvdGpcomVcpuCmd` */
+static const uint8_t kWriteUvdGpcomVcpuCmdOriginal[] = {0xBE, 0x03, 0x05, 0x00, 0x00, 0xFF, 0x50, 0x20};
+static const uint8_t kWriteUvdGpcomVcpuCmdPatched[] = {0xBE, 0xC3, 0x81, 0x00, 0x00, 0xFF, 0x50, 0x20};
+
+/** `Vcn2DecCommand::writeUvdGpcomVcpuData0` */
+static const uint8_t kWriteUvdGpcomVcpuData0Original[] = {0xBE, 0x04, 0x05, 0x00, 0x00, 0xFF, 0x50, 0x20};
+static const uint8_t kWriteUvdGpcomVcpuData0Patched[] = {0xBE, 0xC4, 0x81, 0x00, 0x00, 0xFF, 0x50, 0x20};
+
+/** `Vcn2DecCommand::writeUvdGpcomVcpuData1` */
+static const uint8_t kWriteUvdGpcomVcpuData1Original[] = {0xBE, 0x05, 0x05, 0x00, 0x00, 0xFF, 0x50, 0x20};
+static const uint8_t kWriteUvdGpcomVcpuData1Patched[] = {0xBE, 0xC5, 0x81, 0x00, 0x00, 0xFF, 0x50, 0x20};
+
 static_assert(arrsize(kAGDPFBCountCheckOriginal) == arrsize(kAGDPFBCountCheckPatched));
 static_assert(arrsize(kAGDPBoardIDKeyOriginal) == arrsize(kAGDPBoardIDKeyPatched));
 static_assert(arrsize(kFullAsicResetOriginal) == arrsize(kFullAsicResetPatched));
@@ -141,5 +161,10 @@ static_assert(arrsize(kGetSchedulerCallOriginal) == arrsize(kGetSchedulerCallPat
 static_assert(arrsize(kIsDeviceValidCallOriginal) == arrsize(kIsDeviceValidCallPatched));
 static_assert(arrsize(kCoreLSKDOriginal) == arrsize(kCoreLSKDPatched));
 static_assert(arrsize(kVAAcceleratorInfoIdentifyOriginal) == arrsize(kVAAcceleratorInfoIdentifyPatched));
+static_assert(arrsize(kWriteUvdNoOpOriginal) == arrsize(kWriteUvdNoOpPatched));
+static_assert(arrsize(kWriteUvdEngineStartOriginal) == arrsize(kWriteUvdEngineStartPatched));
+static_assert(arrsize(kWriteUvdGpcomVcpuCmdOriginal) == arrsize(kWriteUvdGpcomVcpuCmdPatched));
+static_assert(arrsize(kWriteUvdGpcomVcpuData0Original) == arrsize(kWriteUvdGpcomVcpuData0Patched));
+static_assert(arrsize(kWriteUvdGpcomVcpuData1Original) == arrsize(kWriteUvdGpcomVcpuData1Patched));
 
 #endif /* kern_patches_hpp */
