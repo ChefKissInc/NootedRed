@@ -151,6 +151,9 @@ while not cpp_lines[target_line].endswith("};\n"):
 
 indent = cpp_lines[target_line][:-3]
 
+if "_smu_9_0_1_full_asic_reset" in cpp_lines[target_line - 1] or "_dm_logger_write" in cpp_lines[target_line - 1]:
+    target_line -= 1
+
 cpp_lines.insert(
     target_line, f"{indent}    {{\"{symbol}\", wrap{func_ident_pascal}, org{func_ident_pascal}}},\n")
 
