@@ -50,7 +50,8 @@ bool PRODUCT_NAME::start(IOService *provider) {
         return false;
     }
 
-    if (!(lilu.getRunMode() & LiluAPI::RunningInstallerRecovery) && ADDPR(startSuccess)) {
+    if (!(lilu.getRunMode() & LiluAPI::RunningInstallerRecovery) && ADDPR(startSuccess) &&
+        !checkKernelArgument("-nredfbonly")) {
         auto *prop = OSDynamicCast(OSArray, this->getProperty("Drivers"));
         if (!prop) {
             SYSLOG("init", "Failed to get Drivers property");

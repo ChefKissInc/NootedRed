@@ -35,7 +35,7 @@ static X5000 x5000;
 static X6000 x6000;
 
 void NRed::init() {
-    SYSLOG("nred", "Please don't support tonymacx86.com!");
+    SYSLOG("nred", "Copyright © 2023 ChefKiss Inc. If you've paid for this, you've been scammed.");
     callback = this;
     SYSLOG_COND(checkKernelArgument("-wreddbg"), "nred", "You're using the legacy WRed debug flag. Update your EFI");
 

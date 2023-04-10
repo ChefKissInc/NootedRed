@@ -8,13 +8,13 @@ The Source Code of this Original Work is licensed under the `Thou Shalt Not Prof
 
 Thanks [Acidanthera](https://github.com/Acidanthera) for the AppleBacklight code, framebuffer init zero-fill fix, and UnfairGVA patches in [WhateverGreen](https://github.com/Acidanthera/WhateverGreen).
 
-**External websites NOT endorsed by us which mention and/or link to Noot and its projects include, but are not limited to,**
-
-- tonymacx86.com,
-- technopat.net (technopat.net/sosyal),
-- and olarila.com.
-
-Reasons include, but are not limited to, large suspicion due to unrecommended methodology, techniques and methods of distribution, inappropriate behaviour, stealing work, lack of credits and lazy handling of hackintosh issues. We would recommend not supporting websites like those.
+| Boot Argument |                              Description                              |
+|:-------------:|:---------------------------------------------------------------------:|
+| -nredfbonly   | Boot in FB-only macOS, without acceleration. May have visual glitches |
+| -nreddmlogger | Enable Display Core debugging output                                  |
+| -nreddbg      | Enable debugging output from kext and FB                              |
+| -nredoff      | Disable NootedRed                                                     |
+| -nredbeta     | Force load in unsupported macOS versions                              |
 
 ## Project members
 
