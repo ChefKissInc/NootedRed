@@ -1,12 +1,12 @@
 # NootedRed ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/NootInc/NootedRed/main.yml?branch=master&logo=github&style=for-the-badge)
 
-Through hard work come great results.
-
-An AMD iGPU support [Lilu](https://github.com/acidanthera/Lilu) (1.6.4+) plugin.
+The AMD Vega iGPU support [Lilu](https://github.com/acidanthera/Lilu) (1.6.4+) plugin.
 
 The Source Code of this Original Work is licensed under the `Thou Shalt Not Profit License version 1.0`. See [`LICENSE`](https://github.com/NootInc/NootedRed/blob/master/LICENSE)
 
 Thanks [Acidanthera](https://github.com/Acidanthera) for the AppleBacklight code, framebuffer init zero-fill fix, and UnfairGVA patches in [WhateverGreen](https://github.com/Acidanthera/WhateverGreen).
+
+## Boot arguments
 
 | Boot Argument |                              Description                              |
 |:-------------:|:---------------------------------------------------------------------:|
@@ -16,11 +16,17 @@ Thanks [Acidanthera](https://github.com/Acidanthera) for the AppleBacklight code
 | -nredoff      | Disable NootedRed                                                     |
 | -nredbeta     | Force load in unsupported macOS versions                              |
 
+## Prerequisites
+
+- Increase VRAM size otherwise the device will fail to initialise. 512MiB VRAM minimum. 1GiB or more for proper functionality
+- Disable Legacy Boot aka CSM, otherwise you will get a panic saying "Failed to get VBIOS from VRAM"
+
 ## Recommendations
 
-- Add [SSDT-PNLF.aml](Assets/SSDT-PNLF.aml) by [@ChefKissInc](https://github.com/ChefKissInc) and [@ExtremeXT](https://github.com/ExtremeXT) and compile and add [SSDT-ALS0.aml](https://github.com/Acidanthera/OpenCorePkg/blob/master/Docs/AcpiSamples/Source/SSDT-ALS0.dsl) (NOTE: only if you have no ambient light sensor) along with [SMCLightSensor.kext](https://github.com/Acidanthera/VirtualSMC) by [Acidanthera](https://github.com/Acidanthera) for backlight functionality (usually laptop-only).
+- Add [SSDT-PNLF.aml](Assets/SSDT-PNLF.aml) and [SSDT-ALS0.aml](Assets/SSDT-ALS0.aml) (only if you have no compatible Ambient Light Sensor) from this repository, along with [SMCLightSensor.kext](https://github.com/Acidanthera/VirtualSMC) by [Acidanthera](https://github.com/Acidanthera) for backlight functionality (usually only works on laptops).
 - Use `MacBookPro16,3`, `MacBookPro16,4` or `MacPro7,1` SMBIOS.
-- Add [AGPMInjector.kext](Assets/AGPMInjector.kext.zip) by [Visual](https://github.com/ChefKissInc). Supports only `MacBookPro16,3`, `MacBookPro16,4` or `MacPro7,1` SMBIOS
+- Add [AGPMInjector.kext](Assets/AGPMInjector.kext.zip) from this repository. Has definitions only for `MacBookPro16,3`, `MacBookPro16,4` and `MacPro7,1` SMBIOS
+- Update to latest macOS 11 (Big Sur) version
 
 ## FAQ
 
@@ -32,9 +38,9 @@ We are mixing AMDRadeonX5000 for GCN 5, AMDRadeonX6000 for VCN, and AMDRadeonX60
 
 This project is under active research and development; There will be crashes here and there, and full support for Renoir-based iGPUs (Like Cezanne, Lucienne, etc.) is a work in progress.
 
-Right now, Renoir doesn't have fully working acceleration yet (see [Issue #11](https://github.com/NootInc/NootedRed/issues/11) for details,) but you can achieve "partial" acceleration by adding `-nredfbonly` to your boot-args. Raven/Raven2-based iGPUs do not need this option to work and will run slower if you add it.
+Right now, Renoir (Ryzen 4XXX series and newer) doesn't have graphics acceleration working yet (see [Issue #11](https://github.com/NootInc/NootedRed/issues/11) for details) but you can achieve "partial" acceleration by adding `-nredfbonly` to your boot-args.
 
-The kext is fully functional more or less on Raven/Raven2-based iGPUs (Like Picasso).
+The kext is mostly fully functional on Picasso/Raven/Raven2-based iGPUs (Ryzen 3XXX series and older).
 
 See repository issues for more information.
 
@@ -48,12 +54,4 @@ This cannot be resolved without breaking macOS' integrity and potentially even s
 
 Injecting the GPU kexts is not possible during the OpenCore injection stage. The prelink stage fails for kexts of this type as their dependencies aren't contained in the Boot Kext Collection, where OpenCore injects kexts to, they're in the System Kext Collection.
 
-In conclusion, this kext is constricted to Big Sur since there are too many incompatibilities with older and newer macOS versions.
-
-### I get a panic saying "Failed to get VBIOS from VRAM", how can I fix this?
-
-Ensure Legacy Boot/CSM is disabled in your BIOS settings.
-
-### I get stuck on gIOScreenLockState 3, how can I fix this?
-
-Ensure you have VRAM size larger or equal to 512MiB. Recommended VRAM size is 1GiB or larger. (Use a tool like Smokeless-UMAF if there's no option, or options are lacking).
+In conclusion, this kext is (currently) exclusive to macOS 11 (Big Sur) since there are too many incompatibilities with older and newer macOS versions.
