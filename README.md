@@ -30,7 +30,9 @@ We are mixing AMDRadeonX5000 for GCN 5, AMDRadeonX6000 for VCN, and AMDRadeonX60
 
 ### How functional is the kext?
 
-This project is under active research and development; There will be crashes here and there, and it is incompatible with Renoir-based iGPUs (Like Cezanne, Lucienne, etc).
+This project is under active research and development; There will be crashes here and there, and full support for Renoir-based iGPUs (Like Cezanne, Lucienne, etc.) is a work in progress.
+
+Right now, Renoir doesn't have fully working acceleration yet (see [Issue #11](https://github.com/NootInc/NootedRed/issues/11) for details,) but you can achieve "partial" acceleration by adding `-nredfbonly` to your boot-args. Raven/Raven2-based iGPUs do not need this option to work and will run slower if you add it.
 
 The kext is fully functional more or less on Raven/Raven2-based iGPUs (Like Picasso).
 
