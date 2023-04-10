@@ -38,7 +38,7 @@ We are mixing AMDRadeonX5000 for GCN 5, AMDRadeonX6000 for VCN, and AMDRadeonX60
 
 This project is under active research and development; There will be crashes here and there, and full support for Renoir-based iGPUs (Like Cezanne, Lucienne, etc.) is a work in progress.
 
-Right now, Renoir (Ryzen 4XXX series and newer) doesn't have graphics acceleration working yet (see [Issue #11](https://github.com/NootInc/NootedRed/issues/11) for details) but you can achieve "partial" acceleration by adding `-nredfbonly` to your boot-args.
+Renoir (Ryzen 4XXX series and newer) doesn't have graphics acceleration working yet (see [Issue #11](https://github.com/NootInc/NootedRed/issues/11) for details) but you can achieve "partial" acceleration by adding `-nredfbonly` to your boot-args.
 
 The kext is mostly fully functional on Picasso/Raven/Raven2-based iGPUs (Ryzen 3XXX series and older).
 
