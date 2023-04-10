@@ -44,6 +44,7 @@ class X6000FB {
     static IOReturn wrapFramebufferGetAttribute(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
         uintptr_t *value);
     static uint32_t wrapGetNumberOfConnectors(void *that);
+    static void wrapDmLoggerWrite([[maybe_unused]] void *dalLogger, uint32_t logType, char *fmt, ...);
 };
 
 #endif /* kern_x6000fb_hpp */

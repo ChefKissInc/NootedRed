@@ -47,8 +47,11 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
                 this->orgFramebufferGetAttribute},
             {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
                 this->orgGetNumberOfConnectors},
+            {"_dm_logger_write", wrapDmLoggerWrite},
         };
-        PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "x6000fb", "Failed to route symbols");
+        auto count = arrsize(requests);
+        if (!checkKernelArgument("-nreddmlogger")) { count--; }
+        PANIC_COND(!patcher.routeMultiple(index, requests, count, address, size), "x6000fb", "Failed to route symbols");
 
         KernelPatcher::LookupPatch patches[] = {
             {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckOriginal, kAmdAtomVramInfoNullCheckPatched,
@@ -268,4 +271,20 @@ uint32_t X6000FB::wrapGetNumberOfConnectors(void *that) {
         }
     }
     return FunctionCast(wrapGetNumberOfConnectors, callback->orgGetNumberOfConnectors)(that);
+}
+
+constexpr static const char *LogTypes[] = {"Error", "Warning", "Debug", "DC_Interface", "DTN", "Surface", "HW_Hotplug",
+    "HW_LKTN", "HW_Mode", "HW_Resume", "HW_Audio", "HW_HPDIRQ", "MST", "Scaler", "BIOS", "BWCalcs", "BWValidation",
+    "I2C_AUX", "Sync", "Backlight", "Override", "Edid", "DP_Caps", "Resource", "DML", "Mode", "Detect", "LKTN",
+    "LinkLoss", "Underflow", "InterfaceTrace", "PerfTrace", "DisplayStats"};
+
+void X6000FB::wrapDmLoggerWrite([[maybe_unused]] void *dalLogger, uint32_t logType, char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    auto *ns = new char[0x10000];
+    vsnprintf(ns, 0x10000, fmt, args);
+    va_end(args);
+    const char *logTypeStr = arrsize(LogTypes) > logType ? LogTypes[logType] : "Info";
+    kprintf("[%s] %s", logTypeStr, ns);
+    delete[] ns;
 }
