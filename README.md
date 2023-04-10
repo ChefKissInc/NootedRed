@@ -8,13 +8,13 @@ Thanks [Acidanthera](https://github.com/Acidanthera) for the AppleBacklight code
 
 ## Boot arguments
 
-| Boot Argument |                              Description                              |
-|:-------------:|:---------------------------------------------------------------------:|
-| -nredfbonly   | Boot in FB-only macOS, without acceleration. May have visual glitches |
-| -nreddmlogger | Enable Display Core debugging output                                  |
-| -nreddbg      | Enable debugging output from kext and FB                              |
-| -nredoff      | Disable NootedRed                                                     |
-| -nredbeta     | Force load in unsupported macOS versions                              |
+|  Boot Argument  |                              Description                              |
+|:---------------:|:---------------------------------------------------------------------:|
+| `-nredfbonly`   | Boot in FB-only macOS, without acceleration. May have visual glitches |
+| `-nreddmlogger` | Enable Display Core debugging output                                  |
+| `-nreddbg`      | Enable debugging output from kext and FB                              |
+| `-nredoff`      | Disable NootedRed                                                     |
+| `-nredbeta`     | Force load in unsupported macOS versions                              |
 
 ## Prerequisites
 
