@@ -14,7 +14,6 @@ Thanks [Acidanthera](https://github.com/Acidanthera) for the AppleBacklight code
 | `-nreddmlogger` | Enable Display Core debugging output                                  |
 | `-nreddbg`      | Enable debugging output from kext and FB                              |
 | `-nredoff`      | Disable NootedRed                                                     |
-| `-nredbeta`     | Force load in unsupported macOS versions                              |
 
 ## Prerequisites
 
