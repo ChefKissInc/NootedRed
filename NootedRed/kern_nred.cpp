@@ -64,8 +64,8 @@ void NRed::processPatcher(KernelPatcher &patcher) {
         PANIC_COND(!devInfo->videoBuiltin, "nred", "videoBuiltin null");
         this->iGPU = OSDynamicCast(IOPCIDevice, devInfo->videoBuiltin);
         PANIC_COND(!this->iGPU, "nred", "videoBuiltin is not IOPCIDevice");
-        PANIC_COND(WIOKit::readPCIConfigValue(iGPU, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD, "nred",
-            "videoBuiltin is not AMD");
+        PANIC_COND(WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD,
+            "nred", "videoBuiltin is not AMD");
 
         WIOKit::renameDevice(this->iGPU, "IGPU");
         WIOKit::awaitPublishing(this->iGPU);
@@ -92,11 +92,9 @@ void NRed::processPatcher(KernelPatcher &patcher) {
 
         if (UNLIKELY(this->iGPU->getProperty("ATY,bin_image"))) {
             DBGLOG("nred", "VBIOS manually overridden");
-        } else {
-            if (!this->getVBIOSFromVFCT(this->iGPU)) {
-                SYSLOG("nred", "Failed to get VBIOS from VFCT.");
-                PANIC_COND(!this->getVBIOSFromVRAM(this->iGPU), "nred", "Failed to get VBIOS from VRAM");
-            }
+        } else if (!this->getVBIOSFromVFCT(this->iGPU)) {
+            SYSLOG("nred", "Failed to get VBIOS from VFCT.");
+            PANIC_COND(!this->getVBIOSFromVRAM(this->iGPU), "nred", "Failed to get VBIOS from VRAM");
         }
 
         DeviceInfo::deleter(devInfo);
@@ -119,7 +117,7 @@ void NRed::processPatcher(KernelPatcher &patcher) {
             entry->release();
         }
     } else {
-        num -= 1;
+        num--;
     }
     PANIC_COND(!patcher.routeMultipleLong(KernelPatcher::KernelID, requests, num), "nred",
         "Failed to route kernel symbols");
