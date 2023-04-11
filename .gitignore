@@ -44,3 +44,4 @@ DerivedData/
 CompilationDatabase/
 compile_commands.json
 clang_analyze
+NootedRed/kern_fw.cpp.old
