@@ -111,6 +111,13 @@ static const char kCoreLSKDPath[] = "/System/Library/PrivateFrameworks/CoreLSKD.
 static const uint8_t kCoreLSKDOriginal[] = {0xC7, 0xC0, 0x01, 0x00, 0x00, 0x00, 0x0F, 0xA2};
 static const uint8_t kCoreLSKDPatched[] = {0xC7, 0xC0, 0xC3, 0x06, 0x03, 0x00, 0x90, 0x90};
 
+/**
+ * `AMDRadeonX5000_AMDGraphicsAccelerator::createAccelChannels::channelTypes`
+ * On some macOS versions, this symbol is stripped. So, we match it by its contents.
+ */
+static const uint8_t kChannelTypesOriginal[] = {0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00,
+    0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00};
+
 static_assert(arrsize(kAGDPFBCountCheckOriginal) == arrsize(kAGDPFBCountCheckPatched));
 static_assert(arrsize(kAGDPBoardIDKeyOriginal) == arrsize(kAGDPBoardIDKeyPatched));
 static_assert(arrsize(kFullAsicResetOriginal) == arrsize(kFullAsicResetPatched));
