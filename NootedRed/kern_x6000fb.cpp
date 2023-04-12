@@ -23,13 +23,19 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
     if (kextRadeonX6000Framebuffer.loadIndex == index) {
         NRed::callback->setRMMIOIfNecessary();
 
-        CailAsicCapEntry *orgAsicCapsTable = nullptr;
+        auto *orgAsicCapsTable =
+            patcher.solveSymbol<CailAsicCapEntry *>(index, "__ZL20CAIL_ASIC_CAPS_TABLE", address, size);
+        if (!orgAsicCapsTable) {
+            size_t offset = 0;
+            PANIC_COND(!patcher.findPattern(kCailAsicCapsTableOriginal, nullptr, arrsize(kCailAsicCapsTableOriginal),
+                           reinterpret_cast<void *>(address), size, &offset),
+                "x6000fb", "Failed to find CAIL_ASIC_CAPS_TABLE");
+            orgAsicCapsTable = reinterpret_cast<CailAsicCapEntry *>(address + offset);
+        }
 
-        KernelPatcher::SolveRequest solveRequests[] = {
-            {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable},
-            {"_dce_driver_set_backlight", this->orgDceDriverSetBacklight},
-        };
-        PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "x6000fb", "Failed to resolve symbols");
+        this->orgDceDriverSetBacklight =
+            patcher.solveSymbol<t_DceDriverSetBacklight>(index, "_dce_driver_set_backlight", address, size);
+        SYSLOG_COND(!this->orgDceDriverSetBacklight, "x6000fb", "Failed to find _dce_driver_set_backlight");
 
         KernelPatcher::RouteRequest requests[] = {
             {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", wrapPopulateVramInfo},

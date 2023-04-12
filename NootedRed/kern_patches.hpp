@@ -112,11 +112,18 @@ static const uint8_t kCoreLSKDOriginal[] = {0xC7, 0xC0, 0x01, 0x00, 0x00, 0x00, 
 static const uint8_t kCoreLSKDPatched[] = {0xC7, 0xC0, 0xC3, 0x06, 0x03, 0x00, 0x90, 0x90};
 
 /**
- * `AMDRadeonX5000_AMDGraphicsAccelerator::createAccelChannels::channelTypes`
- * On some macOS versions, this symbol is stripped. So, we match it by its contents.
+ * `__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator19createAccelChannelsEbE12channelTypes`
+ * On some macOS versions, this symbol is stripped. So, we match it by its content.
  */
 static const uint8_t kChannelTypesOriginal[] = {0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00,
     0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00};
+
+/**
+ * `__ZL20CAIL_ASIC_CAPS_TABLE`
+ * On some macOS versions, this symbol is stripped. So, we match it by its content.
+ */
+static const uint8_t kCailAsicCapsTableOriginal[] = {0x98, 0x67, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00,
+    0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00};
 
 static_assert(arrsize(kAGDPFBCountCheckOriginal) == arrsize(kAGDPFBCountCheckPatched));
 static_assert(arrsize(kAGDPBoardIDKeyOriginal) == arrsize(kAGDPBoardIDKeyPatched));
