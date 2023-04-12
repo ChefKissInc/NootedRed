@@ -12,11 +12,11 @@ header = '''
 '''
 
 
-def format_file_name(file_name) -> str:
+def format_file_name(file_name):
     return file_name.replace(".", "_").replace("-", "_")
 
 
-def lines_for_file(path, file) -> list[str]:
+def lines_for_file(path, file):
     with open(path, "rb") as src_file:
         src_data = src_file.read()
         src_len = len(src_data)
@@ -44,7 +44,7 @@ def lines_for_file(path, file) -> list[str]:
     ]
 
 
-def process_files(target_file, dir) -> None:
+def process_files(target_file, dir):
     os.makedirs(os.path.dirname(target_file), exist_ok=True)
     lines: list[str] = header.splitlines(keepends=True)
     files = list(filter(lambda v: not os.path.basename(v[1]).startswith('.'), [
