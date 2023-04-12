@@ -78,7 +78,7 @@ def locate_line(lines: list[str], needle: str) -> int:
     for i, line in enumerate(lines):
         if needle in line:
             return i
-    raise AssertionError()
+    assert False
 
 
 moduleToClass = {
@@ -88,7 +88,7 @@ moduleToClass = {
     "x6000fb": "X6000FB",
 }
 
-module = input("Filename without extension: ./NootedRed/kern_")
+module: str = input("Filename without extension: ./NootedRed/kern_")
 assert module in moduleToClass
 className = moduleToClass[module]
 cpp_path: str = f"./NootedRed/kern_{module}.cpp"
@@ -102,43 +102,42 @@ with open(hpp_path) as hpp_file:
 
 signature: str = input("Signature from \"Edit Function\": ").strip().replace(
     " *", "*")
-signature_parts = signature.split(" ")
+signature_parts: list[str] = signature.split(" ")
 
-return_type = fix_type(signature_parts[0].replace("*", " *"))
+return_type: str = fix_type(signature_parts[0].replace("*", " *"))
 
-func_ident = signature_parts[1]
-func_ident_pascal = to_pascal_case(func_ident)
+func_ident: str = signature_parts[1]
+func_ident_pascal: str = to_pascal_case(func_ident)
 
-parameters = [x.strip()
-              for x in signature.split("(")[1].split(")")[0].split(",")]
-parameters = [parse_param(x) for x in parameters]
+parameters: list[tuple[str, str]] = [parse_param(x) for x in [x.strip()
+                                                              for x in signature.split("(")[1].split(")")[0].split(",")]]
 
-params_stringified = ", ".join([" ".join(x) for x in parameters])
+params_stringified: str = ", ".join([" ".join(x) for x in parameters])
 
-target_line = len(cpp_lines)
-function = [
+target_line: int = len(cpp_lines)
+function: list[str] = [
     "\n",
     f"{return_type} {className}::wrap{func_ident_pascal}({params_stringified}) {{\n",
 ]
 
-fmt_types = " ".join(
+fmt_types: str = " ".join(
     f"{get_fmt_name(x[1])}: {get_fmt_type(x[0])}" for x in parameters)
-arguments = ", ".join(x[1] for x in parameters)
-function.append(
-    f"    DBGLOG(\"{module}\", \"{func_ident} << ({fmt_types})\", {arguments});\n")
+arguments: str = ", ".join(x[1] for x in parameters)
+function += [f"    DBGLOG(\"{module}\", \"{func_ident} << ({fmt_types})\", {arguments});\n"]
 
 if return_type == "void":
-    function.append(
-        f"    FunctionCast(wrap{func_ident_pascal}, callback->org{func_ident_pascal})({arguments});\n")
-    function.append(f"    DBGLOG(\"{module}\", \"{func_ident} >> void\");\n")
+    function += [
+        f"    FunctionCast(wrap{func_ident_pascal}, callback->org{func_ident_pascal})({arguments});\n",
+        f"    DBGLOG(\"{module}\", \"{func_ident} >> void\");\n",
+    ]
 else:
-    function.append(
-        f"    auto ret = FunctionCast(wrap{func_ident_pascal}, callback->org{func_ident_pascal})({arguments});\n")
-    function.append(
-        f"    DBGLOG(\"{module}\", \"{func_ident} >> {get_fmt_type(return_type)}\", ret);\n")
-    function.append("    return ret;\n")
+    function += [
+        f"    auto ret = FunctionCast(wrap{func_ident_pascal}, callback->org{func_ident_pascal})({arguments});\n",
+        f"    DBGLOG(\"{module}\", \"{func_ident} >> {get_fmt_type(return_type)}\", ret);\n",
+        "    return ret;\n",
+    ]
 
-function.append("}\n")  # -- End of function --
+function += ["}\n"]  # -- End of function --
 
 cpp_lines[target_line:target_line] = function  # Extend at index
 

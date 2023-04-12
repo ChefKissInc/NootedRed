@@ -15,11 +15,11 @@ struct FwDesc {
 #define NRED_FW(fw_name, fw_data, fw_size) .name = fw_name, .data = fw_data, .size = fw_size
 
 extern const struct FwDesc fwList[];
-extern const int fwNumber;
+extern const size_t fwNumber;
 
 inline const FwDesc &getFWDescByName(const char *name) {
-    for (int i = 0; i < fwNumber; i++) {
-        if (strcmp(fwList[i].name, name) == 0) { return fwList[i]; }
+    for (size_t i = 0; i < fwNumber; i++) {
+        if (!strcmp(fwList[i].name, name)) { return fwList[i]; }
     }
     PANIC("nred", "getFWDescByName: '%s' not found", name);
 }
