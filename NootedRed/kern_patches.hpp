@@ -57,6 +57,15 @@ static const uint8_t kGetFirmwareInfoNullCheckPatched[] = {0x48, 0x83, 0xBB, 0x9
     0x90, 0x90, 0x90, 0x90, 0x49, 0x89, 0xF7, 0xBA, 0x60, 0x00, 0x00, 0x00};
 
 /**
+ * `AMDRadeonX6000_AmdAgdcServices::getVendorInfo`
+ * Tell AGDC that we're an iGPU.
+ */
+static const uint8_t kAgdcServicesGetVendorInfoOriginal[] = {0xC7, 0x03, 0x00, 0x00, 0x03, 0x00, 0x48, 0xB8, 0x02, 0x10,
+    0x00, 0x00, 0x02, 0x00, 0x00, 0x00};
+static const uint8_t kAgdcServicesGetVendorInfoPatched[] = {0xC7, 0x03, 0x00, 0x00, 0x03, 0x00, 0x48, 0xB8, 0x02, 0x10,
+    0x00, 0x00, 0x01, 0x00, 0x00, 0x00};
+
+/**
  * `AMDRadeonX5000_AMDHardware::startHWEngines`
  * Make for loop run only once as we only have one SDMA engine.
  */
@@ -207,6 +216,7 @@ static_assert(arrsize(kFullAsicResetOriginal) == arrsize(kFullAsicResetPatched))
 static_assert(arrsize(kAmdAtomVramInfoNullCheckOriginal) == arrsize(kAmdAtomVramInfoNullCheckPatched));
 static_assert(arrsize(kAmdAtomPspDirectoryNullCheckOriginal) == arrsize(kAmdAtomPspDirectoryNullCheckPatched));
 static_assert(arrsize(kGetFirmwareInfoNullCheckOriginal) == arrsize(kGetFirmwareInfoNullCheckPatched));
+static_assert(arrsize(kAgdcServicesGetVendorInfoOriginal) == arrsize(kAgdcServicesGetVendorInfoPatched));
 static_assert(arrsize(kStartHWEnginesOriginal) == arrsize(kStartHWEnginesPatched));
 static_assert(arrsize(kGetGpuDebugPolicyCallOriginal) == arrsize(kGetGpuDebugPolicyCallPatched));
 static_assert(arrsize(kHWChannelSubmitCommandBufferOriginal) == arrsize(kHWChannelSubmitCommandBufferPatched));
