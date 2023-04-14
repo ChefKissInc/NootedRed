@@ -186,6 +186,12 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
                     nullptr, 0, 0, 0)))
                 DBGLOG("nred", "Patched VAFactory::create*VP");
 
+            if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                    kVAFactoryCreateImageBltOriginal, arrsize(kVAFactoryCreateImageBltOriginal),
+                    kVAFactoryCreateImageBltMask, arrsize(kVAFactoryCreateImageBltMask),
+                    kVAFactoryCreateImageBltPatched, arrsize(kVAFactoryCreateImageBltPatched), nullptr, 0, 1, 0)))
+                DBGLOG("nred", "Patched VAFactory::createImageBlt");
+
             if (callback->chipType < ChipType::Renoir) {
                 if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kWriteUvdNoOpOriginal,
                         kWriteUvdNoOpPatched)))
