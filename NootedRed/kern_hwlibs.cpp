@@ -89,20 +89,21 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "hwlibs",
             "Failed to enable kernel writing");
-        *orgDeviceTypeTable = {.deviceId = NRed::callback->deviceId, .deviceType = 0};
+        *orgDeviceTypeTable = {.deviceId = NRed::callback->deviceId, .deviceType = 6};
         orgAsicInitCapsTable->familyId = orgAsicCapsTable->familyId = AMDGPU_FAMILY_RAVEN;
         orgAsicInitCapsTable->deviceId = orgAsicCapsTable->deviceId = NRed::callback->deviceId;
         orgAsicInitCapsTable->revision = orgAsicCapsTable->revision = NRed::callback->revision;
         orgAsicInitCapsTable->emulatedRev = orgAsicCapsTable->emulatedRev =
             static_cast<uint32_t>(NRed::callback->enumeratedRevision) + NRed::callback->revision;
-        orgAsicInitCapsTable->pciRev = orgAsicCapsTable->pciRev = 0xFFFFFFFF;
+        orgAsicInitCapsTable->pciRev = orgAsicCapsTable->pciRev = NRed::callback->pciRevision;
         orgAsicInitCapsTable->caps = orgAsicCapsTable->caps = isRavenDerivative ? ddiCapsRaven : ddiCapsRenoir;
         orgAsicInitCapsTable->goldenCaps =
             goldenSettings[static_cast<uint32_t>(isRavenDerivative ? NRed::callback->chipType : ChipType::Renoir)];
 
         deviceCapabilityTbl->familyId = AMDGPU_FAMILY_RAVEN;
         deviceCapabilityTbl->deviceId = NRed::callback->deviceId;
-        deviceCapabilityTbl->internalRevision = deviceCapabilityTbl->externalRevision = DEVICE_CAP_ENTRY_REV_DONT_CARE;
+        deviceCapabilityTbl->internalRevision = NRed::callback->revision;
+        deviceCapabilityTbl->externalRevision = orgAsicInitCapsTable->emulatedRev;
         auto capTblIndex = NRed::callback->chipType < ChipType::Raven2 ? 0 :
                            NRed::callback->chipType < ChipType::Renoir ? 1 :
                                                                          2;
@@ -148,7 +149,7 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
     auto *fw = callback->orgCreateFirmware(fwDesc.data, fwDesc.size, isRenoirDerivative ? 0x0202 : 0x0100, filename);
     PANIC_COND(!fw, "hwlibs", "Failed to create '%s' firmware", filename);
     DBGLOG("hwlibs", "Inserting %s!", filename);
-    PANIC_COND(!callback->orgPutFirmware(fwDir, 0, fw), "hwlibs", "Failed to inject %s firmware", filename);
+    PANIC_COND(!callback->orgPutFirmware(fwDir, 6, fw), "hwlibs", "Failed to inject %s firmware", filename);
 }
 
 void *X5000HWLibs::wrapCreatePowerTuneServices(void *that, void *param2) {

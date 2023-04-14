@@ -154,6 +154,4 @@ struct DeviceCapabilityEntry {
     const void *goldenRegisterSetings, *doorbellRange;
 } PACKED;
 
-constexpr uint64_t DEVICE_CAP_ENTRY_REV_DONT_CARE = 0xDEADCAFEU;
-
 #endif /* kern_amd.hpp */

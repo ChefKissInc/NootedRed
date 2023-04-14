@@ -228,6 +228,7 @@ class NRed {
     uint32_t deviceId {0};
     uint16_t enumeratedRevision {0};
     uint16_t revision {0};
+    uint32_t pciRevision {0};
     IOPCIDevice *iGPU {nullptr};
     OSMetaClass *metaClassMap[4][2] = {{nullptr}};
     mach_vm_address_t orgSafeMetaCast {0};
