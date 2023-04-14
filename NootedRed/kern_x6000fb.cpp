@@ -66,8 +66,6 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
                 arrsize(kAmdAtomPspDirectoryNullCheckOriginal), 1},
             {&kextRadeonX6000Framebuffer, kGetFirmwareInfoNullCheckOriginal, kGetFirmwareInfoNullCheckPatched,
                 arrsize(kGetFirmwareInfoNullCheckOriginal), 1},
-            {&kextRadeonX6000Framebuffer, kAgdcServicesGetVendorInfoOriginal, kAgdcServicesGetVendorInfoPatched,
-                arrsize(kAgdcServicesGetVendorInfoOriginal), 1},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
