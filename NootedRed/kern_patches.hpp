@@ -186,6 +186,13 @@ static const uint8_t kVAFactoryCreateGraphicsEngineMask[] = {0xF8, 0xFF, 0xFF, 0
 static const uint8_t kVAFactoryCreateGraphicsEnginePatched[] = {0x48, 0xB8, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00};
 
+/** `VAFactory::create*VP` */
+static const uint8_t kVAFactoryCreateVPOriginal[] = {0x83, 0xFE, 0x07, 0x77, 0x00, 0x89, 0xF0, 0x48, 0x8D, 0x0D, 0x00,
+    0x00, 0x00, 0x00};
+static const uint8_t kVAFactoryCreateVPMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xF8, 0xFF, 0xFF, 0x00, 0x00,
+    0x00, 0x00};
+static const uint8_t kVAFactoryCreateVPPatched[] = {0xBE, 0x04, 0x00, 0x00, 0x00};
+
 static_assert(arrsize(kAGDPFBCountCheckOriginal) == arrsize(kAGDPFBCountCheckPatched));
 static_assert(arrsize(kAGDPBoardIDKeyOriginal) == arrsize(kAGDPBoardIDKeyPatched));
 static_assert(arrsize(kFullAsicResetOriginal) == arrsize(kFullAsicResetPatched));
@@ -214,5 +221,7 @@ static_assert(arrsize(kAddFeedbackBufferPacketOriginal) == arrsize(kAddFeedbackB
 static_assert(arrsize(kBuildGeneralCommandOriginal) < arrsize(kBuildGeneralCommandPatched));
 static_assert(arrsize(kVAFactoryCreateGraphicsEngineOriginal) == arrsize(kVAFactoryCreateGraphicsEngineMask));
 static_assert(arrsize(kVAFactoryCreateGraphicsEngineOriginal) > arrsize(kVAFactoryCreateGraphicsEnginePatched));
+static_assert(arrsize(kVAFactoryCreateVPOriginal) == arrsize(kVAFactoryCreateVPMask));
+static_assert(arrsize(kVAFactoryCreateVPOriginal) > arrsize(kVAFactoryCreateVPPatched));
 
 #endif /* kern_patches_hpp */
