@@ -19,7 +19,7 @@ Thanks [Acidanthera](https://github.com/Acidanthera) for the AppleBacklight code
 
 ## Prerequisites
 
-- Increase VRAM size otherwise the device will fail to initialise. 512MiB VRAM minimum. 1GiB or more for proper functionality
+- Increase VRAM size, otherwise the device will fail to initialise. 512MiB VRAM minimum. 1GiB or more for proper functionality
 - Disable Legacy Boot aka CSM, otherwise you will get a panic saying "Failed to get VBIOS from VRAM"
 
 ## Recommendations
@@ -37,7 +37,7 @@ We are mixing AMDRadeonX5000 for GCN 5, AMDRadeonX6000 for VCN, and AMDRadeonX60
 
 ### How functional is the kext?
 
-This project is under active research and development; There will be crashes here and there, and full support for Renoir-based iGPUs (Like Cezanne, Lucienne, etc.) is a work in progress.
+This project is under active research and development; You may face crashes here and there, and full support for Renoir-based iGPUs (Like Cezanne, Lucienne, etc.) is a work in progress.
 
 Renoir (Ryzen 4XXX series and newer) doesn't have graphics acceleration working yet (see [`Issue #11`](https://github.com/NootInc/NootedRed/issues/11) for details) but you can achieve "partial" acceleration by adding `-nredfbonly` to your boot-args.
 
@@ -47,7 +47,7 @@ See repository issues for more information.
 
 ### On which macOS versions am I able to use this on?
 
-Due to the complexity and secrecy of the Metal drivers, adding support for non-existent logic is basically impossible. In addition, the required logic for our iGPUs has been purged from the AMD kexts since Monterey. This cannot be resolved without breaking macOS' integrity and potentially even stability.
+Due to the complexity and secrecy of the Metal drivers, adding support for non-existent logic is basically impossible. In addition, the required logic for our iGPUs has been purged from the AMD kexts since Monterey. This cannot be resolved without breaking macOS' integrity, and potentially even stability.
 
 Injecting the GPU kexts is not possible during the OpenCore injection stage; the prelink stage fails for kexts of this type since their dependencies aren't contained in the Boot Kext Collection, where OpenCore injects kexts to, they're in the System Kext Collection.
 
