@@ -210,14 +210,8 @@ class NRed {
         auto base = *reinterpret_cast<const uint16_t *>(vbios + ATOM_ROM_TABLE_PTR);
         auto dataTable = *reinterpret_cast<const uint16_t *>(vbios + base + ATOM_ROM_DATA_PTR);
         auto *mdt = reinterpret_cast<const uint16_t *>(vbios + dataTable + 4);
-
-        if (mdt[index]) {
-            uint32_t offset = index * 2 + 4;
-            auto index = *reinterpret_cast<const uint16_t *>(vbios + dataTable + offset);
-            return reinterpret_cast<T *>(const_cast<uint8_t *>(vbios) + index);
-        }
-
-        return nullptr;
+        auto offset = mdt[index];
+        return offset ? reinterpret_cast<T *>(const_cast<uint8_t *>(vbios) + offset) : nullptr;
     }
 
     OSData *vbiosData {nullptr};

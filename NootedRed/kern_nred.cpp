@@ -35,7 +35,7 @@ static X5000 x5000;
 static X6000 x6000;
 
 void NRed::init() {
-    SYSLOG("nred", "Copyright © 2023 ChefKiss Inc. If you've paid for this, you've been scammed.");
+    SYSLOG("nred", "Copyright 2023 ChefKiss Inc. If you've paid for this, you've been scammed.");
     callback = this;
     SYSLOG_COND(checkKernelArgument("-wreddbg"), "nred", "You're using the legacy WRed debug flag. Update your EFI");
 
@@ -91,11 +91,19 @@ void NRed::processPatcher(KernelPatcher &patcher) {
             this->iGPU->setProperty("ATY,DeviceName", const_cast<char *>(model) + 11, len - 11);    // Vega ...
         }
 
-        if (UNLIKELY(this->iGPU->getProperty("ATY,bin_image"))) {
+        auto *prop = OSDynamicCast(OSData, this->iGPU->getProperty("ATY,bin_image"));
+        if (UNLIKELY(prop)) {
             DBGLOG("nred", "VBIOS manually overridden");
-        } else if (!this->getVBIOSFromVFCT(this->iGPU)) {
+            this->vbiosData = OSData::withBytes(prop->getBytesNoCopy(), prop->getLength());
+            PANIC_COND(UNLIKELY(!this->vbiosData), "nred", "Failed to allocate VBIOS data");
+        } else if (UNLIKELY(!this->getVBIOSFromVFCT(this->iGPU))) {
             SYSLOG("nred", "Failed to get VBIOS from VFCT.");
-            PANIC_COND(!this->getVBIOSFromVRAM(this->iGPU), "nred", "Failed to get VBIOS from VRAM");
+            PANIC_COND(UNLIKELY(!this->getVBIOSFromVRAM(this->iGPU)), "nred", "Failed to get VBIOS from VRAM");
+        }
+        auto len = this->vbiosData->getLength();
+        if (len < 65536) {
+            DBGLOG("nred", "Padding VBIOS to 65536 bytes (was %u)", len);
+            this->vbiosData->appendByte(0, 65536 - len);
         }
 
         DeviceInfo::deleter(devInfo);
@@ -109,7 +117,7 @@ void NRed::processPatcher(KernelPatcher &patcher) {
     };
 
     size_t num = arrsize(requests);
-    if (lilu.getRunMode() & LiluAPI::RunningNormal) {
+    if (LIKELY(lilu.getRunMode() & LiluAPI::RunningNormal)) {
         auto *entry = IORegistryEntry::fromPath("/", gIODTPlane);
         if (entry) {
             DBGLOG("nred", "Setting hwgva-id to iMacPro1,1");
@@ -124,7 +132,7 @@ void NRed::processPatcher(KernelPatcher &patcher) {
         "Failed to route kernel symbols");
 
     auto info = reinterpret_cast<vc_info *>(patcher.solveSymbol(KernelPatcher::KernelID, "_vinfo"));
-    if (info) {
+    if (LIKELY(info)) {
         consoleVinfo = *info;
         DBGLOG("nred", "VInfo 1: %u:%u %u:%u:%u", consoleVinfo.v_height, consoleVinfo.v_width, consoleVinfo.v_depth,
             consoleVinfo.v_rowbytes, consoleVinfo.v_type);
@@ -139,9 +147,9 @@ void NRed::processPatcher(KernelPatcher &patcher) {
 
 OSMetaClassBase *NRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const OSMetaClass *toMeta) {
     auto ret = FunctionCast(wrapSafeMetaCast, callback->orgSafeMetaCast)(anObject, toMeta);
-    if (!ret) {
+    if (UNLIKELY(!ret)) {
         for (const auto &ent : callback->metaClassMap) {
-            if (ent[0] == toMeta) {
+            if (LIKELY(ent[0] == toMeta)) {
                 return FunctionCast(wrapSafeMetaCast, callback->orgSafeMetaCast)(anObject, ent[1]);
             } else if (UNLIKELY(ent[1] == toMeta)) {
                 return FunctionCast(wrapSafeMetaCast, callback->orgSafeMetaCast)(anObject, ent[0]);
@@ -158,8 +166,8 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
 
     char path[PATH_MAX];
     int pathlen = PATH_MAX;
-    if (!vn_getpath(vp, path, &pathlen)) {
-        if (UserPatcher::matchSharedCachePath(path)) {
+    if (LIKELY(!vn_getpath(vp, path, &pathlen))) {
+        if (UNLIKELY(UserPatcher::matchSharedCachePath(path))) {
             if (UNLIKELY(
                     KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kVideoToolboxDRMModelOriginal,
                         arrsize(kVideoToolboxDRMModelOriginal), BaseDeviceInfo::get().modelIdentifier, 20)))
@@ -192,7 +200,7 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
                     kVAFactoryCreateImageBltPatched, arrsize(kVAFactoryCreateImageBltPatched), nullptr, 0, 1, 0)))
                 DBGLOG("nred", "Patched VAFactory::createImageBlt");
 
-            if (callback->chipType < ChipType::Renoir) {
+            if (LIKELY(callback->chipType < ChipType::Renoir)) {
                 if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kWriteUvdNoOpOriginal,
                         kWriteUvdNoOpPatched)))
                     DBGLOG("nred", "Patched writeUvdNoOp");
@@ -254,14 +262,14 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
 void NRed::setRMMIOIfNecessary() {
     if (UNLIKELY(!this->rmmio || !this->rmmio->getLength())) {
         this->rmmio = this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5);
-        PANIC_COND(!this->rmmio || !this->rmmio->getLength(), "nred", "Failed to map RMMIO");
+        PANIC_COND(UNLIKELY(!this->rmmio || !this->rmmio->getLength()), "nred", "Failed to map RMMIO");
         this->rmmioPtr = reinterpret_cast<uint32_t *>(this->rmmio->getVirtualAddress());
 
         this->fbOffset = static_cast<uint64_t>(this->readReg32(0x296B)) << 24;
         this->revision = (this->readReg32(0xD2F) & 0xF000000) >> 0x18;
         switch (this->deviceId) {
             case 0x15D8:
-                if (this->revision >= 0x8) {
+                if (LIKELY(this->revision >= 0x8)) {
                     this->chipType = ChipType::Raven2;
                     this->enumeratedRevision = 0x79;
                     break;
@@ -270,7 +278,7 @@ void NRed::setRMMIOIfNecessary() {
                 this->enumeratedRevision = 0x41;
                 break;
             case 0x15DD:
-                if (this->revision >= 0x8) {
+                if (LIKELY(this->revision >= 0x8)) {
                     this->chipType = ChipType::Raven2;
                     this->enumeratedRevision = 0x79;
                     break;
