@@ -8,15 +8,6 @@ The Source Code of this Original Work is licensed under the `Thou Shalt Not Prof
 
 Thanks [Acidanthera](https://github.com/Acidanthera) for the AppleBacklight code, framebuffer init zero-fill fix, and UnfairGVA patches in [WhateverGreen](https://github.com/Acidanthera/WhateverGreen).
 
-## Boot arguments
-
-|  Boot Argument  |                              Description                              |
-|:---------------:|:---------------------------------------------------------------------:|
-| `-nredfbonly`   | Boot in FB-only macOS, without acceleration. May have visual glitches |
-| `-nreddmlogger` | Enable Display Core debugging output                                  |
-| `-nreddbg`      | Enable debugging output from kext and FB                              |
-| `-nredoff`      | Disable NootedRed                                                     |
-
 ## Prerequisites
 
 - Increase VRAM size otherwise the device will fail to initialise. 512MiB VRAM minimum. 1GiB or more for proper functionality
