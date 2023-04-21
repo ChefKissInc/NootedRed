@@ -1,6 +1,6 @@
-status = ["Analyse Clang", "Build"]
+status = ["Analyse Clang", "Build", "CodeQL Analysis"]
 block_labels = ["Invalid", "Duplicate", "Help wanted", "Won't fix"]
-pr_stats = ["Analyse Clang", "Build"]
+pr_stats = ["Analyse Clang", "Build", "CodeQL Analysis"]
 delete_merged_branches = true
 use_squash_merge = true
 update_base_for_deletes = true
