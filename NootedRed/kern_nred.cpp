@@ -452,6 +452,6 @@ void NRed::wrapFramebufferInit(IOFramebuffer *fb) {
     if (FramebufferViewer::getVRAMMap(fb) && zeroFill) {
         DBGLOG("nred", "Doing zero-fill...");
         auto dst = reinterpret_cast<uint8_t *>(FramebufferViewer::getVRAMMap(fb)->getVirtualAddress());
-        memset(dst, 0, info.v_rowbytes * info.v_height);
+        memset(dst, 0, static_cast<size_t>(info.v_rowbytes) * static_cast<size_t>(info.v_height));
     }
 }
