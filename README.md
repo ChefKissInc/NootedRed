@@ -37,8 +37,8 @@ See repository issues for more information.
 
 ### On which macOS versions am I able to use this on?
 
-Due to the complexity and secrecy of the Metal drivers, adding support for non-existent logic is basically impossible. In addition, the required logic for our iGPUs has been purged from the AMD kexts since Monterey. This cannot be resolved without breaking macOS' integrity and potentially even stability.
+Due to the complexity and secrecy of the Metal drivers, adding support for non-existent logic is basically impossible. In addition, the required logic for our iGPUs has been purged from the AMD kexts since Monterey. This cannot be resolved without breaking macOS' integrity and potentially even stability, at the moment.
 
 Injecting the GPU kexts is not possible during the OpenCore injection stage; the pre-linked injection fails for kexts that don't contain their dependencies in the Boot Kext Collection, which is where OpenCore injects kexts to.
 
-In conclusion, this kext is (currently) exclusive to macOS 11 (Big Sur) since there are too many incompatibilities with other major macOS versions.
+In conclusion, this kext works only natively in macOS 11 (Big Sur). For Monterey, a downgrade of `AMDRadeonX6000Framebuffer.kext` and `AMDRadeonX5000HWLibs.kext` is required.
