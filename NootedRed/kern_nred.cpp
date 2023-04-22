@@ -243,10 +243,15 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
                         kAddFeedbackBufferPacketOriginal, kAddFeedbackBufferPacketPatched)))
                     DBGLOG("nred", "Patched addFeedbackBufferPacket");
 
-                if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
-                        kBuildGeneralCommandOriginal, arrsize(kBuildGeneralCommandOriginal),
-                        kBuildGeneralCommandPatched, arrsize(kBuildGeneralCommandPatched))))
-                    DBGLOG("nred", "Patched buildGeneralCommand");
+                if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                        kAddInputFormatPacketOriginal, arrsize(kAddInputFormatPacketOriginal), kAddFormatPacketMask,
+                        arrsize(kAddFormatPacketMask), kRetZero, arrsize(kRetZero), nullptr, 0, 0, 0)))
+                    DBGLOG("nred", "Patched addInputFormatPacket");
+
+                if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                        kAddOutputFormatPacketOriginal, arrsize(kAddOutputFormatPacketOriginal), kAddFormatPacketMask,
+                        arrsize(kAddFormatPacketMask), kRetZero, arrsize(kRetZero), nullptr, 0, 0, 0)))
+                    DBGLOG("nred", "Patched addOutputFormatPacket");
             }
         } else if (UNLIKELY(!strncmp(path, kCoreLSKDMSEPath, arrsize(kCoreLSKDMSEPath))) ||
                    UNLIKELY(!strncmp(path, kCoreLSKDPath, arrsize(kCoreLSKDPath)))) {
