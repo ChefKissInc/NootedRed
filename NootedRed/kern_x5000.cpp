@@ -23,6 +23,8 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
     if (kextRadeonX5000.loadIndex == index) {
         NRed::callback->setRMMIOIfNecessary();
 
+        void *startHWEngines = nullptr;
+
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZN31AMDRadeonX5000_AMDGFX9PM4EngineC1Ev", this->orgGFX9PM4EngineConstructor},
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngineC1Ev", this->orgGFX9SDMAEngineConstructor},
@@ -34,6 +36,7 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
             {"__ZN30AMDRadeonX5000_AMDAccelChannel10gMetaClassE", NRed::callback->metaClassMap[3][1]},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware32setupAndInitializeHWCapabilitiesEv",
                 this->orgSetupAndInitializeHWCapabilities},
+            {"__ZN26AMDRadeonX5000_AMDHardware14startHWEnginesEv", startHWEngines},
         };
         PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "x5000", "Failed to resolve symbols");
 
@@ -77,12 +80,10 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
             orgChannelTypes[12] = 0;
         }
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
+        PANIC_COND(
+            !KernelPatcher::findAndReplace(startHWEngines, PAGE_SIZE, kStartHWEnginesOriginal, kStartHWEnginesPatched),
+            "x5000", "Failed to patch startHWEngines");
         DBGLOG("x5000", "Applied SDMA1 patches");
-
-        KernelPatcher::LookupPatch patch = {&kextRadeonX5000, kStartHWEnginesOriginal, kStartHWEnginesPatched,
-            arrsize(kStartHWEnginesOriginal), 1};
-        patcher.applyLookupPatch(&patch);
-        patcher.clearError();
 
         return true;
     }
