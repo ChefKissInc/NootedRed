@@ -8,10 +8,10 @@
 /**
  * `AppleGraphicsDevicePolicy`
  * Symbols are stripped so function is unknown.
- * Removes framebuffer count >= 2 check.
+ * Changes frame-buffer count >= 2 check to >= 1.
  */
 static const uint8_t kAGDPFBCountCheckOriginal[] = {0x02, 0x00, 0x00, 0x83, 0xF8, 0x02};
-static const uint8_t kAGDPFBCountCheckPatched[] = {0x02, 0x00, 0x00, 0x83, 0xF8, 0x00};
+static const uint8_t kAGDPFBCountCheckPatched[] = {0x02, 0x00, 0x00, 0x83, 0xF8, 0x01};
 
 /**
  * `AppleGraphicsDevicePolicy::start`
