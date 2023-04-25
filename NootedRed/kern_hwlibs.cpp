@@ -175,22 +175,9 @@ AMDReturn X5000HWLibs::wrapSmuRenoirInitialize(void *smum, uint32_t param2) {
 
 AMDReturn X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4) {
     // Upstream patch: https://github.com/torvalds/linux/commit/f8f70c1371d304f42d4a1242d8abcbda807d0bed
-    if (NRed::callback->chipType >= ChipType::Renoir) {
-        static bool didMec1 = false;
-        switch (getMember<uint32_t>(ctx, 16)) {
-            case GFX_FW_TYPE_CP_MEC:
-                if (!didMec1) {
-                    didMec1 = true;
-                    break;
-                }
-                DBGLOG("hwlibs", "Skipping MEC2 FW");
-                return kAMDReturnSuccess;
-            case GFX_FW_TYPE_CP_MEC_ME2:
-                DBGLOG("hwlibs", "Skipping MEC2 JT FW");
-                return kAMDReturnSuccess;
-            default:
-                break;
-        }
+    if (NRed::callback->chipType >= ChipType::Renoir && getMember<uint32_t>(ctx, 16) == 6) {
+        DBGLOG("hwlibs", "Skipping MEC2 JT FW");
+        return kAMDReturnSuccess;
     }
 
     return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(psp, ctx, param3, param4);
