@@ -319,15 +319,25 @@ void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             patcher.clearError();
         }
     } else if (kextAGDP.loadIndex == index) {
-        KernelPatcher::LookupPatch patches[] = {
-            {&kextAGDP, reinterpret_cast<const uint8_t *>(kAGDPBoardIDKeyOriginal),
-                reinterpret_cast<const uint8_t *>(kAGDPBoardIDKeyPatched), arrsize(kAGDPBoardIDKeyOriginal), 1},
-            {&kextAGDP, kAGDPFBCountCheckOriginal, kAGDPFBCountCheckPatched, arrsize(kAGDPFBCountCheckOriginal), 1},
-        };
-        for (auto &patch : patches) {
+        KernelPatcher::LookupPatch patch = {&kextAGDP, reinterpret_cast<const uint8_t *>(kAGDPBoardIDKeyOriginal),
+            reinterpret_cast<const uint8_t *>(kAGDPBoardIDKeyPatched), arrsize(kAGDPBoardIDKeyOriginal), 1};
+        patcher.applyLookupPatch(&patch);
+        SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "nred",
+            "Failed to apply AGDP board-id patch: %d", patcher.getError());
+        patcher.clearError();
+        if (getKernelVersion() >= KernelVersion::Ventura) {
+            KernelPatcher::LookupPatch patch = {&kextAGDP, kAGDPFBCountCheckVenturaOriginal,
+                kAGDPFBCountCheckVenturaPatched, arrsize(kAGDPFBCountCheckVenturaOriginal), 1};
             patcher.applyLookupPatch(&patch);
-            SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "nred", "Failed to apply AGDP patch: %d",
-                patcher.getError());
+            SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "nred",
+                "Failed to apply AGDP FB count patch: %d", patcher.getError());
+            patcher.clearError();
+        } else {
+            KernelPatcher::LookupPatch patch = {&kextAGDP, kAGDPFBCountCheckOriginal, kAGDPFBCountCheckPatched,
+                arrsize(kAGDPFBCountCheckOriginal), 1};
+            patcher.applyLookupPatch(&patch);
+            SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "nred",
+                "Failed to apply AGDP FB count patch: %d", patcher.getError());
             patcher.clearError();
         }
     } else if (kextBacklight.loadIndex == index) {

@@ -13,6 +13,10 @@
 static const uint8_t kAGDPFBCountCheckOriginal[] = {0x02, 0x00, 0x00, 0x83, 0xF8, 0x02};
 static const uint8_t kAGDPFBCountCheckPatched[] = {0x02, 0x00, 0x00, 0x83, 0xF8, 0x01};
 
+/** Ditto */
+static const uint8_t kAGDPFBCountCheckVenturaOriginal[] = {0x41, 0x83, 0xBE, 0x14, 0x02, 0x00, 0x00, 0x02};
+static const uint8_t kAGDPFBCountCheckVenturaPatched[] = {0x41, 0x83, 0xBE, 0x14, 0x02, 0x00, 0x00, 0x01};
+
 /**
  * `AppleGraphicsDevicePolicy::start`
  * Neutralise access to AGDP configuration by board identifier.
@@ -216,6 +220,7 @@ static const uint8_t kVAFactoryCreateImageBltPatched[] = {0x48, 0x89, 0xF7, 0x48
     0x00, 0x00, 0x00};
 
 static_assert(arrsize(kAGDPFBCountCheckOriginal) == arrsize(kAGDPFBCountCheckPatched));
+static_assert(arrsize(kAGDPFBCountCheckVenturaOriginal) == arrsize(kAGDPFBCountCheckVenturaPatched));
 static_assert(arrsize(kAGDPBoardIDKeyOriginal) == arrsize(kAGDPBoardIDKeyPatched));
 static_assert(arrsize(kFullAsicResetOriginal) == arrsize(kFullAsicResetPatched));
 static_assert(arrsize(kAmdAtomVramInfoNullCheckOriginal) == arrsize(kAmdAtomVramInfoNullCheckPatched));
