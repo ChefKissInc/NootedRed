@@ -87,8 +87,8 @@ void NRed::processPatcher(KernelPatcher &patcher) {
         if (model) {
             auto len = static_cast<uint32_t>(strlen(model) + 1);
             this->iGPU->setProperty("model", const_cast<char *>(model), len);
-            this->iGPU->setProperty("ATY,FamilyName", const_cast<char *>("Radeon"), 7);
-            this->iGPU->setProperty("ATY,DeviceName", const_cast<char *>(model) + 11, len - 11);    // Vega ...
+            this->iGPU->setProperty("ATY,FamilyName", "Radeon");
+            this->iGPU->setProperty("ATY,DeviceName", const_cast<char *>(model) + 11);    // Vega ...
         }
 
         auto *prop = OSDynamicCast(OSData, this->iGPU->getProperty("ATY,bin_image"));
@@ -166,8 +166,8 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
 
     char path[PATH_MAX];
     int pathlen = PATH_MAX;
-    if (LIKELY(!vn_getpath(vp, path, &pathlen))) {
-        if (UNLIKELY(UserPatcher::matchSharedCachePath(path))) {
+    if (!vn_getpath(vp, path, &pathlen)) {
+        if (UserPatcher::matchSharedCachePath(path)) {
             if (UNLIKELY(
                     KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kVideoToolboxDRMModelOriginal,
                         arrsize(kVideoToolboxDRMModelOriginal), BaseDeviceInfo::get().modelIdentifier, 20)))
