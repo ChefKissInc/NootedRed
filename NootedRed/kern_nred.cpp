@@ -177,15 +177,16 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
                     arrsize(kBoardIdOriginal), kBoardIdPatched, arrsize(kBoardIdPatched))))
                 DBGLOG("nred", "Patched 'board-id' -> 'hwgva-id'");
 
-            if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
-                    kVAAcceleratorInfoIdentifyOriginal, kVAAcceleratorInfoIdentifyPatched)))
+            if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                    kVAAcceleratorInfoIdentifyOriginal, kVAAcceleratorInfoIdentifyMask,
+                    kVAAcceleratorInfoIdentifyPatched, kVAAcceleratorInfoIdentifyMask, 0, 0)))
                 DBGLOG("nred", "Patched VAAcceleratorInfo::identify");
 
             if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
                     kVAFactoryCreateGraphicsEngineOriginal, arrsize(kVAFactoryCreateGraphicsEngineOriginal),
                     kVAFactoryCreateGraphicsEngineMask, arrsize(kVAFactoryCreateGraphicsEngineMask),
                     kVAFactoryCreateGraphicsEnginePatched, arrsize(kVAFactoryCreateGraphicsEnginePatched), nullptr, 0,
-                    1, 0)))
+                    0, 0)))
                 DBGLOG("nred", "Patched VAFactory::createGraphicsEngine");
 
             if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
@@ -197,10 +198,10 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
             if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
                     kVAFactoryCreateImageBltOriginal, arrsize(kVAFactoryCreateImageBltOriginal),
                     kVAFactoryCreateImageBltMask, arrsize(kVAFactoryCreateImageBltMask),
-                    kVAFactoryCreateImageBltPatched, arrsize(kVAFactoryCreateImageBltPatched), nullptr, 0, 1, 0)))
+                    kVAFactoryCreateImageBltPatched, arrsize(kVAFactoryCreateImageBltPatched), nullptr, 0, 0, 0)))
                 DBGLOG("nred", "Patched VAFactory::createImageBlt");
 
-            if (LIKELY(callback->chipType < ChipType::Renoir)) {
+            if (callback->chipType < ChipType::Renoir) {
                 if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kWriteUvdNoOpOriginal,
                         kWriteUvdNoOpPatched)))
                     DBGLOG("nred", "Patched writeUvdNoOp");
@@ -221,28 +222,34 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
                         kWriteUvdGpcomVcpuData1Original, kWriteUvdGpcomVcpuData1Patched)))
                     DBGLOG("nred", "Patched writeUvdGpcomVcpuData1Original");
 
-                if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
-                        kAddEncodePacketOriginal, kAddEncodePacketPatched)))
+                if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                        kAddEncodePacketOriginal, kAddEncodePacketMask, kAddEncodePacketPatched, kAddEncodePacketMask,
+                        0, 0)))
                     DBGLOG("nred", "Patched addEncodePacket");
 
-                if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
-                        kAddSliceHeaderPacketOriginal, kAddSliceHeaderPacketPatched)))
+                if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                        kAddSliceHeaderPacketOriginal, kAddSliceHeaderPacketMask, kAddSliceHeaderPacketPatched,
+                        kAddSliceHeaderPacketMask, 0, 0)))
                     DBGLOG("nred", "Patched addSliceHeaderPacket");
 
-                if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
-                        kAddIntraRefreshPacketOriginal, kAddIntraRefreshPacketPatched)))
+                if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                        kAddIntraRefreshPacketOriginal, kAddIntraRefreshPacketMask, kAddIntraRefreshPacketPatched,
+                        kAddIntraRefreshPacketMask, 0, 0)))
                     DBGLOG("nred", "Patched addIntraRefreshPacket");
 
-                if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
-                        kAddContextBufferPacketOriginal, kAddContextBufferPacketPatched)))
+                if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                        kAddContextBufferPacketOriginal, kAddContextBufferPacketMask, kAddContextBufferPacketPatched,
+                        kAddContextBufferPacketMask, 0, 0)))
                     DBGLOG("nred", "Patched addContextBufferPacket");
 
-                if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
-                        kAddBitstreamBufferPacketOriginal, kAddBitstreamBufferPacketPatched)))
+                if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                        kAddBitstreamBufferPacketOriginal, kAddBitstreamBufferPacketMask,
+                        kAddBitstreamBufferPacketPatched, kAddBitstreamBufferPacketMask, 1, 0)))
                     DBGLOG("nred", "Patched addBitstreamBufferPacket");
 
-                if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
-                        kAddFeedbackBufferPacketOriginal, kAddFeedbackBufferPacketPatched)))
+                if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                        kAddFeedbackBufferPacketOriginal, kAddFeedbackBufferPacketMask, kAddFeedbackBufferPacketPatched,
+                        kAddFeedbackBufferPacketMask, 0, 0)))
                     DBGLOG("nred", "Patched addFeedbackBufferPacket");
 
                 if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
