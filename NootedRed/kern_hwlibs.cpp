@@ -72,7 +72,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"_psp_sw_init", wrapPspSwInit, this->orgPspSwInit},
             {"_psp_bootloader_is_sos_running", hwLibsUnsupported},
             {"_psp_bootloader_load_sos", hwLibsNoop},
-            {"_psp_bootloader_load_sysdrv_3_1", hwLibsNoop},
+            {"_psp_bootloader_load_sysdrv", hwLibsNoop},
             {"_psp_xgmi_is_support", hwLibsUnsupported},
             {"_psp_rap_is_supported", hwLibsUnsupported},
             {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit},
@@ -128,9 +128,10 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
 uint32_t X5000HWLibs::wrapSmuGetHwVersion() { return 0x1; }
 
 AMDReturn X5000HWLibs::wrapPspSwInit(uint32_t *inputData, void *outputData) {
-    inputData[3] = 0x9;
-    inputData[4] = 0x0;
-    inputData[5] = 0x2;
+    if (inputData[3] >= 0xA) {
+        inputData[3] = 0xB;
+        inputData[4] = inputData[5] = 0x0;
+    }
     auto ret = FunctionCast(wrapPspSwInit, callback->orgPspSwInit)(inputData, outputData);
     DBGLOG("hwlibs", "_psp_sw_init >> 0x%X", ret);
     return ret;
