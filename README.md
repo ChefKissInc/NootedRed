@@ -15,7 +15,7 @@ Thanks [Acidanthera](https://github.com/Acidanthera) for the AppleBacklight code
 ## Recommendations
 
 - From this repository, add [`SSDT-PNLF.aml`](Assets/SSDT-PNLF.aml) and [`SSDT-ALS0.aml`](Assets/SSDT-ALS0.aml) if you have no Ambient Light Sensor, along with [`SMCLightSensor.kext`](https://github.com/Acidanthera/VirtualSMC) for backlight functionality. Usually only works on laptops. Add [`BrightnessKeys.kext`](https://github.com/Acidanthera/BrightnessKeys) for brightness control from the keyboard
-- Use `MacBookPro16,3`, `MacBookPro16,4` or `MacPro7,1` SMBIOS
+- Use `MacBookPro16,3` or `MacPro7,1` SMBIOS
 - Update to latest macOS 11 (Big Sur) version
 
 ## FAQ
