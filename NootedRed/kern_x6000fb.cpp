@@ -264,15 +264,17 @@ uint32_t X6000FB::wrapGetNumberOfConnectors(void *that) {
     static bool once = false;
     if (!once) {
         once = true;
-        DBGLOG("nred", "Fixing VBIOS connectors");
         struct DispObjInfoTableV1_4 *objInfo = getMember<DispObjInfoTableV1_4 *>(that, 0x28);
-        auto n = objInfo->pathCount;
-        for (size_t i = 0, j = 0; i < n; i++) {
-            // Skip invalid device tags
-            if (objInfo->supportedDevices & objInfo->dispPaths[i].devTag) {
-                objInfo->dispPaths[j++] = objInfo->dispPaths[i];
-            } else {
-                objInfo->pathCount--;
+        if (objInfo->formatRev == 1 && (objInfo->contentRev == 4 || objInfo->contentRev == 5)) {
+            DBGLOG("nred", "Fixing VBIOS connectors");
+            auto n = objInfo->pathCount;
+            for (size_t i = 0, j = 0; i < n; i++) {
+                // Skip invalid device tags
+                if (objInfo->dispPaths[i].devTag) {
+                    objInfo->dispPaths[j++] = objInfo->dispPaths[i];
+                } else {
+                    objInfo->pathCount--;
+                }
             }
         }
     }
