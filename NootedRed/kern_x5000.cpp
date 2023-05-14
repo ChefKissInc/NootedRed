@@ -111,6 +111,8 @@ enum HWCapability : uint64_t {
     HasVCN0 = 0x87,             // bool
     HasVCN1 = 0x88,             // bool
     HasHDCP = 0x8D,             // bool
+    Unknown1 = 0x94,            // bool
+    Unknown2 = 0x97,            // bool
     HasSDMAPageQueue = 0x98,    // bool
 };
 
@@ -142,6 +144,8 @@ void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
     setHWCapability<bool>(that, HWCapability::HasVCN0, true);
     setHWCapability<bool>(that, HWCapability::HasVCN1, false);
     setHWCapability<bool>(that, HWCapability::HasHDCP, true);
+    setHWCapability<bool>(that, HWCapability::Unknown1, true);     // Set to true in Vega10
+    setHWCapability<bool>(that, HWCapability::Unknown2, false);    // Set to false in Vega10
     setHWCapability<bool>(that, HWCapability::HasSDMAPageQueue, false);
 }
 
