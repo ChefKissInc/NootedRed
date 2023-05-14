@@ -240,6 +240,8 @@
 					<integer>16908288</integer>
 					<key>SWIP_properties</key>
 					<dict>
+						<key>EnableGDDR6MemoryTraining</key>
+						<integer>0</integer>
 						<key>EnableSwVCNFWLoading</key>
 						<integer>0</integer>
 						<key>EnableVCNFWLog</key>
