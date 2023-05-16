@@ -145,10 +145,10 @@ symbol: str = input("Symbol: ").strip()
 target_line: int = locate_line(
     cpp_lines, "Failed to route symbols")
 
-while not cpp_lines[target_line].endswith("};\n"):
+while "};" not in cpp_lines[target_line]:
     target_line -= 1
 
-indent = cpp_lines[target_line][:-3]
+indent = cpp_lines[target_line].split("};")[0]
 
 if "_smu_9_0_1_full_asic_reset" in cpp_lines[target_line - 1] or "_dm_logger_write" in cpp_lines[target_line - 1]:
     target_line -= 1
