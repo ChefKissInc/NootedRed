@@ -157,19 +157,15 @@ IOReturn X6000FB::wrapPopulateVramInfo([[maybe_unused]] void *that, void *fwInfo
         case kDDR4MemType:
             [[fallthrough]];
         case kLPDDR4MemType:
-            videoMemoryType = kVideoMemoryTypeDDR4;
-            break;
-        case kGDDR6MemType:
-            videoMemoryType = kVideoMemoryTypeGDDR6;
-            break;
-        case kHBMMemType:
             [[fallthrough]];
-        case kHBM2MemType:
-            videoMemoryType = kVideoMemoryTypeHBM;
+        case kDDR5MemType:    // AMD's Kexts don't know about DDR5
+            [[fallthrough]];
+        case kLPDDR5MemType:
+            videoMemoryType = kVideoMemoryTypeDDR4;
             break;
         default:
             DBGLOG("x6000fb", "Unsupported memory type %d", memoryType);
-            videoMemoryType = kVideoMemoryTypeDDR4;
+            videoMemoryType = kVideoMemoryTypeUnknown;
             break;
     }
     getMember<uint32_t>(fwInfo, 0x20) = channelCount * 64;    // VRAM Width (64-bit channels)

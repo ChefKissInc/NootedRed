@@ -66,9 +66,8 @@ enum AtomDmiT17MemTypeDef : uint8_t {
     kLPDDR2MemType = 0x1C,
     kLPDDR3MemType,
     kLPDDR4MemType,
-    kGDDR6MemType,
-    kHBMMemType,
-    kHBM2MemType,
+    kDDR5MemType = 0x22,
+    kLPDDR5MemType,
 };
 
 struct IgpSystemInfoV2 : public AtomCommonTableHeader {

@@ -152,12 +152,10 @@ struct DeviceCapabilityEntry {
 } PACKED;
 
 enum VideoMemoryType : uint32_t {
-    kVideoMemoryTypeDDR2 = 1,
-    kVideoMemoryTypeGDDR5,
-    kVideoMemoryTypeDDR3,
+    kVideoMemoryTypeUnknown,
+    kVideoMemoryTypeDDR2,
+    kVideoMemoryTypeDDR3 = 3,
     kVideoMemoryTypeDDR4,
-    kVideoMemoryTypeHBM,
-    kVideoMemoryTypeGDDR6,
 };
 
 #endif /* kern_amd.hpp */
