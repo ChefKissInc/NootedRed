@@ -100,7 +100,7 @@ IOReturn X6000FB::wrapPopulateDeviceInfo(void *that) {
     return ret;
 }
 
-IOReturn X6000FB::wrapPopulateVramInfo([[maybe_unused]] void *that, void *fwInfo) {
+IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
     uint32_t channelCount = 1;
     auto *table = NRed::callback->getVBIOSDataTable<IgpSystemInfo>(0x1E);
     uint8_t memoryType = 0;
@@ -186,8 +186,7 @@ bool X6000FB::wrapInitWithPciInfo(void *that, void *param1) {
     return ret;
 }
 
-bool X6000FB::OnAppleBacklightDisplayLoad([[maybe_unused]] void *target, [[maybe_unused]] void *refCon,
-    IOService *newService, [[maybe_unused]] IONotifier *notifier) {
+bool X6000FB::OnAppleBacklightDisplayLoad(void *, void *, IOService *newService, IONotifier *) {
     OSDictionary *params = OSDynamicCast(OSDictionary, newService->getProperty("IODisplayParameters"));
     if (!params) {
         DBGLOG("x6000fb", "OnAppleBacklightDisplayLoad: No 'IODisplayParameters' property");
@@ -316,7 +315,7 @@ constexpr static const char *LogTypes[] = {"Error", "Warning", "Debug", "DC_Inte
     "I2C_AUX", "Sync", "Backlight", "Override", "Edid", "DP_Caps", "Resource", "DML", "Mode", "Detect", "LKTN",
     "LinkLoss", "Underflow", "InterfaceTrace", "PerfTrace", "DisplayStats"};
 
-void X6000FB::wrapDmLoggerWrite([[maybe_unused]] void *dalLogger, uint32_t logType, char *fmt, ...) {
+void X6000FB::wrapDmLoggerWrite(void *, uint32_t logType, char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
     auto *ns = new char[0x10000];
