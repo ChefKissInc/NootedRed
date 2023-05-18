@@ -151,4 +151,13 @@ struct DeviceCapabilityEntry {
     const void *goldenRegisterSetings, *doorbellRange;
 } PACKED;
 
+enum VideoMemoryType : uint32_t {
+    kVideoMemoryTypeDDR2 = 1,
+    kVideoMemoryTypeGDDR5,
+    kVideoMemoryTypeDDR3,
+    kVideoMemoryTypeDDR4,
+    kVideoMemoryTypeHBM,
+    kVideoMemoryTypeGDDR6,
+};
+
 #endif /* kern_amd.hpp */

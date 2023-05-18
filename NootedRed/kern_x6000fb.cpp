@@ -103,6 +103,7 @@ IOReturn X6000FB::wrapPopulateDeviceInfo(void *that) {
 IOReturn X6000FB::wrapPopulateVramInfo([[maybe_unused]] void *that, void *fwInfo) {
     uint32_t channelCount = 1;
     auto *table = NRed::callback->getVBIOSDataTable<IgpSystemInfo>(0x1E);
+    uint8_t memoryType = 0;
     if (table) {
         DBGLOG("x6000fb", "Fetching VRAM info from iGPU System Info");
         switch (table->header.formatRev) {
@@ -112,6 +113,7 @@ IOReturn X6000FB::wrapPopulateVramInfo([[maybe_unused]] void *that, void *fwInfo
                         [[fallthrough]];
                     case 12:
                         if (table->infoV11.umaChannelCount) channelCount = table->infoV11.umaChannelCount;
+                        memoryType = table->infoV11.memoryType;
                         break;
                     default:
                         DBGLOG("x6000fb", "Unsupported contentRev %d", table->header.contentRev);
@@ -124,6 +126,7 @@ IOReturn X6000FB::wrapPopulateVramInfo([[maybe_unused]] void *that, void *fwInfo
                         [[fallthrough]];
                     case 2:
                         if (table->infoV2.umaChannelCount) channelCount = table->infoV2.umaChannelCount;
+                        memoryType = table->infoV2.memoryType;
                         break;
                     default:
                         DBGLOG("x6000fb", "Unsupported contentRev %d", table->header.contentRev);
@@ -137,7 +140,38 @@ IOReturn X6000FB::wrapPopulateVramInfo([[maybe_unused]] void *that, void *fwInfo
     } else {
         DBGLOG("x6000fb", "No iGPU System Info in Master Data Table");
     }
-    getMember<uint32_t>(fwInfo, 0x1C) = 4;                    // VRAM Type (DDR4)
+    auto &videoMemoryType = getMember<uint32_t>(fwInfo, 0x1C);
+    switch (memoryType) {
+        case kDDR2MemType:
+            [[fallthrough]];
+        case kDDR2FBDIMMMemType:
+            [[fallthrough]];
+        case kLPDDR2MemType:
+            videoMemoryType = kVideoMemoryTypeDDR2;
+            break;
+        case kDDR3MemType:
+            [[fallthrough]];
+        case kLPDDR3MemType:
+            videoMemoryType = kVideoMemoryTypeDDR3;
+            break;
+        case kDDR4MemType:
+            [[fallthrough]];
+        case kLPDDR4MemType:
+            videoMemoryType = kVideoMemoryTypeDDR4;
+            break;
+        case kGDDR6MemType:
+            videoMemoryType = kVideoMemoryTypeGDDR6;
+            break;
+        case kHBMMemType:
+            [[fallthrough]];
+        case kHBM2MemType:
+            videoMemoryType = kVideoMemoryTypeHBM;
+            break;
+        default:
+            DBGLOG("x6000fb", "Unsupported memory type %d", memoryType);
+            videoMemoryType = kVideoMemoryTypeDDR4;
+            break;
+    }
     getMember<uint32_t>(fwInfo, 0x20) = channelCount * 64;    // VRAM Width (64-bit channels)
     return kIOReturnSuccess;
 }

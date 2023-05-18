@@ -58,6 +58,19 @@ struct IgpSystemInfoV11 : public AtomCommonTableHeader {
     uint8_t umaChannelCount;
 } PACKED;
 
+enum AtomDmiT17MemTypeDef : uint8_t {
+    kDDR2MemType = 0x13,
+    kDDR2FBDIMMMemType,
+    kDDR3MemType = 0x18,
+    kDDR4MemType = 0x1A,
+    kLPDDR2MemType = 0x1C,
+    kLPDDR3MemType,
+    kLPDDR4MemType,
+    kGDDR6MemType,
+    kHBMMemType,
+    kHBM2MemType,
+};
+
 struct IgpSystemInfoV2 : public AtomCommonTableHeader {
     uint32_t vbiosMisc;
     uint32_t gpuCapInfo;
