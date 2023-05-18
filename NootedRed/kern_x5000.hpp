@@ -40,6 +40,7 @@ class X5000 {
     static void *wrapNewSharedUserClient();
     static void *wrapAllocateAMDHWAlignManager();
     static uint32_t wrapGetDeviceType();
+    static uint32_t wrapReturnZero();
 };
 
 #endif /* kern_x5000_hpp */
