@@ -28,11 +28,8 @@ class X5000HWLibs {
     t_VegaXPowerTuneConstructor orgVega10PowerTuneConstructor {nullptr};
     t_sendMsgToSmc orgRavenSendMsgToSmc {nullptr};
     t_sendMsgToSmcWithParameter orgRenoirSendMsgToSmcWithParameter {nullptr};
-    mach_vm_address_t orgSmuRavenInitialize {0};
-    mach_vm_address_t orgSmuRenoirInitialize {0};
-    mach_vm_address_t orgPspCmdKmSubmit {0};
-    mach_vm_address_t orgPspCosWaitFor {0};
-    mach_vm_address_t orgTtlDevSetAsicResetMode {0};
+    mach_vm_address_t orgSmuRavenInitialize {0}, orgSmuRenoirInitialize {0};
+    mach_vm_address_t orgPspCmdKmSubmit {0}, orgPspCosWaitFor {0};
 
     static uint32_t wrapSmuGetHwVersion();
     static AMDReturn wrapPspSwInit(uint32_t *inputData, void *outputData);
@@ -43,9 +40,7 @@ class X5000HWLibs {
     static AMDReturn wrapSmuRenoirInitialize(void *smum, uint32_t param2);
     static AMDReturn wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4);
     static AMDReturn wrapPspCosWaitFor(void *cos, uint64_t param2, uint64_t param3, uint64_t param4);
-    static void wrapTtlDevSetAsicResetMode(void *ttl, uint32_t mode);
     static AMDReturn hwLibsNoop();
-    static AMDReturn hwLibsUnsupported();
 };
 
 #endif /* kern_hwlibs_hpp */

@@ -70,21 +70,12 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"_smu_9_0_1_check_fw_status", hwLibsNoop},
             {"_smu_9_0_1_unload_smu", hwLibsNoop},
             {"_psp_sw_init", wrapPspSwInit, this->orgPspSwInit},
-            {"_psp_bootloader_is_sos_running", hwLibsUnsupported},
-            {"_psp_bootloader_load_sos", hwLibsNoop},
-            {"_psp_bootloader_load_sysdrv", hwLibsNoop},
-            {"_psp_xgmi_is_support", hwLibsUnsupported},
-            {"_psp_rap_is_supported", hwLibsUnsupported},
             {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit},
             {"_SmuRaven_Initialize", wrapSmuRavenInitialize, this->orgSmuRavenInitialize},
             {"_SmuRenoir_Initialize", wrapSmuRenoirInitialize, this->orgSmuRenoirInitialize},
             {"_psp_cos_wait_for", wrapPspCosWaitFor, orgPspCosWaitFor},
-            {"_ttlDevSetAsicResetMode", wrapTtlDevSetAsicResetMode, orgTtlDevSetAsicResetMode},
-            {"_smu_9_0_1_full_asic_reset", hwLibsNoop},
-        };    // NOTE: IF YOU ADD A NEW WRAP, YOU WILL HAVE TO ADD IT BEFORE THE LINE ABOVE
+        };
         auto count = arrsize(requests);
-        auto isRavenDerivative = NRed::callback->chipType < ChipType::Renoir;
-        if (!isRavenDerivative) { count--; }
         PANIC_COND(!patcher.routeMultiple(index, requests, count, address, size), "hwlibs", "Failed to route symbols");
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "hwlibs",
@@ -96,6 +87,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         orgAsicInitCapsTable->emulatedRev = orgAsicCapsTable->emulatedRev =
             static_cast<uint32_t>(NRed::callback->enumeratedRevision) + NRed::callback->revision;
         orgAsicInitCapsTable->pciRev = orgAsicCapsTable->pciRev = NRed::callback->pciRevision;
+        auto isRavenDerivative = NRed::callback->chipType < ChipType::Renoir;
         orgAsicInitCapsTable->caps = orgAsicCapsTable->caps = isRavenDerivative ? ddiCapsRaven : ddiCapsRenoir;
         orgAsicInitCapsTable->goldenCaps =
             goldenSettings[static_cast<uint32_t>(isRavenDerivative ? NRed::callback->chipType : ChipType::Renoir)];
@@ -160,7 +152,6 @@ void *X5000HWLibs::wrapCreatePowerTuneServices(void *that, void *param2) {
 }
 
 AMDReturn X5000HWLibs::hwLibsNoop() { return kAMDReturnSuccess; }
-AMDReturn X5000HWLibs::hwLibsUnsupported() { return kAMDReturnUnsupported; }
 
 AMDReturn X5000HWLibs::wrapSmuRavenInitialize(void *smum, uint32_t param2) {
     auto ret = FunctionCast(wrapSmuRavenInitialize, callback->orgSmuRavenInitialize)(smum, param2);
@@ -187,9 +178,4 @@ AMDReturn X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, vo
 AMDReturn X5000HWLibs::wrapPspCosWaitFor(void *cos, uint64_t param2, uint64_t param3, uint64_t param4) {
     IOSleep(20);    // There might be a handshake issue with the hardware, requiring delay
     return FunctionCast(wrapPspCosWaitFor, callback->orgPspCosWaitFor)(cos, param2, param3, param4);
-}
-
-void X5000HWLibs::wrapTtlDevSetAsicResetMode(void *ttl, uint32_t mode) {
-    DBGLOG("hwlibs", "_ttlDevSetAsicResetMode << (ttl: %p mode: 0x%X)", ttl, mode);
-    FunctionCast(wrapTtlDevSetAsicResetMode, callback->orgTtlDevSetAsicResetMode)(ttl, 3);
 }
