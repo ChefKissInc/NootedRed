@@ -161,4 +161,6 @@ enum VideoMemoryType : uint32_t {
     kVideoMemoryTypeDDR4,
 };
 
+constexpr uint32_t PP_RESULT_OK = 1;
+
 #endif /* kern_amd.hpp */

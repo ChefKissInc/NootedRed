@@ -41,7 +41,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable},
             {"_CAILAsicCapsInitTable", orgAsicInitCapsTable},
             {"_Raven_SendMsgToSmc", this->orgRavenSendMsgToSmc},
-            {"_Renoir_SendMsgToSmcWithParameter", this->orgRenoirSendMsgToSmcWithParameter},
+            {"_Renoir_SendMsgToSmc", this->orgRenoirSendMsgToSmc},
             {"__ZN20AMDFirmwareDirectoryC1Ej", this->orgAMDFirmwareDirectoryConstructor},
             {"_RAVEN1_GoldenSettings_A0", goldenSettings[static_cast<uint32_t>(ChipType::Raven)]},
             {"_RAVEN2_GoldenSettings_A0", goldenSettings[static_cast<uint32_t>(ChipType::Raven2)]},
@@ -155,13 +155,17 @@ AMDReturn X5000HWLibs::hwLibsNoop() { return kAMDReturnSuccess; }
 
 AMDReturn X5000HWLibs::wrapSmuRavenInitialize(void *smum, uint32_t param2) {
     auto ret = FunctionCast(wrapSmuRavenInitialize, callback->orgSmuRavenInitialize)(smum, param2);
-    callback->orgRavenSendMsgToSmc(smum, PPSMC_MSG_PowerUpSdma);
+    if (callback->orgRavenSendMsgToSmc(smum, PPSMC_MSG_PowerUpSdma) != PP_RESULT_OK) {
+        SYSLOG("hwlibs", "Failed to power up SDMA");
+    }
     return ret;
 }
 
 AMDReturn X5000HWLibs::wrapSmuRenoirInitialize(void *smum, uint32_t param2) {
     auto ret = FunctionCast(wrapSmuRenoirInitialize, callback->orgSmuRenoirInitialize)(smum, param2);
-    callback->orgRenoirSendMsgToSmcWithParameter(smum, PPSMC_MSG_PowerUpSdma, 0);
+    if (callback->orgRenoirSendMsgToSmc(smum, PPSMC_MSG_PowerUpSdma) != PP_RESULT_OK) {
+        SYSLOG("hwlibs", "Failed to power up SDMA");
+    }
     return ret;
 }
 

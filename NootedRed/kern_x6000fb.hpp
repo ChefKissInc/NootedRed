@@ -21,10 +21,8 @@ class X6000FB {
     mach_vm_address_t orgInitWithPciInfo {0};
     t_DceDriverSetBacklight orgDceDriverSetBacklight {nullptr};
     mach_vm_address_t orgDcePanelCntlHwInit {0};
-    mach_vm_address_t orgFramebufferSetAttribute {0};
-    mach_vm_address_t orgFramebufferGetAttribute {0};
-    uint32_t curPwmBacklightLvl {0};
-    uint32_t maxPwmBacklightLvl {0xFF7B};
+    mach_vm_address_t orgFramebufferSetAttribute {0}, orgFramebufferGetAttribute {0};
+    uint32_t curPwmBacklightLvl {0}, maxPwmBacklightLvl {0xFF7B};
     void *panelCntlPtr {nullptr};
     IONotifier *dispNotif {nullptr};
     mach_vm_address_t orgGetNumberOfConnectors {0};
