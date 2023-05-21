@@ -26,6 +26,8 @@ class X6000FB {
     void *panelCntlPtr {nullptr};
     IONotifier *dispNotif {nullptr};
     mach_vm_address_t orgGetNumberOfConnectors {0};
+    mach_vm_address_t orgIH40IVRingInitHardware {0};
+    mach_vm_address_t orgIRQMGRWriteRegister {0};
 
     static bool OnAppleBacklightDisplayLoad(void *target, void *refCon, IOService *newService, IONotifier *notifier);
     void registerDispMaxBrightnessNotif();
@@ -43,6 +45,8 @@ class X6000FB {
         uintptr_t *value);
     static uint32_t wrapGetNumberOfConnectors(void *that);
     static void wrapDmLoggerWrite([[maybe_unused]] void *dalLogger, uint32_t logType, char *fmt, ...);
+    static bool wrapIH40IVRingInitHardware(void *ctx, void *param2);
+    static void wrapIRQMGRWriteRegister(void *ctx, uint64_t index, uint32_t value);
 };
 
 #endif /* kern_x6000fb_hpp */

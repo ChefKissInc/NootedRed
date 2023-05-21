@@ -53,6 +53,8 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
                 this->orgFramebufferGetAttribute},
             {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
                 this->orgGetNumberOfConnectors},
+            {"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware, orgIH40IVRingInitHardware},
+            {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister, orgIRQMGRWriteRegister},
             {"_dm_logger_write", wrapDmLoggerWrite},
         };
         auto count = arrsize(requests);
@@ -324,4 +326,22 @@ void X6000FB::wrapDmLoggerWrite(void *, uint32_t logType, char *fmt, ...) {
     const char *logTypeStr = arrsize(LogTypes) > logType ? LogTypes[logType] : "Info";
     kprintf("[%s] %s", logTypeStr, ns);
     delete[] ns;
+}
+
+bool X6000FB::wrapIH40IVRingInitHardware(void *ctx, void *param2) {
+    DBGLOG("x6000fb", "_IH_4_0_IVRing_InitHardware << (ctx: %p param2: %p)", ctx, param2);
+    auto ret = FunctionCast(wrapIH40IVRingInitHardware, callback->orgIH40IVRingInitHardware)(ctx, param2);
+    DBGLOG("x6000fb", "_IH_4_0_IVRing_InitHardware >> %d", ret);
+    if (NRed::callback->chipType >= ChipType::Renoir) {    // MC_SPACE_GPA_ENABLE=1
+        NRed::callback->writeReg32(mmIH_CHICKEN, NRed::callback->readReg32(mmIH_CHICKEN) | 0x10);
+    }
+    return ret;
+}
+
+void X6000FB::wrapIRQMGRWriteRegister(void *ctx, uint64_t index, uint32_t value) {
+    if (index == mmIH_CLK_CTRL && NRed::callback->chipType >= ChipType::Renoir) {
+        index |= (index & (1U << 0x1b)) >> 0x1;    // Set IH_BUFFER_MEM_CLK_SOFT_OVERRIDE
+        DBGLOG("x6000fb", "_IRQMGR_WriteRegister: Set IH_BUFFER_MEM_CLK_SOFT_OVERRIDE");
+    }
+    FunctionCast(wrapIRQMGRWriteRegister, callback->orgIRQMGRWriteRegister)(ctx, index, value);
 }

@@ -171,7 +171,7 @@ AMDReturn X5000HWLibs::wrapSmuRenoirInitialize(void *smum, uint32_t param2) {
 
 AMDReturn X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4) {
     // Upstream patch: https://github.com/torvalds/linux/commit/f8f70c1371d304f42d4a1242d8abcbda807d0bed
-    if (NRed::callback->chipType >= ChipType::Renoir && getMember<uint32_t>(ctx, 16) == 6) {
+    if (NRed::callback->chipType >= ChipType::Renoir && getMember<uint32_t>(ctx, 0x10) == 6) {
         DBGLOG("hwlibs", "Skipping MEC2 JT FW");
         return kAMDReturnSuccess;
     }

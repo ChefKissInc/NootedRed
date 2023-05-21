@@ -78,6 +78,9 @@ constexpr uint32_t mmOTG5_OTG_INTERLACE_CONTROL = 0x1DC4;
 constexpr uint32_t mmPCIE_INDEX2 = 0xE;
 constexpr uint32_t mmPCIE_DATA2 = 0xF;
 
+constexpr uint32_t mmIH_CHICKEN = 0x122C;
+constexpr uint32_t mmIH_CLK_CTRL = 0x117B;
+
 struct CommonFirmwareHeader {
     uint32_t size;
     uint32_t headerSize;
