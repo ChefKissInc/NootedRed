@@ -202,8 +202,8 @@ uint32_t X5000::wrapReturnZero() { return 0; }
 
 void *X5000::wrapObtainAccelChannelGroup(void *that, uint32_t prio) {
     auto ret = FunctionCast(wrapObtainAccelChannelGroup, callback->orgObtainAccelChannelGroup)(that, prio);
-    if (ret != nullptr && prio == 2 && getMember<void *>(ret, 0x20) == nullptr) {
-        getMember<void *>(ret, 0x20) = getMember<void *>(ret, 0x18);
+    if (ret != nullptr && prio == 2 && getMember<uint64_t>(ret, 0x20) == 0) {
+        getMember<uint64_t>(ret, 0x20) = getMember<uint64_t>(ret, 0x18);
     }
     return ret;
 }
