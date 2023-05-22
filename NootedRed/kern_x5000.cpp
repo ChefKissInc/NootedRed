@@ -68,6 +68,8 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
                 this->orgAllocateAMDHWAlignManager},
             {"__ZN43AMDRadeonX5000_AMDVega10GraphicsAccelerator13getDeviceTypeEP11IOPCIDevice", wrapGetDeviceType},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20writeASICHangLogInfoEPPv", wrapReturnZero},
+            {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator23obtainAccelChannelGroupE11SS_PRIORITY",
+                wrapObtainAccelChannelGroup, orgObtainAccelChannelGroup},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "x5000", "Failed to route symbols");
 
@@ -197,3 +199,9 @@ void *X5000::wrapAllocateAMDHWAlignManager() {
 uint32_t X5000::wrapGetDeviceType() { return NRed::callback->chipType < ChipType::Renoir ? 0 : 9; }
 
 uint32_t X5000::wrapReturnZero() { return 0; }
+
+void *X5000::wrapObtainAccelChannelGroup(void *that, uint32_t prio) {
+    auto ret = FunctionCast(wrapObtainAccelChannelGroup, callback->orgObtainAccelChannelGroup)(that, prio);
+    if (prio == 2) { getMember<void *>(ret, 0x20) = getMember<void *>(ret, 0x18); }
+    return ret;
+}
