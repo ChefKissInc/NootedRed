@@ -124,9 +124,8 @@ static const uint8_t kIsDeviceValidCallPatched[] = {0x48, 0x8B, 0x07, 0xFF, 0x90
 /** VideoToolbox DRM model check */
 static const char kVideoToolboxDRMModelOriginal[] = "MacPro5,1\0MacPro6,1\0IOService";
 
-static const uint8_t kBoardIdOriginal[] = {0x62, 0x6F, 0x61, 0x72, 0x64, 0x2D, 0x69, 0x64, 0x00, 0x68, 0x77, 0x2E, 0x6D,
-    0x6F, 0x64, 0x65, 0x6C};
-static const uint8_t kBoardIdPatched[] = {0x68, 0x77, 0x67, 0x76, 0x61};
+static const char kBoardIdOriginal[] = "board-id\0hw.model";
+static const char kBoardIdPatched[] = "hwgva-id";
 
 static const char kCoreLSKDMSEPath[] = "/System/Library/PrivateFrameworks/CoreLSKDMSE.framework/Versions/A/CoreLSKDMSE";
 static const char kCoreLSKDPath[] = "/System/Library/PrivateFrameworks/CoreLSKD.framework/Versions/A/CoreLSKD";
