@@ -42,7 +42,7 @@ class X5000 {
     static void *wrapAllocateAMDHWAlignManager();
     static uint32_t wrapGetDeviceType();
     static uint32_t wrapReturnZero();
-    static void *wrapObtainAccelChannelGroup(void *that, uint32_t prio);
+    static void *wrapObtainAccelChannelGroup(void *that, uint32_t priority);
 };
 
 #endif /* kern_x5000_hpp */

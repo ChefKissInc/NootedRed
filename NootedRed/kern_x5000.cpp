@@ -200,10 +200,11 @@ uint32_t X5000::wrapGetDeviceType() { return NRed::callback->chipType < ChipType
 
 uint32_t X5000::wrapReturnZero() { return 0; }
 
-void *X5000::wrapObtainAccelChannelGroup(void *that, uint32_t prio) {
-    auto ret = FunctionCast(wrapObtainAccelChannelGroup, callback->orgObtainAccelChannelGroup)(that, prio);
-    if (ret != nullptr && prio == 2 && getMember<uint64_t>(ret, 0x18) == 0) {
-        getMember<uint64_t>(ret, 0x18) = getMember<uint64_t>(ret, 0x10);
+void *X5000::wrapObtainAccelChannelGroup(void *that, uint32_t priority) {
+    auto ret = FunctionCast(wrapObtainAccelChannelGroup, callback->orgObtainAccelChannelGroup)(that, priority);
+    auto *&sdma1 = getMember<void *>(ret, 0x18);
+    if (ret && priority == 2 && !sdma1) {
+        sdma1 = getMember<void *>(ret, 0x10);    // Replace field with SDMA0, as we have no SDMA1
     }
     return ret;
 }
