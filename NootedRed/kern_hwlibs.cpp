@@ -40,8 +40,6 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
                 this->orgVega10PowerTuneConstructor},
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable},
             {"_CAILAsicCapsInitTable", orgAsicInitCapsTable},
-            {"_Raven_SendMsgToSmc", this->orgRavenSendMsgToSmc},
-            {"_Renoir_SendMsgToSmc", this->orgRenoirSendMsgToSmc},
             {"__ZN20AMDFirmwareDirectoryC1Ej", this->orgAMDFirmwareDirectoryConstructor},
             {"_RAVEN1_GoldenSettings_A0", goldenSettings[static_cast<uint32_t>(ChipType::Raven)]},
             {"_RAVEN2_GoldenSettings_A0", goldenSettings[static_cast<uint32_t>(ChipType::Raven2)]},
@@ -74,6 +72,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"_SmuRaven_Initialize", wrapSmuRavenInitialize, this->orgSmuRavenInitialize},
             {"_SmuRenoir_Initialize", wrapSmuRenoirInitialize, this->orgSmuRenoirInitialize},
             {"_psp_cos_wait_for", wrapPspCosWaitFor, orgPspCosWaitFor},
+            {"_update_sdma_power_gating", wrapUpdateSdmaPowerGating, orgUpdateSdmaPowerGating},
         };
         auto count = arrsize(requests);
         PANIC_COND(!patcher.routeMultiple(index, requests, count, address, size), "hwlibs", "Failed to route symbols");
@@ -153,22 +152,6 @@ void *X5000HWLibs::wrapCreatePowerTuneServices(void *that, void *param2) {
 
 AMDReturn X5000HWLibs::hwLibsNoop() { return kAMDReturnSuccess; }
 
-AMDReturn X5000HWLibs::wrapSmuRavenInitialize(void *smum, uint32_t param2) {
-    auto ret = FunctionCast(wrapSmuRavenInitialize, callback->orgSmuRavenInitialize)(smum, param2);
-    if (callback->orgRavenSendMsgToSmc(smum, PPSMC_MSG_PowerUpSdma) != PP_RESULT_OK) {
-        SYSLOG("hwlibs", "Failed to power up SDMA");
-    }
-    return ret;
-}
-
-AMDReturn X5000HWLibs::wrapSmuRenoirInitialize(void *smum, uint32_t param2) {
-    auto ret = FunctionCast(wrapSmuRenoirInitialize, callback->orgSmuRenoirInitialize)(smum, param2);
-    if (callback->orgRenoirSendMsgToSmc(smum, PPSMC_MSG_PowerUpSdma) != PP_RESULT_OK) {
-        SYSLOG("hwlibs", "Failed to power up SDMA");
-    }
-    return ret;
-}
-
 AMDReturn X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4) {
     // Upstream patch: https://github.com/torvalds/linux/commit/f8f70c1371d304f42d4a1242d8abcbda807d0bed
     if (NRed::callback->chipType >= ChipType::Renoir && getMember<uint32_t>(ctx, 0x10) == 6) {
@@ -182,4 +165,22 @@ AMDReturn X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, vo
 AMDReturn X5000HWLibs::wrapPspCosWaitFor(void *cos, uint64_t param2, uint64_t param3, uint64_t param4) {
     IOSleep(20);    // There might be a handshake issue with the hardware, requiring delay
     return FunctionCast(wrapPspCosWaitFor, callback->orgPspCosWaitFor)(cos, param2, param3, param4);
+}
+
+void X5000HWLibs::wrapUpdateSdmaPowerGating(void * param1, uint32_t mode) {
+    DBGLOG("hwlibs", "_update_sdma_power_gating << (param1: %p mode: 0x%X)", param1, mode);
+    if (mode == 0 || mode == 3) {
+        uint32_t smcRet;
+        if (NRed::callback->chipType < ChipType::Renoir) {
+            smcRet = callback->orgRavenSendMsgToSmc(smum, PPSMC_MSG_PowerUpSdma);
+        } else {
+            smcRet = callback->orgRenoirSendMsgToSmc(smum, PPSMC_MSG_PowerUpSdma);
+        }
+
+        if (smcRet != PP_RESULT_OK) {
+            SYSLOG("hwlibs", "Failed to power up SDMA");
+        }
+    }
+
+    FunctionCast(wrapUpdateSdmaPowerGating, callback->orgUpdateSdmaPowerGating)(param1, mode);
 }
