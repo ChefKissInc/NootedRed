@@ -69,8 +69,6 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"_smu_9_0_1_unload_smu", hwLibsNoop},
             {"_psp_sw_init", wrapPspSwInit, this->orgPspSwInit},
             {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit},
-            {"_SmuRaven_Initialize", wrapSmuRavenInitialize, this->orgSmuRavenInitialize},
-            {"_SmuRenoir_Initialize", wrapSmuRenoirInitialize, this->orgSmuRenoirInitialize},
             {"_psp_cos_wait_for", wrapPspCosWaitFor, orgPspCosWaitFor},
             {"_update_sdma_power_gating", wrapUpdateSdmaPowerGating, orgUpdateSdmaPowerGating},
         };
@@ -170,16 +168,7 @@ AMDReturn X5000HWLibs::wrapPspCosWaitFor(void *cos, uint64_t param2, uint64_t pa
 void X5000HWLibs::wrapUpdateSdmaPowerGating(void * param1, uint32_t mode) {
     DBGLOG("hwlibs", "_update_sdma_power_gating << (param1: %p mode: 0x%X)", param1, mode);
     if (mode == 0 || mode == 3) {
-        uint32_t smcRet;
-        if (NRed::callback->chipType < ChipType::Renoir) {
-            smcRet = callback->orgRavenSendMsgToSmc(smum, PPSMC_MSG_PowerUpSdma);
-        } else {
-            smcRet = callback->orgRenoirSendMsgToSmc(smum, PPSMC_MSG_PowerUpSdma);
-        }
-
-        if (smcRet != PP_RESULT_OK) {
-            SYSLOG("hwlibs", "Failed to power up SDMA");
-        }
+        NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerUpSdma);
     }
 
     FunctionCast(wrapUpdateSdmaPowerGating, callback->orgUpdateSdmaPowerGating)(param1, mode);

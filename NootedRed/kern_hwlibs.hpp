@@ -11,7 +11,6 @@ using t_AMDFirmwareDirectoryConstructor = void (*)(void *that, uint32_t maxEntry
 using t_createFirmware = void *(*)(const void *data, uint32_t size, uint32_t ipVersion, const char *filename);
 using t_putFirmware = bool (*)(void *that, uint32_t deviceType, void *fw);
 using t_VegaXPowerTuneConstructor = void (*)(void *that, void *ppInstance, void *ppCallbacks);
-using t_sendMsgToSmc = uint32_t (*)(void *smum, uint32_t msgId);
 
 class X5000HWLibs {
     public:
@@ -25,7 +24,6 @@ class X5000HWLibs {
     t_createFirmware orgCreateFirmware {nullptr};
     t_putFirmware orgPutFirmware {nullptr};
     t_VegaXPowerTuneConstructor orgVega10PowerTuneConstructor {nullptr};
-    t_sendMsgToSmc orgRavenSendMsgToSmc {nullptr}, orgRenoirSendMsgToSmc {nullptr};
     mach_vm_address_t orgPspCmdKmSubmit {0}, orgPspCosWaitFor {0};
     mach_vm_address_t orgUpdateSdmaPowerGating {0};
 

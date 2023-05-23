@@ -81,6 +81,14 @@ constexpr uint32_t mmPCIE_DATA2 = 0xF;
 constexpr uint32_t mmIH_CHICKEN = 0x122C;
 constexpr uint32_t mmIH_CLK_CTRL = 0x117B;
 
+constexpr uint32_t MP_BASE = 0x16000;
+
+constexpr uint32_t AMDGPU_MAX_USEC_TIMEOUT = 100000;
+
+constexpr uint32_t mmMP1_SMN_C2PMSG_90 = 0x29A;
+constexpr uint32_t mmMP1_SMN_C2PMSG_82 = 0x292;
+constexpr uint32_t mmMP1_SMN_C2PMSG_66 = 0x282;
+
 struct CommonFirmwareHeader {
     uint32_t size;
     uint32_t headerSize;

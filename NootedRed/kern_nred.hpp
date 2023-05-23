@@ -204,6 +204,30 @@ class NRed {
         }
     }
 
+    uint32_t sendMsgToSmc(uint32_t msg, uint32_t param=0) {
+        auto smuWaitForResp = [=]() {
+            uint32_t ret = 0;
+            for (uint32_t i = 0; i < AMDGPU_MAX_USEC_TIMEOUT; i++) {
+                ret = this->readReg32(MP_BASE + mmMP1_SMN_C2PMSG_90);
+                if (ret != 0) return ret;
+
+                IOSleep(1);
+            }
+
+            return ret;
+        };
+
+        PANIC_COND(smuWaitForResp() != 1, "nred", "Msg issuing pre-check failed; SMU may be in an improper state");
+
+        this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_90, 0);
+        this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_82, param);
+        this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_66, msg);
+
+        PANIC_COND(smuWaitForResp() != 1, "nred", "No response from SMU");
+
+        return this->readReg32(MP_BASE + mmMP1_SMN_C2PMSG_82);
+    }
+
     template<typename T>
     T *getVBIOSDataTable(uint32_t index) {
         auto *vbios = static_cast<const uint8_t *>(this->vbiosData->getBytesNoCopy());
