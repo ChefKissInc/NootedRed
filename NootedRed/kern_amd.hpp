@@ -9,6 +9,7 @@ using t_GenericConstructor = void (*)(void *that);
 
 constexpr uint32_t AMDGPU_FAMILY_RAVEN = 0x8E;
 
+constexpr uint32_t PPSMC_MSG_PowerDownSdma = 0xD;
 constexpr uint32_t PPSMC_MSG_PowerUpSdma = 0xE;
 
 constexpr uint32_t mmHUBP0_DCSURF_ADDR_CONFIG = 0x55A;

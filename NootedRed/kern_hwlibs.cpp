@@ -169,6 +169,8 @@ void X5000HWLibs::wrapUpdateSdmaPowerGating(void * param1, uint32_t mode) {
     DBGLOG("hwlibs", "_update_sdma_power_gating << (param1: %p mode: 0x%X)", param1, mode);
     if (mode == 0 || mode == 3) {
         NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerUpSdma);
+    } else if (mode == 2) {
+        NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerDownSdma);
     }
 
     FunctionCast(wrapUpdateSdmaPowerGating, callback->orgUpdateSdmaPowerGating)(param1, mode);
