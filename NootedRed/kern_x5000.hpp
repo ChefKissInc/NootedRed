@@ -24,6 +24,7 @@ class X5000 {
     mach_vm_address_t orgAccelSharedUCStart {0};
     mach_vm_address_t orgAccelSharedUCStop {0};
     mach_vm_address_t orgAllocateAMDHWAlignManager {0};
+    mach_vm_address_t orgObtainAccelChannelGroup {0};
     void *hwAlignMgr {nullptr};
     uint8_t *hwAlignMgrVtX5000 {nullptr};
     uint8_t *hwAlignMgrVtX6000 {nullptr};
@@ -41,6 +42,7 @@ class X5000 {
     static void *wrapAllocateAMDHWAlignManager();
     static uint32_t wrapGetDeviceType();
     static uint32_t wrapReturnZero();
+    static void *wrapObtainAccelChannelGroup(void *that, uint32_t priority);
 };
 
 #endif /* kern_x5000_hpp */
