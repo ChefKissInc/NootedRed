@@ -165,13 +165,16 @@ AMDReturn X5000HWLibs::wrapPspCosWaitFor(void *cos, uint64_t param2, uint64_t pa
     return FunctionCast(wrapPspCosWaitFor, callback->orgPspCosWaitFor)(cos, param2, param3, param4);
 }
 
-void X5000HWLibs::wrapUpdateSdmaPowerGating(void * param1, uint32_t mode) {
-    DBGLOG("hwlibs", "_update_sdma_power_gating << (param1: %p mode: 0x%X)", param1, mode);
-    if (mode == 0 || mode == 3) {
-        NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerUpSdma);
-    } else if (mode == 2) {
-        NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerDownSdma);
+void X5000HWLibs::wrapUpdateSdmaPowerGating(void *cail, uint32_t mode) {
+    switch (mode) {
+        case 0:
+            [[fallthrough]];
+        case 3:
+            NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerUpSdma);
+            break;
+        case 2:
+            NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerDownSdma);
+            break;
     }
-
-    FunctionCast(wrapUpdateSdmaPowerGating, callback->orgUpdateSdmaPowerGating)(param1, mode);
+    FunctionCast(wrapUpdateSdmaPowerGating, callback->orgUpdateSdmaPowerGating)(cail, mode);
 }

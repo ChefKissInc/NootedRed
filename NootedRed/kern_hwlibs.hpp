@@ -34,7 +34,7 @@ class X5000HWLibs {
     static void *wrapCreatePowerTuneServices(void *that, void *param2);
     static AMDReturn wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4);
     static AMDReturn wrapPspCosWaitFor(void *cos, uint64_t param2, uint64_t param3, uint64_t param4);
-    static void wrapUpdateSdmaPowerGating(void * param1, uint32_t mode);
+    static void wrapUpdateSdmaPowerGating(void *cail, uint32_t mode);
     static AMDReturn hwLibsNoop();
 };
 
