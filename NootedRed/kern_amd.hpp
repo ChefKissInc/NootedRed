@@ -79,7 +79,10 @@ constexpr uint32_t mmPCIE_INDEX2 = 0xE;
 constexpr uint32_t mmPCIE_DATA2 = 0xF;
 
 constexpr uint32_t mmIH_CHICKEN = 0x122C;
+constexpr uint32_t mmIH_MC_SPACE_GPA_ENABLE = 0x10;
 constexpr uint32_t mmIH_CLK_CTRL = 0x117B;
+constexpr uint32_t mmIH_IH_BUFFER_MEM_CLK_SOFT_OVERRIDE_SHIFT = 0x1a;
+constexpr uint32_t mmIH_DBUS_MUX_CLK_SOFT_OVERRIDE_SHIFT = 0x1b;
 
 struct CommonFirmwareHeader {
     uint32_t size;
