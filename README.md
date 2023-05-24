@@ -28,13 +28,7 @@ Your system must not have a GCN 5 or RDNA AMD dGPU, as this kext will conflict w
 
 This project is under active research and development; There will be crashes here and there.
 
-The kext is mostly fully functional on all Vega iGPUs. That includes:  
-- Raven
-- Raven2
-- Renoir
-- Lucienne
-- Cezanne
-- Ryzen 5xxx series and older
+The kext is mostly fully functional on all Vega (Entire Raven family - Raven(2)/Renoir and derivatives, aka Ryzen 5xxx series and older) iGPUs.
 
 See repository issues for more information.
 
