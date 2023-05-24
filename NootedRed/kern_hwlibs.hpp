@@ -26,6 +26,8 @@ class X5000HWLibs {
     t_VegaXPowerTuneConstructor orgVega10PowerTuneConstructor {nullptr};
     mach_vm_address_t orgPspCmdKmSubmit {0}, orgPspCosWaitFor {0};
     mach_vm_address_t orgUpdateSdmaPowerGating {0};
+    mach_vm_address_t orgVWriteMmRegisterUlong {0};
+    mach_vm_address_t orgWriteRegister {0};
     bool isSdmaPoweredUp {false};
 
     static uint32_t wrapSmuGetHwVersion();
@@ -36,6 +38,8 @@ class X5000HWLibs {
     static AMDReturn wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4);
     static AMDReturn wrapPspCosWaitFor(void *cos, uint64_t param2, uint64_t param3, uint64_t param4);
     static void wrapUpdateSdmaPowerGating(void *cail, uint32_t mode);
+    static void wrapVWriteMmRegisterUlong(void *cail, uint32_t regIndex, uint32_t regVal);
+    static void wrapWriteRegister(void *cgsDevice, uint32_t regIndex, uint32_t regVal);
     static AMDReturn hwLibsNoop();
 };
 

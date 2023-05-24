@@ -71,6 +71,8 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit},
             {"_psp_cos_wait_for", wrapPspCosWaitFor, orgPspCosWaitFor},
             {"_update_sdma_power_gating", wrapUpdateSdmaPowerGating, orgUpdateSdmaPowerGating},
+            {"_vWriteMmRegisterUlong", wrapVWriteMmRegisterUlong, orgVWriteMmRegisterUlong},
+            {"_write_register", wrapWriteRegister, orgWriteRegister},
         };
         auto count = arrsize(requests);
         PANIC_COND(!patcher.routeMultiple(index, requests, count, address, size), "hwlibs", "Failed to route symbols");
@@ -183,4 +185,14 @@ void X5000HWLibs::wrapUpdateSdmaPowerGating(void *cail, uint32_t mode) {
         NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerDownSdma);
         callback->isSdmaPoweredUp = false;
     }
+}
+
+void X5000HWLibs::wrapVWriteMmRegisterUlong(void *cail, uint32_t regIndex, uint32_t regVal) {
+    DBGLOG("hwlibs", "_vWriteMmRegisterUlong << (cail: %p regIndex: 0x%X regVal: 0x%X)", cail, regIndex, regVal);
+    NRed::callback->writeReg32(regIndex, regVal);
+}
+
+void X5000HWLibs::wrapWriteRegister(void *cgsDevice, uint32_t regIndex, uint32_t regVal) {
+    DBGLOG("hwlibs", "_write_register << (cgsDevice: %p regIndex: 0x%X regVal: 0x%X)", cgsDevice, regIndex, regVal);
+    NRed::callback->writeReg32(regIndex, regVal);
 }

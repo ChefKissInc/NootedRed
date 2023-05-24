@@ -70,6 +70,8 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20writeASICHangLogInfoEPPv", wrapReturnZero},
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator23obtainAccelChannelGroupE11SS_PRIORITY",
                 wrapObtainAccelChannelGroup, orgObtainAccelChannelGroup},
+            {"__ZN29AMDRadeonX5000_AMDHWRegisters5writeEjj", wrapHwRegWrite, orgHwRegWrite},
+            {"__ZN26AMDRadeonX5000_AMDHardware16powerUpHWEnginesEv", wrapPowerUpHWEngines, orgPowerUpHWEngines},
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "x5000", "Failed to route symbols");
 
@@ -206,5 +208,17 @@ void *X5000::wrapObtainAccelChannelGroup(void *that, uint32_t priority) {
     if (ret && priority == 2 && !sdma1) {
         sdma1 = getMember<void *>(ret, 0x10);    // Replace field with SDMA0, as we have no SDMA1
     }
+    return ret;
+}
+
+void X5000::wrapHwRegWrite(uint32_t regIndex, uint32_t regVal) {
+    DBGLOG("x5000", "hwRegWrite << (regIndex: 0x%X regVal: 0x%X)", regIndex, regVal);
+    NRed::callback->writeReg32(regIndex, regVal);
+}
+
+bool X5000::wrapPowerUpHWEngines(void *that) {
+    DBGLOG("x5000", "powerUpHWEngines << (that: %p)", that);
+    auto ret = FunctionCast(wrapPowerUpHWEngines, callback->orgPowerUpHWEngines)(that);
+    DBGLOG("x5000", "powerUpHWEngines >> %d", ret);
     return ret;
 }
