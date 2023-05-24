@@ -121,8 +121,7 @@ void NRed::processPatcher(KernelPatcher &patcher) {
         auto *entry = IORegistryEntry::fromPath("/", gIODTPlane);
         if (entry) {
             DBGLOG("nred", "Setting hwgva-id to iMacPro1,1");
-            entry->setProperty("hwgva-id", const_cast<char *>("Mac-7BA5B2D9E42DDD94"),
-                static_cast<uint32_t>(sizeof("Mac-7BA5B2D9E42DDD94")));
+            entry->setProperty("hwgva-id", const_cast<char *>("Mac-7BA5B2D9E42DDD94"), sizeof("Mac-7BA5B2D9E42DDD94"));
             entry->release();
         }
     } else {
@@ -166,113 +165,113 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
 
     char path[PATH_MAX];
     int pathlen = PATH_MAX;
-    if (LIKELY(!vn_getpath(vp, path, &pathlen))) {
-        if (UNLIKELY(UserPatcher::matchSharedCachePath(path))) {
-            if (UNLIKELY(
-                    KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kVideoToolboxDRMModelOriginal,
-                        arrsize(kVideoToolboxDRMModelOriginal), BaseDeviceInfo::get().modelIdentifier, 20)))
-                DBGLOG("nred", "Relaxed VideoToolbox DRM model check");
+    if (UNLIKELY(vn_getpath(vp, path, &pathlen))) { return; }
 
-            if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kBoardIdOriginal,
-                    arrsize(kBoardIdOriginal), kBoardIdPatched, arrsize(kBoardIdPatched))))
-                DBGLOG("nred", "Patched 'board-id' -> 'hwgva-id'");
+    if (UserPatcher::matchSharedCachePath(path)) {
+        if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kVideoToolboxDRMModelOriginal,
+                arrsize(kVideoToolboxDRMModelOriginal), BaseDeviceInfo::get().modelIdentifier, 20)))
+            DBGLOG("nred", "Relaxed VideoToolbox DRM model check");
 
-            if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
-                    kVAAcceleratorInfoIdentifyOriginal, kVAAcceleratorInfoIdentifyMask,
-                    kVAAcceleratorInfoIdentifyPatched, kVAAcceleratorInfoIdentifyMask, 0, 0)))
-                DBGLOG("nred", "Patched VAAcceleratorInfo::identify");
+        if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kBoardIdOriginal,
+                arrsize(kBoardIdOriginal), kBoardIdPatched, arrsize(kBoardIdPatched))))
+            DBGLOG("nred", "Applied iMacPro1,1 spoof in AppleGVA");
 
-            if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
-                    kVAFactoryCreateGraphicsEngineOriginal, arrsize(kVAFactoryCreateGraphicsEngineOriginal),
-                    kVAFactoryCreateGraphicsEngineMask, arrsize(kVAFactoryCreateGraphicsEngineMask),
-                    kVAFactoryCreateGraphicsEnginePatched, arrsize(kVAFactoryCreateGraphicsEnginePatched), nullptr, 0,
-                    0, 0)))
-                DBGLOG("nred", "Patched VAFactory::createGraphicsEngine");
+        if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                kVAAcceleratorInfoIdentifyOriginal, kVAAcceleratorInfoIdentifyMask, kVAAcceleratorInfoIdentifyPatched,
+                kVAAcceleratorInfoIdentifyMask, 0, 0)))
+            DBGLOG("nred", "Patched VAAcceleratorInfo::identify");
 
-            if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
-                    kVAFactoryCreateVPOriginal, arrsize(kVAFactoryCreateVPOriginal), kVAFactoryCreateVPMask,
-                    arrsize(kVAFactoryCreateVPMask), kVAFactoryCreateVPPatched, arrsize(kVAFactoryCreateVPPatched),
-                    nullptr, 0, 0, 0)))
-                DBGLOG("nred", "Patched VAFactory::create*VP");
+        if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                kVAFactoryCreateGraphicsEngineOriginal, arrsize(kVAFactoryCreateGraphicsEngineOriginal),
+                kVAFactoryCreateGraphicsEngineMask, arrsize(kVAFactoryCreateGraphicsEngineMask),
+                kVAFactoryCreateGraphicsEnginePatched, arrsize(kVAFactoryCreateGraphicsEnginePatched), nullptr, 0, 0,
+                0)))
+            DBGLOG("nred", "Patched VAFactory::createGraphicsEngine");
 
-            if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
-                    kVAFactoryCreateImageBltOriginal, arrsize(kVAFactoryCreateImageBltOriginal),
-                    kVAFactoryCreateImageBltMask, arrsize(kVAFactoryCreateImageBltMask),
-                    kVAFactoryCreateImageBltPatched, arrsize(kVAFactoryCreateImageBltPatched), nullptr, 0, 0, 0)))
-                DBGLOG("nred", "Patched VAFactory::createImageBlt");
+        if (UNLIKELY(
+                KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE, kVAFactoryCreateVPOriginal,
+                    arrsize(kVAFactoryCreateVPOriginal), kVAFactoryCreateVPMask, arrsize(kVAFactoryCreateVPMask),
+                    kVAFactoryCreateVPPatched, arrsize(kVAFactoryCreateVPPatched), nullptr, 0, 0, 0)))
+            DBGLOG("nred", "Patched VAFactory::create*VP");
 
-            if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
-                    kVAAddrLibInterfaceInitOriginal, kVAAddrLibInterfaceInitOriginalMask,
-                    kVAAddrLibInterfaceInitPatched, kVAAddrLibInterfaceInitPatchedMask, 0, 0)))
-                DBGLOG("nred", "Patched VAAddrLibInterface::init");
+        if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                kVAFactoryCreateImageBltOriginal, arrsize(kVAFactoryCreateImageBltOriginal),
+                kVAFactoryCreateImageBltMask, arrsize(kVAFactoryCreateImageBltMask), kVAFactoryCreateImageBltPatched,
+                arrsize(kVAFactoryCreateImageBltPatched), nullptr, 0, 0, 0)))
+            DBGLOG("nred", "Patched VAFactory::createImageBlt");
 
-            if (callback->chipType < ChipType::Renoir) {
-                if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kWriteUvdNoOpOriginal,
-                        kWriteUvdNoOpPatched)))
-                    DBGLOG("nred", "Patched Vcn2DecCommand::writeUvdNoOp");
+        if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                kVAAddrLibInterfaceInitOriginal, kVAAddrLibInterfaceInitOriginalMask, kVAAddrLibInterfaceInitPatched,
+                kVAAddrLibInterfaceInitPatchedMask, 0, 0)))
+            DBGLOG("nred", "Patched VAAddrLibInterface::init");
 
-                if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
-                        kWriteUvdEngineStartOriginal, kWriteUvdEngineStartPatched)))
-                    DBGLOG("nred", "Patched Vcn2DecCommand::writeUvdEngineStart");
+        // ----------------------------------------------
+        if (callback->chipType >= ChipType::Renoir) { return; }    // Everything after is for VCN 1
+        // ----------------------------------------------
 
-                if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
-                        kWriteUvdGpcomVcpuCmdOriginal, kWriteUvdGpcomVcpuCmdPatched)))
-                    DBGLOG("nred", "Patched Vcn2DecCommand::writeUvdGpcomVcpuCmdOriginal");
+        if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kWriteUvdNoOpOriginal,
+                kWriteUvdNoOpPatched)))
+            DBGLOG("nred", "Patched Vcn2DecCommand::writeUvdNoOp");
 
-                if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
-                        kWriteUvdGpcomVcpuData0Original, kWriteUvdGpcomVcpuData0Patched)))
-                    DBGLOG("nred", "Patched Vcn2DecCommand::writeUvdGpcomVcpuData0Original");
+        if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kWriteUvdEngineStartOriginal,
+                kWriteUvdEngineStartPatched)))
+            DBGLOG("nred", "Patched Vcn2DecCommand::writeUvdEngineStart");
 
-                if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE,
-                        kWriteUvdGpcomVcpuData1Original, kWriteUvdGpcomVcpuData1Patched)))
-                    DBGLOG("nred", "Patched Vcn2DecCommand::writeUvdGpcomVcpuData1Original");
+        if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kWriteUvdGpcomVcpuCmdOriginal,
+                kWriteUvdGpcomVcpuCmdPatched)))
+            DBGLOG("nred", "Patched Vcn2DecCommand::writeUvdGpcomVcpuCmdOriginal");
 
-                if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
-                        kAddEncodePacketOriginal, kAddEncodePacketMask, kAddEncodePacketPatched, kAddEncodePacketMask,
-                        0, 0)))
-                    DBGLOG("nred", "Patched Vcn2EncCommand::addEncodePacket");
+        if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kWriteUvdGpcomVcpuData0Original,
+                kWriteUvdGpcomVcpuData0Patched)))
+            DBGLOG("nred", "Patched Vcn2DecCommand::writeUvdGpcomVcpuData0Original");
 
-                if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
-                        kAddSliceHeaderPacketOriginal, kAddSliceHeaderPacketMask, kAddSliceHeaderPacketPatched,
-                        kAddSliceHeaderPacketMask, 0, 0)))
-                    DBGLOG("nred", "Patched Vcn2EncCommand::addSliceHeaderPacket");
+        if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kWriteUvdGpcomVcpuData1Original,
+                kWriteUvdGpcomVcpuData1Patched)))
+            DBGLOG("nred", "Patched Vcn2DecCommand::writeUvdGpcomVcpuData1Original");
 
-                if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
-                        kAddIntraRefreshPacketOriginal, kAddIntraRefreshPacketMask, kAddIntraRefreshPacketPatched,
-                        kAddIntraRefreshPacketMask, 0, 0)))
-                    DBGLOG("nred", "Patched Vcn2EncCommand::addIntraRefreshPacket");
+        if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                kAddEncodePacketOriginal, kAddEncodePacketMask, kAddEncodePacketPatched, kAddEncodePacketMask, 0, 0)))
+            DBGLOG("nred", "Patched Vcn2EncCommand::addEncodePacket");
 
-                if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
-                        kAddContextBufferPacketOriginal, kAddContextBufferPacketMask, kAddContextBufferPacketPatched,
-                        kAddContextBufferPacketMask, 0, 0)))
-                    DBGLOG("nred", "Patched Vcn2EncCommand::addContextBufferPacket");
+        if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                kAddSliceHeaderPacketOriginal, kAddSliceHeaderPacketMask, kAddSliceHeaderPacketPatched,
+                kAddSliceHeaderPacketMask, 0, 0)))
+            DBGLOG("nred", "Patched Vcn2EncCommand::addSliceHeaderPacket");
 
-                if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
-                        kAddBitstreamBufferPacketOriginal, kAddBitstreamBufferPacketMask,
-                        kAddBitstreamBufferPacketPatched, kAddBitstreamBufferPacketMask, 1, 0)))
-                    DBGLOG("nred", "Patched Vcn2EncCommand::addBitstreamBufferPacket");
+        if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                kAddIntraRefreshPacketOriginal, kAddIntraRefreshPacketMask, kAddIntraRefreshPacketPatched,
+                kAddIntraRefreshPacketMask, 0, 0)))
+            DBGLOG("nred", "Patched Vcn2EncCommand::addIntraRefreshPacket");
 
-                if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
-                        kAddFeedbackBufferPacketOriginal, kAddFeedbackBufferPacketMask, kAddFeedbackBufferPacketPatched,
-                        kAddFeedbackBufferPacketMask, 0, 0)))
-                    DBGLOG("nred", "Patched Vcn2EncCommand::addFeedbackBufferPacket");
+        if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                kAddContextBufferPacketOriginal, kAddContextBufferPacketMask, kAddContextBufferPacketPatched,
+                kAddContextBufferPacketMask, 0, 0)))
+            DBGLOG("nred", "Patched Vcn2EncCommand::addContextBufferPacket");
 
-                if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
-                        kAddInputFormatPacketOriginal, arrsize(kAddInputFormatPacketOriginal), kAddFormatPacketMask,
-                        arrsize(kAddFormatPacketMask), kRetZero, arrsize(kRetZero), nullptr, 0, 0, 0)))
-                    DBGLOG("nred", "Patched Vcn2EncCommand::addInputFormatPacket");
+        if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                kAddBitstreamBufferPacketOriginal, kAddBitstreamBufferPacketMask, kAddBitstreamBufferPacketPatched,
+                kAddBitstreamBufferPacketMask, 1, 0)))
+            DBGLOG("nred", "Patched Vcn2EncCommand::addBitstreamBufferPacket");
 
-                if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
-                        kAddOutputFormatPacketOriginal, arrsize(kAddOutputFormatPacketOriginal), kAddFormatPacketMask,
-                        arrsize(kAddFormatPacketMask), kRetZero, arrsize(kRetZero), nullptr, 0, 0, 0)))
-                    DBGLOG("nred", "Patched Vcn2EncCommand::addOutputFormatPacket");
-            }
-        } else if (UNLIKELY(!strncmp(path, kCoreLSKDMSEPath, arrsize(kCoreLSKDMSEPath))) ||
-                   UNLIKELY(!strncmp(path, kCoreLSKDPath, arrsize(kCoreLSKDPath)))) {
-            if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kCoreLSKDOriginal,
-                    kCoreLSKDPatched)))
-                DBGLOG("nred", "Patched streaming CPUID to Haswell");
-        }
+        if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                kAddFeedbackBufferPacketOriginal, kAddFeedbackBufferPacketMask, kAddFeedbackBufferPacketPatched,
+                kAddFeedbackBufferPacketMask, 0, 0)))
+            DBGLOG("nred", "Patched Vcn2EncCommand::addFeedbackBufferPacket");
+
+        if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                kAddInputFormatPacketOriginal, arrsize(kAddInputFormatPacketOriginal), kAddFormatPacketMask,
+                arrsize(kAddFormatPacketMask), kRetZero, arrsize(kRetZero), nullptr, 0, 0, 0)))
+            DBGLOG("nred", "Patched Vcn2EncCommand::addInputFormatPacket");
+
+        if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                kAddOutputFormatPacketOriginal, arrsize(kAddOutputFormatPacketOriginal), kAddFormatPacketMask,
+                arrsize(kAddFormatPacketMask), kRetZero, arrsize(kRetZero), nullptr, 0, 0, 0)))
+            DBGLOG("nred", "Patched Vcn2EncCommand::addOutputFormatPacket");
+    } else if (UNLIKELY(!strncmp(path, kCoreLSKDMSEPath, arrsize(kCoreLSKDMSEPath))) ||
+               UNLIKELY(!strncmp(path, kCoreLSKDPath, arrsize(kCoreLSKDPath)))) {
+        if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kCoreLSKDOriginal,
+                kCoreLSKDPatched)))
+            DBGLOG("nred", "Patched streaming CPUID to Haswell");
     }
 }
 
