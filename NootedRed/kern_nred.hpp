@@ -209,7 +209,7 @@ class NRed {
             uint32_t ret = 0;
             for (uint32_t i = 0; i < AMDGPU_MAX_USEC_TIMEOUT; i++) {
                 ret = this->readReg32(MP_BASE + mmMP1_SMN_C2PMSG_90);
-                if (ret != 0) return ret;
+                if (ret) return ret;
 
                 IOSleep(1);
             }

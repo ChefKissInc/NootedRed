@@ -26,6 +26,7 @@ class X5000HWLibs {
     t_VegaXPowerTuneConstructor orgVega10PowerTuneConstructor {nullptr};
     mach_vm_address_t orgPspCmdKmSubmit {0}, orgPspCosWaitFor {0};
     mach_vm_address_t orgUpdateSdmaPowerGating {0};
+    bool isSdmaPoweredUp {false};
 
     static uint32_t wrapSmuGetHwVersion();
     static AMDReturn wrapPspSwInit(uint32_t *inputData, void *outputData);

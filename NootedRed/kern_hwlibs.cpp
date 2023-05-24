@@ -170,10 +170,16 @@ void X5000HWLibs::wrapUpdateSdmaPowerGating(void *cail, uint32_t mode) {
         case 0:
             [[fallthrough]];
         case 3:
-            NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerUpSdma);
+            if (!callback->isSdmaPoweredUp) {
+                NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerUpSdma);
+                callback->isSdmaPoweredUp = true;
+            }
             break;
         case 2:
-            NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerDownSdma);
+            if (callback->isSdmaPoweredUp) {
+                NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerDownSdma);
+                callback->isSdmaPoweredUp = false;
+            }
             break;
     }
     FunctionCast(wrapUpdateSdmaPowerGating, callback->orgUpdateSdmaPowerGating)(cail, mode);
