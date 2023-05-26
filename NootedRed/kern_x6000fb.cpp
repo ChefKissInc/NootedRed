@@ -82,7 +82,8 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
         orgAsicCapsTable->caps = NRed::callback->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir;
         orgAsicCapsTable->deviceId = NRed::callback->deviceId;
         orgAsicCapsTable->revision = NRed::callback->revision;
-        orgAsicCapsTable->emulatedRev = NRed::callback->enumeratedRevision + NRed::callback->revision;
+        orgAsicCapsTable->emulatedRev =
+            static_cast<uint32_t>(NRed::callback->enumeratedRevision) + NRed::callback->revision;
         orgAsicCapsTable->pciRev = NRed::callback->pciRevision;
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("x6000fb", "Applied DDI Caps patches");
