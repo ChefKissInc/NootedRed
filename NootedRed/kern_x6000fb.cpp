@@ -87,32 +87,6 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("x6000fb", "Applied DDI Caps patches");
 
-        if (!checkKernelArgument("-nred24bit")) { return true; }
-
-        auto bitsPerComponent = patcher.solveSymbol<int *>(index, "__ZL18BITS_PER_COMPONENT", address, size);
-        if (bitsPerComponent) {
-            while (*bitsPerComponent) {
-                if (*bitsPerComponent == 10) {
-                    PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS,
-                        "x5000", "Failed to disable kernel writing");
-                    DBGLOG("rad", "Patching BITS_PER_COMPONENT");
-                    *bitsPerComponent = 8;
-                    MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
-                }
-                bitsPerComponent++;
-            }
-        } else {
-            SYSLOG("rad", "failed to find BITS_PER_COMPONENT");
-        }
-        patcher.clearError();
-
-        DBGLOG("rad", "Patching pixel types");
-        KernelPatcher::LookupPatch patch {&kextRadeonX6000Framebuffer,
-            reinterpret_cast<const uint8_t *>(kBitsPerComponentOriginal),
-            reinterpret_cast<const uint8_t *>(kBitsPerComponentPatched), 32, 2};
-        patcher.applyLookupPatch(&patch);
-        patcher.clearError();
-
         return true;
     }
 

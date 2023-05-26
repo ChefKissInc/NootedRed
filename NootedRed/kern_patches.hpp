@@ -332,14 +332,6 @@ static const uint8_t kVAAddrLibInterfaceInitPatched[] = {0x74, 0x00, 0x66, 0x90,
 static const uint8_t kVAAddrLibInterfaceInitPatchedMask[] = {0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
-/**
- * `BITS_PER_COMPONENT`
- * AMDRadeonX6000Framebuffer.kext
- * Change definition of 3rd component from 32 to 24 bits when `-nred24bit` is specified
- */
-static const char kBitsPerComponentOriginal[] = "--RRRRRRRRRRGGGGGGGGGGBBBBBBBBBB";
-static const char kBitsPerComponentPatched[] = "--------RRRRRRRRGGGGGGGGBBBBBBBB";
-
 static_assert(arrsize(kAGDPFBCountCheckOriginal) == arrsize(kAGDPFBCountCheckPatched));
 static_assert(arrsize(kAGDPFBCountCheckVenturaOriginal) == arrsize(kAGDPFBCountCheckVenturaPatched));
 static_assert(arrsize(kAGDPBoardIDKeyOriginal) == arrsize(kAGDPBoardIDKeyPatched));
@@ -384,5 +376,8 @@ static_assert(arrsize(kVAFactoryCreateVPOriginal) == arrsize(kVAFactoryCreateVPM
 static_assert(arrsize(kVAFactoryCreateVPOriginal) > arrsize(kVAFactoryCreateVPPatched));
 static_assert(arrsize(kVAFactoryCreateImageBltOriginal) == arrsize(kVAFactoryCreateImageBltMask));
 static_assert(arrsize(kVAFactoryCreateImageBltOriginal) > arrsize(kVAFactoryCreateImageBltPatched));
+static_assert(arrsize(kVAAddrLibInterfaceInitOriginal) == arrsize(kVAAddrLibInterfaceInitOriginalMask));
+static_assert(arrsize(kVAAddrLibInterfaceInitOriginal) == arrsize(kVAAddrLibInterfaceInitPatched));
+static_assert(arrsize(kVAAddrLibInterfaceInitPatched) == arrsize(kVAAddrLibInterfaceInitPatchedMask));
 
 #endif /* kern_patches_hpp */

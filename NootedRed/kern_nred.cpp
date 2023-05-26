@@ -316,17 +316,14 @@ void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             KernelPatcher::LookupPatch patch = {&kextAGDP, kAGDPFBCountCheckVenturaOriginal,
                 kAGDPFBCountCheckVenturaPatched, arrsize(kAGDPFBCountCheckVenturaOriginal), 1};
             patcher.applyLookupPatch(&patch);
-            SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "nred",
-                "Failed to apply AGDP FB count patch: %d", patcher.getError());
-            patcher.clearError();
         } else {
             KernelPatcher::LookupPatch patch = {&kextAGDP, kAGDPFBCountCheckOriginal, kAGDPFBCountCheckPatched,
                 arrsize(kAGDPFBCountCheckOriginal), 1};
             patcher.applyLookupPatch(&patch);
-            SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "nred",
-                "Failed to apply AGDP FB count patch: %d", patcher.getError());
-            patcher.clearError();
         }
+        SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "nred",
+            "Failed to apply AGDP FB count patch: %d", patcher.getError());
+        patcher.clearError();
     } else if (kextBacklight.loadIndex == index) {
         KernelPatcher::RouteRequest request {"__ZN15AppleIntelPanel10setDisplayEP9IODisplay", wrapApplePanelSetDisplay,
             orgApplePanelSetDisplay};
@@ -334,15 +331,17 @@ void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             const uint8_t find[] = {"F%uT%04x"};
             const uint8_t replace[] = {"F%uTxxxx"};
             KernelPatcher::LookupPatch patch = {&kextBacklight, find, replace, sizeof(find), 1};
-            DBGLOG("nred", "applying backlight patch");
             patcher.applyLookupPatch(&patch);
+            patcher.clearError();
+            DBGLOG("nred", "Applied backlight patch");
         }
     } else if (kextMCCSControl.loadIndex == index) {
-        KernelPatcher::RouteRequest request[] = {
+        KernelPatcher::RouteRequest requests[] = {
             {"__ZN25AppleMCCSControlGibraltar5probeEP9IOServicePi", wrapFunctionReturnZero},
             {"__ZN21AppleMCCSControlCello5probeEP9IOServicePi", wrapFunctionReturnZero},
         };
-        patcher.routeMultiple(index, request, address, size);
+        patcher.routeMultiple(index, requests, address, size);
+        patcher.clearError();
     } else if (x6000fb.processKext(patcher, index, address, size)) {
         DBGLOG("nred", "Processed AMDRadeonX6000Framebuffer");
     } else if (hwlibs.processKext(patcher, index, address, size)) {
