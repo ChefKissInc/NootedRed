@@ -29,8 +29,8 @@ static const char kAGDPBoardIDKeyPatched[] = "applehax";
  * AMDRadeonX5000HWLibs.kext
  * Change SMC message from `0x3B` to `0x1E` as the original one is wrong for SMU 10/12.
  */
-static const uint8_t kFullAsicResetOriginal[] = {0xBE, 0x3B, 0x00, 0x00, 0x00};
-static const uint8_t kFullAsicResetPatched[] = {0xBE, 0x1E, 0x00, 0x00, 0x00};
+static const uint8_t kFullAsicResetOriginal[] = {0x8B, 0x56, 0x04, 0xBE, 0x3B, 0x00, 0x00, 0x00};
+static const uint8_t kFullAsicResetPatched[] = {0x8B, 0x56, 0x04, 0xBE, 0x1E, 0x00, 0x00, 0x00};
 
 /**
  * `AmdAtomFwServices::initializeAtomDataTable`

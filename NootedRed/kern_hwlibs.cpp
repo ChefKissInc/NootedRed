@@ -27,7 +27,6 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         CailInitAsicCapEntry *orgAsicInitCapsTable = nullptr;
         const void *goldenSettings[static_cast<uint32_t>(ChipType::Unknown) - 1] = {nullptr};
         CailDeviceTypeEntry *orgDeviceTypeTable = nullptr;
-        uint8_t *orgSmuFullAsicReset = nullptr;
         DeviceCapabilityEntry *deviceCapabilityTbl = nullptr;
         const void *swipInfo[3] = {nullptr}, *goldenRegisterSettings[3] = {nullptr};
         const void *swipInfoMinimal = nullptr, *devDoorbellRangeNotSupported = nullptr;
@@ -47,7 +46,6 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"_RAVEN2_GoldenSettings_A0", goldenSettings[static_cast<uint32_t>(ChipType::Raven2)]},
             {"_PICASSO_GoldenSettings_A0", goldenSettings[static_cast<uint32_t>(ChipType::Picasso)]},
             {"_RENOIR_GoldenSettings_A0", goldenSettings[static_cast<uint32_t>(ChipType::Renoir)]},
-            {"_smu_9_0_1_full_asic_reset", orgSmuFullAsicReset},
             {"_DeviceCapabilityTbl", deviceCapabilityTbl},
             {"_swipInfoRaven", swipInfo[0]},
             {"_swipInfoRaven2", swipInfo[1]},
@@ -106,9 +104,10 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("hwlibs", "Applied DDI Caps patches");
 
-        PANIC_COND(!isRavenDerivative && !KernelPatcher::findAndReplace(orgSmuFullAsicReset, PAGE_SIZE,
-                                             kFullAsicResetOriginal, kFullAsicResetPatched),
-            "hwlibs", "Failed to patch _smu_9_0_1_full_asic_reset");
+        KernelPatcher::LookupPatch patch {&kextRadeonX5000HWLibs, kFullAsicResetOriginal, kFullAsicResetPatched,
+            arrsize(kFullAsicResetOriginal), 1};
+        patcher.applyLookupPatch(&patch);
+        patcher.clearError();
 
         return true;
     }
