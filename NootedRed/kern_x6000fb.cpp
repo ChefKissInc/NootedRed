@@ -53,8 +53,8 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
                 this->orgFramebufferGetAttribute},
             {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
                 this->orgGetNumberOfConnectors},
-            {"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware, orgIH40IVRingInitHardware},
-            {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister, orgIRQMGRWriteRegister},
+            {"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware, this->orgIH40IVRingInitHardware},
+            {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister, this->orgIRQMGRWriteRegister},
             {"_dm_logger_write", wrapDmLoggerWrite},
         };
         auto count = arrsize(requests);

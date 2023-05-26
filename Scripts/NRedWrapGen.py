@@ -154,7 +154,7 @@ if "_smu_9_0_1_full_asic_reset" in cpp_lines[target_line - 1] or "_dm_logger_wri
     target_line -= 1
 
 cpp_lines.insert(
-    target_line, f"{indent}    {{\"{symbol}\", wrap{func_ident_pascal}, org{func_ident_pascal}}},\n")
+    target_line, f"{indent}    {{\"{symbol}\", wrap{func_ident_pascal}, this->org{func_ident_pascal}}},\n")
 
 target_line = len(hpp_lines) - 1
 while "wrap" not in hpp_lines[target_line]:
