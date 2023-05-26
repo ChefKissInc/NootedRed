@@ -23,11 +23,11 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
     if (kextRadeonX5000HWLibs.loadIndex == index) {
         NRed::callback->setRMMIOIfNecessary();
 
-        CailAsicCapEntry *orgAsicCapsTable = nullptr;
-        CailInitAsicCapEntry *orgAsicInitCapsTable = nullptr;
+        CailAsicCapEntry *orgCapsTbl = nullptr;
+        CailInitAsicCapEntry *orgInitCapsTbl = nullptr;
         const void *goldenSettings[static_cast<uint32_t>(ChipType::Unknown) - 1] = {nullptr};
         CailDeviceTypeEntry *orgDeviceTypeTable = nullptr;
-        DeviceCapabilityEntry *deviceCapabilityTbl = nullptr;
+        DeviceCapabilityEntry *orgDevCapTbl = nullptr;
         const void *swipInfo[3] = {nullptr}, *goldenRegisterSettings[3] = {nullptr};
         const void *swipInfoMinimal = nullptr, *devDoorbellRangeNotSupported = nullptr;
 
@@ -37,8 +37,8 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware", this->orgPutFirmware},
             {"__ZN31AtiAppleVega10PowerTuneServicesC1EP11PP_InstanceP18PowerPlayCallbacks",
                 this->orgVega10PowerTuneConstructor},
-            {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable},
-            {"_CAILAsicCapsInitTable", orgAsicInitCapsTable},
+            {"__ZL20CAIL_ASIC_CAPS_TABLE", orgCapsTbl},
+            {"_CAILAsicCapsInitTable", orgInitCapsTbl},
             {"_Raven_SendMsgToSmc", this->orgRavenSendMsgToSmc},
             {"_Renoir_SendMsgToSmc", this->orgRenoirSendMsgToSmc},
             {"__ZN20AMDFirmwareDirectoryC1Ej", this->orgAMDFirmwareDirectoryConstructor},
@@ -46,7 +46,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"_RAVEN2_GoldenSettings_A0", goldenSettings[static_cast<uint32_t>(ChipType::Raven2)]},
             {"_PICASSO_GoldenSettings_A0", goldenSettings[static_cast<uint32_t>(ChipType::Picasso)]},
             {"_RENOIR_GoldenSettings_A0", goldenSettings[static_cast<uint32_t>(ChipType::Renoir)]},
-            {"_DeviceCapabilityTbl", deviceCapabilityTbl},
+            {"_DeviceCapabilityTbl", orgDevCapTbl},
             {"_swipInfoRaven", swipInfo[0]},
             {"_swipInfoRaven2", swipInfo[1]},
             {"_swipInfoRenoir", swipInfo[2]},
@@ -78,29 +78,23 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "hwlibs",
             "Failed to enable kernel writing");
         *orgDeviceTypeTable = {.deviceId = NRed::callback->deviceId, .deviceType = 6};
-        orgAsicInitCapsTable->familyId = orgAsicCapsTable->familyId = AMDGPU_FAMILY_RAVEN;
-        orgAsicInitCapsTable->deviceId = orgAsicCapsTable->deviceId = NRed::callback->deviceId;
-        orgAsicInitCapsTable->revision = orgAsicCapsTable->revision = NRed::callback->revision;
-        orgAsicInitCapsTable->emulatedRev = orgAsicCapsTable->emulatedRev =
+        orgInitCapsTbl->familyId = orgCapsTbl->familyId = orgDevCapTbl->familyId = AMDGPU_FAMILY_RAVEN;
+        orgInitCapsTbl->deviceId = orgCapsTbl->deviceId = orgDevCapTbl->deviceId = NRed::callback->deviceId;
+        orgInitCapsTbl->revision = orgCapsTbl->revision = orgDevCapTbl->internalRevision = NRed::callback->revision;
+        orgInitCapsTbl->emulatedRev = orgCapsTbl->emulatedRev = orgDevCapTbl->externalRevision =
             static_cast<uint32_t>(NRed::callback->enumeratedRevision) + NRed::callback->revision;
-        orgAsicInitCapsTable->pciRev = orgAsicCapsTable->pciRev = NRed::callback->pciRevision;
+        orgInitCapsTbl->pciRev = orgCapsTbl->pciRev = NRed::callback->pciRevision;
         auto isRavenDerivative = NRed::callback->chipType < ChipType::Renoir;
-        orgAsicInitCapsTable->caps = orgAsicCapsTable->caps = isRavenDerivative ? ddiCapsRaven : ddiCapsRenoir;
-        orgAsicInitCapsTable->goldenCaps =
+        orgInitCapsTbl->caps = orgCapsTbl->caps = isRavenDerivative ? ddiCapsRaven : ddiCapsRenoir;
+        orgInitCapsTbl->goldenCaps =
             goldenSettings[static_cast<uint32_t>(isRavenDerivative ? NRed::callback->chipType : ChipType::Renoir)];
 
-        deviceCapabilityTbl->familyId = AMDGPU_FAMILY_RAVEN;
-        deviceCapabilityTbl->deviceId = NRed::callback->deviceId;
-        deviceCapabilityTbl->internalRevision = NRed::callback->revision;
-        deviceCapabilityTbl->externalRevision = orgAsicInitCapsTable->emulatedRev;
-        auto capTblIndex = NRed::callback->chipType < ChipType::Raven2 ? 0 :
-                           NRed::callback->chipType < ChipType::Renoir ? 1 :
-                                                                         2;
-        deviceCapabilityTbl->swipInfo = swipInfo[capTblIndex];
-        deviceCapabilityTbl->swipInfoMinimal = swipInfoMinimal;
-        deviceCapabilityTbl->devAttrFlags = &ravenDevAttrFlags;
-        deviceCapabilityTbl->goldenRegisterSetings = goldenRegisterSettings[capTblIndex];
-        deviceCapabilityTbl->doorbellRange = devDoorbellRangeNotSupported;
+        auto capTblIndex = NRed::callback->chipType < ChipType::Raven2 ? 0 : isRavenDerivative ? 1 : 2;
+        orgDevCapTbl->swipInfo = swipInfo[capTblIndex];
+        orgDevCapTbl->swipInfoMinimal = swipInfoMinimal;
+        orgDevCapTbl->devAttrFlags = &ravenDevAttrFlags;
+        orgDevCapTbl->goldenRegisterSetings = goldenRegisterSettings[capTblIndex];
+        orgDevCapTbl->doorbellRange = devDoorbellRangeNotSupported;
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("hwlibs", "Applied DDI Caps patches");
 
