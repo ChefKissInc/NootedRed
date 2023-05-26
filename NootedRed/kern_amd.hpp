@@ -117,8 +117,8 @@ struct GPUInfoFirmware {
 
 struct CailAsicCapEntry {
     uint32_t familyId, deviceId;
-    uint32_t revision, emulatedRev;
-    uint32_t pciRev;
+    uint32_t revision, extRevision;
+    uint32_t pciRevision;
     uint32_t _reserved;
     const uint32_t *caps;
     const uint32_t *skeleton;
@@ -126,8 +126,8 @@ struct CailAsicCapEntry {
 
 struct CailInitAsicCapEntry {
     uint64_t familyId, deviceId;
-    uint64_t revision, emulatedRev;
-    uint64_t pciRev;
+    uint64_t revision, extRevision;
+    uint64_t pciRevision;
     const uint32_t *caps;
     const void *goldenCaps;
 } PACKED;
@@ -154,7 +154,7 @@ static const uint32_t ravenDevAttrFlags = 0x49;
 
 struct DeviceCapabilityEntry {
     uint64_t familyId, deviceId;
-    uint64_t internalRevision, externalRevision;
+    uint64_t intRevision, extRevision;
     const void *swipInfo, *swipInfoMinimal;
     const uint32_t *devAttrFlags;
     const void *goldenRegisterSetings, *doorbellRange;

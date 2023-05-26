@@ -306,8 +306,8 @@ void NRed::setRMMIOIfNecessary() {
 
 void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextAGDP.loadIndex == index) {
-        KernelPatcher::LookupPatch patch = {&kextAGDP, reinterpret_cast<const uint8_t *>(kAGDPBoardIDKeyOriginal),
-            reinterpret_cast<const uint8_t *>(kAGDPBoardIDKeyPatched), arrsize(kAGDPBoardIDKeyOriginal), 1};
+        KernelPatcher::LookupPatch patch = {&kextAGDP, kAGDPBoardIDKeyOriginal, kAGDPBoardIDKeyPatched,
+            arrsize(kAGDPBoardIDKeyOriginal), 1};
         patcher.applyLookupPatch(&patch);
         SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "nred",
             "Failed to apply AGDP board-id patch: %d", patcher.getError());
@@ -330,7 +330,7 @@ void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         if (patcher.routeMultiple(kextBacklight.loadIndex, &request, 1, address, size)) {
             const uint8_t find[] = {"F%uT%04x"};
             const uint8_t replace[] = {"F%uTxxxx"};
-            KernelPatcher::LookupPatch patch = {&kextBacklight, find, replace, sizeof(find), 1};
+            KernelPatcher::LookupPatch patch {&kextBacklight, find, replace, arrsize(find), 1};
             patcher.applyLookupPatch(&patch);
             patcher.clearError();
             DBGLOG("nred", "Applied backlight patch");
@@ -388,9 +388,11 @@ bool NRed::wrapApplePanelSetDisplay(IOService *that, IODisplay *display) {
     static bool once = false;
     if (!once) {
         once = true;
-        auto panels = OSDynamicCast(OSDictionary, that->getProperty("ApplePanels"));
-        if (panels) {
-            auto rawPanels = panels->copyCollection();
+        auto *panels = OSDynamicCast(OSDictionary, that->getProperty("ApplePanels"));
+        if (!panels) {
+            SYSLOG("nred", "setDisplay: Missing ApplePanels property");
+        } else {
+            auto *rawPanels = panels->copyCollection();
             panels = OSDynamicCast(OSDictionary, rawPanels);
 
             if (panels) {
@@ -400,20 +402,17 @@ bool NRed::wrapApplePanelSetDisplay(IOService *that, IODisplay *display) {
                         panels->setObject(entry.deviceName, pd);
                         // No release required by current AppleBacklight implementation.
                     } else {
-                        SYSLOG("nred", "Panel start cannot allocate %s data", entry.deviceName);
+                        SYSLOG("nred", "setDisplay: Cannot allocate data for %s", entry.deviceName);
                     }
                 }
                 that->setProperty("ApplePanels", panels);
             }
 
-            if (rawPanels) { rawPanels->release(); }
-        } else {
-            SYSLOG("nred", "Panel start has no panels");
+            OSSafeReleaseNULL(rawPanels);
         }
     }
 
-    bool result = FunctionCast(wrapApplePanelSetDisplay, callback->orgApplePanelSetDisplay)(that, display);
-    DBGLOG("nred", "Panel display set returned %d", result);
-
-    return result;
+    bool ret = FunctionCast(wrapApplePanelSetDisplay, callback->orgApplePanelSetDisplay)(that, display);
+    DBGLOG("nred", "setDisplay >> %d", ret);
+    return ret;
 }

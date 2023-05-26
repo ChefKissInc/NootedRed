@@ -21,8 +21,8 @@ static const uint8_t kAGDPFBCountCheckVenturaPatched[] = {0x41, 0x83, 0xBE, 0x14
  * `AppleGraphicsDevicePolicy::start`
  * Neutralise access to AGDP configuration by board identifier.
  */
-static const char kAGDPBoardIDKeyOriginal[] = "board-id";
-static const char kAGDPBoardIDKeyPatched[] = "applehax";
+static const uint8_t kAGDPBoardIDKeyOriginal[] = "board-id";
+static const uint8_t kAGDPBoardIDKeyPatched[] = "applehax";
 
 /**
  * `_smu_9_0_1_full_asic_reset`

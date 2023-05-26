@@ -82,9 +82,9 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
         orgAsicCapsTable->caps = NRed::callback->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir;
         orgAsicCapsTable->deviceId = NRed::callback->deviceId;
         orgAsicCapsTable->revision = NRed::callback->revision;
-        orgAsicCapsTable->emulatedRev =
+        orgAsicCapsTable->extRevision =
             static_cast<uint32_t>(NRed::callback->enumeratedRevision) + NRed::callback->revision;
-        orgAsicCapsTable->pciRev = NRed::callback->pciRevision;
+        orgAsicCapsTable->pciRevision = NRed::callback->pciRevision;
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("x6000fb", "Applied DDI Caps patches");
 
@@ -115,7 +115,7 @@ IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
                     case 11:
                         [[fallthrough]];
                     case 12:
-                        if (table->infoV11.umaChannelCount) channelCount = table->infoV11.umaChannelCount;
+                        if (table->infoV11.umaChannelCount) { channelCount = table->infoV11.umaChannelCount; }
                         memoryType = table->infoV11.memoryType;
                         break;
                     default:
@@ -128,7 +128,7 @@ IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
                     case 1:
                         [[fallthrough]];
                     case 2:
-                        if (table->infoV2.umaChannelCount) channelCount = table->infoV2.umaChannelCount;
+                        if (table->infoV2.umaChannelCount) { channelCount = table->infoV2.umaChannelCount; }
                         memoryType = table->infoV2.memoryType;
                         break;
                     default:

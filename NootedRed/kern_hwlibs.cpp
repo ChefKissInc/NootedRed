@@ -80,10 +80,10 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         *orgDeviceTypeTable = {.deviceId = NRed::callback->deviceId, .deviceType = 6};
         orgInitCapsTbl->familyId = orgCapsTbl->familyId = orgDevCapTbl->familyId = AMDGPU_FAMILY_RAVEN;
         orgInitCapsTbl->deviceId = orgCapsTbl->deviceId = orgDevCapTbl->deviceId = NRed::callback->deviceId;
-        orgInitCapsTbl->revision = orgCapsTbl->revision = orgDevCapTbl->internalRevision = NRed::callback->revision;
-        orgInitCapsTbl->emulatedRev = orgCapsTbl->emulatedRev = orgDevCapTbl->externalRevision =
+        orgInitCapsTbl->revision = orgCapsTbl->revision = orgDevCapTbl->intRevision = NRed::callback->revision;
+        orgInitCapsTbl->extRevision = orgCapsTbl->extRevision = orgDevCapTbl->extRevision =
             static_cast<uint32_t>(NRed::callback->enumeratedRevision) + NRed::callback->revision;
-        orgInitCapsTbl->pciRev = orgCapsTbl->pciRev = NRed::callback->pciRevision;
+        orgInitCapsTbl->pciRevision = orgCapsTbl->pciRevision = NRed::callback->pciRevision;
         auto isRavenDerivative = NRed::callback->chipType < ChipType::Renoir;
         orgInitCapsTbl->caps = orgCapsTbl->caps = isRavenDerivative ? ddiCapsRaven : ddiCapsRenoir;
         orgInitCapsTbl->goldenCaps =
