@@ -123,10 +123,8 @@ static inline void setHWCapability(void *that, HWCapability capability, T value)
 
 void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
     auto isRavenDerivative = NRed::callback->chipType < ChipType::Renoir;
-
-    auto *chipName = isRavenDerivative ? NRed::getChipName() : "renoir";
     char filename[128] = {0};
-    snprintf(filename, arrsize(filename), "%s_gpu_info.bin", chipName);
+    snprintf(filename, arrsize(filename), "%s_gpu_info.bin", isRavenDerivative ? NRed::getChipName() : "renoir");
     auto &fwDesc = getFWDescByName(filename);
     auto *header = reinterpret_cast<const CommonFirmwareHeader *>(fwDesc.data);
     auto *gpuInfo = reinterpret_cast<const GPUInfoFirmware *>(fwDesc.data + header->ucodeOff);

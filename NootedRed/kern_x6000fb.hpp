@@ -18,7 +18,6 @@ class X6000FB {
     private:
     mach_vm_address_t orgPopulateDeviceInfo {0};
     mach_vm_address_t orgHwReadReg32 {0};
-    mach_vm_address_t orgInitWithPciInfo {0};
     t_DceDriverSetBacklight orgDceDriverSetBacklight {nullptr};
     mach_vm_address_t orgDcePanelCntlHwInit {0};
     mach_vm_address_t orgFramebufferSetAttribute {0}, orgFramebufferGetAttribute {0};
@@ -36,15 +35,12 @@ class X6000FB {
     static uint16_t wrapGetEnumeratedRevision();
     static IOReturn wrapPopulateVramInfo(void *that, void *fwInfo);
     static uint32_t wrapHwReadReg32(void *that, uint32_t param1);
-    static bool wrapInitWithPciInfo(void *that, void *param1);
-    static void wrapDoGPUPanic();
     static uint32_t wrapDcePanelCntlHwInit(void *panelCntl);
     static IOReturn wrapFramebufferSetAttribute(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
         uintptr_t value);
     static IOReturn wrapFramebufferGetAttribute(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
         uintptr_t *value);
     static uint32_t wrapGetNumberOfConnectors(void *that);
-    static void wrapDmLoggerWrite([[maybe_unused]] void *dalLogger, uint32_t logType, char *fmt, ...);
     static bool wrapIH40IVRingInitHardware(void *ctx, void *param2);
     static void wrapIRQMGRWriteRegister(void *ctx, uint64_t index, uint32_t value);
 };

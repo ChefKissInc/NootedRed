@@ -43,9 +43,6 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
                 this->orgPopulateDeviceInfo},
             {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
             {"__ZN32AMDRadeonX6000_AmdRegisterAccess11hwReadReg32Ej", wrapHwReadReg32, this->orgHwReadReg32},
-            {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo,
-                this->orgInitWithPciInfo},
-            {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", wrapDoGPUPanic},
             {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit, this->orgDcePanelCntlHwInit},
             {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25setAttributeForConnectionEijm", wrapFramebufferSetAttribute,
                 this->orgFramebufferSetAttribute},
@@ -55,11 +52,8 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
                 this->orgGetNumberOfConnectors},
             {"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware, this->orgIH40IVRingInitHardware},
             {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister, this->orgIRQMGRWriteRegister},
-            {"_dm_logger_write", wrapDmLoggerWrite},
         };
-        auto count = arrsize(requests);
-        if (!checkKernelArgument("-nreddmlogger")) { count--; }
-        PANIC_COND(!patcher.routeMultiple(index, requests, count, address, size), "x6000fb", "Failed to route symbols");
+        PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "x6000fb", "Failed to route symbols");
 
         KernelPatcher::LookupPatch patches[] = {
             {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckOriginal, kAmdAtomVramInfoNullCheckPatched,
@@ -180,16 +174,6 @@ uint32_t X6000FB::wrapHwReadReg32(void *that, uint32_t reg) {
     return FunctionCast(wrapHwReadReg32, callback->orgHwReadReg32)(that, reg == 0xD31 ? 0xD2F : reg);
 }
 
-bool X6000FB::wrapInitWithPciInfo(void *that, void *param1) {
-    auto ret = FunctionCast(wrapInitWithPciInfo, callback->orgInitWithPciInfo)(that, param1);
-    if (ADDPR(debugEnabled)) {
-        // Hack AMDRadeonX6000_AmdLogger to log everything
-        getMember<uint64_t>(that, 0x28) = ~0ULL;
-        getMember<uint32_t>(that, 0x30) = 0xFF;
-    }
-    return ret;
-}
-
 bool X6000FB::OnAppleBacklightDisplayLoad(void *, void *, IOService *newService, IONotifier *) {
     OSDictionary *params = OSDynamicCast(OSDictionary, newService->getProperty("IODisplayParameters"));
     if (!params) {
@@ -226,11 +210,6 @@ void X6000FB::registerDispMaxBrightnessNotif() {
         IOService::addMatchingNotification(gIOFirstMatchNotification, matching, OnAppleBacklightDisplayLoad, nullptr);
     DBGLOG_COND(!callback->dispNotif, "x6000fb", "registerDispMaxBrightnessNotif: Failed to register notification");
     OSSafeReleaseNULL(matching);
-}
-
-void X6000FB::wrapDoGPUPanic() {
-    DBGLOG("x6000fb", "doGPUPanic << ()");
-    while (true) { IOSleep(3600000); }
 }
 
 uint32_t X6000FB::wrapDcePanelCntlHwInit(void *panelCntl) {
@@ -312,22 +291,6 @@ uint32_t X6000FB::wrapGetNumberOfConnectors(void *that) {
         }
     }
     return FunctionCast(wrapGetNumberOfConnectors, callback->orgGetNumberOfConnectors)(that);
-}
-
-constexpr static const char *LogTypes[] = {"Error", "Warning", "Debug", "DC_Interface", "DTN", "Surface", "HW_Hotplug",
-    "HW_LKTN", "HW_Mode", "HW_Resume", "HW_Audio", "HW_HPDIRQ", "MST", "Scaler", "BIOS", "BWCalcs", "BWValidation",
-    "I2C_AUX", "Sync", "Backlight", "Override", "Edid", "DP_Caps", "Resource", "DML", "Mode", "Detect", "LKTN",
-    "LinkLoss", "Underflow", "InterfaceTrace", "PerfTrace", "DisplayStats"};
-
-void X6000FB::wrapDmLoggerWrite(void *, uint32_t logType, char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    auto *ns = new char[0x10000];
-    vsnprintf(ns, 0x10000, fmt, args);
-    va_end(args);
-    const char *logTypeStr = arrsize(LogTypes) > logType ? LogTypes[logType] : "Info";
-    kprintf("[%s] %s", logTypeStr, ns);
-    delete[] ns;
 }
 
 bool X6000FB::wrapIH40IVRingInitHardware(void *ctx, void *param2) {

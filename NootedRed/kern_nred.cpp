@@ -1,4 +1,4 @@
-//  Copyright © 2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
+//  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
 //  details.
 
 #include "kern_nred.hpp"
@@ -32,9 +32,8 @@ static X5000 x5000;
 static X6000 x6000;
 
 void NRed::init() {
-    SYSLOG("nred", "Copyright 2023 ChefKiss Inc. If you've paid for this, you've been scammed.");
+    SYSLOG("nred", "Copyright 2022-2023 ChefKiss Inc. If you've paid for this, you've been scammed.");
     callback = this;
-    SYSLOG_COND(checkKernelArgument("-wreddbg"), "nred", "You're using the legacy WRed debug flag. Update your EFI");
 
     lilu.onPatcherLoadForce(
         [](void *user, KernelPatcher &patcher) { static_cast<NRed *>(user)->processPatcher(patcher); }, this);
