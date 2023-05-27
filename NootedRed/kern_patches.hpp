@@ -33,6 +33,23 @@ static const uint8_t kFullAsicResetOriginal[] = {0x8B, 0x56, 0x04, 0xBE, 0x3B, 0
 static const uint8_t kFullAsicResetPatched[] = {0x8B, 0x56, 0x04, 0xBE, 0x1E, 0x00, 0x00, 0x00};
 
 /**
+ * `AtiApplePowerTuneServices::createPowerTuneServices`
+ * AMDRadeonX5000HWLibs.kext
+ * Change switch statement case `0x8D` to `0x8E`.
+ */
+static const uint8_t kCreatePowerTuneServicesOriginal1[] = {0x41, 0x8B, 0x47, 0x18, 0x83, 0xC0, 0x88, 0x83, 0xF8, 0x17};
+static const uint8_t kCreatePowerTuneServicesPatched1[] = {0x41, 0x8B, 0x47, 0x18, 0x83, 0xC0, 0x87, 0x83, 0xF8, 0x17};
+
+/**
+ * `AtiApplePowerTuneServices::createPowerTuneServices`
+ * AMDRadeonX5000HWLibs.kext
+ * Remove revision check to always use Vega 10 PowerTune.
+ */
+static const uint8_t kCreatePowerTuneServicesOriginal2[] = {0x41, 0x8B, 0x47, 0x1C, 0x83, 0xF8, 0x13, 0xFF, 0x00};
+static const uint8_t kCreatePowerTuneServicesMask2[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00};
+static const uint8_t kCreatePowerTuneServicesPatched2[] = {0x41, 0x8B, 0x47, 0x1C, 0x3D, 0xFF, 0x00, 0x00, 0x00};
+
+/**
  * `AMDRadeonX6000_AmdAsicInfoNavi::populateDeviceInfo`
  * AMDRadeonX6000.kext
  * Fix register read (0xD31 -> 0xD2F) and family ID (0x8F -> 0x8E).
@@ -354,6 +371,10 @@ static_assert(arrsize(kAGDPFBCountCheckOriginal) == arrsize(kAGDPFBCountCheckPat
 static_assert(arrsize(kAGDPFBCountCheckVenturaOriginal) == arrsize(kAGDPFBCountCheckVenturaPatched));
 static_assert(arrsize(kAGDPBoardIDKeyOriginal) == arrsize(kAGDPBoardIDKeyPatched));
 static_assert(arrsize(kFullAsicResetOriginal) == arrsize(kFullAsicResetPatched));
+static_assert(arrsize(kPopulateDeviceInfoOriginal) == arrsize(kPopulateDeviceInfoPatched));
+static_assert(arrsize(kCreatePowerTuneServicesOriginal1) == arrsize(kCreatePowerTuneServicesPatched1));
+static_assert(arrsize(kCreatePowerTuneServicesOriginal2) == arrsize(kCreatePowerTuneServicesMask2));
+static_assert(arrsize(kCreatePowerTuneServicesOriginal2) == arrsize(kCreatePowerTuneServicesPatched2));
 static_assert(arrsize(kAmdAtomVramInfoNullCheckOriginal) == arrsize(kAmdAtomVramInfoNullCheckPatched));
 static_assert(arrsize(kAmdAtomPspDirectoryNullCheckOriginal) == arrsize(kAmdAtomPspDirectoryNullCheckPatched));
 static_assert(arrsize(kGetFirmwareInfoNullCheckOriginal) == arrsize(kGetFirmwareInfoNullCheckPatched));

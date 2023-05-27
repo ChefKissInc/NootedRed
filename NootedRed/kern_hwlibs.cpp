@@ -30,8 +30,6 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"__ZL15deviceTypeTable", orgDeviceTypeTable},
             {"__ZN11AMDFirmware14createFirmwareEPhjjPKc", this->orgCreateFirmware},
             {"__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware", this->orgPutFirmware},
-            {"__ZN31AtiAppleVega10PowerTuneServicesC1EP11PP_InstanceP18PowerPlayCallbacks",
-                this->orgVega10PowerTuneConstructor},
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgCapsTbl},
             {"__ZN20AMDFirmwareDirectoryC1Ej", this->orgAMDFirmwareDirectoryConstructor},
         };
@@ -39,8 +37,6 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
 
         KernelPatcher::RouteRequest requests[] = {
             {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory},
-            {"__ZN25AtiApplePowerTuneServices23createPowerTuneServicesEP11PP_InstanceP18PowerPlayCallbacks",
-                wrapCreatePowerTuneServices},
             {"_gc_get_hw_version", wrapGcGetHwVersion},
             {"_smu_get_hw_version", wrapSmuGetHwVersion},
             {"_smu_get_fw_constants", hwLibsNoop},
@@ -70,10 +66,19 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("hwlibs", "Applied DDI Caps patches");
 
-        KernelPatcher::LookupPatch patch {&kextRadeonX5000HWLibs, kFullAsicResetOriginal, kFullAsicResetPatched,
-            arrsize(kFullAsicResetOriginal), 1};
-        patcher.applyLookupPatch(&patch);
-        patcher.clearError();
+        KernelPatcher::LookupPatch patches[] = {
+            {&kextRadeonX5000HWLibs, kFullAsicResetOriginal, kFullAsicResetPatched, arrsize(kFullAsicResetOriginal), 1},
+            {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesOriginal1, kCreatePowerTuneServicesPatched1,
+                arrsize(kCreatePowerTuneServicesOriginal1), 1},
+        };
+        for (auto &patch : patches) {
+            patcher.applyLookupPatch(&patch);
+            patcher.clearError();
+        }
+        patcher.findAndReplaceWithMask(reinterpret_cast<uint8_t *>(address), size, kCreatePowerTuneServicesOriginal2,
+            arrsize(kCreatePowerTuneServicesOriginal2), kCreatePowerTuneServicesMask2,
+            arrsize(kCreatePowerTuneServicesMask2), kCreatePowerTuneServicesPatched2,
+            arrsize(kCreatePowerTuneServicesPatched2), nullptr, 0, 1, 0);
 
         return true;
     }
@@ -107,12 +112,6 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
     PANIC_COND(!fw, "hwlibs", "Failed to create '%s' firmware", filename);
     DBGLOG("hwlibs", "Inserting %s!", filename);
     PANIC_COND(!callback->orgPutFirmware(fwDir, 6, fw), "hwlibs", "Failed to inject %s firmware", filename);
-}
-
-void *X5000HWLibs::wrapCreatePowerTuneServices(void *that, void *param2) {
-    auto *ret = IOMallocZero(0x18);
-    callback->orgVega10PowerTuneConstructor(ret, that, param2);
-    return ret;
 }
 
 AMDReturn X5000HWLibs::hwLibsNoop() { return kAMDReturnSuccess; }

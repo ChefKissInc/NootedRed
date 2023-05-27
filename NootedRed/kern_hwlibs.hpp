@@ -10,7 +10,6 @@
 using t_AMDFirmwareDirectoryConstructor = void (*)(void *that, uint32_t maxEntryCount);
 using t_createFirmware = void *(*)(const void *data, uint32_t size, uint32_t ipVersion, const char *filename);
 using t_putFirmware = bool (*)(void *that, uint32_t deviceType, void *fw);
-using t_VegaXPowerTuneConstructor = void (*)(void *that, void *ppInstance, void *ppCallbacks);
 
 class X5000HWLibs {
     public:
@@ -23,7 +22,6 @@ class X5000HWLibs {
     t_AMDFirmwareDirectoryConstructor orgAMDFirmwareDirectoryConstructor {nullptr};
     t_createFirmware orgCreateFirmware {nullptr};
     t_putFirmware orgPutFirmware {nullptr};
-    t_VegaXPowerTuneConstructor orgVega10PowerTuneConstructor {nullptr};
     mach_vm_address_t orgSmuInitialize {0};
     mach_vm_address_t orgPspCmdKmSubmit {0};
 
@@ -31,7 +29,6 @@ class X5000HWLibs {
     static AMDReturn wrapPspSwInit(uint32_t *inputData, void *outputData);
     static uint32_t wrapGcGetHwVersion();
     static void wrapPopulateFirmwareDirectory(void *that);
-    static void *wrapCreatePowerTuneServices(void *that, void *param2);
     static AMDReturn wrapSmuInitialize(void *smum, uint32_t param2);
     static AMDReturn wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4);
     static AMDReturn hwLibsNoop();
