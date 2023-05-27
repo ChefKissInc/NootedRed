@@ -78,13 +78,14 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "x5000",
             "Failed to enable kernel writing");
-        orgAsicCapsTable->familyId = AMDGPU_FAMILY_RAVEN;
-        orgAsicCapsTable->caps = NRed::callback->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir;
-        orgAsicCapsTable->deviceId = NRed::callback->deviceId;
-        orgAsicCapsTable->revision = NRed::callback->revision;
-        orgAsicCapsTable->extRevision =
-            static_cast<uint32_t>(NRed::callback->enumeratedRevision) + NRed::callback->revision;
-        orgAsicCapsTable->pciRevision = NRed::callback->pciRevision;
+        *orgAsicCapsTable = {
+            .familyId = AMDGPU_FAMILY_RAVEN,
+            .caps = NRed::callback->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir,
+            .deviceId = NRed::callback->deviceId,
+            .revision = NRed::callback->revision,
+            .extRevision = NRed::callback->extRevision,
+            .pciRevision = NRed::callback->pciRevision,
+        };
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("x6000fb", "Applied DDI Caps patches");
 
@@ -94,7 +95,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
     return false;
 }
 
-uint16_t X6000FB::wrapGetEnumeratedRevision() { return NRed::callback->enumeratedRevision; }
+uint16_t X6000FB::wrapGetEnumeratedRevision() { return NRed::callback->extRevision - NRed::callback->revision; }
 
 IOReturn X6000FB::wrapPopulateDeviceInfo(void *that) {
     if (!callback->dispNotif) { callback->registerDispMaxBrightnessNotif(); }

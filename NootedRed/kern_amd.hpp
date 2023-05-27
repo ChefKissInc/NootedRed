@@ -81,8 +81,16 @@ constexpr uint32_t mmPCIE_DATA2 = 0xF;
 constexpr uint32_t mmIH_CHICKEN = 0x122C;
 constexpr uint32_t mmIH_MC_SPACE_GPA_ENABLE = 0x10;
 constexpr uint32_t mmIH_CLK_CTRL = 0x117B;
-constexpr uint32_t mmIH_IH_BUFFER_MEM_CLK_SOFT_OVERRIDE_SHIFT = 0x1a;
-constexpr uint32_t mmIH_DBUS_MUX_CLK_SOFT_OVERRIDE_SHIFT = 0x1b;
+constexpr uint32_t mmIH_IH_BUFFER_MEM_CLK_SOFT_OVERRIDE_SHIFT = 0x1A;
+constexpr uint32_t mmIH_DBUS_MUX_CLK_SOFT_OVERRIDE_SHIFT = 0x1B;
+
+constexpr uint32_t MP_BASE = 0x16000;
+
+constexpr uint32_t AMDGPU_MAX_USEC_TIMEOUT = 100000;
+
+constexpr uint32_t mmMP1_SMN_C2PMSG_90 = 0x29A;
+constexpr uint32_t mmMP1_SMN_C2PMSG_82 = 0x292;
+constexpr uint32_t mmMP1_SMN_C2PMSG_66 = 0x282;
 
 struct CommonFirmwareHeader {
     uint32_t size;
@@ -124,14 +132,6 @@ struct CailAsicCapEntry {
     const uint32_t *skeleton;
 } PACKED;
 
-struct CailInitAsicCapEntry {
-    uint64_t familyId, deviceId;
-    uint64_t revision, extRevision;
-    uint64_t pciRevision;
-    const uint32_t *caps;
-    const void *goldenCaps;
-} PACKED;
-
 static const uint32_t ddiCapsRaven[16] = {0x800005U, 0x500011FEU, 0x80000U, 0x11001000U, 0x200U, 0x68000001U,
     0x20000000, 0x4002U, 0x22420001U, 0x9E20E10U, 0x2000120U, 0x0U, 0x0U, 0x0U, 0x0U, 0x0U};
 static const uint32_t ddiCapsRenoir[16] = {0x800005U, 0x500011FEU, 0x80000U, 0x11001000U, 0x200U, 0x68000001U,
@@ -148,16 +148,6 @@ enum AMDReturn : uint32_t {
 struct CailDeviceTypeEntry {
     uint32_t deviceId;
     uint32_t deviceType;
-} PACKED;
-
-static const uint32_t ravenDevAttrFlags = 0x49;
-
-struct DeviceCapabilityEntry {
-    uint64_t familyId, deviceId;
-    uint64_t intRevision, extRevision;
-    const void *swipInfo, *swipInfoMinimal;
-    const uint32_t *devAttrFlags;
-    const void *goldenRegisterSetings, *doorbellRange;
 } PACKED;
 
 enum VideoMemoryType : uint32_t {

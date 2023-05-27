@@ -24,12 +24,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         NRed::callback->setRMMIOIfNecessary();
 
         CailAsicCapEntry *orgCapsTbl = nullptr;
-        CailInitAsicCapEntry *orgInitCapsTbl = nullptr;
-        const void *goldenSettings[static_cast<uint32_t>(ChipType::Unknown) - 1] = {nullptr};
         CailDeviceTypeEntry *orgDeviceTypeTable = nullptr;
-        DeviceCapabilityEntry *orgDevCapTbl = nullptr;
-        const void *swipInfo[3] = {nullptr}, *goldenRegisterSettings[3] = {nullptr};
-        const void *swipInfoMinimal = nullptr, *devDoorbellRangeNotSupported = nullptr;
 
         KernelPatcher::SolveRequest solveRequests[] = {
             {"__ZL15deviceTypeTable", orgDeviceTypeTable},
@@ -38,23 +33,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"__ZN31AtiAppleVega10PowerTuneServicesC1EP11PP_InstanceP18PowerPlayCallbacks",
                 this->orgVega10PowerTuneConstructor},
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgCapsTbl},
-            {"_CAILAsicCapsInitTable", orgInitCapsTbl},
-            {"_Raven_SendMsgToSmc", this->orgRavenSendMsgToSmc},
-            {"_Renoir_SendMsgToSmc", this->orgRenoirSendMsgToSmc},
             {"__ZN20AMDFirmwareDirectoryC1Ej", this->orgAMDFirmwareDirectoryConstructor},
-            {"_RAVEN1_GoldenSettings_A0", goldenSettings[static_cast<uint32_t>(ChipType::Raven)]},
-            {"_RAVEN2_GoldenSettings_A0", goldenSettings[static_cast<uint32_t>(ChipType::Raven2)]},
-            {"_PICASSO_GoldenSettings_A0", goldenSettings[static_cast<uint32_t>(ChipType::Picasso)]},
-            {"_RENOIR_GoldenSettings_A0", goldenSettings[static_cast<uint32_t>(ChipType::Renoir)]},
-            {"_DeviceCapabilityTbl", orgDevCapTbl},
-            {"_swipInfoRaven", swipInfo[0]},
-            {"_swipInfoRaven2", swipInfo[1]},
-            {"_swipInfoRenoir", swipInfo[2]},
-            {"_swipInfoMinimalInit", swipInfoMinimal},
-            {"_devDoorbellRangeNotSupported", devDoorbellRangeNotSupported},
-            {"_ravenGoldenRegisterSettings", goldenRegisterSettings[0]},
-            {"_raven2GoldenRegisterSettings", goldenRegisterSettings[1]},
-            {"_renoirGoldenRegisterSettings", goldenRegisterSettings[2]},
         };
         PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "hwlibs", "Failed to resolve symbols");
 
@@ -69,32 +48,25 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"_smu_9_0_1_unload_smu", hwLibsNoop},
             {"_psp_sw_init", wrapPspSwInit, this->orgPspSwInit},
             {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit},
-            {"_SmuRaven_Initialize", wrapSmuRavenInitialize, this->orgSmuRavenInitialize},
-            {"_SmuRenoir_Initialize", wrapSmuRenoirInitialize, this->orgSmuRenoirInitialize},
+            {NRed::callback->chipType < ChipType::Renoir ? "_SmuRaven_Initialize" : "_SmuRenoir_Initialize",
+                wrapSmuInitialize, this->orgSmuInitialize},
         };
-        auto count = arrsize(requests);
-        PANIC_COND(!patcher.routeMultiple(index, requests, count, address, size), "hwlibs", "Failed to route symbols");
+        PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "hwlibs", "Failed to route symbols");
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "hwlibs",
             "Failed to enable kernel writing");
-        *orgDeviceTypeTable = {.deviceId = NRed::callback->deviceId, .deviceType = 6};
-        orgInitCapsTbl->familyId = orgCapsTbl->familyId = orgDevCapTbl->familyId = AMDGPU_FAMILY_RAVEN;
-        orgInitCapsTbl->deviceId = orgCapsTbl->deviceId = orgDevCapTbl->deviceId = NRed::callback->deviceId;
-        orgInitCapsTbl->revision = orgCapsTbl->revision = orgDevCapTbl->intRevision = NRed::callback->revision;
-        orgInitCapsTbl->extRevision = orgCapsTbl->extRevision = orgDevCapTbl->extRevision =
-            static_cast<uint32_t>(NRed::callback->enumeratedRevision) + NRed::callback->revision;
-        orgInitCapsTbl->pciRevision = orgCapsTbl->pciRevision = NRed::callback->pciRevision;
-        auto isRavenDerivative = NRed::callback->chipType < ChipType::Renoir;
-        orgInitCapsTbl->caps = orgCapsTbl->caps = isRavenDerivative ? ddiCapsRaven : ddiCapsRenoir;
-        orgInitCapsTbl->goldenCaps =
-            goldenSettings[static_cast<uint32_t>(isRavenDerivative ? NRed::callback->chipType : ChipType::Renoir)];
-
-        auto capTblIndex = NRed::callback->chipType < ChipType::Raven2 ? 0 : isRavenDerivative ? 1 : 2;
-        orgDevCapTbl->swipInfo = swipInfo[capTblIndex];
-        orgDevCapTbl->swipInfoMinimal = swipInfoMinimal;
-        orgDevCapTbl->devAttrFlags = &ravenDevAttrFlags;
-        orgDevCapTbl->goldenRegisterSetings = goldenRegisterSettings[capTblIndex];
-        orgDevCapTbl->doorbellRange = devDoorbellRangeNotSupported;
+        *orgDeviceTypeTable = {
+            .deviceId = NRed::callback->deviceId,
+            .deviceType = 6,
+        };
+        *orgCapsTbl = {
+            .familyId = AMDGPU_FAMILY_RAVEN,
+            .deviceId = NRed::callback->deviceId,
+            .revision = NRed::callback->revision,
+            .extRevision = NRed::callback->extRevision,
+            .pciRevision = NRed::callback->pciRevision,
+            .caps = NRed::callback->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir,
+        };
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("hwlibs", "Applied DDI Caps patches");
 
@@ -145,19 +117,9 @@ void *X5000HWLibs::wrapCreatePowerTuneServices(void *that, void *param2) {
 
 AMDReturn X5000HWLibs::hwLibsNoop() { return kAMDReturnSuccess; }
 
-AMDReturn X5000HWLibs::wrapSmuRavenInitialize(void *smum, uint32_t param2) {
-    auto ret = FunctionCast(wrapSmuRavenInitialize, callback->orgSmuRavenInitialize)(smum, param2);
-    if (callback->orgRavenSendMsgToSmc(smum, PPSMC_MSG_PowerUpSdma) != PP_RESULT_OK) {
-        SYSLOG("hwlibs", "Failed to power up SDMA");
-    }
-    return ret;
-}
-
-AMDReturn X5000HWLibs::wrapSmuRenoirInitialize(void *smum, uint32_t param2) {
-    auto ret = FunctionCast(wrapSmuRenoirInitialize, callback->orgSmuRenoirInitialize)(smum, param2);
-    if (callback->orgRenoirSendMsgToSmc(smum, PPSMC_MSG_PowerUpSdma) != PP_RESULT_OK) {
-        SYSLOG("hwlibs", "Failed to power up SDMA");
-    }
+AMDReturn X5000HWLibs::wrapSmuInitialize(void *smum, uint32_t param2) {
+    auto ret = FunctionCast(wrapSmuInitialize, callback->orgSmuInitialize)(smum, param2);
+    NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerUpSdma);
     return ret;
 }
 

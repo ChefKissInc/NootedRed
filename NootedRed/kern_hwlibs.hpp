@@ -11,7 +11,6 @@ using t_AMDFirmwareDirectoryConstructor = void (*)(void *that, uint32_t maxEntry
 using t_createFirmware = void *(*)(const void *data, uint32_t size, uint32_t ipVersion, const char *filename);
 using t_putFirmware = bool (*)(void *that, uint32_t deviceType, void *fw);
 using t_VegaXPowerTuneConstructor = void (*)(void *that, void *ppInstance, void *ppCallbacks);
-using t_sendMsgToSmc = uint32_t (*)(void *smum, uint32_t msgId);
 
 class X5000HWLibs {
     public:
@@ -25,8 +24,7 @@ class X5000HWLibs {
     t_createFirmware orgCreateFirmware {nullptr};
     t_putFirmware orgPutFirmware {nullptr};
     t_VegaXPowerTuneConstructor orgVega10PowerTuneConstructor {nullptr};
-    t_sendMsgToSmc orgRavenSendMsgToSmc {nullptr}, orgRenoirSendMsgToSmc {nullptr};
-    mach_vm_address_t orgSmuRavenInitialize {0}, orgSmuRenoirInitialize {0};
+    mach_vm_address_t orgSmuInitialize {0};
     mach_vm_address_t orgPspCmdKmSubmit {0};
 
     static uint32_t wrapSmuGetHwVersion();
@@ -34,8 +32,7 @@ class X5000HWLibs {
     static uint32_t wrapGcGetHwVersion();
     static void wrapPopulateFirmwareDirectory(void *that);
     static void *wrapCreatePowerTuneServices(void *that, void *param2);
-    static AMDReturn wrapSmuRavenInitialize(void *smum, uint32_t param2);
-    static AMDReturn wrapSmuRenoirInitialize(void *smum, uint32_t param2);
+    static AMDReturn wrapSmuInitialize(void *smum, uint32_t param2);
     static AMDReturn wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4);
     static AMDReturn hwLibsNoop();
 };
