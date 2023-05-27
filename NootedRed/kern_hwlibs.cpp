@@ -31,12 +31,12 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"__ZN11AMDFirmware14createFirmwareEPhjjPKc", this->orgCreateFirmware},
             {"__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware", this->orgPutFirmware},
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgCapsTbl},
-            {"__ZN20AMDFirmwareDirectoryC1Ej", this->orgAMDFirmwareDirectoryConstructor},
         };
         PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "hwlibs", "Failed to resolve symbols");
 
         KernelPatcher::RouteRequest requests[] = {
-            {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory},
+            {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory,
+                this->orgPopulateFirmwareDirectory},
             {"_gc_get_hw_version", wrapGcGetHwVersion},
             {"_smu_get_hw_version", wrapSmuGetHwVersion},
             {"_smu_get_fw_constants", hwLibsNoop},
@@ -102,8 +102,7 @@ AMDReturn X5000HWLibs::wrapPspSwInit(uint32_t *inputData, void *outputData) {
 uint32_t X5000HWLibs::wrapGcGetHwVersion() { return 0x090400; }
 
 void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
-    auto *fwDir = getMember<void *>(that, 0xB8) = IOMallocZero(0xD8);
-    callback->orgAMDFirmwareDirectoryConstructor(fwDir, 3);
+    FunctionCast(wrapPopulateFirmwareDirectory, callback->orgPopulateFirmwareDirectory)(that);
 
     auto isRenoirDerivative = NRed::callback->chipType >= ChipType::Renoir;
     auto *filename = isRenoirDerivative ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
@@ -112,7 +111,8 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
     auto *fw = callback->orgCreateFirmware(fwDesc.data, fwDesc.size, isRenoirDerivative ? 0x0202 : 0x0100, filename);
     PANIC_COND(!fw, "hwlibs", "Failed to create '%s' firmware", filename);
     DBGLOG("hwlibs", "Inserting %s!", filename);
-    PANIC_COND(!callback->orgPutFirmware(fwDir, 6, fw), "hwlibs", "Failed to inject %s firmware", filename);
+    PANIC_COND(!callback->orgPutFirmware(getMember<void *>(that, 0xB8), 6, fw), "hwlibs",
+        "Failed to inject %s firmware", filename);
 }
 
 AMDReturn X5000HWLibs::hwLibsNoop() { return kAMDReturnSuccess; }

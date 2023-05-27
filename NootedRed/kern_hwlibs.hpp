@@ -7,7 +7,6 @@
 #include <Headers/kern_patcher.hpp>
 #include <Headers/kern_util.hpp>
 
-using t_AMDFirmwareDirectoryConstructor = void (*)(void *that, uint32_t maxEntryCount);
 using t_createFirmware = void *(*)(const void *data, uint32_t size, uint32_t ipVersion, const char *filename);
 using t_putFirmware = bool (*)(void *that, uint32_t deviceType, void *fw);
 
@@ -18,8 +17,7 @@ class X5000HWLibs {
     bool processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size);
 
     private:
-    mach_vm_address_t orgPspSwInit {0};
-    t_AMDFirmwareDirectoryConstructor orgAMDFirmwareDirectoryConstructor {nullptr};
+    mach_vm_address_t orgPspSwInit {0}, orgPopulateFirmwareDirectory {0};
     t_createFirmware orgCreateFirmware {nullptr};
     t_putFirmware orgPutFirmware {nullptr};
     mach_vm_address_t orgSmuInitialize {0};
