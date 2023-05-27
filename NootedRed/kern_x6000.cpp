@@ -69,6 +69,8 @@ bool X6000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
                 22},
             {&kextRadeonX6000, kIsDeviceValidCallOriginal, kIsDeviceValidCallPatched,
                 arrsize(kIsDeviceValidCallOriginal), 14},
+            {&kextRadeonX6000, kIsDevicePCITunnelledOriginal, kIsDevicePCITunnelledPatched,
+                arrsize(kIsDevicePCITunnelledOriginal), 1},
         };
         for (auto &patch : patches) {
             patcher.applyLookupPatch(&patch);
