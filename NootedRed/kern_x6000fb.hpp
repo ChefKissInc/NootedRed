@@ -3,6 +3,7 @@
 
 #ifndef kern_x6000fb_hpp
 #define kern_x6000fb_hpp
+#include "kern_nred.hpp"
 #include <Headers/kern_patcher.hpp>
 #include <Headers/kern_util.hpp>
 #include <IOKit/graphics/IOFramebuffer.h>
@@ -10,14 +11,14 @@
 using t_DceDriverSetBacklight = void (*)(void *panel_cntl, uint32_t backlight_pwm_u16_16);
 
 class X6000FB {
+    friend class PRODUCT_NAME;
+
     public:
     static X6000FB *callback;
     void init();
     bool processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size);
 
     private:
-    mach_vm_address_t orgPopulateDeviceInfo {0};
-    mach_vm_address_t orgHwReadReg32 {0};
     t_DceDriverSetBacklight orgDceDriverSetBacklight {nullptr};
     mach_vm_address_t orgDcePanelCntlHwInit {0};
     mach_vm_address_t orgFramebufferSetAttribute {0}, orgFramebufferGetAttribute {0};
@@ -31,10 +32,8 @@ class X6000FB {
     static bool OnAppleBacklightDisplayLoad(void *target, void *refCon, IOService *newService, IONotifier *notifier);
     void registerDispMaxBrightnessNotif();
 
-    static IOReturn wrapPopulateDeviceInfo(void *that);
     static uint16_t wrapGetEnumeratedRevision();
     static IOReturn wrapPopulateVramInfo(void *that, void *fwInfo);
-    static uint32_t wrapHwReadReg32(void *that, uint32_t param1);
     static uint32_t wrapDcePanelCntlHwInit(void *panelCntl);
     static IOReturn wrapFramebufferSetAttribute(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
         uintptr_t value);

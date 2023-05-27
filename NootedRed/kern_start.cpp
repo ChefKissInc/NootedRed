@@ -2,6 +2,7 @@
 //  details.
 
 #include "kern_nred.hpp"
+#include "kern_x6000fb.hpp"
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_version.hpp>
 #include <Headers/plugin_start.hpp>
@@ -74,6 +75,8 @@ bool PRODUCT_NAME::start(IOService *provider) {
         }
         OSSafeReleaseNULL(drivers);
     }
+
+    if (ADDPR(startSuccess) && X6000FB::callback) { X6000FB::callback->registerDispMaxBrightnessNotif(); }
 
     return ADDPR(startSuccess);
 }

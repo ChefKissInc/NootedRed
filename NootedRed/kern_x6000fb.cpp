@@ -39,10 +39,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
 
         KernelPatcher::RouteRequest requests[] = {
             {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", wrapPopulateVramInfo},
-            {"__ZN30AMDRadeonX6000_AmdAsicInfoNavi18populateDeviceInfoEv", wrapPopulateDeviceInfo,
-                this->orgPopulateDeviceInfo},
             {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
-            {"__ZN32AMDRadeonX6000_AmdRegisterAccess11hwReadReg32Ej", wrapHwReadReg32, this->orgHwReadReg32},
             {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit, this->orgDcePanelCntlHwInit},
             {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25setAttributeForConnectionEijm", wrapFramebufferSetAttribute,
                 this->orgFramebufferSetAttribute},
@@ -56,6 +53,8 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "x6000fb", "Failed to route symbols");
 
         KernelPatcher::LookupPatch patches[] = {
+            {&kextRadeonX6000Framebuffer, kPopulateDeviceInfoOriginal, kPopulateDeviceInfoPatched,
+                arrsize(kPopulateDeviceInfoOriginal), 1},
             {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckOriginal, kAmdAtomVramInfoNullCheckPatched,
                 arrsize(kAmdAtomVramInfoNullCheckOriginal), 1},
             {&kextRadeonX6000Framebuffer, kAmdAtomPspDirectoryNullCheckOriginal, kAmdAtomPspDirectoryNullCheckPatched,
@@ -90,13 +89,6 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
 }
 
 uint16_t X6000FB::wrapGetEnumeratedRevision() { return NRed::callback->extRevision - NRed::callback->revision; }
-
-IOReturn X6000FB::wrapPopulateDeviceInfo(void *that) {
-    if (!callback->dispNotif) { callback->registerDispMaxBrightnessNotif(); }
-    auto ret = FunctionCast(wrapPopulateDeviceInfo, callback->orgPopulateDeviceInfo)(that);
-    getMember<uint32_t>(that, 0x60) = AMDGPU_FAMILY_RAVEN;
-    return ret;
-}
 
 IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
     uint32_t channelCount = 1;
@@ -170,10 +162,6 @@ IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
     return kIOReturnSuccess;
 }
 
-uint32_t X6000FB::wrapHwReadReg32(void *that, uint32_t reg) {
-    return FunctionCast(wrapHwReadReg32, callback->orgHwReadReg32)(that, reg == 0xD31 ? 0xD2F : reg);
-}
-
 bool X6000FB::OnAppleBacklightDisplayLoad(void *, void *, IOService *newService, IONotifier *) {
     OSDictionary *params = OSDynamicCast(OSDictionary, newService->getProperty("IODisplayParameters"));
     if (!params) {
@@ -200,16 +188,18 @@ bool X6000FB::OnAppleBacklightDisplayLoad(void *, void *, IOService *newService,
 }
 
 void X6000FB::registerDispMaxBrightnessNotif() {
+    if (callback->dispNotif) { return; }
+
     auto *matching = IOService::serviceMatching("AppleBacklightDisplay");
     if (!matching) {
-        DBGLOG("x6000fb", "registerDispMaxBrightnessNotif: Failed to create match dictionary");
+        SYSLOG("x6000fb", "registerDispMaxBrightnessNotif: Failed to create match dictionary");
         return;
     }
 
     callback->dispNotif =
         IOService::addMatchingNotification(gIOFirstMatchNotification, matching, OnAppleBacklightDisplayLoad, nullptr);
-    DBGLOG_COND(!callback->dispNotif, "x6000fb", "registerDispMaxBrightnessNotif: Failed to register notification");
-    OSSafeReleaseNULL(matching);
+    SYSLOG_COND(!callback->dispNotif, "x6000fb", "registerDispMaxBrightnessNotif: Failed to register notification");
+    matching->release();
 }
 
 uint32_t X6000FB::wrapDcePanelCntlHwInit(void *panelCntl) {
