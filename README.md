@@ -2,21 +2,23 @@
 
 The AMD Vega iGPU support [Lilu](https://github.com/acidanthera/Lilu) (1.6.4+) plug-in.
 
+Supports the entire Raven ASIC family (Ryzen 5XXX series and older).
+
 The Source Code of this Original Work is licensed under the `Thou Shalt Not Profit License version 1.0`. See [`LICENSE`](https://github.com/NootInc/NootedRed/blob/master/LICENSE)
 
 Thanks [Acidanthera](https://github.com/Acidanthera) for the AppleBacklight code and UnfairGVA patches in [WhateverGreen](https://github.com/Acidanthera/WhateverGreen).
 
 ## Prerequisites
 
-- Increase VRAM size; otherwise, the device will fail to initialise. 512MiB VRAM is the minimum, 1GiB or more for proper functionality
-- Disable Legacy Boot, also known as CSM; otherwise, you will experience various difficulties, such as a kernel panic with "Failed to get VBIOS from VRAM" as the message
-- **Remove** WhateverGreen. **This kext conflicts with it**
+- Increase **VRAM size**; otherwise, the device will fail to initialise. 512MiB VRAM is the minimum, 1GiB or more for proper functionality
+- Disable **Legacy Boot**, also known as CSM; otherwise, you will experience various difficulties, such as a kernel panic with "Failed to get VBIOS from VRAM" as the message.
+- Remove **`WhateverGreen`**; this kext conflicts with it.
+- Use `MacBookPro16,3` or `MacPro7,1` SMBIOS
+- Update to latest macOS 11 (Big Sur) version
 
 ## Recommendations
 
-- From this repository, add [`SSDT-PNLF.aml`](Assets/SSDT-PNLF.aml) and [`SSDT-ALS0.aml`](Assets/SSDT-ALS0.aml) if you have no Ambient Light Sensor, along with [`SMCLightSensor.kext`](https://github.com/Acidanthera/VirtualSMC) for backlight functionality. Usually only works on laptops. Add [`BrightnessKeys.kext`](https://github.com/Acidanthera/BrightnessKeys) for brightness control from the keyboard
-- Use `MacBookPro16,3` or `MacPro7,1` SMBIOS
-- Update to latest macOS 11 (Big Sur) version
+- From this repository, add [`SSDT-PNLF.aml`](Assets/SSDT-PNLF.aml), and [`SSDT-ALS0.aml`](Assets/SSDT-ALS0.aml) if you have no Ambient Light Sensor, along with [`SMCLightSensor.kext`](https://github.com/Acidanthera/VirtualSMC) for backlight functionality. Usually only works on laptops. Add [`BrightnessKeys.kext`](https://github.com/Acidanthera/BrightnessKeys) for brightness control from the keyboard
 
 ## FAQ
 
@@ -27,8 +29,6 @@ Your system must not have a GCN 5 or RDNA AMD dGPU, as this kext will conflict w
 ### How functional is the kext?
 
 This project is under active research and development; There will be crashes here and there.
-
-The kext is mostly fully functional on all Vega (Entire Raven family - Raven(2)/Renoir and derivatives, aka Ryzen 5xxx series and older) iGPUs.
 
 See repository issues for more information.
 
