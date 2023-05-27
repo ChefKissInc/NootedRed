@@ -77,11 +77,10 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
             "Failed to enable kernel writing");
         orgChannelTypes[5] = 1;    // Fix createAccelChannels so that it only starts SDMA0
         // Fix getPagingChannel so that it gets SDMA0
-        auto &idx11 = orgChannelTypes[11];
-        if (idx11 == 1) {
-            idx11 = 0;
-        } else {
+        if (getKernelVersion() > KernelVersion::BigSur) {
             orgChannelTypes[12] = 0;
+        } else {
+            orgChannelTypes[11] = 0;
         }
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         PANIC_COND(

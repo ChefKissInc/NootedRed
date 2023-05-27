@@ -75,10 +75,11 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             patcher.applyLookupPatch(&patch);
             patcher.clearError();
         }
-        patcher.findAndReplaceWithMask(reinterpret_cast<uint8_t *>(address), size, kCreatePowerTuneServicesOriginal2,
-            arrsize(kCreatePowerTuneServicesOriginal2), kCreatePowerTuneServicesMask2,
-            arrsize(kCreatePowerTuneServicesMask2), kCreatePowerTuneServicesPatched2,
-            arrsize(kCreatePowerTuneServicesPatched2), nullptr, 0, 1, 0);
+        PANIC_COND(!KernelPatcher::findAndReplaceWithMask(reinterpret_cast<uint8_t *>(address), size,
+                       kCreatePowerTuneServicesOriginal2, arrsize(kCreatePowerTuneServicesOriginal2),
+                       kCreatePowerTuneServicesMask2, arrsize(kCreatePowerTuneServicesMask2),
+                       kCreatePowerTuneServicesPatched2, arrsize(kCreatePowerTuneServicesPatched2), nullptr, 0, 1, 0),
+            "hwlibs", "Failed to apply PowerTune services patch part 2");
 
         return true;
     }
