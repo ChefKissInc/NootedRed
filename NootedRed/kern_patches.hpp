@@ -121,6 +121,14 @@ static const uint8_t kGetSchedulerCallPatched[] = {0x48, 0x8B, 0x07, 0xFF, 0x90,
 static const uint8_t kIsDeviceValidCallOriginal[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0xA0, 0x02, 0x00, 0x00, 0x84, 0xC0};
 static const uint8_t kIsDeviceValidCallPatched[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0x98, 0x02, 0x00, 0x00, 0x84, 0xC0};
 
+/**
+ * Mismatched `isDevicePCITunnelled` virtual call.
+ * `AMDRadeonX6000_AMDNavi10VideoContext::setSuspendResumeState`
+ * AMDRadeonX6000.kext
+ */
+static const uint8_t kIsDevicePCITunnelledOriginal[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0xB0, 0x02, 0x00, 0x00};
+static const uint8_t kIsDevicePCITunnelledPatched[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0xA8, 0x02, 0x00, 0x00};
+
 /** VideoToolbox DRM model check */
 static const char kVideoToolboxDRMModelOriginal[] = "MacPro5,1\0MacPro6,1\0IOService";
 
@@ -346,6 +354,7 @@ static_assert(arrsize(kHWChannelSubmitCommandBufferOriginal) == arrsize(kHWChann
 static_assert(arrsize(kEnableTimestampInterruptOriginal) == arrsize(kEnableTimestampInterruptPatched));
 static_assert(arrsize(kGetSchedulerCallOriginal) == arrsize(kGetSchedulerCallPatched));
 static_assert(arrsize(kIsDeviceValidCallOriginal) == arrsize(kIsDeviceValidCallPatched));
+static_assert(arrsize(kIsDevicePCITunnelledOriginal) == arrsize(kIsDevicePCITunnelledPatched));
 static_assert(arrsize(kCoreLSKDOriginal) == arrsize(kCoreLSKDPatched));
 static_assert(arrsize(kVAAcceleratorInfoIdentifyOriginal) == arrsize(kVAAcceleratorInfoIdentifyMask));
 static_assert(arrsize(kVAAcceleratorInfoIdentifyOriginal) == arrsize(kVAAcceleratorInfoIdentifyPatched));
