@@ -24,7 +24,7 @@ class X5000HWLibs {
     t_createFirmware orgCreateFirmware {nullptr};
     t_putFirmware orgPutFirmware {nullptr};
     t_VegaXPowerTuneConstructor orgVega10PowerTuneConstructor {nullptr};
-    mach_vm_address_t orgPspCmdKmSubmit {0}, orgPspCosWaitFor {0};
+    mach_vm_address_t orgPspCmdKmSubmit {0};
     mach_vm_address_t orgUpdateSdmaPowerGating {0};
     bool isSdmaPoweredUp {false};
 
@@ -34,7 +34,6 @@ class X5000HWLibs {
     static void wrapPopulateFirmwareDirectory(void *that);
     static void *wrapCreatePowerTuneServices(void *that, void *param2);
     static AMDReturn wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4);
-    static AMDReturn wrapPspCosWaitFor(void *cos, uint64_t param2, uint64_t param3, uint64_t param4);
     static void wrapUpdateSdmaPowerGating(void *cail, uint32_t mode);
     static AMDReturn hwLibsNoop();
 };

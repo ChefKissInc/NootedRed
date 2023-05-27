@@ -53,8 +53,8 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
                 this->orgFramebufferGetAttribute},
             {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
                 this->orgGetNumberOfConnectors},
-            {"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware, orgIH40IVRingInitHardware},
-            {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister, orgIRQMGRWriteRegister},
+            {"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware, this->orgIH40IVRingInitHardware},
+            {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister, this->orgIRQMGRWriteRegister},
             {"_dm_logger_write", wrapDmLoggerWrite},
         };
         auto count = arrsize(requests);
@@ -82,36 +82,11 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
         orgAsicCapsTable->caps = NRed::callback->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir;
         orgAsicCapsTable->deviceId = NRed::callback->deviceId;
         orgAsicCapsTable->revision = NRed::callback->revision;
-        orgAsicCapsTable->emulatedRev = NRed::callback->enumeratedRevision + NRed::callback->revision;
-        orgAsicCapsTable->pciRev = NRed::callback->pciRevision;
+        orgAsicCapsTable->extRevision =
+            static_cast<uint32_t>(NRed::callback->enumeratedRevision) + NRed::callback->revision;
+        orgAsicCapsTable->pciRevision = NRed::callback->pciRevision;
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("x6000fb", "Applied DDI Caps patches");
-
-        if (!checkKernelArgument("-nred24bit")) { return true; }
-
-        auto bitsPerComponent = patcher.solveSymbol<int *>(index, "__ZL18BITS_PER_COMPONENT", address, size);
-        if (bitsPerComponent) {
-            while (*bitsPerComponent) {
-                if (*bitsPerComponent == 10) {
-                    PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS,
-                        "x5000", "Failed to disable kernel writing");
-                    DBGLOG("rad", "Patching BITS_PER_COMPONENT");
-                    *bitsPerComponent = 8;
-                    MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
-                }
-                bitsPerComponent++;
-            }
-        } else {
-            SYSLOG("rad", "failed to find BITS_PER_COMPONENT");
-        }
-        patcher.clearError();
-
-        DBGLOG("rad", "Patching pixel types");
-        KernelPatcher::LookupPatch patch {&kextRadeonX6000Framebuffer,
-            reinterpret_cast<const uint8_t *>(kBitsPerComponentOriginal),
-            reinterpret_cast<const uint8_t *>(kBitsPerComponentPatched), 32, 2};
-        patcher.applyLookupPatch(&patch);
-        patcher.clearError();
 
         return true;
     }
@@ -140,7 +115,7 @@ IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
                     case 11:
                         [[fallthrough]];
                     case 12:
-                        if (table->infoV11.umaChannelCount) channelCount = table->infoV11.umaChannelCount;
+                        if (table->infoV11.umaChannelCount) { channelCount = table->infoV11.umaChannelCount; }
                         memoryType = table->infoV11.memoryType;
                         break;
                     default:
@@ -153,7 +128,7 @@ IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
                     case 1:
                         [[fallthrough]];
                     case 2:
-                        if (table->infoV2.umaChannelCount) channelCount = table->infoV2.umaChannelCount;
+                        if (table->infoV2.umaChannelCount) { channelCount = table->infoV2.umaChannelCount; }
                         memoryType = table->infoV2.memoryType;
                         break;
                     default:

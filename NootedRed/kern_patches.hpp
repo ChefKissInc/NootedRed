@@ -21,16 +21,16 @@ static const uint8_t kAGDPFBCountCheckVenturaPatched[] = {0x41, 0x83, 0xBE, 0x14
  * `AppleGraphicsDevicePolicy::start`
  * Neutralise access to AGDP configuration by board identifier.
  */
-static const char kAGDPBoardIDKeyOriginal[] = "board-id";
-static const char kAGDPBoardIDKeyPatched[] = "applehax";
+static const uint8_t kAGDPBoardIDKeyOriginal[] = "board-id";
+static const uint8_t kAGDPBoardIDKeyPatched[] = "applehax";
 
 /**
  * `_smu_9_0_1_full_asic_reset`
  * AMDRadeonX5000HWLibs.kext
  * Change SMC message from `0x3B` to `0x1E` as the original one is wrong for SMU 10/12.
  */
-static const uint8_t kFullAsicResetOriginal[] = {0xBE, 0x3B, 0x00, 0x00, 0x00};
-static const uint8_t kFullAsicResetPatched[] = {0xBE, 0x1E, 0x00, 0x00, 0x00};
+static const uint8_t kFullAsicResetOriginal[] = {0x8B, 0x56, 0x04, 0xBE, 0x3B, 0x00, 0x00, 0x00};
+static const uint8_t kFullAsicResetPatched[] = {0x8B, 0x56, 0x04, 0xBE, 0x1E, 0x00, 0x00, 0x00};
 
 /**
  * `AmdAtomFwServices::initializeAtomDataTable`
@@ -332,14 +332,6 @@ static const uint8_t kVAAddrLibInterfaceInitPatched[] = {0x74, 0x00, 0x66, 0x90,
 static const uint8_t kVAAddrLibInterfaceInitPatchedMask[] = {0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
-/**
- * `BITS_PER_COMPONENT`
- * AMDRadeonX6000Framebuffer.kext
- * Change definition of 3rd component from 32 to 24 bits when `-nred24bit` is specified
- */
-static const char kBitsPerComponentOriginal[] = "--RRRRRRRRRRGGGGGGGGGGBBBBBBBBBB";
-static const char kBitsPerComponentPatched[] = "--------RRRRRRRRGGGGGGGGBBBBBBBB";
-
 static_assert(arrsize(kAGDPFBCountCheckOriginal) == arrsize(kAGDPFBCountCheckPatched));
 static_assert(arrsize(kAGDPFBCountCheckVenturaOriginal) == arrsize(kAGDPFBCountCheckVenturaPatched));
 static_assert(arrsize(kAGDPBoardIDKeyOriginal) == arrsize(kAGDPBoardIDKeyPatched));
@@ -384,5 +376,8 @@ static_assert(arrsize(kVAFactoryCreateVPOriginal) == arrsize(kVAFactoryCreateVPM
 static_assert(arrsize(kVAFactoryCreateVPOriginal) > arrsize(kVAFactoryCreateVPPatched));
 static_assert(arrsize(kVAFactoryCreateImageBltOriginal) == arrsize(kVAFactoryCreateImageBltMask));
 static_assert(arrsize(kVAFactoryCreateImageBltOriginal) > arrsize(kVAFactoryCreateImageBltPatched));
+static_assert(arrsize(kVAAddrLibInterfaceInitOriginal) == arrsize(kVAAddrLibInterfaceInitOriginalMask));
+static_assert(arrsize(kVAAddrLibInterfaceInitOriginal) == arrsize(kVAAddrLibInterfaceInitPatched));
+static_assert(arrsize(kVAAddrLibInterfaceInitPatched) == arrsize(kVAAddrLibInterfaceInitPatchedMask));
 
 #endif /* kern_patches_hpp */

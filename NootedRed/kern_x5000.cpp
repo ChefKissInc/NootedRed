@@ -187,7 +187,7 @@ void *X5000::wrapAllocateAMDHWAlignManager() {
     callback->hwAlignMgr = ret;
 
     callback->hwAlignMgrVtX5000 = getMember<uint8_t *>(ret, 0);
-    callback->hwAlignMgrVtX6000 = static_cast<uint8_t *>(IOMallocZero(0x238));
+    callback->hwAlignMgrVtX6000 = IONewZero(uint8_t, 0x238);
 
     memcpy(callback->hwAlignMgrVtX6000, callback->hwAlignMgrVtX5000, 0x128);
     *reinterpret_cast<mach_vm_address_t *>(callback->hwAlignMgrVtX6000 + 0x128) =
