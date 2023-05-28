@@ -58,7 +58,7 @@ bool X6000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "x6000", "Failed to route symbols");
 
-        KernelPatcher::LookupPatch patches[] = {
+        KernelPatcher::LookupPatch const patches[] = {
             {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal, kGetGpuDebugPolicyCallPatched,
                 arrsize(kGetGpuDebugPolicyCallOriginal), 28},
             {&kextRadeonX6000, kHWChannelSubmitCommandBufferOriginal, kHWChannelSubmitCommandBufferPatched,

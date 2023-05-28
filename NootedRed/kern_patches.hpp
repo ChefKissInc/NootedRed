@@ -69,6 +69,17 @@ static const uint8_t kPspSwInitPatched2[] = {0x66, 0x48, 0x90, 0x66, 0x48, 0x90,
     0x31, 0xC0, 0x90, 0x48, 0x83, 0xF8, 0x0D};
 
 /**
+ * `_smu_init_function_pointer_list`
+ * AMDRadeonX5000HWLibs.kext
+ * Replace call to `_smu_get_hw_version` with constant (0x1).
+ */
+static const uint8_t kSmuInitFunctionPointerListOriginal[] = {0xE8, 0x00, 0x00, 0x00, 0x00, 0x89, 0xC3, 0x41, 0x89,
+    0x87, 0x00, 0x00, 0x00, 0x00};
+static const uint8_t kSmuInitFunctionPointerListMask[] = {0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0x00, 0x00, 0x00, 0x00};
+static const uint8_t kSmuInitFunctionPointerListPatched[] = {0xB8, 0x01, 0x00, 0x00, 0x00};
+
+/**
  * `_smu_9_0_1_full_asic_reset`
  * AMDRadeonX5000HWLibs.kext
  * Change SMC message from `0x3B` to `0x1E` as the original one is wrong for SMU 10/12.
@@ -407,6 +418,8 @@ static_assert(arrsize(kGcSetFwEntryInfoOriginal) == arrsize(kGcSetFwEntryInfoMas
 static_assert(arrsize(kPspSwInitOriginal1) == arrsize(kPspSwInitPatched1));
 static_assert(arrsize(kPspSwInitOriginal2) > arrsize(kPspSwInitPatched2));
 static_assert(arrsize(kPspSwInitOriginal2) == arrsize(kPspSwInitMask2));
+static_assert(arrsize(kSmuInitFunctionPointerListOriginal) > arrsize(kSmuInitFunctionPointerListPatched));
+static_assert(arrsize(kSmuInitFunctionPointerListOriginal) == arrsize(kSmuInitFunctionPointerListMask));
 static_assert(arrsize(kFullAsicResetOriginal) == arrsize(kFullAsicResetPatched));
 static_assert(arrsize(kPopulateDeviceInfoOriginal) == arrsize(kPopulateDeviceInfoPatched));
 static_assert(arrsize(kCreatePowerTuneServicesOriginal1) == arrsize(kCreatePowerTuneServicesPatched1));

@@ -305,14 +305,14 @@ void NRed::setRMMIOIfNecessary() {
 
 void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextAGDP.loadIndex == index) {
-        KernelPatcher::LookupPatch patch = {&kextAGDP, kAGDPBoardIDKeyOriginal, kAGDPBoardIDKeyPatched,
+        KernelPatcher::LookupPatch const patch = {&kextAGDP, kAGDPBoardIDKeyOriginal, kAGDPBoardIDKeyPatched,
             arrsize(kAGDPBoardIDKeyOriginal), 1};
         patcher.applyLookupPatch(&patch);
         SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "nred",
             "Failed to apply AGDP board-id patch: %d", patcher.getError());
         patcher.clearError();
         auto ventura = getKernelVersion() >= KernelVersion::Ventura;
-        KernelPatcher::LookupPatch fbPatch = {&kextAGDP,
+        KernelPatcher::LookupPatch const fbPatch = {&kextAGDP,
             ventura ? kAGDPFBCountCheckVenturaOriginal : kAGDPFBCountCheckOriginal,
             ventura ? kAGDPFBCountCheckVenturaPatched : kAGDPFBCountCheckPatched,
             ventura ? arrsize(kAGDPFBCountCheckVenturaOriginal) : arrsize(kAGDPFBCountCheckOriginal), 1};
@@ -326,7 +326,7 @@ void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         if (patcher.routeMultiple(kextBacklight.loadIndex, &request, 1, address, size)) {
             const uint8_t find[] = {"F%uT%04x"};
             const uint8_t replace[] = {"F%uTxxxx"};
-            KernelPatcher::LookupPatch patch {&kextBacklight, find, replace, arrsize(find), 1};
+            KernelPatcher::LookupPatch const patch {&kextBacklight, find, replace, arrsize(find), 1};
             patcher.applyLookupPatch(&patch);
             SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "nred",
                 "Failed to apply backlight patch: %d", patcher.getError());

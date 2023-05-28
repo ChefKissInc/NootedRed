@@ -54,7 +54,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
         PANIC_COND(!RouteWithFallbackRequest::routeAll(patcher, index, requests, address, size), "x6000fb",
             "Failed to route symbols");
 
-        KernelPatcher::LookupPatch patches[] = {
+        KernelPatcher::LookupPatch const patches[] = {
             {&kextRadeonX6000Framebuffer, kPopulateDeviceInfoOriginal, kPopulateDeviceInfoPatched,
                 arrsize(kPopulateDeviceInfoOriginal), 1},
             {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckOriginal, kAmdAtomVramInfoNullCheckPatched,

@@ -41,7 +41,6 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         RouteWithFallbackRequest requests[] = {
             {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory,
                 this->orgPopulateFirmwareDirectory},
-            {"_smu_get_hw_version", wrapSmuGetHwVersion, kSmuGetHwVersionPattern},
             {"_smu_get_fw_constants", hwLibsNoop, kSmuGetFwConstantsPattern, kSmuGetFwConstantsMask},
             {"_smu_9_0_1_check_fw_status", hwLibsNoop, kSmu901CheckFwStatusPattern, kSmu901CheckFwStatusMask},
             {"_smu_9_0_1_unload_smu", hwLibsNoop, kSmu901UnloadSmuPattern, kSmu901UnloadSmuMask},
@@ -68,7 +67,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         DBGLOG("hwlibs", "Applied DDI Caps patches");
 
         auto adjustment = getKernelVersion() > KernelVersion::BigSur;
-        KernelPatcher::LookupPatch patches[] = {
+        KernelPatcher::LookupPatch const patches[] = {
             {&kextRadeonX5000HWLibs, kPspSwInitOriginal1, kPspSwInitPatched1, arrsize(kPspSwInitOriginal1), 1},
             {&kextRadeonX5000HWLibs, kFullAsicResetOriginal, kFullAsicResetPatched, arrsize(kFullAsicResetOriginal), 1},
             {&kextRadeonX5000HWLibs,
@@ -84,6 +83,13 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
                 "Failed to apply patches[%zu]: %d", i, patcher.getError());
             patcher.clearError();
         }
+
+        PANIC_COND(!KernelPatcher::findAndReplaceWithMask(reinterpret_cast<uint8_t *>(address), size,
+                       kSmuInitFunctionPointerListOriginal, arrsize(kSmuInitFunctionPointerListOriginal),
+                       kSmuInitFunctionPointerListMask, arrsize(kSmuInitFunctionPointerListMask),
+                       kSmuInitFunctionPointerListPatched, arrsize(kSmuInitFunctionPointerListPatched), nullptr, 0, 1,
+                       0),
+            "hwlibs", "Failed to apply _smu_init_function_pointer_list patch");
 
         PANIC_COND(!KernelPatcher::findAndReplaceWithMask(reinterpret_cast<uint8_t *>(address), size,
                        kCreatePowerTuneServicesOriginal2, arrsize(kCreatePowerTuneServicesOriginal2),
@@ -111,8 +117,6 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
 
     return false;
 }
-
-uint32_t X5000HWLibs::wrapSmuGetHwVersion() { return 0x1; }
 
 void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
     FunctionCast(wrapPopulateFirmwareDirectory, callback->orgPopulateFirmwareDirectory)(that);
