@@ -24,6 +24,31 @@ static const uint8_t kAGDPBoardIDKeyOriginal[] = "board-id";
 static const uint8_t kAGDPBoardIDKeyPatched[] = "applehax";
 
 /**
+ * `_gc_sw_init`
+ * AMDRadeonX5000HWLibs.kext
+ * Replace call to `_gc_get_hw_version` with constant (0x090400).
+ */
+static const uint8_t kGcSwInitOriginal[] = {0xE8, 0x00, 0x00, 0x00, 0x00, 0x49, 0x8D, 0x7C, 0x24, 0x0C, 0xE8, 0x00,
+    0x00, 0x00, 0x00, 0x41, 0x89, 0xC7};
+static const uint8_t kGcSwInitOriginalMask[] = {0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00,
+    0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF};
+static const uint8_t kGcSwInitPatched[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xB8, 0x00, 0x04,
+    0x09, 0x00, 0x00, 0x00, 0x00};
+static const uint8_t kGcSwInitPatchedMask[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00};
+
+/**
+ * `_gc_set_fw_entry_info`
+ * AMDRadeonX5000HWLibs.kext
+ * Replace call to `_gc_get_hw_version` with constant (0x090400).
+ */
+static const uint8_t kGcSetFwEntryInfoOriginal[] = {0xE8, 0x00, 0x00, 0x00, 0x00, 0x31, 0xC9, 0x41, 0x89, 0x4E, 0x10,
+    0x41, 0x89, 0x8C, 0x24, 0xF0, 0x02, 0x00, 0x00, 0x3D, 0x0A, 0x00, 0x08, 0x00};
+static const uint8_t kGcSetFwEntryInfoMask[] = {0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+static const uint8_t kGcSetFwEntryInfoPatched[] = {0xB8, 0x00, 0x04, 0x09, 0x00};
+
+/**
  * `_smu_9_0_1_full_asic_reset`
  * AMDRadeonX5000HWLibs.kext
  * Change SMC message from `0x3B` to `0x1E` as the original one is wrong for SMU 10/12.
@@ -369,6 +394,11 @@ static const uint8_t kVAAddrLibInterfaceInitPatchedMask[] = {0xFF, 0x00, 0xFF, 0
 static_assert(arrsize(kAGDPFBCountCheckOriginal) == arrsize(kAGDPFBCountCheckPatched));
 static_assert(arrsize(kAGDPFBCountCheckVenturaOriginal) == arrsize(kAGDPFBCountCheckVenturaPatched));
 static_assert(arrsize(kAGDPBoardIDKeyOriginal) == arrsize(kAGDPBoardIDKeyPatched));
+static_assert(arrsize(kGcSwInitOriginal) == arrsize(kGcSwInitPatched));
+static_assert(arrsize(kGcSwInitOriginal) == arrsize(kGcSwInitOriginalMask));
+static_assert(arrsize(kGcSwInitPatched) == arrsize(kGcSwInitPatchedMask));
+static_assert(arrsize(kGcSetFwEntryInfoOriginal) > arrsize(kGcSetFwEntryInfoPatched));
+static_assert(arrsize(kGcSetFwEntryInfoOriginal) == arrsize(kGcSetFwEntryInfoMask));
 static_assert(arrsize(kFullAsicResetOriginal) == arrsize(kFullAsicResetPatched));
 static_assert(arrsize(kPopulateDeviceInfoOriginal) == arrsize(kPopulateDeviceInfoPatched));
 static_assert(arrsize(kCreatePowerTuneServicesOriginal1) == arrsize(kCreatePowerTuneServicesPatched1));

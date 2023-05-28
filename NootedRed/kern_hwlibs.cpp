@@ -37,7 +37,6 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         KernelPatcher::RouteRequest requests[] = {
             {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory,
                 this->orgPopulateFirmwareDirectory},
-            {"_gc_get_hw_version", wrapGcGetHwVersion},
             {"_smu_get_hw_version", wrapSmuGetHwVersion},
             {"_smu_get_fw_constants", hwLibsNoop},
             {"_smu_9_0_1_check_fw_status", hwLibsNoop},
@@ -75,11 +74,22 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             patcher.applyLookupPatch(&patch);
             patcher.clearError();
         }
+
         PANIC_COND(!KernelPatcher::findAndReplaceWithMask(reinterpret_cast<uint8_t *>(address), size,
                        kCreatePowerTuneServicesOriginal2, arrsize(kCreatePowerTuneServicesOriginal2),
                        kCreatePowerTuneServicesMask2, arrsize(kCreatePowerTuneServicesMask2),
                        kCreatePowerTuneServicesPatched2, arrsize(kCreatePowerTuneServicesPatched2), nullptr, 0, 1, 0),
             "hwlibs", "Failed to apply PowerTune services patch part 2");
+
+        PANIC_COND(!KernelPatcher::findAndReplaceWithMask(reinterpret_cast<uint8_t *>(address), size, kGcSwInitOriginal,
+                       kGcSwInitOriginalMask, kGcSwInitPatched, kGcSwInitPatchedMask, 1, 0),
+            "hwlibs", "Failed to apply _gc_sw_init version spoof patch");
+
+        PANIC_COND(!KernelPatcher::findAndReplaceWithMask(reinterpret_cast<uint8_t *>(address), size,
+                       kGcSetFwEntryInfoOriginal, arrsize(kGcSetFwEntryInfoOriginal), kGcSetFwEntryInfoMask,
+                       arrsize(kGcSetFwEntryInfoMask), kGcSetFwEntryInfoPatched, arrsize(kGcSetFwEntryInfoPatched),
+                       nullptr, 0, 1, 0),
+            "hwlibs", "Failed to apply _gc_set_fw_entry_info version spoof patch");
 
         return true;
     }
