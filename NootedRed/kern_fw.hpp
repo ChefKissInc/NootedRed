@@ -1,8 +1,7 @@
 //  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
 //  details.
 
-#ifndef kern_fw_hpp
-#define kern_fw_hpp
+#pragma once
 #include <Headers/kern_util.hpp>
 #include <libkern/c++/OSData.h>
 
@@ -23,5 +22,3 @@ inline const FwDesc &getFWDescByName(const char *name) {
     }
     PANIC("nred", "getFWDescByName: '%s' not found", name);
 }
-
-#endif /* kern_fw_hpp */

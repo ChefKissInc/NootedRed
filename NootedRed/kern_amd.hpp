@@ -1,8 +1,7 @@
 //  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
 //  details.
 
-#ifndef kern_amd_hpp
-#define kern_amd_hpp
+#pragma once
 #include <Headers/kern_util.hpp>
 
 using t_GenericConstructor = void (*)(void *that);
@@ -158,5 +157,3 @@ enum VideoMemoryType : uint32_t {
 };
 
 constexpr uint32_t PP_RESULT_OK = 1;
-
-#endif /* kern_amd.hpp */

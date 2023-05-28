@@ -1,8 +1,7 @@
 //  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
 //  details.
 
-#ifndef kern_hwlibs_hpp
-#define kern_hwlibs_hpp
+#pragma once
 #include "kern_amd.hpp"
 #include <Headers/kern_patcher.hpp>
 #include <Headers/kern_util.hpp>
@@ -31,5 +30,3 @@ class X5000HWLibs {
     static AMDReturn wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4);
     static AMDReturn hwLibsNoop();
 };
-
-#endif /* kern_hwlibs_hpp */

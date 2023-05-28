@@ -1,8 +1,7 @@
 //  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
 //  details.
 
-#ifndef kern_x6000fb_hpp
-#define kern_x6000fb_hpp
+#pragma once
 #include "kern_nred.hpp"
 #include <Headers/kern_patcher.hpp>
 #include <Headers/kern_util.hpp>
@@ -43,5 +42,3 @@ class X6000FB {
     static bool wrapIH40IVRingInitHardware(void *ctx, void *param2);
     static void wrapIRQMGRWriteRegister(void *ctx, uint64_t index, uint32_t value);
 };
-
-#endif /* kern_x6000fb_hpp */

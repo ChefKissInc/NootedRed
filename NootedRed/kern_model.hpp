@@ -1,8 +1,7 @@
 //  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
 //  details.
 
-#ifndef kern_model_hpp
-#define kern_model_hpp
+#pragma once
 #include <Headers/kern_util.hpp>
 
 struct Model {
@@ -110,5 +109,3 @@ inline const char *getBranding(uint16_t dev, uint16_t rev) {
 
     return "AMD Radeon Graphics";
 }
-
-#endif /* kern_model_hpp */

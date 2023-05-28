@@ -1,8 +1,7 @@
 //  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
 //  details.
 
-#ifndef kern_x5000_hpp
-#define kern_x5000_hpp
+#pragma once
 #include "kern_amd.hpp"
 #include <Headers/kern_patcher.hpp>
 #include <Headers/kern_util.hpp>
@@ -44,5 +43,3 @@ class X5000 {
     static uint32_t wrapReturnZero();
     static void *wrapObtainAccelChannelGroup(void *that, uint32_t priority);
 };
-
-#endif /* kern_x5000_hpp */

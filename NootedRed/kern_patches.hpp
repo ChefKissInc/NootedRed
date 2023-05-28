@@ -1,8 +1,7 @@
 //  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
 //  details.
 
-#ifndef kern_patches_hpp
-#define kern_patches_hpp
+#pragma once
 #include <Headers/kern_util.hpp>
 
 /**
@@ -419,5 +418,3 @@ static_assert(arrsize(kVAFactoryCreateImageBltOriginal) > arrsize(kVAFactoryCrea
 static_assert(arrsize(kVAAddrLibInterfaceInitOriginal) == arrsize(kVAAddrLibInterfaceInitOriginalMask));
 static_assert(arrsize(kVAAddrLibInterfaceInitOriginal) == arrsize(kVAAddrLibInterfaceInitPatched));
 static_assert(arrsize(kVAAddrLibInterfaceInitPatched) == arrsize(kVAAddrLibInterfaceInitPatchedMask));
-
-#endif /* kern_patches_hpp */

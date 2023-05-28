@@ -1,8 +1,7 @@
 //  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
 //  details.
 
-#ifndef kern_x6000_hpp
-#define kern_x6000_hpp
+#pragma once
 #include "kern_amd.hpp"
 #include <Headers/kern_patcher.hpp>
 #include <Headers/kern_util.hpp>
@@ -41,5 +40,3 @@ class X6000 {
     static uint64_t wrapGetDisplayInfo(void *that, uint32_t param1, bool param2, bool param3, void *param4,
         void *param5);
 };
-
-#endif /* kern_x6000_hpp */
