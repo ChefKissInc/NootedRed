@@ -174,10 +174,10 @@ static const uint8_t kGetGpuDebugPolicyCallPatched[] = {0x48, 0x8B, 0x07, 0xFF, 
  * VTable Call to signalGPUWorkSubmitted.
  * Doesn't exist on X5000, but looks like it isn't necessary, so we just NO-OP it.
  */
-static const uint8_t kHWChannelSubmitCommandBufferOriginal[] = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0xFF, 0x90,
-    0x30, 0x02, 0x00, 0x00, 0x48, 0x8B, 0x43, 0x50};
-static const uint8_t kHWChannelSubmitCommandBufferPatched[] = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x07, 0x66, 0x90,
-    0x66, 0x90, 0x66, 0x90, 0x48, 0x8B, 0x43, 0x50};
+static const uint8_t kHWChannelSubmitCommandBufferOriginal[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0x30, 0x02, 0x00, 0x00,
+    0x48, 0x8B, 0x43};
+static const uint8_t kHWChannelSubmitCommandBufferPatched[] = {0x48, 0x8B, 0x07, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90,
+    0x48, 0x8B, 0x43};
 
 /**
  * Mismatched `getScheduler` virtual calls.
@@ -410,6 +410,7 @@ static_assert(arrsize(kPspSwInitOriginal2) == arrsize(kPspSwInitMask2));
 static_assert(arrsize(kFullAsicResetOriginal) == arrsize(kFullAsicResetPatched));
 static_assert(arrsize(kPopulateDeviceInfoOriginal) == arrsize(kPopulateDeviceInfoPatched));
 static_assert(arrsize(kCreatePowerTuneServicesOriginal1) == arrsize(kCreatePowerTuneServicesPatched1));
+static_assert(arrsize(kCreatePowerTuneServicesMontereyOriginal1) == arrsize(kCreatePowerTuneServicesMontereyPatched1));
 static_assert(arrsize(kCreatePowerTuneServicesOriginal2) == arrsize(kCreatePowerTuneServicesMask2));
 static_assert(arrsize(kCreatePowerTuneServicesOriginal2) == arrsize(kCreatePowerTuneServicesPatched2));
 static_assert(arrsize(kAmdAtomVramInfoNullCheckOriginal) == arrsize(kAmdAtomVramInfoNullCheckPatched));
