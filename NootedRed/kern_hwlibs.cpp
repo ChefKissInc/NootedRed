@@ -124,8 +124,9 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
     auto *fw = callback->orgCreateFirmware(fwDesc.data, fwDesc.size, isRenoirDerivative ? 0x0202 : 0x0100, filename);
     PANIC_COND(!fw, "hwlibs", "Failed to create '%s' firmware", filename);
     DBGLOG("hwlibs", "Inserting %s!", filename);
-    SYSLOG_COND(!callback->orgPutFirmware(getMember<void *>(that, 0xB8), 6, fw), "hwlibs",
-        "Failed to inject %s firmware", filename);
+    auto *fwDir = getMember<void *>(that, getKernelVersion() > KernelVersion::BigSur ? 0xB0 : 0xB8);
+    PANIC_COND(!fwDir, "hwlibs", "Failed to get firmware directory");
+    PANIC_COND(!callback->orgPutFirmware(fwDir, 6, fw), "hwlibs", "Failed to inject %s firmware", filename);
 }
 
 AMDReturn X5000HWLibs::hwLibsNoop() { return kAMDReturnSuccess; }
