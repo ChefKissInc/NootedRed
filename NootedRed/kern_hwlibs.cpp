@@ -67,11 +67,16 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("hwlibs", "Applied DDI Caps patches");
 
+        auto adjustment = getKernelVersion() > KernelVersion::BigSur;
         KernelPatcher::LookupPatch patches[] = {
             {&kextRadeonX5000HWLibs, kPspSwInitOriginal1, kPspSwInitPatched1, arrsize(kPspSwInitOriginal1), 1},
             {&kextRadeonX5000HWLibs, kFullAsicResetOriginal, kFullAsicResetPatched, arrsize(kFullAsicResetOriginal), 1},
-            {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesOriginal1, kCreatePowerTuneServicesPatched1,
-                arrsize(kCreatePowerTuneServicesOriginal1), 1},
+            {&kextRadeonX5000HWLibs,
+                adjustment ? kCreatePowerTuneServicesOriginal1Monterey : kCreatePowerTuneServicesOriginal1,
+                adjustment ? kCreatePowerTuneServicesPatched1Monterey : kCreatePowerTuneServicesPatched1,
+                adjustment ? arrsize(kCreatePowerTuneServicesOriginal1Monterey) :
+                             arrsize(kCreatePowerTuneServicesOriginal1),
+                1},
         };
         for (size_t i = 0; i < arrsize(patches); i++) {
             patcher.applyLookupPatch(patches + i);
