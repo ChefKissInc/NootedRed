@@ -63,19 +63,17 @@ bool X6000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
                 arrsize(kGetGpuDebugPolicyCallOriginal), 28},
             {&kextRadeonX6000, kHWChannelSubmitCommandBufferOriginal, kHWChannelSubmitCommandBufferPatched,
                 arrsize(kHWChannelSubmitCommandBufferOriginal), 1},
-            {&kextRadeonX6000, kEnableTimestampInterruptOriginal, kEnableTimestampInterruptPatched,
-                arrsize(kEnableTimestampInterruptOriginal), 1},
             {&kextRadeonX6000, kGetSchedulerCallOriginal, kGetSchedulerCallPatched, arrsize(kGetSchedulerCallOriginal),
                 22},
             {&kextRadeonX6000, kIsDeviceValidCallOriginal, kIsDeviceValidCallPatched,
-                arrsize(kIsDeviceValidCallOriginal), 14},
+                arrsize(kIsDeviceValidCallOriginal), 24},
             {&kextRadeonX6000, kIsDevicePCITunnelledOriginal, kIsDevicePCITunnelledPatched,
                 arrsize(kIsDevicePCITunnelledOriginal), 1},
         };
         for (size_t i = 0; i < arrsize(patches); i++) {
             patcher.applyLookupPatch(patches + i);
-            SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "x6000", "Failed to apply patches[%zu]",
-                i);
+            SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "x6000",
+                "Failed to apply patches[%zu]: %d", i, patcher.getError());
             patcher.clearError();
         }
 

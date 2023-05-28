@@ -72,16 +72,16 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {&kextRadeonX5000HWLibs, kPspSwInitOriginal1, kPspSwInitPatched1, arrsize(kPspSwInitOriginal1), 1},
             {&kextRadeonX5000HWLibs, kFullAsicResetOriginal, kFullAsicResetPatched, arrsize(kFullAsicResetOriginal), 1},
             {&kextRadeonX5000HWLibs,
-                adjustment ? kCreatePowerTuneServicesOriginal1Monterey : kCreatePowerTuneServicesOriginal1,
-                adjustment ? kCreatePowerTuneServicesPatched1Monterey : kCreatePowerTuneServicesPatched1,
-                adjustment ? arrsize(kCreatePowerTuneServicesOriginal1Monterey) :
+                adjustment ? kCreatePowerTuneServicesMontereyOriginal1 : kCreatePowerTuneServicesOriginal1,
+                adjustment ? kCreatePowerTuneServicesMontereyPatched1 : kCreatePowerTuneServicesPatched1,
+                adjustment ? arrsize(kCreatePowerTuneServicesMontereyOriginal1) :
                              arrsize(kCreatePowerTuneServicesOriginal1),
                 1},
         };
         for (size_t i = 0; i < arrsize(patches); i++) {
             patcher.applyLookupPatch(patches + i);
-            SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "hwlibs", "Failed to apply patches[%zu]",
-                i);
+            SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "hwlibs",
+                "Failed to apply patches[%zu]: %d", i, patcher.getError());
             patcher.clearError();
         }
 

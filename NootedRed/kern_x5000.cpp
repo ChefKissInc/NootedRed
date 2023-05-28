@@ -72,12 +72,8 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "x5000",
             "Failed to enable kernel writing");
         orgChannelTypes[5] = 1;    // Fix createAccelChannels so that it only starts SDMA0
-        // Fix getPagingChannel so that it gets SDMA0
-        if (getKernelVersion() > KernelVersion::BigSur) {
-            orgChannelTypes[12] = 0;
-        } else {
-            orgChannelTypes[11] = 0;
-        }
+        orgChannelTypes[getKernelVersion() > KernelVersion::BigSur ? 12 : 11] =
+            0;    // Fix getPagingChannel so that it gets SDMA0
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("x5000", "Applied SDMA1 patches");
         PANIC_COND(

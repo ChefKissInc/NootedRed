@@ -311,15 +311,12 @@ void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "nred",
             "Failed to apply AGDP board-id patch: %d", patcher.getError());
         patcher.clearError();
-        if (getKernelVersion() >= KernelVersion::Ventura) {
-            KernelPatcher::LookupPatch patch = {&kextAGDP, kAGDPFBCountCheckVenturaOriginal,
-                kAGDPFBCountCheckVenturaPatched, arrsize(kAGDPFBCountCheckVenturaOriginal), 1};
-            patcher.applyLookupPatch(&patch);
-        } else {
-            KernelPatcher::LookupPatch patch = {&kextAGDP, kAGDPFBCountCheckOriginal, kAGDPFBCountCheckPatched,
-                arrsize(kAGDPFBCountCheckOriginal), 1};
-            patcher.applyLookupPatch(&patch);
-        }
+        auto ventura = getKernelVersion() >= KernelVersion::Ventura;
+        KernelPatcher::LookupPatch fbPatch = {&kextAGDP,
+            ventura ? kAGDPFBCountCheckVenturaOriginal : kAGDPFBCountCheckOriginal,
+            ventura ? kAGDPFBCountCheckVenturaPatched : kAGDPFBCountCheckPatched,
+            ventura ? arrsize(kAGDPFBCountCheckVenturaOriginal) : arrsize(kAGDPFBCountCheckOriginal), 1};
+        patcher.applyLookupPatch(&fbPatch);
         SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "nred",
             "Failed to apply AGDP FB count patch: %d", patcher.getError());
         patcher.clearError();

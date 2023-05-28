@@ -66,8 +66,8 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
         };
         for (size_t i = 0; i < arrsize(patches); i++) {
             patcher.applyLookupPatch(patches + i);
-            SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "x6000fb", "Failed to apply patches[%zu]",
-                i);
+            SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "x6000fb",
+                "Failed to apply patches[%zu]: %d", i, patcher.getError());
             patcher.clearError();
         }
 

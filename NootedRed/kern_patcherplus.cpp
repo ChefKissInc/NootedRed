@@ -7,6 +7,7 @@ bool SolveWithFallbackRequest::solve(KernelPatcher &patcher, size_t index, mach_
     PANIC_COND(!this->address, "solver", "this->address is null");
     *this->address = patcher.solveSymbol(index, this->symbol);
     if (*this->address) { return true; }
+    patcher.clearError();
 
     if (!this->pattern || !this->patternSize) {
         SYSLOG("solver", "Failed to solve %s using symbol", safeString(this->symbol));

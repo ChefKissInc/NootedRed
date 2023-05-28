@@ -85,9 +85,9 @@ static const uint8_t kCreatePowerTuneServicesOriginal1[] = {0x41, 0x8B, 0x47, 0x
 static const uint8_t kCreatePowerTuneServicesPatched1[] = {0x41, 0x8B, 0x47, 0x18, 0x83, 0xC0, 0x87, 0x83, 0xF8, 0x17};
 
 /** Ditto */
-static const uint8_t kCreatePowerTuneServicesOriginal1Monterey[] = {0xB8, 0x7E, 0xFF, 0xFF, 0xFF, 0x41, 0x03, 0x47,
+static const uint8_t kCreatePowerTuneServicesMontereyOriginal1[] = {0xB8, 0x7E, 0xFF, 0xFF, 0xFF, 0x41, 0x03, 0x47,
     0x18, 0x83, 0xF8, 0x0F};
-static const uint8_t kCreatePowerTuneServicesPatched1Monterey[] = {0xB8, 0x7D, 0xFF, 0xFF, 0xFF, 0x41, 0x03, 0x47, 0x18,
+static const uint8_t kCreatePowerTuneServicesMontereyPatched1[] = {0xB8, 0x7D, 0xFF, 0xFF, 0xFF, 0x41, 0x03, 0x47, 0x18,
     0x83, 0xF8, 0x0F};
 
 /**
@@ -180,13 +180,6 @@ static const uint8_t kHWChannelSubmitCommandBufferPatched[] = {0x48, 0x8B, 0x7B,
     0x66, 0x90, 0x66, 0x90, 0x48, 0x8B, 0x43, 0x50};
 
 /**
- * Mismatched `isDeviceValid` virtual call in `enableTimestampInterrupt`
- * AMDRadeonX6000.kext
- */
-static const uint8_t kEnableTimestampInterruptOriginal[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0xA0, 0x02, 0x00, 0x00};
-static const uint8_t kEnableTimestampInterruptPatched[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0x98, 0x02, 0x00, 0x00};
-
-/**
  * Mismatched `getScheduler` virtual calls.
  * AMDRadeonX6000.kext
  */
@@ -197,8 +190,8 @@ static const uint8_t kGetSchedulerCallPatched[] = {0x48, 0x8B, 0x07, 0xFF, 0x90,
  * Mismatched `isDeviceValid` virtual calls.
  * AMDRadeonX6000.kext
  */
-static const uint8_t kIsDeviceValidCallOriginal[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0xA0, 0x02, 0x00, 0x00, 0x84, 0xC0};
-static const uint8_t kIsDeviceValidCallPatched[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0x98, 0x02, 0x00, 0x00, 0x84, 0xC0};
+static const uint8_t kIsDeviceValidCallOriginal[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0xA0, 0x02, 0x00, 0x00};
+static const uint8_t kIsDeviceValidCallPatched[] = {0x48, 0x8B, 0x07, 0xFF, 0x90, 0x98, 0x02, 0x00, 0x00};
 
 /**
  * Mismatched `isDevicePCITunnelled` virtual call.
@@ -427,7 +420,6 @@ static_assert(arrsize(kAgdcServicesGetVendorInfoOriginal) == arrsize(kAgdcServic
 static_assert(arrsize(kStartHWEnginesOriginal) == arrsize(kStartHWEnginesPatched));
 static_assert(arrsize(kGetGpuDebugPolicyCallOriginal) == arrsize(kGetGpuDebugPolicyCallPatched));
 static_assert(arrsize(kHWChannelSubmitCommandBufferOriginal) == arrsize(kHWChannelSubmitCommandBufferPatched));
-static_assert(arrsize(kEnableTimestampInterruptOriginal) == arrsize(kEnableTimestampInterruptPatched));
 static_assert(arrsize(kGetSchedulerCallOriginal) == arrsize(kGetSchedulerCallPatched));
 static_assert(arrsize(kIsDeviceValidCallOriginal) == arrsize(kIsDeviceValidCallPatched));
 static_assert(arrsize(kIsDevicePCITunnelledOriginal) == arrsize(kIsDevicePCITunnelledPatched));
