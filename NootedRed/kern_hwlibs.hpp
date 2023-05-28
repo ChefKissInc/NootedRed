@@ -19,12 +19,12 @@ class X5000HWLibs {
     mach_vm_address_t orgPopulateFirmwareDirectory {0};
     t_createFirmware orgCreateFirmware {nullptr};
     t_putFirmware orgPutFirmware {nullptr};
-    mach_vm_address_t orgSmuInitialize {0};
+    mach_vm_address_t orgUpdateSdmaPowerGating {0};
     mach_vm_address_t orgPspCmdKmSubmit {0};
 
     static uint32_t wrapSmuGetHwVersion();
     static void wrapPopulateFirmwareDirectory(void *that);
-    static AMDReturn wrapSmuInitialize(void *smum, uint32_t param2);
+    static void wrapUpdateSdmaPowerGating(void *cail, uint32_t mode);
     static AMDReturn wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4);
     static AMDReturn hwLibsNoop();
 };

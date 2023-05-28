@@ -113,7 +113,7 @@ void NRed::processPatcher(KernelPatcher &patcher) {
     };
 
     size_t num = arrsize(requests);
-    if (LIKELY(lilu.getRunMode() & LiluAPI::RunningNormal)) {
+    if (LIKELY(lilu.getRunMode() & LiluAPI::RunningNormal) && checkKernelArgument("-nredvcn")) {
         auto *entry = IORegistryEntry::fromPath("/", gIODTPlane);
         if (entry) {
             DBGLOG("nred", "Setting hwgva-id to iMacPro1,1");
@@ -331,8 +331,9 @@ void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
             const uint8_t replace[] = {"F%uTxxxx"};
             KernelPatcher::LookupPatch patch {&kextBacklight, find, replace, arrsize(find), 1};
             patcher.applyLookupPatch(&patch);
+            SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "nred",
+                "Failed to apply backlight patch: %d", patcher.getError());
             patcher.clearError();
-            DBGLOG("nred", "Applied backlight patch");
         }
     } else if (kextMCCSControl.loadIndex == index) {
         KernelPatcher::RouteRequest requests[] = {

@@ -3,7 +3,9 @@
 
 #include "kern_hwlibs.hpp"
 #include "kern_nred.hpp"
+#include "kern_patcherplus.hpp"
 #include "kern_patches.hpp"
+#include "kern_patterns.hpp"
 #include <Headers/kern_api.hpp>
 
 static const char *pathRadeonX5000HWLibs = "/System/Library/Extensions/AMDRadeonX5000HWServices.kext/Contents/PlugIns/"
@@ -26,26 +28,30 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         CailAsicCapEntry *orgCapsTbl = nullptr;
         CailDeviceTypeEntry *orgDeviceTypeTable = nullptr;
 
-        KernelPatcher::SolveRequest solveRequests[] = {
-            {"__ZL15deviceTypeTable", orgDeviceTypeTable},
-            {"__ZN11AMDFirmware14createFirmwareEPhjjPKc", this->orgCreateFirmware},
-            {"__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware", this->orgPutFirmware},
-            {"__ZL20CAIL_ASIC_CAPS_TABLE", orgCapsTbl},
+        SolveWithFallbackRequest solveRequests[] = {
+            {"__ZL15deviceTypeTable", orgDeviceTypeTable, kDeviceTypeTablePattern},
+            {"__ZN11AMDFirmware14createFirmwareEPhjjPKc", this->orgCreateFirmware, kCreateFirmwarePattern},
+            {"__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware", this->orgPutFirmware,
+                kPutFirmwarePattern},
+            {"__ZL20CAIL_ASIC_CAPS_TABLE", orgCapsTbl, kCailAsicCapsTableHWLibsPattern},
         };
-        PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "hwlibs", "Failed to resolve symbols");
+        PANIC_COND(!SolveWithFallbackRequest::solveAll(patcher, index, solveRequests, address, size), "hwlibs",
+            "Failed to resolve symbols");
 
-        KernelPatcher::RouteRequest requests[] = {
+        RouteWithFallbackRequest requests[] = {
             {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory,
                 this->orgPopulateFirmwareDirectory},
-            {"_smu_get_hw_version", wrapSmuGetHwVersion},
-            {"_smu_get_fw_constants", hwLibsNoop},
-            {"_smu_9_0_1_check_fw_status", hwLibsNoop},
-            {"_smu_9_0_1_unload_smu", hwLibsNoop},
-            {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit},
-            {NRed::callback->chipType < ChipType::Renoir ? "_SmuRaven_Initialize" : "_SmuRenoir_Initialize",
-                wrapSmuInitialize, this->orgSmuInitialize},
+            {"_smu_get_hw_version", wrapSmuGetHwVersion, kSmuGetHwVersionPattern},
+            {"_smu_get_fw_constants", hwLibsNoop, kSmuGetFwConstantsPattern},
+            {"_smu_9_0_1_check_fw_status", hwLibsNoop, kSmu901CheckFwStatusPattern, kSmu901CheckFwStatusMask},
+            {"_smu_9_0_1_unload_smu", hwLibsNoop, kSmu901UnloadSmuPattern, kSmu901UnloadSmuMask},
+            {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit, kPspCmdKmSubmitPattern,
+                kPspCmdKmSubmitMask},
+            {"_update_sdma_power_gating", wrapUpdateSdmaPowerGating, this->orgUpdateSdmaPowerGating,
+                kUpdateSdmaPowerGatingPattern, kUpdateSdmaPowerGatingMask},
         };
-        PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "hwlibs", "Failed to route symbols");
+        PANIC_COND(!RouteWithFallbackRequest::routeAll(patcher, index, requests, address, size), "hwlibs",
+            "Failed to route symbols");
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "hwlibs",
             "Failed to enable kernel writing");
@@ -67,8 +73,10 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesOriginal1, kCreatePowerTuneServicesPatched1,
                 arrsize(kCreatePowerTuneServicesOriginal1), 1},
         };
-        for (auto &patch : patches) {
-            patcher.applyLookupPatch(&patch);
+        for (size_t i = 0; i < arrsize(patches); i++) {
+            patcher.applyLookupPatch(patches + i);
+            SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "hwlibs", "Failed to apply patches[%zu]",
+                i);
             patcher.clearError();
         }
 
@@ -111,16 +119,15 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
     auto *fw = callback->orgCreateFirmware(fwDesc.data, fwDesc.size, isRenoirDerivative ? 0x0202 : 0x0100, filename);
     PANIC_COND(!fw, "hwlibs", "Failed to create '%s' firmware", filename);
     DBGLOG("hwlibs", "Inserting %s!", filename);
-    PANIC_COND(!callback->orgPutFirmware(getMember<void *>(that, 0xB8), 6, fw), "hwlibs",
+    SYSLOG_COND(!callback->orgPutFirmware(getMember<void *>(that, 0xB8), 6, fw), "hwlibs",
         "Failed to inject %s firmware", filename);
 }
 
 AMDReturn X5000HWLibs::hwLibsNoop() { return kAMDReturnSuccess; }
 
-AMDReturn X5000HWLibs::wrapSmuInitialize(void *smum, uint32_t param2) {
-    auto ret = FunctionCast(wrapSmuInitialize, callback->orgSmuInitialize)(smum, param2);
-    NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerUpSdma);
-    return ret;
+void X5000HWLibs::wrapUpdateSdmaPowerGating(void *cail, uint32_t mode) {
+    if (mode == 0 || mode == 3) { NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerUpSdma); }
+    FunctionCast(wrapUpdateSdmaPowerGating, callback->orgUpdateSdmaPowerGating)(cail, mode);
 }
 
 AMDReturn X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4) {

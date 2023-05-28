@@ -3,7 +3,9 @@
 
 #include "kern_x6000fb.hpp"
 #include "kern_nred.hpp"
+#include "kern_patcherplus.hpp"
 #include "kern_patches.hpp"
+#include "kern_patterns.hpp"
 #include <Headers/kern_api.hpp>
 
 static const char *pathRadeonX6000Framebuffer =
@@ -23,34 +25,34 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
     if (kextRadeonX6000Framebuffer.loadIndex == index) {
         NRed::callback->setRMMIOIfNecessary();
 
-        auto *orgAsicCapsTable =
-            patcher.solveSymbol<CailAsicCapEntry *>(index, "__ZL20CAIL_ASIC_CAPS_TABLE", address, size);
-        if (!orgAsicCapsTable) {
-            size_t offset = 0;
-            PANIC_COND(!patcher.findPattern(kCailAsicCapsTableOriginal, nullptr, arrsize(kCailAsicCapsTableOriginal),
-                           reinterpret_cast<void *>(address), size, &offset),
-                "x6000fb", "Failed to find CAIL_ASIC_CAPS_TABLE");
-            orgAsicCapsTable = reinterpret_cast<CailAsicCapEntry *>(address + offset);
-        }
+        CailAsicCapEntry *orgAsicCapsTable = nullptr;
 
-        this->orgDceDriverSetBacklight =
-            patcher.solveSymbol<t_DceDriverSetBacklight>(index, "_dce_driver_set_backlight", address, size);
-        SYSLOG_COND(!this->orgDceDriverSetBacklight, "x6000fb", "Failed to find _dce_driver_set_backlight");
+        SolveWithFallbackRequest solveRequests[] = {
+            {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable, kCailAsicCapsTablePattern},
+            {"_dce_driver_set_backlight", this->orgDceDriverSetBacklight, kDceDriverSetBacklight},
+        };
+        PANIC_COND(!SolveWithFallbackRequest::solveAll(patcher, index, solveRequests, address, size), "x6000fb",
+            "Failed to resolve symbols");
 
-        KernelPatcher::RouteRequest requests[] = {
-            {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", wrapPopulateVramInfo},
+        RouteWithFallbackRequest requests[] = {
+            {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", wrapPopulateVramInfo,
+                kPopulateVramInfoPattern},
             {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
-            {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit, this->orgDcePanelCntlHwInit},
+            {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit, this->orgDcePanelCntlHwInit,
+                kDcePanelCntlHwInitPattern},
             {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25setAttributeForConnectionEijm", wrapFramebufferSetAttribute,
                 this->orgFramebufferSetAttribute},
             {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25getAttributeForConnectionEijPm", wrapFramebufferGetAttribute,
                 this->orgFramebufferGetAttribute},
             {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
-                this->orgGetNumberOfConnectors},
-            {"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware, this->orgIH40IVRingInitHardware},
-            {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister, this->orgIRQMGRWriteRegister},
+                this->orgGetNumberOfConnectors, kGetNumberOfConnectorsPattern},
+            {"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware, this->orgIH40IVRingInitHardware,
+                kIH40IVRingInitHardwarePattern, kIH40IVRingInitHardwareMask},
+            {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister, this->orgIRQMGRWriteRegister,
+                kIRQMGRWriteRegisterPattern},
         };
-        PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "x6000fb", "Failed to route symbols");
+        PANIC_COND(!RouteWithFallbackRequest::routeAll(patcher, index, requests, address, size), "x6000fb",
+            "Failed to route symbols");
 
         KernelPatcher::LookupPatch patches[] = {
             {&kextRadeonX6000Framebuffer, kPopulateDeviceInfoOriginal, kPopulateDeviceInfoPatched,
@@ -61,13 +63,18 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
                 arrsize(kAmdAtomPspDirectoryNullCheckOriginal), 1},
             {&kextRadeonX6000Framebuffer, kGetFirmwareInfoNullCheckOriginal, kGetFirmwareInfoNullCheckPatched,
                 arrsize(kGetFirmwareInfoNullCheckOriginal), 1},
-            {&kextRadeonX6000Framebuffer, kAgdcServicesGetVendorInfoOriginal, kAgdcServicesGetVendorInfoPatched,
-                arrsize(kAgdcServicesGetVendorInfoOriginal), 1},
         };
-        for (auto &patch : patches) {
-            patcher.applyLookupPatch(&patch);
+        for (size_t i = 0; i < arrsize(patches); i++) {
+            patcher.applyLookupPatch(patches + i);
+            SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "x6000fb", "Failed to apply patches[%zu]",
+                i);
             patcher.clearError();
         }
+
+        PANIC_COND(!KernelPatcher::findAndReplaceWithMask(reinterpret_cast<uint8_t *>(address), size,
+                       kAgdcServicesGetVendorInfoOriginal, kAgdcServicesGetVendorInfoMask,
+                       kAgdcServicesGetVendorInfoPatched, kAgdcServicesGetVendorInfoMask, 1, 0),
+            "x5000", "Failed to patch getVendorInfo");
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "x5000",
             "Failed to enable kernel writing");

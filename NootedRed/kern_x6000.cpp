@@ -72,8 +72,10 @@ bool X6000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
             {&kextRadeonX6000, kIsDevicePCITunnelledOriginal, kIsDevicePCITunnelledPatched,
                 arrsize(kIsDevicePCITunnelledOriginal), 1},
         };
-        for (auto &patch : patches) {
-            patcher.applyLookupPatch(&patch);
+        for (size_t i = 0; i < arrsize(patches); i++) {
+            patcher.applyLookupPatch(patches + i);
+            SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "x6000", "Failed to apply patches[%zu]",
+                i);
             patcher.clearError();
         }
 

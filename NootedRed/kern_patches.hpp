@@ -140,9 +140,11 @@ static const uint8_t kGetFirmwareInfoNullCheckPatched[] = {0x48, 0x83, 0xBB, 0x9
  * AMDRadeonX6000Framebuffer.kext
  * Tell AGDC that we're an iGPU.
  */
-static const uint8_t kAgdcServicesGetVendorInfoOriginal[] = {0xC7, 0x03, 0x00, 0x00, 0x03, 0x00, 0x48, 0xB8, 0x02, 0x10,
+static const uint8_t kAgdcServicesGetVendorInfoOriginal[] = {0xC7, 0x00, 0x00, 0x00, 0x03, 0x00, 0x48, 0x00, 0x02, 0x10,
     0x00, 0x00, 0x02, 0x00, 0x00, 0x00};
-static const uint8_t kAgdcServicesGetVendorInfoPatched[] = {0xC7, 0x03, 0x00, 0x00, 0x03, 0x00, 0x48, 0xB8, 0x02, 0x10,
+static const uint8_t kAgdcServicesGetVendorInfoMask[] = {0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+static const uint8_t kAgdcServicesGetVendorInfoPatched[] = {0xC7, 0x00, 0x00, 0x00, 0x03, 0x00, 0x48, 0x00, 0x02, 0x10,
     0x00, 0x00, 0x01, 0x00, 0x00, 0x00};
 
 /**
@@ -211,22 +213,6 @@ static const char kCoreLSKDPath[] = "/System/Library/PrivateFrameworks/CoreLSKD.
 
 static const uint8_t kCoreLSKDOriginal[] = {0xC7, 0xC0, 0x01, 0x00, 0x00, 0x00, 0x0F, 0xA2};
 static const uint8_t kCoreLSKDPatched[] = {0xC7, 0xC0, 0xC3, 0x06, 0x03, 0x00, 0x66, 0x90};
-
-/**
- * `__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator19createAccelChannelsEbE12channelTypes`
- * AMDRadeonX5000.kext
- * On some macOS versions, this symbol is stripped. So, we match it by its content.
- */
-static const uint8_t kChannelTypesOriginal[] = {0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00,
-    0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00};
-
-/**
- * `__ZL20CAIL_ASIC_CAPS_TABLE`
- * AMDRadeonX6000Framebuffer.kext
- * On some macOS versions, this symbol is stripped. So, we match it by its content.
- */
-static const uint8_t kCailAsicCapsTableOriginal[] = {0x98, 0x67, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00,
-    0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00};
 
 /**
  * `VAAcceleratorInfo::identify`
@@ -431,6 +417,7 @@ static_assert(arrsize(kAmdAtomVramInfoNullCheckOriginal) == arrsize(kAmdAtomVram
 static_assert(arrsize(kAmdAtomPspDirectoryNullCheckOriginal) == arrsize(kAmdAtomPspDirectoryNullCheckPatched));
 static_assert(arrsize(kGetFirmwareInfoNullCheckOriginal) == arrsize(kGetFirmwareInfoNullCheckPatched));
 static_assert(arrsize(kAgdcServicesGetVendorInfoOriginal) == arrsize(kAgdcServicesGetVendorInfoPatched));
+static_assert(arrsize(kAgdcServicesGetVendorInfoOriginal) == arrsize(kAgdcServicesGetVendorInfoMask));
 static_assert(arrsize(kStartHWEnginesOriginal) == arrsize(kStartHWEnginesPatched));
 static_assert(arrsize(kGetGpuDebugPolicyCallOriginal) == arrsize(kGetGpuDebugPolicyCallPatched));
 static_assert(arrsize(kHWChannelSubmitCommandBufferOriginal) == arrsize(kHWChannelSubmitCommandBufferPatched));
