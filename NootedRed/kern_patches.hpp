@@ -49,6 +49,26 @@ static const uint8_t kGcSetFwEntryInfoMask[] = {0xFF, 0x00, 0x00, 0x00, 0x00, 0x
 static const uint8_t kGcSetFwEntryInfoPatched[] = {0xB8, 0x00, 0x04, 0x09, 0x00};
 
 /**
+ * `_psp_sw_init`
+ * AMDRadeonX5000HWLibs.kext
+ * Force major version switch case to always use case 0xB.
+ */
+static const uint8_t kPspSwInitOriginal1[] = {0x8B, 0x43, 0x0C, 0x83, 0xC0, 0xF7, 0x83, 0xF8, 0x04};
+static const uint8_t kPspSwInitPatched1[] = {0xC7, 0xC0, 0x02, 0x00, 0x00, 0x00, 0x83, 0xF8, 0x04};
+
+/**
+ * `_psp_sw_init`
+ * AMDRadeonX5000HWLibs.kext
+ * Force minor & patch checks to always use case 0x0.
+ */
+static const uint8_t kPspSwInitOriginal2[] = {0x8B, 0x43, 0x10, 0x83, 0xF8, 0x05, 0x74, 0x00, 0x85, 0xC0, 0x75, 0x00,
+    0x8B, 0x43, 0x14, 0x48, 0x83, 0xF8, 0x0D, 0x77, 0x00};
+static const uint8_t kPspSwInitMask2[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00};
+static const uint8_t kPspSwInitPatched2[] = {0x66, 0x48, 0x90, 0x66, 0x48, 0x90, 0x48, 0x90, 0x48, 0x90, 0x48, 0x90,
+    0x31, 0xC0, 0x90, 0x48, 0x83, 0xF8, 0x0D};
+
+/**
  * `_smu_9_0_1_full_asic_reset`
  * AMDRadeonX5000HWLibs.kext
  * Change SMC message from `0x3B` to `0x1E` as the original one is wrong for SMU 10/12.
@@ -399,6 +419,9 @@ static_assert(arrsize(kGcSwInitOriginal) == arrsize(kGcSwInitOriginalMask));
 static_assert(arrsize(kGcSwInitPatched) == arrsize(kGcSwInitPatchedMask));
 static_assert(arrsize(kGcSetFwEntryInfoOriginal) > arrsize(kGcSetFwEntryInfoPatched));
 static_assert(arrsize(kGcSetFwEntryInfoOriginal) == arrsize(kGcSetFwEntryInfoMask));
+static_assert(arrsize(kPspSwInitOriginal1) == arrsize(kPspSwInitPatched1));
+static_assert(arrsize(kPspSwInitOriginal2) > arrsize(kPspSwInitPatched2));
+static_assert(arrsize(kPspSwInitOriginal2) == arrsize(kPspSwInitMask2));
 static_assert(arrsize(kFullAsicResetOriginal) == arrsize(kFullAsicResetPatched));
 static_assert(arrsize(kPopulateDeviceInfoOriginal) == arrsize(kPopulateDeviceInfoPatched));
 static_assert(arrsize(kCreatePowerTuneServicesOriginal1) == arrsize(kCreatePowerTuneServicesPatched1));

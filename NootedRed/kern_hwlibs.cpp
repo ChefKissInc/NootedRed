@@ -41,7 +41,6 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"_smu_get_fw_constants", hwLibsNoop},
             {"_smu_9_0_1_check_fw_status", hwLibsNoop},
             {"_smu_9_0_1_unload_smu", hwLibsNoop},
-            {"_psp_sw_init", wrapPspSwInit, this->orgPspSwInit},
             {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit},
             {NRed::callback->chipType < ChipType::Renoir ? "_SmuRaven_Initialize" : "_SmuRenoir_Initialize",
                 wrapSmuInitialize, this->orgSmuInitialize},
@@ -50,10 +49,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "hwlibs",
             "Failed to enable kernel writing");
-        *orgDeviceTypeTable = {
-            .deviceId = NRed::callback->deviceId,
-            .deviceType = 6,
-        };
+        *orgDeviceTypeTable = {.deviceId = NRed::callback->deviceId, .deviceType = 6};
         *orgCapsTbl = {
             .familyId = AMDGPU_FAMILY_RAVEN,
             .deviceId = NRed::callback->deviceId,
@@ -66,6 +62,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         DBGLOG("hwlibs", "Applied DDI Caps patches");
 
         KernelPatcher::LookupPatch patches[] = {
+            {&kextRadeonX5000HWLibs, kPspSwInitOriginal1, kPspSwInitPatched1, arrsize(kPspSwInitOriginal1), 1},
             {&kextRadeonX5000HWLibs, kFullAsicResetOriginal, kFullAsicResetPatched, arrsize(kFullAsicResetOriginal), 1},
             {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesOriginal1, kCreatePowerTuneServicesPatched1,
                 arrsize(kCreatePowerTuneServicesOriginal1), 1},
@@ -91,6 +88,11 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
                        nullptr, 0, 1, 0),
             "hwlibs", "Failed to apply _gc_set_fw_entry_info version spoof patch");
 
+        PANIC_COND(!KernelPatcher::findAndReplaceWithMask(reinterpret_cast<uint8_t *>(address), size,
+                       kPspSwInitOriginal2, arrsize(kPspSwInitOriginal2), kPspSwInitMask2, arrsize(kPspSwInitMask2),
+                       kPspSwInitPatched2, arrsize(kPspSwInitPatched2), nullptr, 0, 1, 0),
+            "hwlibs", "Failed to apply _psp_sw_init patch part 2");
+
         return true;
     }
 
@@ -98,18 +100,6 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
 }
 
 uint32_t X5000HWLibs::wrapSmuGetHwVersion() { return 0x1; }
-
-AMDReturn X5000HWLibs::wrapPspSwInit(uint32_t *inputData, void *outputData) {
-    if (inputData[3] >= 0xA) {
-        inputData[3] = 0xB;
-        inputData[4] = inputData[5] = 0x0;
-    }
-    auto ret = FunctionCast(wrapPspSwInit, callback->orgPspSwInit)(inputData, outputData);
-    DBGLOG("hwlibs", "_psp_sw_init >> 0x%X", ret);
-    return ret;
-}
-
-uint32_t X5000HWLibs::wrapGcGetHwVersion() { return 0x090400; }
 
 void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
     FunctionCast(wrapPopulateFirmwareDirectory, callback->orgPopulateFirmwareDirectory)(that);

@@ -16,15 +16,13 @@ class X5000HWLibs {
     bool processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size);
 
     private:
-    mach_vm_address_t orgPspSwInit {0}, orgPopulateFirmwareDirectory {0};
+    mach_vm_address_t orgPopulateFirmwareDirectory {0};
     t_createFirmware orgCreateFirmware {nullptr};
     t_putFirmware orgPutFirmware {nullptr};
     mach_vm_address_t orgSmuInitialize {0};
     mach_vm_address_t orgPspCmdKmSubmit {0};
 
     static uint32_t wrapSmuGetHwVersion();
-    static AMDReturn wrapPspSwInit(uint32_t *inputData, void *outputData);
-    static uint32_t wrapGcGetHwVersion();
     static void wrapPopulateFirmwareDirectory(void *that);
     static AMDReturn wrapSmuInitialize(void *smum, uint32_t param2);
     static AMDReturn wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4);
