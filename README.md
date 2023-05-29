@@ -19,7 +19,7 @@ Thanks [Acidanthera](https://github.com/Acidanthera) for the AppleBacklight code
 - Disable **Legacy Boot**, also known as CSM; otherwise, you will experience various difficulties, such as a kernel panic with "Failed to get VBIOS from VRAM" as the message.
 - Remove **`WhateverGreen`**; this kext conflicts with it.
 - Use `MacBookPro16,3` or `MacPro7,1` SMBIOS
-- Update to latest macOS 11 (Big Sur) version
+- Update to latest macOS 11/12 version
 
 ## Recommendations
 
