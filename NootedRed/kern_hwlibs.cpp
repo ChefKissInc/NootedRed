@@ -136,8 +136,17 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
 AMDReturn X5000HWLibs::hwLibsNoop() { return kAMDReturnSuccess; }
 
 void X5000HWLibs::wrapUpdateSdmaPowerGating(void *cail, uint32_t mode) {
-    if (mode == 0 || mode == 3) { NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerUpSdma); }
     FunctionCast(wrapUpdateSdmaPowerGating, callback->orgUpdateSdmaPowerGating)(cail, mode);
+    switch (mode) {
+        case 0:
+            [[fallthrough]];
+        case 3:
+            NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerUpSdma);
+        case 2:
+            NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerDownSdma);
+        default:
+            break;
+    }
 }
 
 AMDReturn X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4) {
