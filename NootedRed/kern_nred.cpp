@@ -155,9 +155,13 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
                 arrsize(kVideoToolboxDRMModelOriginal), BaseDeviceInfo::get().modelIdentifier, 20)))
             DBGLOG("nred", "Relaxed VideoToolbox DRM model check");
 
-        if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kBoardIdOriginal,
-                arrsize(kBoardIdOriginal), kBoardIdPatched, arrsize(kBoardIdPatched))))
-            DBGLOG("nred", "Applied iMacPro1,1 spoof in AppleGVA");
+        if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kAGVABoardIdOriginal,
+                arrsize(kAGVABoardIdOriginal), kAGVABoardIdPatched, arrsize(kAGVABoardIdPatched))))
+            DBGLOG("nred", "Applied iMacPro1,1 spoof to AppleGVA");
+
+        if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kHEVCEncBoardIdOriginal,
+                kHEVCEncBoardIdPatched)))
+            DBGLOG("nred", "Applied iMacPro1,1 spoof to AppleGVAHEVCEncoder");
 
         if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
                 kVAAcceleratorInfoIdentifyOriginal, kVAAcceleratorInfoIdentifyMask, kVAAcceleratorInfoIdentifyPatched,

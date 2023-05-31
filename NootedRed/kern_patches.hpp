@@ -215,8 +215,9 @@ static const uint8_t kIsDevicePCITunnelledPatched[] = {0x48, 0x8B, 0x07, 0xFF, 0
 /** VideoToolbox DRM model check */
 static const char kVideoToolboxDRMModelOriginal[] = "MacPro5,1\0MacPro6,1\0IOService";
 
-static const char kBoardIdOriginal[] = "board-id\0hw.model";
-static const char kBoardIdPatched[] = "hwgva-id";
+/** AppleGVA model check */
+static const char kAGVABoardIdOriginal[] = "board-id\0hw.model";
+static const char kAGVABoardIdPatched[] = "hwgva-id";
 
 static const char kCoreLSKDMSEPath[] = "/System/Library/PrivateFrameworks/CoreLSKDMSE.framework/Versions/A/CoreLSKDMSE";
 static const char kCoreLSKDPath[] = "/System/Library/PrivateFrameworks/CoreLSKD.framework/Versions/A/CoreLSKD";
@@ -224,17 +225,21 @@ static const char kCoreLSKDPath[] = "/System/Library/PrivateFrameworks/CoreLSKD.
 static const uint8_t kCoreLSKDOriginal[] = {0xC7, 0xC0, 0x01, 0x00, 0x00, 0x00, 0x0F, 0xA2};
 static const uint8_t kCoreLSKDPatched[] = {0xC7, 0xC0, 0xC3, 0x06, 0x03, 0x00, 0x66, 0x90};
 
+/** AppleGVAHEVCEncoder model check */
+static const uint8_t kHEVCEncBoardIdOriginal[] = "IOService\0board-id";
+static const uint8_t kHEVCEncBoardIdPatched[] = "IOService\0hwgva-id";
+
 /**
  * `VAAcceleratorInfo::identify`
  * AMDRadeonVADriver2.bundle
  * The device info identification fails, as the device id is not present in the function.
- * Patch fallback "error" value (0x12) to Navi 10 (0xC).
+ * Patch fallback "error" value (0x12) to Navi 10 (0xD).
  */
 static const uint8_t kVAAcceleratorInfoIdentifyOriginal[] = {0x85, 0xC0, 0x74, 0x00, 0xBB, 0x12, 0x00, 0x00, 0x00, 0x89,
     0xD8, 0x48, 0x83, 0xC4, 0x00};
 static const uint8_t kVAAcceleratorInfoIdentifyMask[] = {0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0x00};
-static const uint8_t kVAAcceleratorInfoIdentifyPatched[] = {0x85, 0xC0, 0x74, 0x00, 0xBB, 0x0C, 0x00, 0x00, 0x00, 0x89,
+static const uint8_t kVAAcceleratorInfoIdentifyPatched[] = {0x85, 0xC0, 0x74, 0x00, 0xBB, 0x0D, 0x00, 0x00, 0x00, 0x89,
     0xD8, 0x48, 0x83, 0xC4, 0x00};
 
 /**
