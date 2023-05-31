@@ -215,6 +215,8 @@ static const uint8_t kIsDevicePCITunnelledPatched[] = {0x48, 0x8B, 0x07, 0xFF, 0
 /** VideoToolbox DRM model check */
 static const char kVideoToolboxDRMModelOriginal[] = "MacPro5,1\0MacPro6,1\0IOService";
 
+static const char kHwGvaId[] = "Mac-27AD2F918AE68F61";
+
 /** AppleGVA model check */
 static const char kAGVABoardIdOriginal[] = "board-id\0hw.model";
 static const char kAGVABoardIdPatched[] = "hwgva-id";

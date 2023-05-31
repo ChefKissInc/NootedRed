@@ -116,8 +116,8 @@ void NRed::processPatcher(KernelPatcher &patcher) {
     if (LIKELY(lilu.getRunMode() & LiluAPI::RunningNormal) && checkKernelArgument("-nredvcn")) {
         auto *entry = IORegistryEntry::fromPath("/", gIODTPlane);
         if (entry) {
-            DBGLOG("nred", "Setting hwgva-id to iMacPro1,1");
-            entry->setProperty("hwgva-id", const_cast<char *>("Mac-7BA5B2D9E42DDD94"), sizeof("Mac-7BA5B2D9E42DDD94"));
+            DBGLOG("nred", "Setting hwgva-id to MacPro7,1");
+            entry->setProperty("hwgva-id", const_cast<char *>(kHwGvaId), arrsize(kHwGvaId));
             entry->release();
         }
     } else {
@@ -157,11 +157,11 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
 
         if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kAGVABoardIdOriginal,
                 arrsize(kAGVABoardIdOriginal), kAGVABoardIdPatched, arrsize(kAGVABoardIdPatched))))
-            DBGLOG("nred", "Applied iMacPro1,1 spoof to AppleGVA");
+            DBGLOG("nred", "Applied MacPro7,1 spoof to AppleGVA");
 
         if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kHEVCEncBoardIdOriginal,
                 kHEVCEncBoardIdPatched)))
-            DBGLOG("nred", "Applied iMacPro1,1 spoof to AppleGVAHEVCEncoder");
+            DBGLOG("nred", "Applied MacPro7,1 spoof to AppleGVAHEVCEncoder");
 
         if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
                 kVAAcceleratorInfoIdentifyOriginal, kVAAcceleratorInfoIdentifyMask, kVAAcceleratorInfoIdentifyPatched,
