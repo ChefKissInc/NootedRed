@@ -22,13 +22,13 @@ struct SolveWithFallbackRequest : public KernelPatcher::SolveRequest {
 
     bool solve(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size);
 
+    static bool solveAll(KernelPatcher &patcher, size_t index, SolveWithFallbackRequest *requests, size_t count,
+        mach_vm_address_t address, size_t size);
+
     template<size_t N>
     static bool solveAll(KernelPatcher &patcher, size_t index, SolveWithFallbackRequest (&requests)[N],
         mach_vm_address_t address, size_t size) {
-        for (size_t i = 0; i < N; i++) {
-            if (!requests[i].solve(patcher, index, address, size)) { return false; }
-        }
-        return true;
+        return solveAll(patcher, index, requests, N, address, size);
     }
 };
 
@@ -72,12 +72,12 @@ struct RouteWithFallbackRequest : public KernelPatcher::RouteRequest {
 
     bool route(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size);
 
+    static bool routeAll(KernelPatcher &patcher, size_t index, RouteWithFallbackRequest *requests, size_t count,
+        mach_vm_address_t address, size_t size);
+
     template<size_t N>
     static bool routeAll(KernelPatcher &patcher, size_t index, RouteWithFallbackRequest (&requests)[N],
         mach_vm_address_t address, size_t size) {
-        for (size_t i = 0; i < N; i++) {
-            if (!requests[i].route(patcher, index, address, size)) { return false; }
-        }
-        return true;
+        return routeAll(patcher, index, requests, N, address, size);
     }
 };

@@ -26,6 +26,14 @@ bool SolveWithFallbackRequest::solve(KernelPatcher &patcher, size_t index, mach_
     return true;
 }
 
+bool SolveWithFallbackRequest::solveAll(KernelPatcher &patcher, size_t index, SolveWithFallbackRequest *requests,
+    size_t count, mach_vm_address_t address, size_t size) {
+    for (size_t i = 0; i < count; i++) {
+        if (!requests[i].solve(patcher, index, address, size)) { return false; }
+    }
+    return true;
+}
+
 bool RouteWithFallbackRequest::route(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (patcher.routeMultiple(index, this, 1, address, size)) { return true; }
     patcher.clearError();
@@ -50,5 +58,13 @@ bool RouteWithFallbackRequest::route(KernelPatcher &patcher, size_t index, mach_
     }
     if (this->org) { *this->org = org; }
 
+    return true;
+}
+
+bool RouteWithFallbackRequest::routeAll(KernelPatcher &patcher, size_t index, RouteWithFallbackRequest *requests,
+    size_t count, mach_vm_address_t address, size_t size) {
+    for (size_t i = 0; i < count; i++) {
+        if (!requests[i].route(patcher, index, address, size)) { return false; }
+    }
     return true;
 }
