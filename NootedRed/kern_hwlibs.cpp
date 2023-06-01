@@ -28,17 +28,17 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         CailAsicCapEntry *orgCapsTbl = nullptr;
         CailDeviceTypeEntry *orgDeviceTypeTable = nullptr;
 
-        SolveWithFallbackRequest solveRequests[] = {
+        SolveRequestPlus solveRequests[] = {
             {"__ZL15deviceTypeTable", orgDeviceTypeTable, kDeviceTypeTablePattern},
             {"__ZN11AMDFirmware14createFirmwareEPhjjPKc", this->orgCreateFirmware, kCreateFirmwarePattern},
             {"__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware", this->orgPutFirmware,
                 kPutFirmwarePattern},
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgCapsTbl, kCailAsicCapsTableHWLibsPattern},
         };
-        PANIC_COND(!SolveWithFallbackRequest::solveAll(patcher, index, solveRequests, address, size), "hwlibs",
+        PANIC_COND(!SolveRequestPlus::solveAll(patcher, index, solveRequests, address, size), "hwlibs",
             "Failed to resolve symbols");
 
-        RouteWithFallbackRequest requests[] = {
+        RouteRequestPlus requests[] = {
             {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory,
                 this->orgPopulateFirmwareDirectory},
             {"_smu_get_fw_constants", hwLibsNoop, kSmuGetFwConstantsPattern, kSmuGetFwConstantsMask},
@@ -49,7 +49,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"_update_sdma_power_gating", wrapUpdateSdmaPowerGating, this->orgUpdateSdmaPowerGating,
                 kUpdateSdmaPowerGatingPattern, kUpdateSdmaPowerGatingMask},
         };
-        PANIC_COND(!RouteWithFallbackRequest::routeAll(patcher, index, requests, address, size), "hwlibs",
+        PANIC_COND(!RouteRequestPlus::routeAll(patcher, index, requests, address, size), "hwlibs",
             "Failed to route symbols");
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "hwlibs",

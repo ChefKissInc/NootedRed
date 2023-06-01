@@ -28,7 +28,7 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
         uint32_t *orgChannelTypes = nullptr;
         void *startHWEngines = nullptr;
 
-        SolveWithFallbackRequest solveRequests[] = {
+        SolveRequestPlus solveRequests[] = {
             {"__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator19createAccelChannelsEbE12channelTypes", orgChannelTypes,
                 kChannelTypesPattern},
             {"__ZN31AMDRadeonX5000_AMDGFX9PM4EngineC1Ev", this->orgGFX9PM4EngineConstructor},
@@ -43,7 +43,7 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
                 this->orgSetupAndInitializeHWCapabilities},
             {"__ZN26AMDRadeonX5000_AMDHardware14startHWEnginesEv", startHWEngines},
         };
-        PANIC_COND(!SolveWithFallbackRequest::solveAll(patcher, index, solveRequests, address, size), "x5000",
+        PANIC_COND(!SolveRequestPlus::solveAll(patcher, index, solveRequests, address, size), "x5000",
             "Failed to resolve symbols");
 
         KernelPatcher::RouteRequest requests[] = {

@@ -27,14 +27,14 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
 
         CailAsicCapEntry *orgAsicCapsTable = nullptr;
 
-        SolveWithFallbackRequest solveRequests[] = {
+        SolveRequestPlus solveRequests[] = {
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable, kCailAsicCapsTablePattern},
             {"_dce_driver_set_backlight", this->orgDceDriverSetBacklight, kDceDriverSetBacklight},
         };
-        PANIC_COND(!SolveWithFallbackRequest::solveAll(patcher, index, solveRequests, address, size), "x6000fb",
+        PANIC_COND(!SolveRequestPlus::solveAll(patcher, index, solveRequests, address, size), "x6000fb",
             "Failed to resolve symbols");
 
-        RouteWithFallbackRequest requests[] = {
+        RouteRequestPlus requests[] = {
             {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", wrapPopulateVramInfo,
                 kPopulateVramInfoPattern},
             {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
@@ -51,7 +51,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
             {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister, this->orgIRQMGRWriteRegister,
                 kIRQMGRWriteRegisterPattern},
         };
-        PANIC_COND(!RouteWithFallbackRequest::routeAll(patcher, index, requests, address, size), "x6000fb",
+        PANIC_COND(!RouteRequestPlus::routeAll(patcher, index, requests, address, size), "x6000fb",
             "Failed to route symbols");
 
         KernelPatcher::LookupPatch const patches[] = {
