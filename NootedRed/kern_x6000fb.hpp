@@ -25,8 +25,7 @@ class X6000FB {
     void *panelCntlPtr {nullptr};
     IONotifier *dispNotif {nullptr};
     mach_vm_address_t orgGetNumberOfConnectors {0};
-    mach_vm_address_t orgIH40IVRingInitHardware {0};
-    mach_vm_address_t orgIRQMGRWriteRegister {0};
+    mach_vm_address_t orgIH40IVRingInitHardware {0}, orgIRQMGRWriteRegister {0};
 
     static bool OnAppleBacklightDisplayLoad(void *target, void *refCon, IOService *newService, IONotifier *notifier);
     void registerDispMaxBrightnessNotif();

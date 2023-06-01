@@ -35,7 +35,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
                 kPutFirmwarePattern},
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgCapsTbl, kCailAsicCapsTableHWLibsPattern},
         };
-        PANIC_COND(!SolveRequestPlus::solveAll(patcher, index, solveRequests, address, size), "hwlibs",
+        PANIC_COND(!SolveRequestPlus::solveAll(&patcher, index, solveRequests, address, size), "hwlibs",
             "Failed to resolve symbols");
 
         RouteRequestPlus requests[] = {
@@ -66,51 +66,24 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("hwlibs", "Applied DDI Caps patches");
 
-        auto adjustment = getKernelVersion() > KernelVersion::BigSur;
-        KernelPatcher::LookupPatch const patches[] = {
-            {&kextRadeonX5000HWLibs, kPspSwInitOriginal1, kPspSwInitPatched1, arrsize(kPspSwInitOriginal1), 1},
-            {&kextRadeonX5000HWLibs, kFullAsicResetOriginal, kFullAsicResetPatched, arrsize(kFullAsicResetOriginal), 1},
-            {&kextRadeonX5000HWLibs,
-                adjustment ? kCreatePowerTuneServicesMontereyOriginal1 : kCreatePowerTuneServicesOriginal1,
-                adjustment ? kCreatePowerTuneServicesMontereyPatched1 : kCreatePowerTuneServicesPatched1,
-                adjustment ? arrsize(kCreatePowerTuneServicesMontereyOriginal1) :
-                             arrsize(kCreatePowerTuneServicesOriginal1),
+        LookupPatchPlus const patches[] = {
+            {&kextRadeonX5000HWLibs, kPspSwInitOriginal1, kPspSwInitPatched1, 1},
+            {&kextRadeonX5000HWLibs, kPspSwInitOriginal2, kPspSwInitMask2, kPspSwInitPatched2, 1},
+            {&kextRadeonX5000HWLibs, kSmuInitFunctionPointerListOriginal, kSmuInitFunctionPointerListMask,
+                kSmuInitFunctionPointerListPatched, 1},
+            {&kextRadeonX5000HWLibs, kFullAsicResetOriginal, kFullAsicResetPatched, 1},
+            {&kextRadeonX5000HWLibs, kGcSwInitOriginal, kGcSwInitOriginalMask, kGcSwInitPatched, kGcSwInitPatchedMask,
                 1},
+            {&kextRadeonX5000HWLibs, kGcSetFwEntryInfoOriginal, kGcSetFwEntryInfoMask, kGcSetFwEntryInfoPatched, 1},
+            {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesOriginal1, kCreatePowerTuneServicesPatched1, 1,
+                getKernelVersion() < KernelVersion::Monterey},
+            {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesMontereyOriginal1,
+                kCreatePowerTuneServicesMontereyPatched1, 1, getKernelVersion() >= KernelVersion::Monterey},
+            {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesOriginal2, kCreatePowerTuneServicesMask2,
+                kCreatePowerTuneServicesPatched2, 1},
         };
-        for (size_t i = 0; i < arrsize(patches); i++) {
-            patcher.applyLookupPatch(patches + i);
-            SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "hwlibs",
-                "Failed to apply patches[%zu]: %d", i, patcher.getError());
-            patcher.clearError();
-        }
-
-        PANIC_COND(!KernelPatcher::findAndReplaceWithMask(reinterpret_cast<uint8_t *>(address), size,
-                       kSmuInitFunctionPointerListOriginal, arrsize(kSmuInitFunctionPointerListOriginal),
-                       kSmuInitFunctionPointerListMask, arrsize(kSmuInitFunctionPointerListMask),
-                       kSmuInitFunctionPointerListPatched, arrsize(kSmuInitFunctionPointerListPatched), nullptr, 0, 1,
-                       0),
-            "hwlibs", "Failed to apply _smu_init_function_pointer_list patch");
-
-        PANIC_COND(!KernelPatcher::findAndReplaceWithMask(reinterpret_cast<uint8_t *>(address), size,
-                       kCreatePowerTuneServicesOriginal2, arrsize(kCreatePowerTuneServicesOriginal2),
-                       kCreatePowerTuneServicesMask2, arrsize(kCreatePowerTuneServicesMask2),
-                       kCreatePowerTuneServicesPatched2, arrsize(kCreatePowerTuneServicesPatched2), nullptr, 0, 1, 0),
-            "hwlibs", "Failed to apply PowerTune services patch part 2");
-
-        PANIC_COND(!KernelPatcher::findAndReplaceWithMask(reinterpret_cast<uint8_t *>(address), size, kGcSwInitOriginal,
-                       kGcSwInitOriginalMask, kGcSwInitPatched, kGcSwInitPatchedMask, 1, 0),
-            "hwlibs", "Failed to apply _gc_sw_init version spoof patch");
-
-        PANIC_COND(!KernelPatcher::findAndReplaceWithMask(reinterpret_cast<uint8_t *>(address), size,
-                       kGcSetFwEntryInfoOriginal, arrsize(kGcSetFwEntryInfoOriginal), kGcSetFwEntryInfoMask,
-                       arrsize(kGcSetFwEntryInfoMask), kGcSetFwEntryInfoPatched, arrsize(kGcSetFwEntryInfoPatched),
-                       nullptr, 0, 1, 0),
-            "hwlibs", "Failed to apply _gc_set_fw_entry_info version spoof patch");
-
-        PANIC_COND(!KernelPatcher::findAndReplaceWithMask(reinterpret_cast<uint8_t *>(address), size,
-                       kPspSwInitOriginal2, arrsize(kPspSwInitOriginal2), kPspSwInitMask2, arrsize(kPspSwInitMask2),
-                       kPspSwInitPatched2, arrsize(kPspSwInitPatched2), nullptr, 0, 1, 0),
-            "hwlibs", "Failed to apply _psp_sw_init patch part 2");
+        PANIC_COND(!LookupPatchPlus::applyAll(&patcher, patches, address, size), "hwlibs",
+            "Failed to apply patches: %d", patcher.getError());
 
         return true;
     }
