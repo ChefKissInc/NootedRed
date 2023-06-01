@@ -26,7 +26,7 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
         NRed::callback->setRMMIOIfNecessary();
 
         uint32_t *orgChannelTypes = nullptr;
-        void *startHWEngines = nullptr;
+        mach_vm_address_t startHWEngines = 0;
 
         SolveRequestPlus solveRequests[] = {
             {"__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator19createAccelChannelsEbE12channelTypes", orgChannelTypes,
@@ -43,7 +43,7 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
                 this->orgSetupAndInitializeHWCapabilities},
             {"__ZN26AMDRadeonX5000_AMDHardware14startHWEnginesEv", startHWEngines},
         };
-        PANIC_COND(!SolveRequestPlus::solveAll(patcher, index, solveRequests, address, size), "x5000",
+        PANIC_COND(!SolveRequestPlus::solveAll(&patcher, index, solveRequests, address, size), "x5000",
             "Failed to resolve symbols");
 
         KernelPatcher::RouteRequest requests[] = {
@@ -69,6 +69,9 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "x5000", "Failed to route symbols");
 
+        LookupPatchPlus const patch {&kextRadeonX5000, kStartHWEnginesOriginal, kStartHWEnginesPatched, 1};
+        PANIC_COND(!patch.apply(&patcher, startHWEngines, PAGE_SIZE), "x5000", "Failed to patch startHWEngines");
+
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "x5000",
             "Failed to enable kernel writing");
         orgChannelTypes[5] = 1;    // Fix createAccelChannels so that it only starts SDMA0
@@ -76,9 +79,6 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
             0;    // Fix getPagingChannel so that it gets SDMA0
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("x5000", "Applied SDMA1 patches");
-        PANIC_COND(
-            !KernelPatcher::findAndReplace(startHWEngines, PAGE_SIZE, kStartHWEnginesOriginal, kStartHWEnginesPatched),
-            "x5000", "Failed to patch startHWEngines");
 
         return true;
     }

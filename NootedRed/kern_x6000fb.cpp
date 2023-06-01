@@ -31,7 +31,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable, kCailAsicCapsTablePattern},
             {"_dce_driver_set_backlight", this->orgDceDriverSetBacklight, kDceDriverSetBacklight},
         };
-        PANIC_COND(!SolveRequestPlus::solveAll(patcher, index, solveRequests, address, size), "x6000fb",
+        PANIC_COND(!SolveRequestPlus::solveAll(&patcher, index, solveRequests, address, size), "x6000fb",
             "Failed to resolve symbols");
 
         RouteRequestPlus requests[] = {
@@ -54,27 +54,17 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
         PANIC_COND(!RouteRequestPlus::routeAll(patcher, index, requests, address, size), "x6000fb",
             "Failed to route symbols");
 
-        KernelPatcher::LookupPatch const patches[] = {
-            {&kextRadeonX6000Framebuffer, kPopulateDeviceInfoOriginal, kPopulateDeviceInfoPatched,
-                arrsize(kPopulateDeviceInfoOriginal), 1},
-            {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckOriginal, kAmdAtomVramInfoNullCheckPatched,
-                arrsize(kAmdAtomVramInfoNullCheckOriginal), 1},
+        LookupPatchPlus const patches[] = {
+            {&kextRadeonX6000Framebuffer, kPopulateDeviceInfoOriginal, kPopulateDeviceInfoPatched, 1},
+            {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckOriginal, kAmdAtomVramInfoNullCheckPatched, 1},
             {&kextRadeonX6000Framebuffer, kAmdAtomPspDirectoryNullCheckOriginal, kAmdAtomPspDirectoryNullCheckPatched,
-                arrsize(kAmdAtomPspDirectoryNullCheckOriginal), 1},
-            {&kextRadeonX6000Framebuffer, kGetFirmwareInfoNullCheckOriginal, kGetFirmwareInfoNullCheckPatched,
-                arrsize(kGetFirmwareInfoNullCheckOriginal), 1},
+                1},
+            {&kextRadeonX6000Framebuffer, kGetFirmwareInfoNullCheckOriginal, kGetFirmwareInfoNullCheckPatched, 1},
+            {&kextRadeonX6000Framebuffer, kAgdcServicesGetVendorInfoOriginal, kAgdcServicesGetVendorInfoMask,
+                kAgdcServicesGetVendorInfoPatched, kAgdcServicesGetVendorInfoMask, 1},
         };
-        for (size_t i = 0; i < arrsize(patches); i++) {
-            patcher.applyLookupPatch(patches + i);
-            SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "x6000fb",
-                "Failed to apply patches[%zu]: %d", i, patcher.getError());
-            patcher.clearError();
-        }
-
-        PANIC_COND(!KernelPatcher::findAndReplaceWithMask(reinterpret_cast<uint8_t *>(address), size,
-                       kAgdcServicesGetVendorInfoOriginal, kAgdcServicesGetVendorInfoMask,
-                       kAgdcServicesGetVendorInfoPatched, kAgdcServicesGetVendorInfoMask, 1, 0),
-            "x5000", "Failed to patch getVendorInfo");
+        PANIC_COND(!LookupPatchPlus::applyAll(&patcher, patches, address, size), "x6000fb",
+            "Failed to apply patches: %d", patcher.getError());
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "x5000",
             "Failed to enable kernel writing");

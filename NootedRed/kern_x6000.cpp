@@ -3,6 +3,7 @@
 
 #include "kern_x6000.hpp"
 #include "kern_nred.hpp"
+#include "kern_patcherplus.hpp"
 #include "kern_patches.hpp"
 #include "kern_x5000.hpp"
 #include <Headers/kern_api.hpp>
@@ -58,24 +59,15 @@ bool X6000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "x6000", "Failed to route symbols");
 
-        KernelPatcher::LookupPatch const patches[] = {
-            {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal, kGetGpuDebugPolicyCallPatched,
-                arrsize(kGetGpuDebugPolicyCallOriginal), 28},
-            {&kextRadeonX6000, kHWChannelSubmitCommandBufferOriginal, kHWChannelSubmitCommandBufferPatched,
-                arrsize(kHWChannelSubmitCommandBufferOriginal), 1},
-            {&kextRadeonX6000, kGetSchedulerCallOriginal, kGetSchedulerCallPatched, arrsize(kGetSchedulerCallOriginal),
-                22},
-            {&kextRadeonX6000, kIsDeviceValidCallOriginal, kIsDeviceValidCallPatched,
-                arrsize(kIsDeviceValidCallOriginal), 24},
-            {&kextRadeonX6000, kIsDevicePCITunnelledOriginal, kIsDevicePCITunnelledPatched,
-                arrsize(kIsDevicePCITunnelledOriginal), 1},
+        LookupPatchPlus const patches[] = {
+            {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal, kGetGpuDebugPolicyCallPatched, 28},
+            {&kextRadeonX6000, kHWChannelSubmitCommandBufferOriginal, kHWChannelSubmitCommandBufferPatched, 1},
+            {&kextRadeonX6000, kGetSchedulerCallOriginal, kGetSchedulerCallPatched, 22},
+            {&kextRadeonX6000, kIsDeviceValidCallOriginal, kIsDeviceValidCallPatched, 24},
+            {&kextRadeonX6000, kIsDevicePCITunnelledOriginal, kIsDevicePCITunnelledPatched, 1},
         };
-        for (size_t i = 0; i < arrsize(patches); i++) {
-            patcher.applyLookupPatch(patches + i);
-            SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "x6000",
-                "Failed to apply patches[%zu]: %d", i, patcher.getError());
-            patcher.clearError();
-        }
+        PANIC_COND(!LookupPatchPlus::applyAll(&patcher, patches, address, size), "x6000", "Failed to apply patches: %d",
+            patcher.getError());
 
         return true;
     }

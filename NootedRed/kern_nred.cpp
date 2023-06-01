@@ -4,6 +4,7 @@
 #include "kern_nred.hpp"
 #include "kern_hwlibs.hpp"
 #include "kern_model.hpp"
+#include "kern_patcherplus.hpp"
 #include "kern_patches.hpp"
 #include "kern_x5000.hpp"
 #include "kern_x6000.hpp"
@@ -309,32 +310,24 @@ void NRed::setRMMIOIfNecessary() {
 
 void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextAGDP.loadIndex == index) {
-        KernelPatcher::LookupPatch const patch = {&kextAGDP, kAGDPBoardIDKeyOriginal, kAGDPBoardIDKeyPatched,
-            arrsize(kAGDPBoardIDKeyOriginal), 1};
-        patcher.applyLookupPatch(&patch);
-        SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "nred",
-            "Failed to apply AGDP board-id patch: %d", patcher.getError());
-        patcher.clearError();
-        auto ventura = getKernelVersion() >= KernelVersion::Ventura;
-        KernelPatcher::LookupPatch const fbPatch = {&kextAGDP,
-            ventura ? kAGDPFBCountCheckVenturaOriginal : kAGDPFBCountCheckOriginal,
-            ventura ? kAGDPFBCountCheckVenturaPatched : kAGDPFBCountCheckPatched,
-            ventura ? arrsize(kAGDPFBCountCheckVenturaOriginal) : arrsize(kAGDPFBCountCheckOriginal), 1};
-        patcher.applyLookupPatch(&fbPatch);
-        SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "nred",
-            "Failed to apply AGDP FB count patch: %d", patcher.getError());
-        patcher.clearError();
+        LookupPatchPlus const patches[] = {
+            {&kextAGDP, kAGDPBoardIDKeyOriginal, kAGDPBoardIDKeyPatched, 1},
+            {&kextAGDP, kAGDPFBCountCheckOriginal, kAGDPFBCountCheckPatched, 1,
+                getKernelVersion() <= KernelVersion::Monterey},
+            {&kextAGDP, kAGDPFBCountCheckVenturaOriginal, kAGDPFBCountCheckVenturaPatched, 1,
+                getKernelVersion() >= KernelVersion::Ventura},
+        };
+        PANIC_COND(!LookupPatchPlus::applyAll(&patcher, patches, address, size), "nred",
+            "Failed to apply AGDP patches: %d", patcher.getError());
     } else if (kextBacklight.loadIndex == index) {
         KernelPatcher::RouteRequest request {"__ZN15AppleIntelPanel10setDisplayEP9IODisplay", wrapApplePanelSetDisplay,
             orgApplePanelSetDisplay};
         if (patcher.routeMultiple(kextBacklight.loadIndex, &request, 1, address, size)) {
             const uint8_t find[] = {"F%uT%04x"};
             const uint8_t replace[] = {"F%uTxxxx"};
-            KernelPatcher::LookupPatch const patch {&kextBacklight, find, replace, arrsize(find), 1};
-            patcher.applyLookupPatch(&patch);
-            SYSLOG_COND(patcher.getError() != KernelPatcher::Error::NoError, "nred",
-                "Failed to apply backlight patch: %d", patcher.getError());
-            patcher.clearError();
+            LookupPatchPlus const patch {&kextBacklight, find, replace, 1};
+            SYSLOG_COND(!patch.apply(&patcher, address, size), "nred", "Failed to apply backlight patch: %d",
+                patcher.getError());
         }
     } else if (kextMCCSControl.loadIndex == index) {
         KernelPatcher::RouteRequest requests[] = {
@@ -390,9 +383,7 @@ bool NRed::wrapApplePanelSetDisplay(IOService *that, IODisplay *display) {
     if (!once) {
         once = true;
         auto *panels = OSDynamicCast(OSDictionary, that->getProperty("ApplePanels"));
-        if (!panels) {
-            SYSLOG("nred", "setDisplay: Missing ApplePanels property");
-        } else {
+        if (panels) {
             auto *rawPanels = panels->copyCollection();
             panels = OSDynamicCast(OSDictionary, rawPanels);
 
@@ -410,6 +401,8 @@ bool NRed::wrapApplePanelSetDisplay(IOService *that, IODisplay *display) {
             }
 
             OSSafeReleaseNULL(rawPanels);
+        } else {
+            SYSLOG("nred", "setDisplay: Missing ApplePanels property");
         }
     }
 
