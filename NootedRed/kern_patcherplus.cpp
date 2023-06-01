@@ -3,7 +3,7 @@
 
 #include "kern_patcherplus.hpp"
 
-bool SolveWithFallbackRequest::solve(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
+bool SolveRequestPlus::solve(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     PANIC_COND(!this->address, "solver", "this->address is null");
     *this->address = patcher.solveSymbol(index, this->symbol);
     if (*this->address) { return true; }
@@ -26,15 +26,15 @@ bool SolveWithFallbackRequest::solve(KernelPatcher &patcher, size_t index, mach_
     return true;
 }
 
-bool SolveWithFallbackRequest::solveAll(KernelPatcher &patcher, size_t index, SolveWithFallbackRequest *requests,
-    size_t count, mach_vm_address_t address, size_t size) {
+bool SolveRequestPlus::solveAll(KernelPatcher &patcher, size_t index, SolveRequestPlus *requests, size_t count,
+    mach_vm_address_t address, size_t size) {
     for (size_t i = 0; i < count; i++) {
         if (!requests[i].solve(patcher, index, address, size)) { return false; }
     }
     return true;
 }
 
-bool RouteWithFallbackRequest::route(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
+bool RouteRequestPlus::route(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (patcher.routeMultiple(index, this, 1, address, size)) { return true; }
     patcher.clearError();
 
@@ -61,8 +61,8 @@ bool RouteWithFallbackRequest::route(KernelPatcher &patcher, size_t index, mach_
     return true;
 }
 
-bool RouteWithFallbackRequest::routeAll(KernelPatcher &patcher, size_t index, RouteWithFallbackRequest *requests,
-    size_t count, mach_vm_address_t address, size_t size) {
+bool RouteRequestPlus::routeAll(KernelPatcher &patcher, size_t index, RouteRequestPlus *requests, size_t count,
+    mach_vm_address_t address, size_t size) {
     for (size_t i = 0; i < count; i++) {
         if (!requests[i].route(patcher, index, address, size)) { return false; }
     }
