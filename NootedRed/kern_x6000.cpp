@@ -59,11 +59,12 @@ bool X6000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
         };
         PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "x6000", "Failed to route symbols");
 
+        auto monterey = getKernelVersion() == KernelVersion::Monterey;
         LookupPatchPlus const patches[] = {
             {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal, kGetGpuDebugPolicyCallPatched, 28},
             {&kextRadeonX6000, kHWChannelSubmitCommandBufferOriginal, kHWChannelSubmitCommandBufferPatched, 1},
-            {&kextRadeonX6000, kGetSchedulerCallOriginal, kGetSchedulerCallPatched, 22},
-            {&kextRadeonX6000, kIsDeviceValidCallOriginal, kIsDeviceValidCallPatched, 24},
+            {&kextRadeonX6000, kGetSchedulerCallOriginal, kGetSchedulerCallPatched, monterey ? 21U : 22U},
+            {&kextRadeonX6000, kIsDeviceValidCallOriginal, kIsDeviceValidCallPatched, monterey ? 26U : 24U},
             {&kextRadeonX6000, kIsDevicePCITunnelledOriginal, kIsDevicePCITunnelledPatched, 1},
         };
         PANIC_COND(!LookupPatchPlus::applyAll(&patcher, patches, address, size), "x6000", "Failed to apply patches: %d",
