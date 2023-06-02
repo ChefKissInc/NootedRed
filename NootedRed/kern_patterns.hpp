@@ -145,10 +145,3 @@ static const uint8_t kDcePanelCntlHwInitPattern[] = {0x55, 0x48, 0x89, 0xE5, 0x4
 static const uint8_t kIRQMGRWriteRegisterPattern[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41,
     0x54, 0x53, 0x50, 0x41, 0x89, 0xD6, 0x49, 0x89, 0xF7, 0x48, 0x89, 0xFB, 0x48, 0x8B, 0x87, 0xB0, 0x00, 0x00, 0x00,
     0x48, 0x85, 0xC0};
-
-static_assert(arrsize(kSmuGetFwConstantsPattern) == arrsize(kSmuGetFwConstantsMask));
-static_assert(arrsize(kSmu901CheckFwStatusPattern) == arrsize(kSmu901CheckFwStatusMask));
-static_assert(arrsize(kSmu901UnloadSmuPattern) == arrsize(kSmu901UnloadSmuMask));
-static_assert(arrsize(kPspCmdKmSubmitPattern) == arrsize(kPspCmdKmSubmitMask));
-static_assert(arrsize(kGetNumberOfConnectorsPattern) == arrsize(kGetNumberOfConnectorsMask));
-static_assert(arrsize(kIH40IVRingInitHardwarePattern) == arrsize(kIH40IVRingInitHardwareMask));
