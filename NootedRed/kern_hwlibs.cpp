@@ -115,8 +115,10 @@ void X5000HWLibs::wrapUpdateSdmaPowerGating(void *cail, uint32_t mode) {
             [[fallthrough]];
         case 3:
             NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerUpSdma);
+            break;
         case 2:
             NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerDownSdma);
+            break;
         default:
             break;
     }
