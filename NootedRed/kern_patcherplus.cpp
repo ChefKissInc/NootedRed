@@ -5,6 +5,8 @@
 
 bool SolveRequestPlus::solve(KernelPatcher *patcher, size_t index, mach_vm_address_t address, size_t size) {
     PANIC_COND(!this->address, "patcher+", "this->address is null");
+    if (!this->guard) { return true; }
+
     if (patcher) {
         *this->address = patcher->solveSymbol(index, this->symbol);
         if (*this->address) { return true; }
