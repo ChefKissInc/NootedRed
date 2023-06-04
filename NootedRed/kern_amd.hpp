@@ -132,6 +132,14 @@ struct CailAsicCapEntry {
     const uint32_t *skeleton;
 } PACKED;
 
+struct CailInitAsicCapEntry {
+    uint64_t familyId, deviceId;
+    uint64_t revision, extRevision;
+    uint64_t pciRevision;
+    const uint32_t *caps;
+    const void *goldenCaps;
+} PACKED;
+
 static const uint32_t ddiCapsRaven[16] = {0x800005U, 0x500011FEU, 0x80000U, 0x11001000U, 0x200U, 0x68000001U,
     0x20000000, 0x4002U, 0x22420001U, 0x9E20E10U, 0x2000120U, 0x0U, 0x0U, 0x0U, 0x0U, 0x0U};
 static const uint32_t ddiCapsRenoir[16] = {0x800005U, 0x500011FEU, 0x80000U, 0x11001000U, 0x200U, 0x68000001U,

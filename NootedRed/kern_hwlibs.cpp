@@ -26,6 +26,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         NRed::callback->setRMMIOIfNecessary();
 
         CailAsicCapEntry *orgCapsTbl = nullptr;
+        CailInitAsicCapEntry *orgInitCapsTbl = nullptr;
         CailDeviceTypeEntry *orgDeviceTypeTable = nullptr;
 
         SolveRequestPlus solveRequests[] = {
@@ -34,6 +35,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware", this->orgPutFirmware,
                 kPutFirmwarePattern},
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgCapsTbl, kCailAsicCapsTableHWLibsPattern},
+            {"_CAILAsicCapsInitTable", orgInitCapsTbl, kCAILAsicCapsInitTablePattern},
         };
         PANIC_COND(!SolveRequestPlus::solveAll(&patcher, index, solveRequests, address, size), "hwlibs",
             "Failed to resolve symbols");
@@ -63,6 +65,16 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             .pciRevision = NRed::callback->pciRevision,
             .caps = NRed::callback->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir,
         };
+        auto *temp = orgInitCapsTbl;
+        while (temp->deviceId != 0xFFFFFFFF) {
+            if (temp->familyId == AMDGPU_FAMILY_RAVEN && temp->deviceId == NRed::callback->deviceId) {
+                temp->revision = NRed::callback->revision;
+                temp->extRevision = NRed::callback->extRevision;
+                temp->pciRevision = NRed::callback->pciRevision;
+                break;
+            }
+            temp++;
+        }
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("hwlibs", "Applied DDI Caps patches");
 
