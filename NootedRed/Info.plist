@@ -64,6 +64,14 @@
 			<dict>
 				<key>CFG_CORRECT_BLPT</key>
 				<true/>
+				<key>CFG_NO_PP</key>
+				<false/>
+				<key>CFG_PTPL2_CNT</key>
+				<integer>16</integer>
+				<key>CFG_PTPL2_MAX</key>
+				<integer>250</integer>
+				<key>CFG_PTPL2_MIN</key>
+				<integer>100</integer>
 				<key>CFG_TRANS_WSRV</key>
 				<true/>
 				<key>CFG_UFL_CHK</key>
@@ -79,10 +87,16 @@
 				<integer>1</integer>
 				<key>DalDisableLTTPR</key>
 				<integer>1</integer>
+				<key>DalEarlyTps1Pattern</key>
+				<integer>1</integer>
 				<key>DalSkipDetectionLT</key>
 				<integer>1</integer>
+				<key>PP_DiDtSQStallPatternOverride</key>
+				<integer>16383</integer>
 				<key>PP_DisableClockStretcher</key>
 				<integer>1</integer>
+				<key>PP_DisableDIDT</key>
+				<integer>0</integer>
 				<key>PP_DisableULV</key>
 				<integer>0</integer>
 				<key>PP_EnableUploadFirmware</key>
@@ -96,7 +110,17 @@
 				<key>PP_ToolsLogSpaceSize</key>
 				<integer>524288</integer>
 				<key>PP_WorkLoadPolicyMask</key>
-				<integer>16</integer>
+				<integer>32</integer>
+				<key>SMU_ActivityMonitorTable</key>
+				<data>
+				AAQABAIA6AMAAAEAAAAAAAAAAADQAQEAMP7+/wAAAAAA
+				BAAAAgDoAwAAAQAAAAAAAAAAANABAQA45v//AAAAAAAA
+				AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAkF
+				AAFkPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+				AAAAAA==
+				</data>
+				<key>SMU_DisallowedFeatures</key>
+				<integer>64</integer>
 			</dict>
 		</dict>
 		<key>com.ChefKissInc.NootedRed</key>
