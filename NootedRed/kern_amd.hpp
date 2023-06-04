@@ -158,3 +158,28 @@ enum VideoMemoryType : uint32_t {
 };
 
 constexpr uint32_t PP_RESULT_OK = 1;
+
+constexpr uint32_t ADDR_CHIP_FAMILY_AI = 8;
+
+constexpr uint32_t Dcn1NonBpp64SwModeMask = 0x2220221;
+constexpr uint32_t Dcn1Bpp64SwModeMask = 0x6660661;
+constexpr uint32_t Dcn2NonBpp64SwModeMask = 0x2020201;
+constexpr uint32_t Dcn2Bpp64SwModeMask = 0x6060601;
+
+struct Gfx9ChipSettings {
+    uint32_t isArcticIsland : 1;
+    uint32_t isVega10 : 1;
+    uint32_t isRaven : 1;
+    uint32_t isVega12 : 1;
+    uint32_t isVega20 : 1;
+    uint32_t reserved0 : 27;
+    uint32_t isDce12 : 1;
+    uint32_t isDcn1 : 1;
+    uint32_t reserved1 : 30;
+    uint32_t metaBaseAlignFix : 1;
+    uint32_t depthPipeXorDisable : 1;
+    uint32_t htileAlignFix : 1;
+    uint32_t applyAliasFix : 1;
+    uint32_t htileCacheRbConflict : 1;
+    uint32_t reserved2 : 27;
+};

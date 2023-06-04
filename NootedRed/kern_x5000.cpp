@@ -46,7 +46,7 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
         PANIC_COND(!SolveRequestPlus::solveAll(&patcher, index, solveRequests, address, size), "x5000",
             "Failed to resolve symbols");
 
-        KernelPatcher::RouteRequest requests[] = {
+        RouteRequestPlus requests[] = {
             {"__ZN32AMDRadeonX5000_AMDVega10Hardware17allocateHWEnginesEv", wrapAllocateHWEngines},
             {"__ZN32AMDRadeonX5000_AMDVega10Hardware32setupAndInitializeHWCapabilitiesEv",
                 wrapSetupAndInitializeHWCapabilities},
@@ -66,11 +66,27 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20writeASICHangLogInfoEPPv", wrapReturnZero},
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator23obtainAccelChannelGroupE11SS_PRIORITY",
                 wrapObtainAccelChannelGroup, orgObtainAccelChannelGroup},
+            {"__ZN4Addr2V27Gfx9Lib20HwlConvertChipFamilyEjj", wrapHwlConvertChipFamily, kHwlConvertChipFamilyPattern},
         };
-        PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "x5000", "Failed to route symbols");
+        PANIC_COND(!RouteRequestPlus::routeAll(patcher, index, requests, address, size), "x5000",
+            "Failed to route symbols");
 
         LookupPatchPlus const patch {&kextRadeonX5000, kStartHWEnginesOriginal, kStartHWEnginesPatched, 1};
         PANIC_COND(!patch.apply(&patcher, startHWEngines, PAGE_SIZE), "x5000", "Failed to patch startHWEngines");
+
+        uint32_t findBpp64 = Dcn1Bpp64SwModeMask;
+        uint32_t replBpp64 = Dcn2Bpp64SwModeMask;
+        uint32_t findNonBpp64 = Dcn1NonBpp64SwModeMask;
+        uint32_t replNonBpp64 = Dcn2NonBpp64SwModeMask;
+        auto dcn2 = NRed::callback->chipType >= ChipType::Renoir;
+        LookupPatchPlus const swizzleModePatches[] = {
+            {&kextRadeonX5000, reinterpret_cast<const uint8_t *>(&findBpp64),
+                reinterpret_cast<const uint8_t *>(&replBpp64), sizeof(uint32_t), 4, dcn2},
+            {&kextRadeonX5000, reinterpret_cast<const uint8_t *>(&findNonBpp64),
+                reinterpret_cast<const uint8_t *>(&replNonBpp64), sizeof(uint32_t), 4, dcn2},
+        };
+        PANIC_COND(!LookupPatchPlus::applyAll(&patcher, swizzleModePatches, address, size), "x5000",
+            "Failed to patch swizzle mode");
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "x5000",
             "Failed to enable kernel writing");
@@ -190,4 +206,17 @@ void *X5000::wrapObtainAccelChannelGroup(void *that, uint32_t priority) {
         sdma1 = getMember<void *>(ret, 0x10);    // Replace field with SDMA0, as we have no SDMA1
     }
     return ret;
+}
+
+uint32_t X5000::wrapHwlConvertChipFamily(void *that, uint32_t, uint32_t) {
+    auto &settings = getMember<Gfx9ChipSettings>(that, 0x5B10);
+    auto renoir = NRed::callback->chipType >= ChipType::Renoir;
+    settings.isArcticIsland = 1;
+    settings.isRaven = 1;
+    settings.depthPipeXorDisable = NRed::callback->chipType < ChipType::Raven2;
+    settings.htileAlignFix = renoir;
+    settings.applyAliasFix = renoir;
+    settings.isDcn1 = 1;
+    settings.metaBaseAlignFix = 1;
+    return ADDR_CHIP_FAMILY_AI;
 }
