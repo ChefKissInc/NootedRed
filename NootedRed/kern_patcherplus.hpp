@@ -11,15 +11,14 @@ struct SolveRequestPlus : KernelPatcher::SolveRequest {
     bool guard {true};
 
     template<typename T>
-    SolveRequestPlus(const char *s, T &addr, bool guard = false)
-        : KernelPatcher::SolveRequest(s, addr), guard {guard} {}
+    SolveRequestPlus(const char *s, T &addr, bool guard = true) : KernelPatcher::SolveRequest(s, addr), guard {guard} {}
 
     template<typename T, typename P, size_t N>
-    SolveRequestPlus(const char *s, T &addr, const P (&pattern)[N], bool guard = false)
+    SolveRequestPlus(const char *s, T &addr, const P (&pattern)[N], bool guard = true)
         : KernelPatcher::SolveRequest(s, addr), pattern {pattern}, patternSize {N}, guard {guard} {}
 
     template<typename T, typename P, size_t N>
-    SolveRequestPlus(const char *s, T &addr, const P (&pattern)[N], const uint8_t (&mask)[N], bool guard = false)
+    SolveRequestPlus(const char *s, T &addr, const P (&pattern)[N], const uint8_t (&mask)[N], bool guard = true)
         : KernelPatcher::SolveRequest(s, addr), pattern {pattern}, mask {mask}, patternSize {N}, guard {guard} {}
 
     bool solve(KernelPatcher *patcher, size_t index, mach_vm_address_t address, size_t size);
