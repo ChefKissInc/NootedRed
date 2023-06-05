@@ -60,18 +60,7 @@ def get_fmt_type(type: str) -> str:
 
 
 def to_pascal_case(inp: str) -> str:
-    ret = ""
-    i = 0
-    while i < len(inp):
-        if inp[i] == "_":
-            if i + 1 == len(inp):
-                break
-            ret += inp[i + 1].upper()
-            i += 1
-        else:
-            ret += inp[i]
-        i += 1
-    return ret[0].upper() + ret[1:]
+    return inp.title().replace("_", "")
 
 
 def locate_line(lines: list[str], needle: str) -> int:
