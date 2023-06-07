@@ -243,7 +243,7 @@ class NRed {
     IOMemoryMap *rmmio {nullptr};
     volatile uint32_t *rmmioPtr {nullptr};
     uint32_t deviceId {0};
-    uint16_t extRevision {0};
+    uint16_t enumRevision {0};
     uint16_t revision {0};
     uint32_t pciRevision {0};
     IOPCIDevice *iGPU {nullptr};

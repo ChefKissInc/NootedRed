@@ -26,24 +26,28 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         NRed::callback->setRMMIOIfNecessary();
 
         CailAsicCapEntry *orgCapsTbl = nullptr;
-        CailInitAsicCapEntry *orgInitCapsTbl = nullptr;
+        CailAsicCapsInitEntry *orgCapsInitTable = nullptr;
         CailDeviceTypeEntry *orgDeviceTypeTable = nullptr;
+        DeviceCapabilityEntry *orgDevCapTable = nullptr;
 
+        auto catalina = getKernelVersion() == KernelVersion::Catalina;
         SolveRequestPlus solveRequests[] = {
-            {"__ZL15deviceTypeTable", orgDeviceTypeTable, kDeviceTypeTablePattern},
-            {"__ZN11AMDFirmware14createFirmwareEPhjjPKc", this->orgCreateFirmware, kCreateFirmwarePattern},
+            {"__ZL15deviceTypeTable", orgDeviceTypeTable, kDeviceTypeTablePattern, !catalina},
+            {"__ZN11AMDFirmware14createFirmwareEPhjjPKc", this->orgCreateFirmware, kCreateFirmwarePattern, !catalina},
             {"__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware", this->orgPutFirmware,
-                kPutFirmwarePattern},
+                kPutFirmwarePattern, !catalina},
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgCapsTbl, kCailAsicCapsTableHWLibsPattern},
-            {"_CAILAsicCapsInitTable", orgInitCapsTbl, kCAILAsicCapsInitTablePattern},
+            {"_CAILAsicCapsInitTable", orgCapsInitTable, kCAILAsicCapsInitTablePattern},
+            {"_DeviceCapabilityTbl", orgDevCapTable, kDeviceCapabilityTblPattern},
         };
         PANIC_COND(!SolveRequestPlus::solveAll(&patcher, index, solveRequests, address, size), "hwlibs",
             "Failed to resolve symbols");
 
         RouteRequestPlus requests[] = {
             {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory,
-                this->orgPopulateFirmwareDirectory},
-            {"_smu_get_fw_constants", hwLibsNoop, kSmuGetFwConstantsPattern, kSmuGetFwConstantsMask},
+                this->orgPopulateFirmwareDirectory, !catalina},
+            {catalina ? "_smu_get_external_fw" : "_smu_get_fw_constants", hwLibsNoop, kSmuGetFwConstantsPattern,
+                kSmuGetFwConstantsMask},
             {"_smu_9_0_1_check_fw_status", hwLibsNoop, kSmu901CheckFwStatusPattern, kSmu901CheckFwStatusMask},
             {"_smu_9_0_1_unload_smu", hwLibsNoop, kSmu901UnloadSmuPattern, kSmu901UnloadSmuMask},
             {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit, kPspCmdKmSubmitPattern,
@@ -56,37 +60,59 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "hwlibs",
             "Failed to enable kernel writing");
-        *orgDeviceTypeTable = {.deviceId = NRed::callback->deviceId, .deviceType = 6};
+        if (!catalina) { *orgDeviceTypeTable = {.deviceId = NRed::callback->deviceId, .deviceType = 6}; }
+        auto renoir = NRed::callback->chipType >= ChipType::Renoir;
         *orgCapsTbl = {
             .familyId = AMDGPU_FAMILY_RAVEN,
             .deviceId = NRed::callback->deviceId,
             .revision = NRed::callback->revision,
-            .extRevision = NRed::callback->extRevision,
+            .extRevision = static_cast<uint32_t>(NRed::callback->enumRevision) + NRed::callback->revision,
             .pciRevision = NRed::callback->pciRevision,
-            .caps = NRed::callback->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir,
+            .caps = !renoir ? ddiCapsRaven : ddiCapsRenoir,
         };
-        auto *temp = orgInitCapsTbl;
-        while (temp->deviceId != 0xFFFFFFFF) {
-            if (temp->familyId == AMDGPU_FAMILY_RAVEN && temp->deviceId == NRed::callback->deviceId) {
-                temp->revision = NRed::callback->revision;
-                temp->extRevision = NRed::callback->extRevision;
-                temp->pciRevision = NRed::callback->pciRevision;
+        auto targetDeviceId =
+            (catalina && renoir && NRed::callback->deviceId != 0x1636) ? 0x1636 : NRed::callback->deviceId;
+        auto found = false;
+        while (orgCapsInitTable->deviceId != 0xFFFFFFFF) {
+            if (orgCapsInitTable->familyId == AMDGPU_FAMILY_RAVEN && orgCapsInitTable->deviceId == targetDeviceId) {
+                orgCapsInitTable->deviceId = NRed::callback->deviceId;
+                orgCapsInitTable->revision = NRed::callback->revision;
+                orgCapsInitTable->extRevision =
+                    static_cast<uint64_t>(NRed::callback->enumRevision) + NRed::callback->revision;
+                orgCapsInitTable->pciRevision = NRed::callback->pciRevision;
+                found = true;
                 break;
             }
-            temp++;
+            orgCapsInitTable++;
         }
+        PANIC_COND(!found, "hwlibs", "Failed to find init caps table entry");
+        found = false;
+        while (orgDevCapTable->familyId) {
+            if (orgDevCapTable->familyId == AMDGPU_FAMILY_RAVEN && orgDevCapTable->deviceId == targetDeviceId) {
+                orgDevCapTable->deviceId = NRed::callback->deviceId;
+                orgDevCapTable->extRevision =
+                    static_cast<uint64_t>(NRed::callback->enumRevision) + NRed::callback->revision;
+                orgDevCapTable->revision = DEVICE_CAP_ENTRY_REV_DONT_CARE;
+                orgDevCapTable->enumRevision = DEVICE_CAP_ENTRY_REV_DONT_CARE;
+                found = true;
+                break;
+            }
+            orgDevCapTable++;
+        }
+        PANIC_COND(!found, "hwlibs", "Failed to find device capability table entry");
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("hwlibs", "Applied DDI Caps patches");
 
         LookupPatchPlus const patches[] = {
-            {&kextRadeonX5000HWLibs, kPspSwInitOriginal1, kPspSwInitPatched1, 1},
-            {&kextRadeonX5000HWLibs, kPspSwInitOriginal2, kPspSwInitMask2, kPspSwInitPatched2, 1},
+            {&kextRadeonX5000HWLibs, kPspSwInitOriginal1, kPspSwInitPatched1, 1, !catalina},
+            {&kextRadeonX5000HWLibs, kPspSwInitOriginal2, kPspSwInitMask2, kPspSwInitPatched2, 1, !catalina},
             {&kextRadeonX5000HWLibs, kSmuInitFunctionPointerListOriginal, kSmuInitFunctionPointerListMask,
                 kSmuInitFunctionPointerListPatched, 1},
             {&kextRadeonX5000HWLibs, kFullAsicResetOriginal, kFullAsicResetPatched, 1},
             {&kextRadeonX5000HWLibs, kGcSwInitOriginal, kGcSwInitOriginalMask, kGcSwInitPatched, kGcSwInitPatchedMask,
-                1},
-            {&kextRadeonX5000HWLibs, kGcSetFwEntryInfoOriginal, kGcSetFwEntryInfoMask, kGcSetFwEntryInfoPatched, 1},
+                1, !catalina},
+            {&kextRadeonX5000HWLibs, kGcSetFwEntryInfoOriginal, kGcSetFwEntryInfoMask, kGcSetFwEntryInfoPatched, 1,
+                !catalina},
             {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesOriginal1, kCreatePowerTuneServicesPatched1, 1,
                 getKernelVersion() < KernelVersion::Monterey},
             {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesMontereyOriginal1,

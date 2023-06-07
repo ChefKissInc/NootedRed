@@ -27,9 +27,10 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
 
         CailAsicCapEntry *orgAsicCapsTable = nullptr;
 
+        auto catalina = getKernelVersion() == KernelVersion::Catalina;
         SolveRequestPlus solveRequests[] = {
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable, kCailAsicCapsTablePattern},
-            {"_dce_driver_set_backlight", this->orgDceDriverSetBacklight, kDceDriverSetBacklight},
+            {"_dce_driver_set_backlight", this->orgDceDriverSetBacklight, kDceDriverSetBacklight, !catalina},
         };
         PANIC_COND(!SolveRequestPlus::solveAll(&patcher, index, solveRequests, address, size), "x6000fb",
             "Failed to resolve symbols");
@@ -41,8 +42,8 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
             {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo,
                 this->orgInitWithPciInfo, ADDPR(debugEnabled)},
             {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", wrapDoGPUPanic, ADDPR(debugEnabled)},
-            {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit, this->orgDcePanelCntlHwInit,
-                kDcePanelCntlHwInitPattern},
+            {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit, this->orgDcePanelCntlHwInit, kDcePanelCntlHwInitPattern,
+                !catalina},
             {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25setAttributeForConnectionEijm", wrapFramebufferSetAttribute,
                 this->orgFramebufferSetAttribute},
             {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25getAttributeForConnectionEijPm", wrapFramebufferGetAttribute,
@@ -59,11 +60,16 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
             "Failed to route symbols");
 
         LookupPatchPlus const patches[] = {
-            {&kextRadeonX6000Framebuffer, kPopulateDeviceInfoOriginal, kPopulateDeviceInfoPatched, 1},
-            {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckOriginal, kAmdAtomVramInfoNullCheckPatched, 1},
+            {&kextRadeonX6000Framebuffer, kPopulateDeviceInfoOriginal, kPopulateDeviceInfoMask,
+                kPopulateDeviceInfoPatched, kPopulateDeviceInfoMask, 1},
+            {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckOriginal, kAmdAtomVramInfoNullCheckPatched, 1,
+                !catalina},
+            {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckCatalinaOriginal,
+                kAmdAtomVramInfoNullCheckCatalinaMask, kAmdAtomVramInfoNullCheckCatalinaPatched, 1, catalina},
             {&kextRadeonX6000Framebuffer, kAmdAtomPspDirectoryNullCheckOriginal, kAmdAtomPspDirectoryNullCheckPatched,
-                1},
-            {&kextRadeonX6000Framebuffer, kGetFirmwareInfoNullCheckOriginal, kGetFirmwareInfoNullCheckPatched, 1},
+                1, !catalina},
+            {&kextRadeonX6000Framebuffer, kGetFirmwareInfoNullCheckOriginal, kGetFirmwareInfoNullCheckOriginalMask,
+                kGetFirmwareInfoNullCheckPatched, kGetFirmwareInfoNullCheckPatchedMask, 1},
             {&kextRadeonX6000Framebuffer, kAgdcServicesGetVendorInfoOriginal, kAgdcServicesGetVendorInfoMask,
                 kAgdcServicesGetVendorInfoPatched, kAgdcServicesGetVendorInfoMask, 1},
         };
@@ -77,7 +83,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
             .caps = NRed::callback->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir,
             .deviceId = NRed::callback->deviceId,
             .revision = NRed::callback->revision,
-            .extRevision = NRed::callback->extRevision,
+            .extRevision = static_cast<uint32_t>(NRed::callback->enumRevision) + NRed::callback->revision,
             .pciRevision = NRed::callback->pciRevision,
         };
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
@@ -89,7 +95,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
     return false;
 }
 
-uint16_t X6000FB::wrapGetEnumeratedRevision() { return NRed::callback->extRevision - NRed::callback->revision; }
+uint16_t X6000FB::wrapGetEnumeratedRevision() { return NRed::callback->enumRevision; }
 
 IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
     uint32_t channelCount = 1;

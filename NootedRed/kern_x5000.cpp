@@ -28,9 +28,12 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
         uint32_t *orgChannelTypes = nullptr;
         mach_vm_address_t startHWEngines = 0;
 
+        auto catalina = getKernelVersion() == KernelVersion::Catalina;
         SolveRequestPlus solveRequests[] = {
-            {"__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator19createAccelChannelsEbE12channelTypes", orgChannelTypes,
-                kChannelTypesPattern},
+            {catalina ? "__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator22getAdditionalQueueListEPPK18_"
+                        "AMDQueueSpecifierE27additionalQueueList_Default" :
+                        "__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator19createAccelChannelsEbE12channelTypes",
+                orgChannelTypes, kChannelTypesPattern},
             {"__ZN31AMDRadeonX5000_AMDGFX9PM4EngineC1Ev", this->orgGFX9PM4EngineConstructor},
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngineC1Ev", this->orgGFX9SDMAEngineConstructor},
             {"__ZN39AMDRadeonX5000_AMDAccelSharedUserClient5startEP9IOService", this->orgAccelSharedUCStart},
@@ -58,43 +61,69 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
             {"__ZN31AMDRadeonX5000_IAMDSMLInterface18createSMLInterfaceEj", wrapCreateSMLInterface},
             {"__ZN26AMDRadeonX5000_AMDHWMemory17adjustVRAMAddressEy", wrapAdjustVRAMAddress,
                 this->orgAdjustVRAMAddress},
-            {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator9newSharedEv", wrapNewShared},
-            {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator19newSharedUserClientEv", wrapNewSharedUserClient},
+            {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator9newSharedEv", wrapNewShared, !catalina},
+            {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator19newSharedUserClientEv", wrapNewSharedUserClient, !catalina},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware25allocateAMDHWAlignManagerEv", wrapAllocateAMDHWAlignManager,
                 this->orgAllocateAMDHWAlignManager},
             {"__ZN43AMDRadeonX5000_AMDVega10GraphicsAccelerator13getDeviceTypeEP11IOPCIDevice", wrapGetDeviceType},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20writeASICHangLogInfoEPPv", wrapReturnZero},
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator23obtainAccelChannelGroupE11SS_PRIORITY",
-                wrapObtainAccelChannelGroup, orgObtainAccelChannelGroup},
+                wrapObtainAccelChannelGroup, orgObtainAccelChannelGroup, !catalina},
             {"__ZN4Addr2V27Gfx9Lib20HwlConvertChipFamilyEjj", wrapHwlConvertChipFamily, kHwlConvertChipFamilyPattern},
         };
         PANIC_COND(!RouteRequestPlus::routeAll(patcher, index, requests, address, size), "x5000",
             "Failed to route symbols");
 
-        LookupPatchPlus const patch {&kextRadeonX5000, kStartHWEnginesOriginal, kStartHWEnginesPatched, 1};
+        LookupPatchPlus const patch {&kextRadeonX5000, kStartHWEnginesOriginal, kStartHWEnginesPatched, 1, !catalina};
         PANIC_COND(!patch.apply(&patcher, startHWEngines, PAGE_SIZE), "x5000", "Failed to patch startHWEngines");
 
-        uint32_t findBpp64 = Dcn1Bpp64SwModeMask;
-        uint32_t replBpp64 = Dcn2Bpp64SwModeMask;
-        uint32_t findNonBpp64 = Dcn1NonBpp64SwModeMask;
-        uint32_t replNonBpp64 = Dcn2NonBpp64SwModeMask;
-        auto dcn2 = NRed::callback->chipType >= ChipType::Renoir;
-        LookupPatchPlus const swizzleModePatches[] = {
-            {&kextRadeonX5000, reinterpret_cast<const uint8_t *>(&findBpp64),
-                reinterpret_cast<const uint8_t *>(&replBpp64), sizeof(uint32_t), 4, dcn2},
-            {&kextRadeonX5000, reinterpret_cast<const uint8_t *>(&findNonBpp64),
-                reinterpret_cast<const uint8_t *>(&replNonBpp64), sizeof(uint32_t), 4, dcn2},
-        };
-        PANIC_COND(!LookupPatchPlus::applyAll(&patcher, swizzleModePatches, address, size), "x5000",
-            "Failed to patch swizzle mode");
+        LookupPatchPlus const createAccelChannelsPatch {&kextRadeonX5000, kCreateAccelChannelsOriginal,
+            kCreateAccelChannelsPatched, 2, catalina};
+        PANIC_COND(!createAccelChannelsPatch.apply(&patcher, address, size), "x5000",
+            "Failed to patch createAccelChannels");
 
-        PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "x5000",
-            "Failed to enable kernel writing");
-        orgChannelTypes[5] = 1;    // Fix createAccelChannels so that it only starts SDMA0
-        orgChannelTypes[getKernelVersion() > KernelVersion::BigSur ? 12 : 11] =
-            0;    // Fix getPagingChannel so that it gets SDMA0
-        MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
-        DBGLOG("x5000", "Applied SDMA1 patches");
+        if (!catalina) {
+            uint32_t findBpp64 = Dcn1Bpp64SwModeMask;
+            uint32_t replBpp64 = Dcn2Bpp64SwModeMask;
+            uint32_t findNonBpp64 = Dcn1NonBpp64SwModeMask;
+            uint32_t replNonBpp64 = Dcn2NonBpp64SwModeMask;
+            auto dcn2 = NRed::callback->chipType >= ChipType::Renoir;
+            LookupPatchPlus const swizzleModePatches[] = {
+                {&kextRadeonX5000, reinterpret_cast<const uint8_t *>(&findBpp64),
+                    reinterpret_cast<const uint8_t *>(&replBpp64), sizeof(uint32_t), 4, dcn2},
+                {&kextRadeonX5000, reinterpret_cast<const uint8_t *>(&findNonBpp64),
+                    reinterpret_cast<const uint8_t *>(&replNonBpp64), sizeof(uint32_t), 4, dcn2},
+            };
+            PANIC_COND(!LookupPatchPlus::applyAll(&patcher, swizzleModePatches, address, size), "x5000",
+                "Failed to patch swizzle mode");
+
+            PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "x5000",
+                "Failed to enable kernel writing");
+            orgChannelTypes[5] = 1;    // Fix createAccelChannels so that it only starts SDMA0
+            orgChannelTypes[getKernelVersion() > KernelVersion::BigSur ? 12 : 11] =
+                0;    // Fix getPagingChannel so that it gets SDMA0
+            MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
+            DBGLOG("x5000", "Applied SDMA1 patches");
+        } else {
+            auto dcn2 = NRed::callback->chipType >= ChipType::Renoir;
+            uint32_t findNonBpp64 = 0x22222221;
+            uint32_t replNonBpp64 = dcn2 ? Dcn2NonBpp64SwModeMask : Dcn1NonBpp64SwModeMask;
+            uint32_t findBpp64 = 0x44444440;
+            uint32_t replBpp64Pt2 = dcn2 ? Dcn2Bpp64SwModeMask : Dcn1Bpp64SwModeMask;
+            uint32_t replBpp64 = replNonBpp64 ^ replBpp64Pt2;
+            uint32_t findBpp64Pt2 = 0x66666661;
+            LookupPatchPlus const swizzleModePatches[] = {
+                {&kextRadeonX5000, reinterpret_cast<const uint8_t *>(&findNonBpp64),
+                    reinterpret_cast<const uint8_t *>(&replNonBpp64), sizeof(uint32_t), 2},
+                {&kextRadeonX5000, reinterpret_cast<const uint8_t *>(&findBpp64),
+                    reinterpret_cast<const uint8_t *>(&replBpp64), sizeof(uint32_t), 1},
+                {&kextRadeonX5000, reinterpret_cast<const uint8_t *>(&findBpp64Pt2),
+                    reinterpret_cast<const uint8_t *>(&replBpp64Pt2), sizeof(uint32_t), 1},
+            };
+            PANIC_COND(!LookupPatchPlus::applyAll(&patcher, swizzleModePatches, address, size), "x5000",
+                "Failed to patch swizzle mode");
+            *orgChannelTypes = 1;    // Make VMPT use SDMA0 instead of SDMA1
+        }
 
         return true;
     }
@@ -103,28 +132,42 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
 }
 
 bool X5000::wrapAllocateHWEngines(void *that) {
-    callback->orgGFX9PM4EngineConstructor(getMember<void *>(that, 0x3B8) = IOMallocZero(0x340));
-    callback->orgGFX9SDMAEngineConstructor(getMember<void *>(that, 0x3C0) = IOMallocZero(0x250));
-    X6000::callback->orgVCN2EngineConstructor(getMember<void *>(that, 0x3F8) = IOMallocZero(0x2D8));
+    auto catalina = getKernelVersion() == KernelVersion::Catalina;
+    auto fieldBase = catalina ? 0x348 : 0x3B8;
+    callback->orgGFX9PM4EngineConstructor(getMember<void *>(that, fieldBase) = IOMallocZero(0x340));
+    callback->orgGFX9SDMAEngineConstructor(getMember<void *>(that, fieldBase + 0x8) = IOMallocZero(0x250));
+    X6000::callback->orgVCN2EngineConstructor(
+        getMember<void *>(that, fieldBase + (catalina ? 0x30 : 0x40)) = IOMallocZero(0x2D8));
 
     return true;
 }
 
-enum HWCapability : uint64_t {
-    DisplayPipeCount = 0x04,    // uint32_t
-    SECount = 0x34,             // uint32_t
-    SHPerSE = 0x3C,             // uint32_t
-    CUPerSH = 0x70,             // uint32_t
-    HasUVD0 = 0x84,             // bool
-    HasUVD1 = 0x85,             // bool
-    HasVCE = 0x86,              // bool
-    HasVCN0 = 0x87,             // bool
-    HasVCN1 = 0x88,             // bool
-    HasSDMAPageQueue = 0x98,    // bool
+struct HWCapability {
+    enum : uint64_t {
+        DisplayPipeCount = 0x04,    // uint32_t
+        SECount = 0x34,             // uint32_t
+        SHPerSE = 0x3C,             // uint32_t
+        CUPerSH = 0x70,             // uint32_t
+        HasUVD0 = 0x84,             // bool
+        HasVCE = 0x86,              // bool
+        HasVCN0 = 0x87,             // bool
+    };
+};
+
+struct HWCapabilityCatalina {
+    enum : uint64_t {
+        DisplayPipeCount = 0x04,    // uint32_t
+        SECount = 0x30,             // uint32_t
+        SHPerSE = 0x34,             // uint32_t
+        CUPerSH = 0x58,             // uint32_t
+        HasUVD0 = 0x68,             // bool
+        HasVCE = 0x6A,              // bool
+        HasVCN0 = 0x6B,             // bool
+    };
 };
 
 template<typename T>
-static inline void setHWCapability(void *that, HWCapability capability, T value) {
+static inline void setHWCapability(void *that, uint64_t capability, T value) {
     getMember<T>(that, 0x28 + capability) = value;
 }
 
@@ -136,19 +179,20 @@ void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
     auto *header = reinterpret_cast<const CommonFirmwareHeader *>(fwDesc.data);
     auto *gpuInfo = reinterpret_cast<const GPUInfoFirmware *>(fwDesc.data + header->ucodeOff);
 
-    setHWCapability<uint32_t>(that, HWCapability::SECount, gpuInfo->gcNumSe);
-    setHWCapability<uint32_t>(that, HWCapability::SHPerSE, gpuInfo->gcNumShPerSe);
-    setHWCapability<uint32_t>(that, HWCapability::CUPerSH, gpuInfo->gcNumCuPerSh);
+    auto catalina = getKernelVersion() == KernelVersion::Catalina;
+    setHWCapability<uint32_t>(that, catalina ? HWCapabilityCatalina::SECount : HWCapability::SECount, gpuInfo->gcNumSe);
+    setHWCapability<uint32_t>(that, catalina ? HWCapabilityCatalina::SHPerSE : HWCapability::SHPerSE,
+        gpuInfo->gcNumShPerSe);
+    setHWCapability<uint32_t>(that, catalina ? HWCapabilityCatalina::CUPerSH : HWCapability::CUPerSH,
+        gpuInfo->gcNumCuPerSh);
 
     FunctionCast(wrapSetupAndInitializeHWCapabilities, callback->orgSetupAndInitializeHWCapabilities)(that);
 
-    setHWCapability<uint32_t>(that, HWCapability::DisplayPipeCount, isRavenDerivative ? 4 : 6);
-    setHWCapability<bool>(that, HWCapability::HasUVD0, false);
-    setHWCapability<bool>(that, HWCapability::HasUVD1, false);
-    setHWCapability<bool>(that, HWCapability::HasVCE, false);
-    setHWCapability<bool>(that, HWCapability::HasVCN0, true);
-    setHWCapability<bool>(that, HWCapability::HasVCN1, false);
-    setHWCapability<bool>(that, HWCapability::HasSDMAPageQueue, false);
+    setHWCapability<uint32_t>(that, catalina ? HWCapabilityCatalina::DisplayPipeCount : HWCapability::DisplayPipeCount,
+        isRavenDerivative ? 4 : 6);
+    setHWCapability<bool>(that, catalina ? HWCapabilityCatalina::HasUVD0 : HWCapability::HasUVD0, false);
+    setHWCapability<bool>(that, catalina ? HWCapabilityCatalina::HasVCE : HWCapability::HasVCE, false);
+    setHWCapability<bool>(that, catalina ? HWCapabilityCatalina::HasVCN0 : HWCapability::HasVCN0, true);
 }
 
 void *X5000::wrapGetHWChannel(void *that, uint32_t engineType, uint32_t ringId) {
@@ -156,7 +200,9 @@ void *X5000::wrapGetHWChannel(void *that, uint32_t engineType, uint32_t ringId) 
     return FunctionCast(wrapGetHWChannel, callback->orgGetHWChannel)(that, (engineType == 2) ? 1 : engineType, ringId);
 }
 
-void X5000::wrapInitializeFamilyType(void *that) { getMember<uint32_t>(that, 0x308) = AMDGPU_FAMILY_RAVEN; }
+void X5000::wrapInitializeFamilyType(void *that) {
+    getMember<uint32_t>(that, getKernelVersion() == KernelVersion::Catalina ? 0x2B4 : 0x308) = AMDGPU_FAMILY_RAVEN;
+}
 
 void *X5000::wrapAllocateAMDHWDisplay(void *that) {
     return FunctionCast(wrapAllocateAMDHWDisplay, X6000::callback->orgAllocateAMDHWDisplay)(that);
@@ -209,7 +255,7 @@ void *X5000::wrapObtainAccelChannelGroup(void *that, uint32_t priority) {
 }
 
 uint32_t X5000::wrapHwlConvertChipFamily(void *that, uint32_t, uint32_t) {
-    auto &settings = getMember<Gfx9ChipSettings>(that, 0x5B10);
+    auto &settings = getMember<Gfx9ChipSettings>(that, getKernelVersion() == KernelVersion::Catalina ? 0x5B18 : 0x5B10);
     auto renoir = NRed::callback->chipType >= ChipType::Renoir;
     settings.isArcticIsland = 1;
     settings.isRaven = 1;

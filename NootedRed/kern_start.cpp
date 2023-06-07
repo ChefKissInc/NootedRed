@@ -32,7 +32,7 @@ PluginConfiguration ADDPR(config) {
     arrsize(bootargDebug),
     bootargBeta,
     arrsize(bootargBeta),
-    KernelVersion::BigSur,
+    KernelVersion::Catalina,
     KernelVersion::Monterey,
     []() { nred.init(); },
 };

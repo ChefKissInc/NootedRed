@@ -275,32 +275,32 @@ void NRed::setRMMIOIfNecessary() {
             case 0x15D8:
                 if (LIKELY(this->revision >= 0x8)) {
                     this->chipType = ChipType::Raven2;
-                    this->extRevision = 0x79;
+                    this->enumRevision = 0x79;
                     break;
                 }
                 this->chipType = ChipType::Picasso;
-                this->extRevision = 0x41;
+                this->enumRevision = 0x41;
                 break;
             case 0x15DD:
                 if (LIKELY(this->revision >= 0x8)) {
                     this->chipType = ChipType::Raven2;
-                    this->extRevision = 0x79;
+                    this->enumRevision = 0x79;
                     break;
                 }
                 this->chipType = ChipType::Raven;
-                this->extRevision = 0x10;
+                this->enumRevision = 0x10;
                 break;
             case 0x164C:
                 [[fallthrough]];
             case 0x1636:
                 this->chipType = ChipType::Renoir;
-                this->extRevision = 0x91;
+                this->enumRevision = 0x91;
                 break;
             case 0x15E7:
                 [[fallthrough]];
             case 0x1638:
                 this->chipType = ChipType::GreenSardine;
-                this->extRevision = 0x91;
+                this->enumRevision = 0x91;
                 break;
             default:
                 PANIC("nred", "Unknown device ID");
