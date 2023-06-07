@@ -96,7 +96,7 @@
 				<key>PP_ToolsLogSpaceSize</key>
 				<integer>524288</integer>
 				<key>PP_WorkLoadPolicyMask</key>
-				<integer>16</integer>
+				<integer>1</integer>
 			</dict>
 		</dict>
 		<key>com.ChefKissInc.NootedRed</key>
