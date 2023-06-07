@@ -313,9 +313,9 @@ void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         LookupPatchPlus const patches[] = {
             {&kextAGDP, kAGDPBoardIDKeyOriginal, kAGDPBoardIDKeyPatched, 1},
             {&kextAGDP, kAGDPFBCountCheckOriginal, kAGDPFBCountCheckPatched, 1,
-                getKernelVersion() <= KernelVersion::Monterey},
+                getKernelVersion() < KernelVersion::Ventura || getKernelVersion() > KernelVersion::Ventura},
             {&kextAGDP, kAGDPFBCountCheckVenturaOriginal, kAGDPFBCountCheckVenturaPatched, 1,
-                getKernelVersion() >= KernelVersion::Ventura},
+                getKernelVersion() == KernelVersion::Ventura},
         };
         PANIC_COND(!LookupPatchPlus::applyAll(&patcher, patches, address, size), "nred",
             "Failed to apply AGDP patches: %d", patcher.getError());

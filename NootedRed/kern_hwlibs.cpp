@@ -78,6 +78,8 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("hwlibs", "Applied DDI Caps patches");
 
+        auto ventura = getKernelVersion() >= KernelVersion::Ventura;
+        auto monterey = getKernelVersion() >= KernelVersion::Monterey;
         LookupPatchPlus const patches[] = {
             {&kextRadeonX5000HWLibs, kPspSwInitOriginal1, kPspSwInitPatched1, 1},
             {&kextRadeonX5000HWLibs, kPspSwInitOriginal2, kPspSwInitMask2, kPspSwInitPatched2, 1},
@@ -85,14 +87,16 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
                 kSmuInitFunctionPointerListPatched, 1},
             {&kextRadeonX5000HWLibs, kFullAsicResetOriginal, kFullAsicResetPatched, 1},
             {&kextRadeonX5000HWLibs, kGcSwInitOriginal, kGcSwInitOriginalMask, kGcSwInitPatched, kGcSwInitPatchedMask,
-                1},
+                1, !ventura},
+            {&kextRadeonX5000HWLibs, kGcSwInitVenturaOriginal, kGcSwInitVenturaOriginalMask, kGcSwInitVenturaPatched,
+                kGcSwInitVenturaPatchedMask, 1, ventura},
             {&kextRadeonX5000HWLibs, kGcSetFwEntryInfoOriginal, kGcSetFwEntryInfoMask, kGcSetFwEntryInfoPatched, 1},
-            {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesOriginal1, kCreatePowerTuneServicesPatched1, 1,
-                getKernelVersion() < KernelVersion::Monterey},
+            {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesOriginal1, kCreatePowerTuneServicesPatched1, 1, !monterey},
             {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesMontereyOriginal1,
-                kCreatePowerTuneServicesMontereyPatched1, 1, getKernelVersion() >= KernelVersion::Monterey},
+                kCreatePowerTuneServicesMontereyPatched1, 1, monterey},
             {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesOriginal2, kCreatePowerTuneServicesMask2,
                 kCreatePowerTuneServicesPatched2, 1},
+            {&kextRadeonX5000HWLibs, kCailQueryAdapterInfoOriginal, kCailQueryAdapterInfoPatched, 1, ventura},
         };
         PANIC_COND(!LookupPatchPlus::applyAll(&patcher, patches, address, size), "hwlibs",
             "Failed to apply patches: %d", patcher.getError());

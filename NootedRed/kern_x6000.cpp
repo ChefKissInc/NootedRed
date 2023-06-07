@@ -40,7 +40,8 @@ bool X6000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
         };
         PANIC_COND(!patcher.solveMultiple(index, solveRequests, address, size), "x6000", "Failed to resolve symbols");
 
-        KernelPatcher::RouteRequest requests[] = {
+        auto ventura = getKernelVersion() >= KernelVersion::Ventura;
+        RouteRequestPlus requests[] = {
             {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator5startEP9IOService", wrapAccelStartX6000},
             {"__ZN39AMDRadeonX6000_AMDAccelSharedUserClient5startEP9IOService", wrapAccelSharedUCStartX6000},
             {"__ZN39AMDRadeonX6000_AMDAccelSharedUserClient4stopEP9IOService", wrapAccelSharedUCStopX6000},
@@ -48,27 +49,35 @@ bool X6000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
                 this->orgInitDCNRegistersOffsets},
             {"__ZN29AMDRadeonX6000_AMDAccelShared11SurfaceCopyEPjyP12IOAccelEvent", wrapAccelSharedSurfaceCopy,
                 this->orgAccelSharedSurfaceCopy},
-            {"__ZN27AMDRadeonX6000_AMDHWDisplay17allocateScanoutFBEjP16IOAccelResource2S1_Py", wrapAllocateScanoutFB,
-                this->orgAllocateScanoutFB},
             {"__ZN27AMDRadeonX6000_AMDHWDisplay14fillUBMSurfaceEjP17_FRAMEBUFFER_INFOP13_UBM_SURFINFO",
                 wrapFillUBMSurface, this->orgFillUBMSurface},
             {"__ZN27AMDRadeonX6000_AMDHWDisplay16configureDisplayEjjP17_FRAMEBUFFER_INFOP16IOAccelResource2",
                 wrapConfigureDisplay, this->orgConfigureDisplay},
             {"__ZN27AMDRadeonX6000_AMDHWDisplay14getDisplayInfoEjbbPvP17_FRAMEBUFFER_INFO", wrapGetDisplayInfo,
                 this->orgGetDisplayInfo},
+            {"__ZN27AMDRadeonX6000_AMDHWDisplay17allocateScanoutFBEjP16IOAccelResource2S1_Py", wrapAllocateScanoutFB,
+                this->orgAllocateScanoutFB, !ventura},
         };
-        PANIC_COND(!patcher.routeMultiple(index, requests, address, size), "x6000", "Failed to route symbols");
+        PANIC_COND(!RouteRequestPlus::routeAll(patcher, index, requests, address, size), "x6000",
+            "Failed to route symbols");
 
         auto monterey = getKernelVersion() == KernelVersion::Monterey;
         LookupPatchPlus const patches[] = {
-            {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal, kGetGpuDebugPolicyCallPatched, 28},
+            {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal, kGetGpuDebugPolicyCallPatched,
+                (getKernelVersion() == KernelVersion::Ventura && getKernelMinorVersion() >= 5) ? 38U :
+                ventura                                                                        ? 37 :
+                                                                                                 28},
             {&kextRadeonX6000, kHWChannelSubmitCommandBufferOriginal, kHWChannelSubmitCommandBufferPatched, 1},
-            {&kextRadeonX6000, kGetSchedulerCallOriginal, kGetSchedulerCallPatched, monterey ? 21U : 22U},
-            {&kextRadeonX6000, kIsDeviceValidCallOriginal, kIsDeviceValidCallPatched, monterey ? 26U : 24U},
-            {&kextRadeonX6000, kIsDevicePCITunnelledOriginal, kIsDevicePCITunnelledPatched, 1},
+            {&kextRadeonX6000, kGetSchedulerCallOriginal, kGetSchedulerCallPatched, monterey ? 21U : 22, !ventura},
+            {&kextRadeonX6000, kGetSchedulerCallVenturaOriginal, kGetSchedulerCallVenturaPatched, 24, ventura},
+            {&kextRadeonX6000, kIsDeviceValidCallOriginal, kIsDeviceValidCallPatched,
+                ventura  ? 23U :
+                monterey ? 26 :
+                           24},
+            {&kextRadeonX6000, kIsDevicePCITunnelledCallOriginal, kIsDevicePCITunnelledCallPatched, ventura ? 3U : 1},
         };
-        PANIC_COND(!LookupPatchPlus::applyAll(&patcher, patches, address, size), "x6000", "Failed to apply patches: %d",
-            patcher.getError());
+        SYSLOG_COND(!LookupPatchPlus::applyAll(&patcher, patches, address, size), "x6000",
+            "Failed to apply patches: %d", patcher.getError());
 
         return true;
     }
@@ -94,67 +103,68 @@ void X6000::wrapInitDCNRegistersOffsets(void *that) {
     FunctionCast(wrapInitDCNRegistersOffsets, callback->orgInitDCNRegistersOffsets)(that);
     if (NRed::callback->chipType < ChipType::Renoir) {
         DBGLOG("x6000", "initDCNRegistersOffsets !! PATCHING REGISTERS FOR DCN 1.0 !!");
-        auto base = getMember<uint32_t>(that, 0x4830);
-        getMember<uint32_t>(that, 0x4840) = base + mmHUBPREQ0_DCSURF_PRIMARY_SURFACE_ADDRESS;
-        getMember<uint32_t>(that, 0x4878) = base + mmHUBPREQ1_DCSURF_PRIMARY_SURFACE_ADDRESS;
-        getMember<uint32_t>(that, 0x48B0) = base + mmHUBPREQ2_DCSURF_PRIMARY_SURFACE_ADDRESS;
-        getMember<uint32_t>(that, 0x48E8) = base + mmHUBPREQ3_DCSURF_PRIMARY_SURFACE_ADDRESS;
-        getMember<uint32_t>(that, 0x4844) = base + mmHUBPREQ0_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH;
-        getMember<uint32_t>(that, 0x487C) = base + mmHUBPREQ1_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH;
-        getMember<uint32_t>(that, 0x48B4) = base + mmHUBPREQ2_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH;
-        getMember<uint32_t>(that, 0x48EC) = base + mmHUBPREQ3_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH;
-        getMember<uint32_t>(that, 0x4848) = base + mmHUBP0_DCSURF_SURFACE_CONFIG;
-        getMember<uint32_t>(that, 0x4880) = base + mmHUBP1_DCSURF_SURFACE_CONFIG;
-        getMember<uint32_t>(that, 0x48B8) = base + mmHUBP2_DCSURF_SURFACE_CONFIG;
-        getMember<uint32_t>(that, 0x48F0) = base + mmHUBP3_DCSURF_SURFACE_CONFIG;
-        getMember<uint32_t>(that, 0x484C) = base + mmHUBPREQ0_DCSURF_SURFACE_PITCH;
-        getMember<uint32_t>(that, 0x4884) = base + mmHUBPREQ1_DCSURF_SURFACE_PITCH;
-        getMember<uint32_t>(that, 0x48BC) = base + mmHUBPREQ2_DCSURF_SURFACE_PITCH;
-        getMember<uint32_t>(that, 0x48F4) = base + mmHUBPREQ3_DCSURF_SURFACE_PITCH;
-        getMember<uint32_t>(that, 0x4850) = base + mmHUBP0_DCSURF_ADDR_CONFIG;
-        getMember<uint32_t>(that, 0x4888) = base + mmHUBP1_DCSURF_ADDR_CONFIG;
-        getMember<uint32_t>(that, 0x48C0) = base + mmHUBP2_DCSURF_ADDR_CONFIG;
-        getMember<uint32_t>(that, 0x48F8) = base + mmHUBP3_DCSURF_ADDR_CONFIG;
-        getMember<uint32_t>(that, 0x4854) = base + mmHUBP0_DCSURF_TILING_CONFIG;
-        getMember<uint32_t>(that, 0x488C) = base + mmHUBP1_DCSURF_TILING_CONFIG;
-        getMember<uint32_t>(that, 0x48C4) = base + mmHUBP2_DCSURF_TILING_CONFIG;
-        getMember<uint32_t>(that, 0x48FC) = base + mmHUBP3_DCSURF_TILING_CONFIG;
-        getMember<uint32_t>(that, 0x4858) = base + mmHUBP0_DCSURF_PRI_VIEWPORT_START;
-        getMember<uint32_t>(that, 0x4890) = base + mmHUBP1_DCSURF_PRI_VIEWPORT_START;
-        getMember<uint32_t>(that, 0x48C8) = base + mmHUBP2_DCSURF_PRI_VIEWPORT_START;
-        getMember<uint32_t>(that, 0x4900) = base + mmHUBP3_DCSURF_PRI_VIEWPORT_START;
-        getMember<uint32_t>(that, 0x485C) = base + mmHUBP0_DCSURF_PRI_VIEWPORT_DIMENSION;
-        getMember<uint32_t>(that, 0x4894) = base + mmHUBP1_DCSURF_PRI_VIEWPORT_DIMENSION;
-        getMember<uint32_t>(that, 0x48CC) = base + mmHUBP2_DCSURF_PRI_VIEWPORT_DIMENSION;
-        getMember<uint32_t>(that, 0x4904) = base + mmHUBP3_DCSURF_PRI_VIEWPORT_DIMENSION;
-        getMember<uint32_t>(that, 0x4860) = base + mmOTG0_OTG_CONTROL;
-        getMember<uint32_t>(that, 0x4898) = base + mmOTG1_OTG_CONTROL;
-        getMember<uint32_t>(that, 0x48D0) = base + mmOTG2_OTG_CONTROL;
-        getMember<uint32_t>(that, 0x4908) = base + mmOTG3_OTG_CONTROL;
-        getMember<uint32_t>(that, 0x4940) = base + mmOTG4_OTG_CONTROL;
-        getMember<uint32_t>(that, 0x4978) = base + mmOTG5_OTG_CONTROL;
-        getMember<uint32_t>(that, 0x4864) = base + mmOTG0_OTG_INTERLACE_CONTROL;
-        getMember<uint32_t>(that, 0x489C) = base + mmOTG1_OTG_INTERLACE_CONTROL;
-        getMember<uint32_t>(that, 0x48D4) = base + mmOTG2_OTG_INTERLACE_CONTROL;
-        getMember<uint32_t>(that, 0x490C) = base + mmOTG3_OTG_INTERLACE_CONTROL;
-        getMember<uint32_t>(that, 0x4944) = base + mmOTG4_OTG_INTERLACE_CONTROL;
-        getMember<uint32_t>(that, 0x497C) = base + mmOTG5_OTG_INTERLACE_CONTROL;
-        getMember<uint32_t>(that, 0x4868) = base + mmHUBPREQ0_DCSURF_FLIP_CONTROL;
-        getMember<uint32_t>(that, 0x48A0) = base + mmHUBPREQ1_DCSURF_FLIP_CONTROL;
-        getMember<uint32_t>(that, 0x48D8) = base + mmHUBPREQ2_DCSURF_FLIP_CONTROL;
-        getMember<uint32_t>(that, 0x4910) = base + mmHUBPREQ3_DCSURF_FLIP_CONTROL;
-        getMember<uint32_t>(that, 0x486C) = base + mmHUBPRET0_HUBPRET_CONTROL;
-        getMember<uint32_t>(that, 0x48A4) = base + mmHUBPRET1_HUBPRET_CONTROL;
-        getMember<uint32_t>(that, 0x48DC) = base + mmHUBPRET2_HUBPRET_CONTROL;
-        getMember<uint32_t>(that, 0x4914) = base + mmHUBPRET3_HUBPRET_CONTROL;
-        getMember<uint32_t>(that, 0x4870) = base + mmHUBPREQ0_DCSURF_SURFACE_EARLIEST_INUSE;
-        getMember<uint32_t>(that, 0x48A8) = base + mmHUBPREQ1_DCSURF_SURFACE_EARLIEST_INUSE;
-        getMember<uint32_t>(that, 0x48E0) = base + mmHUBPREQ2_DCSURF_SURFACE_EARLIEST_INUSE;
-        getMember<uint32_t>(that, 0x4918) = base + mmHUBPREQ3_DCSURF_SURFACE_EARLIEST_INUSE;
-        getMember<uint32_t>(that, 0x4874) = base + mmHUBPREQ0_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
-        getMember<uint32_t>(that, 0x48AC) = base + mmHUBPREQ1_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
-        getMember<uint32_t>(that, 0x48E4) = base + mmHUBPREQ2_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
-        getMember<uint32_t>(that, 0x491C) = base + mmHUBPREQ3_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
+        auto fieldBase = getKernelVersion() > KernelVersion::Monterey ? 0x590 : 0x4830;
+        auto base = getMember<uint32_t>(that, fieldBase);
+        getMember<uint32_t>(that, fieldBase + 0x10) = base + mmHUBPREQ0_DCSURF_PRIMARY_SURFACE_ADDRESS;
+        getMember<uint32_t>(that, fieldBase + 0x48) = base + mmHUBPREQ1_DCSURF_PRIMARY_SURFACE_ADDRESS;
+        getMember<uint32_t>(that, fieldBase + 0x80) = base + mmHUBPREQ2_DCSURF_PRIMARY_SURFACE_ADDRESS;
+        getMember<uint32_t>(that, fieldBase + 0xB8) = base + mmHUBPREQ3_DCSURF_PRIMARY_SURFACE_ADDRESS;
+        getMember<uint32_t>(that, fieldBase + 0x14) = base + mmHUBPREQ0_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH;
+        getMember<uint32_t>(that, fieldBase + 0x4C) = base + mmHUBPREQ1_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH;
+        getMember<uint32_t>(that, fieldBase + 0x84) = base + mmHUBPREQ2_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH;
+        getMember<uint32_t>(that, fieldBase + 0xBC) = base + mmHUBPREQ3_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH;
+        getMember<uint32_t>(that, fieldBase + 0x18) = base + mmHUBP0_DCSURF_SURFACE_CONFIG;
+        getMember<uint32_t>(that, fieldBase + 0x50) = base + mmHUBP1_DCSURF_SURFACE_CONFIG;
+        getMember<uint32_t>(that, fieldBase + 0x88) = base + mmHUBP2_DCSURF_SURFACE_CONFIG;
+        getMember<uint32_t>(that, fieldBase + 0xC0) = base + mmHUBP3_DCSURF_SURFACE_CONFIG;
+        getMember<uint32_t>(that, fieldBase + 0x1C) = base + mmHUBPREQ0_DCSURF_SURFACE_PITCH;
+        getMember<uint32_t>(that, fieldBase + 0x54) = base + mmHUBPREQ1_DCSURF_SURFACE_PITCH;
+        getMember<uint32_t>(that, fieldBase + 0x8C) = base + mmHUBPREQ2_DCSURF_SURFACE_PITCH;
+        getMember<uint32_t>(that, fieldBase + 0xC4) = base + mmHUBPREQ3_DCSURF_SURFACE_PITCH;
+        getMember<uint32_t>(that, fieldBase + 0x20) = base + mmHUBP0_DCSURF_ADDR_CONFIG;
+        getMember<uint32_t>(that, fieldBase + 0x58) = base + mmHUBP1_DCSURF_ADDR_CONFIG;
+        getMember<uint32_t>(that, fieldBase + 0x90) = base + mmHUBP2_DCSURF_ADDR_CONFIG;
+        getMember<uint32_t>(that, fieldBase + 0xC8) = base + mmHUBP3_DCSURF_ADDR_CONFIG;
+        getMember<uint32_t>(that, fieldBase + 0x24) = base + mmHUBP0_DCSURF_TILING_CONFIG;
+        getMember<uint32_t>(that, fieldBase + 0x5C) = base + mmHUBP1_DCSURF_TILING_CONFIG;
+        getMember<uint32_t>(that, fieldBase + 0x94) = base + mmHUBP2_DCSURF_TILING_CONFIG;
+        getMember<uint32_t>(that, fieldBase + 0xCC) = base + mmHUBP3_DCSURF_TILING_CONFIG;
+        getMember<uint32_t>(that, fieldBase + 0x28) = base + mmHUBP0_DCSURF_PRI_VIEWPORT_START;
+        getMember<uint32_t>(that, fieldBase + 0x60) = base + mmHUBP1_DCSURF_PRI_VIEWPORT_START;
+        getMember<uint32_t>(that, fieldBase + 0x98) = base + mmHUBP2_DCSURF_PRI_VIEWPORT_START;
+        getMember<uint32_t>(that, fieldBase + 0xD0) = base + mmHUBP3_DCSURF_PRI_VIEWPORT_START;
+        getMember<uint32_t>(that, fieldBase + 0x2C) = base + mmHUBP0_DCSURF_PRI_VIEWPORT_DIMENSION;
+        getMember<uint32_t>(that, fieldBase + 0x64) = base + mmHUBP1_DCSURF_PRI_VIEWPORT_DIMENSION;
+        getMember<uint32_t>(that, fieldBase + 0x9C) = base + mmHUBP2_DCSURF_PRI_VIEWPORT_DIMENSION;
+        getMember<uint32_t>(that, fieldBase + 0xD4) = base + mmHUBP3_DCSURF_PRI_VIEWPORT_DIMENSION;
+        getMember<uint32_t>(that, fieldBase + 0x30) = base + mmOTG0_OTG_CONTROL;
+        getMember<uint32_t>(that, fieldBase + 0x68) = base + mmOTG1_OTG_CONTROL;
+        getMember<uint32_t>(that, fieldBase + 0xA0) = base + mmOTG2_OTG_CONTROL;
+        getMember<uint32_t>(that, fieldBase + 0xD8) = base + mmOTG3_OTG_CONTROL;
+        getMember<uint32_t>(that, fieldBase + 0x110) = base + mmOTG4_OTG_CONTROL;
+        getMember<uint32_t>(that, fieldBase + 0x148) = base + mmOTG5_OTG_CONTROL;
+        getMember<uint32_t>(that, fieldBase + 0x34) = base + mmOTG0_OTG_INTERLACE_CONTROL;
+        getMember<uint32_t>(that, fieldBase + 0x6C) = base + mmOTG1_OTG_INTERLACE_CONTROL;
+        getMember<uint32_t>(that, fieldBase + 0xA4) = base + mmOTG2_OTG_INTERLACE_CONTROL;
+        getMember<uint32_t>(that, fieldBase + 0xDC) = base + mmOTG3_OTG_INTERLACE_CONTROL;
+        getMember<uint32_t>(that, fieldBase + 0x114) = base + mmOTG4_OTG_INTERLACE_CONTROL;
+        getMember<uint32_t>(that, fieldBase + 0x14C) = base + mmOTG5_OTG_INTERLACE_CONTROL;
+        getMember<uint32_t>(that, fieldBase + 0x38) = base + mmHUBPREQ0_DCSURF_FLIP_CONTROL;
+        getMember<uint32_t>(that, fieldBase + 0x70) = base + mmHUBPREQ1_DCSURF_FLIP_CONTROL;
+        getMember<uint32_t>(that, fieldBase + 0xA8) = base + mmHUBPREQ2_DCSURF_FLIP_CONTROL;
+        getMember<uint32_t>(that, fieldBase + 0xE0) = base + mmHUBPREQ3_DCSURF_FLIP_CONTROL;
+        getMember<uint32_t>(that, fieldBase + 0x3C) = base + mmHUBPRET0_HUBPRET_CONTROL;
+        getMember<uint32_t>(that, fieldBase + 0x74) = base + mmHUBPRET1_HUBPRET_CONTROL;
+        getMember<uint32_t>(that, fieldBase + 0xAC) = base + mmHUBPRET2_HUBPRET_CONTROL;
+        getMember<uint32_t>(that, fieldBase + 0xE4) = base + mmHUBPRET3_HUBPRET_CONTROL;
+        getMember<uint32_t>(that, fieldBase + 0x40) = base + mmHUBPREQ0_DCSURF_SURFACE_EARLIEST_INUSE;
+        getMember<uint32_t>(that, fieldBase + 0x78) = base + mmHUBPREQ1_DCSURF_SURFACE_EARLIEST_INUSE;
+        getMember<uint32_t>(that, fieldBase + 0xB0) = base + mmHUBPREQ2_DCSURF_SURFACE_EARLIEST_INUSE;
+        getMember<uint32_t>(that, fieldBase + 0xE8) = base + mmHUBPREQ3_DCSURF_SURFACE_EARLIEST_INUSE;
+        getMember<uint32_t>(that, fieldBase + 0x44) = base + mmHUBPREQ0_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
+        getMember<uint32_t>(that, fieldBase + 0x7C) = base + mmHUBPREQ1_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
+        getMember<uint32_t>(that, fieldBase + 0xB4) = base + mmHUBPREQ2_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
+        getMember<uint32_t>(that, fieldBase + 0xEC) = base + mmHUBPREQ3_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
     }
 }
 

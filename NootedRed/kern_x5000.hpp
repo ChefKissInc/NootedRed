@@ -42,5 +42,6 @@ class X5000 {
     static uint32_t wrapGetDeviceType();
     static uint32_t wrapReturnZero();
     static void *wrapObtainAccelChannelGroup(void *that, uint32_t priority);
+    static void *wrapObtainAccelChannelGroup1304(void *that, uint32_t priority, void *task);
     static uint32_t wrapHwlConvertChipFamily(void *that, uint32_t family, uint32_t revision);
 };
