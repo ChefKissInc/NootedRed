@@ -27,9 +27,12 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
 
         CAILAsicCapsEntry *orgAsicCapsTable = nullptr;
 
+        auto ventura = getKernelVersion() >= KernelVersion::Ventura;
         SolveRequestPlus solveRequests[] = {
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable, kCailAsicCapsTablePattern},
             {"_dce_driver_set_backlight", this->orgDceDriverSetBacklight, kDceDriverSetBacklight},
+            {"__ZNK34AMDRadeonX6000_AmdRadeonController18messageAcceleratorE25_eAMDAccelIOFBRequestTypePvS1_S1_",
+                this->orgMessageAccelerator, ventura},
         };
         PANIC_COND(!SolveRequestPlus::solveAll(&patcher, index, solveRequests, address, size), "x6000fb",
             "Failed to resolve symbols");
@@ -50,6 +53,8 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
                 kIH40IVRingInitHardwarePattern, kIH40IVRingInitHardwareMask},
             {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister, this->orgIRQMGRWriteRegister,
                 kIRQMGRWriteRegisterPattern},
+            {"__ZN34AMDRadeonX6000_AmdRadeonController7powerUpEv", wrapControllerPowerUp, this->orgControllerPowerUp,
+                ventura},
         };
         PANIC_COND(!RouteRequestPlus::routeAll(patcher, index, requests, address, size), "x6000fb",
             "Failed to route symbols");
@@ -62,6 +67,8 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
             {&kextRadeonX6000Framebuffer, kGetFirmwareInfoNullCheckOriginal, kGetFirmwareInfoNullCheckPatched, 1},
             {&kextRadeonX6000Framebuffer, kAgdcServicesGetVendorInfoOriginal, kAgdcServicesGetVendorInfoMask,
                 kAgdcServicesGetVendorInfoPatched, kAgdcServicesGetVendorInfoMask, 1},
+            {&kextRadeonX6000Framebuffer, kControllerPowerUpOriginal, kControllerPowerUpOriginalMask,
+                kControllerPowerUpReplace, kControllerPowerUpReplaceMask, 1, ventura},
         };
         PANIC_COND(!LookupPatchPlus::applyAll(&patcher, patches, address, size), "x6000fb",
             "Failed to apply patches: %d", patcher.getError());
@@ -157,14 +164,6 @@ IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
     }
     getMember<uint32_t>(fwInfo, 0x20) = channelCount * 64;    // VRAM Width (64-bit channels)
     return kIOReturnSuccess;
-}
-
-bool X6000FB::wrapInitWithPciInfo(void *that, void *param1) {
-    auto ret = FunctionCast(wrapInitWithPciInfo, callback->orgInitWithPciInfo)(that, param1);
-    // Hack AMDRadeonX6000_AmdLogger to log everything
-    getMember<uint64_t>(that, 0x28) = ~0ULL;
-    getMember<uint32_t>(that, 0x30) = 0xFF;
-    return ret;
 }
 
 bool X6000FB::OnAppleBacklightDisplayLoad(void *, void *, IOService *newService, IONotifier *) {
@@ -293,22 +292,6 @@ uint32_t X6000FB::wrapGetNumberOfConnectors(void *that) {
     return FunctionCast(wrapGetNumberOfConnectors, callback->orgGetNumberOfConnectors)(that);
 }
 
-constexpr static const char *LogTypes[] = {"Error", "Warning", "Debug", "DC_Interface", "DTN", "Surface", "HW_Hotplug",
-    "HW_LKTN", "HW_Mode", "HW_Resume", "HW_Audio", "HW_HPDIRQ", "MST", "Scaler", "BIOS", "BWCalcs", "BWValidation",
-    "I2C_AUX", "Sync", "Backlight", "Override", "Edid", "DP_Caps", "Resource", "DML", "Mode", "Detect", "LKTN",
-    "LinkLoss", "Underflow", "InterfaceTrace", "PerfTrace", "DisplayStats"};
-
-void X6000FB::wrapDmLoggerWrite(void *, uint32_t logType, char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    auto *ns = new char[0x10000];
-    vsnprintf(ns, 0x10000, fmt, args);
-    va_end(args);
-    const char *logTypeStr = arrsize(LogTypes) > logType ? LogTypes[logType] : "Info";
-    kprintf("[%s] %s", logTypeStr, ns);
-    delete[] ns;
-}
-
 bool X6000FB::wrapIH40IVRingInitHardware(void *ctx, void *param2) {
     auto ret = FunctionCast(wrapIH40IVRingInitHardware, callback->orgIH40IVRingInitHardware)(ctx, param2);
     if (NRed::callback->chipType >= ChipType::Renoir) {
@@ -324,4 +307,13 @@ void X6000FB::wrapIRQMGRWriteRegister(void *ctx, uint64_t index, uint32_t value)
         DBGLOG("x6000fb", "_IRQMGR_WriteRegister: Set IH_BUFFER_MEM_CLK_SOFT_OVERRIDE");
     }
     FunctionCast(wrapIRQMGRWriteRegister, callback->orgIRQMGRWriteRegister)(ctx, index, value);
+}
+
+uint32_t X6000FB::wrapControllerPowerUp(void *that) {
+    auto &m_flags = getMember<uint8_t>(that, 0x5F18);
+    auto send = !(m_flags & 2);
+    m_flags |= 4;    // All framebuffers enabled
+    auto ret = FunctionCast(wrapControllerPowerUp, callback->orgControllerPowerUp)(that);
+    if (send) { callback->orgMessageAccelerator(that, 0x1B, nullptr, nullptr, nullptr); }
+    return ret;
 }
