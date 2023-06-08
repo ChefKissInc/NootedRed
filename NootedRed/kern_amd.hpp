@@ -123,7 +123,7 @@ struct GPUInfoFirmware {
     uint32_t gcLdsSize;
 } PACKED;
 
-struct CailAsicCapEntry {
+struct CAILAsicCapsEntry {
     uint32_t familyId, deviceId;
     uint32_t revision, extRevision;
     uint32_t pciRevision;
@@ -132,7 +132,7 @@ struct CailAsicCapEntry {
     const uint32_t *skeleton;
 } PACKED;
 
-struct CailInitAsicCapEntry {
+struct CAILAsicCapsInitEntry {
     uint64_t familyId, deviceId;
     uint64_t revision, extRevision;
     uint64_t pciRevision;
@@ -145,15 +145,15 @@ static const uint32_t ddiCapsRaven[16] = {0x800005U, 0x500011FEU, 0x80000U, 0x11
 static const uint32_t ddiCapsRenoir[16] = {0x800005U, 0x500011FEU, 0x80000U, 0x11001000U, 0x200U, 0x68000001U,
     0x20000000, 0x4002U, 0x22420001U, 0x9E20E18U, 0x2000120U, 0x0U, 0x0U, 0x0U, 0x0U, 0x0U};
 
-enum AMDReturn : uint32_t {
-    kAMDReturnSuccess = 0,
-    kAMDReturnInvalidArgument,
-    kAMDReturnGeneralFailure,
-    kAMDReturnResourcesExhausted,
-    kAMDReturnUnsupported,
+enum CAILResult : uint32_t {
+    kCAILResultSuccess = 0,
+    kCAILResultInvalidArgument,
+    kCAILResultGeneralFailure,
+    kCAILResultResourcesExhausted,
+    kCAILResultUnsupported,
 };
 
-struct CailDeviceTypeEntry {
+struct CAILDeviceTypeEntry {
     uint32_t deviceId;
     uint32_t deviceType;
 } PACKED;

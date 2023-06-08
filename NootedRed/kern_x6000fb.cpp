@@ -25,7 +25,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
     if (kextRadeonX6000Framebuffer.loadIndex == index) {
         NRed::callback->setRMMIOIfNecessary();
 
-        CailAsicCapEntry *orgAsicCapsTable = nullptr;
+        CAILAsicCapsEntry *orgAsicCapsTable = nullptr;
 
         SolveRequestPlus solveRequests[] = {
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable, kCailAsicCapsTablePattern},
@@ -38,9 +38,6 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
             {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", wrapPopulateVramInfo,
                 kPopulateVramInfoPattern},
             {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
-            {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo,
-                this->orgInitWithPciInfo, ADDPR(debugEnabled)},
-            {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", wrapDoGPUPanic, ADDPR(debugEnabled)},
             {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit, this->orgDcePanelCntlHwInit,
                 kDcePanelCntlHwInitPattern},
             {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25setAttributeForConnectionEijm", wrapFramebufferSetAttribute,
@@ -53,7 +50,6 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
                 kIH40IVRingInitHardwarePattern, kIH40IVRingInitHardwareMask},
             {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister, this->orgIRQMGRWriteRegister,
                 kIRQMGRWriteRegisterPattern},
-            {"_dm_logger_write", wrapDmLoggerWrite, kDmLoggerWritePattern, checkKernelArgument("-nreddmlogger")},
         };
         PANIC_COND(!RouteRequestPlus::routeAll(patcher, index, requests, address, size), "x6000fb",
             "Failed to route symbols");
@@ -93,7 +89,7 @@ uint16_t X6000FB::wrapGetEnumeratedRevision() { return NRed::callback->extRevisi
 
 IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
     uint32_t channelCount = 1;
-    auto *table = NRed::callback->getVBIOSDataTable<IgpSystemInfo>(0x1E);
+    auto *table = NRed::callback->getVBIOSDataTable<IGPSystemInfo>(0x1E);
     uint8_t memoryType = 0;
     if (table) {
         DBGLOG("x6000fb", "Fetching VRAM info from iGPU System Info");
@@ -286,8 +282,8 @@ uint32_t X6000FB::wrapGetNumberOfConnectors(void *that) {
             auto n = objInfo->pathCount;
             for (size_t i = 0, j = 0; i < n; i++) {
                 // Skip invalid device tags
-                if (objInfo->dispPaths[i].devTag) {
-                    objInfo->dispPaths[j++] = objInfo->dispPaths[i];
+                if (objInfo->paths[i].devTag) {
+                    objInfo->paths[j++] = objInfo->paths[i];
                 } else {
                     objInfo->pathCount--;
                 }

@@ -4,7 +4,6 @@
 #pragma once
 #include "kern_amd.hpp"
 #include <Headers/kern_patcher.hpp>
-#include <Headers/kern_util.hpp>
 
 class X5000 {
     friend class X6000;

@@ -14,7 +14,7 @@ bool SolveRequestPlus::solve(KernelPatcher *patcher, size_t index, mach_vm_addre
     }
 
     if (!this->pattern || !this->patternSize) {
-        SYSLOG("patcher+", "Failed to solve %s using symbol", safeString(this->symbol));
+        DBGLOG("patcher+", "Failed to solve %s using symbol", safeString(this->symbol));
         return false;
     }
 
@@ -22,7 +22,7 @@ bool SolveRequestPlus::solve(KernelPatcher *patcher, size_t index, mach_vm_addre
     if (!KernelPatcher::findPattern(this->pattern, this->mask, this->patternSize,
             reinterpret_cast<const void *>(address), size, &offset) ||
         !offset) {
-        SYSLOG("patcher+", "Failed to solve %s using pattern", safeString(this->symbol));
+        DBGLOG("patcher+", "Failed to solve %s using pattern", safeString(this->symbol));
         return false;
     }
 
@@ -45,7 +45,7 @@ bool RouteRequestPlus::route(KernelPatcher &patcher, size_t index, mach_vm_addre
     patcher.clearError();
 
     if (!this->pattern || !this->patternSize) {
-        SYSLOG("patcher+", "Failed to route %s using symbol", safeString(this->symbol));
+        DBGLOG("patcher+", "Failed to route %s using symbol", safeString(this->symbol));
         return false;
     }
 
@@ -53,13 +53,13 @@ bool RouteRequestPlus::route(KernelPatcher &patcher, size_t index, mach_vm_addre
     if (!KernelPatcher::findPattern(this->pattern, this->mask, this->patternSize,
             reinterpret_cast<const void *>(address), size, &offset) ||
         !offset) {
-        SYSLOG("patcher+", "Failed to route %s using pattern", safeString(this->symbol));
+        DBGLOG("patcher+", "Failed to route %s using pattern", safeString(this->symbol));
         return false;
     }
 
     auto org = patcher.routeFunction(address + offset, this->to, true);
     if (!org) {
-        SYSLOG("patcher+", "Failed to route %s using pattern: %d", safeString(this->symbol), patcher.getError());
+        DBGLOG("patcher+", "Failed to route %s using pattern: %d", safeString(this->symbol), patcher.getError());
         return false;
     }
     if (this->org) { *this->org = org; }
@@ -91,7 +91,7 @@ bool LookupPatchPlus::applyAll(KernelPatcher *patcher, LookupPatchPlus const *pa
     mach_vm_address_t address, size_t size) {
     for (size_t i = 0; i < count; i++) {
         if (!patches[i].apply(patcher, address, size)) {
-            SYSLOG("patcher+", "Failed to apply patches[%zu]", i);
+            DBGLOG("patcher+", "Failed to apply patches[%zu]", i);
             return false;
         }
     }

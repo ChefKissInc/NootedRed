@@ -43,7 +43,7 @@ def get_fmt_type(type: str) -> str:
     table = {
         "uint64_t": "0x%llX",
         "uint32_t": "0x%X",
-        "AMDReturn": "0x%X",
+        "CAILResult": "0x%X",
         "uint16_t": "0x%hX",
         "uint8_t": "0x%hhX",
         "bool": "%d",

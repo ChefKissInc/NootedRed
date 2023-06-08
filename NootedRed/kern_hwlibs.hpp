@@ -25,6 +25,6 @@ class X5000HWLibs {
     static uint32_t wrapSmuGetHwVersion();
     static void wrapPopulateFirmwareDirectory(void *that);
     static void wrapUpdateSdmaPowerGating(void *cail, uint32_t mode);
-    static AMDReturn wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4);
-    static AMDReturn hwLibsNoop();
+    static CAILResult wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4);
+    static CAILResult hwLibsNoop();
 };

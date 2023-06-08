@@ -10,28 +10,20 @@
 
 static NRed nred;
 
-static const char *bootargOff[] = {
-    "-nredoff",
-};
-
-static const char *bootargDebug[] = {
-    "-nreddbg",
-};
-
-static const char *bootargBeta[] = {
-    "-nredbeta",
-};
+static const char *bootargOff = "-nredoff";
+static const char *bootargDebug = "-nreddbg";
+static const char *bootargBeta = "-nredbeta";
 
 PluginConfiguration ADDPR(config) {
     xStringify(PRODUCT_NAME),
     parseModuleVersion(xStringify(MODULE_VERSION)),
     LiluAPI::AllowNormal | LiluAPI::AllowInstallerRecovery | LiluAPI::AllowSafeMode,
-    bootargOff,
-    arrsize(bootargOff),
-    bootargDebug,
-    arrsize(bootargDebug),
-    bootargBeta,
-    arrsize(bootargBeta),
+    &bootargOff,
+    1,
+    &bootargDebug,
+    1,
+    &bootargBeta,
+    1,
     KernelVersion::BigSur,
     KernelVersion::Monterey,
     []() { nred.init(); },
@@ -41,17 +33,18 @@ OSDefineMetaClassAndStructors(PRODUCT_NAME, IOService);
 
 IOService *PRODUCT_NAME::probe(IOService *provider, SInt32 *score) {
     setProperty("VersionInfo", kextVersion);
-    auto service = IOService::probe(provider, score);
-    return ADDPR(startSuccess) ? service : nullptr;
+    return ADDPR(startSuccess) ? IOService::probe(provider, score) : nullptr;
 }
 
 bool PRODUCT_NAME::start(IOService *provider) {
+    if (!ADDPR(startSuccess)) { return false; }
+
     if (!IOService::start(provider)) {
         SYSLOG("init", "Failed to start the parent");
         return false;
     }
 
-    if (!(lilu.getRunMode() & LiluAPI::RunningInstallerRecovery) && ADDPR(startSuccess)) {
+    if (!(lilu.getRunMode() & LiluAPI::RunningInstallerRecovery)) {
         auto *prop = OSDynamicCast(OSArray, this->getProperty("Drivers"));
         if (!prop) {
             SYSLOG("init", "Failed to get Drivers property");
@@ -76,7 +69,7 @@ bool PRODUCT_NAME::start(IOService *provider) {
         OSSafeReleaseNULL(drivers);
     }
 
-    if (ADDPR(startSuccess) && X6000FB::callback) { X6000FB::callback->registerDispMaxBrightnessNotif(); }
+    if (X6000FB::callback) { X6000FB::callback->registerDispMaxBrightnessNotif(); }
 
-    return ADDPR(startSuccess);
+    return true;
 }
