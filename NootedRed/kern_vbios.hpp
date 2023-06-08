@@ -25,7 +25,7 @@ struct GOPVideoBIOSHeader {
     uint32_t revision, imageLength;
 } PACKED;
 
-struct AtomCommonTableHeader {
+struct ATOMCommonTableHeader {
     uint16_t structureSize;
     uint8_t formatRev;
     uint8_t contentRev;
@@ -34,10 +34,7 @@ struct AtomCommonTableHeader {
 constexpr uint32_t ATOM_ROM_TABLE_PTR = 0x48;
 constexpr uint32_t ATOM_ROM_DATA_PTR = 0x20;
 
-constexpr uint32_t ATOM_ROM_SIZE_OFFSET = 0x2;
-constexpr uint32_t ATOM_ROM_CHECKSUM_OFFSET = 0x21;
-
-struct IgpSystemInfoV11 : public AtomCommonTableHeader {
+struct IGPSystemInfoV11 : public ATOMCommonTableHeader {
     uint32_t vbiosMisc;
     uint32_t gpuCapInfo;
     uint32_t systemConfig;
@@ -57,7 +54,7 @@ struct IgpSystemInfoV11 : public AtomCommonTableHeader {
     uint8_t umaChannelCount;
 } PACKED;
 
-enum AtomDmiT17MemTypeDef : uint8_t {
+enum DMIT17MemType : uint8_t {
     kDDR2MemType = 0x13,
     kDDR2FBDIMMMemType,
     kDDR3MemType = 0x18,
@@ -69,7 +66,7 @@ enum AtomDmiT17MemTypeDef : uint8_t {
     kLPDDR5MemType,
 };
 
-struct IgpSystemInfoV2 : public AtomCommonTableHeader {
+struct IGPSystemInfoV2 : public ATOMCommonTableHeader {
     uint32_t vbiosMisc;
     uint32_t gpuCapInfo;
     uint32_t systemConfig;
@@ -81,13 +78,13 @@ struct IgpSystemInfoV2 : public AtomCommonTableHeader {
     uint8_t umaChannelCount;
 } PACKED;
 
-union IgpSystemInfo {
-    AtomCommonTableHeader header;
-    IgpSystemInfoV11 infoV11;
-    IgpSystemInfoV2 infoV2;
+union IGPSystemInfo {
+    ATOMCommonTableHeader header;
+    IGPSystemInfoV11 infoV11;
+    IGPSystemInfoV2 infoV2;
 };
 
-struct AtomDispObjPathV2 {
+struct ATOMDispObjPathV2 {
     uint16_t dispObjId;
     uint16_t dispRecordOff;
     uint16_t encoderObjId;
@@ -99,9 +96,9 @@ struct AtomDispObjPathV2 {
     uint8_t _reserved;
 } PACKED;
 
-struct DispObjInfoTableV1_4 : public AtomCommonTableHeader {
+struct DispObjInfoTableV1_4 : public ATOMCommonTableHeader {
     uint16_t supportedDevices;
     uint8_t pathCount;
     uint8_t _reserved;
-    AtomDispObjPathV2 dispPaths[];
+    ATOMDispObjPathV2 paths[];
 } PACKED;

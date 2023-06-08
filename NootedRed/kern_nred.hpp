@@ -5,7 +5,7 @@
 #include "kern_amd.hpp"
 #include "kern_fw.hpp"
 #include "kern_vbios.hpp"
-#include <Headers/kern_iokit.hpp>
+#include <Headers/kern_patcher.hpp>
 #include <IOKit/acpi/IOACPIPlatformExpert.h>
 #include <IOKit/graphics/IOFramebuffer.h>
 #include <IOKit/pci/IOPCIDevice.h>
@@ -85,11 +85,6 @@ struct vc_info {
     unsigned int v_scale;
     unsigned int v_rotate;
     unsigned int v_reserved[3];
-};
-
-// This is a hack to let us access protected properties.
-struct FramebufferViewer : public IOFramebuffer {
-    static IOMemoryMap *&getVRAMMap(IOFramebuffer *fb) { return static_cast<FramebufferViewer *>(fb)->fVramMap; }
 };
 
 class NRed {

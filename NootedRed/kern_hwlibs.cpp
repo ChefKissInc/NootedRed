@@ -25,17 +25,17 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
     if (kextRadeonX5000HWLibs.loadIndex == index) {
         NRed::callback->setRMMIOIfNecessary();
 
-        CailAsicCapEntry *orgCapsTbl = nullptr;
-        CailInitAsicCapEntry *orgInitCapsTbl = nullptr;
-        CailDeviceTypeEntry *orgDeviceTypeTable = nullptr;
+        CAILAsicCapsEntry *orgCapsTable = nullptr;
+        CAILAsicCapsInitEntry *orgCapsInitTable = nullptr;
+        CAILDeviceTypeEntry *orgDeviceTypeTable = nullptr;
 
         SolveRequestPlus solveRequests[] = {
             {"__ZL15deviceTypeTable", orgDeviceTypeTable, kDeviceTypeTablePattern},
             {"__ZN11AMDFirmware14createFirmwareEPhjjPKc", this->orgCreateFirmware, kCreateFirmwarePattern},
             {"__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware", this->orgPutFirmware,
                 kPutFirmwarePattern},
-            {"__ZL20CAIL_ASIC_CAPS_TABLE", orgCapsTbl, kCailAsicCapsTableHWLibsPattern},
-            {"_CAILAsicCapsInitTable", orgInitCapsTbl, kCAILAsicCapsInitTablePattern},
+            {"__ZL20CAIL_ASIC_CAPS_TABLE", orgCapsTable, kCailAsicCapsTableHWLibsPattern},
+            {"_CAILAsicCapsInitTable", orgCapsInitTable, kCAILAsicCapsInitTablePattern},
         };
         PANIC_COND(!SolveRequestPlus::solveAll(&patcher, index, solveRequests, address, size), "hwlibs",
             "Failed to resolve symbols");
@@ -57,7 +57,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "hwlibs",
             "Failed to enable kernel writing");
         *orgDeviceTypeTable = {.deviceId = NRed::callback->deviceId, .deviceType = 6};
-        *orgCapsTbl = {
+        *orgCapsTable = {
             .familyId = AMDGPU_FAMILY_RAVEN,
             .deviceId = NRed::callback->deviceId,
             .revision = NRed::callback->revision,
@@ -65,7 +65,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             .pciRevision = NRed::callback->pciRevision,
             .caps = NRed::callback->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir,
         };
-        auto *temp = orgInitCapsTbl;
+        auto *temp = orgCapsInitTable;
         while (temp->deviceId != 0xFFFFFFFF) {
             if (temp->familyId == AMDGPU_FAMILY_RAVEN && temp->deviceId == NRed::callback->deviceId) {
                 temp->revision = NRed::callback->revision;
@@ -124,7 +124,7 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
     PANIC_COND(!callback->orgPutFirmware(fwDir, 6, fw), "hwlibs", "Failed to inject %s firmware", filename);
 }
 
-AMDReturn X5000HWLibs::hwLibsNoop() { return kAMDReturnSuccess; }
+CAILResult X5000HWLibs::hwLibsNoop() { return kCAILResultSuccess; }
 
 void X5000HWLibs::wrapUpdateSdmaPowerGating(void *cail, uint32_t mode) {
     FunctionCast(wrapUpdateSdmaPowerGating, callback->orgUpdateSdmaPowerGating)(cail, mode);
@@ -142,11 +142,11 @@ void X5000HWLibs::wrapUpdateSdmaPowerGating(void *cail, uint32_t mode) {
     }
 }
 
-AMDReturn X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4) {
+CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4) {
     // Upstream patch: https://github.com/torvalds/linux/commit/f8f70c1371d304f42d4a1242d8abcbda807d0bed
     if (NRed::callback->chipType >= ChipType::Renoir && getMember<uint32_t>(ctx, 0x10) == 6) {
         DBGLOG("hwlibs", "Skipping MEC2 JT FW");
-        return kAMDReturnSuccess;
+        return kCAILResultSuccess;
     }
 
     return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(psp, ctx, param3, param4);

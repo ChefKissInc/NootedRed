@@ -2,10 +2,9 @@
 //  details.
 
 #pragma once
-#include "kern_nred.hpp"
 #include <Headers/kern_patcher.hpp>
-#include <Headers/kern_util.hpp>
-#include <IOKit/graphics/IOFramebuffer.h>
+#include <IOKit/IOService.h>
+#include <IOKit/graphics/IOGraphicsTypes.h>
 
 using t_DceDriverSetBacklight = void (*)(void *panel_cntl, uint32_t backlight_pwm_u16_16);
 
