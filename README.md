@@ -2,7 +2,7 @@
 
 The AMD Vega iGPU support [Lilu](https://github.com/acidanthera/Lilu) (1.6.4+) plug-in.
 
-Supports the entire Raven ASIC family (Ryzen 5XXX series and older), from Big Sur to Ventura.
+Supports the entire Raven ASIC family (Ryzen 5XXX series and older), from Big Sur to Sonoma.
 
 The Source Code of this Original Work is licensed under the `Thou Shalt Not Profit License version 1.0`. See [`LICENSE`](https://github.com/NootInc/NootedRed/blob/master/LICENSE).
 
