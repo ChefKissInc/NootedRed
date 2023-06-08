@@ -217,14 +217,14 @@ static void fixAccelGroup(void *that) {
 
 void *X5000::wrapObtainAccelChannelGroup(void *that, uint32_t priority) {
     auto ret = FunctionCast(wrapObtainAccelChannelGroup, callback->orgObtainAccelChannelGroup)(that, priority);
-    if (ret && priority == 2) { fixAccelGroup(ret); }
+    if (ret) { fixAccelGroup(ret); }
     return ret;
 }
 
 void *X5000::wrapObtainAccelChannelGroup1304(void *that, uint32_t priority, void *task) {
     auto ret =
         FunctionCast(wrapObtainAccelChannelGroup1304, callback->orgObtainAccelChannelGroup)(that, priority, task);
-    if (ret && priority == 2) { fixAccelGroup(ret); }
+    if (ret) { fixAccelGroup(ret); }
     return ret;
 }
 
