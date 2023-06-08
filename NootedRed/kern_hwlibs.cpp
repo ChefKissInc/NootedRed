@@ -97,6 +97,8 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesOriginal2, kCreatePowerTuneServicesMask2,
                 kCreatePowerTuneServicesPatched2, 1},
             {&kextRadeonX5000HWLibs, kCailQueryAdapterInfoOriginal, kCailQueryAdapterInfoPatched, 1, ventura},
+            {&kextRadeonX5000HWLibs, kSDMAInitFunctionPointerListOriginal, kSDMAInitFunctionPointerListPatched, 1,
+                ventura},
         };
         PANIC_COND(!LookupPatchPlus::applyAll(&patcher, patches, address, size), "hwlibs",
             "Failed to apply patches: %d", patcher.getError());

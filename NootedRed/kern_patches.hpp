@@ -126,6 +126,14 @@ static const uint8_t kCailQueryAdapterInfoOriginal[] = {0x83, 0xC0, 0x92, 0x83, 
 static const uint8_t kCailQueryAdapterInfoPatched[] = {0x83, 0xC0, 0x91, 0x83, 0xF8, 0x21};
 
 /**
+ * `_sdma_init_function_pointer_list`
+ * AMDRadeonX5000HWLibs.kext
+ * Ventura removed the firmware for SDMA 4.1.x. Force use SDMA 4.0 firmware.
+ */
+static const uint8_t kSDMAInitFunctionPointerListOriginal[] = {0x81, 0xFB, 0x00, 0x00, 0x04, 0x00, 0x0F};
+static const uint8_t kSDMAInitFunctionPointerListPatched[] = {0x39, 0xDB, 0x66, 0x90, 0x66, 0x90, 0x0F};
+
+/**
  * `AMDRadeonX6000_AmdAsicInfoNavi::populateDeviceInfo`
  * AMDRadeonX6000.kext
  * Fix register read (0xD31 -> 0xD2F) and family ID (0x8F -> 0x8E).
