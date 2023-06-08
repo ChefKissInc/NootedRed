@@ -128,7 +128,7 @@ static const uint8_t kCailQueryAdapterInfoPatched[] = {0x83, 0xC0, 0x91, 0x83, 0
 /**
  * `_sdma_init_function_pointer_list`
  * AMDRadeonX5000HWLibs.kext
- * Ventura removed the firmware for SDMA 4.1.x. Force use SDMA 4.0 firmware.
+ * Ventura removed the code for SDMA 4.1.x. Force use SDMA 4.0.
  */
 static const uint8_t kSDMAInitFunctionPointerListOriginal[] = {0x81, 0xFB, 0x00, 0x00, 0x04, 0x00, 0x0F};
 static const uint8_t kSDMAInitFunctionPointerListPatched[] = {0x39, 0xDB, 0x66, 0x90, 0x66, 0x90, 0x0F};
@@ -194,7 +194,7 @@ static const uint8_t kAgdcServicesGetVendorInfoPatched[] = {0xC7, 0x00, 0x00, 0x
  */
 static const uint8_t kStartHWEnginesOriginal[] = {0x40, 0x83, 0xF0, 0x02};
 static const uint8_t kStartHWEnginesMask[] = {0xF0, 0xFF, 0xF0, 0xFF};
-static const uint8_t kStartHWEnginesPatched[] = {0x48, 0x83, 0xFB, 0x01};
+static const uint8_t kStartHWEnginesPatched[] = {0x40, 0x83, 0xF0, 0x01};
 
 /**
  * `Addr::Lib::Create`
