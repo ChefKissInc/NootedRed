@@ -85,10 +85,8 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
             kStartHWEnginesPatched, kStartHWEnginesMask, ventura ? 2U : 1};
         PANIC_COND(!patch.apply(&patcher, startHWEngines, PAGE_SIZE), "x5000", "Failed to patch startHWEngines");
 
-        uint32_t findBpp64 = Dcn1Bpp64SwModeMask;
-        uint32_t replBpp64 = Dcn2Bpp64SwModeMask;
-        uint32_t findNonBpp64 = Dcn1NonBpp64SwModeMask;
-        uint32_t replNonBpp64 = Dcn2NonBpp64SwModeMask;
+        uint32_t findBpp64 = Dcn1Bpp64SwModeMask, replBpp64 = Dcn2Bpp64SwModeMask;
+        uint32_t findNonBpp64 = Dcn1NonBpp64SwModeMask, replNonBpp64 = Dcn2NonBpp64SwModeMask;
         auto dcn2 = NRed::callback->chipType >= ChipType::Renoir;
         LookupPatchPlus const swizzleModePatches[] = {
             {&kextRadeonX5000, reinterpret_cast<const uint8_t *>(&findBpp64),
@@ -102,7 +100,7 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "x5000",
             "Failed to enable kernel writing");
         orgChannelTypes[5] = 1;    // Fix createAccelChannels so that it only starts SDMA0
-        orgChannelTypes[getKernelVersion() > KernelVersion::BigSur ? 12 : 11] =
+        orgChannelTypes[(getKernelVersion() >= KernelVersion::Monterey) ? 12 : 11] =
             0;    // Fix getPagingChannel so that it gets SDMA0
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("x5000", "Applied SDMA1 patches");
@@ -136,7 +134,7 @@ enum HWCapability : uint64_t {
 
 template<typename T>
 static inline void setHWCapability(void *that, HWCapability capability, T value) {
-    getMember<T>(that, (getKernelVersion() > KernelVersion::Monterey ? 0x30 : 0x28) + capability) = value;
+    getMember<T>(that, (getKernelVersion() >= KernelVersion::Ventura ? 0x30 : 0x28) + capability) = value;
 }
 
 void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
