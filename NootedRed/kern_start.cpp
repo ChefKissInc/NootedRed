@@ -25,7 +25,7 @@ PluginConfiguration ADDPR(config) {
     &bootargBeta,
     1,
     KernelVersion::BigSur,
-    KernelVersion::Monterey,
+    KernelVersion::Sonoma,
     []() { nred.init(); },
 };
 

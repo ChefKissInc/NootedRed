@@ -6,7 +6,8 @@
 #include <IOKit/IOService.h>
 #include <IOKit/graphics/IOGraphicsTypes.h>
 
-using t_DceDriverSetBacklight = void (*)(void *panel_cntl, uint32_t backlight_pwm_u16_16);
+using t_DceDriverSetBacklight = void (*)(void *panelCntl, uint32_t backlightPwm);
+using t_MessageAccelerator = IOReturn (*)(void *that, uint32_t requestType, void *arg2, void *arg3, void *arg4);
 
 class X6000FB {
     friend class PRODUCT_NAME;
@@ -17,7 +18,6 @@ class X6000FB {
     bool processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size);
 
     private:
-    mach_vm_address_t orgInitWithPciInfo {0};
     t_DceDriverSetBacklight orgDceDriverSetBacklight {nullptr};
     mach_vm_address_t orgDcePanelCntlHwInit {0};
     mach_vm_address_t orgFramebufferSetAttribute {0}, orgFramebufferGetAttribute {0};
@@ -26,6 +26,8 @@ class X6000FB {
     IONotifier *dispNotif {nullptr};
     mach_vm_address_t orgGetNumberOfConnectors {0};
     mach_vm_address_t orgIH40IVRingInitHardware {0}, orgIRQMGRWriteRegister {0};
+    t_MessageAccelerator orgMessageAccelerator {nullptr};
+    mach_vm_address_t orgControllerPowerUp {0};
 
     static bool OnAppleBacklightDisplayLoad(void *target, void *refCon, IOService *newService, IONotifier *notifier);
     void registerDispMaxBrightnessNotif();
@@ -40,7 +42,7 @@ class X6000FB {
     static IOReturn wrapFramebufferGetAttribute(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
         uintptr_t *value);
     static uint32_t wrapGetNumberOfConnectors(void *that);
-    static void wrapDmLoggerWrite([[maybe_unused]] void *dalLogger, uint32_t logType, char *fmt, ...);
     static bool wrapIH40IVRingInitHardware(void *ctx, void *param2);
     static void wrapIRQMGRWriteRegister(void *ctx, uint64_t index, uint32_t value);
+    static uint32_t wrapControllerPowerUp(void *that);
 };

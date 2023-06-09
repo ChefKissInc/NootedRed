@@ -46,6 +46,8 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
         PANIC_COND(!SolveRequestPlus::solveAll(&patcher, index, solveRequests, address, size), "x5000",
             "Failed to resolve symbols");
 
+        auto ventura = getKernelVersion() >= KernelVersion::Ventura;
+        auto ventura1304 = (ventura && getKernelMinorVersion() >= 5) || getKernelVersion() > KernelVersion::Ventura;
         RouteRequestPlus requests[] = {
             {"__ZN32AMDRadeonX5000_AMDVega10Hardware17allocateHWEnginesEv", wrapAllocateHWEngines},
             {"__ZN32AMDRadeonX5000_AMDVega10Hardware32setupAndInitializeHWCapabilitiesEv",
@@ -65,25 +67,32 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
             {"__ZN43AMDRadeonX5000_AMDVega10GraphicsAccelerator13getDeviceTypeEP11IOPCIDevice", wrapGetDeviceType},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20writeASICHangLogInfoEPPv", wrapReturnZero},
             {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator23obtainAccelChannelGroupE11SS_PRIORITY",
-                wrapObtainAccelChannelGroup, orgObtainAccelChannelGroup},
+                wrapObtainAccelChannelGroup, this->orgObtainAccelChannelGroup, !ventura1304},
+            {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator23obtainAccelChannelGroupE11SS_PRIORITYP27AMDRadeonX5000_"
+             "AMDAccelTask",
+                wrapObtainAccelChannelGroup1304, this->orgObtainAccelChannelGroup, ventura1304},
             {"__ZN4Addr2V27Gfx9Lib20HwlConvertChipFamilyEjj", wrapHwlConvertChipFamily, kHwlConvertChipFamilyPattern},
         };
         PANIC_COND(!RouteRequestPlus::routeAll(patcher, index, requests, address, size), "x5000",
             "Failed to route symbols");
 
-        LookupPatchPlus const patch {&kextRadeonX5000, kStartHWEnginesOriginal, kStartHWEnginesPatched, 1};
+        LookupPatchPlus const addrLibPatch {&kextRadeonX5000, kAddrLibCreateOriginal, kAddrLibCreatePatched, 1,
+            ventura1304};
+        PANIC_COND(!addrLibPatch.apply(&patcher, address, size), "x5000",
+            "Failed to apply Ventura 13.4+ Addr::Lib::Create patch: %d", patcher.getError());
+
+        LookupPatchPlus const patch {&kextRadeonX5000, kStartHWEnginesOriginal, kStartHWEnginesMask,
+            kStartHWEnginesPatched, kStartHWEnginesMask, ventura ? 2U : 1};
         PANIC_COND(!patch.apply(&patcher, startHWEngines, PAGE_SIZE), "x5000", "Failed to patch startHWEngines");
 
-        uint32_t findBpp64 = Dcn1Bpp64SwModeMask;
-        uint32_t replBpp64 = Dcn2Bpp64SwModeMask;
-        uint32_t findNonBpp64 = Dcn1NonBpp64SwModeMask;
-        uint32_t replNonBpp64 = Dcn2NonBpp64SwModeMask;
+        uint32_t findBpp64 = Dcn1Bpp64SwModeMask, replBpp64 = Dcn2Bpp64SwModeMask;
+        uint32_t findNonBpp64 = Dcn1NonBpp64SwModeMask, replNonBpp64 = Dcn2NonBpp64SwModeMask;
         auto dcn2 = NRed::callback->chipType >= ChipType::Renoir;
         LookupPatchPlus const swizzleModePatches[] = {
             {&kextRadeonX5000, reinterpret_cast<const uint8_t *>(&findBpp64),
-                reinterpret_cast<const uint8_t *>(&replBpp64), sizeof(uint32_t), 4, dcn2},
+                reinterpret_cast<const uint8_t *>(&replBpp64), sizeof(uint32_t), ventura1304 ? 2U : 4, dcn2},
             {&kextRadeonX5000, reinterpret_cast<const uint8_t *>(&findNonBpp64),
-                reinterpret_cast<const uint8_t *>(&replNonBpp64), sizeof(uint32_t), 4, dcn2},
+                reinterpret_cast<const uint8_t *>(&replNonBpp64), sizeof(uint32_t), ventura1304 ? 2U : 4, dcn2},
         };
         PANIC_COND(!LookupPatchPlus::applyAll(&patcher, swizzleModePatches, address, size), "x5000",
             "Failed to patch swizzle mode");
@@ -91,7 +100,7 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "x5000",
             "Failed to enable kernel writing");
         orgChannelTypes[5] = 1;    // Fix createAccelChannels so that it only starts SDMA0
-        orgChannelTypes[getKernelVersion() > KernelVersion::BigSur ? 12 : 11] =
+        orgChannelTypes[(getKernelVersion() >= KernelVersion::Monterey) ? 12 : 11] =
             0;    // Fix getPagingChannel so that it gets SDMA0
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("x5000", "Applied SDMA1 patches");
@@ -116,16 +125,13 @@ enum HWCapability : uint64_t {
     SHPerSE = 0x3C,             // uint32_t
     CUPerSH = 0x70,             // uint32_t
     HasUVD0 = 0x84,             // bool
-    HasUVD1 = 0x85,             // bool
     HasVCE = 0x86,              // bool
     HasVCN0 = 0x87,             // bool
-    HasVCN1 = 0x88,             // bool
-    HasSDMAPageQueue = 0x98,    // bool
 };
 
 template<typename T>
 static inline void setHWCapability(void *that, HWCapability capability, T value) {
-    getMember<T>(that, 0x28 + capability) = value;
+    getMember<T>(that, (getKernelVersion() >= KernelVersion::Ventura ? 0x30 : 0x28) + capability) = value;
 }
 
 void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
@@ -144,11 +150,8 @@ void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
 
     setHWCapability<uint32_t>(that, HWCapability::DisplayPipeCount, isRavenDerivative ? 4 : 6);
     setHWCapability<bool>(that, HWCapability::HasUVD0, false);
-    setHWCapability<bool>(that, HWCapability::HasUVD1, false);
     setHWCapability<bool>(that, HWCapability::HasVCE, false);
     setHWCapability<bool>(that, HWCapability::HasVCN0, true);
-    setHWCapability<bool>(that, HWCapability::HasVCN1, false);
-    setHWCapability<bool>(that, HWCapability::HasSDMAPageQueue, false);
 }
 
 void *X5000::wrapGetHWChannel(void *that, uint32_t engineType, uint32_t ringId) {
@@ -199,12 +202,21 @@ uint32_t X5000::wrapGetDeviceType() { return NRed::callback->chipType < ChipType
 
 uint32_t X5000::wrapReturnZero() { return 0; }
 
+static void fixAccelGroup(void *that) {
+    auto *&sdma1 = getMember<void *>(that, 0x18);
+    sdma1 = sdma1 ?: getMember<void *>(that, 0x10);    // Replace field with SDMA0, as we have no SDMA1
+}
+
 void *X5000::wrapObtainAccelChannelGroup(void *that, uint32_t priority) {
     auto ret = FunctionCast(wrapObtainAccelChannelGroup, callback->orgObtainAccelChannelGroup)(that, priority);
-    auto *&sdma1 = getMember<void *>(ret, 0x18);
-    if (ret && priority == 2 && !sdma1) {
-        sdma1 = getMember<void *>(ret, 0x10);    // Replace field with SDMA0, as we have no SDMA1
-    }
+    if (ret) { fixAccelGroup(ret); }
+    return ret;
+}
+
+void *X5000::wrapObtainAccelChannelGroup1304(void *that, uint32_t priority, void *task) {
+    auto ret =
+        FunctionCast(wrapObtainAccelChannelGroup1304, callback->orgObtainAccelChannelGroup)(that, priority, task);
+    if (ret) { fixAccelGroup(ret); }
     return ret;
 }
 

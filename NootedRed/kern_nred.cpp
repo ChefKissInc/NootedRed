@@ -310,12 +310,11 @@ void NRed::setRMMIOIfNecessary() {
 
 void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextAGDP.loadIndex == index) {
+        auto ventura = getKernelVersion() == KernelVersion::Ventura;
         LookupPatchPlus const patches[] = {
             {&kextAGDP, kAGDPBoardIDKeyOriginal, kAGDPBoardIDKeyPatched, 1},
-            {&kextAGDP, kAGDPFBCountCheckOriginal, kAGDPFBCountCheckPatched, 1,
-                getKernelVersion() <= KernelVersion::Monterey},
-            {&kextAGDP, kAGDPFBCountCheckVenturaOriginal, kAGDPFBCountCheckVenturaPatched, 1,
-                getKernelVersion() >= KernelVersion::Ventura},
+            {&kextAGDP, kAGDPFBCountCheckOriginal, kAGDPFBCountCheckPatched, 1, !ventura},
+            {&kextAGDP, kAGDPFBCountCheckVenturaOriginal, kAGDPFBCountCheckVenturaPatched, 1, ventura},
         };
         PANIC_COND(!LookupPatchPlus::applyAll(&patcher, patches, address, size), "nred",
             "Failed to apply AGDP patches: %d", patcher.getError());
