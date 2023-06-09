@@ -125,11 +125,8 @@ enum HWCapability : uint64_t {
     SHPerSE = 0x3C,             // uint32_t
     CUPerSH = 0x70,             // uint32_t
     HasUVD0 = 0x84,             // bool
-    HasUVD1 = 0x85,             // bool
     HasVCE = 0x86,              // bool
     HasVCN0 = 0x87,             // bool
-    HasVCN1 = 0x88,             // bool
-    HasSDMAPageQueue = 0x98,    // bool
 };
 
 template<typename T>
@@ -153,11 +150,8 @@ void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
 
     setHWCapability<uint32_t>(that, HWCapability::DisplayPipeCount, isRavenDerivative ? 4 : 6);
     setHWCapability<bool>(that, HWCapability::HasUVD0, false);
-    setHWCapability<bool>(that, HWCapability::HasUVD1, false);
     setHWCapability<bool>(that, HWCapability::HasVCE, false);
     setHWCapability<bool>(that, HWCapability::HasVCN0, true);
-    setHWCapability<bool>(that, HWCapability::HasVCN1, false);
-    setHWCapability<bool>(that, HWCapability::HasSDMAPageQueue, false);
 }
 
 void *X5000::wrapGetHWChannel(void *that, uint32_t engineType, uint32_t ringId) {
