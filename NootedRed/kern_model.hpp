@@ -5,14 +5,14 @@
 #include <Headers/kern_util.hpp>
 
 struct Model {
-    uint16_t rev {0};
+    uint16_t revision {0};
     const char *name {nullptr};
 };
 
 struct DevicePair {
-    uint16_t dev;
+    uint16_t deviceId;
     const Model *models;
-    size_t modelNum;
+    size_t count;
 };
 
 static constexpr Model dev15DD[] = {
@@ -98,10 +98,10 @@ static constexpr DevicePair devices[] = {
 
 inline const char *getBranding(uint16_t dev, uint16_t rev) {
     for (auto &device : devices) {
-        if (device.dev == dev) {
-            for (size_t i = 0; i < device.modelNum; i++) {
+        if (device.deviceId == dev) {
+            for (size_t i = 0; i < device.count; i++) {
                 auto &model = device.models[i];
-                if (model.rev == rev) { return model.name; }
+                if (model.revision == rev) { return model.name; }
             }
             break;
         }

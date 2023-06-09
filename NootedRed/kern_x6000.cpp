@@ -43,6 +43,7 @@ bool X6000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
         PANIC_COND(!SolveRequestPlus::solveAll(&patcher, index, solveRequests, address, size), "x6000",
             "Failed to resolve symbols");
 
+        auto ventura = getKernelVersion() >= KernelVersion::Ventura;
         RouteRequestPlus requests[] = {
             {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator5startEP9IOService", wrapAccelStartX6000},
             {"__ZN39AMDRadeonX6000_AMDAccelSharedUserClient5startEP9IOService", wrapAccelSharedUCStartX6000, !catalina},
@@ -52,7 +53,7 @@ bool X6000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
             {"__ZN29AMDRadeonX6000_AMDAccelShared11SurfaceCopyEPjyP12IOAccelEvent", wrapAccelSharedSurfaceCopy,
                 this->orgAccelSharedSurfaceCopy, !catalina},
             {"__ZN27AMDRadeonX6000_AMDHWDisplay17allocateScanoutFBEjP16IOAccelResource2S1_Py", wrapAllocateScanoutFB,
-                this->orgAllocateScanoutFB},
+                this->orgAllocateScanoutFB, !ventura},
             {"__ZN27AMDRadeonX6000_AMDHWDisplay14fillUBMSurfaceEjP17_FRAMEBUFFER_INFOP13_UBM_SURFINFO",
                 wrapFillUBMSurface, this->orgFillUBMSurface},
             {"__ZN27AMDRadeonX6000_AMDHWDisplay16configureDisplayEjjP17_FRAMEBUFFER_INFOP16IOAccelResource2",
@@ -65,24 +66,34 @@ bool X6000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
 
         auto monterey = getKernelVersion() == KernelVersion::Monterey;
         LookupPatchPlus const patches[] = {
-            {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal, kGetGpuDebugPolicyCallPatched, 28, !catalina},
+            {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal, kGetGpuDebugPolicyCallPatched,
+                (getKernelVersion() == KernelVersion::Ventura && getKernelMinorVersion() >= 5) ? 38U :
+                ventura                                                                        ? 37 :
+                                                                                                 28,
+                !catalina},
             {&kextRadeonX6000, kGetGpuDebugPolicyCallCatalinaOriginal, kGetGpuDebugPolicyCallCatalinaPatched, 27,
                 catalina},
             {&kextRadeonX6000, kHWChannelSubmitCommandBufferOriginal, kHWChannelSubmitCommandBufferPatched, 1,
                 !catalina},
             {&kextRadeonX6000, kHWChannelSubmitCommandBufferCatalinaOriginal,
                 kHWChannelSubmitCommandBufferCatalinaPatched, 1, catalina},
-            {&kextRadeonX6000, kGetSchedulerCallOriginal, kGetSchedulerCallPatched, monterey ? 21U : 22, !catalina},
+            {&kextRadeonX6000, kGetSchedulerCallOriginal, kGetSchedulerCallPatched, monterey ? 21U : 22,
+                !catalina && !ventura},
             {&kextRadeonX6000, kGetSchedulerCallCatalinaOriginal, kGetSchedulerCallCatalinaPatched, 22, catalina},
+            {&kextRadeonX6000, kGetSchedulerCallVenturaOriginal, kGetSchedulerCallVenturaPatched, 24, ventura},
             {&kextRadeonX6000, kIsDeviceValidCallOriginal, kIsDeviceValidCallPatched,
                 catalina ? 20U :
+                ventura  ? 23 :
                 monterey ? 26 :
                            24},
-            {&kextRadeonX6000, kIsDevicePCITunnelledOriginal, kIsDevicePCITunnelledPatched, catalina ? 5U : 1},
+            {&kextRadeonX6000, kIsDevicePCITunnelledCallOriginal, kIsDevicePCITunnelledCallPatched,
+                catalina ? 5U :
+                ventura  ? 3 :
+                           1},
             {&kextRadeonX6000, kGetTtlInterfaceCallOriginal, kGetTtlInterfaceCallPatched, 6, catalina},
         };
-        PANIC_COND(!LookupPatchPlus::applyAll(&patcher, patches, address, size), "x6000", "Failed to apply patches: %d",
-            patcher.getError());
+        SYSLOG_COND(!LookupPatchPlus::applyAll(&patcher, patches, address, size), "x6000",
+            "Failed to apply patches: %d", patcher.getError());
 
         return true;
     }
@@ -106,8 +117,9 @@ bool X6000::wrapAccelSharedUCStopX6000(void *that, void *provider) {
 
 void X6000::wrapInitDCNRegistersOffsets(void *that) {
     FunctionCast(wrapInitDCNRegistersOffsets, callback->orgInitDCNRegistersOffsets)(that);
-    DBGLOG("x6000", "initDCNRegistersOffsets !! PATCHING REGISTERS FOR DCN 1.0 !!");
-    auto fieldBase = getKernelVersion() == KernelVersion::Catalina ? 0x4838 : 0x4830;
+    auto fieldBase = getKernelVersion() == KernelVersion::Catalina ? 0x4838 :
+                     getKernelVersion() > KernelVersion::Monterey  ? 0x590 :
+                                                                     0x4830;
     auto base = getMember<uint32_t>(that, fieldBase);
     getMember<uint32_t>(that, fieldBase + 0x10) = base + mmHUBPREQ0_DCSURF_PRIMARY_SURFACE_ADDRESS;
     getMember<uint32_t>(that, fieldBase + 0x48) = base + mmHUBPREQ1_DCSURF_PRIMARY_SURFACE_ADDRESS;

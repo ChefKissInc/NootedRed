@@ -311,7 +311,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "cd \"${TARGET_BUILD_DIR}\"\n\ndist=(\"$FULL_PRODUCT_NAME\")\nif [ -d \"$DWARF_DSYM_FILE_NAME\" ]; then dist+=(\"$DWARF_DSYM_FILE_NAME\"); fi\n\narchive=\"${PRODUCT_NAME}-${MODULE_VERSION}-$(echo $CONFIGURATION | tr /a-z/ /A-Z/).zip\"\nrm -rf *.zip\nif [ \"$CONFIGURATION\" == \"Release\" ]; then\n  strip -x -T \"${EXECUTABLE_PATH}\" &>/dev/null || strip -x \"${EXECUTABLE_PATH}\"\nfi\nzip -qry -FS \"${archive}\" \"${dist[@]}\"\n\n";
+			shellScript = "cd \"${TARGET_BUILD_DIR}\"\n\ndist=(\"$FULL_PRODUCT_NAME\")\nif [ -d \"$DWARF_DSYM_FILE_NAME\" ]; then dist+=(\"$DWARF_DSYM_FILE_NAME\"); fi\n\narchive=\"${PRODUCT_NAME}-${MODULE_VERSION}-$(echo $CONFIGURATION | tr /a-z/ /A-Z/).zip\"\nrm -rf *.zip\nif [ \"$CONFIGURATION\" == \"Release\" ]; then\n  strip -x -T \"${EXECUTABLE_PATH}\" &>/dev/null || strip -x \"${EXECUTABLE_PATH}\"\nfi\nzip -qry -FS \"${archive}\" \"${dist[@]}\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -504,6 +504,8 @@
 					"-Wno-unknown-warning-option",
 					"-Wno-ossharedptr-misuse",
 					"-Wno-vla",
+					"-Wextra",
+					"-Wall",
 					"$(inherited)",
 				);
 				OTHER_LDFLAGS = "-static";
@@ -558,6 +560,8 @@
 					"-Wno-unknown-warning-option",
 					"-Wno-ossharedptr-misuse",
 					"-Wno-vla",
+					"-Wextra",
+					"-Wall",
 					"$(inherited)",
 				);
 				OTHER_LDFLAGS = "-static";
@@ -673,6 +677,8 @@
 					"-Wno-unknown-warning-option",
 					"-Wno-ossharedptr-misuse",
 					"-Wno-vla",
+					"-Wextra",
+					"-Wall",
 					"$(inherited)",
 				);
 				OTHER_LDFLAGS = "-static";

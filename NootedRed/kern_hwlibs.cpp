@@ -25,9 +25,9 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
     if (kextRadeonX5000HWLibs.loadIndex == index) {
         NRed::callback->setRMMIOIfNecessary();
 
-        CailAsicCapEntry *orgCapsTbl = nullptr;
-        CailAsicCapsInitEntry *orgCapsInitTable = nullptr;
-        CailDeviceTypeEntry *orgDeviceTypeTable = nullptr;
+        CAILAsicCapsEntry *orgCapsTable = nullptr;
+        CAILAsicCapsInitEntry *orgCapsInitTable = nullptr;
+        CAILDeviceTypeEntry *orgDeviceTypeTable = nullptr;
         DeviceCapabilityEntry *orgDevCapTable = nullptr;
 
         auto catalina = getKernelVersion() == KernelVersion::Catalina;
@@ -36,7 +36,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             {"__ZN11AMDFirmware14createFirmwareEPhjjPKc", this->orgCreateFirmware, kCreateFirmwarePattern, !catalina},
             {"__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware", this->orgPutFirmware,
                 kPutFirmwarePattern, !catalina},
-            {"__ZL20CAIL_ASIC_CAPS_TABLE", orgCapsTbl, kCailAsicCapsTableHWLibsPattern},
+            {"__ZL20CAIL_ASIC_CAPS_TABLE", orgCapsTable, kCailAsicCapsTableHWLibsPattern},
             {"_CAILAsicCapsInitTable", orgCapsInitTable, kCAILAsicCapsInitTablePattern},
             {"_DeviceCapabilityTbl", orgDevCapTable, kDeviceCapabilityTblPattern},
         };
@@ -62,7 +62,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             "Failed to enable kernel writing");
         if (!catalina) { *orgDeviceTypeTable = {.deviceId = NRed::callback->deviceId, .deviceType = 6}; }
         auto renoir = NRed::callback->chipType >= ChipType::Renoir;
-        *orgCapsTbl = {
+        *orgCapsTable = {
             .familyId = AMDGPU_FAMILY_RAVEN,
             .deviceId = NRed::callback->deviceId,
             .revision = NRed::callback->revision,
@@ -103,6 +103,8 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("hwlibs", "Applied DDI Caps patches");
 
+        auto ventura = getKernelVersion() >= KernelVersion::Ventura;
+        auto monterey = getKernelVersion() >= KernelVersion::Monterey;
         LookupPatchPlus const patches[] = {
             {&kextRadeonX5000HWLibs, kPspSwInitOriginal1, kPspSwInitPatched1, 1, !catalina},
             {&kextRadeonX5000HWLibs, kPspSwInitOriginal2, kPspSwInitMask2, kPspSwInitPatched2, 1, !catalina},
@@ -113,12 +115,14 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
                 1, !catalina},
             {&kextRadeonX5000HWLibs, kGcSetFwEntryInfoOriginal, kGcSetFwEntryInfoMask, kGcSetFwEntryInfoPatched, 1,
                 !catalina},
-            {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesOriginal1, kCreatePowerTuneServicesPatched1, 1,
-                getKernelVersion() < KernelVersion::Monterey},
+            {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesOriginal1, kCreatePowerTuneServicesPatched1, 1, !monterey},
             {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesMontereyOriginal1,
-                kCreatePowerTuneServicesMontereyPatched1, 1, getKernelVersion() >= KernelVersion::Monterey},
+                kCreatePowerTuneServicesMontereyPatched1, 1, monterey},
             {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesOriginal2, kCreatePowerTuneServicesMask2,
                 kCreatePowerTuneServicesPatched2, 1},
+            {&kextRadeonX5000HWLibs, kCailQueryAdapterInfoOriginal, kCailQueryAdapterInfoPatched, 1, ventura},
+            {&kextRadeonX5000HWLibs, kSDMAInitFunctionPointerListOriginal, kSDMAInitFunctionPointerListPatched, 1,
+                ventura},
         };
         PANIC_COND(!LookupPatchPlus::applyAll(&patcher, patches, address, size), "hwlibs",
             "Failed to apply patches: %d", patcher.getError());
@@ -144,7 +148,7 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
     PANIC_COND(!callback->orgPutFirmware(fwDir, 6, fw), "hwlibs", "Failed to inject %s firmware", filename);
 }
 
-AMDReturn X5000HWLibs::hwLibsNoop() { return kAMDReturnSuccess; }
+CAILResult X5000HWLibs::hwLibsNoop() { return kCAILResultSuccess; }
 
 void X5000HWLibs::wrapUpdateSdmaPowerGating(void *cail, uint32_t mode) {
     FunctionCast(wrapUpdateSdmaPowerGating, callback->orgUpdateSdmaPowerGating)(cail, mode);
@@ -162,11 +166,11 @@ void X5000HWLibs::wrapUpdateSdmaPowerGating(void *cail, uint32_t mode) {
     }
 }
 
-AMDReturn X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4) {
+CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4) {
     // Upstream patch: https://github.com/torvalds/linux/commit/f8f70c1371d304f42d4a1242d8abcbda807d0bed
     if (NRed::callback->chipType >= ChipType::Renoir && getMember<uint32_t>(ctx, 0x10) == 6) {
         DBGLOG("hwlibs", "Skipping MEC2 JT FW");
-        return kAMDReturnSuccess;
+        return kCAILResultSuccess;
     }
 
     return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(psp, ctx, param3, param4);

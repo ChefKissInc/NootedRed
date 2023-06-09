@@ -56,9 +56,9 @@ def process_files(target_file, dir):
         file_list_content += [
             f"    {{NRED_FW(\"{file}\", {fw_var_name}, {fw_var_name}_size)}},\n"]
 
-    lines += ["\n", "const struct FwDesc fwList[] = {\n"]
+    lines += ["\n", "const struct FWDescriptor firmware[] = {\n"]
     lines += file_list_content
-    lines += ["};\n", f"const size_t fwNumber = {len(files)};\n"]
+    lines += ["};\n", f"const size_t firmwareCount = {len(files)};\n"]
 
     with open(target_file, "w") as file:
         file.writelines(lines)
