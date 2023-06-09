@@ -202,6 +202,14 @@ static const uint8_t kControllerPowerUpReplaceMask[] = {0x00, 0x00, 0x00, 0x00, 
     0x00, 0xFF, 0x00};
 
 /**
+ * `AMDRadeonX6000_AmdRadeonFramebuffer::validateDetailedTiming`
+ * AMDRadeonX6000Framebuffer.kext
+ * Remove new problematic Ventura pixel clock multiplier calculation which causes timing validation mishaps.
+ */
+static const uint8_t kValidateDetailedTimingOriginal[] = {0x66, 0x0F, 0x2E, 0xC1, 0x76, 0x06, 0xF2, 0x0F, 0x5E, 0xC1};
+static const uint8_t kValidateDetailedTimingPatched[] = {0x66, 0x0F, 0x2E, 0xC1, 0x66, 0x90, 0xF2, 0x0F, 0x5E, 0xC1};
+
+/**
  * `AMDRadeonX5000_AMDHardware::startHWEngines`
  * AMDRadeonX5000.kext
  * Make for loop run only once as we only have one SDMA engine.

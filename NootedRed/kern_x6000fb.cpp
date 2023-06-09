@@ -69,6 +69,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
                 kAgdcServicesGetVendorInfoPatched, kAgdcServicesGetVendorInfoMask, 1},
             {&kextRadeonX6000Framebuffer, kControllerPowerUpOriginal, kControllerPowerUpOriginalMask,
                 kControllerPowerUpReplace, kControllerPowerUpReplaceMask, 1, ventura},
+            {&kextRadeonX6000Framebuffer, kValidateDetailedTimingOriginal, kValidateDetailedTimingPatched, 1, ventura},
         };
         PANIC_COND(!LookupPatchPlus::applyAll(&patcher, patches, address, size), "x6000fb",
             "Failed to apply patches: %d", patcher.getError());
