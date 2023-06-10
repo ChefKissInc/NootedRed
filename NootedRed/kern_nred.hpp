@@ -88,6 +88,7 @@ struct vc_info {
 };
 
 class NRed {
+    friend class DYLDPatches;
     friend class X6000FB;
     friend class X5000HWLibs;
     friend class X6000;
@@ -245,11 +246,8 @@ class NRed {
     OSMetaClass *metaClassMap[4][2] = {{nullptr}};
     mach_vm_address_t orgSafeMetaCast {0};
     mach_vm_address_t orgApplePanelSetDisplay {0};
-    mach_vm_address_t orgCsValidatePage {0};
 
     static OSMetaClassBase *wrapSafeMetaCast(const OSMetaClassBase *anObject, const OSMetaClass *toMeta);
     static size_t wrapFunctionReturnZero();
     static bool wrapApplePanelSetDisplay(IOService *that, IODisplay *display);
-    static void csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset_t page_offset, const void *data,
-        int *validated_p, int *tainted_p, int *nx_p);
 };
