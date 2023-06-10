@@ -44,6 +44,7 @@ void DYLDPatches::csValidatePage(vnode *vp, memory_object_t pager, memory_object
         if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kCoreLSKDOriginal,
                 kCoreLSKDPatched)))
             DBGLOG("nred", "Patched streaming CPUID to Haswell");
+        return;
     }
 
     if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kVideoToolboxDRMModelOriginal,
