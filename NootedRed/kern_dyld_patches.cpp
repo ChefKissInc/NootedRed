@@ -147,9 +147,8 @@ void DYLDPatches::csValidatePage(vnode *vp, memory_object_t pager, memory_object
                 kAddIntraRefreshPacketMask, kAddIntraRefreshPacketPatched, kAddIntraRefreshPacketMask, 0, 0)))
         DBGLOG("nred", "Patched Vcn2EncCommand::addIntraRefreshPacket");
 
-    if (UNLIKELY(
-            KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE, kAddContextBufferPacketOriginal,
-                kAddContextBufferPacketMask, kAddContextBufferPacketPatched, kAddContextBufferPacketMask, 0, 0)))
+    if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kAddContextBufferPacketOriginal,
+            kAddContextBufferPacketPatched)))
         DBGLOG("nred", "Patched Vcn2EncCommand::addContextBufferPacket");
 
     if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kAddBitstreamBufferPacketOriginal,
@@ -157,8 +156,7 @@ void DYLDPatches::csValidatePage(vnode *vp, memory_object_t pager, memory_object
         DBGLOG("nred", "Patched Vcn2EncCommand::addBitstreamBufferPacket");
 
     if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kAddFeedbackBufferPacketOriginal,
-            arrsize(kAddFeedbackBufferPacketOriginal), kAddFeedbackBufferPacketPatched,
-            arrsize(kAddFeedbackBufferPacketOriginal))))
+            kAddFeedbackBufferPacketPatched)))
         DBGLOG("nred", "Patched Vcn2EncCommand::addFeedbackBufferPacket");
 
     if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
