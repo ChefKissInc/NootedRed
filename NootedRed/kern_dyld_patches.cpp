@@ -133,8 +133,8 @@ void DYLDPatches::csValidatePage(vnode *vp, memory_object_t pager, memory_object
             kWriteUvdGpcomVcpuData1Patched)))
         DBGLOG("nred", "Patched Vcn2DecCommand::writeUvdGpcomVcpuData1Original");
 
-    if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE, kAddEncodePacketOriginal,
-            kAddEncodePacketMask, kAddEncodePacketPatched, kAddEncodePacketMask, 0, 0)))
+    if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kAddEncodePacketOriginal,
+            kAddEncodePacketPatched)))
         DBGLOG("nred", "Patched Vcn2EncCommand::addEncodePacket");
 
     if (UNLIKELY(
