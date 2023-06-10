@@ -164,10 +164,22 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
                 kHEVCEncBoardIdPatched)))
             DBGLOG("nred", "Applied MacPro7,1 spoof to AppleGVAHEVCEncoder");
 
-        if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
-                kVAAcceleratorInfoIdentifyOriginal, kVAAcceleratorInfoIdentifyMask, kVAAcceleratorInfoIdentifyPatched,
-                kVAAcceleratorInfoIdentifyMask, 0, 0)))
-            DBGLOG("nred", "Patched VAAcceleratorInfo::identify");
+        if (getKernelVersion() >= KernelVersion::Ventura) {
+            if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                    kVAAcceleratorInfoIdentifyVenturaOriginal, arrsize(kVAAcceleratorInfoIdentifyVenturaOriginal),
+                    kVAAcceleratorInfoIdentifyVenturaOriginalMask,
+                    arrsize(kVAAcceleratorInfoIdentifyVenturaOriginalMask), kVAAcceleratorInfoIdentifyVenturaPatched,
+                    arrsize(kVAAcceleratorInfoIdentifyVenturaPatched), kVAAcceleratorInfoIdentifyVenturaPatchedMask,
+                    arrsize(kVAAcceleratorInfoIdentifyVenturaPatchedMask), 0, 0)))
+                DBGLOG("nred", "Patched VAAcceleratorInfo::identify");
+        } else {
+            if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                    kVAAcceleratorInfoIdentifyOriginal, arrsize(kVAAcceleratorInfoIdentifyOriginal),
+                    kVAAcceleratorInfoIdentifyOriginalMask, arrsize(kVAAcceleratorInfoIdentifyOriginalMask),
+                    kVAAcceleratorInfoIdentifyPatched, arrsize(kVAAcceleratorInfoIdentifyPatched),
+                    kVAAcceleratorInfoIdentifyPatchedMask, arrsize(kVAAcceleratorInfoIdentifyPatchedMask), 0, 0)))
+                DBGLOG("nred", "Patched VAAcceleratorInfo::identify");
+        }
 
         if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
                 kVAFactoryCreateGraphicsEngineOriginal, arrsize(kVAFactoryCreateGraphicsEngineOriginal),
