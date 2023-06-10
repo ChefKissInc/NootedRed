@@ -178,6 +178,12 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
                     arrsize(kVAFactoryCreateGraphicsEngineVenturaMask), kVAFactoryCreateGraphicsEnginePatched,
                     arrsize(kVAFactoryCreateGraphicsEnginePatched), nullptr, 0, 0, 0)))
                 DBGLOG("nred", "Patched VAFactory::createGraphicsEngine");
+            if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                    kVAFactoryCreateVPVenturaOriginal, arrsize(kVAFactoryCreateVPVenturaOriginal),
+                    kVAFactoryCreateVPVenturaOriginalMask, arrsize(kVAFactoryCreateVPVenturaOriginalMask),
+                    kVAFactoryCreateVPVenturaPatched, arrsize(kVAFactoryCreateVPVenturaPatched),
+                    kVAFactoryCreateVPVenturaPatchedMask, arrsize(kVAFactoryCreateVPVenturaPatchedMask), 0, 0)))
+                DBGLOG("nred", "Patched VAFactory::create*VP");
         } else {
             if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
                     kVAAcceleratorInfoIdentifyOriginal, arrsize(kVAAcceleratorInfoIdentifyOriginal),
@@ -191,13 +197,12 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
                     kVAFactoryCreateGraphicsEnginePatched, arrsize(kVAFactoryCreateGraphicsEnginePatched), nullptr, 0,
                     0, 0)))
                 DBGLOG("nred", "Patched VAFactory::createGraphicsEngine");
+            if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                    kVAFactoryCreateVPOriginal, arrsize(kVAFactoryCreateVPOriginal), kVAFactoryCreateVPMask,
+                    arrsize(kVAFactoryCreateVPMask), kVAFactoryCreateVPPatched, arrsize(kVAFactoryCreateVPPatched),
+                    nullptr, 0, 0, 0)))
+                DBGLOG("nred", "Patched VAFactory::create*VP");
         }
-
-        if (UNLIKELY(
-                KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE, kVAFactoryCreateVPOriginal,
-                    arrsize(kVAFactoryCreateVPOriginal), kVAFactoryCreateVPMask, arrsize(kVAFactoryCreateVPMask),
-                    kVAFactoryCreateVPPatched, arrsize(kVAFactoryCreateVPPatched), nullptr, 0, 0, 0)))
-            DBGLOG("nred", "Patched VAFactory::create*VP");
 
         if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
                 kVAFactoryCreateImageBltOriginal, arrsize(kVAFactoryCreateImageBltOriginal),
