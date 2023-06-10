@@ -172,6 +172,12 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
                     arrsize(kVAAcceleratorInfoIdentifyVenturaPatched), kVAAcceleratorInfoIdentifyVenturaPatchedMask,
                     arrsize(kVAAcceleratorInfoIdentifyVenturaPatchedMask), 0, 0)))
                 DBGLOG("nred", "Patched VAAcceleratorInfo::identify");
+            if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                    kVAFactoryCreateGraphicsEngineVenturaOriginal,
+                    arrsize(kVAFactoryCreateGraphicsEngineVenturaOriginal), kVAFactoryCreateGraphicsEngineVenturaMask,
+                    arrsize(kVAFactoryCreateGraphicsEngineVenturaMask), kVAFactoryCreateGraphicsEnginePatched,
+                    arrsize(kVAFactoryCreateGraphicsEnginePatched), nullptr, 0, 0, 0)))
+                DBGLOG("nred", "Patched VAFactory::createGraphicsEngine");
         } else {
             if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
                     kVAAcceleratorInfoIdentifyOriginal, arrsize(kVAAcceleratorInfoIdentifyOriginal),
@@ -179,14 +185,13 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
                     kVAAcceleratorInfoIdentifyPatched, arrsize(kVAAcceleratorInfoIdentifyPatched),
                     kVAAcceleratorInfoIdentifyPatchedMask, arrsize(kVAAcceleratorInfoIdentifyPatchedMask), 0, 0)))
                 DBGLOG("nred", "Patched VAAcceleratorInfo::identify");
+            if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                    kVAFactoryCreateGraphicsEngineOriginal, arrsize(kVAFactoryCreateGraphicsEngineOriginal),
+                    kVAFactoryCreateGraphicsEngineMask, arrsize(kVAFactoryCreateGraphicsEngineMask),
+                    kVAFactoryCreateGraphicsEnginePatched, arrsize(kVAFactoryCreateGraphicsEnginePatched), nullptr, 0,
+                    0, 0)))
+                DBGLOG("nred", "Patched VAFactory::createGraphicsEngine");
         }
-
-        if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
-                kVAFactoryCreateGraphicsEngineOriginal, arrsize(kVAFactoryCreateGraphicsEngineOriginal),
-                kVAFactoryCreateGraphicsEngineMask, arrsize(kVAFactoryCreateGraphicsEngineMask),
-                kVAFactoryCreateGraphicsEnginePatched, arrsize(kVAFactoryCreateGraphicsEnginePatched), nullptr, 0, 0,
-                0)))
-            DBGLOG("nred", "Patched VAFactory::createGraphicsEngine");
 
         if (UNLIKELY(
                 KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE, kVAFactoryCreateVPOriginal,
