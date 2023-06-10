@@ -157,9 +157,9 @@ void DYLDPatches::csValidatePage(vnode *vp, memory_object_t pager, memory_object
             kAddBitstreamBufferPacketMask, 1, 0)))
         DBGLOG("nred", "Patched Vcn2EncCommand::addBitstreamBufferPacket");
 
-    if (UNLIKELY(
-            KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE, kAddFeedbackBufferPacketOriginal,
-                kAddFeedbackBufferPacketMask, kAddFeedbackBufferPacketPatched, kAddFeedbackBufferPacketMask, 0, 0)))
+    if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kAddFeedbackBufferPacketOriginal,
+            arrsize(kAddFeedbackBufferPacketOriginal), kAddFeedbackBufferPacketPatched,
+            arrsize(kAddFeedbackBufferPacketOriginal))))
         DBGLOG("nred", "Patched Vcn2EncCommand::addFeedbackBufferPacket");
 
     if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
