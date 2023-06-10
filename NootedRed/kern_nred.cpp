@@ -173,11 +173,12 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
                     arrsize(kVAAcceleratorInfoIdentifyVenturaPatchedMask), 0, 0)))
                 DBGLOG("nred", "Patched VAAcceleratorInfo::identify");
             if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
-                    kVAFactoryCreateGraphicsEngineVenturaOriginal,
-                    arrsize(kVAFactoryCreateGraphicsEngineVenturaOriginal), kVAFactoryCreateGraphicsEngineVenturaMask,
-                    arrsize(kVAFactoryCreateGraphicsEngineVenturaMask), kVAFactoryCreateGraphicsEnginePatched,
+                    kVAFactoryCreateGraphicsEngineAndBltVenturaOriginal,
+                    arrsize(kVAFactoryCreateGraphicsEngineAndBltVenturaOriginal),
+                    kVAFactoryCreateGraphicsEngineAndBltVenturaMask,
+                    arrsize(kVAFactoryCreateGraphicsEngineAndBltVenturaMask), kVAFactoryCreateGraphicsEnginePatched,
                     arrsize(kVAFactoryCreateGraphicsEnginePatched), nullptr, 0, 0, 0)))
-                DBGLOG("nred", "Patched VAFactory::createGraphicsEngine");
+                DBGLOG("nred", "Patched VAFactory::createGraphicsEngine/VAFactory::createImageBlt");
             if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
                     kVAFactoryCreateVPVenturaOriginal, arrsize(kVAFactoryCreateVPVenturaOriginal),
                     kVAFactoryCreateVPVenturaOriginalMask, arrsize(kVAFactoryCreateVPVenturaOriginalMask),
@@ -202,13 +203,12 @@ void NRed::csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset
                     arrsize(kVAFactoryCreateVPMask), kVAFactoryCreateVPPatched, arrsize(kVAFactoryCreateVPPatched),
                     nullptr, 0, 0, 0)))
                 DBGLOG("nred", "Patched VAFactory::create*VP");
+            if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
+                    kVAFactoryCreateImageBltOriginal, arrsize(kVAFactoryCreateImageBltOriginal),
+                    kVAFactoryCreateImageBltMask, arrsize(kVAFactoryCreateImageBltMask),
+                    kVAFactoryCreateImageBltPatched, arrsize(kVAFactoryCreateImageBltPatched), nullptr, 0, 0, 0)))
+                DBGLOG("nred", "Patched VAFactory::createImageBlt");
         }
-
-        if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
-                kVAFactoryCreateImageBltOriginal, arrsize(kVAFactoryCreateImageBltOriginal),
-                kVAFactoryCreateImageBltMask, arrsize(kVAFactoryCreateImageBltMask), kVAFactoryCreateImageBltPatched,
-                arrsize(kVAFactoryCreateImageBltPatched), nullptr, 0, 0, 0)))
-            DBGLOG("nred", "Patched VAFactory::createImageBlt");
 
         if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
                 kVAAddrLibInterfaceInitOriginal, kVAAddrLibInterfaceInitOriginalMask, kVAAddrLibInterfaceInitPatched,
