@@ -105,14 +105,14 @@ struct LookupPatchPlus : KernelPatcher::LookupPatch {
     template<size_t N>
     LookupPatchPlus(KernelPatcher::KextInfo *kext, const uint8_t (&find)[N], const uint8_t (&findMask)[N],
         const uint8_t (&replace)[N], size_t count, bool guard = true)
-        : KernelPatcher::LookupPatch {kext, find, replace, N, count}, findMask {findMask}, replaceSize {N},
-          guard {guard} {}
+        : KernelPatcher::LookupPatch {kext, find, replace, N, count}, findMask {findMask},
+          replaceSize {N}, guard {guard} {}
 
     template<size_t N, size_t M>
     LookupPatchPlus(KernelPatcher::KextInfo *kext, const uint8_t (&find)[N], const uint8_t (&findMask)[N],
         const uint8_t (&replace)[M], size_t count, bool guard = true)
-        : KernelPatcher::LookupPatch {kext, find, replace, N, count}, findMask {findMask}, replaceSize {M},
-          guard {guard} {}
+        : KernelPatcher::LookupPatch {kext, find, replace, N, count}, findMask {findMask},
+          replaceSize {M}, guard {guard} {}
 
     template<size_t N, size_t M>
     LookupPatchPlus(KernelPatcher::KextInfo *kext, const uint8_t (&find)[N], const uint8_t (&findMask)[N],
