@@ -63,18 +63,18 @@ bool X6000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
 
         auto monterey = getKernelVersion() == KernelVersion::Monterey;
         LookupPatchPlus const patches[] = {
-            {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal, kGetGpuDebugPolicyCallPatched,
-                (getKernelVersion() == KernelVersion::Ventura && getKernelMinorVersion() >= 5) ? 38U :
-                ventura                                                                        ? 37 :
-                                                                                                 28},
             {&kextRadeonX6000, kHWChannelSubmitCommandBufferOriginal, kHWChannelSubmitCommandBufferPatched, 1},
-            {&kextRadeonX6000, kGetSchedulerCallOriginal, kGetSchedulerCallPatched, monterey ? 21U : 22, !ventura},
-            {&kextRadeonX6000, kGetSchedulerCallVenturaOriginal, kGetSchedulerCallVenturaPatched, 24, ventura},
             {&kextRadeonX6000, kIsDeviceValidCallOriginal, kIsDeviceValidCallPatched,
                 ventura  ? 23U :
                 monterey ? 26 :
                            24},
             {&kextRadeonX6000, kIsDevicePCITunnelledCallOriginal, kIsDevicePCITunnelledCallPatched, ventura ? 3U : 1},
+            {&kextRadeonX6000, kGetSchedulerCallVenturaOriginal, kGetSchedulerCallVenturaPatched, 24, ventura},
+            {&kextRadeonX6000, kGetSchedulerCallOriginal, kGetSchedulerCallPatched, monterey ? 21U : 22, !ventura},
+            {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal, kGetGpuDebugPolicyCallPatched,
+                (getKernelVersion() == KernelVersion::Ventura && getKernelMinorVersion() >= 5) ? 38U :
+                ventura                                                                        ? 37 :
+                                                                                                 28},
         };
         SYSLOG_COND(!LookupPatchPlus::applyAll(&patcher, patches, address, size), "x6000",
             "Failed to apply patches: %d", patcher.getError());
