@@ -34,8 +34,6 @@ class X6000FB {
 
     static uint16_t wrapGetEnumeratedRevision();
     static IOReturn wrapPopulateVramInfo(void *that, void *fwInfo);
-    static bool wrapInitWithPciInfo(void *that, void *param1);
-    static void wrapDoGPUPanic();
     static uint32_t wrapDcePanelCntlHwInit(void *panelCntl);
     static IOReturn wrapFramebufferSetAttribute(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
         uintptr_t value);
