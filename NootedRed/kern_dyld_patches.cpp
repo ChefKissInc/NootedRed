@@ -16,7 +16,7 @@ void DYLDPatches::processPatcher(KernelPatcher &patcher) {
 
     auto *entry = IORegistryEntry::fromPath("/", gIODTPlane);
     if (entry) {
-        DBGLOG("nred", "Setting hwgva-id to MacPro7,1");
+        DBGLOG("nred", "Setting hwgva-id to iMacPro1,1");
         entry->setProperty("hwgva-id", const_cast<char *>(kHwGvaId), arrsize(kHwGvaId));
         entry->release();
     }
@@ -37,13 +37,12 @@ void DYLDPatches::csValidatePage(vnode *vp, memory_object_t pager, memory_object
     if (UNLIKELY(vn_getpath(vp, path, &pathlen))) { return; }
 
     if (!UserPatcher::matchSharedCachePath(path)) {
-        if (LIKELY(strncmp(path, kCoreLSKDMSEPath, arrsize(kCoreLSKDMSEPath))) ||
-            LIKELY(strncmp(path, kCoreLSKDPath, arrsize(kCoreLSKDPath)))) {
-            return;
+        if (UNLIKELY(!strncmp(path, kCoreLSKDMSEPath, arrsize(kCoreLSKDMSEPath))) ||
+            UNLIKELY(!strncmp(path, kCoreLSKDPath, arrsize(kCoreLSKDPath)))) {
+            if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kCoreLSKDOriginal,
+                    kCoreLSKDPatched)))
+                DBGLOG("nred", "Patched streaming CPUID to Haswell");
         }
-        if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kCoreLSKDOriginal,
-                kCoreLSKDPatched)))
-            DBGLOG("nred", "Patched streaming CPUID to Haswell");
         return;
     }
 
@@ -53,11 +52,11 @@ void DYLDPatches::csValidatePage(vnode *vp, memory_object_t pager, memory_object
 
     if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kAGVABoardIdOriginal,
             arrsize(kAGVABoardIdOriginal), kAGVABoardIdPatched, arrsize(kAGVABoardIdPatched))))
-        DBGLOG("nred", "Applied MacPro7,1 spoof to AppleGVA");
+        DBGLOG("nred", "Applied iMacPro1,1 spoof to AppleGVA");
 
     if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kHEVCEncBoardIdOriginal,
             kHEVCEncBoardIdPatched)))
-        DBGLOG("nred", "Applied MacPro7,1 spoof to AppleGVAHEVCEncoder");
+        DBGLOG("nred", "Applied iMacPro1,1 spoof to AppleGVAHEVCEncoder");
 
     if (getKernelVersion() >= KernelVersion::Ventura) {
         if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(const_cast<void *>(data), PAGE_SIZE,
