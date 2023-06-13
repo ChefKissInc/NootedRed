@@ -154,25 +154,27 @@ bool X5000::wrapAllocateHWEngines(void *that) {
 
 struct HWCapability {
     enum : uint64_t {
-        DisplayPipeCount = 0x04,    // uint32_t
-        SECount = 0x34,             // uint32_t
-        SHPerSE = 0x3C,             // uint32_t
-        CUPerSH = 0x70,             // uint32_t
-        HasUVD0 = 0x84,             // bool
-        HasVCE = 0x86,              // bool
-        HasVCN0 = 0x87,             // bool
+        DisplayPipeCount = 0x04,      // uint32_t
+        SECount = 0x34,               // uint32_t
+        SHPerSE = 0x3C,               // uint32_t
+        CUPerSH = 0x70,               // uint32_t
+        HasUVD0 = 0x84,               // bool
+        HasVCE = 0x86,                // bool
+        HasVCN0 = 0x87,               // bool
+        HasSDMAPagingQueue = 0x98,    // bool
     };
 };
 
 struct HWCapabilityCatalina {
     enum : uint64_t {
-        DisplayPipeCount = 0x04,    // uint32_t
-        SECount = 0x30,             // uint32_t
-        SHPerSE = 0x34,             // uint32_t
-        CUPerSH = 0x58,             // uint32_t
-        HasUVD0 = 0x68,             // bool
-        HasVCE = 0x6A,              // bool
-        HasVCN0 = 0x6B,             // bool
+        DisplayPipeCount = 0x04,      // uint32_t
+        SECount = 0x30,               // uint32_t
+        SHPerSE = 0x34,               // uint32_t
+        CUPerSH = 0x58,               // uint32_t
+        HasUVD0 = 0x68,               // bool
+        HasVCE = 0x6A,                // bool
+        HasVCN0 = 0x6B,               // bool
+        HasSDMAPagingQueue = 0x7C,    // bool
     };
 };
 
@@ -203,6 +205,8 @@ void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
     setHWCapability<bool>(that, catalina ? HWCapabilityCatalina::HasUVD0 : HWCapability::HasUVD0, false);
     setHWCapability<bool>(that, catalina ? HWCapabilityCatalina::HasVCE : HWCapability::HasVCE, false);
     setHWCapability<bool>(that, catalina ? HWCapabilityCatalina::HasVCN0 : HWCapability::HasVCN0, true);
+    setHWCapability<bool>(that, catalina ? HWCapabilityCatalina::HasSDMAPagingQueue : HWCapability::HasSDMAPagingQueue,
+        false);
 }
 
 void *X5000::wrapGetHWChannel(void *that, uint32_t engineType, uint32_t ringId) {
