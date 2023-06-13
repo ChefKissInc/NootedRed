@@ -37,6 +37,7 @@ bool X6000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
             {"__ZN37AMDRadeonX6000_AMDAccelDisplayMachine10gMetaClassE", NRed::callback->metaClassMap[1][1]},
             {"__ZN34AMDRadeonX6000_AMDAccelDisplayPipe10gMetaClassE", NRed::callback->metaClassMap[2][1]},
             {"__ZN30AMDRadeonX6000_AMDAccelChannel10gMetaClassE", NRed::callback->metaClassMap[3][0]},
+            {"__ZN28AMDRadeonX6000_IAMDHWChannel10gMetaClassE", NRed::callback->metaClassMap[4][1]},
             {"__ZN33AMDRadeonX6000_AMDHWAlignManager224getPreferredSwizzleMode2EP33_ADDR2_COMPUTE_SURFACE_INFO_INPUT",
                 this->orgGetPreferredSwizzleMode2},
         };

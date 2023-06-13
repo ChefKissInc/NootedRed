@@ -243,7 +243,7 @@ class NRed {
     uint16_t revision {0};
     uint32_t pciRevision {0};
     IOPCIDevice *iGPU {nullptr};
-    OSMetaClass *metaClassMap[4][2] = {{nullptr}};
+    OSMetaClass *metaClassMap[5][2] = {{nullptr}};
     mach_vm_address_t orgSafeMetaCast {0};
     mach_vm_address_t orgApplePanelSetDisplay {0};
 

@@ -42,6 +42,7 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
             {"__ZN37AMDRadeonX5000_AMDAccelDisplayMachine10gMetaClassE", NRed::callback->metaClassMap[1][0]},
             {"__ZN34AMDRadeonX5000_AMDAccelDisplayPipe10gMetaClassE", NRed::callback->metaClassMap[2][0]},
             {"__ZN30AMDRadeonX5000_AMDAccelChannel10gMetaClassE", NRed::callback->metaClassMap[3][1]},
+            {"__ZN28AMDRadeonX5000_IAMDHWChannel10gMetaClassE", NRed::callback->metaClassMap[4][0]},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware32setupAndInitializeHWCapabilitiesEv",
                 this->orgSetupAndInitializeHWCapabilities},
             {"__ZN26AMDRadeonX5000_AMDHardware14startHWEnginesEv", startHWEngines},
