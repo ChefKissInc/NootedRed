@@ -81,9 +81,9 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
             "Failed to route symbols");
 
         LookupPatchPlus const addrLibPatch {&kextRadeonX5000, kAddrLibCreateOriginal, kAddrLibCreatePatched, 1,
-            ventura1304};
+            catalina || ventura1304};
         PANIC_COND(!addrLibPatch.apply(&patcher, address, size), "x5000",
-            "Failed to apply Ventura 13.4+ Addr::Lib::Create patch: %d", patcher.getError());
+            "Failed to apply Catalina & Ventura 13.4+ Addr::Lib::Create patch: %d", patcher.getError());
 
         LookupPatchPlus const patch {&kextRadeonX5000, kStartHWEnginesOriginal, kStartHWEnginesMask,
             kStartHWEnginesPatched, kStartHWEnginesMask, ventura ? 2U : 1, !catalina};
