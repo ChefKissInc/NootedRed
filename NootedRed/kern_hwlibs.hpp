@@ -22,7 +22,6 @@ class X5000HWLibs {
     mach_vm_address_t orgUpdateSdmaPowerGating {0};
     mach_vm_address_t orgPspCmdKmSubmit {0};
 
-    static uint32_t wrapSmuGetHwVersion();
     static void wrapPopulateFirmwareDirectory(void *that);
     static void wrapUpdateSdmaPowerGating(void *cail, uint32_t mode);
     static CAILResult wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4);
