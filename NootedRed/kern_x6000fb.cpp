@@ -81,7 +81,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
             .caps = NRed::callback->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir,
             .deviceId = NRed::callback->deviceId,
             .revision = NRed::callback->revision,
-            .extRevision = NRed::callback->extRevision,
+            .extRevision = static_cast<uint32_t>(NRed::callback->enumRevision) + NRed::callback->revision,
             .pciRevision = NRed::callback->pciRevision,
         };
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
@@ -93,7 +93,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
     return false;
 }
 
-uint16_t X6000FB::wrapGetEnumeratedRevision() { return NRed::callback->extRevision - NRed::callback->revision; }
+uint16_t X6000FB::wrapGetEnumeratedRevision() { return NRed::callback->enumRevision; }
 
 IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
     uint32_t channelCount = 1;

@@ -158,6 +158,18 @@ struct CAILDeviceTypeEntry {
     uint32_t deviceType;
 } PACKED;
 
+static const uint32_t ravenDevAttrFlags = 0x49;
+
+struct DeviceCapabilityEntry {
+    uint64_t familyId, extRevision;
+    uint64_t deviceId, revision, enumRevision;
+    const void *swipInfo, *swipInfoMinimal;
+    const uint32_t *devAttrFlags;
+    const void *goldenRegisterSetings, *doorbellRange;
+} PACKED;
+
+constexpr uint64_t DEVICE_CAP_ENTRY_REV_DONT_CARE = 0xDEADCAFEU;
+
 enum VideoMemoryType : uint32_t {
     kVideoMemoryTypeUnknown,
     kVideoMemoryTypeDDR2,

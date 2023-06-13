@@ -28,6 +28,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         CAILAsicCapsEntry *orgCapsTable = nullptr;
         CAILAsicCapsInitEntry *orgCapsInitTable = nullptr;
         CAILDeviceTypeEntry *orgDeviceTypeTable = nullptr;
+        DeviceCapabilityEntry *orgDevCapTable = nullptr;
 
         SolveRequestPlus solveRequests[] = {
             {"__ZL15deviceTypeTable", orgDeviceTypeTable, kDeviceTypeTablePattern},
@@ -36,6 +37,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
                 kPutFirmwarePattern},
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgCapsTable, kCailAsicCapsTableHWLibsPattern},
             {"_CAILAsicCapsInitTable", orgCapsInitTable, kCAILAsicCapsInitTablePattern},
+            {"_DeviceCapabilityTbl", orgDevCapTable, kDeviceCapabilityTblPattern},
         };
         PANIC_COND(!SolveRequestPlus::solveAll(&patcher, index, solveRequests, address, size), "hwlibs",
             "Failed to resolve symbols");
@@ -61,20 +63,38 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             .familyId = AMDGPU_FAMILY_RAVEN,
             .deviceId = NRed::callback->deviceId,
             .revision = NRed::callback->revision,
-            .extRevision = NRed::callback->extRevision,
+            .extRevision = static_cast<uint32_t>(NRed::callback->enumRevision) + NRed::callback->revision,
             .pciRevision = NRed::callback->pciRevision,
             .caps = NRed::callback->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir,
         };
-        auto *temp = orgCapsInitTable;
-        while (temp->deviceId != 0xFFFFFFFF) {
-            if (temp->familyId == AMDGPU_FAMILY_RAVEN && temp->deviceId == NRed::callback->deviceId) {
-                temp->revision = NRed::callback->revision;
-                temp->extRevision = NRed::callback->extRevision;
-                temp->pciRevision = NRed::callback->pciRevision;
+        auto found = false;
+        while (orgCapsInitTable->deviceId != 0xFFFFFFFF) {
+            if (orgCapsInitTable->familyId == AMDGPU_FAMILY_RAVEN &&
+                orgCapsInitTable->deviceId == NRed::callback->deviceId) {
+                orgCapsInitTable->revision = NRed::callback->revision;
+                orgCapsInitTable->extRevision = NRed::callback->enumRevision;
+                orgCapsInitTable->pciRevision = NRed::callback->pciRevision;
+                found = true;
                 break;
             }
-            temp++;
+            orgCapsInitTable++;
         }
+        PANIC_COND(!found, "hwlibs", "Failed to find caps init table entry");
+        found = false;
+        while (orgDevCapTable->familyId) {
+            if (orgDevCapTable->familyId == AMDGPU_FAMILY_RAVEN &&
+                orgDevCapTable->deviceId == NRed::callback->deviceId) {
+                orgDevCapTable->deviceId = NRed::callback->deviceId;
+                orgDevCapTable->extRevision =
+                    static_cast<uint64_t>(NRed::callback->enumRevision) + NRed::callback->revision;
+                orgDevCapTable->revision = DEVICE_CAP_ENTRY_REV_DONT_CARE;
+                orgDevCapTable->enumRevision = DEVICE_CAP_ENTRY_REV_DONT_CARE;
+                found = true;
+                break;
+            }
+            orgDevCapTable++;
+        }
+        PANIC_COND(!found, "hwlibs", "Failed to find device capability table entry");
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("hwlibs", "Applied DDI Caps patches");
 
