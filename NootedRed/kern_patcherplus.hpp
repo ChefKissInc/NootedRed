@@ -92,33 +92,35 @@ struct LookupPatchPlus : KernelPatcher::LookupPatch {
     const uint8_t *replaceMask {nullptr};
     const size_t replaceSize {0};
     const bool guard {true};
+    const size_t skip {0};
 
     LookupPatchPlus(KernelPatcher::KextInfo *kext, const uint8_t *find, const uint8_t *replace, size_t size,
-        size_t count, bool guard = true)
-        : KernelPatcher::LookupPatch {kext, find, replace, size, count}, replaceSize {size}, guard {guard} {}
+        size_t count, bool guard = true, size_t skip = 0)
+        : KernelPatcher::LookupPatch {kext, find, replace, size, count}, replaceSize {size}, guard {guard},
+          skip {skip} {}
 
     template<size_t N>
     LookupPatchPlus(KernelPatcher::KextInfo *kext, const uint8_t (&find)[N], const uint8_t (&replace)[N], size_t count,
-        bool guard = true)
-        : LookupPatchPlus(kext, find, replace, N, count, guard) {}
+        bool guard = true, size_t skip = 0)
+        : LookupPatchPlus(kext, find, replace, N, count, guard, skip) {}
 
     template<size_t N>
     LookupPatchPlus(KernelPatcher::KextInfo *kext, const uint8_t (&find)[N], const uint8_t (&findMask)[N],
-        const uint8_t (&replace)[N], size_t count, bool guard = true)
+        const uint8_t (&replace)[N], size_t count, bool guard = true, size_t skip = 0)
         : KernelPatcher::LookupPatch {kext, find, replace, N, count}, findMask {findMask}, replaceSize {N},
-          guard {guard} {}
+          guard {guard}, skip {skip} {}
 
     template<size_t N, size_t M>
     LookupPatchPlus(KernelPatcher::KextInfo *kext, const uint8_t (&find)[N], const uint8_t (&findMask)[N],
-        const uint8_t (&replace)[M], size_t count, bool guard = true)
+        const uint8_t (&replace)[M], size_t count, bool guard = true, size_t skip = 0)
         : KernelPatcher::LookupPatch {kext, find, replace, N, count}, findMask {findMask}, replaceSize {M},
-          guard {guard} {}
+          guard {guard}, skip {skip} {}
 
     template<size_t N, size_t M>
     LookupPatchPlus(KernelPatcher::KextInfo *kext, const uint8_t (&find)[N], const uint8_t (&findMask)[N],
-        const uint8_t (&replace)[M], const uint8_t (&replaceMask)[M], size_t count, bool guard = true)
+        const uint8_t (&replace)[M], const uint8_t (&replaceMask)[M], size_t count, bool guard = true, size_t skip = 0)
         : KernelPatcher::LookupPatch {kext, find, replace, N, count}, findMask {findMask}, replaceMask {replaceMask},
-          replaceSize {M}, guard {guard} {}
+          replaceSize {M}, guard {guard}, skip {skip} {}
 
     bool apply(KernelPatcher *patcher, mach_vm_address_t address, size_t size) const;
 

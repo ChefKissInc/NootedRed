@@ -66,21 +66,10 @@ bool X6000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
 
         auto monterey = getKernelVersion() == KernelVersion::Monterey;
         LookupPatchPlus const patches[] = {
-            {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal, kGetGpuDebugPolicyCallPatched,
-                (getKernelVersion() == KernelVersion::Ventura && getKernelMinorVersion() >= 5) ? 38U :
-                ventura                                                                        ? 37 :
-                                                                                                 28,
-                !catalina},
-            {&kextRadeonX6000, kGetGpuDebugPolicyCallCatalinaOriginal, kGetGpuDebugPolicyCallCatalinaPatched, 27,
-                catalina},
-            {&kextRadeonX6000, kHWChannelSubmitCommandBufferOriginal, kHWChannelSubmitCommandBufferPatched, 1,
-                !catalina},
             {&kextRadeonX6000, kHWChannelSubmitCommandBufferCatalinaOriginal,
                 kHWChannelSubmitCommandBufferCatalinaPatched, 1, catalina},
-            {&kextRadeonX6000, kGetSchedulerCallOriginal, kGetSchedulerCallPatched, monterey ? 21U : 22,
-                !catalina && !ventura},
-            {&kextRadeonX6000, kGetSchedulerCallCatalinaOriginal, kGetSchedulerCallCatalinaPatched, 22, catalina},
-            {&kextRadeonX6000, kGetSchedulerCallVenturaOriginal, kGetSchedulerCallVenturaPatched, 24, ventura},
+            {&kextRadeonX6000, kHWChannelSubmitCommandBufferOriginal, kHWChannelSubmitCommandBufferPatched, 1,
+                !catalina},
             {&kextRadeonX6000, kIsDeviceValidCallOriginal, kIsDeviceValidCallPatched,
                 catalina ? 20U :
                 ventura  ? 23 :
@@ -91,6 +80,17 @@ bool X6000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
                 ventura  ? 3 :
                            1},
             {&kextRadeonX6000, kGetTtlInterfaceCallOriginal, kGetTtlInterfaceCallPatched, 6, catalina},
+            {&kextRadeonX6000, kGetSchedulerCallVenturaOriginal, kGetSchedulerCallVenturaPatched, 24, ventura},
+            {&kextRadeonX6000, kGetSchedulerCallOriginal, kGetSchedulerCallPatched, monterey ? 21U : 22,
+                !catalina && !ventura},
+            {&kextRadeonX6000, kGetSchedulerCallCatalinaOriginal, kGetSchedulerCallCatalinaPatched, 22, catalina},
+            {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal, kGetGpuDebugPolicyCallPatched,
+                (getKernelVersion() == KernelVersion::Ventura && getKernelMinorVersion() >= 5) ? 38U :
+                ventura                                                                        ? 37 :
+                                                                                                 28,
+                !catalina},
+            {&kextRadeonX6000, kGetGpuDebugPolicyCallCatalinaOriginal, kGetGpuDebugPolicyCallCatalinaPatched, 27,
+                catalina},
         };
         SYSLOG_COND(!LookupPatchPlus::applyAll(&patcher, patches, address, size), "x6000",
             "Failed to apply patches: %d", patcher.getError());

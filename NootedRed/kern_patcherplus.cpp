@@ -78,13 +78,14 @@ bool RouteRequestPlus::routeAll(KernelPatcher &patcher, size_t index, RouteReque
 bool LookupPatchPlus::apply(KernelPatcher *patcher, mach_vm_address_t address, size_t size) const {
     if (!this->guard) { return true; }
 
-    if (patcher && this->kext && !this->findMask && !this->replaceMask && this->size == this->replaceSize) {
+    if (patcher && this->kext && !this->findMask && !this->replaceMask && this->size == this->replaceSize &&
+        !this->skip) {
         patcher->applyLookupPatch(this, reinterpret_cast<uint8_t *>(address), size);
         return patcher->getError() == KernelPatcher::Error::NoError;
     }
     return KernelPatcher::findAndReplaceWithMask(reinterpret_cast<uint8_t *>(address), size, this->find, this->size,
         this->findMask, this->findMask ? this->size : 0, this->replace, this->replaceSize, this->replaceMask,
-        this->replaceMask ? this->replaceSize : 0, this->count);
+        this->replaceMask ? this->replaceSize : 0, this->count, this->skip);
 }
 
 bool LookupPatchPlus::applyAll(KernelPatcher *patcher, LookupPatchPlus const *patches, size_t count,

@@ -156,6 +156,8 @@ cpp_lines.insert(
 target_line = len(hpp_lines) - 1
 while "wrap" not in hpp_lines[target_line]:
     target_line -= 1
+while ");" not in hpp_lines[target_line]:
+    target_line += 1
 target_line += 1
 hpp_lines[target_line:target_line] = [
     f"    static {return_type} wrap{func_ident_pascal}({params_stringified});\n",

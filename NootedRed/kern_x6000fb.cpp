@@ -213,11 +213,6 @@ void X6000FB::registerDispMaxBrightnessNotif() {
     matching->release();
 }
 
-void X6000FB::wrapDoGPUPanic() {
-    DBGLOG("x6000fb", "doGPUPanic << ()");
-    while (true) { IOSleep(3600000); }
-}
-
 uint32_t X6000FB::wrapDcePanelCntlHwInit(void *panelCntl) {
     callback->panelCntlPtr = panelCntl;
     return FunctionCast(wrapDcePanelCntlHwInit, callback->orgDcePanelCntlHwInit)(panelCntl);
