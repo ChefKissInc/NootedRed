@@ -22,5 +22,10 @@ Thanks [Acidanthera](https://github.com/Acidanthera) for the AppleBacklight code
 - Do your macOS updates (The minor ones, not necessary to go Big Sur -> Monterey)
 
 ## Recommendations
+### Fixing backlight functionality
+- First, add [`SSDT-PNLF.aml`](Assets/SSDT-PNLF.aml) from this repository.
+- Then, add [`BrightnessKeys.kext`](https://github.com/Acidanthera/BrightnessKeys) for brightness control from the keyboard.        
 
-- From this repository, add [`SSDT-PNLF.aml`](Assets/SSDT-PNLF.aml), and [`SSDT-ALS0.aml`](Assets/SSDT-ALS0.aml) if you have no Ambient Light Sensor, along with [`SMCLightSensor.kext`](https://github.com/Acidanthera/VirtualSMC) for backlight functionality. Usually only works on laptops. Add [`BrightnessKeys.kext`](https://github.com/Acidanthera/BrightnessKeys) for brightness control from the keyboard
+### Fixing ambient light sensor functionality
+- First, add [`SSDT-ALS0.aml`](Assets/SSDT-ALS0.aml) from this repository.
+- Then, add [`SMCLightSensor.kext`](https://github.com/Acidanthera/VirtualSMC) to fix the light sensor functionality.
