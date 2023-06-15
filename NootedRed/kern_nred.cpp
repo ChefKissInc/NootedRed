@@ -61,11 +61,25 @@ void NRed::processPatcher(KernelPatcher &patcher) {
     if (devInfo) {
         devInfo->processSwitchOff();
 
-        PANIC_COND(!devInfo->videoBuiltin, "nred", "videoBuiltin null");
-        this->iGPU = OSDynamicCast(IOPCIDevice, devInfo->videoBuiltin);
-        PANIC_COND(!this->iGPU, "nred", "videoBuiltin is not IOPCIDevice");
-        PANIC_COND(WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD,
-            "nred", "videoBuiltin is not AMD");
+        if (!devInfo->videoBuiltin) {
+            for (size_t i = 0; i < devInfo->videoExternal.size(); i++) {
+                auto *device = OSDynamicCast(IOPCIDevice, devInfo->videoExternal[i].video);
+                if (!device) { continue; }
+                auto devid = WIOKit::readPCIConfigValue(device, WIOKit::kIOPCIConfigDeviceID) & 0xFF00;
+                if (WIOKit::readPCIConfigValue(device, WIOKit::kIOPCIConfigVendorID) == WIOKit::VendorID::ATIAMD &&
+                    (devid == 0x1500 || devid == 0x1600)) {
+                    this->iGPU = device;
+                    break;
+                }
+            }
+            PANIC_COND(!this->iGPU, "nred", "No iGPU found");
+        } else {
+            PANIC_COND(!devInfo->videoBuiltin, "nred", "videoBuiltin null");
+            this->iGPU = OSDynamicCast(IOPCIDevice, devInfo->videoBuiltin);
+            PANIC_COND(!this->iGPU, "nred", "videoBuiltin is not IOPCIDevice");
+            PANIC_COND(WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD,
+                "nred", "videoBuiltin is not AMD");
+        }
 
         WIOKit::renameDevice(this->iGPU, "IGPU");
         WIOKit::awaitPublishing(this->iGPU);

@@ -18,7 +18,7 @@ Thanks [Acidanthera](https://github.com/Acidanthera) for the AppleBacklight code
 - Increase **VRAM size**; otherwise, the device will fail to initialise. 512MiB VRAM is the minimum, 1GiB or more for proper functionality
 - Disable **Legacy Boot**, also known as CSM; otherwise, you will experience various difficulties, such as a kernel panic with "Failed to get VBIOS from VRAM" as the message.
 - Remove **`WhateverGreen`**; this kext conflicts with it.
-- Use `MacBookPro16,3` or `MacPro7,1` SMBIOS
+- Use `MacBookPro16,3`, `iMac20,1` or `iMacPro1,1` SMBIOS. `MacPro7,1` often results in black screen at the moment.
 - Do your macOS updates (The minor ones, not necessary to go Big Sur -> Monterey)
 
 ## Recommendations
