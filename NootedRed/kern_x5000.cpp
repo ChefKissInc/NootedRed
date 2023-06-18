@@ -112,9 +112,17 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
 }
 
 bool X5000::wrapAllocateHWEngines(void *that) {
-    callback->orgGFX9PM4EngineConstructor(getMember<void *>(that, 0x3B8) = IOMallocZero(0x340));
-    callback->orgGFX9SDMAEngineConstructor(getMember<void *>(that, 0x3C0) = IOMallocZero(0x250));
-    X6000::callback->orgVCN2EngineConstructor(getMember<void *>(that, 0x3F8) = IOMallocZero(0x2D8));
+    auto *pm4 = OSObject::operator new(0x340);
+    callback->orgGFX9PM4EngineConstructor(pm4);
+    getMember<void *>(that, 0x3B8) = pm4;
+
+    auto *sdma0 = OSObject::operator new(0x250);
+    callback->orgGFX9SDMAEngineConstructor(sdma0);
+    getMember<void *>(that, 0x3C0) = sdma0;
+
+    auto *vcn0 = OSObject::operator new(0x2D8);
+    X6000::callback->orgVCN2EngineConstructor(vcn0);
+    getMember<void *>(that, 0x3F8) = vcn0;
 
     return true;
 }
