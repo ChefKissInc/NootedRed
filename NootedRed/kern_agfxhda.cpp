@@ -24,34 +24,29 @@ bool AppleGFXHDA::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
     if (kextAppleGFXHDA.loadIndex == index) {
         NRed::callback->setRMMIOIfNecessary();
 
-        /*
-                SolveRequestPlus solveRequests[] = {
-                    {"__ZL15deviceTypeTable", orgDeviceTypeTable, kDeviceTypeTablePattern},
-                };
-                PANIC_COND(!SolveRequestPlus::solveAll(&patcher, index, solveRequests, address, size), "agfxhda",
-                    "Failed to resolve symbols");
-        */
-
         RouteRequestPlus requests[] = {
             {"__ZN17AppleGFXHDADriver20logControllerCommandEjPjib", wrapLogControllerCommand},
         };
         PANIC_COND(!RouteRequestPlus::routeAll(patcher, index, requests, address, size), "agfxhda",
             "Failed to route symbols");
 
-        /*
-                LookupPatchPlus const patches[] = {
-                    {&kextRadeonX5000HWLibs, kPspSwInitOriginal1, kPspSwInitPatched1, 1},
-                };
-                PANIC_COND(!LookupPatchPlus::applyAll(&patcher, patches, address, size), "agfxhda",
-                    "Failed to apply patches: %d", patcher.getError());
-        */
-
         uint32_t const probeFind = 0xAB381002;
         uint32_t const probeRepl = NRed::callback->deviceId <= 0x15DD ? 0x15D71002 : 0x16371002;
-        LookupPatchPlus patch {&kextAppleGFXHDA, reinterpret_cast<uint8_t const *>(&probeFind),
-            reinterpret_cast<uint8_t const *>(&probeRepl), sizeof(probeFind), 1};
-        PANIC_COND(!patch.apply(&patcher, address, size), "nred",
-            "Failed to apply AppleGFXHDAController::probe patch: %d", patcher.getError());
+        LookupPatchPlus patches[] = {
+            {&kextAppleGFXHDA, reinterpret_cast<uint8_t const *>(&probeFind),
+                reinterpret_cast<uint8_t const *>(&probeRepl), sizeof(probeFind), 1},
+            {&kextAppleGFXHDA, kCreateAppleHDAFunctionGroup1Original, kCreateAppleHDAFunctionGroup1Mask,
+                kCreateAppleHDAFunctionGroup1Replace, 1},
+            {&kextAppleGFXHDA, kCreateAppleHDAFunctionGroup2Original, kCreateAppleHDAFunctionGroup2Mask,
+                kCreateAppleHDAFunctionGroup2Replace, 1},
+            {&kextAppleGFXHDA, kCreateAppleHDAWidget1Original, kCreateAppleHDAWidget1Mask,
+                kCreateAppleHDAWidget1Replace, 1},
+            {&kextAppleGFXHDA, kCreateAppleHDAWidget2Original, kCreateAppleHDAWidget2Mask,
+                kCreateAppleHDAWidget2Replace, 1},
+            {&kextAppleGFXHDA, kCreateAppleHDAOriginal, kCreateAppleHDAMask, kCreateAppleHDAReplace, 2},
+        };
+        PANIC_COND(!LookupPatchPlus::applyAll(&patcher, patches, address, size), "agfxhda",
+            "Failed to apply patches: %d", patcher.getError());
 
         return true;
     }
