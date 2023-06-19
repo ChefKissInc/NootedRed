@@ -17,12 +17,15 @@ static const char *pathAGDP = "/System/Library/Extensions/AppleGraphicsControl.k
                               "AppleGraphicsDevicePolicy.kext/Contents/MacOS/AppleGraphicsDevicePolicy";
 static const char *pathBacklight = "/System/Library/Extensions/AppleBacklight.kext/Contents/MacOS/AppleBacklight";
 static const char *pathMCCSControl = "/System/Library/Extensions/AppleMCCSControl.kext/Contents/MacOS/AppleMCCSControl";
+static const char *pathAppleGFXHDA = "/System/Library/Extensions/AppleGFXHDA.kext/Contents/MacOS/AppleGFXHDA";
 
 static KernelPatcher::KextInfo kextAGDP {"com.apple.driver.AppleGraphicsDevicePolicy", &pathAGDP, 1, {true}, {},
     KernelPatcher::KextInfo::Unloaded};
 static KernelPatcher::KextInfo kextBacklight {"com.apple.driver.AppleBacklight", &pathBacklight, 1, {true}, {},
     KernelPatcher::KextInfo::Unloaded};
 static KernelPatcher::KextInfo kextMCCSControl {"com.apple.driver.AppleMCCSControl", &pathMCCSControl, 1, {true}, {},
+    KernelPatcher::KextInfo::Unloaded};
+static KernelPatcher::KextInfo kextAppleGFXHDA {"com.apple.driver.AppleGFXHDA", &pathAppleGFXHDA, 1, {true}, {},
     KernelPatcher::KextInfo::Unloaded};
 
 NRed *NRed::callback = nullptr;
@@ -40,6 +43,7 @@ void NRed::init() {
     lilu.onKextLoadForce(&kextAGDP);
     lilu.onKextLoadForce(&kextBacklight);
     lilu.onKextLoadForce(&kextMCCSControl);
+    lilu.onKextLoadForce(&kextAppleGFXHDA);
     dyldpatches.init();
     x6000fb.init();
     hwlibs.init();
@@ -219,6 +223,13 @@ void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         };
         patcher.routeMultiple(index, requests, address, size);
         patcher.clearError();
+    } else if (kextAppleGFXHDA.loadIndex == index) {
+        uint32_t const find = 0xAB381002;
+        uint32_t const repl = this->deviceId <= 0x15DD ? 0x15D71002 : 0x16371002;
+        LookupPatchPlus patch {&kextAppleGFXHDA, reinterpret_cast<uint8_t const *>(&find),
+            reinterpret_cast<uint8_t const *>(&repl), sizeof(find), 1};
+        SYSLOG_COND(!patch.apply(&patcher, address, size), "nred", "Failed to apply AppleGFXHDA patch: %d",
+            patcher.getError());
     } else if (x6000fb.processKext(patcher, index, address, size)) {
         DBGLOG("nred", "Processed AMDRadeonX6000Framebuffer");
     } else if (hwlibs.processKext(patcher, index, address, size)) {
