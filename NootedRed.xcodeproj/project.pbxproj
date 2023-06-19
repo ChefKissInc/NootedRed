@@ -24,6 +24,8 @@
 		40FC5FDE29BF996900367F9D /* kern_hwlibs.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FDC29BF996900367F9D /* kern_hwlibs.hpp */; };
 		40FC5FE129BF9E2500367F9D /* kern_x6000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FC5FDF29BF9E2500367F9D /* kern_x6000.cpp */; };
 		40FC5FE229BF9E2500367F9D /* kern_x6000.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FE029BF9E2500367F9D /* kern_x6000.hpp */; };
+		6C1B36662A407C6100B184DD /* kern_agfxhda.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6C1B36642A407C6100B184DD /* kern_agfxhda.cpp */; };
+		6C1B36672A407C6200B184DD /* kern_agfxhda.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 6C1B36652A407C6100B184DD /* kern_agfxhda.hpp */; };
 		CE405ED91E4A080700AA0B3D /* plugin_start.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CE405ED81E4A080700AA0B3D /* plugin_start.cpp */; };
 		CE8DA0832517C41A008C44E8 /* libkmod.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CE8DA0822517C41A008C44E8 /* libkmod.a */; };
 		CEA03B5E20EE825A00BA842F /* kern_nred.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CEA03B5C20EE825A00BA842F /* kern_nred.cpp */; };
@@ -71,6 +73,8 @@
 		40FC5FDC29BF996900367F9D /* kern_hwlibs.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_hwlibs.hpp; sourceTree = "<group>"; };
 		40FC5FDF29BF9E2500367F9D /* kern_x6000.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_x6000.cpp; sourceTree = "<group>"; };
 		40FC5FE029BF9E2500367F9D /* kern_x6000.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_x6000.hpp; sourceTree = "<group>"; };
+		6C1B36642A407C6100B184DD /* kern_agfxhda.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_agfxhda.cpp; sourceTree = "<group>"; };
+		6C1B36652A407C6100B184DD /* kern_agfxhda.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_agfxhda.hpp; sourceTree = "<group>"; };
 		CE405EBA1E49DD7100AA0B3D /* kern_compression.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_compression.hpp; sourceTree = "<group>"; };
 		CE405EBB1E49DD7100AA0B3D /* kern_disasm.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_disasm.hpp; sourceTree = "<group>"; };
 		CE405EBC1E49DD7100AA0B3D /* kern_file.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_file.hpp; sourceTree = "<group>"; };
@@ -148,6 +152,8 @@
 				40FC5FD429BF995000367F9D /* kern_x6000fb.hpp */,
 				4019EAE32A348852008D800B /* kern_dyld_patches.hpp */,
 				4019EAE52A3488EC008D800B /* kern_dyld_patches.cpp */,
+				6C1B36642A407C6100B184DD /* kern_agfxhda.cpp */,
+				6C1B36652A407C6100B184DD /* kern_agfxhda.hpp */,
 			);
 			path = NootedRed;
 			sourceTree = "<group>";
@@ -228,6 +234,7 @@
 				40FC5FDE29BF996900367F9D /* kern_hwlibs.hpp in Headers */,
 				4019EAE42A348852008D800B /* kern_dyld_patches.hpp in Headers */,
 				4068898C2A229BF600028D22 /* kern_patcherplus.hpp in Headers */,
+				6C1B36672A407C6200B184DD /* kern_agfxhda.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -329,6 +336,7 @@
 			files = (
 				40FC5FDD29BF996900367F9D /* kern_hwlibs.cpp in Sources */,
 				40FC5FD529BF995000367F9D /* kern_x6000fb.cpp in Sources */,
+				6C1B36662A407C6100B184DD /* kern_agfxhda.cpp in Sources */,
 				408F2020288ACBE6002EEC15 /* kern_fw.cpp in Sources */,
 				4068898B2A229BF600028D22 /* kern_patcherplus.cpp in Sources */,
 				40FC5FE129BF9E2500367F9D /* kern_x6000.cpp in Sources */,

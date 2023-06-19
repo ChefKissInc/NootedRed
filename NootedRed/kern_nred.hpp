@@ -88,6 +88,7 @@ struct vc_info {
 };
 
 class NRed {
+    friend class AppleGFXHDA;
     friend class DYLDPatches;
     friend class X6000FB;
     friend class X5000HWLibs;
