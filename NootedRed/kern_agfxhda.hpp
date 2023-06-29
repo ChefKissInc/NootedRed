@@ -11,8 +11,4 @@ class AppleGFXHDA {
     static AppleGFXHDA *callback;
     void init();
     bool processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size);
-
-    private:
-    static void wrapLogControllerCommand(void *that, uint32_t cmd, uint32_t *output, uint32_t controllerRet,
-        bool isAfterExecution);
 };

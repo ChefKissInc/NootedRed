@@ -22,19 +22,11 @@ void AppleGFXHDA::init() {
 
 bool AppleGFXHDA::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextAppleGFXHDA.loadIndex == index) {
-        NRed::callback->setRMMIOIfNecessary();
-
-        RouteRequestPlus requests[] = {
-            {"__ZN17AppleGFXHDADriver20logControllerCommandEjPjib", wrapLogControllerCommand},
-        };
-        PANIC_COND(!RouteRequestPlus::routeAll(patcher, index, requests, address, size), "agfxhda",
-            "Failed to route symbols");
-
-        uint32_t const probeFind = 0xAB381002;
-        uint32_t const probeRepl = NRed::callback->deviceId <= 0x15DD ? 0x15D71002 : 0x16371002;
+        const uint32_t probeFind = 0xAB381002;
+        const uint32_t probeRepl = NRed::callback->deviceId <= 0x15DD ? 0x15D71002 : 0x16371002;
         LookupPatchPlus patches[] = {
-            {&kextAppleGFXHDA, reinterpret_cast<uint8_t const *>(&probeFind),
-                reinterpret_cast<uint8_t const *>(&probeRepl), sizeof(probeFind), 1},
+            {&kextAppleGFXHDA, reinterpret_cast<const uint8_t *>(&probeFind),
+                reinterpret_cast<const uint8_t *>(&probeRepl), sizeof(probeFind), 1},
             {&kextAppleGFXHDA, kCreateAppleHDAFunctionGroup1Original, kCreateAppleHDAFunctionGroup1Mask,
                 kCreateAppleHDAFunctionGroup1Replace, 1},
             {&kextAppleGFXHDA, kCreateAppleHDAFunctionGroup2Original, kCreateAppleHDAFunctionGroup2Mask,
@@ -52,11 +44,4 @@ bool AppleGFXHDA::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
     }
 
     return false;
-}
-
-void AppleGFXHDA::wrapLogControllerCommand(void *that, uint32_t cmd, uint32_t *output, uint32_t controllerRet,
-    bool isAfterExecution) {
-    DBGLOG("agfxhda",
-        "logControllerCommand << (that: %p cmd: 0x%08X output: 0x%X controllerRet: 0x%X isAfterExecution: %d)", that,
-        cmd, output == nullptr ? 0 : *output, controllerRet, isAfterExecution);
 }
