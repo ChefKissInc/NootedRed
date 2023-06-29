@@ -23,7 +23,7 @@ void AppleGFXHDA::init() {
 bool AppleGFXHDA::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextAppleGFXHDA.loadIndex == index) {
         const uint32_t probeFind = 0xAB381002;
-        const uint32_t probeRepl = NRed::callback->deviceId <= 0x15DD ? 0x15D71002 : 0x16371002;
+        const uint32_t probeRepl = NRed::callback->deviceId <= 0x15DD ? 0x15DE1002 : 0x16371002;
         LookupPatchPlus patches[] = {
             {&kextAppleGFXHDA, reinterpret_cast<const uint8_t *>(&probeFind),
                 reinterpret_cast<const uint8_t *>(&probeRepl), sizeof(probeFind), 1},
