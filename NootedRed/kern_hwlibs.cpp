@@ -100,7 +100,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
 
         auto ventura = getKernelVersion() >= KernelVersion::Ventura;
         auto monterey = getKernelVersion() >= KernelVersion::Monterey;
-        LookupPatchPlus const patches[] = {
+        const LookupPatchPlus patches[] = {
             {&kextRadeonX5000HWLibs, kPspSwInitOriginal1, kPspSwInitPatched1, 1},
             {&kextRadeonX5000HWLibs, kPspSwInitOriginal2, kPspSwInitMask2, kPspSwInitPatched2, 1},
             {&kextRadeonX5000HWLibs, kSmuInitFunctionPointerListOriginal, kSmuInitFunctionPointerListMask,

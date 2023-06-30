@@ -88,7 +88,7 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
         uint32_t findBpp64 = Dcn1Bpp64SwModeMask, replBpp64 = Dcn2Bpp64SwModeMask;
         uint32_t findNonBpp64 = Dcn1NonBpp64SwModeMask, replNonBpp64 = Dcn2NonBpp64SwModeMask;
         auto dcn2 = NRed::callback->chipType >= ChipType::Renoir;
-        LookupPatchPlus const swizzleModePatches[] = {
+        const LookupPatchPlus swizzleModePatches[] = {
             {&kextRadeonX5000, reinterpret_cast<const uint8_t *>(&findBpp64),
                 reinterpret_cast<const uint8_t *>(&replBpp64), sizeof(uint32_t), ventura1304 ? 2U : 4, dcn2},
             {&kextRadeonX5000, reinterpret_cast<const uint8_t *>(&findNonBpp64),

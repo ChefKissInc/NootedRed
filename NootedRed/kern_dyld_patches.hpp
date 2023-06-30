@@ -5,6 +5,62 @@
 #include <Headers/kern_patcher.hpp>
 #include <Headers/kern_util.hpp>
 
+class DYLDPatch {
+    const void *find {nullptr}, *findMask {nullptr};
+    const size_t findSize {0};
+    const void *replace {nullptr}, *replaceMask {nullptr};
+    const size_t replaceSize {0};
+    const char *comment {nullptr};
+
+    public:
+    DYLDPatch(const void *find, size_t findSize, const void *replace, size_t replaceSize, const char *comment)
+        : find {find}, findSize {findSize}, replace {replace}, replaceSize {replaceSize}, comment {comment} {}
+
+    DYLDPatch(const void *find, const void *findMask, size_t findSize, const void *replace, const void *replaceMask,
+        size_t replaceSize, const char *comment)
+        : find {find}, findMask {findMask}, findSize {findSize}, replace {replace}, replaceMask {replaceMask},
+          replaceSize {replaceSize}, comment {comment} {}
+
+    DYLDPatch(const void *find, const void *findMask, size_t findSize, const void *replace, size_t replaceSize,
+        const char *comment)
+        : find {find}, findMask {findMask}, findSize {findSize}, replace {replace}, replaceSize {replaceSize},
+          comment {comment} {}
+
+    template<typename T, size_t N>
+    DYLDPatch(const T (&find)[N], const T (&replace)[N], const char *comment)
+        : DYLDPatch(find, N * sizeof(T), replace, N * sizeof(T), comment) {}
+
+    template<typename T, size_t N>
+    DYLDPatch(const T (&find)[N], const T (&findMask)[N], const T (&replace)[N], const T (&replaceMask)[N],
+        const char *comment)
+        : DYLDPatch(find, findMask, N * sizeof(T), replace, replaceMask, N * sizeof(T), comment) {}
+
+    template<typename T, size_t N>
+    DYLDPatch(const T (&find)[N], const T (&findMask)[N], const T (&replace)[N], const char *comment)
+        : DYLDPatch(find, findMask, N * sizeof(T), replace, N * sizeof(T), comment) {}
+
+    template<typename T, size_t N, size_t M>
+    DYLDPatch(const T (&find)[N], const T (&replace)[M], const char *comment)
+        : DYLDPatch(find, N * sizeof(T), replace, M * sizeof(T), comment) {}
+
+    template<typename T, size_t N, size_t M>
+    DYLDPatch(const T (&find)[N], const T (&findMask)[N], const T (&replace)[M], const T (&replaceMask)[M],
+        const char *comment)
+        : DYLDPatch(find, findMask, N * sizeof(T), replace, replaceMask, M * sizeof(T), comment) {}
+
+    template<typename T, size_t N, size_t M>
+    DYLDPatch(const T (&find)[N], const T (&findMask)[N], const T (&replace)[M], const char *comment)
+        : DYLDPatch(find, findMask, N * sizeof(T), replace, M * sizeof(T), comment) {}
+
+    void apply(void *data, size_t size) const;
+    static void applyAll(const DYLDPatch *patches, size_t count, void *data, size_t size);
+
+    template<size_t N>
+    static void applyAll(const DYLDPatch (&patches)[N], void *data, size_t size) {
+        applyAll(patches, N, data, size);
+    }
+};
+
 class DYLDPatches {
     public:
     static DYLDPatches *callback;
