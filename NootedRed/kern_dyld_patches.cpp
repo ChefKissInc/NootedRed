@@ -3,7 +3,6 @@
 
 #include "kern_dyld_patches.hpp"
 #include "kern_nred.hpp"
-#include "kern_patcherplus.hpp"
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_devinfo.hpp>
 #include <IOKit/IODeviceTreeSupport.h>
@@ -12,7 +11,7 @@ void DYLDPatch::apply(void *data, size_t size) const {
     if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(data, size, this->find, this->findSize, this->findMask,
             this->findMask ? this->findSize : 0, this->replace, this->replaceSize, this->replaceMask,
             this->replaceMask ? this->replaceSize : 0))) {
-        DBGLOG("dyld_patches", "Applied '%s' patch", this->comment);
+        DBGLOG("dyld", "Applied '%s' patch", this->comment);
     }
 }
 
@@ -29,14 +28,14 @@ void DYLDPatches::processPatcher(KernelPatcher &patcher) {
 
     auto *entry = IORegistryEntry::fromPath("/", gIODTPlane);
     if (entry) {
-        DBGLOG("dyld_patches", "Setting hwgva-id to iMacPro1,1");
+        DBGLOG("dyld", "Setting hwgva-id to MacPro7,1");
         entry->setProperty("hwgva-id", const_cast<char *>(kHwGvaId), arrsize(kHwGvaId));
         entry->release();
     }
 
     KernelPatcher::RouteRequest request {"_cs_validate_page", csValidatePage, this->orgCsValidatePage};
 
-    PANIC_COND(!patcher.routeMultipleLong(KernelPatcher::KernelID, &request, 1), "dyld_patches",
+    PANIC_COND(!patcher.routeMultipleLong(KernelPatcher::KernelID, &request, 1), "dyld",
         "Failed to route kernel symbols");
 }
 
@@ -63,8 +62,8 @@ void DYLDPatches::csValidatePage(vnode *vp, memory_object_t pager, memory_object
         {kVideoToolboxDRMModelOriginal, arrsize(kVideoToolboxDRMModelOriginal),
             reinterpret_cast<const uint8_t *>(BaseDeviceInfo::get().modelIdentifier), 20,
             "VideoToolbox DRM model check"},
-        {kAGVABoardIdOriginal, kAGVABoardIdPatched, "iMacPro1,1 spoof (AppleGVA)"},
-        {kHEVCEncBoardIdOriginal, kHEVCEncBoardIdPatched, "iMacPro1,1 spoof (AppleGVAHEVCEncoder)"},
+        {kAGVABoardIdOriginal, kAGVABoardIdPatched, "MacPro7,1 spoof (AppleGVA)"},
+        {kHEVCEncBoardIdOriginal, kHEVCEncBoardIdPatched, "MacPro7,1 spoof (AppleGVAHEVCEncoder)"},
     };
     DYLDPatch::applyAll(patches, const_cast<void *>(data), PAGE_SIZE);
 
