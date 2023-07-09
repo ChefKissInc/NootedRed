@@ -8,9 +8,9 @@
 #include <IOKit/IODeviceTreeSupport.h>
 
 void DYLDPatch::apply(void *data, size_t size) const {
-    if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(data, size, this->find, this->findSize, this->findMask,
-            this->findMask ? this->findSize : 0, this->replace, this->replaceSize, this->replaceMask,
-            this->replaceMask ? this->replaceSize : 0))) {
+    if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(data, size, this->find, this->size, this->findMask,
+            this->findMask ? this->size : 0, this->replace, this->size, this->replaceMask,
+            this->replaceMask ? this->size : 0))) {
         DBGLOG("dyld", "Applied '%s' patch", this->comment);
     }
 }
@@ -58,11 +58,17 @@ void DYLDPatches::csValidatePage(vnode *vp, memory_object_t pager, memory_object
         return;
     }
 
+    if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kVideoToolboxDRMModelOriginal,
+            arrsize(kVideoToolboxDRMModelOriginal), BaseDeviceInfo::get().modelIdentifier, 20))) {
+        DBGLOG("dyld", "Applied 'VideoToolbox DRM model check' patch");
+    }
+
+    if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kAGVABoardIdOriginal,
+            arrsize(kAGVABoardIdOriginal), kAGVABoardIdPatched, arrsize(kAGVABoardIdPatched)))) {
+        DBGLOG("dyld", "Applied 'MacPro7,1 spoof (AppleGVA)' patch");
+    }
+
     const DYLDPatch patches[] = {
-        {kVideoToolboxDRMModelOriginal, arrsize(kVideoToolboxDRMModelOriginal),
-            reinterpret_cast<const uint8_t *>(BaseDeviceInfo::get().modelIdentifier), 20,
-            "VideoToolbox DRM model check"},
-        {kAGVABoardIdOriginal, kAGVABoardIdPatched, "MacPro7,1 spoof (AppleGVA)"},
         {kHEVCEncBoardIdOriginal, kHEVCEncBoardIdPatched, "MacPro7,1 spoof (AppleGVAHEVCEncoder)"},
     };
     DYLDPatch::applyAll(patches, const_cast<void *>(data), PAGE_SIZE);
@@ -72,8 +78,10 @@ void DYLDPatches::csValidatePage(vnode *vp, memory_object_t pager, memory_object
             {kVAAcceleratorInfoIdentifyVenturaOriginal, kVAAcceleratorInfoIdentifyVenturaOriginalMask,
                 kVAAcceleratorInfoIdentifyVenturaPatched, kVAAcceleratorInfoIdentifyVenturaPatchedMask,
                 "VAAcceleratorInfo::identify"},
-            {kVAFactoryCreateGraphicsEngineAndBltVenturaOriginal, kVAFactoryCreateGraphicsEngineAndBltVenturaMask,
-                kVAFactoryCreateGraphicsEnginePatched, "VAFactory::createGraphicsEngine/VAFactory::createImageBlt"},
+            {kVAFactoryCreateGraphicsEngineAndBltVenturaOriginal,
+                kVAFactoryCreateGraphicsEngineAndBltVenturaOriginalMask, kVAFactoryCreateGraphicsEngineVenturaPatched,
+                kVAFactoryCreateGraphicsEngineVenturaPatchedMask,
+                "VAFactory::createGraphicsEngine/VAFactory::createImageBlt"},
             {kVAFactoryCreateVPVenturaOriginal, kVAFactoryCreateVPVenturaOriginalMask, kVAFactoryCreateVPVenturaPatched,
                 kVAFactoryCreateVPVenturaPatchedMask, "VAFactory::create*VP"},
         };
@@ -83,11 +91,13 @@ void DYLDPatches::csValidatePage(vnode *vp, memory_object_t pager, memory_object
             {kVAAcceleratorInfoIdentifyOriginal, kVAAcceleratorInfoIdentifyOriginalMask,
                 kVAAcceleratorInfoIdentifyPatched, kVAAcceleratorInfoIdentifyPatchedMask,
                 "VAAcceleratorInfo::identify"},
-            {kVAFactoryCreateGraphicsEngineOriginal, kVAFactoryCreateGraphicsEngineMask,
-                kVAFactoryCreateGraphicsEnginePatched, "VAFactory::createGraphicsEngine"},
+            {kVAFactoryCreateGraphicsEngineOriginal, kVAFactoryCreateGraphicsEngineOriginalMask,
+                kVAFactoryCreateGraphicsEnginePatched, kVAFactoryCreateGraphicsEnginePatchedMask,
+                "VAFactory::createGraphicsEngine"},
             {kVAFactoryCreateImageBltOriginal, kVAFactoryCreateImageBltMask, kVAFactoryCreateImageBltPatched,
-                "VAFactory::createImageBlt"},
-            {kVAFactoryCreateVPOriginal, kVAFactoryCreateVPMask, kVAFactoryCreateVPPatched, "VAFactory::create*VP"},
+                kVAFactoryCreateImageBltPatchedMask, "VAFactory::createImageBlt"},
+            {kVAFactoryCreateVPOriginal, kVAFactoryCreateVPOriginalMask, kVAFactoryCreateVPPatched,
+                kVAFactoryCreateVPPatchedMask, "VAFactory::create*VP"},
         };
         DYLDPatch::applyAll(patches, const_cast<void *>(data), PAGE_SIZE);
     }
@@ -117,8 +127,10 @@ void DYLDPatches::csValidatePage(vnode *vp, memory_object_t pager, memory_object
         {kAddBitstreamBufferPacketOriginal, kAddBitstreamBufferPacketPatched,
             "Vcn2EncCommand::addBitstreamBufferPacket"},
         {kAddFeedbackBufferPacketOriginal, kAddFeedbackBufferPacketPatched, "Vcn2EncCommand::addFeedbackBufferPacket"},
-        {kAddInputFormatPacketOriginal, kAddFormatPacketMask, kRetZero, "Vcn2EncCommand::addInputFormatPacket"},
-        {kAddOutputFormatPacketOriginal, kAddFormatPacketMask, kRetZero, "Vcn2EncCommand::addOutputFormatPacket"},
+        {kAddInputFormatPacketOriginal, kAddFormatPacketOriginalMask, kAddFormatPacketPatched,
+            kAddFormatPacketPatchedMask, "Vcn2EncCommand::addInputFormatPacket"},
+        {kAddOutputFormatPacketOriginal, kAddFormatPacketOriginalMask, kAddFormatPacketPatched,
+            kAddFormatPacketPatchedMask, "Vcn2EncCommand::addOutputFormatPacket"},
     };
     DYLDPatch::applyAll(vcn1Patches, const_cast<void *>(data), PAGE_SIZE);
 }
