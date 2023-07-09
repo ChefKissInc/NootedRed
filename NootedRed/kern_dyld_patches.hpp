@@ -26,19 +26,6 @@ class DYLDPatch {
         : find {find}, findMask {findMask}, findSize {findSize}, replace {replace}, replaceSize {replaceSize},
           comment {comment} {}
 
-    template<typename T, size_t N>
-    DYLDPatch(const T (&find)[N], const T (&replace)[N], const char *comment)
-        : DYLDPatch(find, N * sizeof(T), replace, N * sizeof(T), comment) {}
-
-    template<typename T, size_t N>
-    DYLDPatch(const T (&find)[N], const T (&findMask)[N], const T (&replace)[N], const T (&replaceMask)[N],
-        const char *comment)
-        : DYLDPatch(find, findMask, N * sizeof(T), replace, replaceMask, N * sizeof(T), comment) {}
-
-    template<typename T, size_t N>
-    DYLDPatch(const T (&find)[N], const T (&findMask)[N], const T (&replace)[N], const char *comment)
-        : DYLDPatch(find, findMask, N * sizeof(T), replace, N * sizeof(T), comment) {}
-
     template<typename T, size_t N, size_t M>
     DYLDPatch(const T (&find)[N], const T (&replace)[M], const char *comment)
         : DYLDPatch(find, N * sizeof(T), replace, M * sizeof(T), comment) {}
