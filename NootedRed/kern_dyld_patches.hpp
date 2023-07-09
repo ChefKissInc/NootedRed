@@ -90,8 +90,8 @@ static const uint8_t kCoreLSKDOriginal[] = {0xC7, 0xC0, 0x01, 0x00, 0x00, 0x00, 
 static const uint8_t kCoreLSKDPatched[] = {0xC7, 0xC0, 0xC3, 0x06, 0x03, 0x00, 0x66, 0x90};
 
 /** AppleGVAHEVCEncoder model check */
-static const uint8_t kHEVCEncBoardIdOriginal[] = "vendor8bit\0IOService\0board-id";
-static const uint8_t kHEVCEncBoardIdPatched[] = "vendor8bit\0IOService\0hwgva-id";
+static const char kHEVCEncBoardIdOriginal[] = "vendor8bit\0IOService\0board-id";
+static const char kHEVCEncBoardIdPatched[] = "vendor8bit\0IOService\0hwgva-id";
 
 /**
  * `VAAcceleratorInfo::identify`
