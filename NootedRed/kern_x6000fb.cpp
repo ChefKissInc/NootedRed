@@ -50,9 +50,10 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
             {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
                 this->orgGetNumberOfConnectors, kGetNumberOfConnectorsPattern, kGetNumberOfConnectorsMask},
             {"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware, this->orgIH40IVRingInitHardware,
-                kIH40IVRingInitHardwarePattern, kIH40IVRingInitHardwareMask},
+                kIH40IVRingInitHardwarePattern, kIH40IVRingInitHardwareMask,
+                NRed::callback->chipType >= ChipType::Renoir},
             {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister, this->orgIRQMGRWriteRegister,
-                kIRQMGRWriteRegisterPattern},
+                kIRQMGRWriteRegisterPattern, NRed::callback->chipType >= ChipType::Renoir},
             {"__ZN34AMDRadeonX6000_AmdRadeonController7powerUpEv", wrapControllerPowerUp, this->orgControllerPowerUp,
                 ventura},
         };
@@ -290,14 +291,12 @@ uint32_t X6000FB::wrapGetNumberOfConnectors(void *that) {
 
 bool X6000FB::wrapIH40IVRingInitHardware(void *ctx, void *param2) {
     auto ret = FunctionCast(wrapIH40IVRingInitHardware, callback->orgIH40IVRingInitHardware)(ctx, param2);
-    if (NRed::callback->chipType >= ChipType::Renoir) {
-        NRed::callback->writeReg32(mmIH_CHICKEN, NRed::callback->readReg32(mmIH_CHICKEN) | mmIH_MC_SPACE_GPA_ENABLE);
-    }
+    NRed::callback->writeReg32(mmIH_CHICKEN, NRed::callback->readReg32(mmIH_CHICKEN) | mmIH_MC_SPACE_GPA_ENABLE);
     return ret;
 }
 
 void X6000FB::wrapIRQMGRWriteRegister(void *ctx, uint64_t index, uint32_t value) {
-    if (index == mmIH_CLK_CTRL && NRed::callback->chipType >= ChipType::Renoir) {
+    if (index == mmIH_CLK_CTRL) {
         index |= (index & (1U << mmIH_DBUS_MUX_CLK_SOFT_OVERRIDE_SHIFT)) >>
                  (mmIH_DBUS_MUX_CLK_SOFT_OVERRIDE_SHIFT - mmIH_IH_BUFFER_MEM_CLK_SOFT_OVERRIDE_SHIFT);
         DBGLOG("x6000fb", "_IRQMGR_WriteRegister: Set IH_BUFFER_MEM_CLK_SOFT_OVERRIDE");
