@@ -7,43 +7,49 @@
 
 class DYLDPatch {
     const void *find {nullptr}, *findMask {nullptr};
-    const size_t findSize {0};
     const void *replace {nullptr}, *replaceMask {nullptr};
-    const size_t replaceSize {0};
+    const size_t size {0};
     const char *comment {nullptr};
 
     public:
-    DYLDPatch(const void *find, size_t findSize, const void *replace, size_t replaceSize, const char *comment)
-        : find {find}, findSize {findSize}, replace {replace}, replaceSize {replaceSize}, comment {comment} {}
+    DYLDPatch(const void *find, const void *replace, size_t size, const char *comment)
+        : find {find}, replace {replace}, size {size}, comment {comment} {}
 
-    DYLDPatch(const void *find, const void *findMask, size_t findSize, const void *replace, const void *replaceMask,
-        size_t replaceSize, const char *comment)
-        : find {find}, findMask {findMask}, findSize {findSize}, replace {replace}, replaceMask {replaceMask},
-          replaceSize {replaceSize}, comment {comment} {}
-
-    DYLDPatch(const void *find, const void *findMask, size_t findSize, const void *replace, size_t replaceSize,
+    DYLDPatch(const void *find, const void *findMask, const void *replace, const void *replaceMask, size_t size,
         const char *comment)
-        : find {find}, findMask {findMask}, findSize {findSize}, replace {replace}, replaceSize {replaceSize},
+        : find {find}, findMask {findMask}, replace {replace}, replaceMask {replaceMask}, size {size},
           comment {comment} {}
 
-    template<typename T, size_t N, size_t M>
-    DYLDPatch(const T (&find)[N], const T (&replace)[M], const char *comment)
-        : DYLDPatch(find, N * sizeof(T), replace, M * sizeof(T), comment) {}
+    DYLDPatch(const void *find, const void *findMask, const void *replace, size_t size, const char *comment)
+        : find {find}, findMask {findMask}, replace {replace}, size {size}, comment {comment} {}
 
-    template<typename T, size_t N, size_t M>
-    DYLDPatch(const T (&find)[N], const T (&findMask)[N], const T (&replace)[M], const T (&replaceMask)[M],
+    template<typename T, size_t N>
+    DYLDPatch(const T (&find)[N], const T (&replace)[N], const char *comment)
+        : DYLDPatch(find, replace, N * sizeof(T), comment) {}
+
+    template<typename T, size_t N>
+    DYLDPatch(const T (&find)[N], const T (&findMask)[N], const T (&replace)[N], const T (&replaceMask)[N],
         const char *comment)
-        : DYLDPatch(find, findMask, N * sizeof(T), replace, replaceMask, M * sizeof(T), comment) {}
+        : DYLDPatch(find, findMask, replace, replaceMask, N * sizeof(T), comment) {}
 
-    template<typename T, size_t N, size_t M>
-    DYLDPatch(const T (&find)[N], const T (&findMask)[N], const T (&replace)[M], const char *comment)
-        : DYLDPatch(find, findMask, N * sizeof(T), replace, M * sizeof(T), comment) {}
+    template<typename T, size_t N>
+    DYLDPatch(const T (&find)[N], const T (&findMask)[N], const T (&replace)[N], const char *comment)
+        : DYLDPatch(find, findMask, replace, N * sizeof(T), comment) {}
 
-    void apply(void *data, size_t size) const;
-    static void applyAll(const DYLDPatch *patches, size_t count, void *data, size_t size);
+    inline void apply(void *data, size_t size) const {
+        if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(data, size, this->find, this->size, this->findMask,
+                this->findMask ? this->size : 0, this->replace, this->size, this->replaceMask,
+                this->replaceMask ? this->size : 0))) {
+            DBGLOG("dyld", "Applied '%s' patch", this->comment);
+        }
+    }
+
+    static inline void applyAll(const DYLDPatch *patches, size_t count, void *data, size_t size) {
+        for (size_t i = 0; i < count; i++) { patches[i].apply(data, size); }
+    }
 
     template<size_t N>
-    static void applyAll(const DYLDPatch (&patches)[N], void *data, size_t size) {
+    static inline void applyAll(const DYLDPatch (&patches)[N], void *data, size_t size) {
         applyAll(patches, N, data, size);
     }
 };
@@ -68,7 +74,8 @@ static const char kHwGvaId[] = "Mac-27AD2F918AE68F61";
 
 /** AppleGVA model check */
 static const char kAGVABoardIdOriginal[] = "board-id\0hw.model";
-static const char kAGVABoardIdPatched[] = "hwgva-id";
+static const char kAGVABoardIdPatched[] = "hwgva-id\0hw.model";
+static_assert(arrsize(kAGVABoardIdOriginal) == arrsize(kAGVABoardIdPatched));
 
 static const char kCoreLSKDMSEPath[] = "/System/Library/PrivateFrameworks/CoreLSKDMSE.framework/Versions/A/CoreLSKDMSE";
 static const char kCoreLSKDPath[] = "/System/Library/PrivateFrameworks/CoreLSKD.framework/Versions/A/CoreLSKD";
@@ -92,11 +99,13 @@ static const uint8_t kVAAcceleratorInfoIdentifyOriginal[] = {0x85, 0xC0, 0x74, 0
     0xD8, 0x48, 0x83, 0xC4, 0x00};
 static const uint8_t kVAAcceleratorInfoIdentifyOriginalMask[] = {0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00};
-static const uint8_t kVAAcceleratorInfoIdentifyPatched[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x0C};
-static const uint8_t kVAAcceleratorInfoIdentifyPatchedMask[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0xFF};
+static const uint8_t kVAAcceleratorInfoIdentifyPatched[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00};
+static const uint8_t kVAAcceleratorInfoIdentifyPatchedMask[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static_assert(arrsize(kVAAcceleratorInfoIdentifyOriginal) == arrsize(kVAAcceleratorInfoIdentifyOriginalMask));
+static_assert(arrsize(kVAAcceleratorInfoIdentifyOriginal) == arrsize(kVAAcceleratorInfoIdentifyPatched));
 static_assert(arrsize(kVAAcceleratorInfoIdentifyPatched) == arrsize(kVAAcceleratorInfoIdentifyPatchedMask));
-static_assert(arrsize(kVAAcceleratorInfoIdentifyOriginal) > arrsize(kVAAcceleratorInfoIdentifyPatched));
 
 /** Ditto */
 static const uint8_t kVAAcceleratorInfoIdentifyVenturaOriginal[] = {0x48, 0xC7, 0x45, 0xF0, 0x18, 0x01, 0x00, 0x00,
@@ -120,20 +129,31 @@ static_assert(arrsize(kVAAcceleratorInfoIdentifyVenturaOriginal) == arrsize(kVAA
  */
 static const uint8_t kVAFactoryCreateGraphicsEngineOriginal[] = {0x48, 0x8B, 0x86, 0x60, 0x04, 0x00, 0x00, 0x8B, 0x40,
     0x0C, 0x83, 0xF8, 0x07, 0x77, 0x00};
-static const uint8_t kVAFactoryCreateGraphicsEngineMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x00};
+static const uint8_t kVAFactoryCreateGraphicsEngineOriginalMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00};
 static const uint8_t kVAFactoryCreateGraphicsEnginePatched[] = {0xC7, 0xC0, 0x04, 0x00, 0x00, 0x00, 0x66, 0x90, 0x66,
-    0x90};
-static_assert(arrsize(kVAFactoryCreateGraphicsEngineOriginal) == arrsize(kVAFactoryCreateGraphicsEngineMask));
-static_assert(arrsize(kVAFactoryCreateGraphicsEngineOriginal) > arrsize(kVAFactoryCreateGraphicsEnginePatched));
+    0x90, 0x00, 0x00, 0x00, 0x00, 0x00};
+static const uint8_t kVAFactoryCreateGraphicsEnginePatchedMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00};
+static_assert(arrsize(kVAFactoryCreateGraphicsEngineOriginal) == arrsize(kVAFactoryCreateGraphicsEngineOriginalMask));
+static_assert(arrsize(kVAFactoryCreateGraphicsEngineOriginal) == arrsize(kVAFactoryCreateGraphicsEnginePatched));
+static_assert(arrsize(kVAFactoryCreateGraphicsEnginePatched) == arrsize(kVAFactoryCreateGraphicsEnginePatchedMask));
 
 /** Ditto */
 static const uint8_t kVAFactoryCreateGraphicsEngineAndBltVenturaOriginal[] = {0x48, 0x8B, 0x86, 0x60, 0x04, 0x00, 0x00,
     0x8B, 0x40, 0x0C, 0x8D, 0x48, 0xFF, 0x83, 0xF9, 0x02, 0x72, 0x00, 0x8D, 0x48, 0xFD, 0x83, 0xF9, 0x02};
-static const uint8_t kVAFactoryCreateGraphicsEngineAndBltVenturaMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+static const uint8_t kVAFactoryCreateGraphicsEngineAndBltVenturaOriginalMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+static const uint8_t kVAFactoryCreateGraphicsEngineAndBltVenturaPatched[] = {0xC7, 0xC0, 0x04, 0x00, 0x00, 0x00, 0x66,
+    0x90, 0x66, 0x90, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static const uint8_t kVAFactoryCreateGraphicsEngineAndBltVenturaPatchedMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static_assert(arrsize(kVAFactoryCreateGraphicsEngineAndBltVenturaOriginal) ==
-              arrsize(kVAFactoryCreateGraphicsEngineAndBltVenturaMask));
+              arrsize(kVAFactoryCreateGraphicsEngineAndBltVenturaOriginalMask));
+static_assert(arrsize(kVAFactoryCreateGraphicsEngineAndBltVenturaOriginal) ==
+              arrsize(kVAFactoryCreateGraphicsEngineAndBltVenturaPatched));
+static_assert(arrsize(kVAFactoryCreateGraphicsEngineAndBltVenturaPatched) ==
+              arrsize(kVAFactoryCreateGraphicsEngineAndBltVenturaPatchedMask));
 
 /**
  * `VAFactory::create*VP`
@@ -143,23 +163,31 @@ static_assert(arrsize(kVAFactoryCreateGraphicsEngineAndBltVenturaOriginal) ==
 static const uint8_t kVAFactoryCreateVPOriginal[] = {0x83, 0xFE, 0x07, 0x77, 0x00, 0x89, 0xF0, 0x48, 0x8D, 0x0D, 0x00,
     0x00, 0x00, 0x00, 0x48, 0x63, 0x04, 0x81, 0x48, 0x01, 0xC8, 0xFF, 0xE0, 0xBF, 0x00, 0x00, 0x00, 0x00, 0xE8, 0x00,
     0x00, 0x00, 0x00};
-static const uint8_t kVAFactoryCreateVPMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00,
-    0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00,
-    0x00, 0x00};
-static const uint8_t kVAFactoryCreateVPPatched[] = {0xBE, 0x04, 0x00, 0x00, 0x00};
-static_assert(arrsize(kVAFactoryCreateVPOriginal) == arrsize(kVAFactoryCreateVPMask));
-static_assert(arrsize(kVAFactoryCreateVPOriginal) > arrsize(kVAFactoryCreateVPPatched));
+static const uint8_t kVAFactoryCreateVPOriginalMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF,
+    0x00, 0x00, 0x00, 0x00};
+static const uint8_t kVAFactoryCreateVPPatched[] = {0xBE, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00};
+static const uint8_t kVAFactoryCreateVPPatchedMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00};
+static_assert(arrsize(kVAFactoryCreateVPOriginal) == arrsize(kVAFactoryCreateVPOriginalMask));
+static_assert(arrsize(kVAFactoryCreateVPOriginal) == arrsize(kVAFactoryCreateVPPatched));
+static_assert(arrsize(kVAFactoryCreateVPPatched) == arrsize(kVAFactoryCreateVPPatchedMask));
 
 /** Ditto */
 static const uint8_t kVAFactoryCreateVPVenturaOriginal[] = {0x8D, 0x46, 0xFF, 0x83, 0xF8, 0x02, 0x72, 0x00, 0x8D, 0x46,
     0xFD, 0x83, 0xF8, 0x02, 0x73, 0x00, 0xBF, 0x00, 0x00, 0x00, 0x00, 0xE8, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t kVAFactoryCreateVPVenturaOriginalMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00};
-static const uint8_t kVAFactoryCreateVPVenturaPatched[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xEB};
-static const uint8_t kVAFactoryCreateVPVenturaPatchedMask[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF};
+static const uint8_t kVAFactoryCreateVPVenturaPatched[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xEB, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static const uint8_t kVAFactoryCreateVPVenturaPatchedMask[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static_assert(arrsize(kVAFactoryCreateVPVenturaOriginal) == arrsize(kVAFactoryCreateVPVenturaOriginalMask));
+static_assert(arrsize(kVAFactoryCreateVPVenturaOriginal) == arrsize(kVAFactoryCreateVPVenturaPatched));
 static_assert(arrsize(kVAFactoryCreateVPVenturaPatched) == arrsize(kVAFactoryCreateVPVenturaPatchedMask));
-static_assert(arrsize(kVAFactoryCreateVPVenturaOriginal) > arrsize(kVAFactoryCreateVPVenturaPatched));
 
 /**
  * `VAFactory::createImageBlt`
@@ -171,9 +199,12 @@ static const uint8_t kVAFactoryCreateImageBltOriginal[] = {0x48, 0x89, 0xF7, 0x4
 static const uint8_t kVAFactoryCreateImageBltMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t kVAFactoryCreateImageBltPatched[] = {0x48, 0x89, 0xF7, 0x48, 0xB8, 0x04, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00};
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static const uint8_t kVAFactoryCreateImageBltPatchedMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static_assert(arrsize(kVAFactoryCreateImageBltOriginal) == arrsize(kVAFactoryCreateImageBltMask));
-static_assert(arrsize(kVAFactoryCreateImageBltOriginal) > arrsize(kVAFactoryCreateImageBltPatched));
+static_assert(arrsize(kVAFactoryCreateImageBltOriginal) == arrsize(kVAFactoryCreateImageBltPatched));
+static_assert(arrsize(kVAFactoryCreateImageBltPatched) == arrsize(kVAFactoryCreateImageBltPatchedMask));
 
 /**
  * `VAAddrLibInterface::init`
@@ -257,9 +288,10 @@ static const uint8_t kAddSliceHeaderPacketOriginal[] = {0x00, 0x00, 0x00, 0xBE, 
     0x00, 0x00, 0x00, 0x00, 0xE9, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t kAddSliceHeaderPacketMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00};
-static const uint8_t kAddSliceHeaderPacketPatched[] = {0x00, 0x00, 0x00, 0xBE, 0x0A};
+static const uint8_t kAddSliceHeaderPacketPatched[] = {0x00, 0x00, 0x00, 0xBE, 0x0A, 0x00, 0x00, 0x00, 0xBA, 0xC0, 0x00,
+    0x00, 0x00, 0x00, 0xE9, 0x00, 0x00, 0x00, 0x00};
 static_assert(arrsize(kAddSliceHeaderPacketOriginal) == arrsize(kAddSliceHeaderPacketMask));
-static_assert(arrsize(kAddSliceHeaderPacketOriginal) > arrsize(kAddSliceHeaderPacketPatched));
+static_assert(arrsize(kAddSliceHeaderPacketOriginal) == arrsize(kAddSliceHeaderPacketPatched));
 
 /**
  * `Vcn2EncCommand::addIntraRefreshPacket`
@@ -269,9 +301,10 @@ static const uint8_t kAddIntraRefreshPacketOriginal[] = {0x01, 0x00, 0x00, 0xBE,
     0x00, 0x00, 0x00, 0x00, 0xE9, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t kAddIntraRefreshPacketMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00};
-static const uint8_t kAddIntraRefreshPacketPatched[] = {0x01, 0x00, 0x00, 0xBE, 0x0C};
+static const uint8_t kAddIntraRefreshPacketPatched[] = {0x01, 0x00, 0x00, 0xBE, 0x0C, 0x00, 0x00, 0x00, 0xBA, 0x0C,
+    0x00, 0x00, 0x00, 0x00, 0xE9, 0x00, 0x00, 0x00, 0x00};
 static_assert(arrsize(kAddIntraRefreshPacketOriginal) == arrsize(kAddIntraRefreshPacketMask));
-static_assert(arrsize(kAddIntraRefreshPacketOriginal) > arrsize(kAddIntraRefreshPacketPatched));
+static_assert(arrsize(kAddIntraRefreshPacketOriginal) == arrsize(kAddIntraRefreshPacketPatched));
 
 /**
  * `Vcn2EncCommand::addContextBufferPacket`
@@ -312,10 +345,14 @@ static const uint8_t kAddInputFormatPacketOriginal[] = {0x55, 0x48, 0x89, 0xE5, 
     0x00, 0xBE, 0x0C, 0x00, 0x00, 0x00, 0xBA, 0x1C, 0x00, 0x00, 0x00};
 static const uint8_t kAddOutputFormatPacketOriginal[] = {0x55, 0x48, 0x89, 0xE5, 0x48, 0x8D, 0x8F, 0xA0, 0x05, 0x00,
     0x00, 0xBE, 0x0D, 0x00, 0x00, 0x00, 0xBA, 0x10, 0x00, 0x00, 0x00};
-static const uint8_t kAddFormatPacketMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xF0, 0xFF, 0x00, 0x00, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-static const uint8_t kRetZero[] = {0xB8, 0x00, 0x00, 0x00, 0x00, 0xC3, 0x90};
-static_assert(arrsize(kAddInputFormatPacketOriginal) == arrsize(kAddFormatPacketMask));
-static_assert(arrsize(kAddOutputFormatPacketOriginal) == arrsize(kAddFormatPacketMask));
-static_assert(arrsize(kAddInputFormatPacketOriginal) > arrsize(kRetZero));
-static_assert(arrsize(kAddOutputFormatPacketOriginal) > arrsize(kRetZero));
+static const uint8_t kAddFormatPacketOriginalMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xC0, 0xF0, 0xFF, 0x00, 0x00,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+static const uint8_t kAddFormatPacketPatched[] = {0xB8, 0x00, 0x00, 0x00, 0x00, 0xC3, 0x90, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static const uint8_t kAddFormatPacketPatchedMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static_assert(arrsize(kAddInputFormatPacketOriginal) == arrsize(kAddOutputFormatPacketOriginal));
+static_assert(arrsize(kAddInputFormatPacketOriginal) == arrsize(kAddFormatPacketOriginalMask));
+static_assert(arrsize(kAddOutputFormatPacketOriginal) == arrsize(kAddFormatPacketOriginalMask));
+static_assert(arrsize(kAddFormatPacketOriginalMask) == arrsize(kAddFormatPacketPatched));
+static_assert(arrsize(kAddFormatPacketPatchedMask) == arrsize(kAddFormatPacketPatched));
