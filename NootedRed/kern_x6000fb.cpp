@@ -297,7 +297,7 @@ bool X6000FB::wrapIH40IVRingInitHardware(void *ctx, void *param2) {
 
 void X6000FB::wrapIRQMGRWriteRegister(void *ctx, uint64_t index, uint32_t value) {
     if (index == mmIH_CLK_CTRL) {
-        index |= (index & (1U << mmIH_DBUS_MUX_CLK_SOFT_OVERRIDE_SHIFT)) >>
+        value |= (value & (1U << mmIH_DBUS_MUX_CLK_SOFT_OVERRIDE_SHIFT)) >>
                  (mmIH_DBUS_MUX_CLK_SOFT_OVERRIDE_SHIFT - mmIH_IH_BUFFER_MEM_CLK_SOFT_OVERRIDE_SHIFT);
         DBGLOG("x6000fb", "_IRQMGR_WriteRegister: Set IH_BUFFER_MEM_CLK_SOFT_OVERRIDE");
     }
