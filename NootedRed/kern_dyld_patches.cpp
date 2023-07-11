@@ -16,7 +16,7 @@ void DYLDPatches::processPatcher(KernelPatcher &patcher) {
 
     auto *entry = IORegistryEntry::fromPath("/", gIODTPlane);
     if (entry) {
-        DBGLOG("dyld", "Setting hwgva-id to MacPro7,1");
+        DBGLOG("dyld", "Setting hwgva-id to iMacPro1,1");
         entry->setProperty("hwgva-id", const_cast<char *>(kHwGvaId), arrsize(kHwGvaId));
         entry->release();
     }
@@ -52,8 +52,8 @@ void DYLDPatches::csValidatePage(vnode *vp, memory_object_t pager, memory_object
     }
 
     const DYLDPatch patches[] = {
-        {kAGVABoardIdOriginal, kAGVABoardIdPatched, "MacPro7,1 spoof (AppleGVA)"},
-        {kHEVCEncBoardIdOriginal, kHEVCEncBoardIdPatched, "MacPro7,1 spoof (AppleGVAHEVCEncoder)"},
+        {kAGVABoardIdOriginal, kAGVABoardIdPatched, "iMacPro1,1 spoof (AppleGVA)"},
+        {kHEVCEncBoardIdOriginal, kHEVCEncBoardIdPatched, "iMacPro1,1 spoof (AppleGVAHEVCEncoder)"},
     };
     DYLDPatch::applyAll(patches, const_cast<void *>(data), PAGE_SIZE);
 
