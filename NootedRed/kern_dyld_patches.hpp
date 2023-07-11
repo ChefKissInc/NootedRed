@@ -93,7 +93,7 @@ static_assert(arrsize(kHEVCEncBoardIdOriginal) == arrsize(kHEVCEncBoardIdPatched
  * `VAAcceleratorInfo::identify`
  * AMDRadeonVADriver2.bundle
  * The device info identification fails, as the device id is not present in the function.
- * Patch fallback "error" value (0x12) to Navi 12 (0xC).
+ * Patch fallback "error" value (0x12) to Navi 12 (0xD).
  */
 static const uint8_t kVAAcceleratorInfoIdentifyOriginal[] = {0x85, 0xC0, 0x74, 0x00, 0xBB, 0x12, 0x00, 0x00, 0x00, 0x89,
     0xD8, 0x48, 0x83, 0xC4, 0x00};
