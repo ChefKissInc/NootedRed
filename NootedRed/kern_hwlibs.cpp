@@ -59,21 +59,24 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "hwlibs",
             "Failed to enable kernel writing");
         *orgDeviceTypeTable = {.deviceId = NRed::callback->deviceId, .deviceType = 6};
-        *orgCapsTable = {
-            .familyId = AMDGPU_FAMILY_RAVEN,
-            .deviceId = NRed::callback->deviceId,
-            .revision = NRed::callback->revision,
-            .extRevision = static_cast<uint32_t>(NRed::callback->enumRevision) + NRed::callback->revision,
-            .pciRevision = NRed::callback->pciRevision,
-            .caps = NRed::callback->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir,
-        };
         auto found = false;
+        auto targetDeviceId = NRed::callback->chipType > ChipType::Renoir && NRed::callback->deviceId != 0x1636 ?
+                                  0x1636 :
+                                  NRed::callback->deviceId;
         while (orgCapsInitTable->deviceId != 0xFFFFFFFF) {
-            if (orgCapsInitTable->familyId == AMDGPU_FAMILY_RAVEN &&
-                orgCapsInitTable->deviceId == NRed::callback->deviceId) {
+            if (orgCapsInitTable->familyId == AMDGPU_FAMILY_RAVEN && orgCapsInitTable->deviceId == targetDeviceId) {
+                orgCapsInitTable->deviceId = NRed::callback->deviceId;
                 orgCapsInitTable->revision = NRed::callback->revision;
                 orgCapsInitTable->extRevision = NRed::callback->enumRevision;
                 orgCapsInitTable->pciRevision = NRed::callback->pciRevision;
+                *orgCapsTable = {
+                    .familyId = AMDGPU_FAMILY_RAVEN,
+                    .deviceId = NRed::callback->deviceId,
+                    .revision = NRed::callback->revision,
+                    .extRevision = static_cast<uint32_t>(NRed::callback->enumRevision) + NRed::callback->revision,
+                    .pciRevision = NRed::callback->pciRevision,
+                    .caps = orgCapsInitTable->caps,
+                };
                 found = true;
                 break;
             }
@@ -82,8 +85,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         PANIC_COND(!found, "hwlibs", "Failed to find caps init table entry");
         found = false;
         while (orgDevCapTable->familyId) {
-            if (orgDevCapTable->familyId == AMDGPU_FAMILY_RAVEN &&
-                orgDevCapTable->deviceId == NRed::callback->deviceId) {
+            if (orgDevCapTable->familyId == AMDGPU_FAMILY_RAVEN && orgDevCapTable->deviceId == targetDeviceId) {
                 orgDevCapTable->deviceId = NRed::callback->deviceId;
                 orgDevCapTable->extRevision =
                     static_cast<uint64_t>(NRed::callback->enumRevision) + NRed::callback->revision;
