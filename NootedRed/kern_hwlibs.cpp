@@ -63,14 +63,15 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
             "Failed to enable kernel writing");
         if (!catalina) { *orgDeviceTypeTable = {.deviceId = NRed::callback->deviceId, .deviceType = 6}; }
         auto found = false;
-        auto targetDeviceId = NRed::callback->chipType > ChipType::Renoir && NRed::callback->deviceId != 0x1636 ?
+        auto targetDeviceId = NRed::callback->chipType >= ChipType::Renoir && NRed::callback->deviceId != 0x1636 ?
                                   0x1636 :
                                   NRed::callback->deviceId;
         while (orgCapsInitTable->deviceId != 0xFFFFFFFF) {
             if (orgCapsInitTable->familyId == AMDGPU_FAMILY_RAVEN && orgCapsInitTable->deviceId == targetDeviceId) {
                 orgCapsInitTable->deviceId = NRed::callback->deviceId;
                 orgCapsInitTable->revision = NRed::callback->revision;
-                orgCapsInitTable->extRevision = NRed::callback->enumRevision;
+                orgCapsInitTable->extRevision =
+                    static_cast<uint64_t>(NRed::callback->enumRevision) + NRed::callback->revision;
                 orgCapsInitTable->pciRevision = NRed::callback->pciRevision;
                 *orgCapsTable = {
                     .familyId = AMDGPU_FAMILY_RAVEN,
