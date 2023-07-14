@@ -62,25 +62,24 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "hwlibs",
             "Failed to enable kernel writing");
         if (!catalina) { *orgDeviceTypeTable = {.deviceId = NRed::callback->deviceId, .deviceType = 6}; }
-        auto renoir = NRed::callback->chipType >= ChipType::Renoir;
-        *orgCapsTable = {
-            .familyId = AMDGPU_FAMILY_RAVEN,
-            .deviceId = NRed::callback->deviceId,
-            .revision = NRed::callback->revision,
-            .extRevision = static_cast<uint32_t>(NRed::callback->enumRevision) + NRed::callback->revision,
-            .pciRevision = NRed::callback->pciRevision,
-            .caps = !renoir ? ddiCapsRaven : ddiCapsRenoir,
-        };
-        auto targetDeviceId =
-            (catalina && renoir && NRed::callback->deviceId != 0x1636) ? 0x1636 : NRed::callback->deviceId;
         auto found = false;
+        auto targetDeviceId = NRed::callback->chipType > ChipType::Renoir && NRed::callback->deviceId != 0x1636 ?
+                                  0x1636 :
+                                  NRed::callback->deviceId;
         while (orgCapsInitTable->deviceId != 0xFFFFFFFF) {
             if (orgCapsInitTable->familyId == AMDGPU_FAMILY_RAVEN && orgCapsInitTable->deviceId == targetDeviceId) {
                 orgCapsInitTable->deviceId = NRed::callback->deviceId;
                 orgCapsInitTable->revision = NRed::callback->revision;
-                orgCapsInitTable->extRevision =
-                    static_cast<uint64_t>(NRed::callback->enumRevision) + NRed::callback->revision;
+                orgCapsInitTable->extRevision = NRed::callback->enumRevision;
                 orgCapsInitTable->pciRevision = NRed::callback->pciRevision;
+                *orgCapsTable = {
+                    .familyId = AMDGPU_FAMILY_RAVEN,
+                    .deviceId = NRed::callback->deviceId,
+                    .revision = NRed::callback->revision,
+                    .extRevision = static_cast<uint32_t>(NRed::callback->enumRevision) + NRed::callback->revision,
+                    .pciRevision = NRed::callback->pciRevision,
+                    .caps = orgCapsInitTable->caps,
+                };
                 found = true;
                 break;
             }
