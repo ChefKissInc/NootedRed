@@ -195,7 +195,7 @@ void NRed::setRMMIOIfNecessary() {
 void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
     if (kextAGDP.loadIndex == index) {
         auto ventura = getKernelVersion() == KernelVersion::Ventura;
-        LookupPatchPlus const patches[] = {
+        const LookupPatchPlus patches[] = {
             {&kextAGDP, kAGDPBoardIDKeyOriginal, kAGDPBoardIDKeyPatched, 1},
             {&kextAGDP, kAGDPFBCountCheckOriginal, kAGDPFBCountCheckPatched, 1, !ventura},
             {&kextAGDP, kAGDPFBCountCheckVenturaOriginal, kAGDPFBCountCheckVenturaPatched, 1, ventura},
@@ -208,7 +208,7 @@ void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t a
         if (patcher.routeMultiple(kextBacklight.loadIndex, &request, 1, address, size)) {
             const uint8_t find[] = {"F%uT%04x"};
             const uint8_t replace[] = {"F%uTxxxx"};
-            LookupPatchPlus const patch {&kextBacklight, find, replace, 1};
+            const LookupPatchPlus patch {&kextBacklight, find, replace, 1};
             SYSLOG_COND(!patch.apply(&patcher, address, size), "nred", "Failed to apply backlight patch: %d",
                 patcher.getError());
         }

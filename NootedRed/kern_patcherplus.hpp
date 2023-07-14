@@ -5,8 +5,7 @@
 #include <Headers/kern_patcher.hpp>
 
 struct SolveRequestPlus : KernelPatcher::SolveRequest {
-    const uint8_t *pattern {nullptr};
-    const uint8_t *mask {nullptr};
+    const uint8_t *pattern {nullptr}, *mask {nullptr};
     size_t patternSize {0};
     bool guard {true};
 
@@ -34,8 +33,7 @@ struct SolveRequestPlus : KernelPatcher::SolveRequest {
 };
 
 struct RouteRequestPlus : KernelPatcher::RouteRequest {
-    const uint8_t *pattern {nullptr};
-    const uint8_t *mask {nullptr};
+    const uint8_t *pattern {nullptr}, *mask {nullptr};
     size_t patternSize {0};
     bool guard {true};
 
@@ -88,8 +86,7 @@ struct RouteRequestPlus : KernelPatcher::RouteRequest {
 };
 
 struct LookupPatchPlus : KernelPatcher::LookupPatch {
-    const uint8_t *findMask {nullptr};
-    const uint8_t *replaceMask {nullptr};
+    const uint8_t *findMask {nullptr}, *replaceMask {nullptr};
     const size_t replaceSize {0};
     const bool guard {true};
     const size_t skip {0};
@@ -99,16 +96,10 @@ struct LookupPatchPlus : KernelPatcher::LookupPatch {
         : KernelPatcher::LookupPatch {kext, find, replace, size, count}, replaceSize {size}, guard {guard},
           skip {skip} {}
 
-    template<size_t N>
-    LookupPatchPlus(KernelPatcher::KextInfo *kext, const uint8_t (&find)[N], const uint8_t (&replace)[N], size_t count,
+    template<size_t N, size_t M>
+    LookupPatchPlus(KernelPatcher::KextInfo *kext, const uint8_t (&find)[N], const uint8_t (&replace)[M], size_t count,
         bool guard = true, size_t skip = 0)
-        : LookupPatchPlus(kext, find, replace, N, count, guard, skip) {}
-
-    template<size_t N>
-    LookupPatchPlus(KernelPatcher::KextInfo *kext, const uint8_t (&find)[N], const uint8_t (&findMask)[N],
-        const uint8_t (&replace)[N], size_t count, bool guard = true, size_t skip = 0)
-        : KernelPatcher::LookupPatch {kext, find, replace, N, count}, findMask {findMask}, replaceSize {N},
-          guard {guard}, skip {skip} {}
+        : KernelPatcher::LookupPatch {kext, find, replace, N, count}, replaceSize {M}, guard {guard}, skip {skip} {}
 
     template<size_t N, size_t M>
     LookupPatchPlus(KernelPatcher::KextInfo *kext, const uint8_t (&find)[N], const uint8_t (&findMask)[N],
