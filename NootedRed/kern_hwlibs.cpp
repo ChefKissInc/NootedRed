@@ -54,6 +54,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
                 kPspCmdKmSubmitMask},
             {"_update_sdma_power_gating", wrapUpdateSdmaPowerGating, this->orgUpdateSdmaPowerGating,
                 kUpdateSdmaPowerGatingPattern, kUpdateSdmaPowerGatingMask},
+            {"__ZN16AmdTtlFwServices7getIpFwEjPKcP10_TtlFwInfo", wrapGetIpFw, this->orgGetIpFw, catalina},
         };
         PANIC_COND(!RouteRequestPlus::routeAll(patcher, index, requests, address, size), "hwlibs",
             "Failed to route symbols");
@@ -138,8 +139,8 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
 
     auto isRenoirDerivative = NRed::callback->chipType >= ChipType::Renoir;
 
-    char filename[128] = {0};
-    snprintf(filename, 128, "%s_vcn.bin", NRed::callback->getChipName());
+    char filename[64] = {0};
+    snprintf(filename, 64, "%s_vcn.bin", NRed::callback->getChipName());
     auto *targetFn = isRenoirDerivative ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
     DBGLOG("wred", "%s => %s", filename, targetFn);
 
@@ -182,4 +183,19 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, v
     }
 
     return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(psp, ctx, param3, param4);
+}
+
+bool X5000HWLibs::wrapGetIpFw(void *that, uint32_t ipVersion, char *name, void *out) {
+    if (!strncmp(name, "ativvaxy_rv.dat", 16) || !strncmp(name, "ativvaxy_nv.dat", 16)) {
+        char filename[64] = {0};
+        snprintf(filename, 64, "%s_vcn.bin", NRed::callback->getChipName());
+        DBGLOG("wred", "getIpFw: %s => %s", filename, name);
+
+        auto &fwDesc = getFWDescByName(filename);
+        auto *fwHeader = reinterpret_cast<const CommonFirmwareHeader *>(fwDesc.data);
+        getMember<const uint8_t *>(out, 0x0) = fwDesc.data + fwHeader->ucodeOff;
+        getMember<uint32_t>(out, 0x8) = fwHeader->ucodeSize;
+        return true;
+    }
+    return FunctionCast(wrapGetIpFw, callback->orgGetIpFw)(that, ipVersion, name, out);
 }

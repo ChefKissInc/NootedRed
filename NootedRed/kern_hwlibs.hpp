@@ -21,9 +21,11 @@ class X5000HWLibs {
     t_putFirmware orgPutFirmware {nullptr};
     mach_vm_address_t orgUpdateSdmaPowerGating {0};
     mach_vm_address_t orgPspCmdKmSubmit {0};
+    mach_vm_address_t orgGetIpFw {0};
 
     static void wrapPopulateFirmwareDirectory(void *that);
     static void wrapUpdateSdmaPowerGating(void *cail, uint32_t mode);
     static CAILResult wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4);
+    static bool wrapGetIpFw(void *that, uint32_t param1, char *name, void *out);
     static CAILResult hwLibsNoop();
 };
