@@ -62,7 +62,7 @@ bool X6000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
             "Failed to route symbols");
 
         auto monterey = getKernelVersion() == KernelVersion::Monterey;
-        LookupPatchPlus const patches[] = {
+        const LookupPatchPlus patches[] = {
             {&kextRadeonX6000, kHWChannelSubmitCommandBufferOriginal, kHWChannelSubmitCommandBufferPatched, 1},
             {&kextRadeonX6000, kIsDeviceValidCallOriginal, kIsDeviceValidCallPatched,
                 ventura  ? 23U :

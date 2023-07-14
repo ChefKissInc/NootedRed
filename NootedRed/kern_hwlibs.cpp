@@ -100,7 +100,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t index, mach_vm_addr
 
         auto ventura = getKernelVersion() >= KernelVersion::Ventura;
         auto monterey = getKernelVersion() >= KernelVersion::Monterey;
-        LookupPatchPlus const patches[] = {
+        const LookupPatchPlus patches[] = {
             {&kextRadeonX5000HWLibs, kPspSwInitOriginal1, kPspSwInitPatched1, 1},
             {&kextRadeonX5000HWLibs, kPspSwInitOriginal2, kPspSwInitMask2, kPspSwInitPatched2, 1},
             {&kextRadeonX5000HWLibs, kSmuInitFunctionPointerListOriginal, kSmuInitFunctionPointerListMask,
@@ -131,15 +131,23 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
     FunctionCast(wrapPopulateFirmwareDirectory, callback->orgPopulateFirmwareDirectory)(that);
 
     auto isRenoirDerivative = NRed::callback->chipType >= ChipType::Renoir;
-    auto *filename = isRenoirDerivative ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
+
+    char filename[128] = {0};
+    snprintf(filename, 128, "%s_vcn.bin", NRed::callback->getChipName());
+    auto *targetFn = isRenoirDerivative ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
+    DBGLOG("wred", "%s => %s", filename, targetFn);
+
     auto &fwDesc = getFWDescByName(filename);
+    auto *fwHeader = reinterpret_cast<const CommonFirmwareHeader *>(fwDesc.data);
+
     /** VCN 2.2, VCN 1.0 */
-    auto *fw = callback->orgCreateFirmware(fwDesc.data, fwDesc.size, isRenoirDerivative ? 0x0202 : 0x0100, filename);
-    PANIC_COND(!fw, "hwlibs", "Failed to create '%s' firmware", filename);
-    DBGLOG("hwlibs", "Inserting %s!", filename);
+    auto *fw = callback->orgCreateFirmware(fwDesc.data + fwHeader->ucodeOff, fwHeader->ucodeSize,
+        isRenoirDerivative ? 0x0202 : 0x0100, targetFn);
+    PANIC_COND(!fw, "hwlibs", "Failed to create '%s' firmware", targetFn);
+    DBGLOG("hwlibs", "Inserting %s!", targetFn);
     auto *fwDir = getMember<void *>(that, getKernelVersion() > KernelVersion::BigSur ? 0xB0 : 0xB8);
     PANIC_COND(!fwDir, "hwlibs", "Failed to get firmware directory");
-    PANIC_COND(!callback->orgPutFirmware(fwDir, 6, fw), "hwlibs", "Failed to inject %s firmware", filename);
+    PANIC_COND(!callback->orgPutFirmware(fwDir, 6, fw), "hwlibs", "Failed to inject %s firmware", targetFn);
 }
 
 CAILResult X5000HWLibs::hwLibsNoop() { return kCAILResultSuccess; }

@@ -91,7 +91,9 @@ bool LookupPatchPlus::apply(KernelPatcher *patcher, mach_vm_address_t address, s
 bool LookupPatchPlus::applyAll(KernelPatcher *patcher, LookupPatchPlus const *patches, size_t count,
     mach_vm_address_t address, size_t size) {
     for (size_t i = 0; i < count; i++) {
-        if (!patches[i].apply(patcher, address, size)) {
+        if (patches[i].apply(patcher, address, size)) {
+            DBGLOG("patcher+", "Applied patches[%zu]", i);
+        } else {
             DBGLOG("patcher+", "Failed to apply patches[%zu]", i);
             return false;
         }
