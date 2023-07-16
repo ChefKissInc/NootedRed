@@ -20,8 +20,8 @@ void X6000::init() {
     lilu.onKextLoadForce(&kextRadeonX6000);
 }
 
-bool X6000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
-    if (kextRadeonX6000.loadIndex == index) {
+bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
+    if (kextRadeonX6000.loadIndex == id) {
         NRed::callback->setRMMIOIfNecessary();
 
         auto catalina = getKernelVersion() == KernelVersion::Catalina;
@@ -41,7 +41,7 @@ bool X6000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
             {"__ZN33AMDRadeonX6000_AMDHWAlignManager224getPreferredSwizzleMode2EP33_ADDR2_COMPUTE_SURFACE_INFO_INPUT",
                 this->orgGetPreferredSwizzleMode2},
         };
-        PANIC_COND(!SolveRequestPlus::solveAll(&patcher, index, solveRequests, address, size), "x6000",
+        PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "x6000",
             "Failed to resolve symbols");
 
         auto ventura = getKernelVersion() >= KernelVersion::Ventura;
@@ -62,8 +62,7 @@ bool X6000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
             {"__ZN27AMDRadeonX6000_AMDHWDisplay14getDisplayInfoEjbbPvP17_FRAMEBUFFER_INFO", wrapGetDisplayInfo,
                 this->orgGetDisplayInfo},
         };
-        PANIC_COND(!RouteRequestPlus::routeAll(patcher, index, requests, address, size), "x6000",
-            "Failed to route symbols");
+        PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "x6000", "Failed to route symbols");
 
         auto monterey = getKernelVersion() == KernelVersion::Monterey;
         LookupPatchPlus const patches[] = {
@@ -133,8 +132,9 @@ bool X6000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
             {&kextRadeonX6000, kGetUbmSwizzleModeCallOriginal, kGetUbmSwizzleModeCallPatched, 1, catalina},
             {&kextRadeonX6000, kGetUbmTileModeCallOriginal, kGetUbmTileModeCallPatched, 1, catalina},
         };
-        SYSLOG_COND(!LookupPatchPlus::applyAll(&patcher, patches, address, size), "x6000",
-            "Failed to apply patches: %d", patcher.getError());
+        SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "x6000", "Failed to apply patches: %d",
+            patcher.getError());
+        patcher.clearError();
 
         return true;
     }

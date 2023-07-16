@@ -11,7 +11,7 @@ class X5000 {
     public:
     static X5000 *callback;
     void init();
-    bool processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size);
+    bool processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 
     private:
     t_GenericConstructor orgGFX9PM4EngineConstructor {nullptr};

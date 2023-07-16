@@ -66,27 +66,6 @@ static bool checkAtomBios(const uint8_t *bios, size_t size) {
     return false;
 }
 
-/**
- *  Console info structure, taken from osfmk/console/video_console.h
- *  Last updated from XNU 4570.1.46.
- */
-struct vc_info {
-    unsigned int v_height; /* pixels */
-    unsigned int v_width;  /* pixels */
-    unsigned int v_depth;
-    unsigned int v_rowbytes;
-    unsigned long v_baseaddr;
-    unsigned int v_type;
-    char v_name[32];
-    uint64_t v_physaddr;
-    unsigned int v_rows;         /* characters */
-    unsigned int v_columns;      /* characters */
-    unsigned int v_rowscanbytes; /* Actualy number of bytes used for display per row*/
-    unsigned int v_scale;
-    unsigned int v_rotate;
-    unsigned int v_reserved[3];
-};
-
 class NRed {
     friend class DYLDPatches;
     friend class X6000FB;
@@ -100,7 +79,7 @@ class NRed {
     void init();
     void processPatcher(KernelPatcher &patcher);
     void setRMMIOIfNecessary();
-    void processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size);
+    void processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 
     private:
     static const char *getChipName() {
