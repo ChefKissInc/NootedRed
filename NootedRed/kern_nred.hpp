@@ -100,7 +100,7 @@ class NRed {
     void init();
     void processPatcher(KernelPatcher &patcher);
     void setRMMIOIfNecessary();
-    void processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size);
+    void processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 
     private:
     static const char *getChipName() {

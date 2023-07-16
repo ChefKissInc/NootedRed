@@ -21,8 +21,8 @@ void X6000FB::init() {
     lilu.onKextLoadForce(&kextRadeonX6000Framebuffer);
 }
 
-bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
-    if (kextRadeonX6000Framebuffer.loadIndex == index) {
+bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
+    if (kextRadeonX6000Framebuffer.loadIndex == id) {
         NRed::callback->setRMMIOIfNecessary();
 
         CAILAsicCapsEntry *orgAsicCapsTable = nullptr;
@@ -34,7 +34,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
             {"__ZNK34AMDRadeonX6000_AmdRadeonController18messageAcceleratorE25_eAMDAccelIOFBRequestTypePvS1_S1_",
                 this->orgMessageAccelerator, ventura},
         };
-        PANIC_COND(!SolveRequestPlus::solveAll(&patcher, index, solveRequests, address, size), "x6000fb",
+        PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "x6000fb",
             "Failed to resolve symbols");
 
         RouteRequestPlus requests[] = {
@@ -57,7 +57,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
             {"__ZN34AMDRadeonX6000_AmdRadeonController7powerUpEv", wrapControllerPowerUp, this->orgControllerPowerUp,
                 ventura},
         };
-        PANIC_COND(!RouteRequestPlus::routeAll(patcher, index, requests, address, size), "x6000fb",
+        PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "x6000fb",
             "Failed to route symbols");
 
         const LookupPatchPlus patches[] = {
@@ -72,8 +72,8 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_
                 kControllerPowerUpReplace, kControllerPowerUpReplaceMask, 1, ventura},
             {&kextRadeonX6000Framebuffer, kValidateDetailedTimingOriginal, kValidateDetailedTimingPatched, 1, ventura},
         };
-        PANIC_COND(!LookupPatchPlus::applyAll(&patcher, patches, address, size), "x6000fb",
-            "Failed to apply patches: %d", patcher.getError());
+        PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "x6000fb", "Failed to apply patches: %d",
+            patcher.getError());
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "x5000",
             "Failed to enable kernel writing");
