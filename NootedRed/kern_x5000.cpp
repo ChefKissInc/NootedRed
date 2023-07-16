@@ -21,8 +21,8 @@ void X5000::init() {
     lilu.onKextLoadForce(&kextRadeonX5000);
 }
 
-bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
-    if (kextRadeonX5000.loadIndex == index) {
+bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
+    if (kextRadeonX5000.loadIndex == id) {
         NRed::callback->setRMMIOIfNecessary();
 
         uint32_t *orgChannelTypes = nullptr;
@@ -43,7 +43,7 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
                 this->orgSetupAndInitializeHWCapabilities},
             {"__ZN26AMDRadeonX5000_AMDHardware14startHWEnginesEv", startHWEngines},
         };
-        PANIC_COND(!SolveRequestPlus::solveAll(&patcher, index, solveRequests, address, size), "x5000",
+        PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "x5000",
             "Failed to resolve symbols");
 
         auto ventura = getKernelVersion() >= KernelVersion::Ventura;
@@ -73,17 +73,16 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
                 wrapObtainAccelChannelGroup1304, this->orgObtainAccelChannelGroup, ventura1304},
             {"__ZN4Addr2V27Gfx9Lib20HwlConvertChipFamilyEjj", wrapHwlConvertChipFamily, kHwlConvertChipFamilyPattern},
         };
-        PANIC_COND(!RouteRequestPlus::routeAll(patcher, index, requests, address, size), "x5000",
-            "Failed to route symbols");
+        PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "x5000", "Failed to route symbols");
 
         LookupPatchPlus const addrLibPatch {&kextRadeonX5000, kAddrLibCreateOriginal, kAddrLibCreatePatched, 1,
             ventura1304};
-        PANIC_COND(!addrLibPatch.apply(&patcher, address, size), "x5000",
+        PANIC_COND(!addrLibPatch.apply(patcher, slide, size), "x5000",
             "Failed to apply Ventura 13.4+ Addr::Lib::Create patch: %d", patcher.getError());
 
         LookupPatchPlus const patch {&kextRadeonX5000, kStartHWEnginesOriginal, kStartHWEnginesMask,
             kStartHWEnginesPatched, kStartHWEnginesMask, ventura ? 2U : 1};
-        PANIC_COND(!patch.apply(&patcher, startHWEngines, PAGE_SIZE), "x5000", "Failed to patch startHWEngines");
+        PANIC_COND(!patch.apply(patcher, startHWEngines, PAGE_SIZE), "x5000", "Failed to patch startHWEngines");
 
         uint32_t findBpp64 = Dcn1Bpp64SwModeMask, replBpp64 = Dcn2Bpp64SwModeMask;
         uint32_t findNonBpp64 = Dcn1NonBpp64SwModeMask, replNonBpp64 = Dcn2NonBpp64SwModeMask;
@@ -94,7 +93,7 @@ bool X5000::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t 
             {&kextRadeonX5000, reinterpret_cast<const uint8_t *>(&findNonBpp64),
                 reinterpret_cast<const uint8_t *>(&replNonBpp64), sizeof(uint32_t), ventura1304 ? 2U : 4, dcn2},
         };
-        PANIC_COND(!LookupPatchPlus::applyAll(&patcher, swizzleModePatches, address, size), "x5000",
+        PANIC_COND(!LookupPatchPlus::applyAll(patcher, swizzleModePatches, slide, size), "x5000",
             "Failed to patch swizzle mode");
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "x5000",

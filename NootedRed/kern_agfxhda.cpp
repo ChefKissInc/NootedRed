@@ -20,25 +20,24 @@ void AppleGFXHDA::init() {
     lilu.onKextLoadForce(&kextAppleGFXHDA);
 }
 
-bool AppleGFXHDA::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
-    if (kextAppleGFXHDA.loadIndex == index) {
+bool AppleGFXHDA::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
+    if (kextAppleGFXHDA.loadIndex == id) {
         const uint32_t probeFind = 0xAB381002;
         const uint32_t probeRepl = NRed::callback->deviceId <= 0x15DD ? 0x15DE1002 : 0x16371002;
         LookupPatchPlus patches[] = {
             {&kextAppleGFXHDA, reinterpret_cast<const uint8_t *>(&probeFind),
                 reinterpret_cast<const uint8_t *>(&probeRepl), sizeof(probeFind), 1},
-            {&kextAppleGFXHDA, kCreateAppleHDAFunctionGroup1Original, kCreateAppleHDAFunctionGroup1Mask,
-                kCreateAppleHDAFunctionGroup1Replace, 1},
-            {&kextAppleGFXHDA, kCreateAppleHDAFunctionGroup2Original, kCreateAppleHDAFunctionGroup2Mask,
-                kCreateAppleHDAFunctionGroup2Replace, 1},
-            {&kextAppleGFXHDA, kCreateAppleHDAWidget1Original, kCreateAppleHDAWidget1Mask,
-                kCreateAppleHDAWidget1Replace, 1},
+            {&kextAppleGFXHDA, kCreateAppleHDAFunctionGroup1Original, kCreateAppleHDAFunctionGroup1Patched, 1},
+            {&kextAppleGFXHDA, kCreateAppleHDAFunctionGroup2Original, kCreateAppleHDAFunctionGroup2Patched, 1},
+            {&kextAppleGFXHDA, kCreateAppleHDAWidget1Original, kCreateAppleHDAWidget1OriginalMask,
+                kCreateAppleHDAWidget1Patched, kCreateAppleHDAWidget1PatchedMask, 1},
             {&kextAppleGFXHDA, kCreateAppleHDAWidget2Original, kCreateAppleHDAWidget2Mask,
-                kCreateAppleHDAWidget2Replace, 1},
-            {&kextAppleGFXHDA, kCreateAppleHDAOriginal, kCreateAppleHDAMask, kCreateAppleHDAReplace, 2},
+                kCreateAppleHDAWidget2Patched, 1},
+            {&kextAppleGFXHDA, kCreateAppleHDAOriginal, kCreateAppleHDAOriginalMask, kCreateAppleHDAPatched,
+                kCreateAppleHDAPatchedMask, 2},
         };
-        PANIC_COND(!LookupPatchPlus::applyAll(&patcher, patches, address, size), "agfxhda",
-            "Failed to apply patches: %d", patcher.getError());
+        PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "agfxhda", "Failed to apply patches: %d",
+            patcher.getError());
 
         return true;
     }

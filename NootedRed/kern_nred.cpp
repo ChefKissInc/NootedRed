@@ -53,8 +53,8 @@ void NRed::init() {
         [](void *user, KernelPatcher &patcher) { static_cast<NRed *>(user)->processPatcher(patcher); }, this);
     lilu.onKextLoadForce(
         nullptr, 0,
-        [](void *user, KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
-            static_cast<NRed *>(user)->processKext(patcher, index, address, size);
+        [](void *user, KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
+            static_cast<NRed *>(user)->processKext(patcher, id, slide, size);
         },
         this);
 }
@@ -195,42 +195,42 @@ void NRed::setRMMIOIfNecessary() {
     }
 }
 
-void NRed::processKext(KernelPatcher &patcher, size_t index, mach_vm_address_t address, size_t size) {
-    if (kextAGDP.loadIndex == index) {
+void NRed::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
+    if (kextAGDP.loadIndex == id) {
         auto ventura = getKernelVersion() == KernelVersion::Ventura;
         const LookupPatchPlus patches[] = {
             {&kextAGDP, kAGDPBoardIDKeyOriginal, kAGDPBoardIDKeyPatched, 1},
             {&kextAGDP, kAGDPFBCountCheckOriginal, kAGDPFBCountCheckPatched, 1, !ventura},
             {&kextAGDP, kAGDPFBCountCheckVenturaOriginal, kAGDPFBCountCheckVenturaPatched, 1, ventura},
         };
-        PANIC_COND(!LookupPatchPlus::applyAll(&patcher, patches, address, size), "nred",
+        PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "nred",
             "Failed to apply AGDP patches: %d", patcher.getError());
-    } else if (kextBacklight.loadIndex == index) {
+    } else if (kextBacklight.loadIndex == id) {
         KernelPatcher::RouteRequest request {"__ZN15AppleIntelPanel10setDisplayEP9IODisplay", wrapApplePanelSetDisplay,
             orgApplePanelSetDisplay};
-        if (patcher.routeMultiple(kextBacklight.loadIndex, &request, 1, address, size)) {
+        if (patcher.routeMultiple(kextBacklight.loadIndex, &request, 1, slide, size)) {
             const uint8_t find[] = {"F%uT%04x"};
             const uint8_t replace[] = {"F%uTxxxx"};
             const LookupPatchPlus patch {&kextBacklight, find, replace, 1};
-            SYSLOG_COND(!patch.apply(&patcher, address, size), "nred", "Failed to apply backlight patch: %d",
+            SYSLOG_COND(!patch.apply(patcher, slide, size), "nred", "Failed to apply backlight patch: %d",
                 patcher.getError());
         }
-    } else if (kextMCCSControl.loadIndex == index) {
+    } else if (kextMCCSControl.loadIndex == id) {
         KernelPatcher::RouteRequest requests[] = {
             {"__ZN25AppleMCCSControlGibraltar5probeEP9IOServicePi", wrapFunctionReturnZero},
             {"__ZN21AppleMCCSControlCello5probeEP9IOServicePi", wrapFunctionReturnZero},
         };
-        patcher.routeMultiple(index, requests, address, size);
+        patcher.routeMultiple(id, requests, slide, size);
         patcher.clearError();
-    } else if (agfxhda.processKext(patcher, index, address, size)) {
+    } else if (agfxhda.processKext(patcher, id, slide, size)) {
         DBGLOG("nred", "Processed AppleGFXHDA");
-    } else if (x6000fb.processKext(patcher, index, address, size)) {
+    } else if (x6000fb.processKext(patcher, id, slide, size)) {
         DBGLOG("nred", "Processed AMDRadeonX6000Framebuffer");
-    } else if (hwlibs.processKext(patcher, index, address, size)) {
+    } else if (hwlibs.processKext(patcher, id, slide, size)) {
         DBGLOG("nred", "Processed AMDRadeonX5000HWLibs");
-    } else if (x6000.processKext(patcher, index, address, size)) {
+    } else if (x6000.processKext(patcher, id, slide, size)) {
         DBGLOG("nred", "Processed AMDRadeonX6000");
-    } else if (x5000.processKext(patcher, index, address, size)) {
+    } else if (x5000.processKext(patcher, id, slide, size)) {
         DBGLOG("nred", "Processed AMDRadeonX5000");
     }
 }
