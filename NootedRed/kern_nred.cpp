@@ -93,7 +93,7 @@ void NRed::processPatcher(KernelPatcher &patcher) {
             }
         }
 
-        static uint8_t builtin[] = {0x01};
+        static uint8_t builtin[] = {0x00};
         this->iGPU->setProperty("built-in", builtin, arrsize(builtin));
         this->deviceId = WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigDeviceID);
         this->pciRevision = WIOKit::readPCIConfigValue(NRed::callback->iGPU, WIOKit::kIOPCIConfigRevisionID);
