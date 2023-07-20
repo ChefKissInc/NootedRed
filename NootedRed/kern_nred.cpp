@@ -97,12 +97,9 @@ void NRed::processPatcher(KernelPatcher &patcher) {
         this->iGPU->setProperty("built-in", builtin, arrsize(builtin));
         this->deviceId = WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigDeviceID);
         this->pciRevision = WIOKit::readPCIConfigValue(NRed::callback->iGPU, WIOKit::kIOPCIConfigRevisionID);
-        auto *model = getBranding(this->deviceId, this->pciRevision);
-        if (model) {
-            auto len = static_cast<uint32_t>(strlen(model) + 1);
-            this->iGPU->setProperty("model", const_cast<char *>(model), len);
-            this->iGPU->setProperty("ATY,FamilyName", const_cast<char *>("Radeon"), 7);
-            this->iGPU->setProperty("ATY,DeviceName", const_cast<char *>(model) + 11, len - 11);    // Vega ...
+        if (!this->iGPU->getProperty("model")) {
+            auto *model = getBranding(this->deviceId, this->pciRevision);
+            this->iGPU->setProperty("model", const_cast<char *>(model), static_cast<uint32_t>(strlen(model) + 1));
         }
 
         auto *prop = OSDynamicCast(OSData, this->iGPU->getProperty("ATY,bin_image"));
