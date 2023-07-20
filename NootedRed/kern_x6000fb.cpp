@@ -160,8 +160,8 @@ IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
             videoMemoryType = kVideoMemoryTypeDDR4;
             break;
         default:
-            DBGLOG("x6000fb", "Unsupported memory type %d", memoryType);
-            videoMemoryType = kVideoMemoryTypeUnknown;
+            DBGLOG("x6000fb", "Unsupported memory type %d. Assuming DDR4", memoryType);
+            videoMemoryType = kVideoMemoryTypeDDR4;
             break;
     }
     getMember<uint32_t>(fwInfo, 0x20) = channelCount * 64;    // VRAM Width (64-bit channels)
