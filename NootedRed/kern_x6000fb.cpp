@@ -37,6 +37,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
         PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "x6000fb",
             "Failed to resolve symbols");
 
+        bool renoir = NRed::callback->chipType >= ChipType::Renoir;
         RouteRequestPlus requests[] = {
             {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", wrapPopulateVramInfo,
                 kPopulateVramInfoPattern},
@@ -53,10 +54,9 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
                 this->orgGetNumberOfConnectors, kGetNumberOfConnectorsPattern, kGetNumberOfConnectorsMask},
             {"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware, this->orgIH40IVRingInitHardware,
-                kIH40IVRingInitHardwarePattern, kIH40IVRingInitHardwareMask,
-                NRed::callback->chipType >= ChipType::Renoir},
+                kIH40IVRingInitHardwarePattern, kIH40IVRingInitHardwareMask, renoir},
             {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister, this->orgIRQMGRWriteRegister,
-                kIRQMGRWriteRegisterPattern, NRed::callback->chipType >= ChipType::Renoir},
+                kIRQMGRWriteRegisterPattern, renoir},
             {"__ZN34AMDRadeonX6000_AmdRadeonController7powerUpEv", wrapControllerPowerUp, this->orgControllerPowerUp,
                 ventura},
             {"_dm_logger_write", wrapDmLoggerWrite, kDmLoggerWritePattern, checkKernelArgument("-nreddmlogger")},
@@ -83,7 +83,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             "Failed to enable kernel writing");
         *orgAsicCapsTable = {
             .familyId = AMDGPU_FAMILY_RAVEN,
-            .caps = NRed::callback->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir,
+            .caps = renoir ? ddiCapsRenoir : ddiCapsRaven,
             .deviceId = NRed::callback->deviceId,
             .revision = NRed::callback->revision,
             .extRevision = static_cast<uint32_t>(NRed::callback->enumRevision) + NRed::callback->revision,
