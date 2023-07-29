@@ -2,8 +2,8 @@
 //  details.
 
 #include "kern_nred.hpp"
-#include "kern_agfxhda.hpp"
 #include "kern_dyld_patches.hpp"
+#include "kern_hdmi.hpp"
 #include "kern_hwlibs.hpp"
 #include "kern_model.hpp"
 #include "kern_patcherplus.hpp"
