@@ -33,7 +33,7 @@ static X5000HWLibs hwlibs;
 static X5000 x5000;
 static X6000 x6000;
 static DYLDPatches dyldpatches;
-static AppleGFXHDA agfxhda;
+static HDMI agfxhda;
 
 void NRed::init() {
     SYSLOG("nred", "Copyright 2022-2023 ChefKiss Inc. If you've paid for this, you've been scammed.");

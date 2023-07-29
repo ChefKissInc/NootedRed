@@ -16,15 +16,15 @@ static KernelPatcher::KextInfo kextAppleGFXHDA {"com.apple.driver.AppleGFXHDA", 
 static KernelPatcher::KextInfo kextAppleHDA {"com.apple.driver.AppleHDA", &pathAppleHDA, 1, {true}, {},
     KernelPatcher::KextInfo::Unloaded};
 
-AppleGFXHDA *AppleGFXHDA::callback = nullptr;
+HDMI *HDMI::callback = nullptr;
 
-void AppleGFXHDA::init() {
+void HDMI::init() {
     callback = this;
     lilu.onKextLoadForce(&kextAppleGFXHDA);
     lilu.onKextLoadForce(&kextAppleHDA);
 }
 
-bool AppleGFXHDA::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
+bool HDMI::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextAppleGFXHDA.loadIndex == id) {
         const uint32_t probeFind = 0xAB381002;
         const uint32_t probeRepl = NRed::callback->deviceId <= 0x15DD ? 0x15DE1002 : 0x16371002;
