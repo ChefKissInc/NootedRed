@@ -96,7 +96,7 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
         if (!catalina) {
             uint32_t findBpp64 = Dcn1Bpp64SwModeMask, replBpp64 = Dcn2Bpp64SwModeMask;
             uint32_t findNonBpp64 = Dcn1NonBpp64SwModeMask, replNonBpp64 = Dcn2NonBpp64SwModeMask;
-            auto dcn2 = NRed::callback->chipType >= ChipType::Renoir;
+            bool dcn2 = NRed::callback->chipType >= ChipType::Renoir;
             const LookupPatchPlus swizzleModePatches[] = {
                 {&kextRadeonX5000, reinterpret_cast<const uint8_t *>(&findBpp64),
                     reinterpret_cast<const uint8_t *>(&replBpp64), sizeof(uint32_t), ventura1304 ? 2U : 4, dcn2},
@@ -191,7 +191,7 @@ static inline void setHWCapability(void *that, uint64_t capability, T value) {
 }
 
 void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
-    auto isRavenDerivative = NRed::callback->chipType < ChipType::Renoir;
+    bool isRavenDerivative = NRed::callback->chipType < ChipType::Renoir;
     char filename[128] = {0};
     snprintf(filename, arrsize(filename), "%s_gpu_info.bin", isRavenDerivative ? NRed::getChipName() : "renoir");
     auto &fwDesc = getFWDescByName(filename);
@@ -286,7 +286,7 @@ void *X5000::wrapObtainAccelChannelGroup1304(void *that, uint32_t priority, void
 
 uint32_t X5000::wrapHwlConvertChipFamily(void *that, uint32_t, uint32_t) {
     auto &settings = getMember<Gfx9ChipSettings>(that, getKernelVersion() == KernelVersion::Catalina ? 0x5B18 : 0x5B10);
-    auto renoir = NRed::callback->chipType >= ChipType::Renoir;
+    bool renoir = NRed::callback->chipType >= ChipType::Renoir;
     settings.isArcticIsland = 1;
     settings.isRaven = 1;
     settings.depthPipeXorDisable = NRed::callback->chipType < ChipType::Raven2;

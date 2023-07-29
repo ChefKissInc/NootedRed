@@ -38,10 +38,14 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
         PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "x6000fb",
             "Failed to resolve symbols");
 
+        bool renoir = NRed::callback->chipType >= ChipType::Renoir;
         RouteRequestPlus requests[] = {
             {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", wrapPopulateVramInfo,
                 kPopulateVramInfoPattern},
             {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
+            {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo,
+                this->orgInitWithPciInfo, ADDPR(debugEnabled)},
+            {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", wrapDoGPUPanic, ADDPR(debugEnabled)},
             {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit, this->orgDcePanelCntlHwInit, kDcePanelCntlHwInitPattern,
                 !catalina},
             {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25setAttributeForConnectionEijm", wrapFramebufferSetAttribute,
@@ -51,12 +55,12 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
                 this->orgGetNumberOfConnectors, kGetNumberOfConnectorsPattern, kGetNumberOfConnectorsMask},
             {"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware, this->orgIH40IVRingInitHardware,
-                kIH40IVRingInitHardwarePattern, kIH40IVRingInitHardwareMask,
-                NRed::callback->chipType >= ChipType::Renoir},
+                kIH40IVRingInitHardwarePattern, kIH40IVRingInitHardwareMask, renoir},
             {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister, this->orgIRQMGRWriteRegister,
-                kIRQMGRWriteRegisterPattern, NRed::callback->chipType >= ChipType::Renoir},
+                kIRQMGRWriteRegisterPattern, renoir},
             {"__ZN34AMDRadeonX6000_AmdRadeonController7powerUpEv", wrapControllerPowerUp, this->orgControllerPowerUp,
                 ventura},
+            {"_dm_logger_write", wrapDmLoggerWrite, kDmLoggerWritePattern, checkKernelArgument("-nreddmlogger")},
         };
         PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "x6000fb",
             "Failed to route symbols");
@@ -85,7 +89,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             "Failed to enable kernel writing");
         *orgAsicCapsTable = {
             .familyId = AMDGPU_FAMILY_RAVEN,
-            .caps = NRed::callback->chipType < ChipType::Renoir ? ddiCapsRaven : ddiCapsRenoir,
+            .caps = renoir ? ddiCapsRenoir : ddiCapsRaven,
             .deviceId = NRed::callback->deviceId,
             .revision = NRed::callback->revision,
             .extRevision = static_cast<uint32_t>(NRed::callback->enumRevision) + NRed::callback->revision,
@@ -166,12 +170,20 @@ IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
             videoMemoryType = kVideoMemoryTypeDDR4;
             break;
         default:
-            DBGLOG("x6000fb", "Unsupported memory type %d", memoryType);
-            videoMemoryType = kVideoMemoryTypeUnknown;
+            DBGLOG("x6000fb", "Unsupported memory type %d. Assuming DDR4", memoryType);
+            videoMemoryType = kVideoMemoryTypeDDR4;
             break;
     }
     getMember<uint32_t>(fwInfo, 0x20) = channelCount * 64;    // VRAM Width (64-bit channels)
     return kIOReturnSuccess;
+}
+
+bool X6000FB::wrapInitWithPciInfo(void *that, void *param1) {
+    auto ret = FunctionCast(wrapInitWithPciInfo, callback->orgInitWithPciInfo)(that, param1);
+    // Hack AMDRadeonX6000_AmdLogger to log everything
+    getMember<uint64_t>(that, 0x28) = ~0ULL;
+    getMember<uint32_t>(that, 0x30) = 0xFF;
+    return ret;
 }
 
 bool X6000FB::OnAppleBacklightDisplayLoad(void *, void *, IOService *newService, IONotifier *) {
@@ -212,6 +224,11 @@ void X6000FB::registerDispMaxBrightnessNotif() {
         IOService::addMatchingNotification(gIOFirstMatchNotification, matching, OnAppleBacklightDisplayLoad, nullptr);
     SYSLOG_COND(!callback->dispNotif, "x6000fb", "registerDispMaxBrightnessNotif: Failed to register notification");
     matching->release();
+}
+
+void X6000FB::wrapDoGPUPanic() {
+    DBGLOG("x6000fb", "doGPUPanic << ()");
+    while (true) { IOSleep(3600000); }
 }
 
 uint32_t X6000FB::wrapDcePanelCntlHwInit(void *panelCntl) {
@@ -293,6 +310,22 @@ uint32_t X6000FB::wrapGetNumberOfConnectors(void *that) {
         }
     }
     return FunctionCast(wrapGetNumberOfConnectors, callback->orgGetNumberOfConnectors)(that);
+}
+
+constexpr static const char *LogTypes[] = {"Error", "Warning", "Debug", "DC_Interface", "DTN", "Surface", "HW_Hotplug",
+    "HW_LKTN", "HW_Mode", "HW_Resume", "HW_Audio", "HW_HPDIRQ", "MST", "Scaler", "BIOS", "BWCalcs", "BWValidation",
+    "I2C_AUX", "Sync", "Backlight", "Override", "Edid", "DP_Caps", "Resource", "DML", "Mode", "Detect", "LKTN",
+    "LinkLoss", "Underflow", "InterfaceTrace", "PerfTrace", "DisplayStats"};
+
+void X6000FB::wrapDmLoggerWrite(void *, uint32_t logType, char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    auto *ns = new char[0x10000];
+    vsnprintf(ns, 0x10000, fmt, args);
+    va_end(args);
+    const char *logTypeStr = arrsize(LogTypes) > logType ? LogTypes[logType] : "Info";
+    kprintf("[%s] %s", logTypeStr, ns);
+    delete[] ns;
 }
 
 bool X6000FB::wrapIH40IVRingInitHardware(void *ctx, void *param2) {

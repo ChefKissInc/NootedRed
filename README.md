@@ -2,7 +2,7 @@
 
 The AMD Vega iGPU support [Lilu](https://github.com/acidanthera/Lilu) (1.6.4+) plug-in.
 
-The Source Code of this Original Work is licensed under the `Thou Shalt Not Profit License version 1.0`. See [`LICENSE`](https://github.com/NootInc/NootedRed/blob/master/LICENSE).
+The NootedRed project is licensed under the `Thou Shalt Not Profit License version 1.5`. See `LICENSE`
 
 This project is under active research and development; There will be crashes here and there.
 

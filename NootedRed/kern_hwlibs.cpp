@@ -43,6 +43,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
         PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "hwlibs",
             "Failed to resolve symbols");
 
+        bool renoir = NRed::callback->chipType >= ChipType::Renoir;
         RouteRequestPlus requests[] = {
             {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory,
                 this->orgPopulateFirmwareDirectory, !catalina},
@@ -51,7 +52,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
             {"_smu_9_0_1_check_fw_status", hwLibsNoop, kSmu901CheckFwStatusPattern, kSmu901CheckFwStatusMask},
             {"_smu_9_0_1_unload_smu", hwLibsNoop, kSmu901UnloadSmuPattern, kSmu901UnloadSmuMask},
             {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit, kPspCmdKmSubmitPattern,
-                kPspCmdKmSubmitMask},
+                kPspCmdKmSubmitMask, renoir},
             {"_update_sdma_power_gating", wrapUpdateSdmaPowerGating, this->orgUpdateSdmaPowerGating,
                 kUpdateSdmaPowerGatingPattern, kUpdateSdmaPowerGatingMask},
             {"__ZN16AmdTtlFwServices7getIpFwEjPKcP10_TtlFwInfo", wrapGetIpFw, this->orgGetIpFw, catalina},
@@ -63,9 +64,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
             "Failed to enable kernel writing");
         if (!catalina) { *orgDeviceTypeTable = {.deviceId = NRed::callback->deviceId, .deviceType = 6}; }
         auto found = false;
-        auto targetDeviceId = NRed::callback->chipType >= ChipType::Renoir && NRed::callback->deviceId != 0x1636 ?
-                                  0x1636 :
-                                  NRed::callback->deviceId;
+        auto targetDeviceId = renoir && NRed::callback->deviceId != 0x1636 ? 0x1636 : NRed::callback->deviceId;
         while (orgCapsInitTable->deviceId != 0xFFFFFFFF) {
             if (orgCapsInitTable->familyId == AMDGPU_FAMILY_RAVEN && orgCapsInitTable->deviceId == targetDeviceId) {
                 orgCapsInitTable->deviceId = NRed::callback->deviceId;
@@ -138,7 +137,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
 void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
     FunctionCast(wrapPopulateFirmwareDirectory, callback->orgPopulateFirmwareDirectory)(that);
 
-    auto isRenoirDerivative = NRed::callback->chipType >= ChipType::Renoir;
+    bool isRenoirDerivative = NRed::callback->chipType >= ChipType::Renoir;
 
     char filename[64] = {0};
     snprintf(filename, 64, "%s_vcn.bin", NRed::callback->getChipName());
@@ -178,7 +177,7 @@ void X5000HWLibs::wrapUpdateSdmaPowerGating(void *cail, uint32_t mode) {
 
 CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4) {
     // Upstream patch: https://github.com/torvalds/linux/commit/f8f70c1371d304f42d4a1242d8abcbda807d0bed
-    if (NRed::callback->chipType >= ChipType::Renoir && getMember<uint32_t>(ctx, 0x10) == 6) {
+    if (getMember<uint32_t>(ctx, 0x10) == 6) {
         DBGLOG("hwlibs", "Skipping MEC2 JT FW");
         return kCAILResultSuccess;
     }
