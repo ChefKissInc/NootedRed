@@ -35,10 +35,12 @@ bool HDMI::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slid
             {&kextAppleGFXHDA, kCreateAppleHDAFunctionGroup2Original, kCreateAppleHDAFunctionGroup2Patched, 1},
             {&kextAppleGFXHDA, kCreateAppleHDAWidget1Original, kCreateAppleHDAWidget1OriginalMask,
                 kCreateAppleHDAWidget1Patched, kCreateAppleHDAWidget1PatchedMask, 1},
-            {&kextAppleGFXHDA, kCreateAppleHDAWidget2Original, kCreateAppleHDAWidget2Mask,
+            {&kextAppleGFXHDA, kCreateAppleHDAWidget2Original, kCreateAppleHDAWidget2OriginalMask,
                 kCreateAppleHDAWidget2Patched, 1},
             {&kextAppleGFXHDA, kCreateAppleHDAOriginal, kCreateAppleHDAOriginalMask, kCreateAppleHDAPatched,
                 kCreateAppleHDAPatchedMask, 2},
+            {&kextAppleGFXHDA, kCreateAppleHDA2Original, kCreateAppleHDA2OriginalMask, kCreateAppleHDA2Patched,
+                kCreateAppleHDA2PatchedMask, 2},
         };
         PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "agfxhda", "Failed to apply patches: %d",
             patcher.getError());
