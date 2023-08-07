@@ -1,4 +1,4 @@
-//  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
+//  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5. See LICENSE for
 //  details.
 
 #include "kern_hwlibs.hpp"
@@ -30,11 +30,12 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
         CAILDeviceTypeEntry *orgDeviceTypeTable = nullptr;
         DeviceCapabilityEntry *orgDevCapTable = nullptr;
 
+        auto catalina = getKernelVersion() == KernelVersion::Catalina;
         SolveRequestPlus solveRequests[] = {
-            {"__ZL15deviceTypeTable", orgDeviceTypeTable, kDeviceTypeTablePattern},
-            {"__ZN11AMDFirmware14createFirmwareEPhjjPKc", this->orgCreateFirmware, kCreateFirmwarePattern},
+            {"__ZL15deviceTypeTable", orgDeviceTypeTable, kDeviceTypeTablePattern, !catalina},
+            {"__ZN11AMDFirmware14createFirmwareEPhjjPKc", this->orgCreateFirmware, kCreateFirmwarePattern, !catalina},
             {"__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware", this->orgPutFirmware,
-                kPutFirmwarePattern},
+                kPutFirmwarePattern, !catalina},
             {"__ZL20CAIL_ASIC_CAPS_TABLE", orgCapsTable, kCailAsicCapsTableHWLibsPattern},
             {"_CAILAsicCapsInitTable", orgCapsInitTable, kCAILAsicCapsInitTablePattern},
             {"_DeviceCapabilityTbl", orgDevCapTable, kDeviceCapabilityTblPattern},
@@ -45,21 +46,23 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
         bool renoir = NRed::callback->chipType >= ChipType::Renoir;
         RouteRequestPlus requests[] = {
             {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory,
-                this->orgPopulateFirmwareDirectory},
-            {"_smu_get_fw_constants", hwLibsNoop, kSmuGetFwConstantsPattern, kSmuGetFwConstantsMask},
+                this->orgPopulateFirmwareDirectory, !catalina},
+            {catalina ? "_smu_get_external_fw" : "_smu_get_fw_constants", hwLibsNoop, kSmuGetFwConstantsPattern,
+                kSmuGetFwConstantsMask},
             {"_smu_9_0_1_check_fw_status", hwLibsNoop, kSmu901CheckFwStatusPattern, kSmu901CheckFwStatusMask},
             {"_smu_9_0_1_unload_smu", hwLibsNoop, kSmu901UnloadSmuPattern, kSmu901UnloadSmuMask},
             {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit, kPspCmdKmSubmitPattern,
                 kPspCmdKmSubmitMask, renoir},
             {"_update_sdma_power_gating", wrapUpdateSdmaPowerGating, this->orgUpdateSdmaPowerGating,
                 kUpdateSdmaPowerGatingPattern, kUpdateSdmaPowerGatingMask},
+            {"__ZN16AmdTtlFwServices7getIpFwEjPKcP10_TtlFwInfo", wrapGetIpFw, this->orgGetIpFw, catalina},
         };
         PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "hwlibs",
             "Failed to route symbols");
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "hwlibs",
             "Failed to enable kernel writing");
-        *orgDeviceTypeTable = {.deviceId = NRed::callback->deviceId, .deviceType = 6};
+        if (!catalina) { *orgDeviceTypeTable = {.deviceId = NRed::callback->deviceId, .deviceType = 6}; }
         auto found = false;
         auto targetDeviceId = renoir && NRed::callback->deviceId != 0x1636 ? 0x1636 : NRed::callback->deviceId;
         while (orgCapsInitTable->deviceId != 0xFFFFFFFF) {
@@ -82,7 +85,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
             }
             orgCapsInitTable++;
         }
-        PANIC_COND(!found, "hwlibs", "Failed to find caps init table entry");
+        PANIC_COND(!found, "hwlibs", "Failed to find init caps table entry");
         found = false;
         while (orgDevCapTable->familyId) {
             if (orgDevCapTable->familyId == AMDGPU_FAMILY_RAVEN && orgDevCapTable->deviceId == targetDeviceId) {
@@ -103,16 +106,16 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
         auto ventura = getKernelVersion() >= KernelVersion::Ventura;
         auto monterey = getKernelVersion() >= KernelVersion::Monterey;
         const LookupPatchPlus patches[] = {
-            {&kextRadeonX5000HWLibs, kPspSwInitOriginal1, kPspSwInitPatched1, 1},
+            {&kextRadeonX5000HWLibs, kPspSwInitOriginal1, kPspSwInitPatched1, 1, !catalina},
             {&kextRadeonX5000HWLibs, kPspSwInitOriginal2, kPspSwInitOriginalMask2, kPspSwInitPatched2,
-                kPspSwInitPatchedMask2, 1},
+                kPspSwInitPatchedMask2, 1, !catalina},
             {&kextRadeonX5000HWLibs, kSmuInitFunctionPointerListOriginal, kSmuInitFunctionPointerListOriginalMask,
                 kSmuInitFunctionPointerListPatched, kSmuInitFunctionPointerListPatchedMask, 1},
             {&kextRadeonX5000HWLibs, kFullAsicResetOriginal, kFullAsicResetPatched, 1},
             {&kextRadeonX5000HWLibs, kGcSwInitOriginal, kGcSwInitOriginalMask, kGcSwInitPatched, kGcSwInitPatchedMask,
-                1},
+                1, !catalina},
             {&kextRadeonX5000HWLibs, kGcSetFwEntryInfoOriginal, kGcSetFwEntryInfoOriginalMask, kGcSetFwEntryInfoPatched,
-                kGcSetFwEntryInfoPatchedMask, 1},
+                kGcSetFwEntryInfoPatchedMask, 1, !catalina},
             {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesOriginal1, kCreatePowerTuneServicesPatched1, 1, !monterey},
             {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesMontereyOriginal1,
                 kCreatePowerTuneServicesMontereyPatched1, 1, monterey},
@@ -136,8 +139,8 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
 
     bool isRenoirDerivative = NRed::callback->chipType >= ChipType::Renoir;
 
-    char filename[128] = {0};
-    snprintf(filename, 128, "%s_vcn.bin", NRed::callback->getChipName());
+    char filename[64] = {0};
+    snprintf(filename, 64, "%s_vcn.bin", NRed::callback->getChipName());
     auto *targetFn = isRenoirDerivative ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
     DBGLOG("wred", "%s => %s", filename, targetFn);
 
@@ -180,4 +183,19 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, v
     }
 
     return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(psp, ctx, param3, param4);
+}
+
+bool X5000HWLibs::wrapGetIpFw(void *that, uint32_t ipVersion, char *name, void *out) {
+    if (!strncmp(name, "ativvaxy_rv.dat", 16) || !strncmp(name, "ativvaxy_nv.dat", 16)) {
+        char filename[64] = {0};
+        snprintf(filename, 64, "%s_vcn.bin", NRed::callback->getChipName());
+        DBGLOG("wred", "getIpFw: %s => %s", filename, name);
+
+        auto &fwDesc = getFWDescByName(filename);
+        auto *fwHeader = reinterpret_cast<const CommonFirmwareHeader *>(fwDesc.data);
+        getMember<const uint8_t *>(out, 0x0) = fwDesc.data + fwHeader->ucodeOff;
+        getMember<uint32_t>(out, 0x8) = fwHeader->ucodeSize;
+        return true;
+    }
+    return FunctionCast(wrapGetIpFw, callback->orgGetIpFw)(that, ipVersion, name, out);
 }

@@ -273,6 +273,7 @@
 		1C748C1E1C21952C0024EED2 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1330;
 				ORGANIZATIONNAME = ChefKissInc;
 				TargetAttributes = {

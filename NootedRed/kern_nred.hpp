@@ -1,4 +1,4 @@
-//  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
+//  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5. See LICENSE for
 //  details.
 
 #pragma once
@@ -223,7 +223,7 @@ class NRed {
     uint16_t revision {0};
     uint32_t pciRevision {0};
     IOPCIDevice *iGPU {nullptr};
-    OSMetaClass *metaClassMap[4][2] = {{nullptr}};
+    OSMetaClass *metaClassMap[5][2] = {{nullptr}};
     mach_vm_address_t orgSafeMetaCast {0};
     mach_vm_address_t orgApplePanelSetDisplay {0};
 
