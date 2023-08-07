@@ -86,6 +86,7 @@ moduleToClass = {
     "x5000": "X5000",
     "x6000": "X6000",
     "x6000fb": "X6000FB",
+    "agfxhda": "AppleGFXHDA"
 }
 
 module: str = input("Filename without extension: ./NootedRed/kern_")

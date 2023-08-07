@@ -3,6 +3,7 @@
 
 #include "kern_nred.hpp"
 #include "kern_dyld_patches.hpp"
+#include "kern_hdmi.hpp"
 #include "kern_hwlibs.hpp"
 #include "kern_model.hpp"
 #include "kern_patcherplus.hpp"
@@ -32,6 +33,7 @@ static X5000HWLibs hwlibs;
 static X5000 x5000;
 static X6000 x6000;
 static DYLDPatches dyldpatches;
+static HDMI agfxhda;
 
 void NRed::init() {
     SYSLOG("nred", "Copyright 2022-2023 ChefKiss Inc. If you've paid for this, you've been scammed.");
@@ -40,6 +42,7 @@ void NRed::init() {
     lilu.onKextLoadForce(&kextAGDP);
     lilu.onKextLoadForce(&kextBacklight);
     lilu.onKextLoadForce(&kextMCCSControl);
+    agfxhda.init();
     dyldpatches.init();
     x6000fb.init();
     hwlibs.init();
@@ -216,6 +219,8 @@ void NRed::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slid
         };
         patcher.routeMultiple(id, requests, slide, size);
         patcher.clearError();
+    } else if (agfxhda.processKext(patcher, id, slide, size)) {
+        DBGLOG("nred", "Processed AppleGFXHDA");
     } else if (x6000fb.processKext(patcher, id, slide, size)) {
         DBGLOG("nred", "Processed AMDRadeonX6000Framebuffer");
     } else if (hwlibs.processKext(patcher, id, slide, size)) {
