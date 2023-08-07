@@ -1,0 +1,732 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 54;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1C748C2D1C21952C0024EED2 /* kern_start.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C748C2C1C21952C0024EED2 /* kern_start.cpp */; };
+		4019EAE42A348852008D800B /* kern_dyld_patches.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4019EAE32A348852008D800B /* kern_dyld_patches.hpp */; };
+		4019EAE62A3488ED008D800B /* kern_dyld_patches.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4019EAE52A3488EC008D800B /* kern_dyld_patches.cpp */; };
+		40364DB629B79DFD0070A2B4 /* kern_model.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40364DB529B79DFD0070A2B4 /* kern_model.hpp */; };
+		4068898B2A229BF600028D22 /* kern_patcherplus.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 406889892A229BF600028D22 /* kern_patcherplus.cpp */; };
+		4068898C2A229BF600028D22 /* kern_patcherplus.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4068898A2A229BF600028D22 /* kern_patcherplus.hpp */; };
+		4069F00F29C3A241005293B4 /* kern_vbios.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FCE29BF942900367F9D /* kern_vbios.hpp */; };
+		408F2020288ACBE6002EEC15 /* kern_fw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 408F201F288ACBE6002EEC15 /* kern_fw.cpp */; };
+		40A07FAD2A22A13600499F02 /* kern_patterns.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40A07FAC2A22A13600499F02 /* kern_patterns.hpp */; };
+		40FC5FD529BF995000367F9D /* kern_x6000fb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FC5FD329BF995000367F9D /* kern_x6000fb.cpp */; };
+		40FC5FD629BF995000367F9D /* kern_x6000fb.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FD429BF995000367F9D /* kern_x6000fb.hpp */; };
+		40FC5FD929BF995E00367F9D /* kern_x5000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FC5FD729BF995E00367F9D /* kern_x5000.cpp */; };
+		40FC5FDA29BF995E00367F9D /* kern_x5000.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FD829BF995E00367F9D /* kern_x5000.hpp */; };
+		40FC5FDD29BF996900367F9D /* kern_hwlibs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FC5FDB29BF996900367F9D /* kern_hwlibs.cpp */; };
+		40FC5FDE29BF996900367F9D /* kern_hwlibs.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FDC29BF996900367F9D /* kern_hwlibs.hpp */; };
+		40FC5FE129BF9E2500367F9D /* kern_x6000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FC5FDF29BF9E2500367F9D /* kern_x6000.cpp */; };
+		40FC5FE229BF9E2500367F9D /* kern_x6000.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FE029BF9E2500367F9D /* kern_x6000.hpp */; };
+		CE405ED91E4A080700AA0B3D /* plugin_start.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CE405ED81E4A080700AA0B3D /* plugin_start.cpp */; };
+		CE8DA0832517C41A008C44E8 /* libkmod.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CE8DA0822517C41A008C44E8 /* libkmod.a */; };
+		CEA03B5E20EE825A00BA842F /* kern_nred.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CEA03B5C20EE825A00BA842F /* kern_nred.cpp */; };
+		CEA03B5F20EE825A00BA842F /* kern_nred.hpp in Headers */ = {isa = PBXBuildFile; fileRef = CEA03B5D20EE825A00BA842F /* kern_nred.hpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		1C642F521C8F157A006B4C51 /* Copy Files */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+			);
+			name = "Copy Files";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		1C748C271C21952C0024EED2 /* NootedRed.kext */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NootedRed.kext; sourceTree = BUILT_PRODUCTS_DIR; };
+		1C748C2C1C21952C0024EED2 /* kern_start.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_start.cpp; sourceTree = "<group>"; };
+		1C748C2E1C21952C0024EED2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		40067D372A5D2B1900D04619 /* raven2_vcn.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven2_vcn.bin; sourceTree = "<group>"; };
+		40067D382A5D2B1900D04619 /* renoir_vcn.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_vcn.bin; sourceTree = "<group>"; };
+		40067D392A5D2B1900D04619 /* raven_vcn.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_vcn.bin; sourceTree = "<group>"; };
+		40067D3A2A5D2B1900D04619 /* green_sardine_vcn.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = green_sardine_vcn.bin; sourceTree = "<group>"; };
+		40067D3C2A5D2D8D00D04619 /* picasso_vcn.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = picasso_vcn.bin; sourceTree = "<group>"; };
+		4019EAE32A348852008D800B /* kern_dyld_patches.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_dyld_patches.hpp; sourceTree = "<group>"; };
+		4019EAE52A3488EC008D800B /* kern_dyld_patches.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_dyld_patches.cpp; sourceTree = "<group>"; };
+		401A3D3829BF7D2D00B5A76A /* kern_patches.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_patches.hpp; sourceTree = "<group>"; };
+		40364DB529B79DFD0070A2B4 /* kern_model.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_model.hpp; sourceTree = "<group>"; };
+		40588A8E29D369C400F042E9 /* raven_gpu_info.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_gpu_info.bin; sourceTree = "<group>"; };
+		40588A8F29D369C400F042E9 /* renoir_gpu_info.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_gpu_info.bin; sourceTree = "<group>"; };
+		40588A9029D369C400F042E9 /* raven2_gpu_info.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven2_gpu_info.bin; sourceTree = "<group>"; };
+		40588A9129D369C400F042E9 /* picasso_gpu_info.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = picasso_gpu_info.bin; sourceTree = "<group>"; };
+		406889892A229BF600028D22 /* kern_patcherplus.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_patcherplus.cpp; sourceTree = "<group>"; };
+		4068898A2A229BF600028D22 /* kern_patcherplus.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_patcherplus.hpp; sourceTree = "<group>"; };
+		408F201E288ACBB0002EEC15 /* kern_fw.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_fw.hpp; sourceTree = "<group>"; };
+		408F201F288ACBE6002EEC15 /* kern_fw.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_fw.cpp; sourceTree = "<group>"; };
+		40A07FAC2A22A13600499F02 /* kern_patterns.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_patterns.hpp; sourceTree = "<group>"; };
+		40FC5FCE29BF942900367F9D /* kern_vbios.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_vbios.hpp; sourceTree = "<group>"; };
+		40FC5FD329BF995000367F9D /* kern_x6000fb.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_x6000fb.cpp; sourceTree = "<group>"; };
+		40FC5FD429BF995000367F9D /* kern_x6000fb.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_x6000fb.hpp; sourceTree = "<group>"; };
+		40FC5FD729BF995E00367F9D /* kern_x5000.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_x5000.cpp; sourceTree = "<group>"; };
+		40FC5FD829BF995E00367F9D /* kern_x5000.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_x5000.hpp; sourceTree = "<group>"; };
+		40FC5FDB29BF996900367F9D /* kern_hwlibs.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_hwlibs.cpp; sourceTree = "<group>"; };
+		40FC5FDC29BF996900367F9D /* kern_hwlibs.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_hwlibs.hpp; sourceTree = "<group>"; };
+		40FC5FDF29BF9E2500367F9D /* kern_x6000.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_x6000.cpp; sourceTree = "<group>"; };
+		40FC5FE029BF9E2500367F9D /* kern_x6000.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_x6000.hpp; sourceTree = "<group>"; };
+		CE405EBA1E49DD7100AA0B3D /* kern_compression.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_compression.hpp; sourceTree = "<group>"; };
+		CE405EBB1E49DD7100AA0B3D /* kern_disasm.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_disasm.hpp; sourceTree = "<group>"; };
+		CE405EBC1E49DD7100AA0B3D /* kern_file.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_file.hpp; sourceTree = "<group>"; };
+		CE405EBD1E49DD7100AA0B3D /* kern_iokit.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_iokit.hpp; sourceTree = "<group>"; };
+		CE405EBE1E49DD7100AA0B3D /* kern_mach.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_mach.hpp; sourceTree = "<group>"; };
+		CE405EBF1E49DD7100AA0B3D /* kern_patcher.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_patcher.hpp; sourceTree = "<group>"; };
+		CE405EC01E49DD7100AA0B3D /* kern_policy.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_policy.hpp; sourceTree = "<group>"; };
+		CE405EC31E49DD7100AA0B3D /* kern_user.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_user.hpp; sourceTree = "<group>"; };
+		CE405EC41E49DD7100AA0B3D /* kern_util.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_util.hpp; sourceTree = "<group>"; };
+		CE405ECF1E49EC9100AA0B3D /* kern_config.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = kern_config.hpp; sourceTree = "<group>"; };
+		CE405ED21E49F9FC00AA0B3D /* kern_api.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_api.hpp; sourceTree = "<group>"; };
+		CE405ED81E4A080700AA0B3D /* plugin_start.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = plugin_start.cpp; sourceTree = "<group>"; };
+		CE405EDA1E4A080F00AA0B3D /* plugin_start.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = plugin_start.hpp; sourceTree = "<group>"; };
+		CE8DA0822517C41A008C44E8 /* libkmod.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libkmod.a; path = ../Lilu/MacKernelSDK/Library/x86_64/libkmod.a; sourceTree = "<group>"; };
+		CEA03B5C20EE825A00BA842F /* kern_nred.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_nred.cpp; sourceTree = "<group>"; };
+		CEA03B5D20EE825A00BA842F /* kern_nred.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_nred.hpp; sourceTree = "<group>"; };
+		CEB402A71F181D8300716912 /* kern_amd.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_amd.hpp; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		1C748C231C21952C0024EED2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CE8DA0832517C41A008C44E8 /* libkmod.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1C748C1D1C21952C0024EED2 = {
+			isa = PBXGroup;
+			children = (
+				1C748C291C21952C0024EED2 /* NootedRed */,
+				CE405EC81E49DD7B00AA0B3D /* SDK */,
+				1C748C281C21952C0024EED2 /* Products */,
+				CE8DA0812517C41A008C44E8 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+			usesTabs = 1;
+		};
+		1C748C281C21952C0024EED2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1C748C271C21952C0024EED2 /* NootedRed.kext */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		1C748C291C21952C0024EED2 /* NootedRed */ = {
+			isa = PBXGroup;
+			children = (
+				408F201A288AC068002EEC15 /* Firmware */,
+				1C748C2E1C21952C0024EED2 /* Info.plist */,
+				CEB402A71F181D8300716912 /* kern_amd.hpp */,
+				408F201F288ACBE6002EEC15 /* kern_fw.cpp */,
+				408F201E288ACBB0002EEC15 /* kern_fw.hpp */,
+				40FC5FDB29BF996900367F9D /* kern_hwlibs.cpp */,
+				40FC5FDC29BF996900367F9D /* kern_hwlibs.hpp */,
+				40364DB529B79DFD0070A2B4 /* kern_model.hpp */,
+				CEA03B5C20EE825A00BA842F /* kern_nred.cpp */,
+				CEA03B5D20EE825A00BA842F /* kern_nred.hpp */,
+				406889892A229BF600028D22 /* kern_patcherplus.cpp */,
+				4068898A2A229BF600028D22 /* kern_patcherplus.hpp */,
+				401A3D3829BF7D2D00B5A76A /* kern_patches.hpp */,
+				40A07FAC2A22A13600499F02 /* kern_patterns.hpp */,
+				1C748C2C1C21952C0024EED2 /* kern_start.cpp */,
+				40FC5FCE29BF942900367F9D /* kern_vbios.hpp */,
+				40FC5FD729BF995E00367F9D /* kern_x5000.cpp */,
+				40FC5FD829BF995E00367F9D /* kern_x5000.hpp */,
+				40FC5FDF29BF9E2500367F9D /* kern_x6000.cpp */,
+				40FC5FE029BF9E2500367F9D /* kern_x6000.hpp */,
+				40FC5FD329BF995000367F9D /* kern_x6000fb.cpp */,
+				40FC5FD429BF995000367F9D /* kern_x6000fb.hpp */,
+				4019EAE32A348852008D800B /* kern_dyld_patches.hpp */,
+				4019EAE52A3488EC008D800B /* kern_dyld_patches.cpp */,
+			);
+			path = NootedRed;
+			sourceTree = "<group>";
+		};
+		408F201A288AC068002EEC15 /* Firmware */ = {
+			isa = PBXGroup;
+			children = (
+				40067D3A2A5D2B1900D04619 /* green_sardine_vcn.bin */,
+				40588A9129D369C400F042E9 /* picasso_gpu_info.bin */,
+				40067D3C2A5D2D8D00D04619 /* picasso_vcn.bin */,
+				40588A8E29D369C400F042E9 /* raven_gpu_info.bin */,
+				40067D392A5D2B1900D04619 /* raven_vcn.bin */,
+				40588A9029D369C400F042E9 /* raven2_gpu_info.bin */,
+				40067D372A5D2B1900D04619 /* raven2_vcn.bin */,
+				40588A8F29D369C400F042E9 /* renoir_gpu_info.bin */,
+				40067D382A5D2B1900D04619 /* renoir_vcn.bin */,
+			);
+			path = Firmware;
+			sourceTree = "<group>";
+		};
+		CE405EB91E49DD7100AA0B3D /* Headers */ = {
+			isa = PBXGroup;
+			children = (
+				CE405ED21E49F9FC00AA0B3D /* kern_api.hpp */,
+				CE405ECF1E49EC9100AA0B3D /* kern_config.hpp */,
+				CE405EBA1E49DD7100AA0B3D /* kern_compression.hpp */,
+				CE405EBB1E49DD7100AA0B3D /* kern_disasm.hpp */,
+				CE405EBC1E49DD7100AA0B3D /* kern_file.hpp */,
+				CE405EBD1E49DD7100AA0B3D /* kern_iokit.hpp */,
+				CE405EBE1E49DD7100AA0B3D /* kern_mach.hpp */,
+				CE405EBF1E49DD7100AA0B3D /* kern_patcher.hpp */,
+				CE405EC01E49DD7100AA0B3D /* kern_policy.hpp */,
+				CE405EC31E49DD7100AA0B3D /* kern_user.hpp */,
+				CE405EC41E49DD7100AA0B3D /* kern_util.hpp */,
+				CE405EDA1E4A080F00AA0B3D /* plugin_start.hpp */,
+			);
+			name = Headers;
+			path = Lilu.kext/Contents/Resources/Headers;
+			sourceTree = SOURCE_ROOT;
+		};
+		CE405EC51E49DD7100AA0B3D /* Library */ = {
+			isa = PBXGroup;
+			children = (
+				CE405ED81E4A080700AA0B3D /* plugin_start.cpp */,
+			);
+			name = Library;
+			path = Lilu.kext/Contents/Resources/Library;
+			sourceTree = SOURCE_ROOT;
+		};
+		CE405EC81E49DD7B00AA0B3D /* SDK */ = {
+			isa = PBXGroup;
+			children = (
+				CE405EB91E49DD7100AA0B3D /* Headers */,
+				CE405EC51E49DD7100AA0B3D /* Library */,
+			);
+			name = SDK;
+			sourceTree = "<group>";
+		};
+		CE8DA0812517C41A008C44E8 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				CE8DA0822517C41A008C44E8 /* libkmod.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		1C748C241C21952C0024EED2 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4069F00F29C3A241005293B4 /* kern_vbios.hpp in Headers */,
+				40FC5FDA29BF995E00367F9D /* kern_x5000.hpp in Headers */,
+				40FC5FE229BF9E2500367F9D /* kern_x6000.hpp in Headers */,
+				40364DB629B79DFD0070A2B4 /* kern_model.hpp in Headers */,
+				40A07FAD2A22A13600499F02 /* kern_patterns.hpp in Headers */,
+				CEA03B5F20EE825A00BA842F /* kern_nred.hpp in Headers */,
+				40FC5FD629BF995000367F9D /* kern_x6000fb.hpp in Headers */,
+				40FC5FDE29BF996900367F9D /* kern_hwlibs.hpp in Headers */,
+				4019EAE42A348852008D800B /* kern_dyld_patches.hpp in Headers */,
+				4068898C2A229BF600028D22 /* kern_patcherplus.hpp in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		1C748C261C21952C0024EED2 /* NootedRed */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1C748C311C21952C0024EED2 /* Build configuration list for PBXNativeTarget "NootedRed" */;
+			buildPhases = (
+				408F2028288ACCC6002EEC15 /* ShellScript */,
+				1C748C221C21952C0024EED2 /* Sources */,
+				1C748C231C21952C0024EED2 /* Frameworks */,
+				1C748C241C21952C0024EED2 /* Headers */,
+				1C642F521C8F157A006B4C51 /* Copy Files */,
+				CE131D6A1FB728990036C3A0 /* Archive */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = NootedRed;
+			productName = NootedRed;
+			productReference = 1C748C271C21952C0024EED2 /* NootedRed.kext */;
+			productType = "com.apple.product-type.kernel-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		1C748C1E1C21952C0024EED2 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1330;
+				ORGANIZATIONNAME = ChefKissInc;
+				TargetAttributes = {
+					1C748C261C21952C0024EED2 = {
+						CreatedOnToolsVersion = 7.2;
+					};
+				};
+			};
+			buildConfigurationList = 1C748C211C21952C0024EED2 /* Build configuration list for PBXProject "NootedRed" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 1C748C1D1C21952C0024EED2;
+			productRefGroup = 1C748C281C21952C0024EED2 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				1C748C261C21952C0024EED2 /* NootedRed */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		408F2028288ACCC6002EEC15 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(PROJECT_DIR)/NootedRed/kern_fw.cpp",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "Scripts/FwGen.sh -P \"${PROJECT_DIR}/NootedRed/Firmware/\"\n";
+		};
+		CE131D6A1FB728990036C3A0 /* Archive */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = Archive;
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "cd \"${TARGET_BUILD_DIR}\"\n\ndist=(\"$FULL_PRODUCT_NAME\")\nif [ -d \"$DWARF_DSYM_FILE_NAME\" ]; then dist+=(\"$DWARF_DSYM_FILE_NAME\"); fi\n\narchive=\"${PRODUCT_NAME}-${MODULE_VERSION}-$(echo $CONFIGURATION | tr /a-z/ /A-Z/).zip\"\nrm -rf *.zip\nif [ \"$CONFIGURATION\" == \"Release\" ]; then\n  strip -x -T \"${EXECUTABLE_PATH}\" &>/dev/null || strip -x \"${EXECUTABLE_PATH}\"\nfi\nzip -qry -FS \"${archive}\" \"${dist[@]}\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1C748C221C21952C0024EED2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				40FC5FDD29BF996900367F9D /* kern_hwlibs.cpp in Sources */,
+				40FC5FD529BF995000367F9D /* kern_x6000fb.cpp in Sources */,
+				408F2020288ACBE6002EEC15 /* kern_fw.cpp in Sources */,
+				4068898B2A229BF600028D22 /* kern_patcherplus.cpp in Sources */,
+				40FC5FE129BF9E2500367F9D /* kern_x6000.cpp in Sources */,
+				CEA03B5E20EE825A00BA842F /* kern_nred.cpp in Sources */,
+				CE405ED91E4A080700AA0B3D /* plugin_start.cpp in Sources */,
+				40FC5FD929BF995E00367F9D /* kern_x5000.cpp in Sources */,
+				1C748C2D1C21952C0024EED2 /* kern_start.cpp in Sources */,
+				4019EAE62A3488ED008D800B /* kern_dyld_patches.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1C748C2F1C21952C0024EED2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = x86_64;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++1y";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = c11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/Lilu.kext/Contents/Resources",
+					"$(PROJECT_DIR)/MacKernelSDK/Headers",
+				);
+				KERNEL_EXTENSION_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/MacKernelSDK/Headers";
+				KERNEL_FRAMEWORK_HEADERS = "$(PROJECT_DIR)/MacKernelSDK/Headers";
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/MacKernelSDK/Library/x86_64";
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = (
+					"-Wextra",
+					"-Wall",
+				);
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		1C748C301C21952C0024EED2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = x86_64;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++1y";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = c11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_UNROLL_LOOPS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/Lilu.kext/Contents/Resources",
+					"$(PROJECT_DIR)/MacKernelSDK/Headers",
+				);
+				KERNEL_EXTENSION_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/MacKernelSDK/Headers";
+				KERNEL_FRAMEWORK_HEADERS = "$(PROJECT_DIR)/MacKernelSDK/Headers";
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/MacKernelSDK/Library/x86_64";
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				OTHER_CFLAGS = (
+					"-Wextra",
+					"-Wall",
+				);
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		1C748C321C21952C0024EED2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_DEADCODE_DEADSTORES = NO;
+				CLANG_ANALYZER_DIVIDE_BY_ZERO = NO;
+				CLANG_ANALYZER_NULL_DEREFERENCE = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CLANG_CXX_LIBRARY = "compiler-default";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = "$(MODULE_VERSION)";
+				DEPLOYMENT_POSTPROCESSING = YES;
+				GCC_ENABLE_FLOATING_POINT_LIBRARY_CALLS = NO;
+				GCC_ENABLE_KERNEL_DEVELOPMENT = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MODULE_VERSION=$(MODULE_VERSION)",
+					"PRODUCT_NAME=$(PRODUCT_NAME)",
+					"APPLE_KEXT_ASSERTIONS=1",
+					"LILU_CUSTOM_IOKIT_INIT=1",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = "$(inherited)";
+				INFOPLIST_FILE = NootedRed/Info.plist;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/MacKernelSDK/Library/x86_64",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MODULE_NAME = com.ChefKissInc.NootedRed;
+				MODULE_START = "$(PRODUCT_NAME)_kern_start";
+				MODULE_STOP = "$(PRODUCT_NAME)_kern_stop";
+				MODULE_VERSION = 1.0.0;
+				OTHER_CFLAGS = (
+					"-mmmx",
+					"-msse",
+					"-msse2",
+					"-msse3",
+					"-mfpmath=sse",
+					"-mssse3",
+					"-ftree-vectorize",
+					"-fno-non-call-exceptions",
+					"-fno-builtin",
+					"-fno-asynchronous-unwind-tables",
+					"-Wno-unknown-warning-option",
+					"-Wno-ossharedptr-misuse",
+					"-Wno-vla",
+					"-Wextra",
+					"-Wall",
+					"$(inherited)",
+				);
+				OTHER_LDFLAGS = "-static";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(MODULE_NAME)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				RUN_CLANG_STATIC_ANALYZER = YES;
+				WRAPPER_EXTENSION = kext;
+			};
+			name = Debug;
+		};
+		1C748C331C21952C0024EED2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CLANG_CXX_LIBRARY = "compiler-default";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CURRENT_PROJECT_VERSION = "$(MODULE_VERSION)";
+				DEAD_CODE_STRIPPING = YES;
+				DEPLOYMENT_POSTPROCESSING = YES;
+				GCC_ENABLE_FLOATING_POINT_LIBRARY_CALLS = NO;
+				GCC_ENABLE_KERNEL_DEVELOPMENT = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MODULE_VERSION=$(MODULE_VERSION)",
+					"PRODUCT_NAME=$(PRODUCT_NAME)",
+					"LILU_CUSTOM_IOKIT_INIT=1",
+				);
+				HEADER_SEARCH_PATHS = "$(inherited)";
+				INFOPLIST_FILE = NootedRed/Info.plist;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/MacKernelSDK/Library/x86_64",
+				);
+				LLVM_LTO = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MODULE_NAME = com.ChefKissInc.NootedRed;
+				MODULE_START = "$(PRODUCT_NAME)_kern_start";
+				MODULE_STOP = "$(PRODUCT_NAME)_kern_stop";
+				MODULE_VERSION = 1.0.0;
+				OTHER_CFLAGS = (
+					"-mmmx",
+					"-msse",
+					"-msse2",
+					"-msse3",
+					"-mfpmath=sse",
+					"-mssse3",
+					"-ftree-vectorize",
+					"-fno-non-call-exceptions",
+					"-fno-builtin",
+					"-fno-asynchronous-unwind-tables",
+					"-Wno-unknown-warning-option",
+					"-Wno-ossharedptr-misuse",
+					"-Wno-vla",
+					"-Wextra",
+					"-Wall",
+					"$(inherited)",
+				);
+				OTHER_LDFLAGS = "-static";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(MODULE_NAME)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRIP_STYLE = "non-global";
+				WRAPPER_EXTENSION = kext;
+			};
+			name = Release;
+		};
+		CE9901CA21456F6C006E5CF5 /* Sanitize */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = x86_64;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++1y";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = c11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				KERNEL_EXTENSION_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/MacKernelSDK/Headers";
+				KERNEL_FRAMEWORK_HEADERS = "$(PROJECT_DIR)/MacKernelSDK/Headers";
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = (
+					"-Wextra",
+					"-Wall",
+				);
+				SDKROOT = macosx;
+			};
+			name = Sanitize;
+		};
+		CE9901CB21456F6C006E5CF5 /* Sanitize */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CLANG_CXX_LIBRARY = "compiler-default";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = "$(MODULE_VERSION)";
+				DEPLOYMENT_POSTPROCESSING = YES;
+				GCC_ENABLE_FLOATING_POINT_LIBRARY_CALLS = NO;
+				GCC_ENABLE_KERNEL_DEVELOPMENT = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"MODULE_VERSION=$(MODULE_VERSION)",
+					"APPLE_KEXT_ASSERTIONS=1",
+					"PRODUCT_NAME=$(PRODUCT_NAME)",
+					"LILU_CUSTOM_IOKIT_INIT=1",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = "$(inherited)";
+				INFOPLIST_FILE = NootedRed/Info.plist;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/MacKernelSDK/Library/x86_64",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MODULE_NAME = com.ChefKissInc.NootedRed;
+				MODULE_START = "$(PRODUCT_NAME)_kern_start";
+				MODULE_STOP = "$(PRODUCT_NAME)_kern_stop";
+				MODULE_VERSION = 1.0.0;
+				OTHER_CFLAGS = (
+					"-mmmx",
+					"-msse",
+					"-msse2",
+					"-msse3",
+					"-mfpmath=sse",
+					"-mssse3",
+					"-ftree-vectorize",
+					"-fno-non-call-exceptions",
+					"-fno-builtin",
+					"-fno-asynchronous-unwind-tables",
+					"-fsanitize=undefined,nullability",
+					"-fno-sanitize=function",
+					"-Wno-unknown-warning-option",
+					"-Wno-ossharedptr-misuse",
+					"-Wno-vla",
+					"-Wextra",
+					"-Wall",
+					"$(inherited)",
+				);
+				OTHER_LDFLAGS = "-static";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(MODULE_NAME)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = kext;
+			};
+			name = Sanitize;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1C748C211C21952C0024EED2 /* Build configuration list for PBXProject "NootedRed" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1C748C2F1C21952C0024EED2 /* Debug */,
+				CE9901CA21456F6C006E5CF5 /* Sanitize */,
+				1C748C301C21952C0024EED2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1C748C311C21952C0024EED2 /* Build configuration list for PBXNativeTarget "NootedRed" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1C748C321C21952C0024EED2 /* Debug */,
+				CE9901CB21456F6C006E5CF5 /* Sanitize */,
+				1C748C331C21952C0024EED2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 1C748C1E1C21952C0024EED2 /* Project object */;
+}

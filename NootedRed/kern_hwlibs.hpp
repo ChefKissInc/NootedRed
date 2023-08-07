@@ -1,0 +1,31 @@
+//  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5. See LICENSE for
+//  details.
+
+#pragma once
+#include "kern_amd.hpp"
+#include <Headers/kern_patcher.hpp>
+#include <Headers/kern_util.hpp>
+
+using t_createFirmware = void *(*)(const void *data, uint32_t size, uint32_t ipVersion, const char *filename);
+using t_putFirmware = bool (*)(void *that, uint32_t deviceType, void *fw);
+
+class X5000HWLibs {
+    public:
+    static X5000HWLibs *callback;
+    void init();
+    bool processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
+
+    private:
+    mach_vm_address_t orgPopulateFirmwareDirectory {0};
+    t_createFirmware orgCreateFirmware {nullptr};
+    t_putFirmware orgPutFirmware {nullptr};
+    mach_vm_address_t orgUpdateSdmaPowerGating {0};
+    mach_vm_address_t orgPspCmdKmSubmit {0};
+    mach_vm_address_t orgGetIpFw {0};
+
+    static void wrapPopulateFirmwareDirectory(void *that);
+    static void wrapUpdateSdmaPowerGating(void *cail, uint32_t mode);
+    static CAILResult wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4);
+    static bool wrapGetIpFw(void *that, uint32_t param1, char *name, void *out);
+    static CAILResult hwLibsNoop();
+};
