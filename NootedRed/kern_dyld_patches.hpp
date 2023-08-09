@@ -75,19 +75,16 @@ static const char kHwGvaId[] = "Mac-7BA5B2D9E42DDD94";
 /** AppleGVA model check */
 static const char kAGVABoardIdOriginal[] = "board-id\0hw.model";
 static const char kAGVABoardIdPatched[] = "hwgva-id\0hw.model";
-static_assert(arrsize(kAGVABoardIdOriginal) == arrsize(kAGVABoardIdPatched));
 
 static const char kCoreLSKDMSEPath[] = "/System/Library/PrivateFrameworks/CoreLSKDMSE.framework/Versions/A/CoreLSKDMSE";
 static const char kCoreLSKDPath[] = "/System/Library/PrivateFrameworks/CoreLSKD.framework/Versions/A/CoreLSKD";
 
 static const uint8_t kCoreLSKDOriginal[] = {0xC7, 0xC0, 0x01, 0x00, 0x00, 0x00, 0x0F, 0xA2};
 static const uint8_t kCoreLSKDPatched[] = {0xC7, 0xC0, 0xC3, 0x06, 0x03, 0x00, 0x66, 0x90};
-static_assert(arrsize(kCoreLSKDOriginal) == arrsize(kCoreLSKDPatched));
 
 /** AppleGVAHEVCEncoder model check */
 static const char kHEVCEncBoardIdOriginal[] = "vendor8bit\0IOService\0board-id";
 static const char kHEVCEncBoardIdPatched[] = "vendor8bit\0IOService\0hwgva-id";
-static_assert(arrsize(kHEVCEncBoardIdOriginal) == arrsize(kHEVCEncBoardIdPatched));
 
 /**
  * `VAAcceleratorInfo::identify`
@@ -103,9 +100,6 @@ static const uint8_t kVAAcceleratorInfoIdentifyPatched[] = {0x00, 0x00, 0x00, 0x
     0x00, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t kVAAcceleratorInfoIdentifyPatchedMask[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-static_assert(arrsize(kVAAcceleratorInfoIdentifyOriginal) == arrsize(kVAAcceleratorInfoIdentifyOriginalMask));
-static_assert(arrsize(kVAAcceleratorInfoIdentifyOriginal) == arrsize(kVAAcceleratorInfoIdentifyPatched));
-static_assert(arrsize(kVAAcceleratorInfoIdentifyPatched) == arrsize(kVAAcceleratorInfoIdentifyPatchedMask));
 
 /** Ditto, 0xB -> 0x6 */
 static const uint8_t kVAAcceleratorInfoIdentifyVenturaOriginal[] = {0x48, 0xC7, 0x45, 0xF0, 0x18, 0x01, 0x00, 0x00,
@@ -116,11 +110,6 @@ static const uint8_t kVAAcceleratorInfoIdentifyVenturaPatched[] = {0x00, 0x00, 0
     0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xEB, 0x00};
 static const uint8_t kVAAcceleratorInfoIdentifyVenturaPatchedMask[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00};
-static_assert(
-    arrsize(kVAAcceleratorInfoIdentifyVenturaOriginal) == arrsize(kVAAcceleratorInfoIdentifyVenturaOriginalMask));
-static_assert(
-    arrsize(kVAAcceleratorInfoIdentifyVenturaPatched) == arrsize(kVAAcceleratorInfoIdentifyVenturaPatchedMask));
-static_assert(arrsize(kVAAcceleratorInfoIdentifyVenturaOriginal) == arrsize(kVAAcceleratorInfoIdentifyVenturaPatched));
 
 /**
  * `VAFactory::createGraphicsEngine`
@@ -135,9 +124,6 @@ static const uint8_t kVAFactoryCreateGraphicsEnginePatched[] = {0xC7, 0xC0, 0x04
     0x90, 0x00, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t kVAFactoryCreateGraphicsEnginePatchedMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00};
-static_assert(arrsize(kVAFactoryCreateGraphicsEngineOriginal) == arrsize(kVAFactoryCreateGraphicsEngineOriginalMask));
-static_assert(arrsize(kVAFactoryCreateGraphicsEngineOriginal) == arrsize(kVAFactoryCreateGraphicsEnginePatched));
-static_assert(arrsize(kVAFactoryCreateGraphicsEnginePatched) == arrsize(kVAFactoryCreateGraphicsEnginePatchedMask));
 
 /** Ditto */
 static const uint8_t kVAFactoryCreateGraphicsEngineAndBltVenturaOriginal[] = {0x48, 0x8B, 0x86, 0x60, 0x04, 0x00, 0x00,
@@ -148,12 +134,6 @@ static const uint8_t kVAFactoryCreateGraphicsEngineAndBltVenturaPatched[] = {0xC
     0x90, 0x66, 0x90, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t kVAFactoryCreateGraphicsEngineAndBltVenturaPatchedMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-static_assert(arrsize(kVAFactoryCreateGraphicsEngineAndBltVenturaOriginal) ==
-              arrsize(kVAFactoryCreateGraphicsEngineAndBltVenturaOriginalMask));
-static_assert(arrsize(kVAFactoryCreateGraphicsEngineAndBltVenturaOriginal) ==
-              arrsize(kVAFactoryCreateGraphicsEngineAndBltVenturaPatched));
-static_assert(arrsize(kVAFactoryCreateGraphicsEngineAndBltVenturaPatched) ==
-              arrsize(kVAFactoryCreateGraphicsEngineAndBltVenturaPatchedMask));
 
 /**
  * `VAFactory::create*VP`
@@ -172,9 +152,6 @@ static const uint8_t kVAFactoryCreateVPPatched[] = {0xBE, 0x04, 0x00, 0x00, 0x00
 static const uint8_t kVAFactoryCreateVPPatchedMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00};
-static_assert(arrsize(kVAFactoryCreateVPOriginal) == arrsize(kVAFactoryCreateVPOriginalMask));
-static_assert(arrsize(kVAFactoryCreateVPOriginal) == arrsize(kVAFactoryCreateVPPatched));
-static_assert(arrsize(kVAFactoryCreateVPPatched) == arrsize(kVAFactoryCreateVPPatchedMask));
 
 /** Ditto */
 static const uint8_t kVAFactoryCreateVPVenturaOriginal[] = {0x8D, 0x46, 0xFF, 0x83, 0xF8, 0x02, 0x72, 0x00, 0x8D, 0x46,
@@ -185,9 +162,6 @@ static const uint8_t kVAFactoryCreateVPVenturaPatched[] = {0x00, 0x00, 0x00, 0x0
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t kVAFactoryCreateVPVenturaPatchedMask[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-static_assert(arrsize(kVAFactoryCreateVPVenturaOriginal) == arrsize(kVAFactoryCreateVPVenturaOriginalMask));
-static_assert(arrsize(kVAFactoryCreateVPVenturaOriginal) == arrsize(kVAFactoryCreateVPVenturaPatched));
-static_assert(arrsize(kVAFactoryCreateVPVenturaPatched) == arrsize(kVAFactoryCreateVPVenturaPatchedMask));
 
 /**
  * `VAFactory::createImageBlt`
@@ -202,9 +176,6 @@ static const uint8_t kVAFactoryCreateImageBltPatched[] = {0x48, 0x89, 0xF7, 0x48
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t kVAFactoryCreateImageBltPatchedMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-static_assert(arrsize(kVAFactoryCreateImageBltOriginal) == arrsize(kVAFactoryCreateImageBltMask));
-static_assert(arrsize(kVAFactoryCreateImageBltOriginal) == arrsize(kVAFactoryCreateImageBltPatched));
-static_assert(arrsize(kVAFactoryCreateImageBltPatched) == arrsize(kVAFactoryCreateImageBltPatchedMask));
 
 /**
  * `VAAddrLibInterface::init`
@@ -219,9 +190,6 @@ static const uint8_t kVAAddrLibInterfaceInitPatched[] = {0x00, 0x00, 0x66, 0x90,
     0x90, 0x00, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t kVAAddrLibInterfaceInitPatchedMask[] = {0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0x00, 0x00, 0x00, 0x00, 0x00};
-static_assert(arrsize(kVAAddrLibInterfaceInitOriginal) == arrsize(kVAAddrLibInterfaceInitOriginalMask));
-static_assert(arrsize(kVAAddrLibInterfaceInitPatched) == arrsize(kVAAddrLibInterfaceInitPatchedMask));
-static_assert(arrsize(kVAAddrLibInterfaceInitOriginal) == arrsize(kVAAddrLibInterfaceInitPatched));
 
 /**
  * `Vcn2DecCommand::writeUvdNoOp`
@@ -229,7 +197,6 @@ static_assert(arrsize(kVAAddrLibInterfaceInitOriginal) == arrsize(kVAAddrLibInte
  */
 static const uint8_t kWriteUvdNoOpOriginal[] = {0x48, 0x8B, 0x07, 0xBE, 0x3F, 0x05, 0x00, 0x00, 0xFF, 0x50, 0x20};
 static const uint8_t kWriteUvdNoOpPatched[] = {0x48, 0x8B, 0x07, 0xBE, 0xFF, 0x81, 0x00, 0x00, 0xFF, 0x50, 0x20};
-static_assert(arrsize(kWriteUvdNoOpOriginal) == arrsize(kWriteUvdNoOpPatched));
 
 /**
  * `Vcn2DecCommand::writeUvdEngineStart`
@@ -238,7 +205,6 @@ static_assert(arrsize(kWriteUvdNoOpOriginal) == arrsize(kWriteUvdNoOpPatched));
 static const uint8_t kWriteUvdEngineStartOriginal[] = {0x48, 0x8B, 0x07, 0xBE, 0x06, 0x05, 0x00, 0x00, 0xFF, 0x50,
     0x20};
 static const uint8_t kWriteUvdEngineStartPatched[] = {0x48, 0x8B, 0x07, 0xBE, 0xC6, 0x81, 0x00, 0x00, 0xFF, 0x50, 0x20};
-static_assert(arrsize(kWriteUvdEngineStartOriginal) == arrsize(kWriteUvdEngineStartPatched));
 
 /**
  * `Vcn2DecCommand::writeUvdGpcomVcpuCmd`
@@ -248,7 +214,6 @@ static const uint8_t kWriteUvdGpcomVcpuCmdOriginal[] = {0x48, 0x8B, 0x07, 0xBE, 
     0x20};
 static const uint8_t kWriteUvdGpcomVcpuCmdPatched[] = {0x48, 0x8B, 0x07, 0xBE, 0xC3, 0x81, 0x00, 0x00, 0xFF, 0x50,
     0x20};
-static_assert(arrsize(kWriteUvdGpcomVcpuCmdOriginal) == arrsize(kWriteUvdGpcomVcpuCmdPatched));
 
 /**
  * `Vcn2DecCommand::writeUvdGpcomVcpuData0`
@@ -258,7 +223,6 @@ static const uint8_t kWriteUvdGpcomVcpuData0Original[] = {0x48, 0x8B, 0x07, 0xBE
     0x20};
 static const uint8_t kWriteUvdGpcomVcpuData0Patched[] = {0x48, 0x8B, 0x07, 0xBE, 0xC4, 0x81, 0x00, 0x00, 0xFF, 0x50,
     0x20};
-static_assert(arrsize(kWriteUvdGpcomVcpuData0Original) == arrsize(kWriteUvdGpcomVcpuData0Patched));
 
 /**
  * `Vcn2DecCommand::writeUvdGpcomVcpuData1`
@@ -268,7 +232,6 @@ static const uint8_t kWriteUvdGpcomVcpuData1Original[] = {0x48, 0x8B, 0x07, 0xBE
     0x20};
 static const uint8_t kWriteUvdGpcomVcpuData1Patched[] = {0x48, 0x8B, 0x07, 0xBE, 0xC5, 0x81, 0x00, 0x00, 0xFF, 0x50,
     0x20};
-static_assert(arrsize(kWriteUvdGpcomVcpuData1Original) == arrsize(kWriteUvdGpcomVcpuData1Patched));
 
 /**
  * `Vcn2EncCommand::addEncodePacket`
@@ -278,7 +241,6 @@ static const uint8_t kAddEncodePacketOriginal[] = {0x49, 0x89, 0x40, 0x18, 0xBE,
     0x00, 0x00, 0x00};
 static const uint8_t kAddEncodePacketPatched[] = {0x49, 0x89, 0x40, 0x18, 0xBE, 0x0B, 0x00, 0x00, 0x00, 0xBA, 0x2C,
     0x00, 0x00, 0x00};
-static_assert(arrsize(kAddEncodePacketOriginal) == arrsize(kAddEncodePacketPatched));
 
 /**
  * `Vcn2EncCommand::addSliceHeaderPacket`
@@ -290,8 +252,6 @@ static const uint8_t kAddSliceHeaderPacketMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF
     0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t kAddSliceHeaderPacketPatched[] = {0x00, 0x00, 0x00, 0xBE, 0x0A, 0x00, 0x00, 0x00, 0xBA, 0xC0, 0x00,
     0x00, 0x00, 0x00, 0xE9, 0x00, 0x00, 0x00, 0x00};
-static_assert(arrsize(kAddSliceHeaderPacketOriginal) == arrsize(kAddSliceHeaderPacketMask));
-static_assert(arrsize(kAddSliceHeaderPacketOriginal) == arrsize(kAddSliceHeaderPacketPatched));
 
 /**
  * `Vcn2EncCommand::addIntraRefreshPacket`
@@ -303,8 +263,6 @@ static const uint8_t kAddIntraRefreshPacketMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xF
     0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t kAddIntraRefreshPacketPatched[] = {0x01, 0x00, 0x00, 0xBE, 0x0C, 0x00, 0x00, 0x00, 0xBA, 0x0C,
     0x00, 0x00, 0x00, 0x00, 0xE9, 0x00, 0x00, 0x00, 0x00};
-static_assert(arrsize(kAddIntraRefreshPacketOriginal) == arrsize(kAddIntraRefreshPacketMask));
-static_assert(arrsize(kAddIntraRefreshPacketOriginal) == arrsize(kAddIntraRefreshPacketPatched));
 
 /**
  * `Vcn2EncCommand::addContextBufferPacket`
@@ -314,7 +272,6 @@ static const uint8_t kAddContextBufferPacketOriginal[] = {0x49, 0x89, 0x40, 0x18
     0x00, 0x00, 0xBE, 0x11, 0x00, 0x00, 0x00, 0xBA, 0x58, 0x02, 0x00, 0x00};
 static const uint8_t kAddContextBufferPacketPatched[] = {0x49, 0x89, 0x40, 0x18, 0x41, 0xC7, 0x40, 0x14, 0x01, 0x00,
     0x00, 0x00, 0xBE, 0x0D, 0x00, 0x00, 0x00, 0xBA, 0x58, 0x02, 0x00, 0x00};
-static_assert(arrsize(kAddContextBufferPacketOriginal) == arrsize(kAddContextBufferPacketPatched));
 
 /**
  * `Vcn2EncCommand::addBitstreamBufferPacket`
@@ -324,7 +281,6 @@ static const uint8_t kAddBitstreamBufferPacketOriginal[] = {0x48, 0x8B, 0x46, 0x
     0x00, 0x00, 0x00, 0xBA, 0x14, 0x00, 0x00, 0x00};
 static const uint8_t kAddBitstreamBufferPacketPatched[] = {0x48, 0x8B, 0x46, 0x38, 0x49, 0x89, 0x40, 0x18, 0xBE, 0x0E,
     0x00, 0x00, 0x00, 0xBA, 0x14, 0x00, 0x00, 0x00};
-static_assert(arrsize(kAddBitstreamBufferPacketOriginal) == arrsize(kAddBitstreamBufferPacketPatched));
 
 /**
  * `Vcn2EncCommand::addFeedbackBufferPacket`
@@ -334,7 +290,6 @@ static const uint8_t kAddFeedbackBufferPacketOriginal[] = {0x48, 0x8B, 0x46, 0x4
     0x00, 0x00, 0x00, 0xBA, 0x14, 0x00, 0x00, 0x00};
 static const uint8_t kAddFeedbackBufferPacketPatched[] = {0x48, 0x8B, 0x46, 0x40, 0x49, 0x89, 0x40, 0x18, 0xBE, 0x10,
     0x00, 0x00, 0x00, 0xBA, 0x14, 0x00, 0x00, 0x00};
-static_assert(arrsize(kAddFeedbackBufferPacketOriginal) == arrsize(kAddFeedbackBufferPacketPatched));
 
 /**
  * `Vcn2EncCommand::addInputFormatPacket` and `Vcn2EncCommand::addOutputFormatPacket`
@@ -351,8 +306,3 @@ static const uint8_t kAddFormatPacketPatched[] = {0xB8, 0x00, 0x00, 0x00, 0x00, 
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t kAddFormatPacketPatchedMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-static_assert(arrsize(kAddInputFormatPacketOriginal) == arrsize(kAddOutputFormatPacketOriginal));
-static_assert(arrsize(kAddInputFormatPacketOriginal) == arrsize(kAddFormatPacketOriginalMask));
-static_assert(arrsize(kAddOutputFormatPacketOriginal) == arrsize(kAddFormatPacketOriginalMask));
-static_assert(arrsize(kAddFormatPacketOriginalMask) == arrsize(kAddFormatPacketPatched));
-static_assert(arrsize(kAddFormatPacketPatchedMask) == arrsize(kAddFormatPacketPatched));

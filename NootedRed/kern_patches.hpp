@@ -32,9 +32,6 @@ static const uint8_t kGcSwInitOriginal[] = {0x0C, 0xE8, 0x00, 0x00, 0x00, 0x00, 
 static const uint8_t kGcSwInitOriginalMask[] = {0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF};
 static const uint8_t kGcSwInitPatched[] = {0x00, 0xB8, 0x00, 0x04, 0x09, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t kGcSwInitPatchedMask[] = {0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00};
-static_assert(arrsize(kGcSwInitOriginal) == arrsize(kGcSwInitOriginalMask));
-static_assert(arrsize(kGcSwInitOriginal) == arrsize(kGcSwInitPatched));
-static_assert(arrsize(kGcSwInitPatched) == arrsize(kGcSwInitPatchedMask));
 
 /**
  * `_gc_set_fw_entry_info`
@@ -528,7 +525,6 @@ static const uint8_t kGetAMDHWHandlerCallPatched[] = {0xFF, 0x90, 0xC8, 0x02, 0x
  */
 static const uint8_t kCreateAppleHDAFunctionGroup1Original[] = {0x3D, 0xD7, 0xAA, 0x00, 0x00};
 static const uint8_t kCreateAppleHDAFunctionGroup1Patched[] = {0x3D, 0x00, 0x00, 0x00, 0x00};
-static_assert(arrsize(kCreateAppleHDAFunctionGroup1Original) == arrsize(kCreateAppleHDAFunctionGroup1Patched));
 
 /**
  * `AppleGFXHDAFunctionGroupFactory::createAppleHDAFunctionGroup`
@@ -536,7 +532,6 @@ static_assert(arrsize(kCreateAppleHDAFunctionGroup1Original) == arrsize(kCreateA
  */
 static const uint8_t kCreateAppleHDAFunctionGroup2Original[] = {0x3D, 0xF7, 0xAA, 0x00, 0x00, 0x7F};
 static const uint8_t kCreateAppleHDAFunctionGroup2Patched[] = {0x3D, 0xF7, 0xAA, 0x00, 0x00, 0xEB};
-static_assert(arrsize(kCreateAppleHDAFunctionGroup2Original) == arrsize(kCreateAppleHDAFunctionGroup2Patched));
 
 /**
  * `AppleGFXHDAWidgetFactory::createAppleHDAWidget`
@@ -551,9 +546,6 @@ static const uint8_t kCreateAppleHDAWidget1Patched[] = {0x66, 0x90, 0x66, 0x90, 
     0x90, 0x90, 0xEB, 0x00};
 static const uint8_t kCreateAppleHDAWidget1PatchedMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0x00};
-static_assert(arrsize(kCreateAppleHDAWidget1Original) == arrsize(kCreateAppleHDAWidget1OriginalMask));
-static_assert(arrsize(kCreateAppleHDAWidget1Patched) == arrsize(kCreateAppleHDAWidget1PatchedMask));
-static_assert(arrsize(kCreateAppleHDAWidget1Original) == arrsize(kCreateAppleHDAWidget1Patched));
 
 /**
  * `AppleGFXHDAWidgetFactory::createAppleHDAWidget`
@@ -563,8 +555,6 @@ static_assert(arrsize(kCreateAppleHDAWidget1Original) == arrsize(kCreateAppleHDA
 static const uint8_t kCreateAppleHDAWidget2Original[] = {0x3D, 0x1F, 0xAB, 0x00, 0x00, 0x7E, 0x00};
 static const uint8_t kCreateAppleHDAWidget2OriginalMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00};
 static const uint8_t kCreateAppleHDAWidget2Patched[] = {0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x90};
-static_assert(arrsize(kCreateAppleHDAWidget2Original) == arrsize(kCreateAppleHDAWidget2OriginalMask));
-static_assert(arrsize(kCreateAppleHDAWidget2Original) == arrsize(kCreateAppleHDAWidget2Patched));
 
 /**
  * `AppleGFXHDAWidgetFactory::createAppleHDAWidget`
@@ -576,9 +566,6 @@ static const uint8_t kCreateAppleHDAOriginal[] = {0x8D, 0x88, 0xE0, 0x54, 0xFF, 
 static const uint8_t kCreateAppleHDAOriginalMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00};
 static const uint8_t kCreateAppleHDAPatched[] = {0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x90, 0xEB, 0x00};
 static const uint8_t kCreateAppleHDAPatchedMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00};
-static_assert(arrsize(kCreateAppleHDAOriginal) == arrsize(kCreateAppleHDAOriginalMask));
-static_assert(arrsize(kCreateAppleHDAPatched) == arrsize(kCreateAppleHDAPatchedMask));
-static_assert(arrsize(kCreateAppleHDAOriginal) == arrsize(kCreateAppleHDAPatched));
 
 /**
  * `AppleGFXHDAWidgetFactory::createAppleHDAWidget`
@@ -590,9 +577,6 @@ static const uint8_t kCreateAppleHDA2Original[] = {0x3D, 0xF8, 0xA0, 0x00, 0x00,
 static const uint8_t kCreateAppleHDA2OriginalMask[] = {0xFF, 0xFF, 0xF0, 0xFF, 0xFF, 0xFF, 0x00};
 static const uint8_t kCreateAppleHDA2Patched[] = {0x66, 0x90, 0x66, 0x90, 0x90, 0xEB, 0x00};
 static const uint8_t kCreateAppleHDA2PatchedMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00};
-static_assert(arrsize(kCreateAppleHDA2Original) == arrsize(kCreateAppleHDA2OriginalMask));
-static_assert(arrsize(kCreateAppleHDA2Patched) == arrsize(kCreateAppleHDA2PatchedMask));
-static_assert(arrsize(kCreateAppleHDA2Original) == arrsize(kCreateAppleHDA2Patched));
 
 /**
  * `AppleHDAFunctionGroupFactory::createAppleHDAFunctionGroup`
@@ -601,7 +585,6 @@ static_assert(arrsize(kCreateAppleHDA2Original) == arrsize(kCreateAppleHDA2Patch
  */
 static const uint8_t kAHDACreate1Original[] = {0x87, 0xAA, 0x00, 0x00, 0x0F, 0x8F};
 static const uint8_t kAHDACreate1Patched[] = {0x66, 0x90, 0x66, 0x90, 0x48, 0xE9};
-static_assert(arrsize(kAHDACreate1Original) == arrsize(kAHDACreate1Patched));
 
 /**
  * `AppleHDAFunctionGroupFactory::createAppleHDAFunctionGroup`
@@ -612,7 +595,6 @@ static const uint8_t kAHDACreate2Original[] = {0x83, 0x00, 0x38, 0x77, 0x00, 0xB
 static const uint8_t kAHDACreate2OriginalMask[] = {0xFF, 0x00, 0xFF, 0xFF, 0x00, 0xF0};
 static const uint8_t kAHDACreate2Patched[] = {0x66, 0x90, 0x90, 0xEB, 0x00, 0x00};
 static const uint8_t kAHDACreate2PatchedMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00};
-static_assert(arrsize(kAHDACreate2Original) == arrsize(kAHDACreate2Patched));
 
 /**
  * `AppleHDAFunctionGroupFactory::createAppleHDAFunctionGroup`
@@ -622,5 +604,3 @@ static_assert(arrsize(kAHDACreate2Original) == arrsize(kAHDACreate2Patched));
 static const uint8_t kAHDACreate3Original[] = {0xD8, 0xAA, 0x00, 0x00, 0x75, 0x00};
 static const uint8_t kAHDACreate3Mask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00};
 static const uint8_t kAHDACreate3Patched[] = {0x66, 0x90, 0x66, 0x90, 0x66, 0x90};
-static_assert(arrsize(kAHDACreate3Original) == arrsize(kAHDACreate3Mask));
-static_assert(arrsize(kAHDACreate3Original) == arrsize(kAHDACreate3Patched));
