@@ -28,19 +28,24 @@ bool HDMI::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slid
     if (kextAppleGFXHDA.loadIndex == id) {
         const uint32_t probeFind = 0xAB381002;
         const uint32_t probeRepl = NRed::callback->deviceId <= 0x15DD ? 0x15DE1002 : 0x16371002;
+        bool catalina = getKernelVersion() == KernelVersion::Catalina;
         LookupPatchPlus patches[] = {
             {&kextAppleGFXHDA, reinterpret_cast<const uint8_t *>(&probeFind),
                 reinterpret_cast<const uint8_t *>(&probeRepl), sizeof(probeFind), 1},
-            {&kextAppleGFXHDA, kCreateAppleHDAFunctionGroup1Original, kCreateAppleHDAFunctionGroup1Patched, 1},
-            {&kextAppleGFXHDA, kCreateAppleHDAFunctionGroup2Original, kCreateAppleHDAFunctionGroup2Patched, 1},
+            {&kextAppleGFXHDA, kCreateAppleHDAFunctionGroup1Original, kCreateAppleHDAFunctionGroup1Patched, 1,
+                !catalina},
+            {&kextAppleGFXHDA, kCreateAppleHDAFunctionGroup2Original, kCreateAppleHDAFunctionGroup2Patched, 1,
+                !catalina},
+            {&kextAppleGFXHDA, kCreateAppleHDACatalinaOriginal, kCreateAppleHDACatalinaOriginalMask,
+                kCreateAppleHDACatalinaPatched, kCreateAppleHDACatalinaPatchedMask, 1, catalina},
             {&kextAppleGFXHDA, kCreateAppleHDAWidget1Original, kCreateAppleHDAWidget1OriginalMask,
-                kCreateAppleHDAWidget1Patched, kCreateAppleHDAWidget1PatchedMask, 1},
+                kCreateAppleHDAWidget1Patched, kCreateAppleHDAWidget1PatchedMask, catalina ? 2U : 1},
             {&kextAppleGFXHDA, kCreateAppleHDAWidget2Original, kCreateAppleHDAWidget2OriginalMask,
-                kCreateAppleHDAWidget2Patched, 1},
+                kCreateAppleHDAWidget2Patched, 1, !catalina},
             {&kextAppleGFXHDA, kCreateAppleHDAOriginal, kCreateAppleHDAOriginalMask, kCreateAppleHDAPatched,
-                kCreateAppleHDAPatchedMask, 2},
+                kCreateAppleHDAPatchedMask, 2, !catalina},
             {&kextAppleGFXHDA, kCreateAppleHDA2Original, kCreateAppleHDA2OriginalMask, kCreateAppleHDA2Patched,
-                kCreateAppleHDA2PatchedMask, 2},
+                kCreateAppleHDA2PatchedMask, 2, !catalina},
         };
         PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "agfxhda", "Failed to apply patches: %d",
             patcher.getError());
