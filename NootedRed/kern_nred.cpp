@@ -86,7 +86,8 @@ void NRed::processPatcher(KernelPatcher &patcher) {
 
         WIOKit::renameDevice(this->iGPU, "IGPU");
         WIOKit::awaitPublishing(this->iGPU);
-        char name[256] = {0};
+
+        char name[128] = {0};
         for (size_t i = 0, ii = 0; i < devInfo->videoExternal.size(); i++) {
             auto *device = OSDynamicCast(IOPCIDevice, devInfo->videoExternal[i].video);
             if (device) {
@@ -105,14 +106,16 @@ void NRed::processPatcher(KernelPatcher &patcher) {
             this->iGPU->setProperty("model", const_cast<char *>(model), static_cast<uint32_t>(strlen(model) + 1));
         }
 
+        this->iGPU->setMemoryEnable(true);
+
         auto *prop = OSDynamicCast(OSData, this->iGPU->getProperty("ATY,bin_image"));
-        if (UNLIKELY(prop)) {
+        if (prop) {
             DBGLOG("nred", "VBIOS manually overridden");
             this->vbiosData = OSData::withBytes(prop->getBytesNoCopy(), prop->getLength());
             PANIC_COND(UNLIKELY(!this->vbiosData), "nred", "Failed to allocate VBIOS data");
-        } else if (UNLIKELY(!this->getVBIOSFromVFCT(this->iGPU))) {
+        } else if (!this->getVBIOSFromVFCT()) {
             SYSLOG("nred", "Failed to get VBIOS from VFCT.");
-            PANIC_COND(UNLIKELY(!this->getVBIOSFromVRAM(this->iGPU)), "nred", "Failed to get VBIOS from VRAM");
+            PANIC_COND(!this->getVBIOSFromVRAM(), "nred", "Failed to get VBIOS from VRAM");
         }
         auto len = this->vbiosData->getLength();
         if (len < 65536) {

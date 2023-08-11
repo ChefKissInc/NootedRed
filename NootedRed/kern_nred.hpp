@@ -89,9 +89,9 @@ class NRed {
         return chipNames[static_cast<int>(callback->chipType)];
     }
 
-    bool getVBIOSFromVFCT(IOPCIDevice *obj) {
+    bool getVBIOSFromVFCT() {
         DBGLOG("nred", "Fetching VBIOS from VFCT table");
-        auto *expert = reinterpret_cast<AppleACPIPlatformExpert *>(obj->getPlatform());
+        auto *expert = reinterpret_cast<AppleACPIPlatformExpert *>(this->iGPU->getPlatform());
         PANIC_COND(!expert, "nred", "Failed to get AppleACPIPlatformExpert");
 
         auto *vfctData = expert->getACPITableData("VFCT", 0);
@@ -122,17 +122,18 @@ class NRed {
 
             offset += sizeof(GOPVideoBIOSHeader) + vHdr->imageLength;
 
-            if (vHdr->imageLength && vHdr->pciBus == obj->getBusNumber() && vHdr->pciDevice == obj->getDeviceNumber() &&
-                vHdr->pciFunction == obj->getFunctionNumber() &&
-                vHdr->vendorID == obj->configRead16(kIOPCIConfigVendorID) &&
-                vHdr->deviceID == obj->configRead16(kIOPCIConfigDeviceID)) {
+            if (vHdr->imageLength && vHdr->pciBus == this->iGPU->getBusNumber() &&
+                vHdr->pciDevice == this->iGPU->getDeviceNumber() &&
+                vHdr->pciFunction == this->iGPU->getFunctionNumber() &&
+                vHdr->vendorID == this->iGPU->configRead16(kIOPCIConfigVendorID) &&
+                vHdr->deviceID == this->iGPU->configRead16(kIOPCIConfigDeviceID)) {
                 if (!checkAtomBios(vContent, vHdr->imageLength)) {
                     DBGLOG("nred", "VFCT VBIOS is not an ATOMBIOS");
                     return false;
                 }
                 this->vbiosData = OSData::withBytes(vContent, vHdr->imageLength);
-                PANIC_COND(!this->vbiosData, "nred", "VFCT OSData::withBytes failed");
-                obj->setProperty("ATY,bin_image", this->vbiosData);
+                PANIC_COND(UNLIKELY(!this->vbiosData), "nred", "VFCT OSData::withBytes failed");
+                this->iGPU->setProperty("ATY,bin_image", this->vbiosData);
                 return true;
             }
         }
@@ -140,8 +141,8 @@ class NRed {
         return false;
     }
 
-    bool getVBIOSFromVRAM(IOPCIDevice *provider) {
-        auto *bar0 = provider->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress0);
+    bool getVBIOSFromVRAM() {
+        auto *bar0 = this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress0, kIOMapWriteCombineCache);
         if (!bar0 || !bar0->getLength()) {
             DBGLOG("nred", "FB BAR not enabled");
             OSSafeReleaseNULL(bar0);
@@ -155,8 +156,8 @@ class NRed {
             return false;
         }
         this->vbiosData = OSData::withBytes(fb, size);
-        PANIC_COND(!this->vbiosData, "nred", "VRAM OSData::withBytes failed");
-        provider->setProperty("ATY,bin_image", this->vbiosData);
+        PANIC_COND(UNLIKELY(!this->vbiosData), "nred", "VRAM OSData::withBytes failed");
+        this->iGPU->setProperty("ATY,bin_image", this->vbiosData);
         bar0->release();
         return true;
     }
