@@ -22,48 +22,6 @@
 	<string>$(MODULE_VERSION)</string>
 	<key>IOKitPersonalities</key>
 	<dict>
-		<key>AMD</key>
-		<dict>
-			<key>CFBundleIdentifier</key>
-			<string>com.apple.driver.AppleGFXHDA</string>
-			<key>DPAlwaysDisplayRouting</key>
-			<array>
-				<integer>3</integer>
-				<integer>33</integer>
-				<integer>35</integer>
-				<integer>88</integer>
-			</array>
-			<key>DPAudioDeviceExclusion</key>
-			<array>
-				<dict>
-					<key>ManufacturerID</key>
-					<integer>1552</integer>
-					<key>ProductID</key>
-					<integer>10130</integer>
-				</dict>
-			</array>
-			<key>HighFIFOLimitSupport</key>
-			<array/>
-			<key>IOClass</key>
-			<string>AppleGFXHDAEGController</string>
-			<key>IOPCIMatch</key>
-			<string>0x15DE1002 0x16371002</string>
-			<key>IOPCITunnelCompatible</key>
-			<true/>
-			<key>IOPCIUseDeviceMapper</key>
-			<true/>
-			<key>IOProviderClass</key>
-			<string>IOPCIDevice</string>
-			<key>RequireMaxBusStall</key>
-			<array>
-				<dict>
-					<key>Layouts</key>
-					<array/>
-					<key>MaxBusStall</key>
-					<integer>15000</integer>
-				</dict>
-			</array>
-		</dict>
 		<key>AMDGPUWrangler</key>
 		<dict>
 			<key>CFBundleIdentifier</key>
@@ -149,6 +107,47 @@
 			<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 			<key>Drivers</key>
 			<array>
+				<dict>
+					<key>CFBundleIdentifier</key>
+					<string>com.apple.driver.AppleGFXHDA</string>
+					<key>DPAlwaysDisplayRouting</key>
+					<array>
+						<integer>3</integer>
+						<integer>33</integer>
+						<integer>35</integer>
+						<integer>88</integer>
+					</array>
+					<key>DPAudioDeviceExclusion</key>
+					<array>
+						<dict>
+							<key>ManufacturerID</key>
+							<integer>1552</integer>
+							<key>ProductID</key>
+							<integer>10130</integer>
+						</dict>
+					</array>
+					<key>HighFIFOLimitSupport</key>
+					<array/>
+					<key>IOClass</key>
+					<string>AppleGFXHDAEGController</string>
+					<key>IOPCIMatch</key>
+					<string>0x15DE1002 0x16371002</string>
+					<key>IOPCITunnelCompatible</key>
+					<true/>
+					<key>IOPCIUseDeviceMapper</key>
+					<true/>
+					<key>IOProviderClass</key>
+					<string>IOPCIDevice</string>
+					<key>RequireMaxBusStall</key>
+					<array>
+						<dict>
+							<key>Layouts</key>
+							<array/>
+							<key>MaxBusStall</key>
+							<integer>15000</integer>
+						</dict>
+					</array>
+				</dict>
 				<dict>
 					<key>CFBundleIdentifier</key>
 					<string>com.apple.kext.AMDRadeonX5000HWServices</string>
