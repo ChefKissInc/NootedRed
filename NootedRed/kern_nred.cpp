@@ -87,16 +87,6 @@ void NRed::processPatcher(KernelPatcher &patcher) {
         WIOKit::renameDevice(this->iGPU, "IGPU");
         WIOKit::awaitPublishing(this->iGPU);
 
-        char name[128] = {0};
-        for (size_t i = 0, ii = 0; i < devInfo->videoExternal.size(); i++) {
-            auto *device = OSDynamicCast(IOPCIDevice, devInfo->videoExternal[i].video);
-            if (device) {
-                snprintf(name, arrsize(name), "GFX%zu", ii++);
-                WIOKit::renameDevice(device, name);
-                WIOKit::awaitPublishing(device);
-            }
-        }
-
         static uint8_t builtin[] = {0x00};
         this->iGPU->setProperty("built-in", builtin, arrsize(builtin));
         this->deviceId = WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigDeviceID);
@@ -107,6 +97,16 @@ void NRed::processPatcher(KernelPatcher &patcher) {
         }
 
         this->iGPU->setMemoryEnable(true);
+
+        char name[128] = {0};
+        for (size_t i = 0, ii = 0; i < devInfo->videoExternal.size(); i++) {
+            auto *device = OSDynamicCast(IOPCIDevice, devInfo->videoExternal[i].video);
+            if (device && WIOKit::readPCIConfigValue(device, WIOKit::kIOPCIConfigDeviceID) != this->deviceId) {
+                snprintf(name, arrsize(name), "GFX%zu", ii++);
+                WIOKit::renameDevice(device, name);
+                WIOKit::awaitPublishing(device);
+            }
+        }
 
         auto *prop = OSDynamicCast(OSData, this->iGPU->getProperty("ATY,bin_image"));
         if (prop) {
