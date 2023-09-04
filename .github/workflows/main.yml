@@ -17,7 +17,7 @@ jobs:
     env:
       JOB_TYPE: BUILD
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: "recursive"
       - name: CI Bootstrap
@@ -50,7 +50,7 @@ jobs:
     env:
       JOB_TYPE: ANALYZE
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: "recursive"
       - name: CI Bootstrap
