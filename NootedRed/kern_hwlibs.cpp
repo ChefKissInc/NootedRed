@@ -174,7 +174,9 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, v
     char filename[128] = {0};
     auto &size = getMember<uint32_t>(ctx, 0xC);
     auto cmdID = getMember<uint32_t>(ctx, 0x0);
-    auto *data = getMember<uint8_t *>(psp, getKernelVersion() >= KernelVersion::Ventura ? 0xB48 : 0xAF8);
+    auto *data = getMember<uint8_t *>(psp, getKernelVersion() == KernelVersion::Catalina ? 0xB00 :
+                                           getKernelVersion() >= KernelVersion::Ventura  ? 0xB48 :
+                                                                                           0xAF8);
 
     switch (cmdID) {
         case kPSPCommandLoadTA: {
