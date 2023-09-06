@@ -47,7 +47,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
         RouteRequestPlus requests[] = {
             {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory,
                 this->orgPopulateFirmwareDirectory, !catalina},
-            {catalina ? "_smu_get_external_fw" : "_smu_get_fw_constants", hwLibsNoop, kSmuGetFwConstantsPattern,
+            {catalina ? "_smu_9_0_1_get_fw_constants" : "_smu_get_fw_constants", hwLibsNoop, kSmuGetFwConstantsPattern,
                 kSmuGetFwConstantsMask},
             {"_smu_9_0_1_check_fw_status", hwLibsNoop, kSmu901CheckFwStatusPattern, kSmu901CheckFwStatusMask},
             {"_smu_9_0_1_unload_smu", hwLibsNoop, kSmu901UnloadSmuPattern, kSmu901UnloadSmuMask},
