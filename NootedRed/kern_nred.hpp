@@ -85,13 +85,13 @@ class NRed {
     private:
     static const char *getChipName() {
         PANIC_COND(callback->chipType == ChipType::Unknown, "nred", "Unknown chip type");
-        static const char *chipNames[] = {"raven", "raven2", "picasso", "renoir", "green_sardine"};
+        static const char *chipNames[] = {"raven", "picasso", "raven2", "renoir", "green_sardine"};
         return chipNames[static_cast<int>(callback->chipType)];
     }
 
     static const char *getGCPrefix() {
         PANIC_COND(callback->chipType == ChipType::Unknown, "nred", "Unknown chip type");
-        static const char *gcPrefixes[] = {"gc_9_1_", "gc_9_2_", "gc_9_1_", "gc_9_3_", "gc_9_3_"};
+        static const char *gcPrefixes[] = {"gc_9_1_", "gc_9_1_", "gc_9_2_", "gc_9_3_", "gc_9_3_"};
         return gcPrefixes[static_cast<int>(callback->chipType)];
     }
 
