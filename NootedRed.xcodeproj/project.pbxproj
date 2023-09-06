@@ -49,24 +49,59 @@
 		1C748C271C21952C0024EED2 /* NootedRed.kext */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NootedRed.kext; sourceTree = BUILT_PRODUCTS_DIR; };
 		1C748C2C1C21952C0024EED2 /* kern_start.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_start.cpp; sourceTree = "<group>"; };
 		1C748C2E1C21952C0024EED2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		40067D372A5D2B1900D04619 /* raven2_vcn.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven2_vcn.bin; sourceTree = "<group>"; };
-		40067D382A5D2B1900D04619 /* renoir_vcn.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_vcn.bin; sourceTree = "<group>"; };
-		40067D392A5D2B1900D04619 /* raven_vcn.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_vcn.bin; sourceTree = "<group>"; };
-		40067D3A2A5D2B1900D04619 /* green_sardine_vcn.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = green_sardine_vcn.bin; sourceTree = "<group>"; };
-		40067D3C2A5D2D8D00D04619 /* picasso_vcn.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = picasso_vcn.bin; sourceTree = "<group>"; };
 		4019EAE32A348852008D800B /* kern_dyld_patches.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_dyld_patches.hpp; sourceTree = "<group>"; };
 		4019EAE52A3488EC008D800B /* kern_dyld_patches.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_dyld_patches.cpp; sourceTree = "<group>"; };
 		401A3D3829BF7D2D00B5A76A /* kern_patches.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_patches.hpp; sourceTree = "<group>"; };
 		40364DB529B79DFD0070A2B4 /* kern_model.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_model.hpp; sourceTree = "<group>"; };
+		403E67BD2AA7356D00F43943 /* psp_hdcp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = psp_hdcp.bin; sourceTree = "<group>"; };
+		403E67BE2AA7356D00F43943 /* psp_dtm.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = psp_dtm.bin; sourceTree = "<group>"; };
+		403E67BF2AA7356D00F43943 /* psp_asd.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = psp_asd.bin; sourceTree = "<group>"; };
+		40582A032AA7BEA90066F4D6 /* dmcu_intvectors_dcn10.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = dmcu_intvectors_dcn10.bin; sourceTree = "<group>"; };
+		40582A042AA7BEAA0066F4D6 /* dmcu_eram_dcn10.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = dmcu_eram_dcn10.bin; sourceTree = "<group>"; };
 		40588A8E29D369C400F042E9 /* raven_gpu_info.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_gpu_info.bin; sourceTree = "<group>"; };
 		40588A8F29D369C400F042E9 /* renoir_gpu_info.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_gpu_info.bin; sourceTree = "<group>"; };
 		40588A9029D369C400F042E9 /* raven2_gpu_info.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven2_gpu_info.bin; sourceTree = "<group>"; };
 		40588A9129D369C400F042E9 /* picasso_gpu_info.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = picasso_gpu_info.bin; sourceTree = "<group>"; };
 		406889892A229BF600028D22 /* kern_patcherplus.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_patcherplus.cpp; sourceTree = "<group>"; };
 		4068898A2A229BF600028D22 /* kern_patcherplus.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_patcherplus.hpp; sourceTree = "<group>"; };
+		406C86A02AA6621B004F02E2 /* gc_9_3_rlc_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_3_rlc_ucode.bin; sourceTree = "<group>"; };
+		406C86A12AA6621B004F02E2 /* gc_9_2_ce_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_2_ce_ucode.bin; sourceTree = "<group>"; };
+		406C86A22AA6621B004F02E2 /* gc_9_2_rlc_srlist_srm_mem.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_2_rlc_srlist_srm_mem.bin; sourceTree = "<group>"; };
+		406C86A32AA6621B004F02E2 /* gc_9_1_rlc_srlist_cntl.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_1_rlc_srlist_cntl.bin; sourceTree = "<group>"; };
+		406C86A42AA6621B004F02E2 /* gc_9_3_mec_jt_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_3_mec_jt_ucode.bin; sourceTree = "<group>"; };
+		406C86A52AA6621B004F02E2 /* gc_9_2_mec_jt_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_2_mec_jt_ucode.bin; sourceTree = "<group>"; };
+		406C86A62AA6621B004F02E2 /* gc_9_2_rlc_srlist_gpm_mem.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_2_rlc_srlist_gpm_mem.bin; sourceTree = "<group>"; };
+		406C86A72AA6621B004F02E2 /* gc_9_1_rlc_srlist_srm_mem.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_1_rlc_srlist_srm_mem.bin; sourceTree = "<group>"; };
+		406C86A82AA6621B004F02E2 /* gc_9_1_me_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_1_me_ucode.bin; sourceTree = "<group>"; };
+		406C86A92AA6621B004F02E2 /* gc_9_3_mec_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_3_mec_ucode.bin; sourceTree = "<group>"; };
+		406C86AA2AA6621B004F02E2 /* gc_9_1_rlc_srlist_gpm_mem.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_1_rlc_srlist_gpm_mem.bin; sourceTree = "<group>"; };
+		406C86AB2AA6621B004F02E2 /* gc_9_2_rlc_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_2_rlc_ucode.bin; sourceTree = "<group>"; };
+		406C86AC2AA6621B004F02E2 /* gc_9_1_mec_jt_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_1_mec_jt_ucode.bin; sourceTree = "<group>"; };
+		406C86AD2AA6621B004F02E2 /* gc_9_2_rlcv_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_2_rlcv_ucode.bin; sourceTree = "<group>"; };
+		406C86AE2AA6621B004F02E2 /* gc_9_1_pfp_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_1_pfp_ucode.bin; sourceTree = "<group>"; };
+		406C86AF2AA6621B004F02E2 /* gc_9_3_rlc_srlist_srm_mem.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_3_rlc_srlist_srm_mem.bin; sourceTree = "<group>"; };
+		406C86B02AA6621B004F02E2 /* gc_9_1_mec_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_1_mec_ucode.bin; sourceTree = "<group>"; };
+		406C86B12AA6621B004F02E2 /* gc_9_2_mec_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_2_mec_ucode.bin; sourceTree = "<group>"; };
+		406C86B22AA6621B004F02E2 /* gc_9_3_rlc_srlist_cntl.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_3_rlc_srlist_cntl.bin; sourceTree = "<group>"; };
+		406C86B32AA6621B004F02E2 /* gc_9_2_pfp_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_2_pfp_ucode.bin; sourceTree = "<group>"; };
+		406C86B42AA6621B004F02E2 /* gc_9_2_rlc_srlist_cntl.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_2_rlc_srlist_cntl.bin; sourceTree = "<group>"; };
+		406C86B52AA6621C004F02E2 /* gc_9_3_rlc_srlist_gpm_mem.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_3_rlc_srlist_gpm_mem.bin; sourceTree = "<group>"; };
+		406C86B62AA6621C004F02E2 /* gc_9_3_ce_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_3_ce_ucode.bin; sourceTree = "<group>"; };
+		406C86B72AA6621C004F02E2 /* gc_9_2_me_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_2_me_ucode.bin; sourceTree = "<group>"; };
+		406C86B82AA6621C004F02E2 /* gc_9_1_rlc_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_1_rlc_ucode.bin; sourceTree = "<group>"; };
+		406C86B92AA6621C004F02E2 /* gc_9_3_pfp_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_3_pfp_ucode.bin; sourceTree = "<group>"; };
+		406C86BA2AA6621C004F02E2 /* gc_9_1_ce_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_1_ce_ucode.bin; sourceTree = "<group>"; };
+		406C86BB2AA6621C004F02E2 /* gc_9_1_rlcv_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_1_rlcv_ucode.bin; sourceTree = "<group>"; };
+		406C86BC2AA6621C004F02E2 /* gc_9_3_me_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_3_me_ucode.bin; sourceTree = "<group>"; };
+		406C86BD2AA66223004F02E2 /* sdma_4_1_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = sdma_4_1_ucode.bin; sourceTree = "<group>"; };
+		406C86BE2AA663EF004F02E2 /* ativvaxy_nv.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = ativvaxy_nv.dat; sourceTree = "<group>"; };
+		406C86BF2AA663EF004F02E2 /* ativvaxy_rv.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = ativvaxy_rv.dat; sourceTree = "<group>"; };
 		408F201E288ACBB0002EEC15 /* kern_fw.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_fw.hpp; sourceTree = "<group>"; };
 		408F201F288ACBE6002EEC15 /* kern_fw.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_fw.cpp; sourceTree = "<group>"; };
 		40A07FAC2A22A13600499F02 /* kern_patterns.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_patterns.hpp; sourceTree = "<group>"; };
+		40F6ACB72AA7712100A08558 /* psp_auc.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = psp_auc.bin; sourceTree = "<group>"; };
+		40F6ACB82AA774C100A08558 /* psp_fp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = psp_fp.bin; sourceTree = "<group>"; };
+		40F6ACB92AA7872900A08558 /* atidmcub_instruction_dcn21.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = atidmcub_instruction_dcn21.bin; sourceTree = "<group>"; };
 		40FC5FCE29BF942900367F9D /* kern_vbios.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_vbios.hpp; sourceTree = "<group>"; };
 		40FC5FD329BF995000367F9D /* kern_x6000fb.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_x6000fb.cpp; sourceTree = "<group>"; };
 		40FC5FD429BF995000367F9D /* kern_x6000fb.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_x6000fb.hpp; sourceTree = "<group>"; };
@@ -164,15 +199,50 @@
 		408F201A288AC068002EEC15 /* Firmware */ = {
 			isa = PBXGroup;
 			children = (
-				40067D3A2A5D2B1900D04619 /* green_sardine_vcn.bin */,
+				40F6ACB92AA7872900A08558 /* atidmcub_instruction_dcn21.bin */,
+				406C86BE2AA663EF004F02E2 /* ativvaxy_nv.dat */,
+				406C86BF2AA663EF004F02E2 /* ativvaxy_rv.dat */,
+				40582A042AA7BEAA0066F4D6 /* dmcu_eram_dcn10.bin */,
+				40582A032AA7BEA90066F4D6 /* dmcu_intvectors_dcn10.bin */,
+				406C86BA2AA6621C004F02E2 /* gc_9_1_ce_ucode.bin */,
+				406C86A82AA6621B004F02E2 /* gc_9_1_me_ucode.bin */,
+				406C86AC2AA6621B004F02E2 /* gc_9_1_mec_jt_ucode.bin */,
+				406C86B02AA6621B004F02E2 /* gc_9_1_mec_ucode.bin */,
+				406C86AE2AA6621B004F02E2 /* gc_9_1_pfp_ucode.bin */,
+				406C86A32AA6621B004F02E2 /* gc_9_1_rlc_srlist_cntl.bin */,
+				406C86AA2AA6621B004F02E2 /* gc_9_1_rlc_srlist_gpm_mem.bin */,
+				406C86A72AA6621B004F02E2 /* gc_9_1_rlc_srlist_srm_mem.bin */,
+				406C86B82AA6621C004F02E2 /* gc_9_1_rlc_ucode.bin */,
+				406C86BB2AA6621C004F02E2 /* gc_9_1_rlcv_ucode.bin */,
+				406C86A12AA6621B004F02E2 /* gc_9_2_ce_ucode.bin */,
+				406C86B72AA6621C004F02E2 /* gc_9_2_me_ucode.bin */,
+				406C86A52AA6621B004F02E2 /* gc_9_2_mec_jt_ucode.bin */,
+				406C86B12AA6621B004F02E2 /* gc_9_2_mec_ucode.bin */,
+				406C86B32AA6621B004F02E2 /* gc_9_2_pfp_ucode.bin */,
+				406C86B42AA6621B004F02E2 /* gc_9_2_rlc_srlist_cntl.bin */,
+				406C86A62AA6621B004F02E2 /* gc_9_2_rlc_srlist_gpm_mem.bin */,
+				406C86A22AA6621B004F02E2 /* gc_9_2_rlc_srlist_srm_mem.bin */,
+				406C86AB2AA6621B004F02E2 /* gc_9_2_rlc_ucode.bin */,
+				406C86AD2AA6621B004F02E2 /* gc_9_2_rlcv_ucode.bin */,
+				406C86B62AA6621C004F02E2 /* gc_9_3_ce_ucode.bin */,
+				406C86BC2AA6621C004F02E2 /* gc_9_3_me_ucode.bin */,
+				406C86A42AA6621B004F02E2 /* gc_9_3_mec_jt_ucode.bin */,
+				406C86A92AA6621B004F02E2 /* gc_9_3_mec_ucode.bin */,
+				406C86B92AA6621C004F02E2 /* gc_9_3_pfp_ucode.bin */,
+				406C86B22AA6621B004F02E2 /* gc_9_3_rlc_srlist_cntl.bin */,
+				406C86B52AA6621C004F02E2 /* gc_9_3_rlc_srlist_gpm_mem.bin */,
+				406C86AF2AA6621B004F02E2 /* gc_9_3_rlc_srlist_srm_mem.bin */,
+				406C86A02AA6621B004F02E2 /* gc_9_3_rlc_ucode.bin */,
 				40588A9129D369C400F042E9 /* picasso_gpu_info.bin */,
-				40067D3C2A5D2D8D00D04619 /* picasso_vcn.bin */,
+				403E67BF2AA7356D00F43943 /* psp_asd.bin */,
+				40F6ACB72AA7712100A08558 /* psp_auc.bin */,
+				403E67BE2AA7356D00F43943 /* psp_dtm.bin */,
+				40F6ACB82AA774C100A08558 /* psp_fp.bin */,
+				403E67BD2AA7356D00F43943 /* psp_hdcp.bin */,
 				40588A8E29D369C400F042E9 /* raven_gpu_info.bin */,
-				40067D392A5D2B1900D04619 /* raven_vcn.bin */,
 				40588A9029D369C400F042E9 /* raven2_gpu_info.bin */,
-				40067D372A5D2B1900D04619 /* raven2_vcn.bin */,
 				40588A8F29D369C400F042E9 /* renoir_gpu_info.bin */,
-				40067D382A5D2B1900D04619 /* renoir_vcn.bin */,
+				406C86BD2AA66223004F02E2 /* sdma_4_1_ucode.bin */,
 			);
 			path = Firmware;
 			sourceTree = "<group>";

@@ -52,7 +52,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
             {"_smu_9_0_1_check_fw_status", hwLibsNoop, kSmu901CheckFwStatusPattern, kSmu901CheckFwStatusMask},
             {"_smu_9_0_1_unload_smu", hwLibsNoop, kSmu901UnloadSmuPattern, kSmu901UnloadSmuMask},
             {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit, kPspCmdKmSubmitPattern,
-                kPspCmdKmSubmitMask, renoir},
+                kPspCmdKmSubmitMask},
             {"_update_sdma_power_gating", wrapUpdateSdmaPowerGating, this->orgUpdateSdmaPowerGating,
                 kUpdateSdmaPowerGatingPattern, kUpdateSdmaPowerGatingMask},
             {"__ZN16AmdTtlFwServices7getIpFwEjPKcP10_TtlFwInfo", wrapGetIpFw, this->orgGetIpFw, catalina},
@@ -139,22 +139,17 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
 
     bool isRenoirDerivative = NRed::callback->chipType >= ChipType::Renoir;
 
-    char filename[64] = {0};
-    snprintf(filename, 64, "%s_vcn.bin", NRed::callback->getChipName());
-    auto *targetFn = isRenoirDerivative ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
-    DBGLOG("wred", "%s => %s", filename, targetFn);
-
+    auto *filename = isRenoirDerivative ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
     auto &fwDesc = getFWDescByName(filename);
-    auto *fwHeader = reinterpret_cast<const CommonFirmwareHeader *>(fwDesc.data);
+    DBGLOG("hwlibs", "VCN firmware filename is %s", filename);
 
     /** VCN 2.2, VCN 1.0 */
-    auto *fw = callback->orgCreateFirmware(fwDesc.data + fwHeader->ucodeOff, fwHeader->ucodeSize,
-        isRenoirDerivative ? 0x0202 : 0x0100, targetFn);
-    PANIC_COND(!fw, "hwlibs", "Failed to create '%s' firmware", targetFn);
-    DBGLOG("hwlibs", "Inserting %s!", targetFn);
+    auto *fw = callback->orgCreateFirmware(fwDesc.data, fwDesc.size, isRenoirDerivative ? 0x0202 : 0x0100, filename);
+    PANIC_COND(fw == nullptr, "hwlibs", "Failed to create '%s' firmware", filename);
+
     auto *fwDir = getMember<void *>(that, getKernelVersion() > KernelVersion::BigSur ? 0xB0 : 0xB8);
-    PANIC_COND(!fwDir, "hwlibs", "Failed to get firmware directory");
-    PANIC_COND(!callback->orgPutFirmware(fwDir, 6, fw), "hwlibs", "Failed to inject %s firmware", targetFn);
+    PANIC_COND(fwDir == nullptr, "hwlibs", "Failed to get firmware directory");
+    PANIC_COND(!callback->orgPutFirmware(fwDir, 6, fw), "hwlibs", "Failed to insert '%s' firmware", filename);
 }
 
 CAILResult X5000HWLibs::hwLibsNoop() { return kCAILResultSuccess; }
@@ -176,25 +171,140 @@ void X5000HWLibs::wrapUpdateSdmaPowerGating(void *cail, uint32_t mode) {
 }
 
 CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4) {
-    // Upstream patch: https://github.com/torvalds/linux/commit/f8f70c1371d304f42d4a1242d8abcbda807d0bed
-    if (getMember<uint32_t>(ctx, 0x10) == 6) {
-        DBGLOG("hwlibs", "Skipping MEC2 JT FW");
-        return kCAILResultSuccess;
+    char filename[128] = {0};
+    auto &size = getMember<uint32_t>(ctx, 0xC);
+    auto cmdID = getMember<uint32_t>(ctx, 0x0);
+    auto *data = getMember<uint8_t *>(psp, getKernelVersion() >= KernelVersion::Ventura ? 0xB48 : 0xAF8);
+
+    switch (cmdID) {
+        case kPSPCommandLoadTA: {
+            const char *name = reinterpret_cast<char *>(data + 0x8DB);
+            if (!strncmp(name, "AMD DTM Application", 20)) {
+                DBGLOG("hwlibs", "DTM is being loaded (size: 0x%X)", size);
+                strncpy(filename, "psp_dtm.bin", 12);
+            } else if (!strncmp(name, "AMD HDCP Application", 21)) {
+                DBGLOG("hwlibs", "HDCP is being loaded (size: 0x%X)", size);
+                strncpy(filename, "psp_hdcp.bin", 13);
+            } else if (!strncmp(name, "AMD AUC Application", 20)) {
+                DBGLOG("hwlibs", "AUC is being loaded (size: 0x%X)", size);
+                strncpy(filename, "psp_auc.bin", 12);
+            } else if (!strncmp(name, "AMD FP Application", 19)) {
+                DBGLOG("hwlibs", "FP is being loaded (size: 0x%X)", size);
+                strncpy(filename, "psp_fp.bin", 11);
+            } else {
+                DBGLOG("hwlibs", "Other PSP TA is being loaded: (name: %s size: 0x%X)", data + 0x8DB, size);
+                return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(psp, ctx, param3, param4);
+            }
+            break;
+        }
+        case kPSPCommandLoadASD: {
+            DBGLOG("hwlibs", "ASD is being loaded (size: 0x%X)", size);
+            strncpy(filename, "psp_asd.bin", 12);
+            break;
+        }
+        case kPSPCommandLoadIPFW: {
+            auto *prefix = NRed::getGCPrefix();
+            auto uCodeID = getMember<uint32_t>(ctx, 0x10);
+            switch (uCodeID) {
+                case kUCodeCE:
+                    DBGLOG("hwlibs", "CE is being loaded (size: 0x%X)", size);
+                    snprintf(filename, 128, "%sce_ucode.bin", prefix);
+                    break;
+                case kUCodePFP:
+                    DBGLOG("hwlibs", "PFP is being loaded (size: 0x%X)", size);
+                    snprintf(filename, 128, "%spfp_ucode.bin", prefix);
+                    break;
+                case kUCodeME:
+                    DBGLOG("hwlibs", "ME is being loaded (size: 0x%X)", size);
+                    snprintf(filename, 128, "%sme_ucode.bin", prefix);
+                    break;
+                case kUCodeMEC1JT:
+                    DBGLOG("hwlibs", "MEC1 JT is being loaded (size: 0x%X)", size);
+                    snprintf(filename, 128, "%smec_jt_ucode.bin", prefix);
+                    break;
+                case kUCodeMEC2JT:
+                    DBGLOG("hwlibs", "MEC2 JT is being loaded (size: 0x%X)", size);
+                    if (NRed::callback->chipType >= ChipType::Renoir) {
+                        DBGLOG("hwlibs", "Skipping MEC2 JT FW");
+                        return kCAILResultSuccess;
+                    }
+                    snprintf(filename, 128, "%smec_jt_ucode.bin", prefix);
+                    break;
+                case kUCodeMEC1:
+                    DBGLOG("hwlibs", "MEC1 is being loaded (size: 0x%X)", size);
+                    snprintf(filename, 128, "%smec_ucode.bin", prefix);
+                    break;
+                case kUCodeMEC2:
+                    DBGLOG("hwlibs", "MEC2 is being loaded (size: 0x%X)", size);
+                    if (NRed::callback->chipType >= ChipType::Renoir) {
+                        DBGLOG("hwlibs", "Skipping MEC2 FW");
+                        return kCAILResultSuccess;
+                    }
+                    snprintf(filename, 128, "%smec_ucode.bin", prefix);
+                    break;
+                case kUCodeRLC:
+                    DBGLOG("hwlibs", "RLC is being loaded (size: 0x%X)", size);
+                    snprintf(filename, 128, "%srlc_ucode.bin", prefix);
+                    break;
+                case kUCodeSDMA0:
+                    DBGLOG("hwlibs", "SDMA0 is being loaded (size: 0x%X)", size);
+                    strncpy(filename, "sdma_4_1_ucode.bin", 19);
+                    break;
+                case kUCodeDMCUERAM:
+                    DBGLOG("hwlibs", "DMCU ERAM is being loaded (size: 0x%X)", size);
+                    strncpy(filename, "dmcu_eram_dcn10.bin", 20);
+                    break;
+                case kUCodeDMCUISR:
+                    DBGLOG("hwlibs", "DMCU ISR is being loaded (size: 0x%X)", size);
+                    strncpy(filename, "dmcu_intvectors_dcn10.bin", 26);
+                    break;
+                case kUCodeRLCV:
+                    DBGLOG("hwlibs", "RLC V is being loaded (size: 0x%X)", size);
+                    if (NRed::callback->chipType >= ChipType::Renoir) {
+                        DBGLOG("hwlibs", "Skipping RLC V FW");
+                        return kCAILResultSuccess;
+                    }
+                    snprintf(filename, 128, "%srlcv_ucode.bin", prefix);
+                    break;
+                case kUCodeRLCSRListGPM:
+                    DBGLOG("hwlibs", "RLC SRList GPM is being loaded (size: 0x%X)", size);
+                    snprintf(filename, 128, "%srlc_srlist_gpm_mem.bin", prefix);
+                    break;
+                case kUCodeRLCSRListSRM:
+                    DBGLOG("hwlibs", "RLC SRList SRM is being loaded (size: 0x%X)", size);
+                    snprintf(filename, 128, "%srlc_srlist_srm_mem.bin", prefix);
+                    break;
+                case kUCodeRLCSRListCntl:
+                    DBGLOG("hwlibs", "RLC SRList Cntl is being loaded (size: 0x%X)", size);
+                    snprintf(filename, 128, "%srlc_srlist_cntl.bin", prefix);
+                    break;
+                case kUCodeDMCUB:
+                    DBGLOG("hwlibs", "DMCUB is being loaded (size: 0x%X)", size);
+                    strncpy(filename, "atidmcub_instruction_dcn21.bin", 31);
+                    break;
+                default:
+                    DBGLOG("hwlibs", "UCode ID 0x%X loading", uCodeID);
+                    return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(psp, ctx, param3, param4);
+            }
+            break;
+        }
+        default:
+            DBGLOG("hwlibs", "Not hijacking command id 0x%X", cmdID);
+            return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(psp, ctx, param3, param4);
     }
+
+    auto &fwDesc = getFWDescByName(filename);
+    memcpy(data, fwDesc.data, fwDesc.size);
+    size = fwDesc.size;
 
     return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(psp, ctx, param3, param4);
 }
 
 bool X5000HWLibs::wrapGetIpFw(void *that, uint32_t ipVersion, char *name, void *out) {
     if (!strncmp(name, "ativvaxy_rv.dat", 16) || !strncmp(name, "ativvaxy_nv.dat", 16)) {
-        char filename[64] = {0};
-        snprintf(filename, 64, "%s_vcn.bin", NRed::callback->getChipName());
-        DBGLOG("wred", "getIpFw: %s => %s", filename, name);
-
-        auto &fwDesc = getFWDescByName(filename);
-        auto *fwHeader = reinterpret_cast<const CommonFirmwareHeader *>(fwDesc.data);
-        getMember<const uint8_t *>(out, 0x0) = fwDesc.data + fwHeader->ucodeOff;
-        getMember<uint32_t>(out, 0x8) = fwHeader->ucodeSize;
+        auto &fwDesc = getFWDescByName(name);
+        getMember<const uint8_t *>(out, 0x0) = fwDesc.data;
+        getMember<uint32_t>(out, 0x8) = fwDesc.size;
         return true;
     }
     return FunctionCast(wrapGetIpFw, callback->orgGetIpFw)(that, ipVersion, name, out);

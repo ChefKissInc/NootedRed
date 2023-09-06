@@ -203,3 +203,28 @@ struct Gfx9ChipSettings {
     uint32_t htileCacheRbConflict : 1;
     uint32_t reserved2 : 27;
 };
+
+enum AMDPSPCommand : uint32_t {
+    kPSPCommandLoadTA = 1,
+    kPSPCommandLoadASD = 4,
+    kPSPCommandLoadIPFW = 6,
+};
+
+enum AMDUCodeID : uint32_t {
+    kUCodeCE = 2,
+    kUCodePFP,
+    kUCodeME,
+    kUCodeMEC1JT,
+    kUCodeMEC2JT,
+    kUCodeMEC1,
+    kUCodeMEC2,
+    kUCodeRLC = 11,
+    kUCodeSDMA0,
+    kUCodeDMCUERAM = 19,
+    kUCodeDMCUISR,
+    kUCodeRLCV = 21,
+    kUCodeRLCSRListGPM = 23,
+    kUCodeRLCSRListSRM,
+    kUCodeRLCSRListCntl,
+    kUCodeDMCUB = 35,
+};

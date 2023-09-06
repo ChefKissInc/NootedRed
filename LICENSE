@@ -48,3 +48,7 @@ e) to display the Original Work publicly.
 (ii) You must replace the notice specified in the first paragraph above with the notice "Licensed under <insert your license name here>" or with a notice of your own that is not confusingly similar to the notice in this License.
 
 17) Non-Commercial Use. Non-Commercial means not primarily intended for or directed towards commercial advantage or monetary compensation. For purposes of this Thou Shalt Not Profit 1.5 license, the exchange of the Original Work or Derivative Works for other material subject to Copyright and Similar Rights by digital file-sharing or similar means is Non-Commercial provided there is no payment of monetary compensation in connection with the exchange. Licensor grants You the right to distribute or communicate the Original Work or Derivative Works thereof under this Thou Shalt Not Profit 1.5 license only under Non-Commercial purposes. Otherwise, You shall not distribute or communicate the Original Work or Derivative Works.
+
+---- License Exemption ----
+This Original Work contains firmware binaries located at the Source Code folder path NootedRed/Firmware relative to its root. They are also bundled into the final binary. These binaries are Copyright Advanced Micro Devices, Inc. All rights reserved. They are necessary for proper functionality.
+---- End of License Exemption ----
