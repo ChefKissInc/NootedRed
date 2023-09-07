@@ -24,15 +24,11 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
     if (kextRadeonX6000.loadIndex == id) {
         NRed::callback->setRMMIOIfNecessary();
 
-        auto catalina = getKernelVersion() == KernelVersion::Catalina;
         SolveRequestPlus solveRequests[] = {
             {"__ZN30AMDRadeonX6000_AMDVCN2HWEngineC1Ev", this->orgVCN2EngineConstructor},
             {"__ZN31AMDRadeonX6000_AMDGFX10Hardware20allocateAMDHWDisplayEv", this->orgAllocateAMDHWDisplay},
             {"__ZN42AMDRadeonX6000_AMDGFX10GraphicsAccelerator15newVideoContextEv", this->orgNewVideoContext},
             {"__ZN31AMDRadeonX6000_IAMDSMLInterface18createSMLInterfaceEj", this->orgCreateSMLInterface},
-            {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator9newSharedEv", this->orgNewShared, !catalina},
-            {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator19newSharedUserClientEv", this->orgNewSharedUserClient,
-                !catalina},
             {"__ZN35AMDRadeonX6000_AMDAccelVideoContext10gMetaClassE", NRed::callback->metaClassMap[0][1]},
             {"__ZN37AMDRadeonX6000_AMDAccelDisplayMachine10gMetaClassE", NRed::callback->metaClassMap[1][1]},
             {"__ZN34AMDRadeonX6000_AMDAccelDisplayPipe10gMetaClassE", NRed::callback->metaClassMap[2][1]},
@@ -44,17 +40,8 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
         PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "x6000",
             "Failed to resolve symbols");
 
-        auto ventura = getKernelVersion() >= KernelVersion::Ventura;
         RouteRequestPlus requests[] = {
             {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator5startEP9IOService", wrapAccelStartX6000},
-            {"__ZN39AMDRadeonX6000_AMDAccelSharedUserClient5startEP9IOService", wrapAccelSharedUCStartX6000, !catalina},
-            {"__ZN39AMDRadeonX6000_AMDAccelSharedUserClient4stopEP9IOService", wrapAccelSharedUCStopX6000, !catalina},
-            {"__ZN30AMDRadeonX6000_AMDGFX10Display23initDCNRegistersOffsetsEv", wrapInitDCNRegistersOffsets,
-                this->orgInitDCNRegistersOffsets, NRed::callback->chipType < ChipType::Renoir},
-            {"__ZN29AMDRadeonX6000_AMDAccelShared11SurfaceCopyEPjyP12IOAccelEvent", wrapAccelSharedSurfaceCopy,
-                this->orgAccelSharedSurfaceCopy, !catalina},
-            {"__ZN27AMDRadeonX6000_AMDHWDisplay17allocateScanoutFBEjP16IOAccelResource2S1_Py", wrapAllocateScanoutFB,
-                this->orgAllocateScanoutFB, !ventura},
             {"__ZN27AMDRadeonX6000_AMDHWDisplay14fillUBMSurfaceEjP17_FRAMEBUFFER_INFOP13_UBM_SURFINFO",
                 wrapFillUBMSurface, this->orgFillUBMSurface},
             {"__ZN27AMDRadeonX6000_AMDHWDisplay16configureDisplayEjjP17_FRAMEBUFFER_INFOP16IOAccelResource2",
@@ -64,13 +51,55 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
         };
         PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "x6000", "Failed to route symbols");
 
-        auto monterey = getKernelVersion() == KernelVersion::Monterey;
-        LookupPatchPlus const patches[] = {
-            {&kextRadeonX6000, kHWChannelSubmitCommandBufferCatalinaOriginal,
-                kHWChannelSubmitCommandBufferCatalinaPatched, 1, catalina},
-            {&kextRadeonX6000, kHWChannelSubmitCommandBufferOriginal, kHWChannelSubmitCommandBufferPatched, 1,
-                !catalina},
-            {&kextRadeonX6000, kDummyWPTRUpdateDiagCallOriginal, kDummyWPTRUpdateDiagCallPatched, 1, catalina},
+        bool catalina = getKernelVersion() == KernelVersion::Catalina;
+        if (!catalina) {
+            SolveRequestPlus solveRequests[] = {
+                {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator9newSharedEv", this->orgNewShared},
+                {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator19newSharedUserClientEv", this->orgNewSharedUserClient},
+            };
+            PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "x6000",
+                "Failed to resolve newShared symbols");
+
+            RouteRequestPlus requests[] = {
+                {"__ZN39AMDRadeonX6000_AMDAccelSharedUserClient5startEP9IOService", wrapAccelSharedUCStartX6000},
+                {"__ZN39AMDRadeonX6000_AMDAccelSharedUserClient4stopEP9IOService", wrapAccelSharedUCStopX6000},
+                {"__ZN29AMDRadeonX6000_AMDAccelShared11SurfaceCopyEPjyP12IOAccelEvent", wrapAccelSharedSurfaceCopy,
+                    this->orgAccelSharedSurfaceCopy},
+            };
+            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "x6000",
+                "Failed to route AccelShared symbols");
+        }
+
+        if (NRed::callback->chipType < ChipType::Renoir) {
+            RouteRequestPlus request = {"__ZN30AMDRadeonX6000_AMDGFX10Display23initDCNRegistersOffsetsEv",
+                wrapInitDCNRegistersOffsets, this->orgInitDCNRegistersOffsets};
+            PANIC_COND(!request.route(patcher, id, slide, size), "x6000", "Failed to route initDCNRegistersOffsets");
+        }
+
+        auto ventura = getKernelVersion() >= KernelVersion::Ventura;
+        if (!ventura) {
+            RouteRequestPlus request {"__ZN27AMDRadeonX6000_AMDHWDisplay17allocateScanoutFBEjP16IOAccelResource2S1_Py",
+                wrapAllocateScanoutFB, this->orgAllocateScanoutFB};
+            PANIC_COND(!request.route(patcher, id, slide, size), "x6000", "Failed to route allocateScanout");
+        }
+
+        if (catalina) {
+            const LookupPatchPlus patches[] = {
+                {&kextRadeonX6000, kHWChannelSubmitCommandBufferCatalinaOriginal,
+                    kHWChannelSubmitCommandBufferCatalinaPatched, 1},
+                {&kextRadeonX6000, kDummyWPTRUpdateDiagCallOriginal, kDummyWPTRUpdateDiagCallPatched, 1},
+            };
+            SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "x6000", "Failed to apply patches");
+            patcher.clearError();
+        } else {
+            const LookupPatchPlus patch {&kextRadeonX6000, kHWChannelSubmitCommandBufferOriginal,
+                kHWChannelSubmitCommandBufferPatched, 1};
+            SYSLOG_COND(!patch.apply(patcher, slide, size), "x6000", "Failed to apply submitCommandBuffer patch");
+            patcher.clearError();
+        }
+
+        bool monterey = getKernelVersion() == KernelVersion::Monterey;
+        const LookupPatchPlus patches[] = {
             {&kextRadeonX6000, kIsDeviceValidCallOriginal, kIsDeviceValidCallPatched,
                 catalina ? 20U :
                 ventura  ? 23 :
@@ -80,61 +109,85 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
                 catalina ? 9U :
                 ventura  ? 3 :
                            1},
-            {&kextRadeonX6000, kWriteWaitForRenderingPipeCallOriginal, kWriteWaitForRenderingPipeCallPatched, 1,
-                catalina},
-            {&kextRadeonX6000, kGetTtlInterfaceCallOriginal, kGetTtlInterfaceCallOriginalMask,
-                kGetTtlInterfaceCallPatched, kGetTtlInterfaceCallPatchedMask, 38, catalina},
-            {&kextRadeonX6000, kGetAMDHWHandlerCallOriginal, kGetAMDHWHandlerCallPatched, 19, catalina},
-            {&kextRadeonX6000, kGetAMDHWHandlerCallOriginal, kGetAMDHWHandlerCallPatched, 64, catalina, 1},
-            {&kextRadeonX6000, kGetHWRegistersCallOriginal, kGetHWRegistersCallOriginalMask, kGetHWRegistersCallPatched,
-                kGetHWRegistersCallPatchedMask, 13, catalina},
-            {&kextRadeonX6000, kGetHWMemoryCallOriginal, kGetHWMemoryCallPatched, 11, catalina},
-            {&kextRadeonX6000, kGetHWGartCallOriginal, kGetHWGartCallPatched, 9, catalina},
-            {&kextRadeonX6000, kGetHWAlignManagerCall1Original, kGetHWAlignManagerCall1OriginalMask,
-                kGetHWAlignManagerCall1Patched, kGetHWAlignManagerCall1PatchedMask, 33, catalina},
-            {&kextRadeonX6000, kGetHWAlignManagerCall2Original, kGetHWAlignManagerCall2Patched, 1, catalina},
-            {&kextRadeonX6000, kGetHWEngineCallOriginal, kGetHWEngineCallPatched, 31, catalina},
-            {&kextRadeonX6000, kGetHWChannelCall1Original, kGetHWChannelCall1Patched, 2, catalina},
-            {&kextRadeonX6000, kGetHWChannelCall2Original, kGetHWChannelCall2Patched, 53, catalina},
-            {&kextRadeonX6000, kGetHWChannelCall3Original, kGetHWChannelCall3Patched, 20, catalina},
-            {&kextRadeonX6000, kRegisterChannelCallOriginal, kRegisterChannelCallPatched, 1, catalina},
-            {&kextRadeonX6000, kGetChannelCountCallOriginal, kGetChannelCountCallPatched, 7, catalina},
-            {&kextRadeonX6000, kGetChannelWriteBackFrameOffsetCall1Original,
-                kGetChannelWriteBackFrameOffsetCall1Patched, 4, catalina},
-            {&kextRadeonX6000, kGetChannelWriteBackFrameOffsetCall2Original,
-                kGetChannelWriteBackFrameOffsetCall2Patched, 1, catalina},
-            {&kextRadeonX6000, kGetChannelWriteBackFrameAddrCallOriginal, kGetChannelWriteBackFrameAddrCallOriginalMask,
-                kGetChannelWriteBackFrameAddrCallPatched, kGetChannelWriteBackFrameAddrCallPatchedMask, 10, catalina},
-            {&kextRadeonX6000, kGetDoorbellMemoryBaseAddressCallOriginal, kGetDoorbellMemoryBaseAddressCallPatched, 1,
-                catalina},
-            {&kextRadeonX6000, kGetChannelDoorbellOffsetCallOriginal, kGetChannelDoorbellOffsetCallPatched, 1,
-                catalina},
-            {&kextRadeonX6000, kGetIOPCIDeviceCallOriginal, kGetIOPCIDeviceCallPatched, 5, catalina},
-            {&kextRadeonX6000, kGetSMLCallOriginal, kGetSMLCallPatched, 10, catalina},
-            {&kextRadeonX6000, kGetPM4CommandUtilityCallOriginal, kGetPM4CommandUtilityCallPatched, 2, catalina},
-            {&kextRadeonX6000, kDumpASICHangStateCallOriginal, kDumpASICHangStateCallPatched, 2, catalina},
-            {&kextRadeonX6000, kGetSchedulerCallVenturaOriginal, kGetSchedulerCallVenturaPatched, 24, ventura},
-            {&kextRadeonX6000, kGetSchedulerCallOriginal, kGetSchedulerCallPatched, monterey ? 21U : 22,
-                !catalina && !ventura},
-            {&kextRadeonX6000, kGetSchedulerCallCatalinaOriginal, kGetSchedulerCallCatalinaPatched, 22, catalina},
-            {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal, kGetGpuDebugPolicyCallPatched,
+        };
+        SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "x6000", "Failed to apply patches");
+        patcher.clearError();
+
+        if (catalina) {
+            const LookupPatchPlus patches[] = {
+                {&kextRadeonX6000, kWriteWaitForRenderingPipeCallOriginal, kWriteWaitForRenderingPipeCallPatched, 1},
+                {&kextRadeonX6000, kGetTtlInterfaceCallOriginal, kGetTtlInterfaceCallOriginalMask,
+                    kGetTtlInterfaceCallPatched, kGetTtlInterfaceCallPatchedMask, 38},
+                {&kextRadeonX6000, kGetAMDHWHandlerCallOriginal, kGetAMDHWHandlerCallPatched, 19},
+                {&kextRadeonX6000, kGetAMDHWHandlerCallOriginal, kGetAMDHWHandlerCallPatched,
+                    arrsize(kGetAMDHWHandlerCallOriginal), 64, 1},
+                {&kextRadeonX6000, kGetHWRegistersCallOriginal, kGetHWRegistersCallOriginalMask,
+                    kGetHWRegistersCallPatched, kGetHWRegistersCallPatchedMask, 13},
+                {&kextRadeonX6000, kGetHWMemoryCallOriginal, kGetHWMemoryCallPatched, 11},
+                {&kextRadeonX6000, kGetHWGartCallOriginal, kGetHWGartCallPatched, 9},
+                {&kextRadeonX6000, kGetHWAlignManagerCall1Original, kGetHWAlignManagerCall1OriginalMask,
+                    kGetHWAlignManagerCall1Patched, kGetHWAlignManagerCall1PatchedMask, 33},
+                {&kextRadeonX6000, kGetHWAlignManagerCall2Original, kGetHWAlignManagerCall2Patched, 1},
+                {&kextRadeonX6000, kGetHWEngineCallOriginal, kGetHWEngineCallPatched, 31},
+                {&kextRadeonX6000, kGetHWChannelCall1Original, kGetHWChannelCall1Patched, 2},
+                {&kextRadeonX6000, kGetHWChannelCall2Original, kGetHWChannelCall2Patched, 53},
+                {&kextRadeonX6000, kGetHWChannelCall3Original, kGetHWChannelCall3Patched, 20},
+                {&kextRadeonX6000, kRegisterChannelCallOriginal, kRegisterChannelCallPatched, 1},
+                {&kextRadeonX6000, kGetChannelCountCallOriginal, kGetChannelCountCallPatched, 7},
+                {&kextRadeonX6000, kGetChannelWriteBackFrameOffsetCall1Original,
+                    kGetChannelWriteBackFrameOffsetCall1Patched, 4},
+                {&kextRadeonX6000, kGetChannelWriteBackFrameOffsetCall2Original,
+                    kGetChannelWriteBackFrameOffsetCall2Patched, 1},
+                {&kextRadeonX6000, kGetChannelWriteBackFrameAddrCallOriginal,
+                    kGetChannelWriteBackFrameAddrCallOriginalMask, kGetChannelWriteBackFrameAddrCallPatched,
+                    kGetChannelWriteBackFrameAddrCallPatchedMask, 10},
+                {&kextRadeonX6000, kGetDoorbellMemoryBaseAddressCallOriginal, kGetDoorbellMemoryBaseAddressCallPatched,
+                    1},
+                {&kextRadeonX6000, kGetChannelDoorbellOffsetCallOriginal, kGetChannelDoorbellOffsetCallPatched, 1},
+                {&kextRadeonX6000, kGetIOPCIDeviceCallOriginal, kGetIOPCIDeviceCallPatched, 5},
+                {&kextRadeonX6000, kGetSMLCallOriginal, kGetSMLCallPatched, 10},
+                {&kextRadeonX6000, kGetPM4CommandUtilityCallOriginal, kGetPM4CommandUtilityCallPatched, 2},
+                {&kextRadeonX6000, kDumpASICHangStateCallOriginal, kDumpASICHangStateCallPatched, 2},
+                {&kextRadeonX6000, kGetSchedulerCallCatalinaOriginal, kGetSchedulerCallCatalinaPatched, 22},
+            };
+            SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "x6000", "Failed to apply patches");
+            patcher.clearError();
+        }
+
+        if (ventura) {
+            const LookupPatchPlus patch {&kextRadeonX6000, kGetSchedulerCallVenturaOriginal,
+                kGetSchedulerCallVenturaPatched, 24};
+            SYSLOG_COND(!patch.apply(patcher, slide, size), "x6000", "Failed to apply getScheduler patch");
+            patcher.clearError();
+        } else if (!catalina) {
+            const LookupPatchPlus patch {&kextRadeonX6000, kGetSchedulerCallOriginal, kGetSchedulerCallPatched,
+                monterey ? 21U : 22};
+            SYSLOG_COND(!patch.apply(patcher, slide, size), "x6000", "Failed to apply getScheduler patch");
+            patcher.clearError();
+        }
+
+        if (catalina) {
+            const LookupPatchPlus patches[] = {
+                {&kextRadeonX6000, kGetGpuDebugPolicyCallCatalinaOriginal, kGetGpuDebugPolicyCallCatalinaPatched, 27},
+                {&kextRadeonX6000, kUpdateUtilizationStatisticsCounterCallOriginal,
+                    kUpdateUtilizationStatisticsCounterCallPatched, 2},
+                {&kextRadeonX6000, kDisableGfxOffCallOriginal, kDisableGfxOffCallPatched, 17},
+                {&kextRadeonX6000, kEnableGfxOffCallOriginal, kEnableGfxOffCallPatched, 16},
+                {&kextRadeonX6000, kFlushSystemCachesCallOriginal, kFlushSystemCachesCallPatched, 4},
+                {&kextRadeonX6000, kGetUbmSwizzleModeCallOriginal, kGetUbmSwizzleModeCallPatched, 1},
+                {&kextRadeonX6000, kGetUbmTileModeCallOriginal, kGetUbmTileModeCallPatched, 1},
+            };
+            SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "x6000", "Failed to apply patches");
+            patcher.clearError();
+        } else {
+            const LookupPatchPlus patch {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal,
+                kGetGpuDebugPolicyCallPatched,
                 (getKernelVersion() == KernelVersion::Ventura && getKernelMinorVersion() >= 5) ? 38U :
                 ventura                                                                        ? 37 :
-                                                                                                 28,
-                !catalina},
-            {&kextRadeonX6000, kGetGpuDebugPolicyCallCatalinaOriginal, kGetGpuDebugPolicyCallCatalinaPatched, 27,
-                catalina},
-            {&kextRadeonX6000, kUpdateUtilizationStatisticsCounterCallOriginal,
-                kUpdateUtilizationStatisticsCounterCallPatched, 2, catalina},
-            {&kextRadeonX6000, kDisableGfxOffCallOriginal, kDisableGfxOffCallPatched, 17, catalina},
-            {&kextRadeonX6000, kEnableGfxOffCallOriginal, kEnableGfxOffCallPatched, 16, catalina},
-            {&kextRadeonX6000, kFlushSystemCachesCallOriginal, kFlushSystemCachesCallPatched, 4, catalina},
-            {&kextRadeonX6000, kGetUbmSwizzleModeCallOriginal, kGetUbmSwizzleModeCallPatched, 1, catalina},
-            {&kextRadeonX6000, kGetUbmTileModeCallOriginal, kGetUbmTileModeCallPatched, 1, catalina},
-        };
-        SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "x6000", "Failed to apply patches: %d",
-            patcher.getError());
-        patcher.clearError();
+                                                                                                 28};
+            SYSLOG_COND(!patch.apply(patcher, slide, size), "x6000", "Failed to apply getGpuDebugPolicy patch");
+            patcher.clearError();
+        }
 
         return true;
     }

@@ -26,64 +26,115 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
         NRed::callback->setRMMIOIfNecessary();
 
         CAILAsicCapsEntry *orgAsicCapsTable = nullptr;
+        SolveRequestPlus solveRequest {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable, kCailAsicCapsTablePattern};
+        PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "x6000fb", "Failed to resolve CAIL_ASIC_CAPS_TABLE");
 
-        auto ventura = getKernelVersion() >= KernelVersion::Ventura;
-        auto catalina = getKernelVersion() == KernelVersion::Catalina;
-        SolveRequestPlus solveRequests[] = {
-            {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable, kCailAsicCapsTablePattern},
-            {"_dce_driver_set_backlight", this->orgDceDriverSetBacklight, kDceDriverSetBacklight, !catalina},
-            {"__ZNK34AMDRadeonX6000_AmdRadeonController18messageAcceleratorE25_eAMDAccelIOFBRequestTypePvS1_S1_",
-                this->orgMessageAccelerator, ventura},
-        };
-        PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "x6000fb",
-            "Failed to resolve symbols");
+        bool catalina = getKernelVersion() == KernelVersion::Catalina;
+        if (!catalina) {
+            SolveRequestPlus solveRequest {"_dce_driver_set_backlight", this->orgDceDriverSetBacklight,
+                kDceDriverSetBacklight};
+            PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "x6000fb",
+                "Failed to resolve dce_driver_set_backlight");
+        }
 
-        bool renoir = NRed::callback->chipType >= ChipType::Renoir;
+        bool ventura = getKernelVersion() >= KernelVersion::Ventura;
+        if (ventura) {
+            SolveRequestPlus solveRequest {
+                "__ZNK34AMDRadeonX6000_AmdRadeonController18messageAcceleratorE25_eAMDAccelIOFBRequestTypePvS1_S1_",
+                this->orgMessageAccelerator};
+            PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "x6000fb",
+                "Failed to resolve messageAccelerator");
+        }
+
         RouteRequestPlus requests[] = {
             {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", wrapPopulateVramInfo,
                 kPopulateVramInfoPattern},
             {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
-            {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo,
-                this->orgInitWithPciInfo, ADDPR(debugEnabled)},
-            {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", wrapDoGPUPanic, ADDPR(debugEnabled)},
-            {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit, this->orgDcePanelCntlHwInit, kDcePanelCntlHwInitPattern,
-                !catalina},
-            {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25setAttributeForConnectionEijm", wrapFramebufferSetAttribute,
-                this->orgFramebufferSetAttribute, !catalina},
-            {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25getAttributeForConnectionEijPm", wrapFramebufferGetAttribute,
-                this->orgFramebufferGetAttribute, !catalina},
             {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
                 this->orgGetNumberOfConnectors, kGetNumberOfConnectorsPattern, kGetNumberOfConnectorsMask},
-            {"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware, this->orgIH40IVRingInitHardware,
-                kIH40IVRingInitHardwarePattern, kIH40IVRingInitHardwareMask, renoir},
-            {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister, this->orgIRQMGRWriteRegister,
-                kIRQMGRWriteRegisterPattern, renoir},
-            {"__ZN34AMDRadeonX6000_AmdRadeonController7powerUpEv", wrapControllerPowerUp, this->orgControllerPowerUp,
-                ventura},
-            {"_dm_logger_write", wrapDmLoggerWrite, kDmLoggerWritePattern, checkKernelArgument("-nreddmlogger")},
         };
         PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "x6000fb",
             "Failed to route symbols");
 
-        LookupPatchPlus const patches[] = {
+        if (ADDPR(debugEnabled)) {
+            RouteRequestPlus requests[] = {
+                {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo,
+                    this->orgInitWithPciInfo},
+                {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", wrapDoGPUPanic},
+            };
+            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "x6000fb",
+                "Failed to route debug symbols");
+        }
+
+        if (checkKernelArgument("-nreddmlogger")) {
+            RouteRequestPlus request {"_dm_logger_write", wrapDmLoggerWrite, kDmLoggerWritePattern};
+            PANIC_COND(!request.route(patcher, id, slide, size), "x6000fb", "Failed to route dm_logger_write");
+        }
+
+        bool renoir = NRed::callback->chipType >= ChipType::Renoir;
+        if (renoir) {
+            RouteRequestPlus requests[] = {
+                {"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware, this->orgIH40IVRingInitHardware,
+                    kIH40IVRingInitHardwarePattern, kIH40IVRingInitHardwareMask},
+                {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister, this->orgIRQMGRWriteRegister,
+                    kIRQMGRWriteRegisterPattern},
+            };
+            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "x6000fb",
+                "Failed to route IH symbols");
+        }
+
+        if (ventura) {
+            RouteRequestPlus request {"__ZN34AMDRadeonX6000_AmdRadeonController7powerUpEv", wrapControllerPowerUp,
+                this->orgControllerPowerUp};
+            PANIC_COND(!request.route(patcher, id, slide, size), "x6000fb", "Failed to route powerUp");
+        }
+
+        if (!catalina) {
+            RouteRequestPlus requests[] = {
+                {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit, this->orgDcePanelCntlHwInit,
+                    kDcePanelCntlHwInitPattern},
+                {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25setAttributeForConnectionEijm",
+                    wrapFramebufferSetAttribute, this->orgFramebufferSetAttribute},
+                {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25getAttributeForConnectionEijPm",
+                    wrapFramebufferGetAttribute, this->orgFramebufferGetAttribute},
+            };
+            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "x6000fb",
+                "Failed to route backlight symbols");
+        }
+
+        const LookupPatchPlus patches[] = {
             {&kextRadeonX6000Framebuffer, kPopulateDeviceInfoOriginal, kPopulateDeviceInfoMask,
                 kPopulateDeviceInfoPatched, kPopulateDeviceInfoMask, 1},
-            {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckOriginal, kAmdAtomVramInfoNullCheckPatched, 1,
-                !catalina},
-            {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckCatalinaOriginal,
-                kAmdAtomVramInfoNullCheckCatalinaMask, kAmdAtomVramInfoNullCheckCatalinaPatched, 1, catalina},
-            {&kextRadeonX6000Framebuffer, kAmdAtomPspDirectoryNullCheckOriginal, kAmdAtomPspDirectoryNullCheckPatched,
-                1, !catalina},
             {&kextRadeonX6000Framebuffer, kGetFirmwareInfoNullCheckOriginal, kGetFirmwareInfoNullCheckOriginalMask,
                 kGetFirmwareInfoNullCheckPatched, kGetFirmwareInfoNullCheckPatchedMask, 1},
             {&kextRadeonX6000Framebuffer, kAgdcServicesGetVendorInfoOriginal, kAgdcServicesGetVendorInfoMask,
                 kAgdcServicesGetVendorInfoPatched, kAgdcServicesGetVendorInfoMask, 1},
-            {&kextRadeonX6000Framebuffer, kControllerPowerUpOriginal, kControllerPowerUpOriginalMask,
-                kControllerPowerUpReplace, kControllerPowerUpReplaceMask, 1, ventura},
-            {&kextRadeonX6000Framebuffer, kValidateDetailedTimingOriginal, kValidateDetailedTimingPatched, 1, ventura},
         };
-        PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "x6000fb", "Failed to apply patches: %d",
-            patcher.getError());
+        PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "x6000fb", "Failed to apply patches");
+
+        if (catalina) {
+            const LookupPatchPlus patch {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckCatalinaOriginal,
+                kAmdAtomVramInfoNullCheckCatalinaMask, kAmdAtomVramInfoNullCheckCatalinaPatched, 1};
+            PANIC_COND(!patch.apply(patcher, slide, size), "x6000fb", "Failed to apply null check patch");
+        } else {
+            const LookupPatchPlus patches[] = {
+                {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckOriginal, kAmdAtomVramInfoNullCheckPatched, 1},
+                {&kextRadeonX6000Framebuffer, kAmdAtomPspDirectoryNullCheckOriginal,
+                    kAmdAtomPspDirectoryNullCheckPatched, 1},
+            };
+            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "x6000fb",
+                "Failed to apply null check patches");
+        }
+
+        if (ventura) {
+            const LookupPatchPlus patches[] = {
+                {&kextRadeonX6000Framebuffer, kControllerPowerUpOriginal, kControllerPowerUpOriginalMask,
+                    kControllerPowerUpReplace, kControllerPowerUpReplaceMask, 1},
+                {&kextRadeonX6000Framebuffer, kValidateDetailedTimingOriginal, kValidateDetailedTimingPatched, 1},
+            };
+            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "x6000fb",
+                "Failed to apply logic revert patches");
+        }
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "x5000",
             "Failed to enable kernel writing");

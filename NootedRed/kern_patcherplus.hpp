@@ -7,19 +7,17 @@
 struct SolveRequestPlus : KernelPatcher::SolveRequest {
     const uint8_t *pattern {nullptr}, *mask {nullptr};
     size_t patternSize {0};
-    bool guard {true};
 
     template<typename T>
-    SolveRequestPlus(const char *s, T &addr, bool guard = true)
-        : KernelPatcher::SolveRequest {s, addr}, guard {guard} {}
+    SolveRequestPlus(const char *s, T &addr) : KernelPatcher::SolveRequest {s, addr} {}
 
     template<typename T, typename P, size_t N>
-    SolveRequestPlus(const char *s, T &addr, const P (&pattern)[N], bool guard = true)
-        : KernelPatcher::SolveRequest {s, addr}, pattern {pattern}, patternSize {N}, guard {guard} {}
+    SolveRequestPlus(const char *s, T &addr, const P (&pattern)[N])
+        : KernelPatcher::SolveRequest {s, addr}, pattern {pattern}, patternSize {N} {}
 
     template<typename T, typename P, size_t N>
-    SolveRequestPlus(const char *s, T &addr, const P (&pattern)[N], const uint8_t (&mask)[N], bool guard = true)
-        : KernelPatcher::SolveRequest {s, addr}, pattern {pattern}, mask {mask}, patternSize {N}, guard {guard} {}
+    SolveRequestPlus(const char *s, T &addr, const P (&pattern)[N], const uint8_t (&mask)[N])
+        : KernelPatcher::SolveRequest {s, addr}, pattern {pattern}, mask {mask}, patternSize {N} {}
 
     bool solve(KernelPatcher &patcher, size_t id, mach_vm_address_t address, size_t maxSize);
 
@@ -36,43 +34,39 @@ struct SolveRequestPlus : KernelPatcher::SolveRequest {
 struct RouteRequestPlus : KernelPatcher::RouteRequest {
     const uint8_t *pattern {nullptr}, *mask {nullptr};
     size_t patternSize {0};
-    bool guard {true};
 
     template<typename T>
-    RouteRequestPlus(const char *s, T t, mach_vm_address_t &o, bool guard = true)
-        : KernelPatcher::RouteRequest {s, t, o}, guard {guard} {}
+    RouteRequestPlus(const char *s, T t, mach_vm_address_t &o) : KernelPatcher::RouteRequest {s, t, o} {}
 
     template<typename T, typename O>
-    RouteRequestPlus(const char *s, T t, O &o, bool guard = true)
-        : KernelPatcher::RouteRequest {s, t, o}, guard {guard} {}
+    RouteRequestPlus(const char *s, T t, O &o) : KernelPatcher::RouteRequest {s, t, o} {}
 
     template<typename T>
-    RouteRequestPlus(const char *s, T t, bool guard = true) : KernelPatcher::RouteRequest {s, t}, guard {guard} {}
+    RouteRequestPlus(const char *s, T t) : KernelPatcher::RouteRequest {s, t} {}
 
     template<typename T, typename P, size_t N>
-    RouteRequestPlus(const char *s, T t, mach_vm_address_t &o, const P (&pattern)[N], bool guard = true)
-        : KernelPatcher::RouteRequest {s, t, o}, pattern {pattern}, patternSize {N}, guard {guard} {}
+    RouteRequestPlus(const char *s, T t, mach_vm_address_t &o, const P (&pattern)[N])
+        : KernelPatcher::RouteRequest {s, t, o}, pattern {pattern}, patternSize {N} {}
 
     template<typename T, typename O, typename P, size_t N>
-    RouteRequestPlus(const char *s, T t, O &o, const P (&pattern)[N], bool guard = true)
-        : KernelPatcher::RouteRequest {s, t, o}, pattern {pattern}, patternSize {N}, guard {guard} {}
+    RouteRequestPlus(const char *s, T t, O &o, const P (&pattern)[N])
+        : KernelPatcher::RouteRequest {s, t, o}, pattern {pattern}, patternSize {N} {}
 
     template<typename T, typename P, size_t N>
-    RouteRequestPlus(const char *s, T t, const P (&pattern)[N], bool guard = true)
-        : KernelPatcher::RouteRequest {s, t}, pattern {pattern}, patternSize {N}, guard {guard} {}
+    RouteRequestPlus(const char *s, T t, const P (&pattern)[N])
+        : KernelPatcher::RouteRequest {s, t}, pattern {pattern}, patternSize {N} {}
 
     template<typename T, typename P, size_t N>
-    RouteRequestPlus(const char *s, T t, mach_vm_address_t &o, const P (&pattern)[N], const uint8_t (&mask)[N],
-        bool guard = true)
-        : KernelPatcher::RouteRequest {s, t, o}, pattern {pattern}, mask {mask}, patternSize {N}, guard {guard} {}
+    RouteRequestPlus(const char *s, T t, mach_vm_address_t &o, const P (&pattern)[N], const uint8_t (&mask)[N])
+        : KernelPatcher::RouteRequest {s, t, o}, pattern {pattern}, mask {mask}, patternSize {N} {}
 
     template<typename T, typename O, typename P, size_t N>
-    RouteRequestPlus(const char *s, T t, O &o, const P (&pattern)[N], const uint8_t (&mask)[N], bool guard = true)
-        : KernelPatcher::RouteRequest {s, t, o}, pattern {pattern}, mask {mask}, patternSize {N}, guard {guard} {}
+    RouteRequestPlus(const char *s, T t, O &o, const P (&pattern)[N], const uint8_t (&mask)[N])
+        : KernelPatcher::RouteRequest {s, t, o}, pattern {pattern}, mask {mask}, patternSize {N} {}
 
     template<typename T, typename P, size_t N>
-    RouteRequestPlus(const char *s, T t, const P (&pattern)[N], const uint8_t (&mask)[N], bool guard = true)
-        : KernelPatcher::RouteRequest {s, t}, pattern {pattern}, mask {mask}, patternSize {N}, guard {guard} {}
+    RouteRequestPlus(const char *s, T t, const P (&pattern)[N], const uint8_t (&mask)[N])
+        : KernelPatcher::RouteRequest {s, t}, pattern {pattern}, mask {mask}, patternSize {N} {}
 
     bool route(KernelPatcher &patcher, size_t id, mach_vm_address_t address, size_t maxSize);
 
@@ -88,45 +82,43 @@ struct RouteRequestPlus : KernelPatcher::RouteRequest {
 
 struct LookupPatchPlus : KernelPatcher::LookupPatch {
     const uint8_t *findMask {nullptr}, *replaceMask {nullptr};
-    const bool guard {true};
     const size_t skip {0};
 
     LookupPatchPlus(KernelPatcher::KextInfo *kext, const uint8_t *find, const uint8_t *replace, size_t size,
-        size_t count, bool guard = true, size_t skip = 0)
-        : KernelPatcher::LookupPatch {kext, find, replace, size, count}, guard {guard}, skip {skip} {}
+        size_t count, size_t skip = 0)
+        : KernelPatcher::LookupPatch {kext, find, replace, size, count}, skip {skip} {}
 
     LookupPatchPlus(KernelPatcher::KextInfo *kext, const uint8_t *find, const uint8_t *findMask, const uint8_t *replace,
-        size_t size, size_t count, bool guard = true, size_t skip = 0)
-        : KernelPatcher::LookupPatch {kext, find, replace, size, count}, findMask {findMask}, guard {guard},
-          skip {skip} {}
+        size_t size, size_t count, size_t skip = 0)
+        : KernelPatcher::LookupPatch {kext, find, replace, size, count}, findMask {findMask}, skip {skip} {}
 
     LookupPatchPlus(KernelPatcher::KextInfo *kext, const uint8_t *find, const uint8_t *findMask, const uint8_t *replace,
-        const uint8_t *replaceMask, size_t size, size_t count, bool guard = true, size_t skip = 0)
+        const uint8_t *replaceMask, size_t size, size_t count, size_t skip = 0)
         : KernelPatcher::LookupPatch {kext, find, replace, size, count}, findMask {findMask}, replaceMask {replaceMask},
-          guard {guard}, skip {skip} {}
+          skip {skip} {}
 
     template<size_t N>
     LookupPatchPlus(KernelPatcher::KextInfo *kext, const uint8_t (&find)[N], const uint8_t (&replace)[N], size_t count,
-        bool guard = true, size_t skip = 0)
-        : LookupPatchPlus {kext, find, replace, N, count, guard, skip} {}
+        size_t skip = 0)
+        : LookupPatchPlus {kext, find, replace, N, count, skip} {}
 
     template<size_t N>
     LookupPatchPlus(KernelPatcher::KextInfo *kext, const uint8_t (&find)[N], const uint8_t (&findMask)[N],
-        const uint8_t (&replace)[N], size_t count, bool guard = true, size_t skip = 0)
-        : LookupPatchPlus {kext, find, findMask, replace, N, count, guard, skip} {}
+        const uint8_t (&replace)[N], size_t count, size_t skip = 0)
+        : LookupPatchPlus {kext, find, findMask, replace, N, count, skip} {}
 
     template<size_t N>
     LookupPatchPlus(KernelPatcher::KextInfo *kext, const uint8_t (&find)[N], const uint8_t (&findMask)[N],
-        const uint8_t (&replace)[N], const uint8_t (&replaceMask)[N], size_t count, bool guard = true, size_t skip = 0)
-        : LookupPatchPlus {kext, find, findMask, replace, replaceMask, N, count, guard, skip} {}
+        const uint8_t (&replace)[N], const uint8_t (&replaceMask)[N], size_t count, size_t skip = 0)
+        : LookupPatchPlus {kext, find, findMask, replace, replaceMask, N, count, skip} {}
 
     bool apply(KernelPatcher &patcher, mach_vm_address_t address, size_t maxSize) const;
 
-    static bool applyAll(KernelPatcher &patcher, LookupPatchPlus const *patches, size_t count,
+    static bool applyAll(KernelPatcher &patcher, const LookupPatchPlus *patches, size_t count,
         mach_vm_address_t address, size_t maxSize);
 
     template<size_t N>
-    static bool applyAll(KernelPatcher &patcher, LookupPatchPlus const (&patches)[N], mach_vm_address_t address,
+    static bool applyAll(KernelPatcher &patcher, const LookupPatchPlus (&patches)[N], mach_vm_address_t address,
         size_t maxSize) {
         return applyAll(patcher, patches, N, address, maxSize);
     }

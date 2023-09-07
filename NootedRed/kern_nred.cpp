@@ -151,60 +151,63 @@ OSMetaClassBase *NRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const O
 }
 
 void NRed::setRMMIOIfNecessary() {
-    if (UNLIKELY(!this->rmmio || !this->rmmio->getLength())) {
-        this->rmmio = this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5);
-        PANIC_COND(UNLIKELY(!this->rmmio || !this->rmmio->getLength()), "nred", "Failed to map RMMIO");
-        this->rmmioPtr = reinterpret_cast<uint32_t *>(this->rmmio->getVirtualAddress());
+    if (this->rmmio && this->rmmio->getLength()) { return; }
 
-        this->fbOffset = static_cast<uint64_t>(this->readReg32(0x296B)) << 24;
-        this->revision = (this->readReg32(0xD2F) & 0xF000000) >> 0x18;
-        switch (this->deviceId) {
-            case 0x15D8:
-                if (LIKELY(this->revision >= 0x8)) {
-                    this->chipType = ChipType::Raven2;
-                    this->enumRevision = 0x79;
-                    break;
-                }
-                this->chipType = ChipType::Picasso;
-                this->enumRevision = 0x41;
+    this->rmmio = this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5, kIOInhibitCache | kIOMapAnywhere);
+    PANIC_COND(UNLIKELY(!this->rmmio || !this->rmmio->getLength()), "nred", "Failed to map RMMIO");
+    this->rmmioPtr = reinterpret_cast<uint32_t *>(this->rmmio->getVirtualAddress());
+
+    this->fbOffset = static_cast<uint64_t>(this->readReg32(0x296B)) << 24;
+    this->revision = (this->readReg32(0xD2F) & 0xF000000) >> 0x18;
+    switch (this->deviceId) {
+        case 0x15D8:
+            if (LIKELY(this->revision >= 0x8)) {
+                this->chipType = ChipType::Raven2;
+                this->enumRevision = 0x79;
                 break;
-            case 0x15DD:
-                if (LIKELY(this->revision >= 0x8)) {
-                    this->chipType = ChipType::Raven2;
-                    this->enumRevision = 0x79;
-                    break;
-                }
-                this->chipType = ChipType::Raven;
-                this->enumRevision = 0x10;
+            }
+            this->chipType = ChipType::Picasso;
+            this->enumRevision = 0x41;
+            break;
+        case 0x15DD:
+            if (LIKELY(this->revision >= 0x8)) {
+                this->chipType = ChipType::Raven2;
+                this->enumRevision = 0x79;
                 break;
-            case 0x164C:
-                [[fallthrough]];
-            case 0x1636:
-                this->chipType = ChipType::Renoir;
-                this->enumRevision = 0x91;
-                break;
-            case 0x15E7:
-                [[fallthrough]];
-            case 0x1638:
-                this->chipType = ChipType::GreenSardine;
-                this->enumRevision = 0xA1;
-                break;
-            default:
-                PANIC("nred", "Unknown device ID");
-        }
+            }
+            this->chipType = ChipType::Raven;
+            this->enumRevision = 0x10;
+            break;
+        case 0x164C:
+            [[fallthrough]];
+        case 0x1636:
+            this->chipType = ChipType::Renoir;
+            this->enumRevision = 0x91;
+            break;
+        case 0x15E7:
+            [[fallthrough]];
+        case 0x1638:
+            this->chipType = ChipType::GreenSardine;
+            this->enumRevision = 0xA1;
+            break;
+        default:
+            PANIC("nred", "Unknown device ID");
     }
 }
 
 void NRed::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextAGDP.loadIndex == id) {
-        auto ventura = getKernelVersion() == KernelVersion::Ventura;
-        const LookupPatchPlus patches[] = {
-            {&kextAGDP, kAGDPBoardIDKeyOriginal, kAGDPBoardIDKeyPatched, 1},
-            {&kextAGDP, kAGDPFBCountCheckOriginal, kAGDPFBCountCheckPatched, 1, !ventura},
-            {&kextAGDP, kAGDPFBCountCheckVenturaOriginal, kAGDPFBCountCheckVenturaPatched, 1, ventura},
-        };
-        PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "nred",
-            "Failed to apply AGDP patches: %d", patcher.getError());
+        const LookupPatchPlus patch {&kextAGDP, kAGDPBoardIDKeyOriginal, kAGDPBoardIDKeyPatched, 1};
+        SYSLOG_COND(!patch.apply(patcher, slide, size), "nred", "Failed to apply AGDP board-id patch");
+
+        if (getKernelVersion() == KernelVersion::Ventura) {
+            const LookupPatchPlus patch {&kextAGDP, kAGDPFBCountCheckVenturaOriginal, kAGDPFBCountCheckVenturaPatched,
+                1};
+            SYSLOG_COND(!patch.apply(patcher, slide, size), "nred", "Failed to apply AGDP fb count check patch");
+        } else {
+            const LookupPatchPlus patch {&kextAGDP, kAGDPFBCountCheckOriginal, kAGDPFBCountCheckPatched, 1};
+            SYSLOG_COND(!patch.apply(patcher, slide, size), "nred", "Failed to apply AGDP fb count check patch");
+        }
     } else if (kextBacklight.loadIndex == id) {
         KernelPatcher::RouteRequest request {"__ZN15AppleIntelPanel10setDisplayEP9IODisplay", wrapApplePanelSetDisplay,
             orgApplePanelSetDisplay};
@@ -212,8 +215,7 @@ void NRed::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slid
             const uint8_t find[] = {"F%uT%04x"};
             const uint8_t replace[] = {"F%uTxxxx"};
             const LookupPatchPlus patch {&kextBacklight, find, replace, 1};
-            SYSLOG_COND(!patch.apply(patcher, slide, size), "nred", "Failed to apply backlight patch: %d",
-                patcher.getError());
+            SYSLOG_COND(!patch.apply(patcher, slide, size), "nred", "Failed to apply backlight patch");
         }
     } else if (kextMCCSControl.loadIndex == id) {
         KernelPatcher::RouteRequest requests[] = {

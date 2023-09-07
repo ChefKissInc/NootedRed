@@ -5,7 +5,6 @@
 
 bool SolveRequestPlus::solve(KernelPatcher &patcher, size_t id, mach_vm_address_t address, size_t maxSize) {
     PANIC_COND(!this->address, "patcher+", "this->address is null");
-    if (!this->guard) { return true; }
 
     *this->address = patcher.solveSymbol(id, this->symbol);
     if (*this->address) { return true; }
@@ -37,8 +36,6 @@ bool SolveRequestPlus::solveAll(KernelPatcher &patcher, size_t id, SolveRequestP
 }
 
 bool RouteRequestPlus::route(KernelPatcher &patcher, size_t id, mach_vm_address_t address, size_t maxSize) {
-    if (!this->guard) { return true; }
-
     if (patcher.routeMultiple(id, this, 1, address, maxSize)) { return true; }
     patcher.clearError();
 
@@ -74,8 +71,6 @@ bool RouteRequestPlus::routeAll(KernelPatcher &patcher, size_t id, RouteRequestP
 }
 
 bool LookupPatchPlus::apply(KernelPatcher &patcher, mach_vm_address_t address, size_t maxSize) const {
-    if (!this->guard) { return true; }
-
     if (!this->findMask && !this->replaceMask && !this->skip) {
         patcher.applyLookupPatch(this, reinterpret_cast<uint8_t *>(address), maxSize);
         return patcher.getError() == KernelPatcher::Error::NoError;
@@ -85,7 +80,7 @@ bool LookupPatchPlus::apply(KernelPatcher &patcher, mach_vm_address_t address, s
         this->replaceMask ? this->size : 0, this->count, this->skip);
 }
 
-bool LookupPatchPlus::applyAll(KernelPatcher &patcher, LookupPatchPlus const *patches, size_t count,
+bool LookupPatchPlus::applyAll(KernelPatcher &patcher, const LookupPatchPlus *patches, size_t count,
     mach_vm_address_t address, size_t maxSize) {
     for (size_t i = 0; i < count; i++) {
         if (patches[i].apply(patcher, address, maxSize)) {
