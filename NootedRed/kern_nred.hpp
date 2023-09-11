@@ -5,6 +5,7 @@
 #include "kern_amd.hpp"
 #include "kern_fw.hpp"
 #include "kern_vbios.hpp"
+#include <Headers/kern_iokit.hpp>
 #include <Headers/kern_patcher.hpp>
 #include <IOKit/acpi/IOACPIPlatformExpert.h>
 #include <IOKit/graphics/IOFramebuffer.h>
@@ -111,6 +112,9 @@ class NRed {
 
         auto offset = vfct->vbiosImageOffset;
 
+        uint8_t busNum = 0, devNum = 0, funcNum = 0;
+        WIOKit::getDeviceAddress(this->iGPU, busNum, devNum, funcNum);
+
         while (offset < vfctData->getLength()) {
             auto *vHdr =
                 static_cast<const GOPVideoBIOSHeader *>(vfctData->getBytesNoCopy(offset, sizeof(GOPVideoBIOSHeader)));
@@ -128,11 +132,7 @@ class NRed {
 
             offset += sizeof(GOPVideoBIOSHeader) + vHdr->imageLength;
 
-            if (vHdr->imageLength && vHdr->pciBus == this->iGPU->getBusNumber() &&
-                vHdr->pciDevice == this->iGPU->getDeviceNumber() &&
-                vHdr->pciFunction == this->iGPU->getFunctionNumber() &&
-                vHdr->vendorID == this->iGPU->configRead16(kIOPCIConfigVendorID) &&
-                vHdr->deviceID == this->iGPU->configRead16(kIOPCIConfigDeviceID)) {
+            if (vHdr->vendorID == WIOKit::VendorID::ATIAMD && vHdr->deviceID == this->deviceId) {
                 if (!checkAtomBios(vContent, vHdr->imageLength)) {
                     DBGLOG("nred", "VFCT VBIOS is not an ATOMBIOS");
                     return false;
@@ -148,7 +148,8 @@ class NRed {
     }
 
     bool getVBIOSFromVRAM() {
-        auto *bar0 = this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress0, kIOMapWriteCombineCache);
+        auto *bar0 =
+            this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress0, kIOInhibitCache | kIOMapAnywhere);
         if (!bar0 || !bar0->getLength()) {
             DBGLOG("nred", "FB BAR not enabled");
             OSSafeReleaseNULL(bar0);
