@@ -5,7 +5,6 @@
 #include "kern_amd.hpp"
 #include "kern_fw.hpp"
 #include "kern_vbios.hpp"
-#include <Headers/kern_iokit.hpp>
 #include <Headers/kern_patcher.hpp>
 #include <IOKit/acpi/IOACPIPlatformExpert.h>
 #include <IOKit/graphics/IOFramebuffer.h>
@@ -110,12 +109,7 @@ class NRed {
         auto *vfct = static_cast<const VFCT *>(vfctData->getBytesNoCopy());
         PANIC_COND(!vfct, "nred", "VFCT OSData::getBytesNoCopy returned null");
 
-        auto offset = vfct->vbiosImageOffset;
-
-        uint8_t busNum = 0, devNum = 0, funcNum = 0;
-        WIOKit::getDeviceAddress(this->iGPU, busNum, devNum, funcNum);
-
-        while (offset < vfctData->getLength()) {
+        for (auto offset = vfct->vbiosImageOffset; offset < vfctData->getLength();) {
             auto *vHdr =
                 static_cast<const GOPVideoBIOSHeader *>(vfctData->getBytesNoCopy(offset, sizeof(GOPVideoBIOSHeader)));
             if (!vHdr) {
