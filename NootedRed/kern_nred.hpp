@@ -126,7 +126,7 @@ class NRed {
 
             offset += sizeof(GOPVideoBIOSHeader) + vHdr->imageLength;
 
-            if (vHdr->vendorID == WIOKit::VendorID::ATIAMD && vHdr->deviceID == this->deviceId) {
+            if (vHdr->deviceID == this->deviceId) {
                 if (!checkAtomBios(vContent, vHdr->imageLength)) {
                     DBGLOG("nred", "VFCT VBIOS is not an ATOMBIOS");
                     return false;
