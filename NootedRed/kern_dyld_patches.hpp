@@ -62,9 +62,14 @@ class DYLDPatches {
     void processPatcher(KernelPatcher &patcher);
 
     private:
-    mach_vm_address_t orgCsValidatePage {0};
-    static void csValidatePage(vnode *vp, memory_object_t pager, memory_object_offset_t page_offset, const void *data,
-        int *validated_p, int *tainted_p, int *nx_p);
+    static void apply(char *path, void *data, size_t size);
+
+    mach_vm_address_t orgCsValidate {0};
+
+    static boolean_t wrapCsValidateRange(vnode_t vp, memory_object_t pager, memory_object_offset_t offset,
+        const void *data, vm_size_t size, unsigned *result);
+    static void wrapCsValidatePage(vnode *vp, memory_object_t pager, memory_object_offset_t page_offset,
+        const void *data, int *validated_p, int *tainted_p, int *nx_p);
 };
 
 /** VideoToolbox DRM model check */
