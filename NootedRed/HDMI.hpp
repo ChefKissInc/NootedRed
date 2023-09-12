@@ -2,7 +2,7 @@
 //  details.
 
 #pragma once
-#include "kern_amd.hpp"
+#include "AMDCommon.hpp"
 #include <Headers/kern_patcher.hpp>
 #include <Headers/kern_util.hpp>
 

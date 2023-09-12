@@ -82,18 +82,18 @@ def locate_line(lines: list[str], needle: str) -> int:
 
 
 moduleToClass = {
-    "hwlibs": "X5000HWLibs",
-    "x5000": "X5000",
-    "x6000": "X6000",
-    "x6000fb": "X6000FB",
-    "agfxhda": "AppleGFXHDA"
+    "HWLibs": "X5000HWLibs",
+    "X5000": "X5000",
+    "X6000": "X6000",
+    "X6000FB": "X6000FB",
+    "HDMI": "HDMI",
 }
 
-module: str = input("Filename without extension: ./NootedRed/kern_")
+module: str = input("Filename without extension: ./NootedRed/")
 assert module in moduleToClass
 className = moduleToClass[module]
-cpp_path: str = f"./NootedRed/kern_{module}.cpp"
-hpp_path: str = f"./NootedRed/kern_{module}.hpp"
+cpp_path: str = f"./NootedRed/{module}.cpp"
+hpp_path: str = f"./NootedRed/{module}.hpp"
 
 with open(cpp_path) as cpp_file:
     cpp_lines: list[str] = cpp_file.readlines()

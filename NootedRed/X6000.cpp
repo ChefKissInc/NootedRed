@@ -1,10 +1,10 @@
 //  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5. See LICENSE for
 //  details.
 
-#include "kern_x6000.hpp"
-#include "kern_nred.hpp"
-#include "kern_patcherplus.hpp"
-#include "kern_x5000.hpp"
+#include "X6000.hpp"
+#include "NRed.hpp"
+#include "PatcherPlus.hpp"
+#include "X5000.hpp"
 #include <Headers/kern_api.hpp>
 
 static const char *pathRadeonX6000 = "/System/Library/Extensions/AMDRadeonX6000.kext/Contents/MacOS/AMDRadeonX6000";

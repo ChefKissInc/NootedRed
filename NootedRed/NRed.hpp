@@ -2,9 +2,9 @@
 //  details.
 
 #pragma once
-#include "kern_amd.hpp"
-#include "kern_fw.hpp"
-#include "kern_vbios.hpp"
+#include "AMDCommon.hpp"
+#include "ATOMBIOS.hpp"
+#include "Firmware.hpp"
 #include <Headers/kern_patcher.hpp>
 #include <IOKit/acpi/IOACPIPlatformExpert.h>
 #include <IOKit/graphics/IOFramebuffer.h>

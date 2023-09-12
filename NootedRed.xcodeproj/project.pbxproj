@@ -7,28 +7,28 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1C748C2D1C21952C0024EED2 /* kern_start.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C748C2C1C21952C0024EED2 /* kern_start.cpp */; };
-		4019EAE42A348852008D800B /* kern_dyld_patches.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4019EAE32A348852008D800B /* kern_dyld_patches.hpp */; };
-		4019EAE62A3488ED008D800B /* kern_dyld_patches.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4019EAE52A3488EC008D800B /* kern_dyld_patches.cpp */; };
-		40364DB629B79DFD0070A2B4 /* kern_model.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40364DB529B79DFD0070A2B4 /* kern_model.hpp */; };
-		4068898B2A229BF600028D22 /* kern_patcherplus.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 406889892A229BF600028D22 /* kern_patcherplus.cpp */; };
-		4068898C2A229BF600028D22 /* kern_patcherplus.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4068898A2A229BF600028D22 /* kern_patcherplus.hpp */; };
-		4069F00F29C3A241005293B4 /* kern_vbios.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FCE29BF942900367F9D /* kern_vbios.hpp */; };
-		408F2020288ACBE6002EEC15 /* kern_fw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 408F201F288ACBE6002EEC15 /* kern_fw.cpp */; };
-		40FC5FD529BF995000367F9D /* kern_x6000fb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FC5FD329BF995000367F9D /* kern_x6000fb.cpp */; };
-		40FC5FD629BF995000367F9D /* kern_x6000fb.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FD429BF995000367F9D /* kern_x6000fb.hpp */; };
-		40FC5FD929BF995E00367F9D /* kern_x5000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FC5FD729BF995E00367F9D /* kern_x5000.cpp */; };
-		40FC5FDA29BF995E00367F9D /* kern_x5000.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FD829BF995E00367F9D /* kern_x5000.hpp */; };
-		40FC5FDD29BF996900367F9D /* kern_hwlibs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FC5FDB29BF996900367F9D /* kern_hwlibs.cpp */; };
-		40FC5FDE29BF996900367F9D /* kern_hwlibs.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FDC29BF996900367F9D /* kern_hwlibs.hpp */; };
-		40FC5FE129BF9E2500367F9D /* kern_x6000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FC5FDF29BF9E2500367F9D /* kern_x6000.cpp */; };
-		40FC5FE229BF9E2500367F9D /* kern_x6000.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FE029BF9E2500367F9D /* kern_x6000.hpp */; };
-		6C1B36662A407C6100B184DD /* kern_hdmi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6C1B36642A407C6100B184DD /* kern_hdmi.cpp */; };
-		6C1B36672A407C6200B184DD /* kern_hdmi.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 6C1B36652A407C6100B184DD /* kern_hdmi.hpp */; };
+		1C748C2D1C21952C0024EED2 /* PluginStart.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C748C2C1C21952C0024EED2 /* PluginStart.cpp */; };
+		4019EAE42A348852008D800B /* DYLDPatches.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4019EAE32A348852008D800B /* DYLDPatches.hpp */; };
+		4019EAE62A3488ED008D800B /* DYLDPatches.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4019EAE52A3488EC008D800B /* DYLDPatches.cpp */; };
+		40364DB629B79DFD0070A2B4 /* Model.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40364DB529B79DFD0070A2B4 /* Model.hpp */; };
+		4068898B2A229BF600028D22 /* PatcherPlus.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 406889892A229BF600028D22 /* PatcherPlus.cpp */; };
+		4068898C2A229BF600028D22 /* PatcherPlus.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4068898A2A229BF600028D22 /* PatcherPlus.hpp */; };
+		4069F00F29C3A241005293B4 /* ATOMBIOS.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FCE29BF942900367F9D /* ATOMBIOS.hpp */; };
+		408F2020288ACBE6002EEC15 /* Firmware.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 408F201F288ACBE6002EEC15 /* Firmware.cpp */; };
+		40FC5FD529BF995000367F9D /* X6000FB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FC5FD329BF995000367F9D /* X6000FB.cpp */; };
+		40FC5FD629BF995000367F9D /* X6000FB.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FD429BF995000367F9D /* X6000FB.hpp */; };
+		40FC5FD929BF995E00367F9D /* X5000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FC5FD729BF995E00367F9D /* X5000.cpp */; };
+		40FC5FDA29BF995E00367F9D /* X5000.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FD829BF995E00367F9D /* X5000.hpp */; };
+		40FC5FDD29BF996900367F9D /* HWLibs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FC5FDB29BF996900367F9D /* HWLibs.cpp */; };
+		40FC5FDE29BF996900367F9D /* HWLibs.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FDC29BF996900367F9D /* HWLibs.hpp */; };
+		40FC5FE129BF9E2500367F9D /* X6000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FC5FDF29BF9E2500367F9D /* X6000.cpp */; };
+		40FC5FE229BF9E2500367F9D /* X6000.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FE029BF9E2500367F9D /* X6000.hpp */; };
+		6C1B36662A407C6100B184DD /* HDMI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6C1B36642A407C6100B184DD /* HDMI.cpp */; };
+		6C1B36672A407C6200B184DD /* HDMI.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 6C1B36652A407C6100B184DD /* HDMI.hpp */; };
 		CE405ED91E4A080700AA0B3D /* plugin_start.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CE405ED81E4A080700AA0B3D /* plugin_start.cpp */; };
 		CE8DA0832517C41A008C44E8 /* libkmod.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CE8DA0822517C41A008C44E8 /* libkmod.a */; };
-		CEA03B5E20EE825A00BA842F /* kern_nred.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CEA03B5C20EE825A00BA842F /* kern_nred.cpp */; };
-		CEA03B5F20EE825A00BA842F /* kern_nred.hpp in Headers */ = {isa = PBXBuildFile; fileRef = CEA03B5D20EE825A00BA842F /* kern_nred.hpp */; };
+		CEA03B5E20EE825A00BA842F /* NRed.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CEA03B5C20EE825A00BA842F /* NRed.cpp */; };
+		CEA03B5F20EE825A00BA842F /* NRed.hpp in Headers */ = {isa = PBXBuildFile; fileRef = CEA03B5D20EE825A00BA842F /* NRed.hpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -46,11 +46,11 @@
 
 /* Begin PBXFileReference section */
 		1C748C271C21952C0024EED2 /* NootedRed.kext */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NootedRed.kext; sourceTree = BUILT_PRODUCTS_DIR; };
-		1C748C2C1C21952C0024EED2 /* kern_start.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_start.cpp; sourceTree = "<group>"; };
+		1C748C2C1C21952C0024EED2 /* PluginStart.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = PluginStart.cpp; sourceTree = "<group>"; };
 		1C748C2E1C21952C0024EED2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		4019EAE32A348852008D800B /* kern_dyld_patches.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_dyld_patches.hpp; sourceTree = "<group>"; };
-		4019EAE52A3488EC008D800B /* kern_dyld_patches.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_dyld_patches.cpp; sourceTree = "<group>"; };
-		40364DB529B79DFD0070A2B4 /* kern_model.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_model.hpp; sourceTree = "<group>"; };
+		4019EAE32A348852008D800B /* DYLDPatches.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DYLDPatches.hpp; sourceTree = "<group>"; };
+		4019EAE52A3488EC008D800B /* DYLDPatches.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DYLDPatches.cpp; sourceTree = "<group>"; };
+		40364DB529B79DFD0070A2B4 /* Model.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Model.hpp; sourceTree = "<group>"; };
 		403E67BD2AA7356D00F43943 /* psp_hdcp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = psp_hdcp.bin; sourceTree = "<group>"; };
 		403E67BE2AA7356D00F43943 /* psp_dtm.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = psp_dtm.bin; sourceTree = "<group>"; };
 		403E67BF2AA7356D00F43943 /* psp_asd.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = psp_asd.bin; sourceTree = "<group>"; };
@@ -60,8 +60,8 @@
 		40588A8F29D369C400F042E9 /* renoir_gpu_info.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = renoir_gpu_info.bin; sourceTree = "<group>"; };
 		40588A9029D369C400F042E9 /* raven2_gpu_info.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven2_gpu_info.bin; sourceTree = "<group>"; };
 		40588A9129D369C400F042E9 /* picasso_gpu_info.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = picasso_gpu_info.bin; sourceTree = "<group>"; };
-		406889892A229BF600028D22 /* kern_patcherplus.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_patcherplus.cpp; sourceTree = "<group>"; };
-		4068898A2A229BF600028D22 /* kern_patcherplus.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_patcherplus.hpp; sourceTree = "<group>"; };
+		406889892A229BF600028D22 /* PatcherPlus.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = PatcherPlus.cpp; sourceTree = "<group>"; };
+		4068898A2A229BF600028D22 /* PatcherPlus.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PatcherPlus.hpp; sourceTree = "<group>"; };
 		406C86A02AA6621B004F02E2 /* gc_9_3_rlc_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_3_rlc_ucode.bin; sourceTree = "<group>"; };
 		406C86A12AA6621B004F02E2 /* gc_9_2_ce_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_2_ce_ucode.bin; sourceTree = "<group>"; };
 		406C86A22AA6621B004F02E2 /* gc_9_2_rlc_srlist_srm_mem.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_2_rlc_srlist_srm_mem.bin; sourceTree = "<group>"; };
@@ -94,22 +94,22 @@
 		406C86BD2AA66223004F02E2 /* sdma_4_1_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = sdma_4_1_ucode.bin; sourceTree = "<group>"; };
 		406C86BE2AA663EF004F02E2 /* ativvaxy_nv.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = ativvaxy_nv.dat; sourceTree = "<group>"; };
 		406C86BF2AA663EF004F02E2 /* ativvaxy_rv.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = ativvaxy_rv.dat; sourceTree = "<group>"; };
-		408F201E288ACBB0002EEC15 /* kern_fw.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_fw.hpp; sourceTree = "<group>"; };
-		408F201F288ACBE6002EEC15 /* kern_fw.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_fw.cpp; sourceTree = "<group>"; };
+		408F201E288ACBB0002EEC15 /* Firmware.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Firmware.hpp; sourceTree = "<group>"; };
+		408F201F288ACBE6002EEC15 /* Firmware.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Firmware.cpp; sourceTree = "<group>"; };
 		40F6ACB72AA7712100A08558 /* psp_auc.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = psp_auc.bin; sourceTree = "<group>"; };
 		40F6ACB82AA774C100A08558 /* psp_fp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = psp_fp.bin; sourceTree = "<group>"; };
 		40F6ACB92AA7872900A08558 /* atidmcub_instruction_dcn21.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = atidmcub_instruction_dcn21.bin; sourceTree = "<group>"; };
-		40FC5FCE29BF942900367F9D /* kern_vbios.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_vbios.hpp; sourceTree = "<group>"; };
-		40FC5FD329BF995000367F9D /* kern_x6000fb.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_x6000fb.cpp; sourceTree = "<group>"; };
-		40FC5FD429BF995000367F9D /* kern_x6000fb.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_x6000fb.hpp; sourceTree = "<group>"; };
-		40FC5FD729BF995E00367F9D /* kern_x5000.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_x5000.cpp; sourceTree = "<group>"; };
-		40FC5FD829BF995E00367F9D /* kern_x5000.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_x5000.hpp; sourceTree = "<group>"; };
-		40FC5FDB29BF996900367F9D /* kern_hwlibs.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_hwlibs.cpp; sourceTree = "<group>"; };
-		40FC5FDC29BF996900367F9D /* kern_hwlibs.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_hwlibs.hpp; sourceTree = "<group>"; };
-		40FC5FDF29BF9E2500367F9D /* kern_x6000.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_x6000.cpp; sourceTree = "<group>"; };
-		40FC5FE029BF9E2500367F9D /* kern_x6000.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_x6000.hpp; sourceTree = "<group>"; };
-		6C1B36642A407C6100B184DD /* kern_hdmi.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_hdmi.cpp; sourceTree = "<group>"; };
-		6C1B36652A407C6100B184DD /* kern_hdmi.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_hdmi.hpp; sourceTree = "<group>"; };
+		40FC5FCE29BF942900367F9D /* ATOMBIOS.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ATOMBIOS.hpp; sourceTree = "<group>"; };
+		40FC5FD329BF995000367F9D /* X6000FB.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = X6000FB.cpp; sourceTree = "<group>"; };
+		40FC5FD429BF995000367F9D /* X6000FB.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = X6000FB.hpp; sourceTree = "<group>"; };
+		40FC5FD729BF995E00367F9D /* X5000.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = X5000.cpp; sourceTree = "<group>"; };
+		40FC5FD829BF995E00367F9D /* X5000.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = X5000.hpp; sourceTree = "<group>"; };
+		40FC5FDB29BF996900367F9D /* HWLibs.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HWLibs.cpp; sourceTree = "<group>"; };
+		40FC5FDC29BF996900367F9D /* HWLibs.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HWLibs.hpp; sourceTree = "<group>"; };
+		40FC5FDF29BF9E2500367F9D /* X6000.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = X6000.cpp; sourceTree = "<group>"; };
+		40FC5FE029BF9E2500367F9D /* X6000.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = X6000.hpp; sourceTree = "<group>"; };
+		6C1B36642A407C6100B184DD /* HDMI.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HDMI.cpp; sourceTree = "<group>"; };
+		6C1B36652A407C6100B184DD /* HDMI.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HDMI.hpp; sourceTree = "<group>"; };
 		CE405EBA1E49DD7100AA0B3D /* kern_compression.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_compression.hpp; sourceTree = "<group>"; };
 		CE405EBB1E49DD7100AA0B3D /* kern_disasm.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_disasm.hpp; sourceTree = "<group>"; };
 		CE405EBC1E49DD7100AA0B3D /* kern_file.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_file.hpp; sourceTree = "<group>"; };
@@ -124,9 +124,9 @@
 		CE405ED81E4A080700AA0B3D /* plugin_start.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = plugin_start.cpp; sourceTree = "<group>"; };
 		CE405EDA1E4A080F00AA0B3D /* plugin_start.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = plugin_start.hpp; sourceTree = "<group>"; };
 		CE8DA0822517C41A008C44E8 /* libkmod.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libkmod.a; path = ../Lilu/MacKernelSDK/Library/x86_64/libkmod.a; sourceTree = "<group>"; };
-		CEA03B5C20EE825A00BA842F /* kern_nred.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_nred.cpp; sourceTree = "<group>"; };
-		CEA03B5D20EE825A00BA842F /* kern_nred.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_nred.hpp; sourceTree = "<group>"; };
-		CEB402A71F181D8300716912 /* kern_amd.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_amd.hpp; sourceTree = "<group>"; };
+		CEA03B5C20EE825A00BA842F /* NRed.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = NRed.cpp; sourceTree = "<group>"; };
+		CEA03B5D20EE825A00BA842F /* NRed.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = NRed.hpp; sourceTree = "<group>"; };
+		CEB402A71F181D8300716912 /* AMDCommon.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AMDCommon.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -163,30 +163,30 @@
 		1C748C291C21952C0024EED2 /* NootedRed */ = {
 			isa = PBXGroup;
 			children = (
+				CEB402A71F181D8300716912 /* AMDCommon.hpp */,
+				40FC5FCE29BF942900367F9D /* ATOMBIOS.hpp */,
+				4019EAE52A3488EC008D800B /* DYLDPatches.cpp */,
+				4019EAE32A348852008D800B /* DYLDPatches.hpp */,
 				408F201A288AC068002EEC15 /* Firmware */,
+				408F201F288ACBE6002EEC15 /* Firmware.cpp */,
+				408F201E288ACBB0002EEC15 /* Firmware.hpp */,
+				6C1B36642A407C6100B184DD /* HDMI.cpp */,
+				6C1B36652A407C6100B184DD /* HDMI.hpp */,
+				40FC5FDB29BF996900367F9D /* HWLibs.cpp */,
+				40FC5FDC29BF996900367F9D /* HWLibs.hpp */,
 				1C748C2E1C21952C0024EED2 /* Info.plist */,
-				CEB402A71F181D8300716912 /* kern_amd.hpp */,
-				4019EAE52A3488EC008D800B /* kern_dyld_patches.cpp */,
-				4019EAE32A348852008D800B /* kern_dyld_patches.hpp */,
-				408F201F288ACBE6002EEC15 /* kern_fw.cpp */,
-				408F201E288ACBB0002EEC15 /* kern_fw.hpp */,
-				6C1B36642A407C6100B184DD /* kern_hdmi.cpp */,
-				6C1B36652A407C6100B184DD /* kern_hdmi.hpp */,
-				40FC5FDB29BF996900367F9D /* kern_hwlibs.cpp */,
-				40FC5FDC29BF996900367F9D /* kern_hwlibs.hpp */,
-				40364DB529B79DFD0070A2B4 /* kern_model.hpp */,
-				CEA03B5C20EE825A00BA842F /* kern_nred.cpp */,
-				CEA03B5D20EE825A00BA842F /* kern_nred.hpp */,
-				406889892A229BF600028D22 /* kern_patcherplus.cpp */,
-				4068898A2A229BF600028D22 /* kern_patcherplus.hpp */,
-				1C748C2C1C21952C0024EED2 /* kern_start.cpp */,
-				40FC5FCE29BF942900367F9D /* kern_vbios.hpp */,
-				40FC5FD729BF995E00367F9D /* kern_x5000.cpp */,
-				40FC5FD829BF995E00367F9D /* kern_x5000.hpp */,
-				40FC5FDF29BF9E2500367F9D /* kern_x6000.cpp */,
-				40FC5FE029BF9E2500367F9D /* kern_x6000.hpp */,
-				40FC5FD329BF995000367F9D /* kern_x6000fb.cpp */,
-				40FC5FD429BF995000367F9D /* kern_x6000fb.hpp */,
+				40364DB529B79DFD0070A2B4 /* Model.hpp */,
+				CEA03B5C20EE825A00BA842F /* NRed.cpp */,
+				CEA03B5D20EE825A00BA842F /* NRed.hpp */,
+				406889892A229BF600028D22 /* PatcherPlus.cpp */,
+				4068898A2A229BF600028D22 /* PatcherPlus.hpp */,
+				1C748C2C1C21952C0024EED2 /* PluginStart.cpp */,
+				40FC5FD729BF995E00367F9D /* X5000.cpp */,
+				40FC5FD829BF995E00367F9D /* X5000.hpp */,
+				40FC5FDF29BF9E2500367F9D /* X6000.cpp */,
+				40FC5FE029BF9E2500367F9D /* X6000.hpp */,
+				40FC5FD329BF995000367F9D /* X6000FB.cpp */,
+				40FC5FD429BF995000367F9D /* X6000FB.hpp */,
 			);
 			path = NootedRed;
 			sourceTree = "<group>";
@@ -295,16 +295,16 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4069F00F29C3A241005293B4 /* kern_vbios.hpp in Headers */,
-				40FC5FDA29BF995E00367F9D /* kern_x5000.hpp in Headers */,
-				40FC5FE229BF9E2500367F9D /* kern_x6000.hpp in Headers */,
-				40364DB629B79DFD0070A2B4 /* kern_model.hpp in Headers */,
-				CEA03B5F20EE825A00BA842F /* kern_nred.hpp in Headers */,
-				40FC5FD629BF995000367F9D /* kern_x6000fb.hpp in Headers */,
-				40FC5FDE29BF996900367F9D /* kern_hwlibs.hpp in Headers */,
-				4019EAE42A348852008D800B /* kern_dyld_patches.hpp in Headers */,
-				4068898C2A229BF600028D22 /* kern_patcherplus.hpp in Headers */,
-				6C1B36672A407C6200B184DD /* kern_hdmi.hpp in Headers */,
+				4069F00F29C3A241005293B4 /* ATOMBIOS.hpp in Headers */,
+				40FC5FDA29BF995E00367F9D /* X5000.hpp in Headers */,
+				40FC5FE229BF9E2500367F9D /* X6000.hpp in Headers */,
+				40364DB629B79DFD0070A2B4 /* Model.hpp in Headers */,
+				CEA03B5F20EE825A00BA842F /* NRed.hpp in Headers */,
+				40FC5FD629BF995000367F9D /* X6000FB.hpp in Headers */,
+				40FC5FDE29BF996900367F9D /* HWLibs.hpp in Headers */,
+				4019EAE42A348852008D800B /* DYLDPatches.hpp in Headers */,
+				4068898C2A229BF600028D22 /* PatcherPlus.hpp in Headers */,
+				6C1B36672A407C6200B184DD /* HDMI.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -378,7 +378,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(PROJECT_DIR)/NootedRed/kern_fw.cpp",
+				"$(PROJECT_DIR)/NootedRed/Firmware.cpp",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -405,17 +405,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				40FC5FDD29BF996900367F9D /* kern_hwlibs.cpp in Sources */,
-				40FC5FD529BF995000367F9D /* kern_x6000fb.cpp in Sources */,
-				6C1B36662A407C6100B184DD /* kern_hdmi.cpp in Sources */,
-				408F2020288ACBE6002EEC15 /* kern_fw.cpp in Sources */,
-				4068898B2A229BF600028D22 /* kern_patcherplus.cpp in Sources */,
-				40FC5FE129BF9E2500367F9D /* kern_x6000.cpp in Sources */,
-				CEA03B5E20EE825A00BA842F /* kern_nred.cpp in Sources */,
+				40FC5FDD29BF996900367F9D /* HWLibs.cpp in Sources */,
+				40FC5FD529BF995000367F9D /* X6000FB.cpp in Sources */,
+				6C1B36662A407C6100B184DD /* HDMI.cpp in Sources */,
+				408F2020288ACBE6002EEC15 /* Firmware.cpp in Sources */,
+				4068898B2A229BF600028D22 /* PatcherPlus.cpp in Sources */,
+				40FC5FE129BF9E2500367F9D /* X6000.cpp in Sources */,
+				CEA03B5E20EE825A00BA842F /* NRed.cpp in Sources */,
 				CE405ED91E4A080700AA0B3D /* plugin_start.cpp in Sources */,
-				40FC5FD929BF995E00367F9D /* kern_x5000.cpp in Sources */,
-				1C748C2D1C21952C0024EED2 /* kern_start.cpp in Sources */,
-				4019EAE62A3488ED008D800B /* kern_dyld_patches.cpp in Sources */,
+				40FC5FD929BF995E00367F9D /* X5000.cpp in Sources */,
+				1C748C2D1C21952C0024EED2 /* PluginStart.cpp in Sources */,
+				4019EAE62A3488ED008D800B /* DYLDPatches.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

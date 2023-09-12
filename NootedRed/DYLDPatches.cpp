@@ -1,8 +1,8 @@
 //  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5. See LICENSE for
 //  details.
 
-#include "kern_dyld_patches.hpp"
-#include "kern_nred.hpp"
+#include "DYLDPatches.hpp"
+#include "NRed.hpp"
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_devinfo.hpp>
 #include <IOKit/IODeviceTreeSupport.h>

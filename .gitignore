@@ -38,7 +38,7 @@ DerivedData/
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
 /Lilu.kext
-/NootedRed/kern_fw.cpp
+/NootedRed/Firmware.cpp
 .vscode/
 .cache/
 CompilationDatabase/

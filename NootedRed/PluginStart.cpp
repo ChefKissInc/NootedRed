@@ -1,8 +1,8 @@
 //  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5. See LICENSE for
 //  details.
 
-#include "kern_nred.hpp"
-#include "kern_x6000fb.hpp"
+#include "NRed.hpp"
+#include "X6000FB.hpp"
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_version.hpp>
 #include <Headers/plugin_start.hpp>

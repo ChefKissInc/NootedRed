@@ -1,15 +1,15 @@
 //  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5. See LICENSE for
 //  details.
 
-#include "kern_nred.hpp"
-#include "kern_dyld_patches.hpp"
-#include "kern_hdmi.hpp"
-#include "kern_hwlibs.hpp"
-#include "kern_model.hpp"
-#include "kern_patcherplus.hpp"
-#include "kern_x5000.hpp"
-#include "kern_x6000.hpp"
-#include "kern_x6000fb.hpp"
+#include "NRed.hpp"
+#include "DYLDPatches.hpp"
+#include "HDMI.hpp"
+#include "HWLibs.hpp"
+#include "Model.hpp"
+#include "PatcherPlus.hpp"
+#include "X5000.hpp"
+#include "X6000.hpp"
+#include "X6000FB.hpp"
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_devinfo.hpp>
 

@@ -1,9 +1,9 @@
 //  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5. See LICENSE for
 //  details.
 
-#include "kern_x6000fb.hpp"
-#include "kern_nred.hpp"
-#include "kern_patcherplus.hpp"
+#include "X6000FB.hpp"
+#include "NRed.hpp"
+#include "PatcherPlus.hpp"
 #include <Headers/kern_api.hpp>
 
 static const char *pathRadeonX6000Framebuffer =

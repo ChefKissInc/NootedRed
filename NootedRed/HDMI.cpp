@@ -1,9 +1,9 @@
 //  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.0. See LICENSE for
 //  details.
 
-#include "kern_hdmi.hpp"
-#include "kern_nred.hpp"
-#include "kern_patcherplus.hpp"
+#include "HDMI.hpp"
+#include "NRed.hpp"
+#include "PatcherPlus.hpp"
 #include <Headers/kern_api.hpp>
 
 static const char *pathAppleGFXHDA = "/System/Library/Extensions/AppleGFXHDA.kext/Contents/MacOS/AppleGFXHDA";
