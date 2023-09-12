@@ -141,7 +141,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             .caps = renoir ? ddiCapsRenoir : ddiCapsRaven,
             .deviceId = NRed::callback->deviceId,
             .revision = NRed::callback->revision,
-            .extRevision = static_cast<uint32_t>(NRed::callback->enumRevision) + NRed::callback->revision,
+            .extRevision = static_cast<UInt32>(NRed::callback->enumRevision) + NRed::callback->revision,
             .pciRevision = NRed::callback->pciRevision,
         };
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
@@ -153,12 +153,12 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
     return false;
 }
 
-uint16_t X6000FB::wrapGetEnumeratedRevision() { return NRed::callback->enumRevision; }
+UInt16 X6000FB::wrapGetEnumeratedRevision() { return NRed::callback->enumRevision; }
 
 IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
-    uint32_t channelCount = 1;
+    UInt32 channelCount = 1;
     auto *table = NRed::callback->getVBIOSDataTable<IGPSystemInfo>(0x1E);
-    uint8_t memoryType = 0;
+    UInt8 memoryType = 0;
     if (table) {
         DBGLOG("x6000fb", "Fetching VRAM info from iGPU System Info");
         switch (table->header.formatRev) {
@@ -195,7 +195,7 @@ IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
     } else {
         DBGLOG("x6000fb", "No iGPU System Info in Master Data Table");
     }
-    auto &videoMemoryType = getMember<uint32_t>(fwInfo, 0x1C);
+    auto &videoMemoryType = getMember<UInt32>(fwInfo, 0x1C);
     switch (memoryType) {
         case kDDR2MemType:
             [[fallthrough]];
@@ -223,15 +223,15 @@ IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
             videoMemoryType = kVideoMemoryTypeDDR4;
             break;
     }
-    getMember<uint32_t>(fwInfo, 0x20) = channelCount * 64;    // VRAM Width (64-bit channels)
+    getMember<UInt32>(fwInfo, 0x20) = channelCount * 64;    // VRAM Width (64-bit channels)
     return kIOReturnSuccess;
 }
 
 bool X6000FB::wrapInitWithPciInfo(void *that, void *param1) {
     auto ret = FunctionCast(wrapInitWithPciInfo, callback->orgInitWithPciInfo)(that, param1);
     // Hack AMDRadeonX6000_AmdLogger to log everything
-    getMember<uint64_t>(that, 0x28) = ~0ULL;
-    getMember<uint32_t>(that, 0x30) = 0xFF;
+    getMember<UInt64>(that, 0x28) = ~0ULL;
+    getMember<UInt32>(that, 0x30) = 0xFF;
     return ret;
 }
 
@@ -280,7 +280,7 @@ void X6000FB::wrapDoGPUPanic() {
     while (true) { IOSleep(3600000); }
 }
 
-uint32_t X6000FB::wrapDcePanelCntlHwInit(void *panelCntl) {
+UInt32 X6000FB::wrapDcePanelCntlHwInit(void *panelCntl) {
     callback->panelCntlPtr = panelCntl;
     return FunctionCast(wrapDcePanelCntlHwInit, callback->orgDcePanelCntlHwInit)(panelCntl);
 }
@@ -307,9 +307,9 @@ IOReturn X6000FB::wrapFramebufferSetAttribute(IOService *framebuffer, IOIndex co
     }
 
     // Set the backlight
-    callback->curPwmBacklightLvl = static_cast<uint32_t>(value);
-    uint32_t percentage = callback->curPwmBacklightLvl * 100 / callback->maxPwmBacklightLvl;
-    uint32_t pwmValue = 0;
+    callback->curPwmBacklightLvl = static_cast<UInt32>(value);
+    UInt32 percentage = callback->curPwmBacklightLvl * 100 / callback->maxPwmBacklightLvl;
+    UInt32 pwmValue = 0;
     if (percentage >= 100) {
         // This is from the dmcu_set_backlight_level function of Linux source
         // ...
@@ -340,7 +340,7 @@ IOReturn X6000FB::wrapFramebufferGetAttribute(IOService *framebuffer, IOIndex co
     return ret;
 }
 
-uint32_t X6000FB::wrapGetNumberOfConnectors(void *that) {
+UInt32 X6000FB::wrapGetNumberOfConnectors(void *that) {
     static bool once = false;
     if (!once) {
         once = true;
@@ -366,7 +366,7 @@ constexpr static const char *LogTypes[] = {"Error", "Warning", "Debug", "DC_Inte
     "I2C_AUX", "Sync", "Backlight", "Override", "Edid", "DP_Caps", "Resource", "DML", "Mode", "Detect", "LKTN",
     "LinkLoss", "Underflow", "InterfaceTrace", "PerfTrace", "DisplayStats"};
 
-void X6000FB::wrapDmLoggerWrite(void *, uint32_t logType, char *fmt, ...) {
+void X6000FB::wrapDmLoggerWrite(void *, UInt32 logType, char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
     auto *ns = new char[0x10000];
@@ -383,7 +383,7 @@ bool X6000FB::wrapIH40IVRingInitHardware(void *ctx, void *param2) {
     return ret;
 }
 
-void X6000FB::wrapIRQMGRWriteRegister(void *ctx, uint64_t index, uint32_t value) {
+void X6000FB::wrapIRQMGRWriteRegister(void *ctx, UInt64 index, UInt32 value) {
     if (index == mmIH_CLK_CTRL) {
         value |= (value & (1U << mmIH_DBUS_MUX_CLK_SOFT_OVERRIDE_SHIFT)) >>
                  (mmIH_DBUS_MUX_CLK_SOFT_OVERRIDE_SHIFT - mmIH_IH_BUFFER_MEM_CLK_SOFT_OVERRIDE_SHIFT);
@@ -392,8 +392,8 @@ void X6000FB::wrapIRQMGRWriteRegister(void *ctx, uint64_t index, uint32_t value)
     FunctionCast(wrapIRQMGRWriteRegister, callback->orgIRQMGRWriteRegister)(ctx, index, value);
 }
 
-uint32_t X6000FB::wrapControllerPowerUp(void *that) {
-    auto &m_flags = getMember<uint8_t>(that, 0x5F18);
+UInt32 X6000FB::wrapControllerPowerUp(void *that) {
+    auto &m_flags = getMember<UInt8>(that, 0x5F18);
     auto send = !(m_flags & 2);
     m_flags |= 4;    // All framebuffers enabled
     auto ret = FunctionCast(wrapControllerPowerUp, callback->orgControllerPowerUp)(that);

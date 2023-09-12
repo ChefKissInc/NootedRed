@@ -213,73 +213,73 @@ void X6000::wrapInitDCNRegistersOffsets(void *that) {
     auto fieldBase = getKernelVersion() == KernelVersion::Catalina ? 0x4838 :
                      getKernelVersion() > KernelVersion::Monterey  ? 0x590 :
                                                                      0x4830;
-    auto base = getMember<uint32_t>(that, fieldBase);
-    getMember<uint32_t>(that, fieldBase + 0x10) = base + mmHUBPREQ0_DCSURF_PRIMARY_SURFACE_ADDRESS;
-    getMember<uint32_t>(that, fieldBase + 0x48) = base + mmHUBPREQ1_DCSURF_PRIMARY_SURFACE_ADDRESS;
-    getMember<uint32_t>(that, fieldBase + 0x80) = base + mmHUBPREQ2_DCSURF_PRIMARY_SURFACE_ADDRESS;
-    getMember<uint32_t>(that, fieldBase + 0xB8) = base + mmHUBPREQ3_DCSURF_PRIMARY_SURFACE_ADDRESS;
-    getMember<uint32_t>(that, fieldBase + 0x14) = base + mmHUBPREQ0_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH;
-    getMember<uint32_t>(that, fieldBase + 0x4C) = base + mmHUBPREQ1_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH;
-    getMember<uint32_t>(that, fieldBase + 0x84) = base + mmHUBPREQ2_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH;
-    getMember<uint32_t>(that, fieldBase + 0xBC) = base + mmHUBPREQ3_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH;
-    getMember<uint32_t>(that, fieldBase + 0x18) = base + mmHUBP0_DCSURF_SURFACE_CONFIG;
-    getMember<uint32_t>(that, fieldBase + 0x50) = base + mmHUBP1_DCSURF_SURFACE_CONFIG;
-    getMember<uint32_t>(that, fieldBase + 0x88) = base + mmHUBP2_DCSURF_SURFACE_CONFIG;
-    getMember<uint32_t>(that, fieldBase + 0xC0) = base + mmHUBP3_DCSURF_SURFACE_CONFIG;
-    getMember<uint32_t>(that, fieldBase + 0x1C) = base + mmHUBPREQ0_DCSURF_SURFACE_PITCH;
-    getMember<uint32_t>(that, fieldBase + 0x54) = base + mmHUBPREQ1_DCSURF_SURFACE_PITCH;
-    getMember<uint32_t>(that, fieldBase + 0x8C) = base + mmHUBPREQ2_DCSURF_SURFACE_PITCH;
-    getMember<uint32_t>(that, fieldBase + 0xC4) = base + mmHUBPREQ3_DCSURF_SURFACE_PITCH;
-    getMember<uint32_t>(that, fieldBase + 0x20) = base + mmHUBP0_DCSURF_ADDR_CONFIG;
-    getMember<uint32_t>(that, fieldBase + 0x58) = base + mmHUBP1_DCSURF_ADDR_CONFIG;
-    getMember<uint32_t>(that, fieldBase + 0x90) = base + mmHUBP2_DCSURF_ADDR_CONFIG;
-    getMember<uint32_t>(that, fieldBase + 0xC8) = base + mmHUBP3_DCSURF_ADDR_CONFIG;
-    getMember<uint32_t>(that, fieldBase + 0x24) = base + mmHUBP0_DCSURF_TILING_CONFIG;
-    getMember<uint32_t>(that, fieldBase + 0x5C) = base + mmHUBP1_DCSURF_TILING_CONFIG;
-    getMember<uint32_t>(that, fieldBase + 0x94) = base + mmHUBP2_DCSURF_TILING_CONFIG;
-    getMember<uint32_t>(that, fieldBase + 0xCC) = base + mmHUBP3_DCSURF_TILING_CONFIG;
-    getMember<uint32_t>(that, fieldBase + 0x28) = base + mmHUBP0_DCSURF_PRI_VIEWPORT_START;
-    getMember<uint32_t>(that, fieldBase + 0x60) = base + mmHUBP1_DCSURF_PRI_VIEWPORT_START;
-    getMember<uint32_t>(that, fieldBase + 0x98) = base + mmHUBP2_DCSURF_PRI_VIEWPORT_START;
-    getMember<uint32_t>(that, fieldBase + 0xD0) = base + mmHUBP3_DCSURF_PRI_VIEWPORT_START;
-    getMember<uint32_t>(that, fieldBase + 0x2C) = base + mmHUBP0_DCSURF_PRI_VIEWPORT_DIMENSION;
-    getMember<uint32_t>(that, fieldBase + 0x64) = base + mmHUBP1_DCSURF_PRI_VIEWPORT_DIMENSION;
-    getMember<uint32_t>(that, fieldBase + 0x9C) = base + mmHUBP2_DCSURF_PRI_VIEWPORT_DIMENSION;
-    getMember<uint32_t>(that, fieldBase + 0xD4) = base + mmHUBP3_DCSURF_PRI_VIEWPORT_DIMENSION;
-    getMember<uint32_t>(that, fieldBase + 0x30) = base + mmOTG0_OTG_CONTROL;
-    getMember<uint32_t>(that, fieldBase + 0x68) = base + mmOTG1_OTG_CONTROL;
-    getMember<uint32_t>(that, fieldBase + 0xA0) = base + mmOTG2_OTG_CONTROL;
-    getMember<uint32_t>(that, fieldBase + 0xD8) = base + mmOTG3_OTG_CONTROL;
-    getMember<uint32_t>(that, fieldBase + 0x110) = base + mmOTG4_OTG_CONTROL;
-    getMember<uint32_t>(that, fieldBase + 0x148) = base + mmOTG5_OTG_CONTROL;
-    getMember<uint32_t>(that, fieldBase + 0x34) = base + mmOTG0_OTG_INTERLACE_CONTROL;
-    getMember<uint32_t>(that, fieldBase + 0x6C) = base + mmOTG1_OTG_INTERLACE_CONTROL;
-    getMember<uint32_t>(that, fieldBase + 0xA4) = base + mmOTG2_OTG_INTERLACE_CONTROL;
-    getMember<uint32_t>(that, fieldBase + 0xDC) = base + mmOTG3_OTG_INTERLACE_CONTROL;
-    getMember<uint32_t>(that, fieldBase + 0x114) = base + mmOTG4_OTG_INTERLACE_CONTROL;
-    getMember<uint32_t>(that, fieldBase + 0x14C) = base + mmOTG5_OTG_INTERLACE_CONTROL;
-    getMember<uint32_t>(that, fieldBase + 0x38) = base + mmHUBPREQ0_DCSURF_FLIP_CONTROL;
-    getMember<uint32_t>(that, fieldBase + 0x70) = base + mmHUBPREQ1_DCSURF_FLIP_CONTROL;
-    getMember<uint32_t>(that, fieldBase + 0xA8) = base + mmHUBPREQ2_DCSURF_FLIP_CONTROL;
-    getMember<uint32_t>(that, fieldBase + 0xE0) = base + mmHUBPREQ3_DCSURF_FLIP_CONTROL;
-    getMember<uint32_t>(that, fieldBase + 0x3C) = base + mmHUBPRET0_HUBPRET_CONTROL;
-    getMember<uint32_t>(that, fieldBase + 0x74) = base + mmHUBPRET1_HUBPRET_CONTROL;
-    getMember<uint32_t>(that, fieldBase + 0xAC) = base + mmHUBPRET2_HUBPRET_CONTROL;
-    getMember<uint32_t>(that, fieldBase + 0xE4) = base + mmHUBPRET3_HUBPRET_CONTROL;
-    getMember<uint32_t>(that, fieldBase + 0x40) = base + mmHUBPREQ0_DCSURF_SURFACE_EARLIEST_INUSE;
-    getMember<uint32_t>(that, fieldBase + 0x78) = base + mmHUBPREQ1_DCSURF_SURFACE_EARLIEST_INUSE;
-    getMember<uint32_t>(that, fieldBase + 0xB0) = base + mmHUBPREQ2_DCSURF_SURFACE_EARLIEST_INUSE;
-    getMember<uint32_t>(that, fieldBase + 0xE8) = base + mmHUBPREQ3_DCSURF_SURFACE_EARLIEST_INUSE;
-    getMember<uint32_t>(that, fieldBase + 0x44) = base + mmHUBPREQ0_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
-    getMember<uint32_t>(that, fieldBase + 0x7C) = base + mmHUBPREQ1_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
-    getMember<uint32_t>(that, fieldBase + 0xB4) = base + mmHUBPREQ2_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
-    getMember<uint32_t>(that, fieldBase + 0xEC) = base + mmHUBPREQ3_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
+    auto base = getMember<UInt32>(that, fieldBase);
+    getMember<UInt32>(that, fieldBase + 0x10) = base + mmHUBPREQ0_DCSURF_PRIMARY_SURFACE_ADDRESS;
+    getMember<UInt32>(that, fieldBase + 0x48) = base + mmHUBPREQ1_DCSURF_PRIMARY_SURFACE_ADDRESS;
+    getMember<UInt32>(that, fieldBase + 0x80) = base + mmHUBPREQ2_DCSURF_PRIMARY_SURFACE_ADDRESS;
+    getMember<UInt32>(that, fieldBase + 0xB8) = base + mmHUBPREQ3_DCSURF_PRIMARY_SURFACE_ADDRESS;
+    getMember<UInt32>(that, fieldBase + 0x14) = base + mmHUBPREQ0_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH;
+    getMember<UInt32>(that, fieldBase + 0x4C) = base + mmHUBPREQ1_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH;
+    getMember<UInt32>(that, fieldBase + 0x84) = base + mmHUBPREQ2_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH;
+    getMember<UInt32>(that, fieldBase + 0xBC) = base + mmHUBPREQ3_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH;
+    getMember<UInt32>(that, fieldBase + 0x18) = base + mmHUBP0_DCSURF_SURFACE_CONFIG;
+    getMember<UInt32>(that, fieldBase + 0x50) = base + mmHUBP1_DCSURF_SURFACE_CONFIG;
+    getMember<UInt32>(that, fieldBase + 0x88) = base + mmHUBP2_DCSURF_SURFACE_CONFIG;
+    getMember<UInt32>(that, fieldBase + 0xC0) = base + mmHUBP3_DCSURF_SURFACE_CONFIG;
+    getMember<UInt32>(that, fieldBase + 0x1C) = base + mmHUBPREQ0_DCSURF_SURFACE_PITCH;
+    getMember<UInt32>(that, fieldBase + 0x54) = base + mmHUBPREQ1_DCSURF_SURFACE_PITCH;
+    getMember<UInt32>(that, fieldBase + 0x8C) = base + mmHUBPREQ2_DCSURF_SURFACE_PITCH;
+    getMember<UInt32>(that, fieldBase + 0xC4) = base + mmHUBPREQ3_DCSURF_SURFACE_PITCH;
+    getMember<UInt32>(that, fieldBase + 0x20) = base + mmHUBP0_DCSURF_ADDR_CONFIG;
+    getMember<UInt32>(that, fieldBase + 0x58) = base + mmHUBP1_DCSURF_ADDR_CONFIG;
+    getMember<UInt32>(that, fieldBase + 0x90) = base + mmHUBP2_DCSURF_ADDR_CONFIG;
+    getMember<UInt32>(that, fieldBase + 0xC8) = base + mmHUBP3_DCSURF_ADDR_CONFIG;
+    getMember<UInt32>(that, fieldBase + 0x24) = base + mmHUBP0_DCSURF_TILING_CONFIG;
+    getMember<UInt32>(that, fieldBase + 0x5C) = base + mmHUBP1_DCSURF_TILING_CONFIG;
+    getMember<UInt32>(that, fieldBase + 0x94) = base + mmHUBP2_DCSURF_TILING_CONFIG;
+    getMember<UInt32>(that, fieldBase + 0xCC) = base + mmHUBP3_DCSURF_TILING_CONFIG;
+    getMember<UInt32>(that, fieldBase + 0x28) = base + mmHUBP0_DCSURF_PRI_VIEWPORT_START;
+    getMember<UInt32>(that, fieldBase + 0x60) = base + mmHUBP1_DCSURF_PRI_VIEWPORT_START;
+    getMember<UInt32>(that, fieldBase + 0x98) = base + mmHUBP2_DCSURF_PRI_VIEWPORT_START;
+    getMember<UInt32>(that, fieldBase + 0xD0) = base + mmHUBP3_DCSURF_PRI_VIEWPORT_START;
+    getMember<UInt32>(that, fieldBase + 0x2C) = base + mmHUBP0_DCSURF_PRI_VIEWPORT_DIMENSION;
+    getMember<UInt32>(that, fieldBase + 0x64) = base + mmHUBP1_DCSURF_PRI_VIEWPORT_DIMENSION;
+    getMember<UInt32>(that, fieldBase + 0x9C) = base + mmHUBP2_DCSURF_PRI_VIEWPORT_DIMENSION;
+    getMember<UInt32>(that, fieldBase + 0xD4) = base + mmHUBP3_DCSURF_PRI_VIEWPORT_DIMENSION;
+    getMember<UInt32>(that, fieldBase + 0x30) = base + mmOTG0_OTG_CONTROL;
+    getMember<UInt32>(that, fieldBase + 0x68) = base + mmOTG1_OTG_CONTROL;
+    getMember<UInt32>(that, fieldBase + 0xA0) = base + mmOTG2_OTG_CONTROL;
+    getMember<UInt32>(that, fieldBase + 0xD8) = base + mmOTG3_OTG_CONTROL;
+    getMember<UInt32>(that, fieldBase + 0x110) = base + mmOTG4_OTG_CONTROL;
+    getMember<UInt32>(that, fieldBase + 0x148) = base + mmOTG5_OTG_CONTROL;
+    getMember<UInt32>(that, fieldBase + 0x34) = base + mmOTG0_OTG_INTERLACE_CONTROL;
+    getMember<UInt32>(that, fieldBase + 0x6C) = base + mmOTG1_OTG_INTERLACE_CONTROL;
+    getMember<UInt32>(that, fieldBase + 0xA4) = base + mmOTG2_OTG_INTERLACE_CONTROL;
+    getMember<UInt32>(that, fieldBase + 0xDC) = base + mmOTG3_OTG_INTERLACE_CONTROL;
+    getMember<UInt32>(that, fieldBase + 0x114) = base + mmOTG4_OTG_INTERLACE_CONTROL;
+    getMember<UInt32>(that, fieldBase + 0x14C) = base + mmOTG5_OTG_INTERLACE_CONTROL;
+    getMember<UInt32>(that, fieldBase + 0x38) = base + mmHUBPREQ0_DCSURF_FLIP_CONTROL;
+    getMember<UInt32>(that, fieldBase + 0x70) = base + mmHUBPREQ1_DCSURF_FLIP_CONTROL;
+    getMember<UInt32>(that, fieldBase + 0xA8) = base + mmHUBPREQ2_DCSURF_FLIP_CONTROL;
+    getMember<UInt32>(that, fieldBase + 0xE0) = base + mmHUBPREQ3_DCSURF_FLIP_CONTROL;
+    getMember<UInt32>(that, fieldBase + 0x3C) = base + mmHUBPRET0_HUBPRET_CONTROL;
+    getMember<UInt32>(that, fieldBase + 0x74) = base + mmHUBPRET1_HUBPRET_CONTROL;
+    getMember<UInt32>(that, fieldBase + 0xAC) = base + mmHUBPRET2_HUBPRET_CONTROL;
+    getMember<UInt32>(that, fieldBase + 0xE4) = base + mmHUBPRET3_HUBPRET_CONTROL;
+    getMember<UInt32>(that, fieldBase + 0x40) = base + mmHUBPREQ0_DCSURF_SURFACE_EARLIEST_INUSE;
+    getMember<UInt32>(that, fieldBase + 0x78) = base + mmHUBPREQ1_DCSURF_SURFACE_EARLIEST_INUSE;
+    getMember<UInt32>(that, fieldBase + 0xB0) = base + mmHUBPREQ2_DCSURF_SURFACE_EARLIEST_INUSE;
+    getMember<UInt32>(that, fieldBase + 0xE8) = base + mmHUBPREQ3_DCSURF_SURFACE_EARLIEST_INUSE;
+    getMember<UInt32>(that, fieldBase + 0x44) = base + mmHUBPREQ0_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
+    getMember<UInt32>(that, fieldBase + 0x7C) = base + mmHUBPREQ1_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
+    getMember<UInt32>(that, fieldBase + 0xB4) = base + mmHUBPREQ2_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
+    getMember<UInt32>(that, fieldBase + 0xEC) = base + mmHUBPREQ3_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
 }
 
 #define HWALIGNMGR_ADJUST getMember<void *>(X5000::callback->hwAlignMgr, 0) = X5000::callback->hwAlignMgrVtX6000;
 #define HWALIGNMGR_REVERT getMember<void *>(X5000::callback->hwAlignMgr, 0) = X5000::callback->hwAlignMgrVtX5000;
 
-uint64_t X6000::wrapAccelSharedSurfaceCopy(void *that, void *param1, uint64_t param2, void *param3) {
+UInt64 X6000::wrapAccelSharedSurfaceCopy(void *that, void *param1, UInt64 param2, void *param3) {
     HWALIGNMGR_ADJUST
     auto ret =
         FunctionCast(wrapAccelSharedSurfaceCopy, callback->orgAccelSharedSurfaceCopy)(that, param1, param2, param3);
@@ -287,7 +287,7 @@ uint64_t X6000::wrapAccelSharedSurfaceCopy(void *that, void *param1, uint64_t pa
     return ret;
 }
 
-uint64_t X6000::wrapAllocateScanoutFB(void *that, uint32_t param1, void *param2, void *param3, void *param4) {
+UInt64 X6000::wrapAllocateScanoutFB(void *that, UInt32 param1, void *param2, void *param3, void *param4) {
     HWALIGNMGR_ADJUST
     auto ret =
         FunctionCast(wrapAllocateScanoutFB, callback->orgAllocateScanoutFB)(that, param1, param2, param3, param4);
@@ -295,21 +295,21 @@ uint64_t X6000::wrapAllocateScanoutFB(void *that, uint32_t param1, void *param2,
     return ret;
 }
 
-uint64_t X6000::wrapFillUBMSurface(void *that, uint32_t param1, void *param2, void *param3) {
+UInt64 X6000::wrapFillUBMSurface(void *that, UInt32 param1, void *param2, void *param3) {
     HWALIGNMGR_ADJUST
     auto ret = FunctionCast(wrapFillUBMSurface, callback->orgFillUBMSurface)(that, param1, param2, param3);
     HWALIGNMGR_REVERT
     return ret;
 }
 
-bool X6000::wrapConfigureDisplay(void *that, uint32_t param1, uint32_t param2, void *param3, void *param4) {
+bool X6000::wrapConfigureDisplay(void *that, UInt32 param1, UInt32 param2, void *param3, void *param4) {
     HWALIGNMGR_ADJUST
     auto ret = FunctionCast(wrapConfigureDisplay, callback->orgConfigureDisplay)(that, param1, param2, param3, param4);
     HWALIGNMGR_REVERT
     return ret;
 }
 
-uint64_t X6000::wrapGetDisplayInfo(void *that, uint32_t param1, bool param2, bool param3, void *param4, void *param5) {
+UInt64 X6000::wrapGetDisplayInfo(void *that, UInt32 param1, bool param2, bool param3, void *param4, void *param5) {
     HWALIGNMGR_ADJUST
     auto ret =
         FunctionCast(wrapGetDisplayInfo, callback->orgGetDisplayInfo)(that, param1, param2, param3, param4, param5);

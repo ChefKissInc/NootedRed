@@ -6,8 +6,8 @@
 
 struct FWDescriptor {
     const char *name;
-    const uint8_t *data;
-    const uint32_t size;
+    const UInt8 *data;
+    const UInt32 size;
 };
 
 #define NRED_FW(name_, data_, size_) .name = name_, .data = data_, .size = size_

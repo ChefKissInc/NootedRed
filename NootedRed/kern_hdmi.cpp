@@ -24,12 +24,12 @@ void HDMI::init() {
 
 bool HDMI::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextAppleGFXHDA.loadIndex == id) {
-        const uint32_t probeFind = 0xAB381002;
-        const uint32_t probeRepl = NRed::callback->deviceId <= 0x15DD ? 0x15DE1002 : 0x16371002;
+        const UInt32 probeFind = 0xAB381002;
+        const UInt32 probeRepl = NRed::callback->deviceId <= 0x15DD ? 0x15DE1002 : 0x16371002;
         bool catalina = getKernelVersion() == KernelVersion::Catalina;
         const LookupPatchPlus patches[] = {
-            {&kextAppleGFXHDA, reinterpret_cast<const uint8_t *>(&probeFind),
-                reinterpret_cast<const uint8_t *>(&probeRepl), sizeof(probeFind), 1},
+            {&kextAppleGFXHDA, reinterpret_cast<const UInt8 *>(&probeFind), reinterpret_cast<const UInt8 *>(&probeRepl),
+                sizeof(probeFind), 1},
             {&kextAppleGFXHDA, kCreateAppleHDAWidget1Original, kCreateAppleHDAWidget1OriginalMask,
                 kCreateAppleHDAWidget1Patched, kCreateAppleHDAWidget1PatchedMask, catalina ? 2U : 1},
         };

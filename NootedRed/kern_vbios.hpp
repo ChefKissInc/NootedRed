@@ -6,55 +6,55 @@
 
 struct VFCT {
     char signature[4];
-    uint32_t length;
-    uint8_t revision, checksum;
+    UInt32 length;
+    UInt8 revision, checksum;
     char oemId[6];
     char oemTableId[8];
-    uint32_t oemRevision;
+    UInt32 oemRevision;
     char creatorId[4];
-    uint32_t creatorRevision;
+    UInt32 creatorRevision;
     char tableUUID[16];
-    uint32_t vbiosImageOffset, lib1ImageOffset;
-    uint32_t reserved[4];
+    UInt32 vbiosImageOffset, lib1ImageOffset;
+    UInt32 reserved[4];
 } PACKED;
 
 struct GOPVideoBIOSHeader {
-    uint32_t pciBus, pciDevice, pciFunction;
-    uint16_t vendorID, deviceID;
-    uint16_t ssvId, ssId;
-    uint32_t revision, imageLength;
+    UInt32 pciBus, pciDevice, pciFunction;
+    UInt16 vendorID, deviceID;
+    UInt16 ssvId, ssId;
+    UInt32 revision, imageLength;
 } PACKED;
 
 struct ATOMCommonTableHeader {
-    uint16_t structureSize;
-    uint8_t formatRev;
-    uint8_t contentRev;
+    UInt16 structureSize;
+    UInt8 formatRev;
+    UInt8 contentRev;
 } PACKED;
 
-constexpr uint32_t ATOM_ROM_TABLE_PTR = 0x48;
-constexpr uint32_t ATOM_ROM_DATA_PTR = 0x20;
+constexpr UInt32 ATOM_ROM_TABLE_PTR = 0x48;
+constexpr UInt32 ATOM_ROM_DATA_PTR = 0x20;
 
 struct IGPSystemInfoV11 : public ATOMCommonTableHeader {
-    uint32_t vbiosMisc;
-    uint32_t gpuCapInfo;
-    uint32_t systemConfig;
-    uint32_t cpuCapInfo;
-    uint16_t gpuclkSsPercentage;
-    uint16_t gpuclkSsType;
-    uint16_t lvdsSsPercentage;
-    uint16_t lvdsSsRate10hz;
-    uint16_t hdmiSsPercentage;
-    uint16_t hdmiSsRate10hz;
-    uint16_t dviSsPercentage;
-    uint16_t dviSsRate10hz;
-    uint16_t dpPhyOverride;
-    uint16_t lvdsMisc;
-    uint16_t backlightPwmHz;
-    uint8_t memoryType;
-    uint8_t umaChannelCount;
+    UInt32 vbiosMisc;
+    UInt32 gpuCapInfo;
+    UInt32 systemConfig;
+    UInt32 cpuCapInfo;
+    UInt16 gpuclkSsPercentage;
+    UInt16 gpuclkSsType;
+    UInt16 lvdsSsPercentage;
+    UInt16 lvdsSsRate10hz;
+    UInt16 hdmiSsPercentage;
+    UInt16 hdmiSsRate10hz;
+    UInt16 dviSsPercentage;
+    UInt16 dviSsRate10hz;
+    UInt16 dpPhyOverride;
+    UInt16 lvdsMisc;
+    UInt16 backlightPwmHz;
+    UInt8 memoryType;
+    UInt8 umaChannelCount;
 } PACKED;
 
-enum DMIT17MemType : uint8_t {
+enum DMIT17MemType : UInt8 {
     kDDR2MemType = 0x13,
     kDDR2FBDIMMMemType,
     kDDR3MemType = 0x18,
@@ -67,15 +67,15 @@ enum DMIT17MemType : uint8_t {
 };
 
 struct IGPSystemInfoV2 : public ATOMCommonTableHeader {
-    uint32_t vbiosMisc;
-    uint32_t gpuCapInfo;
-    uint32_t systemConfig;
-    uint32_t cpuCapInfo;
-    uint16_t gpuclkSsPercentage;
-    uint16_t gpuclkSsType;
-    uint16_t dpPhyOverride;
-    uint8_t memoryType;
-    uint8_t umaChannelCount;
+    UInt32 vbiosMisc;
+    UInt32 gpuCapInfo;
+    UInt32 systemConfig;
+    UInt32 cpuCapInfo;
+    UInt16 gpuclkSsPercentage;
+    UInt16 gpuclkSsType;
+    UInt16 dpPhyOverride;
+    UInt8 memoryType;
+    UInt8 umaChannelCount;
 } PACKED;
 
 union IGPSystemInfo {
@@ -85,20 +85,20 @@ union IGPSystemInfo {
 };
 
 struct ATOMDispObjPathV2 {
-    uint16_t dispObjId;
-    uint16_t dispRecordOff;
-    uint16_t encoderObjId;
-    uint16_t extEncoderObjId;
-    uint16_t encoderRecordOff;
-    uint16_t extEncoderRecordOff;
-    uint16_t devTag;
-    uint8_t priorityId;
-    uint8_t _reserved;
+    UInt16 dispObjId;
+    UInt16 dispRecordOff;
+    UInt16 encoderObjId;
+    UInt16 extEncoderObjId;
+    UInt16 encoderRecordOff;
+    UInt16 extEncoderRecordOff;
+    UInt16 devTag;
+    UInt8 priorityId;
+    UInt8 _reserved;
 } PACKED;
 
 struct DispObjInfoTableV1_4 : public ATOMCommonTableHeader {
-    uint16_t supportedDevices;
-    uint8_t pathCount;
-    uint8_t _reserved;
+    UInt16 supportedDevices;
+    UInt8 pathCount;
+    UInt8 _reserved;
     ATOMDispObjPathV2 paths[];
 } PACKED;

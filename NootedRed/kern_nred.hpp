@@ -14,11 +14,11 @@ class EXPORT PRODUCT_NAME : public IOService {
     OSDeclareDefaultStructors(PRODUCT_NAME);
 
     public:
-    IOService *probe(IOService *provider, SInt32 *score) override;
-    bool start(IOService *provider) override;
+    IOService *probe(IOService *provider, SInt32 *score) APPLE_KEXT_OVERRIDE;
+    bool start(IOService *provider) APPLE_KEXT_OVERRIDE;
 };
 
-enum struct ChipType : uint32_t {
+enum struct ChipType : UInt32 {
     Raven = 0,
     Picasso,
     Raven2,
@@ -33,8 +33,8 @@ class AppleACPIPlatformExpert : IOACPIPlatformExpert {
 };
 
 // https://elixir.bootlin.com/linux/latest/source/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c#L49
-static bool checkAtomBios(const uint8_t *bios, size_t size) {
-    uint16_t tmp, bios_header_start;
+static bool checkAtomBios(const UInt8 *bios, size_t size) {
+    UInt16 tmp, bios_header_start;
 
     if (size < 0x49) {
         DBGLOG("nred", "VBIOS size is invalid");
@@ -117,7 +117,7 @@ class NRed {
                 return false;
             }
 
-            auto *vContent = static_cast<const uint8_t *>(
+            auto *vContent = static_cast<const UInt8 *>(
                 vfctData->getBytesNoCopy(offset + sizeof(GOPVideoBIOSHeader), vHdr->imageLength));
             if (!vContent) {
                 DBGLOG("nred", "VFCT VBIOS image out of bounds");
@@ -149,8 +149,8 @@ class NRed {
             OSSafeReleaseNULL(bar0);
             return false;
         }
-        auto *fb = reinterpret_cast<const uint8_t *>(bar0->getVirtualAddress());
-        uint32_t size = 256 * 1024;    // ???
+        auto *fb = reinterpret_cast<const UInt8 *>(bar0->getVirtualAddress());
+        UInt32 size = 256 * 1024;    // ???
         if (!checkAtomBios(fb, size)) {
             DBGLOG("nred", "VRAM VBIOS is not an ATOMBIOS");
             bar0->release();
@@ -163,7 +163,7 @@ class NRed {
         return true;
     }
 
-    uint32_t readReg32(uint32_t reg) {
+    UInt32 readReg32(UInt32 reg) {
         if (reg * 4 < this->rmmio->getLength()) {
             return this->rmmioPtr[reg];
         } else {
@@ -172,7 +172,7 @@ class NRed {
         }
     }
 
-    void writeReg32(uint32_t reg, uint32_t val) {
+    void writeReg32(UInt32 reg, UInt32 val) {
         if ((reg * 4) < this->rmmio->getLength()) {
             this->rmmioPtr[reg] = val;
         } else {
@@ -181,10 +181,10 @@ class NRed {
         }
     }
 
-    uint32_t sendMsgToSmc(uint32_t msg, uint32_t param = 0) {
+    UInt32 sendMsgToSmc(UInt32 msg, UInt32 param = 0) {
         auto smuWaitForResp = [=]() {
-            uint32_t ret = 0;
-            for (uint32_t i = 0; i < AMDGPU_MAX_USEC_TIMEOUT; i++) {
+            UInt32 ret = 0;
+            for (UInt32 i = 0; i < AMDGPU_MAX_USEC_TIMEOUT; i++) {
                 ret = this->readReg32(MP_BASE + mmMP1_SMN_C2PMSG_90);
                 if (ret) return ret;
 
@@ -206,24 +206,24 @@ class NRed {
     }
 
     template<typename T>
-    T *getVBIOSDataTable(uint32_t index) {
-        auto *vbios = static_cast<const uint8_t *>(this->vbiosData->getBytesNoCopy());
-        auto base = *reinterpret_cast<const uint16_t *>(vbios + ATOM_ROM_TABLE_PTR);
-        auto dataTable = *reinterpret_cast<const uint16_t *>(vbios + base + ATOM_ROM_DATA_PTR);
-        auto *mdt = reinterpret_cast<const uint16_t *>(vbios + dataTable + 4);
+    T *getVBIOSDataTable(UInt32 index) {
+        auto *vbios = static_cast<const UInt8 *>(this->vbiosData->getBytesNoCopy());
+        auto base = *reinterpret_cast<const UInt16 *>(vbios + ATOM_ROM_TABLE_PTR);
+        auto dataTable = *reinterpret_cast<const UInt16 *>(vbios + base + ATOM_ROM_DATA_PTR);
+        auto *mdt = reinterpret_cast<const UInt16 *>(vbios + dataTable + 4);
         auto offset = mdt[index];
-        return offset ? reinterpret_cast<T *>(const_cast<uint8_t *>(vbios) + offset) : nullptr;
+        return offset ? reinterpret_cast<T *>(const_cast<UInt8 *>(vbios) + offset) : nullptr;
     }
 
     OSData *vbiosData {nullptr};
     ChipType chipType {ChipType::Unknown};
-    uint64_t fbOffset {0};
+    UInt64 fbOffset {0};
     IOMemoryMap *rmmio {nullptr};
-    volatile uint32_t *rmmioPtr {nullptr};
-    uint32_t deviceId {0};
-    uint16_t enumRevision {0};
-    uint16_t revision {0};
-    uint32_t pciRevision {0};
+    volatile UInt32 *rmmioPtr {nullptr};
+    UInt32 deviceId {0};
+    UInt16 enumRevision {0};
+    UInt16 revision {0};
+    UInt32 pciRevision {0};
     IOPCIDevice *iGPU {nullptr};
     OSMetaClass *metaClassMap[5][2] = {{nullptr}};
     mach_vm_address_t orgSafeMetaCast {0};
@@ -237,13 +237,13 @@ class NRed {
 /* ---- Patches ---- */
 
 // Change frame-buffer count >= 2 check to >= 1.
-static const uint8_t kAGDPFBCountCheckOriginal[] = {0x02, 0x00, 0x00, 0x83, 0xF8, 0x02};
-static const uint8_t kAGDPFBCountCheckPatched[] = {0x02, 0x00, 0x00, 0x83, 0xF8, 0x01};
+static const UInt8 kAGDPFBCountCheckOriginal[] = {0x02, 0x00, 0x00, 0x83, 0xF8, 0x02};
+static const UInt8 kAGDPFBCountCheckPatched[] = {0x02, 0x00, 0x00, 0x83, 0xF8, 0x01};
 
 // Ditto
-static const uint8_t kAGDPFBCountCheckVenturaOriginal[] = {0x41, 0x83, 0xBE, 0x14, 0x02, 0x00, 0x00, 0x02};
-static const uint8_t kAGDPFBCountCheckVenturaPatched[] = {0x41, 0x83, 0xBE, 0x14, 0x02, 0x00, 0x00, 0x01};
+static const UInt8 kAGDPFBCountCheckVenturaOriginal[] = {0x41, 0x83, 0xBE, 0x14, 0x02, 0x00, 0x00, 0x02};
+static const UInt8 kAGDPFBCountCheckVenturaPatched[] = {0x41, 0x83, 0xBE, 0x14, 0x02, 0x00, 0x00, 0x01};
 
 // Neutralise access to AGDP configuration by board identifier.
-static const uint8_t kAGDPBoardIDKeyOriginal[] = "board-id";
-static const uint8_t kAGDPBoardIDKeyPatched[] = "applehax";
+static const UInt8 kAGDPBoardIDKeyOriginal[] = "board-id";
+static const UInt8 kAGDPBoardIDKeyPatched[] = "applehax";

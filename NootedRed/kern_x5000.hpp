@@ -24,46 +24,46 @@ class X5000 {
     mach_vm_address_t orgAllocateAMDHWAlignManager {0};
     mach_vm_address_t orgObtainAccelChannelGroup {0};
     void *hwAlignMgr {nullptr};
-    uint8_t *hwAlignMgrVtX5000 {nullptr};
-    uint8_t *hwAlignMgrVtX6000 {nullptr};
+    UInt8 *hwAlignMgrVtX5000 {nullptr};
+    UInt8 *hwAlignMgrVtX6000 {nullptr};
 
     static bool wrapAllocateHWEngines(void *that);
     static void wrapSetupAndInitializeHWCapabilities(void *that);
-    static void *wrapGetHWChannel(void *that, uint32_t engineType, uint32_t ringId);
+    static void *wrapGetHWChannel(void *that, UInt32 engineType, UInt32 ringId);
     static void wrapInitializeFamilyType(void *that);
     static void *wrapAllocateAMDHWDisplay(void *that);
-    static uint64_t wrapAdjustVRAMAddress(void *that, uint64_t addr);
+    static UInt64 wrapAdjustVRAMAddress(void *that, UInt64 addr);
     static void *wrapNewVideoContext(void *that);
-    static void *wrapCreateSMLInterface(uint32_t configBit);
+    static void *wrapCreateSMLInterface(UInt32 configBit);
     static void *wrapNewShared();
     static void *wrapNewSharedUserClient();
     static void *wrapAllocateAMDHWAlignManager();
-    static uint32_t wrapGetDeviceType();
-    static uint32_t wrapReturnZero();
-    static void *wrapObtainAccelChannelGroup(void *that, uint32_t priority);
-    static void *wrapObtainAccelChannelGroup1304(void *that, uint32_t priority, void *task);
-    static uint32_t wrapHwlConvertChipFamily(void *that, uint32_t family, uint32_t revision);
+    static UInt32 wrapGetDeviceType();
+    static UInt32 wrapReturnZero();
+    static void *wrapObtainAccelChannelGroup(void *that, UInt32 priority);
+    static void *wrapObtainAccelChannelGroup1304(void *that, UInt32 priority, void *task);
+    static UInt32 wrapHwlConvertChipFamily(void *that, UInt32 family, UInt32 revision);
 };
 
 /* ---- Patterns ---- */
 
-static const uint8_t kChannelTypesPattern[] = {0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00,
+static const UInt8 kChannelTypesPattern[] = {0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00,
     0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00};
 
-static const uint8_t kHwlConvertChipFamilyPattern[] = {0x81, 0xFE, 0x8D, 0x00, 0x00, 0x00, 0x0F};
+static const UInt8 kHwlConvertChipFamilyPattern[] = {0x81, 0xFE, 0x8D, 0x00, 0x00, 0x00, 0x0F};
 
 /* ---- Patches ---- */
 
 // Make for loop stop after one SDMA engine.
-static const uint8_t kStartHWEnginesOriginal[] = {0x40, 0x83, 0xF0, 0x02};
-static const uint8_t kStartHWEnginesMask[] = {0xF0, 0xFF, 0xF0, 0xFF};
-static const uint8_t kStartHWEnginesPatched[] = {0x40, 0x83, 0xF0, 0x01};
+static const UInt8 kStartHWEnginesOriginal[] = {0x40, 0x83, 0xF0, 0x02};
+static const UInt8 kStartHWEnginesMask[] = {0xF0, 0xFF, 0xF0, 0xFF};
+static const UInt8 kStartHWEnginesPatched[] = {0x40, 0x83, 0xF0, 0x01};
 
 // The check inside was changed from `familyId - 0x8D < 2` to `familyId == 0x8D` in Ventura 13.4.
 // Change the 0x8D (AI) to 0x8E (RV).
-static const uint8_t kAddrLibCreateOriginal[] = {0x41, 0x81, 0x7D, 0x08, 0x8D, 0x00, 0x00, 0x00};
-static const uint8_t kAddrLibCreatePatched[] = {0x41, 0x81, 0x7D, 0x08, 0x8E, 0x00, 0x00, 0x00};
+static const UInt8 kAddrLibCreateOriginal[] = {0x41, 0x81, 0x7D, 0x08, 0x8D, 0x00, 0x00, 0x00};
+static const UInt8 kAddrLibCreatePatched[] = {0x41, 0x81, 0x7D, 0x08, 0x8E, 0x00, 0x00, 0x00};
 
 // Catalina only. Change loop condition to skip SDMA1_HP.
-static const uint8_t kCreateAccelChannelsOriginal[] = {0x8D, 0x44, 0x09, 0x02};
-static const uint8_t kCreateAccelChannelsPatched[] = {0x8D, 0x44, 0x09, 0x01};
+static const UInt8 kCreateAccelChannelsOriginal[] = {0x8D, 0x44, 0x09, 0x02};
+static const UInt8 kCreateAccelChannelsPatched[] = {0x8D, 0x44, 0x09, 0x01};

@@ -23,7 +23,7 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
     if (kextRadeonX5000.loadIndex == id) {
         NRed::callback->setRMMIOIfNecessary();
 
-        uint32_t *orgChannelTypes = nullptr;
+        UInt32 *orgChannelTypes = nullptr;
         mach_vm_address_t startHWEngines = 0;
 
         auto catalina = getKernelVersion() == KernelVersion::Catalina;
@@ -105,19 +105,19 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
             PANIC_COND(!patch.apply(patcher, slide, size), "x5000", "Failed to patch createAccelChannels");
 
             auto dcn2 = NRed::callback->chipType >= ChipType::Renoir;
-            uint32_t findNonBpp64 = 0x22222221;
-            uint32_t replNonBpp64 = dcn2 ? Dcn2NonBpp64SwModeMask : Dcn1NonBpp64SwModeMask;
-            uint32_t findBpp64 = 0x44444440;
-            uint32_t replBpp64Pt2 = dcn2 ? Dcn2Bpp64SwModeMask : Dcn1Bpp64SwModeMask;
-            uint32_t replBpp64 = replNonBpp64 ^ replBpp64Pt2;
-            uint32_t findBpp64Pt2 = 0x66666661;
+            UInt32 findNonBpp64 = 0x22222221;
+            UInt32 replNonBpp64 = dcn2 ? Dcn2NonBpp64SwModeMask : Dcn1NonBpp64SwModeMask;
+            UInt32 findBpp64 = 0x44444440;
+            UInt32 replBpp64Pt2 = dcn2 ? Dcn2Bpp64SwModeMask : Dcn1Bpp64SwModeMask;
+            UInt32 replBpp64 = replNonBpp64 ^ replBpp64Pt2;
+            UInt32 findBpp64Pt2 = 0x66666661;
             const LookupPatchPlus patches[] = {
-                {&kextRadeonX5000, reinterpret_cast<const uint8_t *>(&findNonBpp64),
-                    reinterpret_cast<const uint8_t *>(&replNonBpp64), sizeof(uint32_t), 2},
-                {&kextRadeonX5000, reinterpret_cast<const uint8_t *>(&findBpp64),
-                    reinterpret_cast<const uint8_t *>(&replBpp64), sizeof(uint32_t), 1},
-                {&kextRadeonX5000, reinterpret_cast<const uint8_t *>(&findBpp64Pt2),
-                    reinterpret_cast<const uint8_t *>(&replBpp64Pt2), sizeof(uint32_t), 1},
+                {&kextRadeonX5000, reinterpret_cast<const UInt8 *>(&findNonBpp64),
+                    reinterpret_cast<const UInt8 *>(&replNonBpp64), sizeof(UInt32), 2},
+                {&kextRadeonX5000, reinterpret_cast<const UInt8 *>(&findBpp64),
+                    reinterpret_cast<const UInt8 *>(&replBpp64), sizeof(UInt32), 1},
+                {&kextRadeonX5000, reinterpret_cast<const UInt8 *>(&findBpp64Pt2),
+                    reinterpret_cast<const UInt8 *>(&replBpp64Pt2), sizeof(UInt32), 1},
             };
             PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "x5000",
                 "Failed to patch swizzle mode");
@@ -133,13 +133,13 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
             PANIC_COND(!patch.apply(patcher, startHWEngines, PAGE_SIZE), "x5000", "Failed to patch startHWEngines");
 
             if (NRed::callback->chipType >= ChipType::Renoir) {
-                uint32_t findBpp64 = Dcn1Bpp64SwModeMask, replBpp64 = Dcn2Bpp64SwModeMask;
-                uint32_t findNonBpp64 = Dcn1NonBpp64SwModeMask, replNonBpp64 = Dcn2NonBpp64SwModeMask;
+                UInt32 findBpp64 = Dcn1Bpp64SwModeMask, replBpp64 = Dcn2Bpp64SwModeMask;
+                UInt32 findNonBpp64 = Dcn1NonBpp64SwModeMask, replNonBpp64 = Dcn2NonBpp64SwModeMask;
                 const LookupPatchPlus patches[] = {
-                    {&kextRadeonX5000, reinterpret_cast<const uint8_t *>(&findBpp64),
-                        reinterpret_cast<const uint8_t *>(&replBpp64), sizeof(uint32_t), ventura1304 ? 2U : 4},
-                    {&kextRadeonX5000, reinterpret_cast<const uint8_t *>(&findNonBpp64),
-                        reinterpret_cast<const uint8_t *>(&replNonBpp64), sizeof(uint32_t), ventura1304 ? 2U : 4},
+                    {&kextRadeonX5000, reinterpret_cast<const UInt8 *>(&findBpp64),
+                        reinterpret_cast<const UInt8 *>(&replBpp64), sizeof(UInt32), ventura1304 ? 2U : 4},
+                    {&kextRadeonX5000, reinterpret_cast<const UInt8 *>(&findNonBpp64),
+                        reinterpret_cast<const UInt8 *>(&replNonBpp64), sizeof(UInt32), ventura1304 ? 2U : 4},
                 };
                 PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "x5000",
                     "Failed to patch swizzle mode");
@@ -180,11 +180,11 @@ bool X5000::wrapAllocateHWEngines(void *that) {
 }
 
 struct HWCapability {
-    enum : uint64_t {
-        DisplayPipeCount = 0x04,      // uint32_t
-        SECount = 0x34,               // uint32_t
-        SHPerSE = 0x3C,               // uint32_t
-        CUPerSH = 0x70,               // uint32_t
+    enum : UInt64 {
+        DisplayPipeCount = 0x04,      // UInt32
+        SECount = 0x34,               // UInt32
+        SHPerSE = 0x3C,               // UInt32
+        CUPerSH = 0x70,               // UInt32
         HasUVD0 = 0x84,               // bool
         HasVCE = 0x86,                // bool
         HasVCN0 = 0x87,               // bool
@@ -193,11 +193,11 @@ struct HWCapability {
 };
 
 struct HWCapabilityCatalina {
-    enum : uint64_t {
-        DisplayPipeCount = 0x04,      // uint32_t
-        SECount = 0x30,               // uint32_t
-        SHPerSE = 0x34,               // uint32_t
-        CUPerSH = 0x58,               // uint32_t
+    enum : UInt64 {
+        DisplayPipeCount = 0x04,      // UInt32
+        SECount = 0x30,               // UInt32
+        SHPerSE = 0x34,               // UInt32
+        CUPerSH = 0x58,               // UInt32
         HasUVD0 = 0x68,               // bool
         HasVCE = 0x6A,                // bool
         HasVCN0 = 0x6B,               // bool
@@ -206,7 +206,7 @@ struct HWCapabilityCatalina {
 };
 
 template<typename T>
-static inline void setHWCapability(void *that, uint64_t capability, T value) {
+static inline void setHWCapability(void *that, UInt64 capability, T value) {
     getMember<T>(that, (getKernelVersion() >= KernelVersion::Ventura ? 0x30 : 0x28) + capability) = value;
 }
 
@@ -219,15 +219,15 @@ void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
     auto *gpuInfo = reinterpret_cast<const GPUInfoFirmware *>(fwDesc.data + header->ucodeOff);
 
     auto catalina = getKernelVersion() == KernelVersion::Catalina;
-    setHWCapability<uint32_t>(that, catalina ? HWCapabilityCatalina::SECount : HWCapability::SECount, gpuInfo->gcNumSe);
-    setHWCapability<uint32_t>(that, catalina ? HWCapabilityCatalina::SHPerSE : HWCapability::SHPerSE,
+    setHWCapability<UInt32>(that, catalina ? HWCapabilityCatalina::SECount : HWCapability::SECount, gpuInfo->gcNumSe);
+    setHWCapability<UInt32>(that, catalina ? HWCapabilityCatalina::SHPerSE : HWCapability::SHPerSE,
         gpuInfo->gcNumShPerSe);
-    setHWCapability<uint32_t>(that, catalina ? HWCapabilityCatalina::CUPerSH : HWCapability::CUPerSH,
+    setHWCapability<UInt32>(that, catalina ? HWCapabilityCatalina::CUPerSH : HWCapability::CUPerSH,
         gpuInfo->gcNumCuPerSh);
 
     FunctionCast(wrapSetupAndInitializeHWCapabilities, callback->orgSetupAndInitializeHWCapabilities)(that);
 
-    setHWCapability<uint32_t>(that, catalina ? HWCapabilityCatalina::DisplayPipeCount : HWCapability::DisplayPipeCount,
+    setHWCapability<UInt32>(that, catalina ? HWCapabilityCatalina::DisplayPipeCount : HWCapability::DisplayPipeCount,
         isRavenDerivative ? 4 : 6);
     setHWCapability<bool>(that, catalina ? HWCapabilityCatalina::HasUVD0 : HWCapability::HasUVD0, false);
     setHWCapability<bool>(that, catalina ? HWCapabilityCatalina::HasVCE : HWCapability::HasVCE, false);
@@ -236,13 +236,13 @@ void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
         false);
 }
 
-void *X5000::wrapGetHWChannel(void *that, uint32_t engineType, uint32_t ringId) {
+void *X5000::wrapGetHWChannel(void *that, UInt32 engineType, UInt32 ringId) {
     /** Redirect SDMA1 engine type to SDMA0 */
     return FunctionCast(wrapGetHWChannel, callback->orgGetHWChannel)(that, (engineType == 2) ? 1 : engineType, ringId);
 }
 
 void X5000::wrapInitializeFamilyType(void *that) {
-    getMember<uint32_t>(that, getKernelVersion() == KernelVersion::Catalina ? 0x2B4 : 0x308) = AMDGPU_FAMILY_RAVEN;
+    getMember<UInt32>(that, getKernelVersion() == KernelVersion::Catalina ? 0x2B4 : 0x308) = AMDGPU_FAMILY_RAVEN;
 }
 
 void *X5000::wrapAllocateAMDHWDisplay(void *that) {
@@ -253,11 +253,11 @@ void *X5000::wrapNewVideoContext(void *that) {
     return FunctionCast(wrapNewVideoContext, X6000::callback->orgNewVideoContext)(that);
 }
 
-void *X5000::wrapCreateSMLInterface(uint32_t configBit) {
+void *X5000::wrapCreateSMLInterface(UInt32 configBit) {
     return FunctionCast(wrapCreateSMLInterface, X6000::callback->orgCreateSMLInterface)(configBit);
 }
 
-uint64_t X5000::wrapAdjustVRAMAddress(void *that, uint64_t addr) {
+UInt64 X5000::wrapAdjustVRAMAddress(void *that, UInt64 addr) {
     auto ret = FunctionCast(wrapAdjustVRAMAddress, callback->orgAdjustVRAMAddress)(that, addr);
     return ret != addr ? (ret + NRed::callback->fbOffset) : ret;
 }
@@ -272,8 +272,8 @@ void *X5000::wrapAllocateAMDHWAlignManager() {
     auto ret = FunctionCast(wrapAllocateAMDHWAlignManager, callback->orgAllocateAMDHWAlignManager)();
     callback->hwAlignMgr = ret;
 
-    callback->hwAlignMgrVtX5000 = getMember<uint8_t *>(ret, 0);
-    callback->hwAlignMgrVtX6000 = IONewZero(uint8_t, 0x238);
+    callback->hwAlignMgrVtX5000 = getMember<UInt8 *>(ret, 0);
+    callback->hwAlignMgrVtX6000 = IONewZero(UInt8, 0x238);
 
     memcpy(callback->hwAlignMgrVtX6000, callback->hwAlignMgrVtX5000, 0x128);
     *reinterpret_cast<mach_vm_address_t *>(callback->hwAlignMgrVtX6000 + 0x128) =
@@ -282,29 +282,29 @@ void *X5000::wrapAllocateAMDHWAlignManager() {
     return ret;
 }
 
-uint32_t X5000::wrapGetDeviceType() { return NRed::callback->chipType < ChipType::Renoir ? 0 : 9; }
+UInt32 X5000::wrapGetDeviceType() { return NRed::callback->chipType < ChipType::Renoir ? 0 : 9; }
 
-uint32_t X5000::wrapReturnZero() { return 0; }
+UInt32 X5000::wrapReturnZero() { return 0; }
 
 static void fixAccelGroup(void *that) {
     auto *&sdma1 = getMember<void *>(that, 0x18);
     sdma1 = sdma1 ?: getMember<void *>(that, 0x10);    // Replace field with SDMA0, as we have no SDMA1
 }
 
-void *X5000::wrapObtainAccelChannelGroup(void *that, uint32_t priority) {
+void *X5000::wrapObtainAccelChannelGroup(void *that, UInt32 priority) {
     auto ret = FunctionCast(wrapObtainAccelChannelGroup, callback->orgObtainAccelChannelGroup)(that, priority);
     if (ret) { fixAccelGroup(ret); }
     return ret;
 }
 
-void *X5000::wrapObtainAccelChannelGroup1304(void *that, uint32_t priority, void *task) {
+void *X5000::wrapObtainAccelChannelGroup1304(void *that, UInt32 priority, void *task) {
     auto ret =
         FunctionCast(wrapObtainAccelChannelGroup1304, callback->orgObtainAccelChannelGroup)(that, priority, task);
     if (ret) { fixAccelGroup(ret); }
     return ret;
 }
 
-uint32_t X5000::wrapHwlConvertChipFamily(void *that, uint32_t, uint32_t) {
+UInt32 X5000::wrapHwlConvertChipFamily(void *that, UInt32, UInt32) {
     auto &settings = getMember<Gfx9ChipSettings>(that, getKernelVersion() == KernelVersion::Catalina ? 0x5B18 : 0x5B10);
     bool renoir = NRed::callback->chipType >= ChipType::Renoir;
     settings.isArcticIsland = 1;

@@ -86,13 +86,13 @@ void NRed::processPatcher(KernelPatcher &patcher) {
         WIOKit::renameDevice(this->iGPU, "IGPU");
         WIOKit::awaitPublishing(this->iGPU);
 
-        static uint8_t builtin[] = {0x00};
+        static UInt8 builtin[] = {0x00};
         this->iGPU->setProperty("built-in", builtin, arrsize(builtin));
         this->deviceId = WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigDeviceID);
         this->pciRevision = WIOKit::readPCIConfigValue(NRed::callback->iGPU, WIOKit::kIOPCIConfigRevisionID);
         if (!this->iGPU->getProperty("model")) {
             auto *model = getBranding(this->deviceId, this->pciRevision);
-            this->iGPU->setProperty("model", const_cast<char *>(model), static_cast<uint32_t>(strlen(model) + 1));
+            this->iGPU->setProperty("model", const_cast<char *>(model), static_cast<UInt32>(strlen(model) + 1));
         }
 
         this->iGPU->setMemoryEnable(true);
@@ -154,9 +154,9 @@ void NRed::setRMMIOIfNecessary() {
 
     this->rmmio = this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5, kIOInhibitCache | kIOMapAnywhere);
     PANIC_COND(UNLIKELY(!this->rmmio || !this->rmmio->getLength()), "nred", "Failed to map RMMIO");
-    this->rmmioPtr = reinterpret_cast<uint32_t *>(this->rmmio->getVirtualAddress());
+    this->rmmioPtr = reinterpret_cast<UInt32 *>(this->rmmio->getVirtualAddress());
 
-    this->fbOffset = static_cast<uint64_t>(this->readReg32(0x296B)) << 24;
+    this->fbOffset = static_cast<UInt64>(this->readReg32(0x296B)) << 24;
     this->revision = (this->readReg32(0xD2F) & 0xF000000) >> 0x18;
     switch (this->deviceId) {
         case 0x15D8:
@@ -211,8 +211,8 @@ void NRed::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slid
         KernelPatcher::RouteRequest request {"__ZN15AppleIntelPanel10setDisplayEP9IODisplay", wrapApplePanelSetDisplay,
             orgApplePanelSetDisplay};
         if (patcher.routeMultiple(kextBacklight.loadIndex, &request, 1, slide, size)) {
-            const uint8_t find[] = {"F%uT%04x"};
-            const uint8_t replace[] = {"F%uTxxxx"};
+            const UInt8 find[] = {"F%uT%04x"};
+            const UInt8 replace[] = {"F%uTxxxx"};
             const LookupPatchPlus patch {&kextBacklight, find, replace, 1};
             SYSLOG_COND(!patch.apply(patcher, slide, size), "nred", "Failed to apply backlight patch");
         }
@@ -238,7 +238,7 @@ void NRed::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slid
 
 struct ApplePanelData {
     const char *deviceName;
-    uint8_t deviceData[36];
+    UInt8 deviceData[36];
 };
 
 static ApplePanelData appleBacklightData[] = {

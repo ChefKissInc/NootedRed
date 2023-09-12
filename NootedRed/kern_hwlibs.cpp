@@ -98,13 +98,13 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
                 orgCapsInitTable->deviceId = NRed::callback->deviceId;
                 orgCapsInitTable->revision = NRed::callback->revision;
                 orgCapsInitTable->extRevision =
-                    static_cast<uint64_t>(NRed::callback->enumRevision) + NRed::callback->revision;
+                    static_cast<UInt64>(NRed::callback->enumRevision) + NRed::callback->revision;
                 orgCapsInitTable->pciRevision = NRed::callback->pciRevision;
                 *orgCapsTable = {
                     .familyId = AMDGPU_FAMILY_RAVEN,
                     .deviceId = NRed::callback->deviceId,
                     .revision = NRed::callback->revision,
-                    .extRevision = static_cast<uint32_t>(NRed::callback->enumRevision) + NRed::callback->revision,
+                    .extRevision = static_cast<UInt32>(NRed::callback->enumRevision) + NRed::callback->revision,
                     .pciRevision = NRed::callback->pciRevision,
                     .caps = orgCapsInitTable->caps,
                 };
@@ -116,7 +116,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
             if (orgDevCapTable->familyId == AMDGPU_FAMILY_RAVEN && orgDevCapTable->deviceId == targetDeviceId) {
                 orgDevCapTable->deviceId = NRed::callback->deviceId;
                 orgDevCapTable->extRevision =
-                    static_cast<uint64_t>(NRed::callback->enumRevision) + NRed::callback->revision;
+                    static_cast<UInt64>(NRed::callback->enumRevision) + NRed::callback->revision;
                 orgDevCapTable->revision = DEVICE_CAP_ENTRY_REV_DONT_CARE;
                 orgDevCapTable->enumRevision = DEVICE_CAP_ENTRY_REV_DONT_CARE;
                 break;
@@ -190,11 +190,11 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
     PANIC_COND(!callback->orgPutFirmware(fwDir, 6, fw), "hwlibs", "Failed to insert '%s' firmware", filename);
 }
 
-bool X5000HWLibs::wrapGetIpFw(void *that, uint32_t ipVersion, char *name, void *out) {
+bool X5000HWLibs::wrapGetIpFw(void *that, UInt32 ipVersion, char *name, void *out) {
     if (!strncmp(name, "ativvaxy_rv.dat", 16) || !strncmp(name, "ativvaxy_nv.dat", 16)) {
         auto &fwDesc = getFWDescByName(name);
-        getMember<const uint8_t *>(out, 0x0) = fwDesc.data;
-        getMember<uint32_t>(out, 0x8) = fwDesc.size;
+        getMember<const UInt8 *>(out, 0x0) = fwDesc.data;
+        getMember<UInt32>(out, 0x8) = fwDesc.size;
         return true;
     }
     return FunctionCast(wrapGetIpFw, callback->orgGetIpFw)(that, ipVersion, name, out);
@@ -218,9 +218,9 @@ CAILResult X5000HWLibs::pspBootloaderLoadSos10(void *psp) {
             fieldBase = 0x391C;
             break;
     }
-    getMember<uint32_t>(psp, fieldBase) = NRed::callback->readReg32(MP_BASE + 0x7B);
-    getMember<uint32_t>(psp, fieldBase + 0x4) = NRed::callback->readReg32(MP_BASE + 0x7A);
-    getMember<uint32_t>(psp, fieldBase + 0x8) = NRed::callback->readReg32(MP_BASE + 0x7A);
+    getMember<UInt32>(psp, fieldBase) = NRed::callback->readReg32(MP_BASE + 0x7B);
+    getMember<UInt32>(psp, fieldBase + 0x4) = NRed::callback->readReg32(MP_BASE + 0x7A);
+    getMember<UInt32>(psp, fieldBase + 0x8) = NRed::callback->readReg32(MP_BASE + 0x7A);
     return kCAILResultSuccess;
 }
 
@@ -238,9 +238,9 @@ CAILResult X5000HWLibs::pspSecurityFeatureCapsSet10(void *psp) {
             fieldBase = 0x3918;
             break;
     }
-    auto &securityCaps = getMember<uint8_t>(psp, fieldBase);
-    securityCaps &= ~static_cast<uint8_t>(1);
-    auto &tOSVer = getMember<uint32_t>(psp, fieldBase + 0x8);
+    auto &securityCaps = getMember<UInt8>(psp, fieldBase);
+    securityCaps &= ~static_cast<UInt8>(1);
+    auto &tOSVer = getMember<UInt32>(psp, fieldBase + 0x8);
     if ((tOSVer & 0xFFFF0000) == 0x80000 && (tOSVer & 0xFF) > 0x50) {
         auto policyVer = NRed::callback->readReg32(MP_BASE + 0x9B);
         SYSLOG_COND((policyVer & 0xFF000000) != 0x0A000000, "hwlibs", "Invalid security policy version: 0x%X",
@@ -268,9 +268,9 @@ CAILResult X5000HWLibs::pspSecurityFeatureCapsSet12(void *psp) {
             fieldBase = 0x3918;
             break;
     }
-    auto &securityCaps = getMember<uint8_t>(psp, fieldBase);
-    securityCaps &= ~static_cast<uint8_t>(1);
-    auto &tOSVer = getMember<uint32_t>(psp, fieldBase + 0x8);
+    auto &securityCaps = getMember<UInt8>(psp, fieldBase);
+    securityCaps &= ~static_cast<UInt8>(1);
+    auto &tOSVer = getMember<UInt32>(psp, fieldBase + 0x8);
     if ((tOSVer & 0xFFFF0000) == 0x110000 && (tOSVer & 0xFF) > 0x2A) {
         auto policyVer = NRed::callback->readReg32(MP_BASE + 0x9B);
         SYSLOG_COND((policyVer & 0xFF000000) != 0xB000000, "hwlibs", "Invalid security policy version: 0x%X",
@@ -281,7 +281,7 @@ CAILResult X5000HWLibs::pspSecurityFeatureCapsSet12(void *psp) {
     return kCAILResultSuccess;
 }
 
-void X5000HWLibs::wrapUpdateSdmaPowerGating(void *cail, uint32_t mode) {
+void X5000HWLibs::wrapUpdateSdmaPowerGating(void *cail, UInt32 mode) {
     FunctionCast(wrapUpdateSdmaPowerGating, callback->orgUpdateSdmaPowerGating)(cail, mode);
     switch (mode) {
         case 0:
@@ -313,9 +313,9 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, v
             off = 0xB48;
             break;
     }
-    auto *data = getMember<uint8_t *>(psp, off);
+    auto *data = getMember<UInt8 *>(psp, off);
 
-    switch (getMember<uint32_t>(ctx, 0x0)) {
+    switch (getMember<UInt32>(ctx, 0x0)) {
         case kPSPCommandLoadTA: {
             const char *name = reinterpret_cast<char *>(data + 0x8DB);
             if (!strncmp(name, "AMD DTM Application", 20)) {
@@ -342,7 +342,7 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, v
         }
         case kPSPCommandLoadIPFW: {
             auto *prefix = NRed::getGCPrefix();
-            switch (getMember<uint32_t>(ctx, 0x10)) {
+            switch (getMember<UInt32>(ctx, 0x10)) {
                 case kUCodeCE:
                     snprintf(filename, 128, "%sce_ucode.bin", prefix);
                     break;
@@ -405,7 +405,7 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, v
 
     auto &fwDesc = getFWDescByName(filename);
     memcpy(data, fwDesc.data, fwDesc.size);
-    getMember<uint32_t>(ctx, 0xC) = fwDesc.size;
+    getMember<UInt32>(ctx, 0xC) = fwDesc.size;
 
     return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(psp, ctx, param3, param4);
 }

@@ -5,13 +5,13 @@ def fix_type(type: str) -> str:
     assert "const" not in type
 
     if type in ["uchar", "byte", "undefined1"]:
-        ret = "uint8_t"
+        ret = "UInt8"
     elif type in ["short", "ushort", "undefined2"]:
-        ret = "uint16_t"
+        ret = "UInt16"
     elif type in ["int", "uint", "undefined4"]:
-        ret = "uint32_t"
+        ret = "UInt32"
     elif type in ["long", "ulong", "ulonglong", "undefined8"]:
-        ret = "uint64_t"
+        ret = "UInt64"
     elif type != "char *" and "*" in type:
         ret = "void *"
     else:
@@ -41,11 +41,11 @@ def get_fmt_name(name: str) -> str:
 
 def get_fmt_type(type: str) -> str:
     table = {
-        "uint64_t": "0x%llX",
-        "uint32_t": "0x%X",
+        "UInt64": "0x%llX",
+        "UInt32": "0x%X",
         "CAILResult": "0x%X",
-        "uint16_t": "0x%hX",
-        "uint8_t": "0x%hhX",
+        "UInt16": "0x%hX",
+        "UInt8": "0x%hhX",
         "bool": "%d",
         "char *": "%s",
         "char": "%c",
