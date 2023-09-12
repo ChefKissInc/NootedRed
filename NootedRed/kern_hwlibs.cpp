@@ -50,16 +50,31 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
         PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "hwlibs",
             "Failed to resolve symbols");
 
+        bool ventura = getKernelVersion() >= KernelVersion::Ventura;
+        bool renoir = NRed::callback->chipType >= ChipType::Renoir;
         if (catalina) {
             RouteRequestPlus request {"__ZN16AmdTtlFwServices7getIpFwEjPKcP10_TtlFwInfo", wrapGetIpFw,
                 this->orgGetIpFw};
 
             PANIC_COND(!request.route(patcher, id, slide, size), "hwlibs", "Failed to route symbols");
         } else {
-            RouteRequestPlus request {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv",
-                wrapPopulateFirmwareDirectory, this->orgPopulateFirmwareDirectory};
+            RouteRequestPlus requests[] = {
+                {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv",
+                    wrapPopulateFirmwareDirectory, this->orgPopulateFirmwareDirectory},
+                {"_psp_bootloader_is_sos_running_3_1", hwLibsGeneralFailure, kPspBootloaderIsSosRunning31Pattern},
+                {"_psp_bootloader_load_sysdrv_3_1", hwLibsNoop, kPspBootloaderLoadSysdrv31Pattern,
+                    kPspBootloaderLoadSysdrv31Mask},
+                {"_psp_bootloader_set_ecc_mode_3_1", hwLibsNoop, kPspBootloaderSetEccMode31Pattern},
+                {"_psp_reset_3_1", hwLibsUnsupported, kPspReset31Pattern},
+                {"_psp_bootloader_load_sos_3_1", pspBootloaderLoadSos10, kPspBootloaderLoadSos31Pattern,
+                    kPspBootloaderLoadSos31Mask},
+                {"_psp_security_feature_caps_set_3_1",
+                    renoir ? pspSecurityFeatureCapsSet12 : pspSecurityFeatureCapsSet10,
+                    ventura ? kPspSecurityFeatureCapsSet31VenturaPattern : kPspSecurityFeatureCapsSet31Pattern},
+            };
 
-            PANIC_COND(!request.route(patcher, id, slide, size), "hwlibs", "Failed to route symbols");
+            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "hwlibs",
+                "Failed to route symbols");
         }
 
         RouteRequestPlus requests[] = {
@@ -79,7 +94,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
             "Failed to enable kernel writing");
         if (orgDeviceTypeTable) { *orgDeviceTypeTable = {.deviceId = NRed::callback->deviceId, .deviceType = 6}; }
 
-        auto targetDeviceId = NRed::callback->chipType >= ChipType::Renoir ? 0x1636 : NRed::callback->deviceId;
+        auto targetDeviceId = renoir ? 0x1636 : NRed::callback->deviceId;
         for (; orgCapsInitTable->deviceId != 0xFFFFFFFF; orgCapsInitTable++) {
             if (orgCapsInitTable->familyId == AMDGPU_FAMILY_RAVEN && orgCapsInitTable->deviceId == targetDeviceId) {
                 orgCapsInitTable->deviceId = NRed::callback->deviceId;
@@ -146,7 +161,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
         };
         PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "hwlibs", "Failed to apply patches");
 
-        if (getKernelVersion() >= KernelVersion::Ventura) {
+        if (ventura) {
             const LookupPatchPlus patches[] = {
                 {&kextRadeonX5000HWLibs, kCailQueryAdapterInfoOriginal, kCailQueryAdapterInfoPatched, 1},
                 {&kextRadeonX5000HWLibs, kSDMAInitFunctionPointerListOriginal, kSDMAInitFunctionPointerListPatched, 1},
@@ -187,7 +202,86 @@ bool X5000HWLibs::wrapGetIpFw(void *that, uint32_t ipVersion, char *name, void *
     return FunctionCast(wrapGetIpFw, callback->orgGetIpFw)(that, ipVersion, name, out);
 }
 
+CAILResult X5000HWLibs::hwLibsGeneralFailure() { return kCAILResultGeneralFailure; }
+CAILResult X5000HWLibs::hwLibsUnsupported() { return kCAILResultUnsupported; }
 CAILResult X5000HWLibs::hwLibsNoop() { return kCAILResultSuccess; }
+
+CAILResult X5000HWLibs::pspBootloaderLoadSos10(void *psp) {
+    size_t fieldBase = 0;
+    switch (getKernelVersion()) {
+        case KernelVersion::Catalina:
+            UNREACHABLE();
+        case KernelVersion::BigSur:
+            [[fallthrough]];
+        case KernelVersion::Monterey:
+            fieldBase = 0x3124;
+            break;
+        default:
+            fieldBase = 0x391C;
+            break;
+    }
+    getMember<uint32_t>(psp, fieldBase) = NRed::callback->readReg32(MP_BASE + 0x7B);
+    getMember<uint32_t>(psp, fieldBase + 0x4) = NRed::callback->readReg32(MP_BASE + 0x7A);
+    getMember<uint32_t>(psp, fieldBase + 0x8) = NRed::callback->readReg32(MP_BASE + 0x7A);
+    return kCAILResultSuccess;
+}
+
+CAILResult X5000HWLibs::pspSecurityFeatureCapsSet10(void *psp) {
+    size_t fieldBase = 0;
+    switch (getKernelVersion()) {
+        case KernelVersion::Catalina:
+            UNREACHABLE();
+        case KernelVersion::BigSur:
+            [[fallthrough]];
+        case KernelVersion::Monterey:
+            fieldBase = 0x3120;
+            break;
+        default:
+            fieldBase = 0x3918;
+            break;
+    }
+    auto &securityCaps = getMember<uint8_t>(psp, fieldBase);
+    securityCaps &= ~static_cast<uint8_t>(1);
+    auto &tOSVer = getMember<uint32_t>(psp, fieldBase + 0x8);
+    if ((tOSVer & 0xFFFF0000) == 0x80000 && (tOSVer & 0xFF) > 0x50) {
+        auto policyVer = NRed::callback->readReg32(MP_BASE + 0x9B);
+        SYSLOG_COND((policyVer & 0xFF000000) != 0x0A000000, "hwlibs", "Invalid security policy version: 0x%X",
+            policyVer);
+        if (policyVer == 0xA02031A || ((policyVer & 0xFFFFFF00) == 0xA020400 && (policyVer & 0xFC) > 0x23) ||
+            ((policyVer & 0xFFFFFF00) == 0xA020300 && (policyVer & 0xFE) > 0x1D)) {
+            securityCaps |= 1;
+        }
+    }
+
+    return kCAILResultSuccess;
+}
+
+CAILResult X5000HWLibs::pspSecurityFeatureCapsSet12(void *psp) {
+    size_t fieldBase = 0;
+    switch (getKernelVersion()) {
+        case KernelVersion::Catalina:
+            UNREACHABLE();
+        case KernelVersion::BigSur:
+            [[fallthrough]];
+        case KernelVersion::Monterey:
+            fieldBase = 0x3120;
+            break;
+        default:
+            fieldBase = 0x3918;
+            break;
+    }
+    auto &securityCaps = getMember<uint8_t>(psp, fieldBase);
+    securityCaps &= ~static_cast<uint8_t>(1);
+    auto &tOSVer = getMember<uint32_t>(psp, fieldBase + 0x8);
+    if ((tOSVer & 0xFFFF0000) == 0x110000 && (tOSVer & 0xFF) > 0x2A) {
+        auto policyVer = NRed::callback->readReg32(MP_BASE + 0x9B);
+        SYSLOG_COND((policyVer & 0xFF000000) != 0xB000000, "hwlibs", "Invalid security policy version: 0x%X",
+            policyVer);
+        if ((policyVer & 0xFFFF0000) == 0xB090000 && (policyVer & 0xFE) > 0x35) { securityCaps |= 1; }
+    }
+
+    return kCAILResultSuccess;
+}
 
 void X5000HWLibs::wrapUpdateSdmaPowerGating(void *cail, uint32_t mode) {
     FunctionCast(wrapUpdateSdmaPowerGating, callback->orgUpdateSdmaPowerGating)(cail, mode);

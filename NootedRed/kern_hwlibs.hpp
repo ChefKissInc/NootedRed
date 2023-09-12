@@ -25,7 +25,12 @@ class X5000HWLibs {
 
     static void wrapPopulateFirmwareDirectory(void *that);
     static bool wrapGetIpFw(void *that, uint32_t param1, char *name, void *out);
+    static CAILResult hwLibsGeneralFailure();
+    static CAILResult hwLibsUnsupported();
     static CAILResult hwLibsNoop();
+    static CAILResult pspBootloaderLoadSos10(void *psp);
+    static CAILResult pspSecurityFeatureCapsSet10(void *psp);
+    static CAILResult pspSecurityFeatureCapsSet12(void *psp);
     static void wrapUpdateSdmaPowerGating(void *cail, uint32_t mode);
     static CAILResult wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4);
 };
