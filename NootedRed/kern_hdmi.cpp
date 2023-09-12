@@ -4,8 +4,6 @@
 #include "kern_hdmi.hpp"
 #include "kern_nred.hpp"
 #include "kern_patcherplus.hpp"
-#include "kern_patches.hpp"
-#include "kern_patterns.hpp"
 #include <Headers/kern_api.hpp>
 
 static const char *pathAppleGFXHDA = "/System/Library/Extensions/AppleGFXHDA.kext/Contents/MacOS/AppleGFXHDA";

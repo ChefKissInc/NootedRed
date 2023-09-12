@@ -15,7 +15,6 @@
 		4068898C2A229BF600028D22 /* kern_patcherplus.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4068898A2A229BF600028D22 /* kern_patcherplus.hpp */; };
 		4069F00F29C3A241005293B4 /* kern_vbios.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FCE29BF942900367F9D /* kern_vbios.hpp */; };
 		408F2020288ACBE6002EEC15 /* kern_fw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 408F201F288ACBE6002EEC15 /* kern_fw.cpp */; };
-		40A07FAD2A22A13600499F02 /* kern_patterns.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40A07FAC2A22A13600499F02 /* kern_patterns.hpp */; };
 		40FC5FD529BF995000367F9D /* kern_x6000fb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FC5FD329BF995000367F9D /* kern_x6000fb.cpp */; };
 		40FC5FD629BF995000367F9D /* kern_x6000fb.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FD429BF995000367F9D /* kern_x6000fb.hpp */; };
 		40FC5FD929BF995E00367F9D /* kern_x5000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FC5FD729BF995E00367F9D /* kern_x5000.cpp */; };
@@ -51,7 +50,6 @@
 		1C748C2E1C21952C0024EED2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4019EAE32A348852008D800B /* kern_dyld_patches.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_dyld_patches.hpp; sourceTree = "<group>"; };
 		4019EAE52A3488EC008D800B /* kern_dyld_patches.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_dyld_patches.cpp; sourceTree = "<group>"; };
-		401A3D3829BF7D2D00B5A76A /* kern_patches.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_patches.hpp; sourceTree = "<group>"; };
 		40364DB529B79DFD0070A2B4 /* kern_model.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_model.hpp; sourceTree = "<group>"; };
 		403E67BD2AA7356D00F43943 /* psp_hdcp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = psp_hdcp.bin; sourceTree = "<group>"; };
 		403E67BE2AA7356D00F43943 /* psp_dtm.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = psp_dtm.bin; sourceTree = "<group>"; };
@@ -98,7 +96,6 @@
 		406C86BF2AA663EF004F02E2 /* ativvaxy_rv.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = ativvaxy_rv.dat; sourceTree = "<group>"; };
 		408F201E288ACBB0002EEC15 /* kern_fw.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_fw.hpp; sourceTree = "<group>"; };
 		408F201F288ACBE6002EEC15 /* kern_fw.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = kern_fw.cpp; sourceTree = "<group>"; };
-		40A07FAC2A22A13600499F02 /* kern_patterns.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_patterns.hpp; sourceTree = "<group>"; };
 		40F6ACB72AA7712100A08558 /* psp_auc.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = psp_auc.bin; sourceTree = "<group>"; };
 		40F6ACB82AA774C100A08558 /* psp_fp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = psp_fp.bin; sourceTree = "<group>"; };
 		40F6ACB92AA7872900A08558 /* atidmcub_instruction_dcn21.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = atidmcub_instruction_dcn21.bin; sourceTree = "<group>"; };
@@ -182,8 +179,6 @@
 				CEA03B5D20EE825A00BA842F /* kern_nred.hpp */,
 				406889892A229BF600028D22 /* kern_patcherplus.cpp */,
 				4068898A2A229BF600028D22 /* kern_patcherplus.hpp */,
-				401A3D3829BF7D2D00B5A76A /* kern_patches.hpp */,
-				40A07FAC2A22A13600499F02 /* kern_patterns.hpp */,
 				1C748C2C1C21952C0024EED2 /* kern_start.cpp */,
 				40FC5FCE29BF942900367F9D /* kern_vbios.hpp */,
 				40FC5FD729BF995E00367F9D /* kern_x5000.cpp */,
@@ -304,7 +299,6 @@
 				40FC5FDA29BF995E00367F9D /* kern_x5000.hpp in Headers */,
 				40FC5FE229BF9E2500367F9D /* kern_x6000.hpp in Headers */,
 				40364DB629B79DFD0070A2B4 /* kern_model.hpp in Headers */,
-				40A07FAD2A22A13600499F02 /* kern_patterns.hpp in Headers */,
 				CEA03B5F20EE825A00BA842F /* kern_nred.hpp in Headers */,
 				40FC5FD629BF995000367F9D /* kern_x6000fb.hpp in Headers */,
 				40FC5FDE29BF996900367F9D /* kern_hwlibs.hpp in Headers */,

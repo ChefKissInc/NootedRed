@@ -4,8 +4,6 @@
 #include "kern_x6000fb.hpp"
 #include "kern_nred.hpp"
 #include "kern_patcherplus.hpp"
-#include "kern_patches.hpp"
-#include "kern_patterns.hpp"
 #include <Headers/kern_api.hpp>
 
 static const char *pathRadeonX6000Framebuffer =

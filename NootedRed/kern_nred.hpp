@@ -233,3 +233,17 @@ class NRed {
     static size_t wrapFunctionReturnZero();
     static bool wrapApplePanelSetDisplay(IOService *that, IODisplay *display);
 };
+
+/* ---- Patches ---- */
+
+// Change frame-buffer count >= 2 check to >= 1.
+static const uint8_t kAGDPFBCountCheckOriginal[] = {0x02, 0x00, 0x00, 0x83, 0xF8, 0x02};
+static const uint8_t kAGDPFBCountCheckPatched[] = {0x02, 0x00, 0x00, 0x83, 0xF8, 0x01};
+
+// Ditto
+static const uint8_t kAGDPFBCountCheckVenturaOriginal[] = {0x41, 0x83, 0xBE, 0x14, 0x02, 0x00, 0x00, 0x02};
+static const uint8_t kAGDPFBCountCheckVenturaPatched[] = {0x41, 0x83, 0xBE, 0x14, 0x02, 0x00, 0x00, 0x01};
+
+// Neutralise access to AGDP configuration by board identifier.
+static const uint8_t kAGDPBoardIDKeyOriginal[] = "board-id";
+static const uint8_t kAGDPBoardIDKeyPatched[] = "applehax";

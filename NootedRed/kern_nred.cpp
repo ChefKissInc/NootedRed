@@ -7,7 +7,6 @@
 #include "kern_hwlibs.hpp"
 #include "kern_model.hpp"
 #include "kern_patcherplus.hpp"
-#include "kern_patches.hpp"
 #include "kern_x5000.hpp"
 #include "kern_x6000.hpp"
 #include "kern_x6000fb.hpp"
