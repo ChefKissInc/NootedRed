@@ -4,14 +4,14 @@
 #include "PatcherPlus.hpp"
 
 bool SolveRequestPlus::solve(KernelPatcher &patcher, size_t id, mach_vm_address_t address, size_t maxSize) {
-    PANIC_COND(!this->address, "patcher+", "this->address is null");
+    PANIC_COND(!this->address, "Patcher+", "this->address is null");
 
     *this->address = patcher.solveSymbol(id, this->symbol);
     if (*this->address) { return true; }
     patcher.clearError();
 
     if (!this->pattern || !this->patternSize) {
-        DBGLOG("patcher+", "Failed to solve %s using symbol", safeString(this->symbol));
+        DBGLOG("Patcher+", "Failed to solve %s using symbol", safeString(this->symbol));
         return false;
     }
 
@@ -19,7 +19,7 @@ bool SolveRequestPlus::solve(KernelPatcher &patcher, size_t id, mach_vm_address_
     if (!KernelPatcher::findPattern(this->pattern, this->mask, this->patternSize,
             reinterpret_cast<const void *>(address), maxSize, &offset) ||
         !offset) {
-        DBGLOG("patcher+", "Failed to solve %s using pattern", safeString(this->symbol));
+        DBGLOG("Patcher+", "Failed to solve %s using pattern", safeString(this->symbol));
         return false;
     }
 
@@ -40,7 +40,7 @@ bool RouteRequestPlus::route(KernelPatcher &patcher, size_t id, mach_vm_address_
     patcher.clearError();
 
     if (!this->pattern || !this->patternSize) {
-        DBGLOG("patcher+", "Failed to route %s using symbol", safeString(this->symbol));
+        DBGLOG("Patcher+", "Failed to route %s using symbol", safeString(this->symbol));
         return false;
     }
 
@@ -48,13 +48,13 @@ bool RouteRequestPlus::route(KernelPatcher &patcher, size_t id, mach_vm_address_
     if (!KernelPatcher::findPattern(this->pattern, this->mask, this->patternSize,
             reinterpret_cast<const void *>(address), maxSize, &offset) ||
         !offset) {
-        DBGLOG("patcher+", "Failed to route %s using pattern", safeString(this->symbol));
+        DBGLOG("Patcher+", "Failed to route %s using pattern", safeString(this->symbol));
         return false;
     }
 
     auto org = patcher.routeFunction(address + offset, this->to, true);
     if (!org) {
-        DBGLOG("patcher+", "Failed to route %s using pattern: %d", safeString(this->symbol), patcher.getError());
+        DBGLOG("Patcher+", "Failed to route %s using pattern: %d", safeString(this->symbol), patcher.getError());
         return false;
     }
     if (this->org) { *this->org = org; }
@@ -84,9 +84,9 @@ bool LookupPatchPlus::applyAll(KernelPatcher &patcher, const LookupPatchPlus *pa
     mach_vm_address_t address, size_t maxSize) {
     for (size_t i = 0; i < count; i++) {
         if (patches[i].apply(patcher, address, maxSize)) {
-            DBGLOG("patcher+", "Applied patches[%zu]", i);
+            DBGLOG("Patcher+", "Applied patches[%zu]", i);
         } else {
-            DBGLOG("patcher+", "Failed to apply patches[%zu]", i);
+            DBGLOG("Patcher+", "Failed to apply patches[%zu]", i);
             return false;
         }
     }

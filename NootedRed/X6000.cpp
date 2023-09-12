@@ -36,7 +36,7 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
             {"__ZN33AMDRadeonX6000_AMDHWAlignManager224getPreferredSwizzleMode2EP33_ADDR2_COMPUTE_SURFACE_INFO_INPUT",
                 this->orgGetPreferredSwizzleMode2},
         };
-        PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "x6000",
+        PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "X6000",
             "Failed to resolve symbols");
 
         RouteRequestPlus requests[] = {
@@ -48,7 +48,7 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
             {"__ZN27AMDRadeonX6000_AMDHWDisplay14getDisplayInfoEjbbPvP17_FRAMEBUFFER_INFO", wrapGetDisplayInfo,
                 this->orgGetDisplayInfo},
         };
-        PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "x6000", "Failed to route symbols");
+        PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X6000", "Failed to route symbols");
 
         bool catalina = getKernelVersion() == KernelVersion::Catalina;
         if (!catalina) {
@@ -56,7 +56,7 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
                 {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator9newSharedEv", this->orgNewShared},
                 {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator19newSharedUserClientEv", this->orgNewSharedUserClient},
             };
-            PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "x6000",
+            PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "X6000",
                 "Failed to resolve newShared symbols");
 
             RouteRequestPlus requests[] = {
@@ -65,21 +65,21 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
                 {"__ZN29AMDRadeonX6000_AMDAccelShared11SurfaceCopyEPjyP12IOAccelEvent", wrapAccelSharedSurfaceCopy,
                     this->orgAccelSharedSurfaceCopy},
             };
-            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "x6000",
+            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X6000",
                 "Failed to route AccelShared symbols");
         }
 
         if (NRed::callback->chipType < ChipType::Renoir) {
             RouteRequestPlus request = {"__ZN30AMDRadeonX6000_AMDGFX10Display23initDCNRegistersOffsetsEv",
                 wrapInitDCNRegistersOffsets, this->orgInitDCNRegistersOffsets};
-            PANIC_COND(!request.route(patcher, id, slide, size), "x6000", "Failed to route initDCNRegistersOffsets");
+            PANIC_COND(!request.route(patcher, id, slide, size), "X6000", "Failed to route initDCNRegistersOffsets");
         }
 
         auto ventura = getKernelVersion() >= KernelVersion::Ventura;
         if (!ventura) {
             RouteRequestPlus request {"__ZN27AMDRadeonX6000_AMDHWDisplay17allocateScanoutFBEjP16IOAccelResource2S1_Py",
                 wrapAllocateScanoutFB, this->orgAllocateScanoutFB};
-            PANIC_COND(!request.route(patcher, id, slide, size), "x6000", "Failed to route allocateScanout");
+            PANIC_COND(!request.route(patcher, id, slide, size), "X6000", "Failed to route allocateScanout");
         }
 
         if (catalina) {
@@ -88,12 +88,12 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
                     kHWChannelSubmitCommandBufferCatalinaPatched, 1},
                 {&kextRadeonX6000, kDummyWPTRUpdateDiagCallOriginal, kDummyWPTRUpdateDiagCallPatched, 1},
             };
-            SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "x6000", "Failed to apply patches");
+            SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000", "Failed to apply patches");
             patcher.clearError();
         } else {
             const LookupPatchPlus patch {&kextRadeonX6000, kHWChannelSubmitCommandBufferOriginal,
                 kHWChannelSubmitCommandBufferPatched, 1};
-            SYSLOG_COND(!patch.apply(patcher, slide, size), "x6000", "Failed to apply submitCommandBuffer patch");
+            SYSLOG_COND(!patch.apply(patcher, slide, size), "X6000", "Failed to apply submitCommandBuffer patch");
             patcher.clearError();
         }
 
@@ -109,7 +109,7 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
                 ventura  ? 3 :
                            1},
         };
-        SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "x6000", "Failed to apply patches");
+        SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000", "Failed to apply patches");
         patcher.clearError();
 
         if (catalina) {
@@ -149,19 +149,19 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
                 {&kextRadeonX6000, kDumpASICHangStateCallOriginal, kDumpASICHangStateCallPatched, 2},
                 {&kextRadeonX6000, kGetSchedulerCallCatalinaOriginal, kGetSchedulerCallCatalinaPatched, 22},
             };
-            SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "x6000", "Failed to apply patches");
+            SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000", "Failed to apply patches");
             patcher.clearError();
         }
 
         if (ventura) {
             const LookupPatchPlus patch {&kextRadeonX6000, kGetSchedulerCallVenturaOriginal,
                 kGetSchedulerCallVenturaPatched, 24};
-            SYSLOG_COND(!patch.apply(patcher, slide, size), "x6000", "Failed to apply getScheduler patch");
+            SYSLOG_COND(!patch.apply(patcher, slide, size), "X6000", "Failed to apply getScheduler patch");
             patcher.clearError();
         } else if (!catalina) {
             const LookupPatchPlus patch {&kextRadeonX6000, kGetSchedulerCallOriginal, kGetSchedulerCallPatched,
                 monterey ? 21U : 22};
-            SYSLOG_COND(!patch.apply(patcher, slide, size), "x6000", "Failed to apply getScheduler patch");
+            SYSLOG_COND(!patch.apply(patcher, slide, size), "X6000", "Failed to apply getScheduler patch");
             patcher.clearError();
         }
 
@@ -176,7 +176,7 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
                 {&kextRadeonX6000, kGetUbmSwizzleModeCallOriginal, kGetUbmSwizzleModeCallPatched, 1},
                 {&kextRadeonX6000, kGetUbmTileModeCallOriginal, kGetUbmTileModeCallPatched, 1},
             };
-            SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "x6000", "Failed to apply patches");
+            SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000", "Failed to apply patches");
             patcher.clearError();
         } else {
             const LookupPatchPlus patch {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal,
@@ -184,7 +184,7 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
                 (getKernelVersion() == KernelVersion::Ventura && getKernelMinorVersion() >= 5) ? 38U :
                 ventura                                                                        ? 37 :
                                                                                                  28};
-            SYSLOG_COND(!patch.apply(patcher, slide, size), "x6000", "Failed to apply getGpuDebugPolicy patch");
+            SYSLOG_COND(!patch.apply(patcher, slide, size), "X6000", "Failed to apply getGpuDebugPolicy patch");
             patcher.clearError();
         }
 

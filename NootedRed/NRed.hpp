@@ -37,29 +37,29 @@ static bool checkAtomBios(const UInt8 *bios, size_t size) {
     UInt16 tmp, bios_header_start;
 
     if (size < 0x49) {
-        DBGLOG("nred", "VBIOS size is invalid");
+        DBGLOG("NRed", "VBIOS size is invalid");
         return false;
     }
 
     if (bios[0] != 0x55 || bios[1] != 0xAA) {
-        DBGLOG("nred", "VBIOS signature <%x %x> is invalid", bios[0], bios[1]);
+        DBGLOG("NRed", "VBIOS signature <%x %x> is invalid", bios[0], bios[1]);
         return false;
     }
 
     bios_header_start = bios[0x48] | (bios[0x49] << 8);
     if (!bios_header_start) {
-        DBGLOG("nred", "Unable to locate VBIOS header");
+        DBGLOG("NRed", "Unable to locate VBIOS header");
         return false;
     }
 
     tmp = bios_header_start + 4;
     if (size < tmp) {
-        DBGLOG("nred", "BIOS header is broken");
+        DBGLOG("NRed", "BIOS header is broken");
         return false;
     }
 
     if (!memcmp(bios + tmp, "ATOM", 4) || !memcmp(bios + tmp, "MOTA", 4)) {
-        DBGLOG("nred", "ATOMBIOS detected");
+        DBGLOG("NRed", "ATOMBIOS detected");
         return true;
     }
 
@@ -84,43 +84,43 @@ class NRed {
 
     private:
     static const char *getChipName() {
-        PANIC_COND(callback->chipType == ChipType::Unknown, "nred", "Unknown chip type");
+        PANIC_COND(callback->chipType == ChipType::Unknown, "NRed", "Unknown chip type");
         static const char *chipNames[] = {"raven", "picasso", "raven2", "renoir", "green_sardine"};
         return chipNames[static_cast<int>(callback->chipType)];
     }
 
     static const char *getGCPrefix() {
-        PANIC_COND(callback->chipType == ChipType::Unknown, "nred", "Unknown chip type");
+        PANIC_COND(callback->chipType == ChipType::Unknown, "NRed", "Unknown chip type");
         static const char *gcPrefixes[] = {"gc_9_1_", "gc_9_1_", "gc_9_2_", "gc_9_3_", "gc_9_3_"};
         return gcPrefixes[static_cast<int>(callback->chipType)];
     }
 
     bool getVBIOSFromVFCT() {
-        DBGLOG("nred", "Fetching VBIOS from VFCT table");
+        DBGLOG("NRed", "Fetching VBIOS from VFCT table");
         auto *expert = reinterpret_cast<AppleACPIPlatformExpert *>(this->iGPU->getPlatform());
-        PANIC_COND(!expert, "nred", "Failed to get AppleACPIPlatformExpert");
+        PANIC_COND(!expert, "NRed", "Failed to get AppleACPIPlatformExpert");
 
         auto *vfctData = expert->getACPITableData("VFCT", 0);
         if (!vfctData) {
-            DBGLOG("nred", "No VFCT from AppleACPIPlatformExpert");
+            DBGLOG("NRed", "No VFCT from AppleACPIPlatformExpert");
             return false;
         }
 
         auto *vfct = static_cast<const VFCT *>(vfctData->getBytesNoCopy());
-        PANIC_COND(!vfct, "nred", "VFCT OSData::getBytesNoCopy returned null");
+        PANIC_COND(!vfct, "NRed", "VFCT OSData::getBytesNoCopy returned null");
 
         for (auto offset = vfct->vbiosImageOffset; offset < vfctData->getLength();) {
             auto *vHdr =
                 static_cast<const GOPVideoBIOSHeader *>(vfctData->getBytesNoCopy(offset, sizeof(GOPVideoBIOSHeader)));
             if (!vHdr) {
-                DBGLOG("nred", "VFCT header out of bounds");
+                DBGLOG("NRed", "VFCT header out of bounds");
                 return false;
             }
 
             auto *vContent = static_cast<const UInt8 *>(
                 vfctData->getBytesNoCopy(offset + sizeof(GOPVideoBIOSHeader), vHdr->imageLength));
             if (!vContent) {
-                DBGLOG("nred", "VFCT VBIOS image out of bounds");
+                DBGLOG("NRed", "VFCT VBIOS image out of bounds");
                 return false;
             }
 
@@ -128,11 +128,11 @@ class NRed {
 
             if (vHdr->deviceID == this->deviceId) {
                 if (!checkAtomBios(vContent, vHdr->imageLength)) {
-                    DBGLOG("nred", "VFCT VBIOS is not an ATOMBIOS");
+                    DBGLOG("NRed", "VFCT VBIOS is not an ATOMBIOS");
                     return false;
                 }
                 this->vbiosData = OSData::withBytes(vContent, vHdr->imageLength);
-                PANIC_COND(UNLIKELY(!this->vbiosData), "nred", "VFCT OSData::withBytes failed");
+                PANIC_COND(UNLIKELY(!this->vbiosData), "NRed", "VFCT OSData::withBytes failed");
                 this->iGPU->setProperty("ATY,bin_image", this->vbiosData);
                 return true;
             }
@@ -145,19 +145,19 @@ class NRed {
         auto *bar0 =
             this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress0, kIOInhibitCache | kIOMapAnywhere);
         if (!bar0 || !bar0->getLength()) {
-            DBGLOG("nred", "FB BAR not enabled");
+            DBGLOG("NRed", "FB BAR not enabled");
             OSSafeReleaseNULL(bar0);
             return false;
         }
         auto *fb = reinterpret_cast<const UInt8 *>(bar0->getVirtualAddress());
         UInt32 size = 256 * 1024;    // ???
         if (!checkAtomBios(fb, size)) {
-            DBGLOG("nred", "VRAM VBIOS is not an ATOMBIOS");
+            DBGLOG("NRed", "VRAM VBIOS is not an ATOMBIOS");
             bar0->release();
             return false;
         }
         this->vbiosData = OSData::withBytes(fb, size);
-        PANIC_COND(UNLIKELY(!this->vbiosData), "nred", "VRAM OSData::withBytes failed");
+        PANIC_COND(UNLIKELY(!this->vbiosData), "NRed", "VRAM OSData::withBytes failed");
         this->iGPU->setProperty("ATY,bin_image", this->vbiosData);
         bar0->release();
         return true;
@@ -194,13 +194,13 @@ class NRed {
             return ret;
         };
 
-        PANIC_COND(smuWaitForResp() != 1, "nred", "Msg issuing pre-check failed; SMU may be in an improper state");
+        PANIC_COND(smuWaitForResp() != 1, "NRed", "Msg issuing pre-check failed; SMU may be in an improper state");
 
         this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_90, 0);
         this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_82, param);
         this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_66, msg);
 
-        PANIC_COND(smuWaitForResp() != 1, "nred", "No response from SMU");
+        PANIC_COND(smuWaitForResp() != 1, "NRed", "No response from SMU");
 
         return this->readReg32(MP_BASE + mmMP1_SMN_C2PMSG_82);
     }

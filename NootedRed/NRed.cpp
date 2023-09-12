@@ -35,7 +35,7 @@ static DYLDPatches dyldpatches;
 static HDMI agfxhda;
 
 void NRed::init() {
-    SYSLOG("nred", "Copyright 2022-2023 ChefKiss Inc. If you've paid for this, you've been scammed.");
+    SYSLOG("NRed", "Copyright 2022-2023 ChefKiss Inc. If you've paid for this, you've been scammed.");
     callback = this;
 
     lilu.onKextLoadForce(&kextAGDP);
@@ -74,13 +74,13 @@ void NRed::processPatcher(KernelPatcher &patcher) {
                     break;
                 }
             }
-            PANIC_COND(!this->iGPU, "nred", "No iGPU found");
+            PANIC_COND(!this->iGPU, "NRed", "No iGPU found");
         } else {
-            PANIC_COND(!devInfo->videoBuiltin, "nred", "videoBuiltin null");
+            PANIC_COND(!devInfo->videoBuiltin, "NRed", "videoBuiltin null");
             this->iGPU = OSDynamicCast(IOPCIDevice, devInfo->videoBuiltin);
-            PANIC_COND(!this->iGPU, "nred", "videoBuiltin is not IOPCIDevice");
+            PANIC_COND(!this->iGPU, "NRed", "videoBuiltin is not IOPCIDevice");
             PANIC_COND(WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD,
-                "nred", "videoBuiltin is not AMD");
+                "NRed", "videoBuiltin is not AMD");
         }
 
         WIOKit::renameDevice(this->iGPU, "IGPU");
@@ -109,22 +109,22 @@ void NRed::processPatcher(KernelPatcher &patcher) {
 
         auto *prop = OSDynamicCast(OSData, this->iGPU->getProperty("ATY,bin_image"));
         if (prop) {
-            DBGLOG("nred", "VBIOS manually overridden");
+            DBGLOG("NRed", "VBIOS manually overridden");
             this->vbiosData = OSData::withBytes(prop->getBytesNoCopy(), prop->getLength());
-            PANIC_COND(UNLIKELY(!this->vbiosData), "nred", "Failed to allocate VBIOS data");
+            PANIC_COND(UNLIKELY(!this->vbiosData), "NRed", "Failed to allocate VBIOS data");
         } else if (!this->getVBIOSFromVFCT()) {
-            SYSLOG("nred", "Failed to get VBIOS from VFCT.");
-            PANIC_COND(!this->getVBIOSFromVRAM(), "nred", "Failed to get VBIOS from VRAM");
+            SYSLOG("NRed", "Failed to get VBIOS from VFCT.");
+            PANIC_COND(!this->getVBIOSFromVRAM(), "NRed", "Failed to get VBIOS from VRAM");
         }
         auto len = this->vbiosData->getLength();
         if (len < 65536) {
-            DBGLOG("nred", "Padding VBIOS to 65536 bytes (was %u)", len);
+            DBGLOG("NRed", "Padding VBIOS to 65536 bytes (was %u)", len);
             this->vbiosData->appendByte(0, 65536 - len);
         }
 
         DeviceInfo::deleter(devInfo);
     } else {
-        SYSLOG("nred", "Failed to create DeviceInfo");
+        SYSLOG("NRed", "Failed to create DeviceInfo");
     }
 
     KernelPatcher::RouteRequest request {"__ZN15OSMetaClassBase12safeMetaCastEPKS_PK11OSMetaClass", wrapSafeMetaCast,
@@ -153,7 +153,7 @@ void NRed::setRMMIOIfNecessary() {
     if (this->rmmio && this->rmmio->getLength()) { return; }
 
     this->rmmio = this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5, kIOInhibitCache | kIOMapAnywhere);
-    PANIC_COND(UNLIKELY(!this->rmmio || !this->rmmio->getLength()), "nred", "Failed to map RMMIO");
+    PANIC_COND(UNLIKELY(!this->rmmio || !this->rmmio->getLength()), "NRed", "Failed to map RMMIO");
     this->rmmioPtr = reinterpret_cast<UInt32 *>(this->rmmio->getVirtualAddress());
 
     this->fbOffset = static_cast<UInt64>(this->readReg32(0x296B)) << 24;
@@ -190,22 +190,22 @@ void NRed::setRMMIOIfNecessary() {
             this->enumRevision = 0xA1;
             break;
         default:
-            PANIC("nred", "Unknown device ID");
+            PANIC("NRed", "Unknown device ID");
     }
 }
 
 void NRed::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextAGDP.loadIndex == id) {
         const LookupPatchPlus patch {&kextAGDP, kAGDPBoardIDKeyOriginal, kAGDPBoardIDKeyPatched, 1};
-        SYSLOG_COND(!patch.apply(patcher, slide, size), "nred", "Failed to apply AGDP board-id patch");
+        SYSLOG_COND(!patch.apply(patcher, slide, size), "NRed", "Failed to apply AGDP board-id patch");
 
         if (getKernelVersion() == KernelVersion::Ventura) {
             const LookupPatchPlus patch {&kextAGDP, kAGDPFBCountCheckVenturaOriginal, kAGDPFBCountCheckVenturaPatched,
                 1};
-            SYSLOG_COND(!patch.apply(patcher, slide, size), "nred", "Failed to apply AGDP fb count check patch");
+            SYSLOG_COND(!patch.apply(patcher, slide, size), "NRed", "Failed to apply AGDP fb count check patch");
         } else {
             const LookupPatchPlus patch {&kextAGDP, kAGDPFBCountCheckOriginal, kAGDPFBCountCheckPatched, 1};
-            SYSLOG_COND(!patch.apply(patcher, slide, size), "nred", "Failed to apply AGDP fb count check patch");
+            SYSLOG_COND(!patch.apply(patcher, slide, size), "NRed", "Failed to apply AGDP fb count check patch");
         }
     } else if (kextBacklight.loadIndex == id) {
         KernelPatcher::RouteRequest request {"__ZN15AppleIntelPanel10setDisplayEP9IODisplay", wrapApplePanelSetDisplay,
@@ -214,7 +214,7 @@ void NRed::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slid
             const UInt8 find[] = {"F%uT%04x"};
             const UInt8 replace[] = {"F%uTxxxx"};
             const LookupPatchPlus patch {&kextBacklight, find, replace, 1};
-            SYSLOG_COND(!patch.apply(patcher, slide, size), "nred", "Failed to apply backlight patch");
+            SYSLOG_COND(!patch.apply(patcher, slide, size), "NRed", "Failed to apply backlight patch");
         }
     } else if (kextMCCSControl.loadIndex == id) {
         KernelPatcher::RouteRequest requests[] = {
@@ -224,15 +224,15 @@ void NRed::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slid
         patcher.routeMultiple(id, requests, slide, size);
         patcher.clearError();
     } else if (agfxhda.processKext(patcher, id, slide, size)) {
-        DBGLOG("nred", "Processed AppleGFXHDA");
+        DBGLOG("NRed", "Processed AppleGFXHDA");
     } else if (x6000fb.processKext(patcher, id, slide, size)) {
-        DBGLOG("nred", "Processed AMDRadeonX6000Framebuffer");
+        DBGLOG("NRed", "Processed AMDRadeonX6000Framebuffer");
     } else if (hwlibs.processKext(patcher, id, slide, size)) {
-        DBGLOG("nred", "Processed AMDRadeonX5000HWLibs");
+        DBGLOG("NRed", "Processed AMDRadeonX5000HWLibs");
     } else if (x6000.processKext(patcher, id, slide, size)) {
-        DBGLOG("nred", "Processed AMDRadeonX6000");
+        DBGLOG("NRed", "Processed AMDRadeonX6000");
     } else if (x5000.processKext(patcher, id, slide, size)) {
-        DBGLOG("nred", "Processed AMDRadeonX5000");
+        DBGLOG("NRed", "Processed AMDRadeonX5000");
     }
 }
 
@@ -283,7 +283,7 @@ bool NRed::wrapApplePanelSetDisplay(IOService *that, IODisplay *display) {
                         panels->setObject(entry.deviceName, pd);
                         // No release required by current AppleBacklight implementation.
                     } else {
-                        SYSLOG("nred", "setDisplay: Cannot allocate data for %s", entry.deviceName);
+                        SYSLOG("NRed", "setDisplay: Cannot allocate data for %s", entry.deviceName);
                     }
                 }
                 that->setProperty("ApplePanels", panels);
@@ -291,11 +291,11 @@ bool NRed::wrapApplePanelSetDisplay(IOService *that, IODisplay *display) {
 
             OSSafeReleaseNULL(rawPanels);
         } else {
-            SYSLOG("nred", "setDisplay: Missing ApplePanels property");
+            SYSLOG("NRed", "setDisplay: Missing ApplePanels property");
         }
     }
 
     bool ret = FunctionCast(wrapApplePanelSetDisplay, callback->orgApplePanelSetDisplay)(that, display);
-    DBGLOG("nred", "setDisplay >> %d", ret);
+    DBGLOG("NRed", "setDisplay >> %d", ret);
     return ret;
 }

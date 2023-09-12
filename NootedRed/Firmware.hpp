@@ -19,5 +19,5 @@ inline const FWDescriptor &getFWDescByName(const char *name) {
     for (size_t i = 0; i < firmwareCount; i++) {
         if (!strcmp(firmware[i].name, name)) { return firmware[i]; }
     }
-    PANIC("nred", "getFWDescByName: '%s' not found", name);
+    PANIC("FW", "'%s' not found", name);
 }

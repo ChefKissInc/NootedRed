@@ -40,7 +40,7 @@ class DYLDPatch {
         if (UNLIKELY(KernelPatcher::findAndReplaceWithMask(data, size, this->find, this->size, this->findMask,
                 this->findMask ? this->size : 0, this->replace, this->size, this->replaceMask,
                 this->replaceMask ? this->size : 0))) {
-            DBGLOG("dyld", "Applied '%s' patch", this->comment);
+            DBGLOG("DYLD", "Applied '%s' patch", this->comment);
         }
     }
 

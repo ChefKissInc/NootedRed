@@ -33,13 +33,13 @@ bool HDMI::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slid
             {&kextAppleGFXHDA, kCreateAppleHDAWidget1Original, kCreateAppleHDAWidget1OriginalMask,
                 kCreateAppleHDAWidget1Patched, kCreateAppleHDAWidget1PatchedMask, catalina ? 2U : 1},
         };
-        PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "agfxhda", "Failed to apply patches");
+        PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "AGFXHDA", "Failed to apply patches");
 
         if (catalina) {
             const LookupPatchPlus patch {&kextAppleGFXHDA, kCreateAppleHDACatalinaOriginal,
                 kCreateAppleHDACatalinaOriginalMask, kCreateAppleHDACatalinaPatched, kCreateAppleHDACatalinaPatchedMask,
                 1};
-            PANIC_COND(!patch.apply(patcher, slide, size), "agfxhda", "Failed to apply patch");
+            PANIC_COND(!patch.apply(patcher, slide, size), "AGFXHDA", "Failed to apply patch");
         } else {
             const LookupPatchPlus patches[] = {
                 {&kextAppleGFXHDA, kCreateAppleHDAFunctionGroup1Original, kCreateAppleHDAFunctionGroup1Patched, 1},
@@ -51,7 +51,7 @@ bool HDMI::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slid
                 {&kextAppleGFXHDA, kCreateAppleHDA2Original, kCreateAppleHDA2OriginalMask, kCreateAppleHDA2Patched,
                     kCreateAppleHDA2PatchedMask, 2},
             };
-            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "agfxhda", "Failed to apply patches");
+            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "AGFXHDA", "Failed to apply patches");
         }
 
         return true;
@@ -62,7 +62,7 @@ bool HDMI::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slid
                 kAHDACreate2PatchedMask, 2},
             {&kextAppleHDA, kAHDACreate3Original, kAHDACreate3Mask, kAHDACreate3Patched, 2},
         };
-        PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "ahda", "Failed to apply patches");
+        PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "AHDA", "Failed to apply patches");
 
         return true;
     }

@@ -40,29 +40,29 @@ bool PRODUCT_NAME::start(IOService *provider) {
     if (!ADDPR(startSuccess)) { return false; }
 
     if (!IOService::start(provider)) {
-        SYSLOG("init", "Failed to start the parent");
+        SYSLOG("Init", "Failed to start the parent");
         return false;
     }
 
     if (!(lilu.getRunMode() & LiluAPI::RunningInstallerRecovery)) {
         auto *prop = OSDynamicCast(OSArray, this->getProperty("Drivers"));
         if (!prop) {
-            SYSLOG("init", "Failed to get Drivers property");
+            SYSLOG("Init", "Failed to get Drivers property");
             return false;
         }
         auto *propCopy = prop->copyCollection();
         if (!propCopy) {
-            SYSLOG("init", "Failed to copy Drivers property");
+            SYSLOG("Init", "Failed to copy Drivers property");
             return false;
         }
         auto *drivers = OSDynamicCast(OSArray, propCopy);
         if (!drivers) {
-            SYSLOG("init", "Failed to cast Drivers property");
+            SYSLOG("Init", "Failed to cast Drivers property");
             OSSafeReleaseNULL(propCopy);
             return false;
         }
         if (!gIOCatalogue->addDrivers(drivers)) {
-            SYSLOG("init", "Failed to add drivers");
+            SYSLOG("Init", "Failed to add drivers");
             OSSafeReleaseNULL(drivers);
             return false;
         }

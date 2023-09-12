@@ -45,7 +45,7 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
                 this->orgSetupAndInitializeHWCapabilities},
             {"__ZN26AMDRadeonX5000_AMDHardware14startHWEnginesEv", startHWEngines},
         };
-        PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "x5000",
+        PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "X5000",
             "Failed to resolve symbols");
 
         RouteRequestPlus requests[] = {
@@ -66,7 +66,7 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20writeASICHangLogInfoEPPv", wrapReturnZero},
             {"__ZN4Addr2V27Gfx9Lib20HwlConvertChipFamilyEjj", wrapHwlConvertChipFamily, kHwlConvertChipFamilyPattern},
         };
-        PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "x5000", "Failed to route symbols");
+        PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X5000", "Failed to route symbols");
 
         bool ventura = getKernelVersion() >= KernelVersion::Ventura;
         bool ventura1304 = (ventura && getKernelMinorVersion() >= 5) || getKernelVersion() > KernelVersion::Ventura;
@@ -75,34 +75,34 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
                 {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator9newSharedEv", wrapNewShared},
                 {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator19newSharedUserClientEv", wrapNewSharedUserClient},
             };
-            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "x5000",
+            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X5000",
                 "Failed to route newShared routes");
 
             if (ventura1304) {
                 RouteRequestPlus request {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator23obtainAccelChannelGroupE11SS_"
                                           "PRIORITYP27AMDRadeonX5000_AMDAccelTask",
                     wrapObtainAccelChannelGroup1304, this->orgObtainAccelChannelGroup};
-                PANIC_COND(!request.route(patcher, id, slide, size), "x5000",
+                PANIC_COND(!request.route(patcher, id, slide, size), "X5000",
                     "Failed to route obtainAccelChannelGroup");
             } else {
                 RouteRequestPlus request {
                     "__ZN37AMDRadeonX5000_AMDGraphicsAccelerator23obtainAccelChannelGroupE11SS_PRIORITY",
                     wrapObtainAccelChannelGroup, this->orgObtainAccelChannelGroup};
-                PANIC_COND(!request.route(patcher, id, slide, size), "x5000",
+                PANIC_COND(!request.route(patcher, id, slide, size), "X5000",
                     "Failed to route obtainAccelChannelGroup");
             }
         }
 
         if (catalina || ventura1304) {
             const LookupPatchPlus patch {&kextRadeonX5000, kAddrLibCreateOriginal, kAddrLibCreatePatched, 1};
-            PANIC_COND(!patch.apply(patcher, slide, size), "x5000",
+            PANIC_COND(!patch.apply(patcher, slide, size), "X5000",
                 "Failed to apply Catalina & Ventura 13.4+ Addr::Lib::Create patch");
         }
 
         if (catalina) {
             const LookupPatchPlus patch {&kextRadeonX5000, kCreateAccelChannelsOriginal, kCreateAccelChannelsPatched,
                 2};
-            PANIC_COND(!patch.apply(patcher, slide, size), "x5000", "Failed to patch createAccelChannels");
+            PANIC_COND(!patch.apply(patcher, slide, size), "X5000", "Failed to patch createAccelChannels");
 
             auto dcn2 = NRed::callback->chipType >= ChipType::Renoir;
             UInt32 findNonBpp64 = 0x22222221;
@@ -119,18 +119,18 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
                 {&kextRadeonX5000, reinterpret_cast<const UInt8 *>(&findBpp64Pt2),
                     reinterpret_cast<const UInt8 *>(&replBpp64Pt2), sizeof(UInt32), 1},
             };
-            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "x5000",
+            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X5000",
                 "Failed to patch swizzle mode");
 
-            PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "x5000",
+            PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "X5000",
                 "Failed to enable kernel writing");
             *orgChannelTypes = 1;    // Make VMPT use SDMA0 instead of SDMA1
             MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
-            DBGLOG("x5000", "Applied SDMA1 patches");
+            DBGLOG("X5000", "Applied SDMA1 patches");
         } else {
             const LookupPatchPlus patch {&kextRadeonX5000, kStartHWEnginesOriginal, kStartHWEnginesMask,
                 kStartHWEnginesPatched, kStartHWEnginesMask, ventura ? 2U : 1};
-            PANIC_COND(!patch.apply(patcher, startHWEngines, PAGE_SIZE), "x5000", "Failed to patch startHWEngines");
+            PANIC_COND(!patch.apply(patcher, startHWEngines, PAGE_SIZE), "X5000", "Failed to patch startHWEngines");
 
             if (NRed::callback->chipType >= ChipType::Renoir) {
                 UInt32 findBpp64 = Dcn1Bpp64SwModeMask, replBpp64 = Dcn2Bpp64SwModeMask;
@@ -141,17 +141,17 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
                     {&kextRadeonX5000, reinterpret_cast<const UInt8 *>(&findNonBpp64),
                         reinterpret_cast<const UInt8 *>(&replNonBpp64), sizeof(UInt32), ventura1304 ? 2U : 4},
                 };
-                PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "x5000",
+                PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X5000",
                     "Failed to patch swizzle mode");
             }
 
-            PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "x5000",
+            PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "X5000",
                 "Failed to enable kernel writing");
             orgChannelTypes[5] = 1;    // Fix createAccelChannels so that it only starts SDMA0
             orgChannelTypes[(getKernelVersion() >= KernelVersion::Monterey) ? 12 : 11] =
                 0;    // Fix getPagingChannel so that it gets SDMA0
             MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
-            DBGLOG("x5000", "Applied SDMA1 patches");
+            DBGLOG("X5000", "Applied SDMA1 patches");
         }
 
         return true;

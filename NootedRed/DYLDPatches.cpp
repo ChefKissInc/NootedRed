@@ -16,7 +16,7 @@ void DYLDPatches::processPatcher(KernelPatcher &patcher) {
 
     auto *entry = IORegistryEntry::fromPath("/", gIODTPlane);
     if (entry) {
-        DBGLOG("dyld", "Setting hwgva-id to iMacPro1,1");
+        DBGLOG("DYLD", "Setting hwgva-id to iMacPro1,1");
         entry->setProperty("hwgva-id", const_cast<char *>(kHwGvaId), arrsize(kHwGvaId));
         entry->release();
     }
@@ -24,12 +24,12 @@ void DYLDPatches::processPatcher(KernelPatcher &patcher) {
     if (getKernelVersion() == KernelVersion::Catalina) {
         KernelPatcher::RouteRequest request {"_cs_validate_range", wrapCsValidateRange, this->orgCsValidate};
 
-        PANIC_COND(!patcher.routeMultipleLong(KernelPatcher::KernelID, &request, 1), "dyld",
+        PANIC_COND(!patcher.routeMultipleLong(KernelPatcher::KernelID, &request, 1), "DYLD",
             "Failed to route kernel symbols");
     } else {
         KernelPatcher::RouteRequest request {"_cs_validate_page", wrapCsValidatePage, this->orgCsValidate};
 
-        PANIC_COND(!patcher.routeMultipleLong(KernelPatcher::KernelID, &request, 1), "dyld",
+        PANIC_COND(!patcher.routeMultipleLong(KernelPatcher::KernelID, &request, 1), "DYLD",
             "Failed to route kernel symbols");
     }
 }
@@ -47,7 +47,7 @@ void DYLDPatches::apply(char *path, void *data, size_t size) {
 
     if (UNLIKELY(KernelPatcher::findAndReplace(data, size, kVideoToolboxDRMModelOriginal,
             arrsize(kVideoToolboxDRMModelOriginal), BaseDeviceInfo::get().modelIdentifier, 20))) {
-        DBGLOG("dyld", "Applied 'VideoToolbox DRM model check' patch");
+        DBGLOG("DYLD", "Applied 'VideoToolbox DRM model check' patch");
     }
 
     const DYLDPatch patches[] = {

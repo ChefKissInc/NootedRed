@@ -36,7 +36,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
                 {"__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware", this->orgPutFirmware,
                     kPutFirmwarePattern},
             };
-            PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "hwlibs",
+            PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "HWLibs",
                 "Failed to resolve symbols");
         }
 
@@ -45,7 +45,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
             {"_CAILAsicCapsInitTable", orgCapsInitTable, kCAILAsicCapsInitTablePattern},
             {"_DeviceCapabilityTbl", orgDevCapTable, kDeviceCapabilityTblPattern},
         };
-        PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "hwlibs",
+        PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "HWLibs",
             "Failed to resolve symbols");
 
         bool ventura = getKernelVersion() >= KernelVersion::Ventura;
@@ -54,7 +54,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
             RouteRequestPlus request {"__ZN16AmdTtlFwServices7getIpFwEjPKcP10_TtlFwInfo", wrapGetIpFw,
                 this->orgGetIpFw};
 
-            PANIC_COND(!request.route(patcher, id, slide, size), "hwlibs", "Failed to route symbols");
+            PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route symbols");
         } else {
             RouteRequestPlus requests[] = {
                 {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv",
@@ -71,7 +71,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
                     ventura ? kPspSecurityFeatureCapsSet31VenturaPattern : kPspSecurityFeatureCapsSet31Pattern},
             };
 
-            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "hwlibs",
+            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "HWLibs",
                 "Failed to route symbols");
         }
 
@@ -85,10 +85,10 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
             {"_update_sdma_power_gating", wrapUpdateSdmaPowerGating, this->orgUpdateSdmaPowerGating,
                 kUpdateSdmaPowerGatingPattern, kUpdateSdmaPowerGatingMask},
         };
-        PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "hwlibs",
+        PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "HWLibs",
             "Failed to route symbols");
 
-        PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "hwlibs",
+        PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "HWLibs",
             "Failed to enable kernel writing");
         if (orgDeviceTypeTable) { *orgDeviceTypeTable = {.deviceId = NRed::callback->deviceId, .deviceType = 6}; }
 
@@ -111,7 +111,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
                 break;
             }
         }
-        PANIC_COND(orgCapsInitTable->deviceId == 0xFFFFFFFF, "hwlibs", "Failed to find init caps table entry");
+        PANIC_COND(orgCapsInitTable->deviceId == 0xFFFFFFFF, "HWLibs", "Failed to find init caps table entry");
         for (; orgDevCapTable->familyId; orgDevCapTable++) {
             if (orgDevCapTable->familyId == AMDGPU_FAMILY_RAVEN && orgDevCapTable->deviceId == targetDeviceId) {
                 orgDevCapTable->deviceId = NRed::callback->deviceId;
@@ -122,9 +122,9 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
                 break;
             }
         }
-        PANIC_COND(!orgDevCapTable->familyId, "hwlibs", "Failed to find device capability table entry");
+        PANIC_COND(!orgDevCapTable->familyId, "HWLibs", "Failed to find device capability table entry");
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
-        DBGLOG("hwlibs", "Applied DDI Caps patches");
+        DBGLOG("HWLibs", "Applied DDI Caps patches");
 
         if (!catalina) {
             const LookupPatchPlus patches[] = {
@@ -136,18 +136,18 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
                 {&kextRadeonX5000HWLibs, kGcSetFwEntryInfoOriginal, kGcSetFwEntryInfoOriginalMask,
                     kGcSetFwEntryInfoPatched, kGcSetFwEntryInfoPatchedMask, 1},
             };
-            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "hwlibs",
+            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs",
                 "Failed to apply spoof patches");
         }
 
         if (getKernelVersion() >= KernelVersion::Monterey) {
             const LookupPatchPlus patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesMontereyOriginal1,
                 kCreatePowerTuneServicesMontereyPatched1, 1};
-            PANIC_COND(!patch.apply(patcher, slide, size), "hwlibs", "Failed to apply PowerTuneServices patch");
+            PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTuneServices patch");
         } else {
             const LookupPatchPlus patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesOriginal1,
                 kCreatePowerTuneServicesPatched1, 1};
-            PANIC_COND(!patch.apply(patcher, slide, size), "hwlibs", "Failed to apply PowerTuneServices patch");
+            PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTuneServices patch");
         }
 
         const LookupPatchPlus patches[] = {
@@ -157,14 +157,14 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
             {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesOriginal2, kCreatePowerTuneServicesMask2,
                 kCreatePowerTuneServicesPatched2, 1},
         };
-        PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "hwlibs", "Failed to apply patches");
+        PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs", "Failed to apply patches");
 
         if (ventura) {
             const LookupPatchPlus patches[] = {
                 {&kextRadeonX5000HWLibs, kCailQueryAdapterInfoOriginal, kCailQueryAdapterInfoPatched, 1},
                 {&kextRadeonX5000HWLibs, kSDMAInitFunctionPointerListOriginal, kSDMAInitFunctionPointerListPatched, 1},
             };
-            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "hwlibs",
+            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs",
                 "Failed to apply Ventura patches");
         }
 
@@ -181,13 +181,13 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
 
     auto *filename = isRenoirDerivative ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
     auto &fwDesc = getFWDescByName(filename);
-    DBGLOG("hwlibs", "VCN firmware filename is %s", filename);
+    DBGLOG("HWLibs", "VCN firmware filename is %s", filename);
 
     /** VCN 2.2, VCN 1.0 */
     auto *fw = callback->orgCreateFirmware(fwDesc.data, fwDesc.size, isRenoirDerivative ? 0x0202 : 0x0100, filename);
-    PANIC_COND(!fw, "hwlibs", "Failed to create '%s' firmware", filename);
+    PANIC_COND(!fw, "HWLibs", "Failed to create '%s' firmware", filename);
     auto *fwDir = getMember<void *>(that, getKernelVersion() > KernelVersion::BigSur ? 0xB0 : 0xB8);
-    PANIC_COND(!callback->orgPutFirmware(fwDir, 6, fw), "hwlibs", "Failed to insert '%s' firmware", filename);
+    PANIC_COND(!callback->orgPutFirmware(fwDir, 6, fw), "HWLibs", "Failed to insert '%s' firmware", filename);
 }
 
 bool X5000HWLibs::wrapGetIpFw(void *that, UInt32 ipVersion, char *name, void *out) {
@@ -243,7 +243,7 @@ CAILResult X5000HWLibs::pspSecurityFeatureCapsSet10(void *psp) {
     auto &tOSVer = getMember<UInt32>(psp, fieldBase + 0x8);
     if ((tOSVer & 0xFFFF0000) == 0x80000 && (tOSVer & 0xFF) > 0x50) {
         auto policyVer = NRed::callback->readReg32(MP_BASE + 0x9B);
-        SYSLOG_COND((policyVer & 0xFF000000) != 0x0A000000, "hwlibs", "Invalid security policy version: 0x%X",
+        SYSLOG_COND((policyVer & 0xFF000000) != 0x0A000000, "HWLibs", "Invalid security policy version: 0x%X",
             policyVer);
         if (policyVer == 0xA02031A || ((policyVer & 0xFFFFFF00) == 0xA020400 && (policyVer & 0xFC) > 0x23) ||
             ((policyVer & 0xFFFFFF00) == 0xA020300 && (policyVer & 0xFE) > 0x1D)) {
@@ -273,7 +273,7 @@ CAILResult X5000HWLibs::pspSecurityFeatureCapsSet12(void *psp) {
     auto &tOSVer = getMember<UInt32>(psp, fieldBase + 0x8);
     if ((tOSVer & 0xFFFF0000) == 0x110000 && (tOSVer & 0xFF) > 0x2A) {
         auto policyVer = NRed::callback->readReg32(MP_BASE + 0x9B);
-        SYSLOG_COND((policyVer & 0xFF000000) != 0xB000000, "hwlibs", "Invalid security policy version: 0x%X",
+        SYSLOG_COND((policyVer & 0xFF000000) != 0xB000000, "HWLibs", "Invalid security policy version: 0x%X",
             policyVer);
         if ((policyVer & 0xFFFF0000) == 0xB090000 && (policyVer & 0xFE) > 0x35) { securityCaps |= 1; }
     }

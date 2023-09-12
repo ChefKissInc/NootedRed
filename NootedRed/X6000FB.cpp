@@ -25,13 +25,13 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
 
         CAILAsicCapsEntry *orgAsicCapsTable = nullptr;
         SolveRequestPlus solveRequest {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable, kCailAsicCapsTablePattern};
-        PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "x6000fb", "Failed to resolve CAIL_ASIC_CAPS_TABLE");
+        PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "X6000FB", "Failed to resolve CAIL_ASIC_CAPS_TABLE");
 
         bool catalina = getKernelVersion() == KernelVersion::Catalina;
         if (!catalina) {
             SolveRequestPlus solveRequest {"_dce_driver_set_backlight", this->orgDceDriverSetBacklight,
                 kDceDriverSetBacklight};
-            PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "x6000fb",
+            PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "X6000FB",
                 "Failed to resolve dce_driver_set_backlight");
         }
 
@@ -40,7 +40,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             SolveRequestPlus solveRequest {
                 "__ZNK34AMDRadeonX6000_AmdRadeonController18messageAcceleratorE25_eAMDAccelIOFBRequestTypePvS1_S1_",
                 this->orgMessageAccelerator};
-            PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "x6000fb",
+            PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "X6000FB",
                 "Failed to resolve messageAccelerator");
         }
 
@@ -51,7 +51,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
                 this->orgGetNumberOfConnectors, kGetNumberOfConnectorsPattern, kGetNumberOfConnectorsMask},
         };
-        PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "x6000fb",
+        PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X6000FB",
             "Failed to route symbols");
 
         if (ADDPR(debugEnabled)) {
@@ -60,13 +60,13 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
                     this->orgInitWithPciInfo},
                 {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", wrapDoGPUPanic},
             };
-            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "x6000fb",
+            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X6000FB",
                 "Failed to route debug symbols");
         }
 
         if (checkKernelArgument("-nreddmlogger")) {
             RouteRequestPlus request {"_dm_logger_write", wrapDmLoggerWrite, kDmLoggerWritePattern};
-            PANIC_COND(!request.route(patcher, id, slide, size), "x6000fb", "Failed to route dm_logger_write");
+            PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route dm_logger_write");
         }
 
         bool renoir = NRed::callback->chipType >= ChipType::Renoir;
@@ -77,14 +77,14 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
                 {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister, this->orgIRQMGRWriteRegister,
                     kIRQMGRWriteRegisterPattern},
             };
-            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "x6000fb",
+            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X6000FB",
                 "Failed to route IH symbols");
         }
 
         if (ventura) {
             RouteRequestPlus request {"__ZN34AMDRadeonX6000_AmdRadeonController7powerUpEv", wrapControllerPowerUp,
                 this->orgControllerPowerUp};
-            PANIC_COND(!request.route(patcher, id, slide, size), "x6000fb", "Failed to route powerUp");
+            PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route powerUp");
         }
 
         if (!catalina) {
@@ -96,7 +96,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
                 {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25getAttributeForConnectionEijPm",
                     wrapFramebufferGetAttribute, this->orgFramebufferGetAttribute},
             };
-            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "x6000fb",
+            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X6000FB",
                 "Failed to route backlight symbols");
         }
 
@@ -108,19 +108,19 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             {&kextRadeonX6000Framebuffer, kAgdcServicesGetVendorInfoOriginal, kAgdcServicesGetVendorInfoMask,
                 kAgdcServicesGetVendorInfoPatched, kAgdcServicesGetVendorInfoMask, 1},
         };
-        PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "x6000fb", "Failed to apply patches");
+        PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000FB", "Failed to apply patches");
 
         if (catalina) {
             const LookupPatchPlus patch {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckCatalinaOriginal,
                 kAmdAtomVramInfoNullCheckCatalinaMask, kAmdAtomVramInfoNullCheckCatalinaPatched, 1};
-            PANIC_COND(!patch.apply(patcher, slide, size), "x6000fb", "Failed to apply null check patch");
+            PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply null check patch");
         } else {
             const LookupPatchPlus patches[] = {
                 {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckOriginal, kAmdAtomVramInfoNullCheckPatched, 1},
                 {&kextRadeonX6000Framebuffer, kAmdAtomPspDirectoryNullCheckOriginal,
                     kAmdAtomPspDirectoryNullCheckPatched, 1},
             };
-            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "x6000fb",
+            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000FB",
                 "Failed to apply null check patches");
         }
 
@@ -130,7 +130,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
                     kControllerPowerUpReplace, kControllerPowerUpReplaceMask, 1},
                 {&kextRadeonX6000Framebuffer, kValidateDetailedTimingOriginal, kValidateDetailedTimingPatched, 1},
             };
-            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "x6000fb",
+            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000FB",
                 "Failed to apply logic revert patches");
         }
 
@@ -145,7 +145,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             .pciRevision = NRed::callback->pciRevision,
         };
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
-        DBGLOG("x6000fb", "Applied DDI Caps patches");
+        DBGLOG("X6000FB", "Applied DDI Caps patches");
 
         return true;
     }
@@ -160,7 +160,7 @@ IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
     auto *table = NRed::callback->getVBIOSDataTable<IGPSystemInfo>(0x1E);
     UInt8 memoryType = 0;
     if (table) {
-        DBGLOG("x6000fb", "Fetching VRAM info from iGPU System Info");
+        DBGLOG("X6000FB", "Fetching VRAM info from iGPU System Info");
         switch (table->header.formatRev) {
             case 1:
                 switch (table->header.contentRev) {
@@ -171,7 +171,7 @@ IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
                         memoryType = table->infoV11.memoryType;
                         break;
                     default:
-                        DBGLOG("x6000fb", "Unsupported contentRev %d", table->header.contentRev);
+                        DBGLOG("X6000FB", "Unsupported contentRev %d", table->header.contentRev);
                         break;
                 }
                 break;
@@ -184,16 +184,16 @@ IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
                         memoryType = table->infoV2.memoryType;
                         break;
                     default:
-                        DBGLOG("x6000fb", "Unsupported contentRev %d", table->header.contentRev);
+                        DBGLOG("X6000FB", "Unsupported contentRev %d", table->header.contentRev);
                         break;
                 }
                 break;
             default:
-                DBGLOG("x6000fb", "Unsupported formatRev %d", table->header.formatRev);
+                DBGLOG("X6000FB", "Unsupported formatRev %d", table->header.formatRev);
                 break;
         }
     } else {
-        DBGLOG("x6000fb", "No iGPU System Info in Master Data Table");
+        DBGLOG("X6000FB", "No iGPU System Info in Master Data Table");
     }
     auto &videoMemoryType = getMember<UInt32>(fwInfo, 0x1C);
     switch (memoryType) {
@@ -219,7 +219,7 @@ IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
             videoMemoryType = kVideoMemoryTypeDDR4;
             break;
         default:
-            DBGLOG("x6000fb", "Unsupported memory type %d. Assuming DDR4", memoryType);
+            DBGLOG("X6000FB", "Unsupported memory type %d. Assuming DDR4", memoryType);
             videoMemoryType = kVideoMemoryTypeDDR4;
             break;
     }
@@ -238,24 +238,24 @@ bool X6000FB::wrapInitWithPciInfo(void *that, void *param1) {
 bool X6000FB::OnAppleBacklightDisplayLoad(void *, void *, IOService *newService, IONotifier *) {
     OSDictionary *params = OSDynamicCast(OSDictionary, newService->getProperty("IODisplayParameters"));
     if (!params) {
-        DBGLOG("x6000fb", "OnAppleBacklightDisplayLoad: No 'IODisplayParameters' property");
+        DBGLOG("X6000FB", "OnAppleBacklightDisplayLoad: No 'IODisplayParameters' property");
         return false;
     }
 
     OSDictionary *linearBrightness = OSDynamicCast(OSDictionary, params->getObject("linear-brightness"));
     if (!linearBrightness) {
-        DBGLOG("x6000fb", "OnAppleBacklightDisplayLoad: No 'linear-brightness' property");
+        DBGLOG("X6000FB", "OnAppleBacklightDisplayLoad: No 'linear-brightness' property");
         return false;
     }
 
     OSNumber *maxBrightness = OSDynamicCast(OSNumber, linearBrightness->getObject("max"));
     if (!maxBrightness) {
-        DBGLOG("x6000fb", "OnAppleBacklightDisplayLoad: No 'max' property");
+        DBGLOG("X6000FB", "OnAppleBacklightDisplayLoad: No 'max' property");
         return false;
     }
 
     callback->maxPwmBacklightLvl = maxBrightness->unsigned32BitValue();
-    DBGLOG("x6000fb", "OnAppleBacklightDisplayLoad: Max brightness: 0x%X", callback->maxPwmBacklightLvl);
+    DBGLOG("X6000FB", "OnAppleBacklightDisplayLoad: Max brightness: 0x%X", callback->maxPwmBacklightLvl);
 
     return true;
 }
@@ -265,18 +265,18 @@ void X6000FB::registerDispMaxBrightnessNotif() {
 
     auto *matching = IOService::serviceMatching("AppleBacklightDisplay");
     if (!matching) {
-        SYSLOG("x6000fb", "registerDispMaxBrightnessNotif: Failed to create match dictionary");
+        SYSLOG("X6000FB", "registerDispMaxBrightnessNotif: Failed to create match dictionary");
         return;
     }
 
     callback->dispNotif =
         IOService::addMatchingNotification(gIOFirstMatchNotification, matching, OnAppleBacklightDisplayLoad, nullptr);
-    SYSLOG_COND(!callback->dispNotif, "x6000fb", "registerDispMaxBrightnessNotif: Failed to register notification");
+    SYSLOG_COND(!callback->dispNotif, "X6000FB", "registerDispMaxBrightnessNotif: Failed to register notification");
     matching->release();
 }
 
 void X6000FB::wrapDoGPUPanic() {
-    DBGLOG("x6000fb", "doGPUPanic << ()");
+    DBGLOG("X6000FB", "doGPUPanic << ()");
     while (true) { IOSleep(3600000); }
 }
 
@@ -292,17 +292,17 @@ IOReturn X6000FB::wrapFramebufferSetAttribute(IOService *framebuffer, IOIndex co
     if (attribute != static_cast<UInt32>('bklt')) { return ret; }
 
     if (!callback->maxPwmBacklightLvl) {
-        DBGLOG("x6000fb", "wrapFramebufferSetAttribute: maxPwmBacklightLvl is 0");
+        DBGLOG("X6000FB", "wrapFramebufferSetAttribute: maxPwmBacklightLvl is 0");
         return kIOReturnSuccess;
     }
 
     if (!callback->panelCntlPtr) {
-        DBGLOG("x6000fb", "wrapFramebufferSetAttribute: panelCntl is null");
+        DBGLOG("X6000FB", "wrapFramebufferSetAttribute: panelCntl is null");
         return kIOReturnSuccess;
     }
 
     if (!callback->orgDceDriverSetBacklight) {
-        DBGLOG("x6000fb", "wrapFramebufferSetAttribute: orgDceDriverSetBacklight is null");
+        DBGLOG("X6000FB", "wrapFramebufferSetAttribute: orgDceDriverSetBacklight is null");
         return kIOReturnSuccess;
     }
 
@@ -333,7 +333,6 @@ IOReturn X6000FB::wrapFramebufferGetAttribute(IOService *framebuffer, IOIndex co
     auto ret = FunctionCast(wrapFramebufferGetAttribute, callback->orgFramebufferGetAttribute)(framebuffer,
         connectIndex, attribute, value);
     if (attribute == static_cast<UInt32>('bklt')) {
-        // Enable the backlight feature of AMD navi10 driver
         *value = callback->curPwmBacklightLvl;
         return kIOReturnSuccess;
     }
@@ -346,7 +345,7 @@ UInt32 X6000FB::wrapGetNumberOfConnectors(void *that) {
         once = true;
         struct DispObjInfoTableV1_4 *objInfo = getMember<DispObjInfoTableV1_4 *>(that, 0x28);
         if (objInfo->formatRev == 1 && (objInfo->contentRev == 4 || objInfo->contentRev == 5)) {
-            DBGLOG("nred", "Fixing VBIOS connectors");
+            DBGLOG("X6000FB", "Fixing VBIOS connectors");
             auto n = objInfo->pathCount;
             for (size_t i = 0, j = 0; i < n; i++) {
                 // Skip invalid device tags
@@ -387,7 +386,7 @@ void X6000FB::wrapIRQMGRWriteRegister(void *ctx, UInt64 index, UInt32 value) {
     if (index == mmIH_CLK_CTRL) {
         value |= (value & (1U << mmIH_DBUS_MUX_CLK_SOFT_OVERRIDE_SHIFT)) >>
                  (mmIH_DBUS_MUX_CLK_SOFT_OVERRIDE_SHIFT - mmIH_IH_BUFFER_MEM_CLK_SOFT_OVERRIDE_SHIFT);
-        DBGLOG("x6000fb", "_IRQMGR_WriteRegister: Set IH_BUFFER_MEM_CLK_SOFT_OVERRIDE");
+        DBGLOG("X6000FB", "_IRQMGR_WriteRegister: Set IH_BUFFER_MEM_CLK_SOFT_OVERRIDE");
     }
     FunctionCast(wrapIRQMGRWriteRegister, callback->orgIRQMGRWriteRegister)(ctx, index, value);
 }
