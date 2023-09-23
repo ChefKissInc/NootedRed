@@ -1,5 +1,5 @@
-//  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5. See LICENSE for
-//  details.
+//!  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5. See LICENSE for
+//!  details.
 
 #include "NRed.hpp"
 #include "X6000FB.hpp"
@@ -10,7 +10,6 @@
 
 static NRed nred;
 
-static const char *bootargOff = "-nredoff";
 static const char *bootargDebug = "-nreddbg";
 static const char *bootargBeta = "-nredbeta";
 
@@ -18,8 +17,8 @@ PluginConfiguration ADDPR(config) {
     xStringify(PRODUCT_NAME),
     parseModuleVersion(xStringify(MODULE_VERSION)),
     LiluAPI::AllowNormal | LiluAPI::AllowInstallerRecovery | LiluAPI::AllowSafeMode,
-    &bootargOff,
-    1,
+    nullptr,
+    0,
     &bootargDebug,
     1,
     &bootargBeta,

@@ -1,5 +1,5 @@
-//  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5. See LICENSE for
-//  details.
+//!  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5. See LICENSE for
+//!  details.
 
 #include "X6000FB.hpp"
 #include "NRed.hpp"
@@ -213,7 +213,7 @@ IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
             [[fallthrough]];
         case kLPDDR4MemType:
             [[fallthrough]];
-        case kDDR5MemType:    // AMD's Kexts don't know about DDR5
+        case kDDR5MemType:    //! AMD's Kexts don't know about DDR5
             [[fallthrough]];
         case kLPDDR5MemType:
             videoMemoryType = kVideoMemoryTypeDDR4;
@@ -223,13 +223,13 @@ IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
             videoMemoryType = kVideoMemoryTypeDDR4;
             break;
     }
-    getMember<UInt32>(fwInfo, 0x20) = channelCount * 64;    // VRAM Width (64-bit channels)
+    getMember<UInt32>(fwInfo, 0x20) = channelCount * 64;    //! VRAM Width (64-bit channels)
     return kIOReturnSuccess;
 }
 
 bool X6000FB::wrapInitWithPciInfo(void *that, void *param1) {
     auto ret = FunctionCast(wrapInitWithPciInfo, callback->orgInitWithPciInfo)(that, param1);
-    // Hack AMDRadeonX6000_AmdLogger to log everything
+    //! Hack AMDRadeonX6000_AmdLogger to log everything
     getMember<UInt64>(that, 0x28) = ~0ULL;
     getMember<UInt32>(that, 0x30) = 0xFF;
     return ret;
@@ -306,19 +306,19 @@ IOReturn X6000FB::wrapFramebufferSetAttribute(IOService *framebuffer, IOIndex co
         return kIOReturnSuccess;
     }
 
-    // Set the backlight
+    //! Set the backlight
     callback->curPwmBacklightLvl = static_cast<UInt32>(value);
     UInt32 percentage = callback->curPwmBacklightLvl * 100 / callback->maxPwmBacklightLvl;
     UInt32 pwmValue = 0;
     if (percentage >= 100) {
-        // This is from the dmcu_set_backlight_level function of Linux source
-        // ...
-        // if (backlight_pwm_u16_16 & 0x10000)
-        // 	   backlight_8_bit = 0xFF;
-        // else
-        // 	   backlight_8_bit = (backlight_pwm_u16_16 >> 8) & 0xFF;
-        // ...
-        // The max brightness should have 0x10000 bit set
+        //! This is from the dmcu_set_backlight_level function of Linux source
+        //! ...
+        //! if (backlight_pwm_u16_16 & 0x10000)
+        //! 	   backlight_8_bit = 0xFF;
+        //! else
+        //! 	   backlight_8_bit = (backlight_pwm_u16_16 >> 8) & 0xFF;
+        //! ...
+        //! The max brightness should have 0x10000 bit set
         pwmValue = 0x1FF00;
     } else {
         pwmValue = ((percentage * 0xFF) / 100) << 8U;
@@ -348,7 +348,7 @@ UInt32 X6000FB::wrapGetNumberOfConnectors(void *that) {
             DBGLOG("X6000FB", "Fixing VBIOS connectors");
             auto n = objInfo->pathCount;
             for (size_t i = 0, j = 0; i < n; i++) {
-                // Skip invalid device tags
+                //! Skip invalid device tags
                 if (objInfo->paths[i].devTag) {
                     objInfo->paths[j++] = objInfo->paths[i];
                 } else {
@@ -394,7 +394,7 @@ void X6000FB::wrapIRQMGRWriteRegister(void *ctx, UInt64 index, UInt32 value) {
 UInt32 X6000FB::wrapControllerPowerUp(void *that) {
     auto &m_flags = getMember<UInt8>(that, 0x5F18);
     auto send = !(m_flags & 2);
-    m_flags |= 4;    // All framebuffers enabled
+    m_flags |= 4;    //! All framebuffers enabled
     auto ret = FunctionCast(wrapControllerPowerUp, callback->orgControllerPowerUp)(that);
     if (send) { callback->orgMessageAccelerator(that, 0x1B, nullptr, nullptr, nullptr); }
     return ret;

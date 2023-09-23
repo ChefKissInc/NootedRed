@@ -1,5 +1,5 @@
-//  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5. See LICENSE for
-//  details.
+//!  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5. See LICENSE for
+//!  details.
 
 #include "DYLDPatches.hpp"
 #include "NRed.hpp"
@@ -90,9 +90,9 @@ void DYLDPatches::apply(char *path, void *data, size_t size) {
         kVAAddrLibInterfaceInitPatched, kVAAddrLibInterfaceInitPatchedMask, "VAAddrLibInterface::init"};
     patch.apply(data, size);
 
-    // ----------------------------------------------
-    if (NRed::callback->chipType >= ChipType::Renoir) { return; }    // Everything after is for VCN 1
-    // ----------------------------------------------
+    //! ----------------------------------------------
+    if (NRed::callback->chipType >= ChipType::Renoir) { return; }    //! Everything after is for VCN 1
+    //! ----------------------------------------------
 
     const DYLDPatch vcn1Patches[] = {
         {kWriteUvdNoOpOriginal, kWriteUvdNoOpPatched, "Vcn2DecCommand::writeUvdNoOp"},

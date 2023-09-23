@@ -1,5 +1,5 @@
-//  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5. See LICENSE for
-//  details.
+//!  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5. See LICENSE for
+//!  details.
 
 #include "NRed.hpp"
 #include "DYLDPatches.hpp"
@@ -281,7 +281,7 @@ bool NRed::wrapApplePanelSetDisplay(IOService *that, IODisplay *display) {
                     auto pd = OSData::withBytes(entry.deviceData, sizeof(entry.deviceData));
                     if (pd) {
                         panels->setObject(entry.deviceName, pd);
-                        // No release required by current AppleBacklight implementation.
+                        //! No release required by current AppleBacklight implementation.
                     } else {
                         SYSLOG("NRed", "setDisplay: Cannot allocate data for %s", entry.deviceName);
                     }

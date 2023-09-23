@@ -1,5 +1,5 @@
-//  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5. See LICENSE for
-//  details.
+//!  Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5. See LICENSE for
+//!  details.
 
 #include "HWLibs.hpp"
 #include "NRed.hpp"
@@ -138,6 +138,14 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
             };
             PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs",
                 "Failed to apply spoof patches");
+        } else if (renoir) {
+            const LookupPatchPlus patches[] = {
+                {&kextRadeonX5000HWLibs, kPspSwInitCatalinaOriginal1, kPspSwInitCatalinaPatched1, 1},
+                {&kextRadeonX5000HWLibs, kPspSwInitCatalinaOriginal2, kPspSwInitCatalinaOriginal2Mask,
+                    kPspSwInitCatalinaPatched2, 1},
+            };
+            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs",
+                "Failed to apply spoof patches");
         }
 
         if (getKernelVersion() >= KernelVersion::Monterey) {
@@ -183,7 +191,7 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
     auto &fwDesc = getFWDescByName(filename);
     DBGLOG("HWLibs", "VCN firmware filename is %s", filename);
 
-    /** VCN 2.2, VCN 1.0 */
+    //! VCN 2.2, VCN 1.0
     auto *fw = callback->orgCreateFirmware(fwDesc.data, fwDesc.size, isRenoirDerivative ? 0x0202 : 0x0100, filename);
     PANIC_COND(!fw, "HWLibs", "Failed to create '%s' firmware", filename);
     auto *fwDir = getMember<void *>(that, getKernelVersion() > KernelVersion::BigSur ? 0xB0 : 0xB8);
