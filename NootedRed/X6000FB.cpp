@@ -32,8 +32,8 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
         bool backlightBootArg = false;
         PE_parse_boot_argn("AMDBacklight", &backlightBootArg, sizeof(backlightBootArg));
         bool enableBacklight =
-            backlightBootArg || BaseDeviceInfo::get().modelType == WIOKit::ComputerModel::ComputerLaptop;
-        if (!catalina && enableBacklight) {
+            !catalina && (backlightBootArg || BaseDeviceInfo::get().modelType == WIOKit::ComputerModel::ComputerLaptop);
+        if (enableBacklight) {
             SolveRequestPlus solveRequest {"_dce_driver_set_backlight", this->orgDceDriverSetBacklight,
                 kDceDriverSetBacklight};
             PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "X6000FB",
@@ -92,7 +92,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route powerUp");
         }
 
-        if (!catalina && enableBacklight) {
+        if (enableBacklight) {
             RouteRequestPlus requests[] = {
                 {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit, this->orgDcePanelCntlHwInit,
                     kDcePanelCntlHwInitPattern},

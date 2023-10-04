@@ -12,6 +12,7 @@
 #include "X6000FB.hpp"
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_devinfo.hpp>
+#include <IOKit/IOCatalogue.h>
 
 static const char *pathAGDP = "/System/Library/Extensions/AppleGraphicsControl.kext/Contents/PlugIns/"
                               "AppleGraphicsDevicePolicy.kext/Contents/MacOS/AppleGraphicsDevicePolicy";
@@ -59,6 +60,13 @@ void NRed::init() {
 }
 
 void NRed::processPatcher(KernelPatcher &patcher) {
+    bool backlightBootArg = false;
+    PE_parse_boot_argn("AMDBacklight", &backlightBootArg, sizeof(backlightBootArg));
+    if (getKernelVersion() == KernelVersion::Catalina ||
+        !(backlightBootArg || BaseDeviceInfo::get().modelType == WIOKit::ComputerModel::ComputerLaptop)) {
+        kextBacklight.switchOff();
+        kextMCCSControl.switchOff();
+    }
     auto *devInfo = DeviceInfo::create();
     if (devInfo) {
         devInfo->processSwitchOff();
@@ -133,6 +141,22 @@ void NRed::processPatcher(KernelPatcher &patcher) {
         "Failed to route kernel symbols");
 
     dyldpatches.processPatcher(patcher);
+
+    if ((lilu.getRunMode() & LiluAPI::RunningInstallerRecovery) || checkKernelArgument("-CKFBOnly")) { return; }
+
+    auto &desc = getFWDescByName("Drivers.xml");
+    OSString *errStr = nullptr;
+    auto *dataNull = new char[desc.size + 1];
+    memcpy(dataNull, desc.data, desc.size);
+    dataNull[desc.size] = 0;
+    auto *dataUnserialized = OSUnserializeXML(dataNull, desc.size + 1, &errStr);
+    delete[] dataNull;
+    PANIC_COND(!dataUnserialized, "NootedRed", "Failed to unserialize Drivers.xml: %s",
+        errStr ? errStr->getCStringNoCopy() : "<No additional information>");
+    auto *drivers = OSDynamicCast(OSArray, dataUnserialized);
+    PANIC_COND(!drivers, "NootedRed", "Failed to cast Drivers.xml data");
+    PANIC_COND(!gIOCatalogue->addDrivers(drivers), "NootedRed", "Failed to add drivers");
+    dataUnserialized->release();
 }
 
 OSMetaClassBase *NRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const OSMetaClass *toMeta) {

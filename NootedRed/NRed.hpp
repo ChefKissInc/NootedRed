@@ -10,14 +10,6 @@
 #include <IOKit/graphics/IOFramebuffer.h>
 #include <IOKit/pci/IOPCIDevice.h>
 
-class EXPORT PRODUCT_NAME : public IOService {
-    OSDeclareDefaultStructors(PRODUCT_NAME);
-
-    public:
-    IOService *probe(IOService *provider, SInt32 *score) APPLE_KEXT_OVERRIDE;
-    bool start(IOService *provider) APPLE_KEXT_OVERRIDE;
-};
-
 enum struct ChipType : UInt32 {
     Raven = 0,
     Picasso,
