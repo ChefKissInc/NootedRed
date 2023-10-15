@@ -8,26 +8,145 @@ using t_GenericConstructor = void (*)(void *that);
 
 constexpr UInt32 AMDGPU_FAMILY_RAVEN = 0x8E;
 
+constexpr UInt32 AMDGPU_MAX_USEC_TIMEOUT = 100000;
+
+//-------- IP Bases --------//
+
+constexpr UInt32 MP_BASE = 0x16000;
+
+//-------- Generic Registers --------//
+
+constexpr UInt32 mmPCIE_INDEX2 = 0xE;
+constexpr UInt32 mmPCIE_DATA2 = 0xF;
+
+//-------- SMU Registers --------//
+
+constexpr UInt32 mmMP1_SMN_C2PMSG_66 = 0x282;
+constexpr UInt32 mmMP1_SMN_C2PMSG_82 = 0x292;
+constexpr UInt32 mmMP1_SMN_C2PMSG_90 = 0x29A;
+
 constexpr UInt32 PPSMC_MSG_PowerDownSdma = 0xD;
 constexpr UInt32 PPSMC_MSG_PowerUpSdma = 0xE;
 
-constexpr UInt32 mmHUBP0_DCSURF_ADDR_CONFIG = 0x55A;
-constexpr UInt32 mmHUBP1_DCSURF_ADDR_CONFIG = 0x61E;
+//-------- GC Registers --------//
+
+constexpr UInt32 mmCPC_UTCL1_CNTL = 0x103D;
+constexpr UInt32 mmCPC_UTCL1_CNTL_BASE_IDX = 0;
+constexpr UInt32 mmCPF_UTCL1_CNTL = 0x103E;
+constexpr UInt32 mmCPF_UTCL1_CNTL_BASE_IDX = 0;
+constexpr UInt32 mmCPG_UTCL1_CNTL = 0x103C;
+constexpr UInt32 mmCPG_UTCL1_CNTL_BASE_IDX = 0;
+constexpr UInt32 mmGB_GPU_ID = 0x640;
+constexpr UInt32 mmGB_GPU_ID_BASE_IDX = 0;
+constexpr UInt32 mmIA_UTCL1_CNTL = 0x246;
+constexpr UInt32 mmIA_UTCL1_CNTL_BASE_IDX = 0;
+constexpr UInt32 mmPA_SC_BINNER_EVENT_CNTL_3 = 0x2CF;
+constexpr UInt32 mmPA_SC_BINNER_EVENT_CNTL_3_BASE_IDX = 0;
+constexpr UInt32 mmRLC_GPM_UTCL1_CNTL_0 = 0x4CB2;
+constexpr UInt32 mmRLC_GPM_UTCL1_CNTL_0_BASE_IDX = 1;
+constexpr UInt32 mmRLC_GPM_UTCL1_CNTL_1 = 0x4CB3;
+constexpr UInt32 mmRLC_GPM_UTCL1_CNTL_1_BASE_IDX = 1;
+constexpr UInt32 mmRLC_GPM_UTCL1_CNTL_2 = 0x4CB4;
+constexpr UInt32 mmRLC_GPM_UTCL1_CNTL_2_BASE_IDX = 1;
+constexpr UInt32 mmRLC_PREWALKER_UTCL1_CNTL = 0x4CCD;
+constexpr UInt32 mmRLC_PREWALKER_UTCL1_CNTL_BASE_IDX = 1;
+constexpr UInt32 mmRLC_SPM_UTCL1_CNTL = 0x4CB5;
+constexpr UInt32 mmRLC_SPM_UTCL1_CNTL_BASE_IDX = 1;
+constexpr UInt32 mmVGT_CACHE_INVALIDATION = 0x231;
+constexpr UInt32 mmVGT_CACHE_INVALIDATION_BASE_IDX = 0;
+constexpr UInt32 mmVGT_GS_MAX_WAVE_ID = 0x269;
+constexpr UInt32 mmVGT_GS_MAX_WAVE_ID_BASE_IDX = 0;
+constexpr UInt32 mmWD_UTCL1_CNTL = 0x243;
+constexpr UInt32 mmWD_UTCL1_CNTL_BASE_IDX = 0;
+constexpr UInt32 mmCP_MEC1_F32_INT_DIS = 0x10BD;
+constexpr UInt32 mmCP_MEC1_F32_INT_DIS_BASE_IDX = 0;
+constexpr UInt32 mmCP_MEC2_F32_INT_DIS = 0x10BE;
+constexpr UInt32 mmCP_MEC2_F32_INT_DIS_BASE_IDX = 0;
+constexpr UInt32 mmCP_DEBUG = 0x107F;
+constexpr UInt32 mmCP_DEBUG_BASE_IDX = 0;
+constexpr UInt32 mmCB_HW_CONTROL_3 = 0x683;
+constexpr UInt32 mmCB_HW_CONTROL_3_BASE_IDX = 0;
+constexpr UInt32 mmPA_SC_MODE_CNTL_1 = 0x293;
+constexpr UInt32 mmPA_SC_MODE_CNTL_1_BASE_IDX = 1;
+constexpr UInt32 mmRMI_UTCL1_CNTL2 = 0x78C;
+constexpr UInt32 mmRMI_UTCL1_CNTL2_BASE_IDX = 0;
+constexpr UInt32 mmTD_CNTL = 0x525;
+constexpr UInt32 mmTD_CNTL_BASE_IDX = 0;
+constexpr UInt32 mmCB_DCC_CONFIG = 0x688;
+constexpr UInt32 mmCB_DCC_CONFIG_BASE_IDX = 0;
+constexpr UInt32 mmCB_HW_CONTROL = 0x680;
+constexpr UInt32 mmCB_HW_CONTROL_BASE_IDX = 0;
+constexpr UInt32 mmCB_HW_CONTROL_2 = 0x682;
+constexpr UInt32 mmCB_HW_CONTROL_2_BASE_IDX = 0;
+constexpr UInt32 mmDB_DEBUG2 = 0x60D;
+constexpr UInt32 mmDB_DEBUG2_BASE_IDX = 0;
+constexpr UInt32 mmGB_ADDR_CONFIG = 0x63E;
+constexpr UInt32 mmGB_ADDR_CONFIG_BASE_IDX = 0;
+constexpr UInt32 mmGB_ADDR_CONFIG_READ = 0x642;
+constexpr UInt32 mmGB_ADDR_CONFIG_READ_BASE_IDX = 0;
+constexpr UInt32 mmPA_SC_ENHANCE = 0x2FC;
+constexpr UInt32 mmPA_SC_ENHANCE_BASE_IDX = 0;
+constexpr UInt32 mmPA_SC_ENHANCE_1 = 0x2FD;
+constexpr UInt32 mmPA_SC_ENHANCE_1_BASE_IDX = 0;
+constexpr UInt32 mmPA_SC_LINE_STIPPLE_STATE = 0x2281;
+constexpr UInt32 mmPA_SC_LINE_STIPPLE_STATE_BASE_IDX = 1;
+constexpr UInt32 mmTA_CNTL_AUX = 0x542;
+constexpr UInt32 mmTA_CNTL_AUX_BASE_IDX = 0;
+constexpr UInt32 mmTCP_CHAN_STEER_LO = 0xB03;
+constexpr UInt32 mmTCP_CHAN_STEER_LO_BASE_IDX = 0;
+constexpr UInt32 mmTCP_CHAN_STEER_HI = 0xB04;
+constexpr UInt32 mmTCP_CHAN_STEER_HI_BASE_IDX = 0;
+constexpr UInt32 mmGCEA_PROBE_MAP = 0x70C;
+constexpr UInt32 mmGCEA_PROBE_MAP_BASE_IDX = 0;
+
+//-------- SDMA0 Registers --------//
+
+constexpr UInt32 mmSDMA0_CHICKEN_BITS = 0x1D;
+constexpr UInt32 mmSDMA0_CHICKEN_BITS_BASE_IDX = 0;
+constexpr UInt32 mmSDMA0_CLK_CTRL = 0x1B;
+constexpr UInt32 mmSDMA0_CLK_CTRL_BASE_IDX = 0;
+constexpr UInt32 mmSDMA0_GFX_IB_CNTL = 0x8A;
+constexpr UInt32 mmSDMA0_GFX_IB_CNTL_BASE_IDX = 0;
+constexpr UInt32 mmSDMA0_GFX_RB_WPTR_POLL_CNTL = 0x87;
+constexpr UInt32 mmSDMA0_GFX_RB_WPTR_POLL_CNTL_BASE_IDX = 0;
+constexpr UInt32 mmSDMA0_POWER_CNTL = 0x1A;
+constexpr UInt32 mmSDMA0_POWER_CNTL_BASE_IDX = 0;
+constexpr UInt32 mmSDMA0_RLC0_IB_CNTL = 0x14A;
+constexpr UInt32 mmSDMA0_RLC0_IB_CNTL_BASE_IDX = 0;
+constexpr UInt32 mmSDMA0_RLC0_RB_WPTR_POLL_CNTL = 0x147;
+constexpr UInt32 mmSDMA0_RLC0_RB_WPTR_POLL_CNTL_BASE_IDX = 0;
+constexpr UInt32 mmSDMA0_RLC1_IB_CNTL = 0x1AA;
+constexpr UInt32 mmSDMA0_RLC1_IB_CNTL_BASE_IDX = 0;
+constexpr UInt32 mmSDMA0_RLC1_RB_WPTR_POLL_CNTL = 0x1A7;
+constexpr UInt32 mmSDMA0_RLC1_RB_WPTR_POLL_CNTL_BASE_IDX = 0;
+constexpr UInt32 mmSDMA0_UTCL1_PAGE = 0x48;
+constexpr UInt32 mmSDMA0_UTCL1_PAGE_BASE_IDX = 0;
+constexpr UInt32 mmSDMA0_UTCL1_WATERMK = 0x3D;
+constexpr UInt32 mmSDMA0_UTCL1_WATERMK_BASE_IDX = 0;
+constexpr UInt32 mmSDMA0_GB_ADDR_CONFIG = 0x1E;
+constexpr UInt32 mmSDMA0_GB_ADDR_CONFIG_BASE_IDX = 0;
+constexpr UInt32 mmSDMA0_GB_ADDR_CONFIG_READ = 0x1F;
+constexpr UInt32 mmSDMA0_GB_ADDR_CONFIG_READ_BASE_IDX = 0;
+
+//-------- DCN1 Registers --------//
+
 constexpr UInt32 mmHUBP0_DCSURF_SURFACE_CONFIG = 0x559;
+constexpr UInt32 mmHUBP0_DCSURF_ADDR_CONFIG = 0x55A;
 constexpr UInt32 mmHUBP0_DCSURF_TILING_CONFIG = 0x55B;
 constexpr UInt32 mmHUBP0_DCSURF_PRI_VIEWPORT_START = 0x55C;
 constexpr UInt32 mmHUBP0_DCSURF_PRI_VIEWPORT_DIMENSION = 0x55D;
-constexpr UInt32 mmHUBP2_DCSURF_ADDR_CONFIG = 0x6E2;
 constexpr UInt32 mmHUBP1_DCSURF_SURFACE_CONFIG = 0x61D;
+constexpr UInt32 mmHUBP1_DCSURF_ADDR_CONFIG = 0x61E;
 constexpr UInt32 mmHUBP1_DCSURF_TILING_CONFIG = 0x61F;
 constexpr UInt32 mmHUBP1_DCSURF_PRI_VIEWPORT_START = 0x620;
 constexpr UInt32 mmHUBP1_DCSURF_PRI_VIEWPORT_DIMENSION = 0x621;
-constexpr UInt32 mmHUBP3_DCSURF_ADDR_CONFIG = 0x7A6;
 constexpr UInt32 mmHUBP2_DCSURF_SURFACE_CONFIG = 0x6E1;
+constexpr UInt32 mmHUBP2_DCSURF_ADDR_CONFIG = 0x6E2;
 constexpr UInt32 mmHUBP2_DCSURF_TILING_CONFIG = 0x6E3;
 constexpr UInt32 mmHUBP2_DCSURF_PRI_VIEWPORT_START = 0x6E4;
 constexpr UInt32 mmHUBP2_DCSURF_PRI_VIEWPORT_DIMENSION = 0x6E5;
 constexpr UInt32 mmHUBP3_DCSURF_SURFACE_CONFIG = 0x7A5;
+constexpr UInt32 mmHUBP3_DCSURF_ADDR_CONFIG = 0x7A6;
 constexpr UInt32 mmHUBP3_DCSURF_TILING_CONFIG = 0x7A7;
 constexpr UInt32 mmHUBP3_DCSURF_PRI_VIEWPORT_START = 0x7A8;
 constexpr UInt32 mmHUBP3_DCSURF_PRI_VIEWPORT_DIMENSION = 0x7A9;
@@ -75,22 +194,305 @@ constexpr UInt32 mmOTG4_OTG_INTERLACE_CONTROL = 0x1D44;
 constexpr UInt32 mmOTG5_OTG_CONTROL = 0x1DC1;
 constexpr UInt32 mmOTG5_OTG_INTERLACE_CONTROL = 0x1DC4;
 
-constexpr UInt32 mmPCIE_INDEX2 = 0xE;
-constexpr UInt32 mmPCIE_DATA2 = 0xF;
+//-------- DCN2 Registers --------//
 
-constexpr UInt32 mmIH_CHICKEN = 0x122C;
-constexpr UInt32 mmIH_MC_SPACE_GPA_ENABLE = 0x10;
 constexpr UInt32 mmIH_CLK_CTRL = 0x117B;
 constexpr UInt32 mmIH_IH_BUFFER_MEM_CLK_SOFT_OVERRIDE_SHIFT = 0x1A;
 constexpr UInt32 mmIH_DBUS_MUX_CLK_SOFT_OVERRIDE_SHIFT = 0x1B;
+constexpr UInt32 mmIH_CHICKEN = 0x122C;
+constexpr UInt32 mmIH_MC_SPACE_GPA_ENABLE = 0x10;
 
-constexpr UInt32 MP_BASE = 0x16000;
+//-------- AMD Catalyst Data Types --------//
 
-constexpr UInt32 AMDGPU_MAX_USEC_TIMEOUT = 100000;
+struct CAILAsicCapsEntry {
+    UInt32 familyId, deviceId;
+    UInt32 revision, extRevision;
+    UInt32 pciRevision;
+    UInt32 _reserved;
+    const UInt32 *caps;
+    const UInt32 *skeleton;
+} PACKED;
 
-constexpr UInt32 mmMP1_SMN_C2PMSG_90 = 0x29A;
-constexpr UInt32 mmMP1_SMN_C2PMSG_82 = 0x292;
-constexpr UInt32 mmMP1_SMN_C2PMSG_66 = 0x282;
+struct CAILAsicCapsInitEntry {
+    UInt64 familyId, deviceId;
+    UInt64 revision, extRevision;
+    UInt64 pciRevision;
+    const UInt32 *caps;
+    const void *goldenCaps;
+} PACKED;
+
+enum CAILResult : UInt32 {
+    kCAILResultSuccess = 0,
+    kCAILResultInvalidArgument,
+    kCAILResultGeneralFailure,
+    kCAILResultResourcesExhausted,
+    kCAILResultUnsupported,
+};
+
+struct CAILDeviceTypeEntry {
+    UInt32 deviceId, deviceType;
+} PACKED;
+
+struct CAILIPGoldenRegister {
+    const UInt32 regOffset;
+    const UInt32 segment;
+    const UInt32 andMask;
+    const UInt32 orMask;
+} PACKED;
+
+#define GOLDEN_REGISTER(reg, and, or) \
+    { .regOffset = reg, .segment = reg##_BASE_IDX, .andMask = and, .orMask = or }
+#define GOLDEN_REGISTER_TERMINATOR \
+    { .regOffset = 0xFFFFFFFF, .segment = 0xFFFFFFFF, .andMask = 0xFFFFFFFF, .orMask = 0xFFFFFFFF }
+
+enum CAILIPType : UInt32 {
+    kCAILIPTypeUnknown = 0,
+    kCAILIPTypeGC = 11,
+    //! Purely an educated guess, doubt the golden registers defined later are actually being used (In HWLibs).
+    kCAILIPTypeATHUB = 28,
+    kCAILIPTypeSDMA0 = 35,
+    kCAILIPTypeSDMA1,
+};
+
+struct CAILASICGoldenRegisters {
+    const CAILIPType ipType;
+    const UInt32 instance;    //! Not sure about that one.
+    const CAILIPGoldenRegister *entries;
+} PACKED;
+
+#define GOLDEN_REGISTERS(type, inst, ents) \
+    { .ipType = kCAILIPType##type, .instance = inst, .entries = ents }
+
+#define GOLDEN_REGISTERS_TERMINATOR \
+    { .ipType = kCAILIPTypeUnknown, .instance = 0, .entries = nullptr }
+
+struct CAILASICGoldenSettings {
+    //! Golden settings for GPUs emulated using the Cadence Palladium Emulation platform. We don't care.
+    const CAILASICGoldenRegisters *palladiumGoldenSettings;
+    const CAILASICGoldenRegisters *goldenSettings;
+} PACKED;
+
+struct DeviceCapabilityEntry {
+    UInt64 familyId, extRevision;
+    UInt64 deviceId, revision, enumRevision;
+    const void *swipInfo, *swipInfoMinimal;
+    const UInt32 *devAttrFlags;
+    CAILASICGoldenSettings *asicGoldenSettings;
+    void *doorbellRange;
+} PACKED;
+
+enum AMDPSPCommand : UInt32 {
+    kPSPCommandLoadTA = 1,
+    kPSPCommandLoadASD = 4,
+    kPSPCommandLoadIPFW = 6,
+};
+
+enum AMDUCodeID : UInt32 {
+    kUCodeCE = 2,
+    kUCodePFP,
+    kUCodeME,
+    kUCodeMEC1JT,
+    kUCodeMEC2JT,
+    kUCodeMEC1,
+    kUCodeMEC2,
+    kUCodeRLC = 11,
+    kUCodeSDMA0,
+    kUCodeDMCUERAM = 19,
+    kUCodeDMCUISR,
+    kUCodeRLCV = 21,
+    kUCodeRLCSRListGPM = 23,
+    kUCodeRLCSRListSRM,
+    kUCodeRLCSRListCntl,
+    kUCodeDMCUB = 35,
+};
+
+enum VideoMemoryType : UInt32 {
+    kVideoMemoryTypeUnknown,
+    kVideoMemoryTypeDDR2,
+    kVideoMemoryTypeDDR3 = 3,
+    kVideoMemoryTypeDDR4,
+};
+
+//-------- AMD Catalyst Constants --------//
+
+constexpr UInt64 DEVICE_CAP_ENTRY_REV_DONT_CARE = 0xDEADCAFEU;
+
+constexpr UInt32 PP_RESULT_OK = 1;
+
+static const UInt32 ddiCapsRaven[16] = {0x800005, 0x500011FE, 0x80000, 0x11001000, 0x200, 0x68000001, 0x20000000,
+    0x4002, 0x22420001, 0x9E20E10, 0x2000120, 0x0, 0x0, 0x0, 0x0, 0x0};
+static const UInt32 ddiCapsRenoir[16] = {0x800005, 0x500011FE, 0x80000, 0x11001000, 0x200, 0x68000001, 0x20000000,
+    0x4002, 0x22420001, 0x9E20E18, 0x2000120, 0x0, 0x0, 0x0, 0x0, 0x0};
+
+static const UInt32 ravenDevAttrFlags = 0x49;
+
+//---- Golden Settings ----//
+
+static const CAILIPGoldenRegister gcGoldenSettingsRaven[] = {
+    GOLDEN_REGISTER(mmCB_HW_CONTROL, 0xFFFDF3CF, 0x14104),
+    GOLDEN_REGISTER(mmCPC_UTCL1_CNTL, 0x8000000, 0x8000080),
+    GOLDEN_REGISTER(mmCPF_UTCL1_CNTL, 0x8000000, 0x8000080),
+    GOLDEN_REGISTER(mmCPG_UTCL1_CNTL, 0x8000000, 0x8000080),
+    GOLDEN_REGISTER(mmDB_DEBUG2, 0xF00FFFFF, 0x420),
+    GOLDEN_REGISTER(mmGB_GPU_ID, 0xF, 0x0),
+    GOLDEN_REGISTER(mmIA_UTCL1_CNTL, 0x8000000, 0x8000080),
+    GOLDEN_REGISTER(mmPA_SC_BINNER_EVENT_CNTL_3, 0x3, 0x82400024),
+    GOLDEN_REGISTER(mmPA_SC_ENHANCE, 0x3FFFFFFF, 0x1),
+    GOLDEN_REGISTER(mmPA_SC_LINE_STIPPLE_STATE, 0xFF0F, 0x0),
+    GOLDEN_REGISTER(mmRLC_GPM_UTCL1_CNTL_0, 0x8000000, 0x8000080),
+    GOLDEN_REGISTER(mmRLC_GPM_UTCL1_CNTL_1, 0x8000000, 0x8000080),
+    GOLDEN_REGISTER(mmRLC_GPM_UTCL1_CNTL_2, 0x8000000, 0x8000080),
+    GOLDEN_REGISTER(mmRLC_PREWALKER_UTCL1_CNTL, 0x8000000, 0x8000080),
+    GOLDEN_REGISTER(mmRLC_SPM_UTCL1_CNTL, 0x8000000, 0x8000080),
+    GOLDEN_REGISTER(mmTA_CNTL_AUX, 0xFFFFFEEF, 0x10B0000),
+    GOLDEN_REGISTER(mmTCP_CHAN_STEER_HI, 0xFFFFFFFF, 0x0),
+    GOLDEN_REGISTER(mmTCP_CHAN_STEER_LO, 0xFFFFFFFF, 0x3120),
+    GOLDEN_REGISTER(mmVGT_CACHE_INVALIDATION, 0x3FFF3AF3, 0x19200000),
+    GOLDEN_REGISTER(mmVGT_GS_MAX_WAVE_ID, 0xFFF, 0xFF),
+    GOLDEN_REGISTER(mmWD_UTCL1_CNTL, 0x8000000, 0x8000080),
+    GOLDEN_REGISTER(mmCP_MEC1_F32_INT_DIS, 0x800, 0x800),
+    GOLDEN_REGISTER(mmCP_MEC2_F32_INT_DIS, 0x800, 0x800),
+    GOLDEN_REGISTER(mmCP_DEBUG, 0x8000, 0x8000),
+    GOLDEN_REGISTER(mmCB_HW_CONTROL_3, 0x30000000, 0x10000000),
+    GOLDEN_REGISTER(mmGB_ADDR_CONFIG, 0xFFFF77FF, 0x24000042),
+    GOLDEN_REGISTER(mmGB_ADDR_CONFIG_READ, 0xFFFF77FF, 0x24000042),
+    GOLDEN_REGISTER(mmPA_SC_ENHANCE_1, 0xFFFFFFFF, 0x4048000),
+    GOLDEN_REGISTER(mmPA_SC_MODE_CNTL_1, 0x6000000, 0x6000000),
+    GOLDEN_REGISTER(mmRMI_UTCL1_CNTL2, 0x30000, 0x20000),
+    GOLDEN_REGISTER(mmTD_CNTL, 0x1BD9F33, 0x800),
+    GOLDEN_REGISTER_TERMINATOR,
+};
+
+static const CAILIPGoldenRegister gcGoldenSettingsRaven2[] = {
+    GOLDEN_REGISTER(mmCB_HW_CONTROL, 0xFFFDF3CF, 0x14104),
+    GOLDEN_REGISTER(mmCPC_UTCL1_CNTL, 0x8000000, 0x8000080),
+    GOLDEN_REGISTER(mmCPF_UTCL1_CNTL, 0x8000000, 0x8000080),
+    GOLDEN_REGISTER(mmCPG_UTCL1_CNTL, 0x8000000, 0x8000080),
+    GOLDEN_REGISTER(mmDB_DEBUG2, 0xF00FFFFF, 0x420),
+    GOLDEN_REGISTER(mmGB_GPU_ID, 0xF, 0x0),
+    GOLDEN_REGISTER(mmIA_UTCL1_CNTL, 0x8000000, 0x8000080),
+    GOLDEN_REGISTER(mmPA_SC_BINNER_EVENT_CNTL_3, 0x3, 0x82400024),
+    GOLDEN_REGISTER(mmPA_SC_ENHANCE, 0x3FFFFFFF, 0x1),
+    GOLDEN_REGISTER(mmPA_SC_LINE_STIPPLE_STATE, 0xFF0F, 0x0),
+    GOLDEN_REGISTER(mmRLC_GPM_UTCL1_CNTL_0, 0x8000000, 0x8000080),
+    GOLDEN_REGISTER(mmRLC_GPM_UTCL1_CNTL_1, 0x8000000, 0x8000080),
+    GOLDEN_REGISTER(mmRLC_GPM_UTCL1_CNTL_2, 0x8000000, 0x8000080),
+    GOLDEN_REGISTER(mmRLC_PREWALKER_UTCL1_CNTL, 0x8000000, 0x8000080),
+    GOLDEN_REGISTER(mmRLC_SPM_UTCL1_CNTL, 0x8000000, 0x8000080),
+    GOLDEN_REGISTER(mmTA_CNTL_AUX, 0xFFFFFEEF, 0x10B0000),
+    GOLDEN_REGISTER(mmTCP_CHAN_STEER_HI, 0xFFFFFFFF, 0x0),
+    GOLDEN_REGISTER(mmTCP_CHAN_STEER_LO, 0xFFFFFFFF, 0x3120),
+    GOLDEN_REGISTER(mmVGT_CACHE_INVALIDATION, 0x3FFF3AF3, 0x19200000),
+    GOLDEN_REGISTER(mmVGT_GS_MAX_WAVE_ID, 0xFFF, 0xFF),
+    GOLDEN_REGISTER(mmWD_UTCL1_CNTL, 0x8000000, 0x8000080),
+    GOLDEN_REGISTER(mmCP_MEC1_F32_INT_DIS, 0x800, 0x800),
+    GOLDEN_REGISTER(mmCP_MEC2_F32_INT_DIS, 0x800, 0x800),
+    GOLDEN_REGISTER(mmCP_DEBUG, 0x8000, 0x8000),
+    GOLDEN_REGISTER(mmCB_DCC_CONFIG, 0xFF7FFFFF, 0x4000000),
+    GOLDEN_REGISTER(mmCB_HW_CONTROL, 0xFFFDF3CF, 0x14104),
+    GOLDEN_REGISTER(mmCB_HW_CONTROL_2, 0xFF7FFFFF, 0xA000000),
+    GOLDEN_REGISTER(mmCPC_UTCL1_CNTL, 0x7F0FFFFF, 0x8000080),
+    GOLDEN_REGISTER(mmCPF_UTCL1_CNTL, 0xFF8FFFFF, 0x8000080),
+    GOLDEN_REGISTER(mmCPG_UTCL1_CNTL, 0x7F8FFFFF, 0x8000080),
+    GOLDEN_REGISTER(mmGB_ADDR_CONFIG, 0xFFFF77FF, 0x26013041),
+    GOLDEN_REGISTER(mmGB_ADDR_CONFIG_READ, 0xFFFF77FF, 0x26013041),
+    GOLDEN_REGISTER(mmIA_UTCL1_CNTL, 0x3F8FFFFF, 0x8000080),
+    GOLDEN_REGISTER(mmPA_SC_ENHANCE_1, 0xFFFFFFFF, 0x4040000),
+    GOLDEN_REGISTER(mmRLC_GPM_UTCL1_CNTL_0, 0xFF0FFFFF, 0x8000080),
+    GOLDEN_REGISTER(mmRLC_GPM_UTCL1_CNTL_1, 0xFF0FFFFF, 0x8000080),
+    GOLDEN_REGISTER(mmRLC_GPM_UTCL1_CNTL_2, 0xFF0FFFFF, 0x8000080),
+    GOLDEN_REGISTER(mmRLC_PREWALKER_UTCL1_CNTL, 0xFF0FFFFF, 0x8000080),
+    GOLDEN_REGISTER(mmRLC_SPM_UTCL1_CNTL, 0xFF0FFFFF, 0x8000080),
+    GOLDEN_REGISTER(mmTCP_CHAN_STEER_HI, 0xFFFFFFFF, 0x0),
+    GOLDEN_REGISTER(mmTCP_CHAN_STEER_LO, 0xFFFFFFFF, 0x10),
+    GOLDEN_REGISTER(mmTD_CNTL, 0x1BD9F33, 0x1000000),
+    GOLDEN_REGISTER(mmWD_UTCL1_CNTL, 0x3F8FFFFF, 0x8000080),
+    GOLDEN_REGISTER_TERMINATOR,
+};
+
+static const CAILIPGoldenRegister gcGoldenSettingsRenoir[] = {
+    GOLDEN_REGISTER(mmCB_HW_CONTROL, 0xFFFDF3CF, 0x14104),
+    GOLDEN_REGISTER(mmCB_HW_CONTROL_2, 0xFF7FFFFF, 0xA000000),
+    GOLDEN_REGISTER(mmDB_DEBUG2, 0xF00FFFFF, 0x400),
+    GOLDEN_REGISTER(mmGB_ADDR_CONFIG, 0xF3E777FF, 0x24000042),
+    GOLDEN_REGISTER(mmGB_ADDR_CONFIG_READ, 0xF3E777FF, 0x24000042),
+    GOLDEN_REGISTER(mmPA_SC_ENHANCE, 0x3FFFFFFF, 0x1),
+    GOLDEN_REGISTER(mmPA_SC_ENHANCE_1, 0xFFFFFFFF, 0x4040000),
+    GOLDEN_REGISTER(mmPA_SC_LINE_STIPPLE_STATE, 0xFF0F, 0x0),
+    GOLDEN_REGISTER(mmTA_CNTL_AUX, 0xFFFFFEEF, 0x10B0000),
+    GOLDEN_REGISTER(mmTCP_CHAN_STEER_HI, 0xFFFFFFFF, 0x0),
+    GOLDEN_REGISTER(mmTCP_CHAN_STEER_LO, 0xFFFFFFFF, 0x3120),
+    GOLDEN_REGISTER(mmGCEA_PROBE_MAP, 0xFFFFFFFF, 0xCCCC),
+    GOLDEN_REGISTER_TERMINATOR,
+};
+
+static const CAILIPGoldenRegister sdmaGoldenSettingsRaven[] = {
+    GOLDEN_REGISTER(mmSDMA0_CHICKEN_BITS, 0xFE931F07, 0x2831D07),
+    GOLDEN_REGISTER(mmSDMA0_CLK_CTRL, 0xFFFFFFFF, 0x3F000100),
+    GOLDEN_REGISTER(mmSDMA0_GFX_IB_CNTL, 0x800F0111, 0x100),
+    GOLDEN_REGISTER(mmSDMA0_GFX_RB_WPTR_POLL_CNTL, 0xFFFFFFF7, 0x403000),
+    GOLDEN_REGISTER(mmSDMA0_POWER_CNTL, 0xFC3FFFFF, 0x40000051),
+    GOLDEN_REGISTER(mmSDMA0_RLC0_IB_CNTL, 0x800F0111, 0x100),
+    GOLDEN_REGISTER(mmSDMA0_RLC0_RB_WPTR_POLL_CNTL, 0xFFFFFFF7, 0x403000),
+    GOLDEN_REGISTER(mmSDMA0_RLC1_IB_CNTL, 0x800F0111, 0x100),
+    GOLDEN_REGISTER(mmSDMA0_RLC1_RB_WPTR_POLL_CNTL, 0xFFFFFFF7, 0x403000),
+    GOLDEN_REGISTER(mmSDMA0_UTCL1_PAGE, 0x3FF, 0x3E0),
+    GOLDEN_REGISTER(mmSDMA0_UTCL1_WATERMK, 0xFC000000, 0x0),
+    GOLDEN_REGISTER(mmSDMA0_GB_ADDR_CONFIG, 0x18773F, 0x2),
+    GOLDEN_REGISTER(mmSDMA0_GB_ADDR_CONFIG_READ, 0x18773F, 0x2),
+    GOLDEN_REGISTER_TERMINATOR,
+};
+
+static const CAILIPGoldenRegister sdmaGoldenSettingsRaven2[] = {
+    GOLDEN_REGISTER(mmSDMA0_CHICKEN_BITS, 0xFE931F07, 0x2831D07),
+    GOLDEN_REGISTER(mmSDMA0_CLK_CTRL, 0xFFFFFFFF, 0x3F000100),
+    GOLDEN_REGISTER(mmSDMA0_GFX_IB_CNTL, 0x800F0111, 0x100),
+    GOLDEN_REGISTER(mmSDMA0_GFX_RB_WPTR_POLL_CNTL, 0xFFFFFFF7, 0x403000),
+    GOLDEN_REGISTER(mmSDMA0_POWER_CNTL, 0xFC3FFFFF, 0x40000051),
+    GOLDEN_REGISTER(mmSDMA0_RLC0_IB_CNTL, 0x800F0111, 0x100),
+    GOLDEN_REGISTER(mmSDMA0_RLC0_RB_WPTR_POLL_CNTL, 0xFFFFFFF7, 0x403000),
+    GOLDEN_REGISTER(mmSDMA0_RLC1_IB_CNTL, 0x800F0111, 0x100),
+    GOLDEN_REGISTER(mmSDMA0_RLC1_RB_WPTR_POLL_CNTL, 0xFFFFFFF7, 0x403000),
+    GOLDEN_REGISTER(mmSDMA0_UTCL1_PAGE, 0x3FF, 0x3E0),
+    GOLDEN_REGISTER(mmSDMA0_UTCL1_WATERMK, 0xFC000000, 0x0),
+    GOLDEN_REGISTER(mmSDMA0_GB_ADDR_CONFIG, 0x18773F, 0x3001),
+    GOLDEN_REGISTER(mmSDMA0_GB_ADDR_CONFIG_READ, 0x18773F, 0x3001),
+    GOLDEN_REGISTER_TERMINATOR,
+};
+
+static const CAILIPGoldenRegister sdmaGoldenSettingsRenoir[] = {
+    GOLDEN_REGISTER(mmSDMA0_CHICKEN_BITS, 0xFE931F07, 0x2831F07),
+    GOLDEN_REGISTER(mmSDMA0_CLK_CTRL, 0xFFFFFFFF, 0x3F000100),
+    GOLDEN_REGISTER(mmSDMA0_GB_ADDR_CONFIG, 0x18773F, 0x2),
+    GOLDEN_REGISTER(mmSDMA0_GB_ADDR_CONFIG_READ, 0x18773F, 0x2),
+    GOLDEN_REGISTER(mmSDMA0_GFX_RB_WPTR_POLL_CNTL, 0xFFFFFFF7, 0x403000),
+    GOLDEN_REGISTER(mmSDMA0_POWER_CNTL, 0x3FFF07, 0x40000051),
+    GOLDEN_REGISTER(mmSDMA0_RLC0_RB_WPTR_POLL_CNTL, 0xFFFFFFF7, 0x403000),
+    GOLDEN_REGISTER(mmSDMA0_RLC1_RB_WPTR_POLL_CNTL, 0xFFFFFFF7, 0x403000),
+    GOLDEN_REGISTER(mmSDMA0_UTCL1_PAGE, 0x3FF, 0x3E0),
+    GOLDEN_REGISTER(mmSDMA0_UTCL1_WATERMK, 0xFC000000, 0x3FBE1FE),
+    GOLDEN_REGISTER_TERMINATOR,
+};
+
+static const CAILASICGoldenRegisters goldenSettingsRaven[] = {
+    GOLDEN_REGISTERS(GC, 0, gcGoldenSettingsRaven),
+    GOLDEN_REGISTERS(SDMA0, 0, sdmaGoldenSettingsRaven),
+    GOLDEN_REGISTERS_TERMINATOR,
+};
+
+static const CAILASICGoldenRegisters goldenSettingsRaven2[] = {
+    GOLDEN_REGISTERS(GC, 0, gcGoldenSettingsRaven2),
+    GOLDEN_REGISTERS(SDMA0, 0, sdmaGoldenSettingsRaven2),
+    GOLDEN_REGISTERS_TERMINATOR,
+};
+
+static const CAILASICGoldenRegisters goldenSettingsRenoir[] = {
+    GOLDEN_REGISTERS(GC, 0, gcGoldenSettingsRenoir),
+    GOLDEN_REGISTERS(SDMA0, 0, sdmaGoldenSettingsRenoir),
+    GOLDEN_REGISTERS_TERMINATOR,
+};
+
+//-------- Linux Firmware Structures --------//
 
 struct CommonFirmwareHeader {
     UInt32 size;
@@ -123,68 +525,7 @@ struct GPUInfoFirmware {
     UInt32 gcLdsSize;
 } PACKED;
 
-struct CAILAsicCapsEntry {
-    UInt32 familyId, deviceId;
-    UInt32 revision, extRevision;
-    UInt32 pciRevision;
-    UInt32 _reserved;
-    const UInt32 *caps;
-    const UInt32 *skeleton;
-} PACKED;
-
-struct CAILAsicCapsInitEntry {
-    UInt64 familyId, deviceId;
-    UInt64 revision, extRevision;
-    UInt64 pciRevision;
-    const UInt32 *caps;
-    const void *goldenCaps;
-} PACKED;
-
-static const UInt32 ddiCapsRaven[16] = {0x800005, 0x500011FE, 0x80000, 0x11001000, 0x200, 0x68000001, 0x20000000,
-    0x4002, 0x22420001, 0x9E20E10, 0x2000120, 0x0, 0x0, 0x0, 0x0, 0x0};
-static const UInt32 ddiCapsRenoir[16] = {0x800005, 0x500011FE, 0x80000, 0x11001000, 0x200, 0x68000001, 0x20000000,
-    0x4002, 0x22420001, 0x9E20E18, 0x2000120, 0x0, 0x0, 0x0, 0x0, 0x0};
-
-enum CAILResult : UInt32 {
-    kCAILResultSuccess = 0,
-    kCAILResultInvalidArgument,
-    kCAILResultGeneralFailure,
-    kCAILResultResourcesExhausted,
-    kCAILResultUnsupported,
-};
-
-struct CAILDeviceTypeEntry {
-    UInt32 deviceId;
-    UInt32 deviceType;
-} PACKED;
-
-static const UInt32 ravenDevAttrFlags = 0x49;
-
-struct DeviceCapabilityEntry {
-    UInt64 familyId, extRevision;
-    UInt64 deviceId, revision, enumRevision;
-    const void *swipInfo, *swipInfoMinimal;
-    const UInt32 *devAttrFlags;
-    const void *goldenRegisterSetings, *doorbellRange;
-} PACKED;
-
-constexpr UInt64 DEVICE_CAP_ENTRY_REV_DONT_CARE = 0xDEADCAFEU;
-
-enum VideoMemoryType : UInt32 {
-    kVideoMemoryTypeUnknown,
-    kVideoMemoryTypeDDR2,
-    kVideoMemoryTypeDDR3 = 3,
-    kVideoMemoryTypeDDR4,
-};
-
-constexpr UInt32 PP_RESULT_OK = 1;
-
-constexpr UInt32 ADDR_CHIP_FAMILY_AI = 8;
-
-constexpr UInt32 Dcn1NonBpp64SwModeMask = 0x2220221;
-constexpr UInt32 Dcn1Bpp64SwModeMask = 0x6660661;
-constexpr UInt32 Dcn2NonBpp64SwModeMask = 0x2020201;
-constexpr UInt32 Dcn2Bpp64SwModeMask = 0x6060601;
+//-------- AddrLib Data Types --------//
 
 struct Gfx9ChipSettings {
     UInt32 isArcticIsland : 1;
@@ -204,27 +545,11 @@ struct Gfx9ChipSettings {
     UInt32 reserved2 : 27;
 };
 
-enum AMDPSPCommand : UInt32 {
-    kPSPCommandLoadTA = 1,
-    kPSPCommandLoadASD = 4,
-    kPSPCommandLoadIPFW = 6,
-};
+//-------- AddrLib Constants --------//
 
-enum AMDUCodeID : UInt32 {
-    kUCodeCE = 2,
-    kUCodePFP,
-    kUCodeME,
-    kUCodeMEC1JT,
-    kUCodeMEC2JT,
-    kUCodeMEC1,
-    kUCodeMEC2,
-    kUCodeRLC = 11,
-    kUCodeSDMA0,
-    kUCodeDMCUERAM = 19,
-    kUCodeDMCUISR,
-    kUCodeRLCV = 21,
-    kUCodeRLCSRListGPM = 23,
-    kUCodeRLCSRListSRM,
-    kUCodeRLCSRListCntl,
-    kUCodeDMCUB = 35,
-};
+constexpr UInt32 ADDR_CHIP_FAMILY_AI = 8;
+
+constexpr UInt32 Dcn1NonBpp64SwModeMask = 0x2220221;
+constexpr UInt32 Dcn1Bpp64SwModeMask = 0x6660661;
+constexpr UInt32 Dcn2NonBpp64SwModeMask = 0x2020201;
+constexpr UInt32 Dcn2Bpp64SwModeMask = 0x6060601;

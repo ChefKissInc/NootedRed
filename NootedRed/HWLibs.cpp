@@ -119,6 +119,12 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
                     static_cast<UInt64>(NRed::callback->enumRevision) + NRed::callback->revision;
                 orgDevCapTable->revision = DEVICE_CAP_ENTRY_REV_DONT_CARE;
                 orgDevCapTable->enumRevision = DEVICE_CAP_ENTRY_REV_DONT_CARE;
+
+                orgDevCapTable->asicGoldenSettings->goldenSettings =
+                    NRed::callback->chipType < ChipType::Raven2 ? goldenSettingsRaven :
+                    NRed::callback->chipType < ChipType::Renoir ? goldenSettingsRaven2 :
+                                                                  goldenSettingsRenoir;
+
                 break;
             }
         }
@@ -164,6 +170,12 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
             {&kextRadeonX5000HWLibs, kFullAsicResetOriginal, kFullAsicResetPatched, 1},
             {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesOriginal2, kCreatePowerTuneServicesMask2,
                 kCreatePowerTuneServicesPatched2, 1},
+            {&kextRadeonX5000HWLibs, kGcGoldenSettingsExecutionOriginal, kGcGoldenSettingsExecutionOriginalMask,
+                kGcGoldenSettingsExecutionPatched, kGcGoldenSettingsExecutionPatchedMask, 1},
+            {&kextRadeonX5000HWLibs, kSdma40GdbExecutionCallOriginal, kSdma40GdbExecutionCallOriginalMask,
+                kSdma40GdbExecutionCallPatched, kSdma40GdbExecutionCallPatchedMask, 1},
+            {&kextRadeonX5000HWLibs, kGc90GdbExecutionCallOriginal, kGc90GdbExecutionCallOriginalMask,
+                kGc90GdbExecutionCallPatched, kGc90GdbExecutionCallPatchedMask, 1},
         };
         PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs", "Failed to apply patches");
 
