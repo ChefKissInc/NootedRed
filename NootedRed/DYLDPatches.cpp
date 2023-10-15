@@ -12,7 +12,19 @@ DYLDPatches *DYLDPatches::callback = nullptr;
 void DYLDPatches::init() { callback = this; }
 
 void DYLDPatches::processPatcher(KernelPatcher &patcher) {
-    if (!(lilu.getRunMode() & LiluAPI::RunningNormal) || !checkKernelArgument("-nredvcn")) { return; }
+    //! Dear end users, do NOT use `-ChefKissInternal`. THIS FLAG ENABLES FEATURES FOR *DEVELOPER* TESTING.
+    //! And to whoever documents them, thanks for making our life harder by making people experience issues
+    //! they would otherwise not have, you bloody wanker.
+    if (getKernelVersion() == KernelVersion::Catalina || !(lilu.getRunMode() & LiluAPI::RunningNormal) ||
+        !checkKernelArgument("-ChefKissInternal")) {
+        return;
+    }
+
+    SYSLOG("DYLD", "----------------------------------------------------------------");
+    SYSLOG("DYLD", "|          You Have Enabled ChefKiss Internal Testing          |");
+    SYSLOG("DYLD", "|                Do NOT Report any issues to us                |");
+    SYSLOG("DYLD", "|         You are on your OWN, and you've been warned!         |");
+    SYSLOG("DYLD", "----------------------------------------------------------------");
 
     auto *entry = IORegistryEntry::fromPath("/", gIODTPlane);
     if (entry) {
@@ -21,31 +33,32 @@ void DYLDPatches::processPatcher(KernelPatcher &patcher) {
         entry->release();
     }
 
-    if (getKernelVersion() == KernelVersion::Catalina) {
-        KernelPatcher::RouteRequest request {"_cs_validate_range", wrapCsValidateRange, this->orgCsValidate};
+    KernelPatcher::RouteRequest request {"_cs_validate_page", wrapCsValidatePage, this->orgCsValidatePage};
 
-        PANIC_COND(!patcher.routeMultipleLong(KernelPatcher::KernelID, &request, 1), "DYLD",
-            "Failed to route kernel symbols");
-    } else {
-        KernelPatcher::RouteRequest request {"_cs_validate_page", wrapCsValidatePage, this->orgCsValidate};
-
-        PANIC_COND(!patcher.routeMultipleLong(KernelPatcher::KernelID, &request, 1), "DYLD",
-            "Failed to route kernel symbols");
-    }
+    PANIC_COND(!patcher.routeMultipleLong(KernelPatcher::KernelID, &request, 1), "DYLD",
+        "Failed to route kernel symbols");
 }
 
-void DYLDPatches::apply(char *path, void *data, size_t size) {
+void DYLDPatches::wrapCsValidatePage(vnode *vp, memory_object_t pager, memory_object_offset_t page_offset,
+    const void *data, int *validated_p, int *tainted_p, int *nx_p) {
+    FunctionCast(wrapCsValidatePage, callback->orgCsValidatePage)(vp, pager, page_offset, data, validated_p, tainted_p,
+        nx_p);
+
+    char path[PATH_MAX];
+    int pathlen = PATH_MAX;
+    if (vn_getpath(vp, path, &pathlen) != 0) { return; }
+
     if (!UserPatcher::matchSharedCachePath(path)) {
         if (LIKELY(strncmp(path, kCoreLSKDMSEPath, arrsize(kCoreLSKDMSEPath))) ||
             LIKELY(strncmp(path, kCoreLSKDPath, arrsize(kCoreLSKDPath)))) {
             return;
         }
         const DYLDPatch patch = {kCoreLSKDOriginal, kCoreLSKDPatched, "CoreLSKD streaming CPUID to Haswell"};
-        patch.apply(data, size);
+        patch.apply(const_cast<void *>(data), PAGE_SIZE);
         return;
     }
 
-    if (UNLIKELY(KernelPatcher::findAndReplace(data, size, kVideoToolboxDRMModelOriginal,
+    if (UNLIKELY(KernelPatcher::findAndReplace(const_cast<void *>(data), PAGE_SIZE, kVideoToolboxDRMModelOriginal,
             arrsize(kVideoToolboxDRMModelOriginal), BaseDeviceInfo::get().modelIdentifier, 20))) {
         DBGLOG("DYLD", "Applied 'VideoToolbox DRM model check' patch");
     }
@@ -54,7 +67,7 @@ void DYLDPatches::apply(char *path, void *data, size_t size) {
         {kAGVABoardIdOriginal, kAGVABoardIdPatched, "iMacPro1,1 spoof (AppleGVA)"},
         {kHEVCEncBoardIdOriginal, kHEVCEncBoardIdPatched, "iMacPro1,1 spoof (AppleGVAHEVCEncoder)"},
     };
-    DYLDPatch::applyAll(patches, data, size);
+    DYLDPatch::applyAll(patches, const_cast<void *>(data), PAGE_SIZE);
 
     if (getKernelVersion() >= KernelVersion::Ventura) {
         const DYLDPatch patches[] = {
@@ -69,7 +82,7 @@ void DYLDPatches::apply(char *path, void *data, size_t size) {
             {kVAFactoryCreateVPVenturaOriginal, kVAFactoryCreateVPVenturaOriginalMask, kVAFactoryCreateVPVenturaPatched,
                 kVAFactoryCreateVPVenturaPatchedMask, "VAFactory::create*VP"},
         };
-        DYLDPatch::applyAll(patches, data, size);
+        DYLDPatch::applyAll(patches, const_cast<void *>(data), PAGE_SIZE);
     } else {
         const DYLDPatch patches[] = {
             {kVAAcceleratorInfoIdentifyOriginal, kVAAcceleratorInfoIdentifyOriginalMask,
@@ -83,16 +96,15 @@ void DYLDPatches::apply(char *path, void *data, size_t size) {
             {kVAFactoryCreateVPOriginal, kVAFactoryCreateVPOriginalMask, kVAFactoryCreateVPPatched,
                 kVAFactoryCreateVPPatchedMask, "VAFactory::create*VP"},
         };
-        DYLDPatch::applyAll(patches, data, size);
+        DYLDPatch::applyAll(patches, const_cast<void *>(data), PAGE_SIZE);
     }
 
     const DYLDPatch patch = {kVAAddrLibInterfaceInitOriginal, kVAAddrLibInterfaceInitOriginalMask,
         kVAAddrLibInterfaceInitPatched, kVAAddrLibInterfaceInitPatchedMask, "VAAddrLibInterface::init"};
-    patch.apply(data, size);
+    patch.apply(const_cast<void *>(data), PAGE_SIZE);
 
-    //! ----------------------------------------------
-    if (NRed::callback->chipType >= ChipType::Renoir) { return; }    //! Everything after is for VCN 1
-    //! ----------------------------------------------
+    //! Everything after patches logic for VCN 1. If you comment this out, you're stupid.
+    if (NRed::callback->chipType >= ChipType::Renoir) { return; }
 
     const DYLDPatch vcn1Patches[] = {
         {kWriteUvdNoOpOriginal, kWriteUvdNoOpPatched, "Vcn2DecCommand::writeUvdNoOp"},
@@ -116,24 +128,5 @@ void DYLDPatches::apply(char *path, void *data, size_t size) {
         {kAddOutputFormatPacketOriginal, kAddFormatPacketOriginalMask, kAddFormatPacketPatched,
             kAddFormatPacketPatchedMask, "Vcn2EncCommand::addOutputFormatPacket"},
     };
-    DYLDPatch::applyAll(vcn1Patches, data, size);
-}
-
-boolean_t DYLDPatches::wrapCsValidateRange(vnode_t vp, memory_object_t pager, memory_object_offset_t offset,
-    const void *data, vm_size_t size, unsigned *result) {
-    char path[PATH_MAX];
-    int pathlen = PATH_MAX;
-    auto ret = FunctionCast(wrapCsValidateRange, callback->orgCsValidate)(vp, pager, offset, data, size, result);
-    if (ret && vn_getpath(vp, path, &pathlen) == 0) { apply(path, const_cast<void *>(data), size); }
-    return ret;
-}
-
-void DYLDPatches::wrapCsValidatePage(vnode *vp, memory_object_t pager, memory_object_offset_t page_offset,
-    const void *data, int *validated_p, int *tainted_p, int *nx_p) {
-    FunctionCast(wrapCsValidatePage, callback->orgCsValidate)(vp, pager, page_offset, data, validated_p, tainted_p,
-        nx_p);
-
-    char path[PATH_MAX];
-    int pathlen = PATH_MAX;
-    if (vn_getpath(vp, path, &pathlen) == 0) { apply(path, const_cast<void *>(data), PAGE_SIZE); }
+    DYLDPatch::applyAll(vcn1Patches, const_cast<void *>(data), PAGE_SIZE);
 }
