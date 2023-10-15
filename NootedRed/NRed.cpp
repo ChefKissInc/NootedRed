@@ -98,12 +98,14 @@ void NRed::processPatcher(KernelPatcher &patcher) {
         this->iGPU->setProperty("built-in", builtin, arrsize(builtin));
         this->deviceId = WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigDeviceID);
         this->pciRevision = WIOKit::readPCIConfigValue(NRed::callback->iGPU, WIOKit::kIOPCIConfigRevisionID);
+        auto *model = getBranding(this->deviceId, this->pciRevision);
+        auto modelLen = static_cast<uint32_t>(strlen(model) + 1);
         if (!this->iGPU->getProperty("model")) {
-            auto *model = getBranding(this->deviceId, this->pciRevision);
-            this->iGPU->setProperty("model", const_cast<char *>(model), static_cast<UInt32>(strlen(model) + 1));
+            this->iGPU->setProperty("model", const_cast<char *>(model), modelLen);
         }
-
-        this->iGPU->setMemoryEnable(true);
+        this->iGPU->setProperty("ATY,FamilyName", const_cast<char *>("Radeon"), 7);
+        this->iGPU->setProperty("ATY,DeviceName", const_cast<char *>(model) + 11, modelLen - 11);    //! Vega ...
+        this->iGPU->setProperty("AAPL,slot-name", const_cast<char *>("built-in"), 9);
 
         char name[128] = {0};
         for (size_t i = 0, ii = 0; i < devInfo->videoExternal.size(); i++) {
