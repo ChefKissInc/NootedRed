@@ -27,11 +27,11 @@ class X5000HWLibs {
     static CAILResult hwLibsGeneralFailure();
     static CAILResult hwLibsUnsupported();
     static CAILResult hwLibsNoop();
-    static CAILResult pspBootloaderLoadSos10(void *psp);
-    static CAILResult pspSecurityFeatureCapsSet10(void *psp);
-    static CAILResult pspSecurityFeatureCapsSet12(void *psp);
+    static CAILResult pspBootloaderLoadSos10(void *ctx);
+    static CAILResult pspSecurityFeatureCapsSet10(void *ctx);
+    static CAILResult pspSecurityFeatureCapsSet12(void *ctx);
     static void wrapUpdateSdmaPowerGating(void *cail, UInt32 mode);
-    static CAILResult wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4);
+    static CAILResult wrapPspCmdKmSubmit(void *ctx, void *cmd, void *param3, void *param4);
 };
 
 //------ Patterns ------//

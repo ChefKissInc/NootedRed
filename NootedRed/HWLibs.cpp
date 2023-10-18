@@ -222,45 +222,45 @@ CAILResult X5000HWLibs::hwLibsGeneralFailure() { return kCAILResultGeneralFailur
 CAILResult X5000HWLibs::hwLibsUnsupported() { return kCAILResultUnsupported; }
 CAILResult X5000HWLibs::hwLibsNoop() { return kCAILResultSuccess; }
 
-CAILResult X5000HWLibs::pspBootloaderLoadSos10(void *psp) {
+CAILResult X5000HWLibs::pspBootloaderLoadSos10(void *ctx) {
     size_t fieldBase = 0;
     switch (getKernelVersion()) {
         case KernelVersion::Catalina:
             UNREACHABLE();
-        case KernelVersion::BigSur:
-            [[fallthrough]];
-        case KernelVersion::Monterey:
+        case KernelVersion::BigSur... KernelVersion::Monterey:
             fieldBase = 0x3124;
             break;
-        default:
+        case KernelVersion::Ventura... KernelVersion::Sonoma:
             fieldBase = 0x391C;
             break;
+        default:
+            PANIC("HWLibs", "Unsupported kernel version %d", getKernelVersion());
     }
-    getMember<UInt32>(psp, fieldBase) = NRed::callback->readReg32(MP_BASE + 0x7B);
-    getMember<UInt32>(psp, fieldBase + 0x4) = NRed::callback->readReg32(MP_BASE + 0x7A);
-    getMember<UInt32>(psp, fieldBase + 0x8) = NRed::callback->readReg32(MP_BASE + 0x7A);
+    getMember<UInt32>(ctx, fieldBase) = NRed::callback->readReg32(MP_BASE + mmMP0_SMN_C2PMSG_59);
+    getMember<UInt32>(ctx, fieldBase + 0x4) = NRed::callback->readReg32(MP_BASE + mmMP0_SMN_C2PMSG_58);
+    getMember<UInt32>(ctx, fieldBase + 0x8) = NRed::callback->readReg32(MP_BASE + mmMP0_SMN_C2PMSG_58);
     return kCAILResultSuccess;
 }
 
-CAILResult X5000HWLibs::pspSecurityFeatureCapsSet10(void *psp) {
+CAILResult X5000HWLibs::pspSecurityFeatureCapsSet10(void *ctx) {
     size_t fieldBase = 0;
     switch (getKernelVersion()) {
         case KernelVersion::Catalina:
             UNREACHABLE();
-        case KernelVersion::BigSur:
-            [[fallthrough]];
-        case KernelVersion::Monterey:
+        case KernelVersion::BigSur... KernelVersion::Monterey:
             fieldBase = 0x3120;
             break;
-        default:
+        case KernelVersion::Ventura... KernelVersion::Sonoma:
             fieldBase = 0x3918;
             break;
+        default:
+            PANIC("HWLibs", "Unsupported kernel version %d", getKernelVersion());
     }
-    auto &securityCaps = getMember<UInt8>(psp, fieldBase);
+    auto &securityCaps = getMember<UInt8>(ctx, fieldBase);
     securityCaps &= ~static_cast<UInt8>(1);
-    auto &tOSVer = getMember<UInt32>(psp, fieldBase + 0x8);
+    auto &tOSVer = getMember<UInt32>(ctx, fieldBase + 0x8);
     if ((tOSVer & 0xFFFF0000) == 0x80000 && (tOSVer & 0xFF) > 0x50) {
-        auto policyVer = NRed::callback->readReg32(MP_BASE + 0x9B);
+        auto policyVer = NRed::callback->readReg32(MP_BASE + mmMP0_SMN_C2PMSG_91);
         SYSLOG_COND((policyVer & 0xFF000000) != 0x0A000000, "HWLibs", "Invalid security policy version: 0x%X",
             policyVer);
         if (policyVer == 0xA02031A || ((policyVer & 0xFFFFFF00) == 0xA020400 && (policyVer & 0xFC) > 0x23) ||
@@ -272,23 +272,23 @@ CAILResult X5000HWLibs::pspSecurityFeatureCapsSet10(void *psp) {
     return kCAILResultSuccess;
 }
 
-CAILResult X5000HWLibs::pspSecurityFeatureCapsSet12(void *psp) {
+CAILResult X5000HWLibs::pspSecurityFeatureCapsSet12(void *ctx) {
     size_t fieldBase = 0;
     switch (getKernelVersion()) {
         case KernelVersion::Catalina:
             UNREACHABLE();
-        case KernelVersion::BigSur:
-            [[fallthrough]];
-        case KernelVersion::Monterey:
+        case KernelVersion::BigSur... KernelVersion::Monterey:
             fieldBase = 0x3120;
             break;
-        default:
+        case KernelVersion::Ventura... KernelVersion::Sonoma:
             fieldBase = 0x3918;
             break;
+        default:
+            PANIC("HWLibs", "Unsupported kernel version %d", getKernelVersion());
     }
-    auto &securityCaps = getMember<UInt8>(psp, fieldBase);
+    auto &securityCaps = getMember<UInt8>(ctx, fieldBase);
     securityCaps &= ~static_cast<UInt8>(1);
-    auto &tOSVer = getMember<UInt32>(psp, fieldBase + 0x8);
+    auto &tOSVer = getMember<UInt32>(ctx, fieldBase + 0x8);
     if ((tOSVer & 0xFFFF0000) == 0x110000 && (tOSVer & 0xFF) > 0x2A) {
         auto policyVer = NRed::callback->readReg32(MP_BASE + 0x9B);
         SYSLOG_COND((policyVer & 0xFF000000) != 0xB000000, "HWLibs", "Invalid security policy version: 0x%X",
@@ -315,25 +315,25 @@ void X5000HWLibs::wrapUpdateSdmaPowerGating(void *cail, UInt32 mode) {
     }
 }
 
-CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, void *param4) {
+CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *ctx, void *cmd, void *param3, void *param4) {
     char filename[128] = {0};
     size_t off = 0;
     switch (getKernelVersion()) {
         case KernelVersion::Catalina:
             off = 0xB00;
             break;
-        case KernelVersion::BigSur:
-            [[fallthrough]];
-        case KernelVersion::Monterey:
+        case KernelVersion::BigSur... KernelVersion::Monterey:
             off = 0xAF8;
             break;
-        default:
+        case KernelVersion::Ventura... KernelVersion::Sonoma:
             off = 0xB48;
             break;
+        default:
+            PANIC("HWLibs", "Unsupported kernel version %d", getKernelVersion());
     }
-    auto *data = getMember<UInt8 *>(psp, off);
+    auto *data = getMember<UInt8 *>(ctx, off);
 
-    switch (getMember<UInt32>(ctx, 0x0)) {
+    switch (getMember<AMDPSPCommand>(cmd, 0x0)) {
         case kPSPCommandLoadTA: {
             const char *name = reinterpret_cast<char *>(data + 0x8DB);
             if (!strncmp(name, "AMD DTM Application", 20)) {
@@ -352,7 +352,7 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, v
                 strncpy(filename, "psp_fp.bin", 11);
                 break;
             }
-            return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(psp, ctx, param3, param4);
+            return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(ctx, cmd, param3, param4);
         }
         case kPSPCommandLoadASD: {
             strncpy(filename, "psp_asd.bin", 12);
@@ -360,7 +360,7 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, v
         }
         case kPSPCommandLoadIPFW: {
             auto *prefix = NRed::getGCPrefix();
-            switch (getMember<UInt32>(ctx, 0x10)) {
+            switch (getMember<AMDUCodeID>(cmd, 0x10)) {
                 case kUCodeCE:
                     snprintf(filename, 128, "%sce_ucode.bin", prefix);
                     break;
@@ -413,17 +413,17 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *psp, void *ctx, void *param3, v
                     strncpy(filename, "atidmcub_instruction_dcn21.bin", 31);
                     break;
                 default:
-                    return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(psp, ctx, param3, param4);
+                    return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(ctx, cmd, param3, param4);
             }
             break;
         }
         default:
-            return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(psp, ctx, param3, param4);
+            return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(ctx, cmd, param3, param4);
     }
 
     auto &fwDesc = getFWDescByName(filename);
     memcpy(data, fwDesc.data, fwDesc.size);
-    getMember<UInt32>(ctx, 0xC) = fwDesc.size;
+    getMember<UInt32>(cmd, 0xC) = fwDesc.size;
 
-    return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(psp, ctx, param3, param4);
+    return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(ctx, cmd, param3, param4);
 }

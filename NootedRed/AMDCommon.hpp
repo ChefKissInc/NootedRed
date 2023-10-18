@@ -21,6 +21,9 @@ constexpr UInt32 mmPCIE_DATA2 = 0xF;
 
 //-------- SMU Registers --------//
 
+constexpr UInt32 mmMP0_SMN_C2PMSG_58 = 0x7A;
+constexpr UInt32 mmMP0_SMN_C2PMSG_59 = 0x7B;
+constexpr UInt32 mmMP0_SMN_C2PMSG_91 = 0x9B;
 constexpr UInt32 mmMP1_SMN_C2PMSG_66 = 0x282;
 constexpr UInt32 mmMP1_SMN_C2PMSG_82 = 0x292;
 constexpr UInt32 mmMP1_SMN_C2PMSG_90 = 0x29A;
