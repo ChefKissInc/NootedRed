@@ -16,12 +16,11 @@ class X5000HWLibs {
     bool processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 
     private:
-    mach_vm_address_t orgPopulateFirmwareDirectory {0};
+    mach_vm_address_t orgGetIpFw {0};
     t_createFirmware orgCreateFirmware {nullptr};
     t_putFirmware orgPutFirmware {nullptr};
     mach_vm_address_t orgUpdateSdmaPowerGating {0};
     mach_vm_address_t orgPspCmdKmSubmit {0};
-    mach_vm_address_t orgGetIpFw {0};
 
     static void wrapPopulateFirmwareDirectory(void *that);
     static bool wrapGetIpFw(void *that, UInt32 param1, char *name, void *out);

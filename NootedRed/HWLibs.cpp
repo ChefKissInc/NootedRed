@@ -53,12 +53,11 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
         if (catalina) {
             RouteRequestPlus request {"__ZN16AmdTtlFwServices7getIpFwEjPKcP10_TtlFwInfo", wrapGetIpFw,
                 this->orgGetIpFw};
-
             PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route symbols");
         } else {
             RouteRequestPlus requests[] = {
                 {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv",
-                    wrapPopulateFirmwareDirectory, this->orgPopulateFirmwareDirectory},
+                    wrapPopulateFirmwareDirectory, this->orgGetIpFw},
                 {"_psp_bootloader_is_sos_running_3_1", hwLibsGeneralFailure, kPspBootloaderIsSosRunning31Pattern},
                 {"_psp_bootloader_load_sysdrv_3_1", hwLibsNoop, kPspBootloaderLoadSysdrv31Pattern,
                     kPspBootloaderLoadSysdrv31Mask},
@@ -70,7 +69,6 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
                     renoir ? pspSecurityFeatureCapsSet12 : pspSecurityFeatureCapsSet10,
                     ventura ? kPspSecurityFeatureCapsSet31VenturaPattern : kPspSecurityFeatureCapsSet31Pattern},
             };
-
             PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "HWLibs",
                 "Failed to route symbols");
         }
@@ -195,7 +193,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
 }
 
 void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
-    FunctionCast(wrapPopulateFirmwareDirectory, callback->orgPopulateFirmwareDirectory)(that);
+    FunctionCast(wrapPopulateFirmwareDirectory, callback->orgGetIpFw)(that);
 
     bool isRenoirDerivative = NRed::callback->chipType >= ChipType::Renoir;
 
