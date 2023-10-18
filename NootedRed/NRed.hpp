@@ -192,7 +192,7 @@ class NRed {
         this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_82, param);
         this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_66, msg);
 
-        PANIC_COND(smuWaitForResp() != 1, "NRed", "No response from SMU");
+        SYSLOG_COND(smuWaitForResp() == 0, "NRed", "No response from SMU");
 
         return this->readReg32(MP_BASE + mmMP1_SMN_C2PMSG_82);
     }
