@@ -9,7 +9,6 @@
 static NRed nred;
 
 static const char *bootargDebug = "-NRedDebug";
-static const char *bootargBeta = "-NRedBeta";
 
 PluginConfiguration ADDPR(config) {
     xStringify(PRODUCT_NAME),
@@ -19,8 +18,8 @@ PluginConfiguration ADDPR(config) {
     0,
     &bootargDebug,
     1,
-    &bootargBeta,
-    1,
+    nullptr,
+    0,
     KernelVersion::Catalina,
     KernelVersion::Sonoma,
     []() { nred.init(); },
