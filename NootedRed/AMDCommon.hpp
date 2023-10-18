@@ -13,6 +13,7 @@ constexpr UInt32 AMDGPU_MAX_USEC_TIMEOUT = 100000;
 //-------- IP Bases --------//
 
 constexpr UInt32 MP_BASE = 0x16000;
+constexpr UInt32 MP1_Public = 0x3B00000;
 
 //-------- Generic Registers --------//
 
@@ -27,9 +28,17 @@ constexpr UInt32 mmMP0_SMN_C2PMSG_91 = 0x9B;
 constexpr UInt32 mmMP1_SMN_C2PMSG_66 = 0x282;
 constexpr UInt32 mmMP1_SMN_C2PMSG_82 = 0x292;
 constexpr UInt32 mmMP1_SMN_C2PMSG_90 = 0x29A;
+constexpr UInt32 mmMP1_SMN_FPS_CNT = 0x2C4;
+constexpr UInt32 smnMP1_FIRMWARE_FLAGS = 0x3010024;
+constexpr UInt32 smnMP1_FIRMWARE_FLAGS_INTERRUPTS_ENABLED = 0x1;
 
-constexpr UInt32 PPSMC_MSG_PowerDownSdma = 0xD;
+constexpr UInt32 PPSMC_MSG_PowerUpGfx = 0x6;
 constexpr UInt32 PPSMC_MSG_PowerUpSdma = 0xE;
+constexpr UInt32 PPSMC_MSG_DeviceDriverReset = 0x1E;
+constexpr UInt32 PPSMC_MSG_SoftReset = 0x2E;
+constexpr UInt32 PPSMC_MSG_PowerGateMmHub = 0x35;
+constexpr UInt32 PPSMC_MSG_ForceGfxContentSave = 0x39;
+constexpr UInt32 PPSMC_MSG_PowerGateAtHub = 0x3D;
 
 //-------- GC Registers --------//
 

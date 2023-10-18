@@ -74,14 +74,12 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
         }
 
         RouteRequestPlus requests[] = {
-            {catalina ? "_smu_9_0_1_get_fw_constants" : "_smu_get_fw_constants", hwLibsNoop, kSmuGetFwConstantsPattern,
-                kSmuGetFwConstantsMask},
-            {"_smu_9_0_1_check_fw_status", hwLibsNoop, kSmu901CheckFwStatusPattern, kSmu901CheckFwStatusMask},
-            {"_smu_9_0_1_unload_smu", hwLibsNoop, kSmu901UnloadSmuPattern, kSmu901UnloadSmuMask},
             {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit, kPspCmdKmSubmitPattern,
                 kPspCmdKmSubmitMask},
-            {"_update_sdma_power_gating", wrapUpdateSdmaPowerGating, this->orgUpdateSdmaPowerGating,
-                kUpdateSdmaPowerGatingPattern, kUpdateSdmaPowerGatingMask},
+            {"_smu_9_0_1_create_function_pointer_list", wrapSmu901CreateFunctionPointerList,
+                getKernelVersion() >= KernelVersion::Ventura ? kSmu901CreateFunctionPointerListVenturaPattern :
+                                                               kSmu901CreateFunctionPointerListPattern,
+                kSmu901CreateFunctionPointerListPatternMask},
         };
         PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "HWLibs",
             "Failed to route symbols");
@@ -165,7 +163,6 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
         const LookupPatchPlus patches[] = {
             {&kextRadeonX5000HWLibs, kSmuInitFunctionPointerListOriginal, kSmuInitFunctionPointerListOriginalMask,
                 kSmuInitFunctionPointerListPatched, kSmuInitFunctionPointerListPatchedMask, 1},
-            {&kextRadeonX5000HWLibs, kFullAsicResetOriginal, kFullAsicResetPatched, 1},
             {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesOriginal2, kCreatePowerTuneServicesMask2,
                 kCreatePowerTuneServicesPatched2, 1},
             {&kextRadeonX5000HWLibs, kGcGoldenSettingsExecutionOriginal, kGcGoldenSettingsExecutionOriginalMask,
@@ -299,22 +296,6 @@ CAILResult X5000HWLibs::pspSecurityFeatureCapsSet12(void *ctx) {
     return kCAILResultSuccess;
 }
 
-void X5000HWLibs::wrapUpdateSdmaPowerGating(void *cail, UInt32 mode) {
-    FunctionCast(wrapUpdateSdmaPowerGating, callback->orgUpdateSdmaPowerGating)(cail, mode);
-    switch (mode) {
-        case 0:
-            [[fallthrough]];
-        case 3:
-            NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerUpSdma);
-            break;
-        case 2:
-            NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerDownSdma);
-            break;
-        default:
-            break;
-    }
-}
-
 CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *ctx, void *cmd, void *param3, void *param4) {
     char filename[128] = {0};
     size_t off = 0;
@@ -426,4 +407,163 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *ctx, void *cmd, void *param3, v
     getMember<UInt32>(cmd, 0xC) = fwDesc.size;
 
     return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(ctx, cmd, param3, param4);
+}
+
+void X5000HWLibs::smuSoftReset() {    //! Likely soft resets SDMA, but logic's not present in Linux
+    NRed::callback->sendMsgToSmc(PPSMC_MSG_SoftReset, 0x40);
+}
+
+void X5000HWLibs::smu10PowerUp() {
+    NRed::callback->sendMsgToSmc(PPSMC_MSG_ForceGfxContentSave);
+    NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerUpSdma);
+    NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerUpGfx);
+    NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerGateMmHub);
+}
+
+CAILResult X5000HWLibs::smuInternalSwInit(void *ctx) {
+    size_t fieldBase;
+    switch (getKernelVersion()) {
+        case KernelVersion::Catalina:
+            UNREACHABLE();
+        case KernelVersion::BigSur... KernelVersion::Monterey:
+            fieldBase = 0x280;
+            break;
+        case KernelVersion::Ventura... KernelVersion::Sonoma:
+            fieldBase = 0x2D0;
+            break;
+        default:
+            PANIC("HWLibs", "Unsupported kernel version %d", getKernelVersion());
+    }
+    //! is_sw_init
+    getMember<bool>(ctx, fieldBase) = true;
+    return kCAILResultSuccess;
+}
+
+CAILResult X5000HWLibs::smu10InternalHwInit(void *) {
+    smuSoftReset();
+    smu10PowerUp();
+    return kCAILResultSuccess;
+}
+
+CAILResult X5000HWLibs::smu12InternalHwInit(void *) {
+    UInt32 i = 0;
+    for (; i < AMDGPU_MAX_USEC_TIMEOUT; i++) {
+        if (NRed::callback->readReg32(MP1_Public | smnMP1_FIRMWARE_FLAGS) & smnMP1_FIRMWARE_FLAGS_INTERRUPTS_ENABLED) {
+            break;
+        }
+        IOSleep(1);
+    }
+    if (i >= AMDGPU_MAX_USEC_TIMEOUT - 1) { return kCAILResultGeneralFailure; }
+    smuSoftReset();
+    smu10PowerUp();
+    NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerGateAtHub);
+    return kCAILResultSuccess;
+}
+
+CAILResult X5000HWLibs::smuInternalHwExit(void *) {
+    smuSoftReset();
+    return kCAILResultSuccess;
+}
+
+CAILResult X5000HWLibs::smuFullAsicReset(void *, void *data) {
+    NRed::callback->sendMsgToSmc(PPSMC_MSG_DeviceDriverReset, getMember<UInt32>(data, 4));
+    return kCAILResultSuccess;
+}
+
+CAILResult X5000HWLibs::smu10NotifyEvent(void *, void *data) {
+    auto event = getMember<UInt32>(data, 4);
+    if (event >= 11) {
+        SYSLOG("HWLibs", "Invalid input event to SMU notify event");
+        return kCAILResultGeneralFailure;
+    }
+    switch (event) {
+        case 0:
+            [[fallthrough]];
+        case 4:
+            [[fallthrough]];
+        case 8:
+            [[fallthrough]];
+        case 10:
+            smu10PowerUp();
+            return kCAILResultSuccess;
+        default:
+            return kCAILResultSuccess;
+    }
+}
+
+CAILResult X5000HWLibs::smu12NotifyEvent(void *, void *data) {
+    auto event = getMember<UInt32>(data, 4);
+    if (event >= 11) {
+        SYSLOG("HWLibs", "Invalid input event to SMU notify event");
+        return kCAILResultGeneralFailure;
+    }
+    switch (event) {
+        case 0:
+            [[fallthrough]];
+        case 4:
+            [[fallthrough]];
+        case 8:
+            [[fallthrough]];
+        case 10:
+            NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerUpSdma);
+            return kCAILResultSuccess;
+        default:
+            return kCAILResultSuccess;
+    }
+}
+
+CAILResult X5000HWLibs::smuFullScreenEvent(void *, UInt32 event) {
+    switch (event) {
+        case 1:
+            NRed::callback->writeReg32(MP_BASE + mmMP1_SMN_FPS_CNT,
+                NRed::callback->readReg32(MP_BASE + mmMP1_SMN_FPS_CNT) + 1);
+            return kCAILResultSuccess;
+        case 2:
+            NRed::callback->writeReg32(MP_BASE + mmMP1_SMN_FPS_CNT, 0);
+            return kCAILResultSuccess;
+        default:
+            SYSLOG("HWLibs", "Invalid input event to SMU full screen event");
+            return kCAILResultGeneralFailure;
+    }
+}
+
+CAILResult X5000HWLibs::wrapSmu901CreateFunctionPointerList(void *ctx) {
+    size_t fieldBase;
+    switch (getKernelVersion()) {
+        case KernelVersion::Catalina:
+            fieldBase = 0x378;
+            break;
+        case KernelVersion::BigSur:
+            fieldBase = 0x638;
+            break;
+        case KernelVersion::Monterey:
+            fieldBase = 0x648;
+            break;
+        case KernelVersion::Ventura... KernelVersion::Sonoma:
+            fieldBase = 0x6C0;
+            break;
+        default:
+            PANIC("HWLibs", "Unsupported kernel version %d", getKernelVersion());
+    }
+    if (getKernelVersion() == KernelVersion::Catalina) {
+        getMember<mach_vm_address_t>(ctx, fieldBase + 0x0) = reinterpret_cast<mach_vm_address_t>(hwLibsNoop);
+        getMember<mach_vm_address_t>(ctx, fieldBase + 0x40) = reinterpret_cast<mach_vm_address_t>(smuFullScreenEvent);
+    } else {
+        getMember<mach_vm_address_t>(ctx, fieldBase + 0x0) = reinterpret_cast<mach_vm_address_t>(smuInternalSwInit);
+        getMember<mach_vm_address_t>(ctx, fieldBase + 0x48) = reinterpret_cast<mach_vm_address_t>(smuFullScreenEvent);
+        //! get_ucode_consts
+        getMember<mach_vm_address_t>(ctx, fieldBase + 0xE8) = reinterpret_cast<mach_vm_address_t>(hwLibsNoop);
+    }
+    if (NRed::callback->chipType >= ChipType::Renoir) {
+        getMember<mach_vm_address_t>(ctx, fieldBase + 0x8) = reinterpret_cast<mach_vm_address_t>(smu12InternalHwInit);
+        getMember<mach_vm_address_t>(ctx, fieldBase + 0x30) = reinterpret_cast<mach_vm_address_t>(smu12NotifyEvent);
+    } else {
+        getMember<mach_vm_address_t>(ctx, fieldBase + 0x8) = reinterpret_cast<mach_vm_address_t>(smu10InternalHwInit);
+        getMember<mach_vm_address_t>(ctx, fieldBase + 0x30) = reinterpret_cast<mach_vm_address_t>(smu10NotifyEvent);
+    }
+    //! internal_sw_exit
+    getMember<mach_vm_address_t>(ctx, fieldBase + 0x10) = reinterpret_cast<mach_vm_address_t>(hwLibsNoop);
+    getMember<mach_vm_address_t>(ctx, fieldBase + 0x18) = reinterpret_cast<mach_vm_address_t>(smuInternalHwExit);
+    getMember<mach_vm_address_t>(ctx, fieldBase + 0x28) = reinterpret_cast<mach_vm_address_t>(smuFullAsicReset);
+    return kCAILResultSuccess;
 }
