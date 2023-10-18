@@ -99,7 +99,7 @@ void NRed::processPatcher(KernelPatcher &patcher) {
         this->deviceId = WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigDeviceID);
         this->pciRevision = WIOKit::readPCIConfigValue(NRed::callback->iGPU, WIOKit::kIOPCIConfigRevisionID);
         auto *model = getBranding(this->deviceId, this->pciRevision);
-        auto modelLen = static_cast<uint32_t>(strlen(model) + 1);
+        auto modelLen = static_cast<UInt32>(strlen(model) + 1);
         if (!this->iGPU->getProperty("model")) {
             this->iGPU->setProperty("model", const_cast<char *>(model), modelLen);
         }
@@ -123,7 +123,7 @@ void NRed::processPatcher(KernelPatcher &patcher) {
             this->vbiosData = OSData::withBytes(prop->getBytesNoCopy(), prop->getLength());
             PANIC_COND(UNLIKELY(!this->vbiosData), "NRed", "Failed to allocate VBIOS data");
         } else if (!this->getVBIOSFromVFCT()) {
-            SYSLOG("NRed", "Failed to get VBIOS from VFCT.");
+            SYSLOG("NRed", "Failed to get VBIOS from VFCT");
             PANIC_COND(!this->getVBIOSFromVRAM(), "NRed", "Failed to get VBIOS from VRAM");
         }
         auto len = this->vbiosData->getLength();
@@ -153,11 +153,11 @@ void NRed::processPatcher(KernelPatcher &patcher) {
     dataNull[desc.size] = 0;
     auto *dataUnserialized = OSUnserializeXML(dataNull, desc.size + 1, &errStr);
     delete[] dataNull;
-    PANIC_COND(!dataUnserialized, "NootedRed", "Failed to unserialize Drivers.xml: %s",
-        errStr ? errStr->getCStringNoCopy() : "<No additional information>");
+    PANIC_COND(!dataUnserialized, "NRed", "Failed to unserialize Drivers.xml: %s",
+        errStr ? errStr->getCStringNoCopy() : "Unspecified");
     auto *drivers = OSDynamicCast(OSArray, dataUnserialized);
-    PANIC_COND(!drivers, "NootedRed", "Failed to cast Drivers.xml data");
-    PANIC_COND(!gIOCatalogue->addDrivers(drivers), "NootedRed", "Failed to add drivers");
+    PANIC_COND(!drivers, "NRed", "Failed to cast Drivers.xml data");
+    PANIC_COND(!gIOCatalogue->addDrivers(drivers), "NRed", "Failed to add drivers");
     dataUnserialized->release();
 }
 

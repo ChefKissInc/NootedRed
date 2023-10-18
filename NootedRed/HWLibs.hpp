@@ -22,7 +22,7 @@ class X5000HWLibs {
     mach_vm_address_t orgPspCmdKmSubmit {0};
 
     static void wrapPopulateFirmwareDirectory(void *that);
-    static bool wrapGetIpFw(void *that, UInt32 param1, char *name, void *out);
+    static bool wrapGetIpFw(void *that, UInt32 ipVersion, char *name, void *out);
     static CAILResult hwLibsGeneralFailure();
     static CAILResult hwLibsUnsupported();
     static CAILResult hwLibsNoop();

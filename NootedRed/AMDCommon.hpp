@@ -262,8 +262,6 @@ struct CAILIPGoldenRegister {
 enum CAILIPType : UInt32 {
     kCAILIPTypeUnknown = 0,
     kCAILIPTypeGC = 11,
-    //! Purely an educated guess, doubt the golden registers defined later are actually being used (In HWLibs).
-    kCAILIPTypeATHUB = 28,
     kCAILIPTypeSDMA0 = 35,
     kCAILIPTypeSDMA1,
 };
