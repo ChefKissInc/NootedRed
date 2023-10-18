@@ -22,8 +22,10 @@ constexpr UInt32 mmPCIE_DATA2 = 0xF;
 
 //-------- SMU Registers --------//
 
+constexpr UInt32 mmMP0_SMN_C2PMSG_33 = 0x61;
 constexpr UInt32 mmMP0_SMN_C2PMSG_58 = 0x7A;
 constexpr UInt32 mmMP0_SMN_C2PMSG_59 = 0x7B;
+constexpr UInt32 mmMP0_SMN_C2PMSG_64 = 0x80;
 constexpr UInt32 mmMP0_SMN_C2PMSG_91 = 0x9B;
 constexpr UInt32 mmMP1_SMN_C2PMSG_66 = 0x282;
 constexpr UInt32 mmMP1_SMN_C2PMSG_82 = 0x292;
@@ -297,6 +299,8 @@ enum AMDPSPCommand : UInt32 {
     kPSPCommandLoadTA = 1,
     kPSPCommandLoadASD = 4,
     kPSPCommandLoadIPFW = 6,
+    kPSPCommandMode1Reset = 0x70000,
+    kPSPCommandMode2Reset = 0xA0000,
 };
 
 enum AMDUCodeID : UInt32 {

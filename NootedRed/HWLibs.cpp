@@ -51,9 +51,12 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
         bool ventura = getKernelVersion() >= KernelVersion::Ventura;
         bool renoir = NRed::callback->chipType >= ChipType::Renoir;
         if (catalina) {
-            RouteRequestPlus request {"__ZN16AmdTtlFwServices7getIpFwEjPKcP10_TtlFwInfo", wrapGetIpFw,
-                this->orgGetIpFw};
-            PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route symbols");
+            RouteRequestPlus requests[] = {
+                {"__ZN16AmdTtlFwServices7getIpFwEjPKcP10_TtlFwInfo", wrapGetIpFw, this->orgGetIpFw},
+                {"_psp_reset_12_0", psp12Reset},
+            };
+            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "HWLibs",
+                "Failed to route Catalina symbols");
         } else {
             RouteRequestPlus requests[] = {
                 {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv",
@@ -62,7 +65,6 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
                 {"_psp_bootloader_load_sysdrv_3_1", hwLibsNoop, kPspBootloaderLoadSysdrv31Pattern,
                     kPspBootloaderLoadSysdrv31Mask},
                 {"_psp_bootloader_set_ecc_mode_3_1", hwLibsNoop, kPspBootloaderSetEccMode31Pattern},
-                {"_psp_reset_3_1", hwLibsUnsupported, kPspReset31Pattern},
                 {"_psp_bootloader_load_sos_3_1", pspBootloaderLoadSos10, kPspBootloaderLoadSos31Pattern,
                     kPspBootloaderLoadSos31Mask},
                 {"_psp_security_feature_caps_set_3_1",
@@ -71,6 +73,13 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
             };
             PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "HWLibs",
                 "Failed to route symbols");
+            if (NRed::callback->chipType >= ChipType::Renoir) {
+                RouteRequestPlus request {"_psp_reset_3_1", psp12Reset, kPspReset31Pattern};
+                PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route psp_reset_3_1");
+            } else {
+                RouteRequestPlus request {"_psp_reset_3_1", hwLibsUnsupported, kPspReset31Pattern};
+                PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route psp_reset_3_1");
+            }
         }
 
         RouteRequestPlus requests[] = {
@@ -220,7 +229,7 @@ CAILResult X5000HWLibs::hwLibsUnsupported() { return kCAILResultUnsupported; }
 CAILResult X5000HWLibs::hwLibsNoop() { return kCAILResultSuccess; }
 
 CAILResult X5000HWLibs::pspBootloaderLoadSos10(void *ctx) {
-    size_t fieldBase = 0;
+    size_t fieldBase;
     switch (getKernelVersion()) {
         case KernelVersion::Catalina:
             UNREACHABLE();
@@ -240,7 +249,7 @@ CAILResult X5000HWLibs::pspBootloaderLoadSos10(void *ctx) {
 }
 
 CAILResult X5000HWLibs::pspSecurityFeatureCapsSet10(void *ctx) {
-    size_t fieldBase = 0;
+    size_t fieldBase;
     switch (getKernelVersion()) {
         case KernelVersion::Catalina:
             UNREACHABLE();
@@ -270,7 +279,7 @@ CAILResult X5000HWLibs::pspSecurityFeatureCapsSet10(void *ctx) {
 }
 
 CAILResult X5000HWLibs::pspSecurityFeatureCapsSet12(void *ctx) {
-    size_t fieldBase = 0;
+    size_t fieldBase;
     switch (getKernelVersion()) {
         case KernelVersion::Catalina:
             UNREACHABLE();
@@ -296,9 +305,37 @@ CAILResult X5000HWLibs::pspSecurityFeatureCapsSet12(void *ctx) {
     return kCAILResultSuccess;
 }
 
+CAILResult X5000HWLibs::psp12Reset(void *, UInt32 resetMode) {
+    AMDPSPCommand resetCmd;
+    switch (resetMode) {
+        case 1:
+            resetCmd = kPSPCommandMode1Reset;
+            break;
+        case 2:
+            resetCmd = kPSPCommandMode2Reset;
+            break;
+        default:
+            SYSLOG("HWLibs", "Invalid reset mode for PSP reset");
+            return kCAILResultInvalidArgument;
+    }
+    UInt32 i;
+    for (i = 0; i < AMDGPU_MAX_USEC_TIMEOUT; i++) {
+        if ((NRed::callback->readReg32(MP_BASE + mmMP0_SMN_C2PMSG_64) & 0x8000FFFF) == 0x80000000) { break; }
+        IOSleep(1);
+    }
+    if (i >= AMDGPU_MAX_USEC_TIMEOUT - 1) { return kCAILResultGeneralFailure; }
+    NRed::callback->writeReg32(MP_BASE + mmMP0_SMN_C2PMSG_64, resetCmd);
+    for (i = 0; i < AMDGPU_MAX_USEC_TIMEOUT; i++) {
+        if ((NRed::callback->readReg32(MP_BASE + mmMP0_SMN_C2PMSG_33) & 0x80000000) == 0x80000000) { break; }
+        IOSleep(1);
+    }
+    if (i >= AMDGPU_MAX_USEC_TIMEOUT - 1) { return kCAILResultGeneralFailure; }
+    return kCAILResultSuccess;
+}
+
 CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *ctx, void *cmd, void *param3, void *param4) {
     char filename[128] = {0};
-    size_t off = 0;
+    size_t off;
     switch (getKernelVersion()) {
         case KernelVersion::Catalina:
             off = 0xB00;
