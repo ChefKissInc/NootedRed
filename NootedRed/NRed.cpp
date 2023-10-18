@@ -63,7 +63,7 @@ void NRed::processPatcher(KernelPatcher &patcher) {
     bool backlightBootArg = false;
     PE_parse_boot_argn("AMDBacklight", &backlightBootArg, sizeof(backlightBootArg));
     if (getKernelVersion() == KernelVersion::Catalina ||
-        !(backlightBootArg || BaseDeviceInfo::get().modelType == WIOKit::ComputerModel::ComputerLaptop)) {
+        (!backlightBootArg && BaseDeviceInfo::get().modelType != WIOKit::ComputerModel::ComputerLaptop)) {
         kextBacklight.switchOff();
         kextMCCSControl.switchOff();
     }
