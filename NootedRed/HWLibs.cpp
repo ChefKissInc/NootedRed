@@ -140,8 +140,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
         if (!catalina) {
             const LookupPatchPlus patches[] = {
                 {&kextRadeonX5000HWLibs, kPspSwInitOriginal1, kPspSwInitPatched1, 1},
-                {&kextRadeonX5000HWLibs, kPspSwInitOriginal2, kPspSwInitOriginalMask2, kPspSwInitPatched2,
-                    kPspSwInitPatchedMask2, 1},
+                {&kextRadeonX5000HWLibs, kPspSwInitOriginal2, kPspSwInitOriginalMask2, kPspSwInitPatched2, 1},
                 {&kextRadeonX5000HWLibs, kGcSwInitOriginal, kGcSwInitOriginalMask, kGcSwInitPatched,
                     kGcSwInitPatchedMask, 1},
                 {&kextRadeonX5000HWLibs, kGcSetFwEntryInfoOriginal, kGcSetFwEntryInfoOriginalMask,
@@ -267,7 +266,7 @@ CAILResult X5000HWLibs::pspSecurityFeatureCapsSet10(void *ctx) {
     auto &tOSVer = getMember<UInt32>(ctx, fieldBase + 0x8);
     if ((tOSVer & 0xFFFF0000) == 0x80000 && (tOSVer & 0xFF) > 0x50) {
         auto policyVer = NRed::callback->readReg32(MP_BASE + mmMP0_SMN_C2PMSG_91);
-        SYSLOG_COND((policyVer & 0xFF000000) != 0x0A000000, "HWLibs", "Invalid security policy version: 0x%X",
+        SYSLOG_COND((policyVer & 0xFF000000) != 0xA000000, "HWLibs", "Invalid security policy version: 0x%X",
             policyVer);
         if (policyVer == 0xA02031A || ((policyVer & 0xFFFFFF00) == 0xA020400 && (policyVer & 0xFC) > 0x23) ||
             ((policyVer & 0xFFFFFF00) == 0xA020300 && (policyVer & 0xFE) > 0x1D)) {
