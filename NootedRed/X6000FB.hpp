@@ -18,7 +18,6 @@ class X6000FB {
     bool processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 
     private:
-    mach_vm_address_t orgInitWithPciInfo {0};
     t_DceDriverSetBacklight orgDceDriverSetBacklight {nullptr};
     mach_vm_address_t orgDcePanelCntlHwInit {0};
     mach_vm_address_t orgFramebufferSetAttribute {0}, orgFramebufferGetAttribute {0};
@@ -29,24 +28,23 @@ class X6000FB {
     mach_vm_address_t orgIH40IVRingInitHardware {0}, orgIRQMGRWriteRegister {0};
     t_MessageAccelerator orgMessageAccelerator {nullptr};
     mach_vm_address_t orgControllerPowerUp {0};
+    mach_vm_address_t orgDpReceiverPowerCtrl {0};
 
     static bool OnAppleBacklightDisplayLoad(void *target, void *refCon, IOService *newService, IONotifier *notifier);
     void registerDispMaxBrightnessNotif();
 
     static UInt16 wrapGetEnumeratedRevision();
     static IOReturn wrapPopulateVramInfo(void *that, void *fwInfo);
-    static bool wrapInitWithPciInfo(void *that, void *param1);
-    static void wrapDoGPUPanic();
     static UInt32 wrapDcePanelCntlHwInit(void *panelCntl);
     static IOReturn wrapFramebufferSetAttribute(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
         uintptr_t value);
     static IOReturn wrapFramebufferGetAttribute(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
         uintptr_t *value);
     static UInt32 wrapGetNumberOfConnectors(void *that);
-    static void wrapDmLoggerWrite([[maybe_unused]] void *dalLogger, UInt32 logType, char *fmt, ...);
     static bool wrapIH40IVRingInitHardware(void *ctx, void *param2);
     static void wrapIRQMGRWriteRegister(void *ctx, UInt64 index, UInt32 value);
     static UInt32 wrapControllerPowerUp(void *that);
+    static void wrapDpReceiverPowerCtrl(void *link, bool power_on);
 };
 
 //------ Patterns ------//
@@ -78,8 +76,8 @@ static const UInt8 kIRQMGRWriteRegisterPattern[] = {0x55, 0x48, 0x89, 0xE5, 0x41
     0x54, 0x53, 0x50, 0x41, 0x89, 0xD6, 0x49, 0x89, 0xF7, 0x48, 0x89, 0xFB, 0x48, 0x8B, 0x87, 0xB0, 0x00, 0x00, 0x00,
     0x48, 0x85, 0xC0};
 
-static const UInt8 kDmLoggerWritePattern[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54,
-    0x53, 0x48, 0x81, 0xEC, 0x88, 0x04, 0x00, 0x00};
+static const UInt8 kDpReceiverPowerCtrl[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x54, 0x53, 0x48,
+    0x83, 0xEC, 0x10, 0x89, 0xF3, 0xB0, 0x02, 0x28, 0xD8};
 
 //------ Patches ------//
 

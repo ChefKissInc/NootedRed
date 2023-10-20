@@ -55,24 +55,10 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
             {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
                 this->orgGetNumberOfConnectors, kGetNumberOfConnectorsPattern, kGetNumberOfConnectorsMask},
+            {"_dp_receiver_power_ctrl", wrapDpReceiverPowerCtrl, this->orgDpReceiverPowerCtrl, kDpReceiverPowerCtrl},
         };
         PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X6000FB",
             "Failed to route symbols");
-
-        if (ADDPR(debugEnabled)) {
-            RouteRequestPlus requests[] = {
-                {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo,
-                    this->orgInitWithPciInfo},
-                {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", wrapDoGPUPanic},
-            };
-            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X6000FB",
-                "Failed to route debug symbols");
-        }
-
-        if (checkKernelArgument("-nreddmlogger")) {
-            RouteRequestPlus request {"_dm_logger_write", wrapDmLoggerWrite, kDmLoggerWritePattern};
-            PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route dm_logger_write");
-        }
 
         bool renoir = NRed::callback->chipType >= ChipType::Renoir;
         if (renoir) {
@@ -232,14 +218,6 @@ IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
     return kIOReturnSuccess;
 }
 
-bool X6000FB::wrapInitWithPciInfo(void *that, void *param1) {
-    auto ret = FunctionCast(wrapInitWithPciInfo, callback->orgInitWithPciInfo)(that, param1);
-    //! Hack AMDRadeonX6000_AmdLogger to log everything
-    getMember<UInt64>(that, 0x28) = ~0ULL;
-    getMember<UInt32>(that, 0x30) = 0xFF;
-    return ret;
-}
-
 bool X6000FB::OnAppleBacklightDisplayLoad(void *, void *, IOService *newService, IONotifier *) {
     OSDictionary *params = OSDynamicCast(OSDictionary, newService->getProperty("IODisplayParameters"));
     if (!params) {
@@ -278,11 +256,6 @@ void X6000FB::registerDispMaxBrightnessNotif() {
         IOService::addMatchingNotification(gIOFirstMatchNotification, matching, OnAppleBacklightDisplayLoad, nullptr);
     SYSLOG_COND(!callback->dispNotif, "X6000FB", "registerDispMaxBrightnessNotif: Failed to register notification");
     matching->release();
-}
-
-void X6000FB::wrapDoGPUPanic() {
-    DBGLOG("X6000FB", "doGPUPanic << ()");
-    while (true) { IOSleep(3600000); }
 }
 
 UInt32 X6000FB::wrapDcePanelCntlHwInit(void *panelCntl) {
@@ -365,22 +338,6 @@ UInt32 X6000FB::wrapGetNumberOfConnectors(void *that) {
     return FunctionCast(wrapGetNumberOfConnectors, callback->orgGetNumberOfConnectors)(that);
 }
 
-constexpr static const char *LogTypes[] = {"Error", "Warning", "Debug", "DC_Interface", "DTN", "Surface", "HW_Hotplug",
-    "HW_LKTN", "HW_Mode", "HW_Resume", "HW_Audio", "HW_HPDIRQ", "MST", "Scaler", "BIOS", "BWCalcs", "BWValidation",
-    "I2C_AUX", "Sync", "Backlight", "Override", "Edid", "DP_Caps", "Resource", "DML", "Mode", "Detect", "LKTN",
-    "LinkLoss", "Underflow", "InterfaceTrace", "PerfTrace", "DisplayStats"};
-
-void X6000FB::wrapDmLoggerWrite(void *, UInt32 logType, char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    auto *ns = new char[0x10000];
-    vsnprintf(ns, 0x10000, fmt, args);
-    va_end(args);
-    const char *logTypeStr = arrsize(LogTypes) > logType ? LogTypes[logType] : "Info";
-    kprintf("[%s] %s", logTypeStr, ns);
-    delete[] ns;
-}
-
 bool X6000FB::wrapIH40IVRingInitHardware(void *ctx, void *param2) {
     auto ret = FunctionCast(wrapIH40IVRingInitHardware, callback->orgIH40IVRingInitHardware)(ctx, param2);
     NRed::callback->writeReg32(mmIH_CHICKEN, NRed::callback->readReg32(mmIH_CHICKEN) | mmIH_MC_SPACE_GPA_ENABLE);
@@ -403,4 +360,9 @@ UInt32 X6000FB::wrapControllerPowerUp(void *that) {
     auto ret = FunctionCast(wrapControllerPowerUp, callback->orgControllerPowerUp)(that);
     if (send) { callback->orgMessageAccelerator(that, 0x1B, nullptr, nullptr, nullptr); }
     return ret;
+}
+
+void X6000FB::wrapDpReceiverPowerCtrl(void *link, bool power_on) {
+    FunctionCast(wrapDpReceiverPowerCtrl, callback->orgDpReceiverPowerCtrl)(link, power_on);
+    IOSleep(250);    //! Link needs a bit of delay to change power state
 }
