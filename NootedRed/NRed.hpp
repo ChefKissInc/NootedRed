@@ -145,13 +145,13 @@ class NRed {
         UInt32 size = 256 * 1024;    //! ???
         if (!checkAtomBios(fb, size)) {
             DBGLOG("NRed", "VRAM VBIOS is not an ATOMBIOS");
-            bar0->release();
+            OSSafeReleaseNULL(bar0);
             return false;
         }
         this->vbiosData = OSData::withBytes(fb, size);
         PANIC_COND(UNLIKELY(!this->vbiosData), "NRed", "VRAM OSData::withBytes failed");
         this->iGPU->setProperty("ATY,bin_image", this->vbiosData);
-        bar0->release();
+        OSSafeReleaseNULL(bar0);
         return true;
     }
 

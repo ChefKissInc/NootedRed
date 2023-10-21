@@ -203,21 +203,24 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
     bool isRenoirDerivative = NRed::callback->chipType >= ChipType::Renoir;
 
     auto *filename = isRenoirDerivative ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
-    auto &fwDesc = getFWDescByName(filename);
+    const auto *vcnFW = getFWByName(filename);
     DBGLOG("HWLibs", "VCN firmware filename is %s", filename);
 
     //! VCN 2.2, VCN 1.0
-    auto *fw = callback->orgCreateFirmware(fwDesc.data, fwDesc.size, isRenoirDerivative ? 0x0202 : 0x0100, filename);
+    auto *fw = callback->orgCreateFirmware(vcnFW->getBytesNoCopy(), vcnFW->getLength(),
+        isRenoirDerivative ? 0x0202 : 0x0100, filename);
     PANIC_COND(!fw, "HWLibs", "Failed to create '%s' firmware", filename);
+    //! Can't deallocate, I think. Too bad!
     auto *fwDir = getMember<void *>(that, getKernelVersion() > KernelVersion::BigSur ? 0xB0 : 0xB8);
     PANIC_COND(!callback->orgPutFirmware(fwDir, 6, fw), "HWLibs", "Failed to insert '%s' firmware", filename);
 }
 
 bool X5000HWLibs::wrapGetIpFw(void *that, UInt32 ipVersion, char *name, void *out) {
     if (!strncmp(name, "ativvaxy_rv.dat", 16) || !strncmp(name, "ativvaxy_nv.dat", 16)) {
-        auto &fwDesc = getFWDescByName(name);
-        getMember<const UInt8 *>(out, 0x0) = fwDesc.data;
-        getMember<UInt32>(out, 0x8) = fwDesc.size;
+        const auto *fwDesc = getFWByName(name);
+        getMember<const void *>(out, 0x0) = fwDesc->getBytesNoCopy();
+        getMember<UInt32>(out, 0x8) = fwDesc->getLength();
+        //! Can't deallocate, too bad!
         return true;
     }
     return FunctionCast(wrapGetIpFw, callback->orgGetIpFw)(that, ipVersion, name, out);
@@ -438,9 +441,10 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *ctx, void *cmd, void *param3, v
             return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(ctx, cmd, param3, param4);
     }
 
-    auto &fwDesc = getFWDescByName(filename);
-    memcpy(data, fwDesc.data, fwDesc.size);
-    getMember<UInt32>(cmd, 0xC) = fwDesc.size;
+    const auto *fw = getFWByName(filename);
+    memcpy(data, fw->getBytesNoCopy(), fw->getLength());
+    getMember<UInt32>(cmd, 0xC) = fw->getLength();
+    OSSafeReleaseNULL(fw);
 
     return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(ctx, cmd, param3, param4);
 }

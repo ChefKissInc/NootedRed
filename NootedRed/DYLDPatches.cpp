@@ -30,7 +30,7 @@ void DYLDPatches::processPatcher(KernelPatcher &patcher) {
     if (entry) {
         DBGLOG("DYLD", "Setting hwgva-id to iMacPro1,1");
         entry->setProperty("hwgva-id", const_cast<char *>(kHwGvaId), arrsize(kHwGvaId));
-        entry->release();
+        OSSafeReleaseNULL(entry);
     }
 
     KernelPatcher::RouteRequest request {"_cs_validate_page", wrapCsValidatePage, this->orgCsValidatePage};

@@ -255,7 +255,7 @@ void X6000FB::registerDispMaxBrightnessNotif() {
     callback->dispNotif =
         IOService::addMatchingNotification(gIOFirstMatchNotification, matching, OnAppleBacklightDisplayLoad, nullptr);
     SYSLOG_COND(!callback->dispNotif, "X6000FB", "registerDispMaxBrightnessNotif: Failed to register notification");
-    matching->release();
+    OSSafeReleaseNULL(matching);
 }
 
 UInt32 X6000FB::wrapDcePanelCntlHwInit(void *panelCntl) {

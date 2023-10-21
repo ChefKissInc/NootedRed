@@ -214,9 +214,11 @@ void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
     bool isRavenDerivative = NRed::callback->chipType < ChipType::Renoir;
     char filename[128] = {0};
     snprintf(filename, arrsize(filename), "%s_gpu_info.bin", isRavenDerivative ? NRed::getChipName() : "renoir");
-    auto &fwDesc = getFWDescByName(filename);
-    auto *header = reinterpret_cast<const CommonFirmwareHeader *>(fwDesc.data);
-    auto *gpuInfo = reinterpret_cast<const GPUInfoFirmware *>(fwDesc.data + header->ucodeOff);
+    const auto *gpuInfoBin = getFWByName(filename);
+    auto *header =
+        reinterpret_cast<const CommonFirmwareHeader *>(gpuInfoBin->getBytesNoCopy(0, sizeof(CommonFirmwareHeader)));
+    auto *gpuInfo = reinterpret_cast<const GPUInfoFirmware *>(
+        gpuInfoBin->getBytesNoCopy(header->ucodeOff, sizeof(GPUInfoFirmware)));
 
     auto catalina = getKernelVersion() == KernelVersion::Catalina;
     setHWCapability<UInt32>(that, catalina ? HWCapabilityCatalina::SECount : HWCapability::SECount, gpuInfo->gcNumSe);
@@ -224,6 +226,8 @@ void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
         gpuInfo->gcNumShPerSe);
     setHWCapability<UInt32>(that, catalina ? HWCapabilityCatalina::CUPerSH : HWCapability::CUPerSH,
         gpuInfo->gcNumCuPerSh);
+
+    OSSafeReleaseNULL(gpuInfoBin);
 
     FunctionCast(wrapSetupAndInitializeHWCapabilities, callback->orgSetupAndInitializeHWCapabilities)(that);
 
