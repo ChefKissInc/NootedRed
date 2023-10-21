@@ -62,8 +62,10 @@ void NRed::init() {
 void NRed::processPatcher(KernelPatcher &patcher) {
     bool backlightBootArg = false;
     PE_parse_boot_argn("AMDBacklight", &backlightBootArg, sizeof(backlightBootArg));
-    if (getKernelVersion() == KernelVersion::Catalina ||
-        (!backlightBootArg && BaseDeviceInfo::get().modelType != WIOKit::ComputerModel::ComputerLaptop)) {
+    this->enableBacklight =
+        getKernelVersion() != KernelVersion::Catalina &&
+        (backlightBootArg || BaseDeviceInfo::get().modelType == WIOKit::ComputerModel::ComputerLaptop);
+    if (!this->enableBacklight) {
         kextBacklight.switchOff();
         kextMCCSControl.switchOff();
     }
@@ -143,6 +145,8 @@ void NRed::processPatcher(KernelPatcher &patcher) {
         "Failed to route kernel symbols");
 
     dyldpatches.processPatcher(patcher);
+
+    x6000fb.registerDispMaxBrightnessNotif();
 
     if ((lilu.getRunMode() & LiluAPI::RunningInstallerRecovery) || checkKernelArgument("-CKFBOnly")) { return; }
 

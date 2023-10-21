@@ -28,12 +28,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
         SolveRequestPlus solveRequest {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable, kCailAsicCapsTablePattern};
         PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "X6000FB", "Failed to resolve CAIL_ASIC_CAPS_TABLE");
 
-        bool catalina = getKernelVersion() == KernelVersion::Catalina;
-        bool backlightBootArg = false;
-        PE_parse_boot_argn("AMDBacklight", &backlightBootArg, sizeof(backlightBootArg));
-        bool enableBacklight =
-            !catalina && (backlightBootArg || BaseDeviceInfo::get().modelType == WIOKit::ComputerModel::ComputerLaptop);
-        if (enableBacklight) {
+        if (NRed::callback->enableBacklight) {
             SolveRequestPlus solveRequest {"_dce_driver_set_backlight", this->orgDceDriverSetBacklight,
                 kDceDriverSetBacklight};
             PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "X6000FB",
@@ -78,14 +73,14 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route powerUp");
         }
 
-        if (enableBacklight) {
+        if (NRed::callback->enableBacklight) {
             RouteRequestPlus requests[] = {
                 {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit, this->orgDcePanelCntlHwInit,
                     kDcePanelCntlHwInitPattern},
                 {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25setAttributeForConnectionEijm",
-                    wrapFramebufferSetAttribute, this->orgFramebufferSetAttribute},
+                    wrapSetAttributeForConnection, this->orgSetAttributeForConnection},
                 {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25getAttributeForConnectionEijPm",
-                    wrapFramebufferGetAttribute, this->orgFramebufferGetAttribute},
+                    wrapGetAttributeForConnection, this->orgGetAttributeForConnection},
             };
             PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X6000FB",
                 "Failed to route backlight symbols");
@@ -101,7 +96,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
         };
         PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000FB", "Failed to apply patches");
 
-        if (catalina) {
+        if (getKernelVersion() == KernelVersion::Catalina) {
             const LookupPatchPlus patch {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckCatalinaOriginal,
                 kAmdAtomVramInfoNullCheckCatalinaMask, kAmdAtomVramInfoNullCheckCatalinaPatched, 1};
             PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply null check patch");
@@ -237,6 +232,11 @@ bool X6000FB::OnAppleBacklightDisplayLoad(void *, void *, IOService *newService,
         return false;
     }
 
+    if (!maxBrightness->unsigned32BitValue()) {
+        DBGLOG("X6000FB", "OnAppleBacklightDisplayLoad: 'max' property is 0");
+        return false;
+    }
+
     callback->maxPwmBacklightLvl = maxBrightness->unsigned32BitValue();
     DBGLOG("X6000FB", "OnAppleBacklightDisplayLoad: Max brightness: 0x%X", callback->maxPwmBacklightLvl);
 
@@ -263,58 +263,37 @@ UInt32 X6000FB::wrapDcePanelCntlHwInit(void *panelCntl) {
     return FunctionCast(wrapDcePanelCntlHwInit, callback->orgDcePanelCntlHwInit)(panelCntl);
 }
 
-IOReturn X6000FB::wrapFramebufferSetAttribute(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
+IOReturn X6000FB::wrapSetAttributeForConnection(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
     uintptr_t value) {
-    auto ret = FunctionCast(wrapFramebufferSetAttribute, callback->orgFramebufferSetAttribute)(framebuffer,
+    auto ret = FunctionCast(wrapSetAttributeForConnection, callback->orgSetAttributeForConnection)(framebuffer,
         connectIndex, attribute, value);
     if (attribute != static_cast<UInt32>('bklt')) { return ret; }
 
     if (!callback->maxPwmBacklightLvl) {
-        DBGLOG("X6000FB", "wrapFramebufferSetAttribute: maxPwmBacklightLvl is 0");
+        DBGLOG("X6000FB", "setAttributeForConnection: May not control backlight at this time; maxPwmBacklightLvl is 0");
         return kIOReturnSuccess;
     }
 
     if (!callback->panelCntlPtr) {
-        DBGLOG("X6000FB", "wrapFramebufferSetAttribute: panelCntl is null");
-        return kIOReturnSuccess;
-    }
-
-    if (!callback->orgDceDriverSetBacklight) {
-        DBGLOG("X6000FB", "wrapFramebufferSetAttribute: orgDceDriverSetBacklight is null");
+        DBGLOG("X6000FB", "setAttributeForConnection: May not control backlight at this time; panelCntl is null");
         return kIOReturnSuccess;
     }
 
     //! Set the backlight
     callback->curPwmBacklightLvl = static_cast<UInt32>(value);
     UInt32 percentage = callback->curPwmBacklightLvl * 100 / callback->maxPwmBacklightLvl;
-    UInt32 pwmValue = 0;
-    if (percentage >= 100) {
-        //! This is from the dmcu_set_backlight_level function of Linux source
-        //! ...
-        //! if (backlight_pwm_u16_16 & 0x10000)
-        //! 	   backlight_8_bit = 0xFF;
-        //! else
-        //! 	   backlight_8_bit = (backlight_pwm_u16_16 >> 8) & 0xFF;
-        //! ...
-        //! The max brightness should have 0x10000 bit set
-        pwmValue = 0x1FF00;
-    } else {
-        pwmValue = ((percentage * 0xFF) / 100) << 8U;
-    }
-
+    UInt32 pwmValue = percentage >= 100 ? 0x1FF00 : ((percentage * 0xFF) / 100) << 8U;
     callback->orgDceDriverSetBacklight(callback->panelCntlPtr, pwmValue);
     return kIOReturnSuccess;
 }
 
-IOReturn X6000FB::wrapFramebufferGetAttribute(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
+IOReturn X6000FB::wrapGetAttributeForConnection(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
     uintptr_t *value) {
-    auto ret = FunctionCast(wrapFramebufferGetAttribute, callback->orgFramebufferGetAttribute)(framebuffer,
+    auto ret = FunctionCast(wrapGetAttributeForConnection, callback->orgGetAttributeForConnection)(framebuffer,
         connectIndex, attribute, value);
-    if (attribute == static_cast<UInt32>('bklt')) {
-        *value = callback->curPwmBacklightLvl;
-        return kIOReturnSuccess;
-    }
-    return ret;
+    if (attribute != static_cast<UInt32>('bklt')) { return ret; }
+    *value = callback->curPwmBacklightLvl;
+    return kIOReturnSuccess;
 }
 
 UInt32 X6000FB::wrapGetNumberOfConnectors(void *that) {
@@ -323,7 +302,7 @@ UInt32 X6000FB::wrapGetNumberOfConnectors(void *that) {
         once = true;
         struct DispObjInfoTableV1_4 *objInfo = getMember<DispObjInfoTableV1_4 *>(that, 0x28);
         if (objInfo->formatRev == 1 && (objInfo->contentRev == 4 || objInfo->contentRev == 5)) {
-            DBGLOG("X6000FB", "Fixing VBIOS connectors");
+            DBGLOG("X6000FB", "getNumberOfConnectors: Fixing VBIOS connectors");
             auto n = objInfo->pathCount;
             for (size_t i = 0, j = 0; i < n; i++) {
                 //! Skip invalid device tags
@@ -348,7 +327,7 @@ void X6000FB::wrapIRQMGRWriteRegister(void *ctx, UInt64 index, UInt32 value) {
     if (index == mmIH_CLK_CTRL) {
         value |= (value & (1U << mmIH_DBUS_MUX_CLK_SOFT_OVERRIDE_SHIFT)) >>
                  (mmIH_DBUS_MUX_CLK_SOFT_OVERRIDE_SHIFT - mmIH_IH_BUFFER_MEM_CLK_SOFT_OVERRIDE_SHIFT);
-        DBGLOG("X6000FB", "_IRQMGR_WriteRegister: Set IH_BUFFER_MEM_CLK_SOFT_OVERRIDE");
+        DBGLOG("X6000FB", "IRQMGR_WriteRegister: Set IH_BUFFER_MEM_CLK_SOFT_OVERRIDE");
     }
     FunctionCast(wrapIRQMGRWriteRegister, callback->orgIRQMGRWriteRegister)(ctx, index, value);
 }

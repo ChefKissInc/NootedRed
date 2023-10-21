@@ -10,7 +10,7 @@ using t_DceDriverSetBacklight = void (*)(void *panelCntl, UInt32 backlightPwm);
 using t_MessageAccelerator = IOReturn (*)(void *that, UInt32 requestType, void *arg2, void *arg3, void *arg4);
 
 class X6000FB {
-    friend class PRODUCT_NAME;
+    friend class NRed;
 
     public:
     static X6000FB *callback;
@@ -20,8 +20,8 @@ class X6000FB {
     private:
     t_DceDriverSetBacklight orgDceDriverSetBacklight {nullptr};
     mach_vm_address_t orgDcePanelCntlHwInit {0};
-    mach_vm_address_t orgFramebufferSetAttribute {0}, orgFramebufferGetAttribute {0};
-    UInt32 curPwmBacklightLvl {0}, maxPwmBacklightLvl {0xFF7B};
+    mach_vm_address_t orgSetAttributeForConnection {0}, orgGetAttributeForConnection {0};
+    UInt32 curPwmBacklightLvl {0}, maxPwmBacklightLvl {0xFFFF};
     void *panelCntlPtr {nullptr};
     IONotifier *dispNotif {nullptr};
     mach_vm_address_t orgGetNumberOfConnectors {0};
@@ -36,9 +36,9 @@ class X6000FB {
     static UInt16 wrapGetEnumeratedRevision();
     static IOReturn wrapPopulateVramInfo(void *that, void *fwInfo);
     static UInt32 wrapDcePanelCntlHwInit(void *panelCntl);
-    static IOReturn wrapFramebufferSetAttribute(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
+    static IOReturn wrapSetAttributeForConnection(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
         uintptr_t value);
-    static IOReturn wrapFramebufferGetAttribute(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
+    static IOReturn wrapGetAttributeForConnection(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
         uintptr_t *value);
     static UInt32 wrapGetNumberOfConnectors(void *that);
     static bool wrapIH40IVRingInitHardware(void *ctx, void *param2);

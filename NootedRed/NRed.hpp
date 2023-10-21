@@ -219,6 +219,7 @@ class NRed {
     IOPCIDevice *iGPU {nullptr};
     OSMetaClass *metaClassMap[5][2] = {{nullptr}};
     mach_vm_address_t orgSafeMetaCast {0};
+    bool enableBacklight {false};
     mach_vm_address_t orgApplePanelSetDisplay {0};
 
     static OSMetaClassBase *wrapSafeMetaCast(const OSMetaClassBase *anObject, const OSMetaClass *toMeta);
