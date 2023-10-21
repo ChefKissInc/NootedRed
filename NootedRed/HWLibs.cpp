@@ -520,8 +520,6 @@ CAILResult X5000HWLibs::smu10NotifyEvent(void *, void *data) {
             [[fallthrough]];
         case 4:
             [[fallthrough]];
-        case 8:
-            [[fallthrough]];
         case 10:
             smu10PowerUp();
             return kCAILResultSuccess;
