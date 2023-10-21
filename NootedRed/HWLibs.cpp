@@ -203,12 +203,11 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
     bool isRenoirDerivative = NRed::callback->chipType >= ChipType::Renoir;
 
     auto *filename = isRenoirDerivative ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
-    const auto *vcnFW = getFWByName(filename);
+    const auto vcnFW = getFWByName(filename);
     DBGLOG("HWLibs", "VCN firmware filename is %s", filename);
 
     //! VCN 2.2, VCN 1.0
-    auto *fw = callback->orgCreateFirmware(vcnFW->getBytesNoCopy(), vcnFW->getLength(),
-        isRenoirDerivative ? 0x0202 : 0x0100, filename);
+    auto *fw = callback->orgCreateFirmware(vcnFW.data, vcnFW.size, isRenoirDerivative ? 0x0202 : 0x0100, filename);
     PANIC_COND(!fw, "HWLibs", "Failed to create '%s' firmware", filename);
     //! Can't deallocate, I think. Too bad!
     auto *fwDir = getMember<void *>(that, getKernelVersion() > KernelVersion::BigSur ? 0xB0 : 0xB8);
@@ -217,9 +216,9 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
 
 bool X5000HWLibs::wrapGetIpFw(void *that, UInt32 ipVersion, char *name, void *out) {
     if (!strncmp(name, "ativvaxy_rv.dat", 16) || !strncmp(name, "ativvaxy_nv.dat", 16)) {
-        const auto *fwDesc = getFWByName(name);
-        getMember<const void *>(out, 0x0) = fwDesc->getBytesNoCopy();
-        getMember<UInt32>(out, 0x8) = fwDesc->getLength();
+        const auto fwDesc = getFWByName(name);
+        getMember<const void *>(out, 0x0) = fwDesc.data;
+        getMember<UInt32>(out, 0x8) = fwDesc.size;
         //! Can't deallocate, too bad!
         return true;
     }
@@ -441,10 +440,10 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *ctx, void *cmd, void *param3, v
             return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(ctx, cmd, param3, param4);
     }
 
-    const auto *fw = getFWByName(filename);
-    memcpy(data, fw->getBytesNoCopy(), fw->getLength());
-    getMember<UInt32>(cmd, 0xC) = fw->getLength();
-    OSSafeReleaseNULL(fw);
+    const auto fw = getFWByName(filename);
+    memcpy(data, fw.data, fw.size);
+    getMember<UInt32>(cmd, 0xC) = fw.size;
+    IOFree(fw.data, fw.size);
 
     return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(ctx, cmd, param3, param4);
 }

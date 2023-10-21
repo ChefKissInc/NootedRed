@@ -20,7 +20,12 @@ struct FWDescriptor {
 extern const struct FWDescriptor firmware[];
 extern const size_t firmwareCount;
 
-inline OSData *getFWByName(const char *name) {
+struct Firmware {
+    UInt8 *data;
+    UInt32 size;
+};
+
+inline const Firmware getFWByName(const char *name) {
     for (size_t i = 0; i < firmwareCount; i++) {
         if (strcmp(firmware[i].name, name)) { continue; }
 
@@ -38,9 +43,7 @@ inline OSData *getFWByName(const char *name) {
         auto err = inflate(&stream, Z_FINISH);
         PANIC_COND(err != Z_STREAM_END, "FW", "Failed to decompress '%s': %d", name, err);
         SYSLOG_COND(inflateEnd(&stream) != Z_OK, "FW", "Failed to end inflate stream");
-        auto *ret = OSData::withBytes(dest, static_cast<UInt32>(stream.total_out));
-        IOFree(dest, size);
-        return ret;
+        return Firmware {.data = dest, .size = firmware[i].uncompressedSize};
     }
     PANIC("FW", "'%s' not found", name);
 }
