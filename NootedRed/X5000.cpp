@@ -41,8 +41,6 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
             {"__ZN34AMDRadeonX5000_AMDAccelDisplayPipe10gMetaClassE", NRed::callback->metaClassMap[2][0]},
             {"__ZN30AMDRadeonX5000_AMDAccelChannel10gMetaClassE", NRed::callback->metaClassMap[3][1]},
             {"__ZN28AMDRadeonX5000_IAMDHWChannel10gMetaClassE", NRed::callback->metaClassMap[4][0]},
-            {"__ZN30AMDRadeonX5000_AMDGFX9Hardware32setupAndInitializeHWCapabilitiesEv",
-                this->orgSetupAndInitializeHWCapabilities},
             {"__ZN26AMDRadeonX5000_AMDHardware14startHWEnginesEv", startHWEngines},
         };
         PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "X5000",
@@ -51,7 +49,9 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
         RouteRequestPlus requests[] = {
             {"__ZN32AMDRadeonX5000_AMDVega10Hardware17allocateHWEnginesEv", wrapAllocateHWEngines},
             {"__ZN32AMDRadeonX5000_AMDVega10Hardware32setupAndInitializeHWCapabilitiesEv",
-                wrapSetupAndInitializeHWCapabilities},
+                wrapSetupAndInitializeHWCapabilities, this->orgSetupAndInitializeHWCapabilities},
+            {"__ZN30AMDRadeonX5000_AMDGFX9Hardware32setupAndInitializeHWCapabilitiesEv",
+                wrapGFX9SetupAndInitializeHWCapabilities, this->orgGFX9SetupAndInitializeHWCapabilities},
             {"__ZN26AMDRadeonX5000_AMDHardware12getHWChannelE20_eAMD_HW_ENGINE_TYPE18_eAMD_HW_RING_TYPE",
                 wrapGetHWChannel, this->orgGetHWChannel},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20initializeFamilyTypeEv", wrapInitializeFamilyType},
@@ -147,9 +147,10 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
 
             PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "X5000",
                 "Failed to enable kernel writing");
-            orgChannelTypes[5] = 1;    //! Fix createAccelChannels so that it only starts SDMA0
-            orgChannelTypes[(getKernelVersion() >= KernelVersion::Monterey) ? 12 : 11] =
-                0;    //! Fix getPagingChannel so that it gets SDMA0
+            //! createAccelChannels: stop at SDMA0
+            orgChannelTypes[5] = 1;
+            //! getPagingChannel: get only SDMA0
+            orgChannelTypes[(getKernelVersion() >= KernelVersion::Monterey) ? 12 : 11] = 0;
             MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
             DBGLOG("X5000", "Applied SDMA1 patches");
         }
@@ -179,63 +180,172 @@ bool X5000::wrapAllocateHWEngines(void *that) {
     return true;
 }
 
-struct HWCapability {
+struct HWCapabilityCatalina {
     enum : UInt64 {
-        DisplayPipeCount = 0x04,      //! UInt32
-        SECount = 0x34,               //! UInt32
-        SHPerSE = 0x3C,               //! UInt32
-        CUPerSH = 0x70,               //! UInt32
-        HasUVD0 = 0x84,               //! bool
-        HasVCE = 0x86,                //! bool
-        HasVCN0 = 0x87,               //! bool
-        HasSDMAPagingQueue = 0x98,    //! bool
+        DisplayPipeCount = 0x04,
+        SECount = 0x30,
+        SHPerSE = 0x34,
+        CUPerSH = 0x58,
+        HasUVD0 = 0x68,
+        HasVCE = 0x6A,
+        HasVCN0 = 0x6B,
+        HasSDMAPagingQueue = 0x7C,
     };
 };
 
-struct HWCapabilityCatalina {
+struct HWCapabilityBigSur {
     enum : UInt64 {
-        DisplayPipeCount = 0x04,      //! UInt32
-        SECount = 0x30,               //! UInt32
-        SHPerSE = 0x34,               //! UInt32
-        CUPerSH = 0x58,               //! UInt32
-        HasUVD0 = 0x68,               //! bool
-        HasVCE = 0x6A,                //! bool
-        HasVCN0 = 0x6B,               //! bool
-        HasSDMAPagingQueue = 0x7C,    //! bool
+        DisplayPipeCount = 0x04,
+        SECount = 0x34,
+        SHPerSE = 0x3C,
+        CUPerSH = 0x70,
+        HasUVD0 = 0x84,
+        HasVCE = 0x86,
+        HasVCN0 = 0x87,
+        HasSDMAPagingQueue = 0x98,
     };
+};
+
+struct HWCapabilityVentura {
+    enum : UInt64 {
+        DisplayPipeCount = 0x04,
+        SECount = 0x34,
+        SHPerSE = 0x3C,
+        CUPerSH = 0x70,
+        HasUVD0 = 0x84,
+        HasVCE = 0x86,
+        HasVCN0 = 0x87,
+        HasSDMAPagingQueue = 0x8F,
+    };
+};
+
+enum struct HWCapability {
+    DisplayPipeCount = 0,    //! UInt32
+    SECount,                 //! UInt32
+    SHPerSE,                 //! UInt32
+    CUPerSH,                 //! UInt32
+    HasUVD0,                 //! bool
+    HasVCE,                  //! bool
+    HasVCN0,                 //! bool
+    HasSDMAPagingQueue,      //! bool
 };
 
 template<typename T>
-static inline void setHWCapability(void *that, UInt64 capability, T value) {
-    getMember<T>(that, (getKernelVersion() >= KernelVersion::Ventura ? 0x30 : 0x28) + capability) = value;
+static inline void setHWCapability(void *that, HWCapability capability, T value) {
+    switch (getKernelVersion()) {
+        case KernelVersion::Catalina:
+            switch (capability) {
+                case HWCapability::DisplayPipeCount:
+                    getMember<T>(that, 0x28 + HWCapabilityCatalina::DisplayPipeCount) = value;
+                    break;
+                case HWCapability::SECount:
+                    getMember<T>(that, 0x28 + HWCapabilityCatalina::SECount) = value;
+                    break;
+                case HWCapability::SHPerSE:
+                    getMember<T>(that, 0x28 + HWCapabilityCatalina::SHPerSE) = value;
+                    break;
+                case HWCapability::CUPerSH:
+                    getMember<T>(that, 0x28 + HWCapabilityCatalina::CUPerSH) = value;
+                    break;
+                case HWCapability::HasUVD0:
+                    getMember<T>(that, 0x28 + HWCapabilityCatalina::HasUVD0) = value;
+                    break;
+                case HWCapability::HasVCE:
+                    getMember<T>(that, 0x28 + HWCapabilityCatalina::HasVCE) = value;
+                    break;
+                case HWCapability::HasVCN0:
+                    getMember<T>(that, 0x28 + HWCapabilityCatalina::HasVCN0) = value;
+                    break;
+                case HWCapability::HasSDMAPagingQueue:
+                    getMember<T>(that, 0x28 + HWCapabilityCatalina::HasSDMAPagingQueue) = value;
+                    break;
+            }
+            break;
+        case KernelVersion::BigSur... KernelVersion::Monterey:
+            switch (capability) {
+                case HWCapability::DisplayPipeCount:
+                    getMember<T>(that, 0x28 + HWCapabilityBigSur::DisplayPipeCount) = value;
+                    break;
+                case HWCapability::SECount:
+                    getMember<T>(that, 0x28 + HWCapabilityBigSur::SECount) = value;
+                    break;
+                case HWCapability::SHPerSE:
+                    getMember<T>(that, 0x28 + HWCapabilityBigSur::SHPerSE) = value;
+                    break;
+                case HWCapability::CUPerSH:
+                    getMember<T>(that, 0x28 + HWCapabilityBigSur::CUPerSH) = value;
+                    break;
+                case HWCapability::HasUVD0:
+                    getMember<T>(that, 0x28 + HWCapabilityBigSur::HasUVD0) = value;
+                    break;
+                case HWCapability::HasVCE:
+                    getMember<T>(that, 0x28 + HWCapabilityBigSur::HasVCE) = value;
+                    break;
+                case HWCapability::HasVCN0:
+                    getMember<T>(that, 0x28 + HWCapabilityBigSur::HasVCN0) = value;
+                    break;
+                case HWCapability::HasSDMAPagingQueue:
+                    getMember<T>(that, 0x28 + HWCapabilityBigSur::HasSDMAPagingQueue) = value;
+                    break;
+            }
+            break;
+        case KernelVersion::Ventura... KernelVersion::Sonoma:
+            switch (capability) {
+                case HWCapability::DisplayPipeCount:
+                    getMember<T>(that, 0x30 + HWCapabilityVentura::DisplayPipeCount) = value;
+                    break;
+                case HWCapability::SECount:
+                    getMember<T>(that, 0x30 + HWCapabilityVentura::SECount) = value;
+                    break;
+                case HWCapability::SHPerSE:
+                    getMember<T>(that, 0x30 + HWCapabilityVentura::SHPerSE) = value;
+                    break;
+                case HWCapability::CUPerSH:
+                    getMember<T>(that, 0x30 + HWCapabilityVentura::CUPerSH) = value;
+                    break;
+                case HWCapability::HasUVD0:
+                    getMember<T>(that, 0x30 + HWCapabilityVentura::HasUVD0) = value;
+                    break;
+                case HWCapability::HasVCE:
+                    getMember<T>(that, 0x30 + HWCapabilityVentura::HasVCE) = value;
+                    break;
+                case HWCapability::HasVCN0:
+                    getMember<T>(that, 0x30 + HWCapabilityVentura::HasVCN0) = value;
+                    break;
+                case HWCapability::HasSDMAPagingQueue:
+                    getMember<T>(that, 0x30 + HWCapabilityVentura::HasSDMAPagingQueue) = value;
+                    break;
+            }
+            break;
+        default:
+            PANIC("X5000", "Unsupported kernel version %d", getKernelVersion());
+    }
 }
 
 void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
-    bool isRavenDerivative = NRed::callback->chipType < ChipType::Renoir;
+    FunctionCast(wrapSetupAndInitializeHWCapabilities, callback->orgSetupAndInitializeHWCapabilities)(that);
+
+    setHWCapability<UInt32>(that, HWCapability::DisplayPipeCount, NRed::callback->chipType < ChipType::Renoir ? 4 : 6);
+    setHWCapability<bool>(that, HWCapability::HasUVD0, false);
+    setHWCapability<bool>(that, HWCapability::HasVCE, false);
+    setHWCapability<bool>(that, HWCapability::HasVCN0, true);
+    setHWCapability<bool>(that, HWCapability::HasSDMAPagingQueue, false);
+}
+
+void X5000::wrapGFX9SetupAndInitializeHWCapabilities(void *that) {
     char filename[128] = {0};
-    snprintf(filename, arrsize(filename), "%s_gpu_info.bin", isRavenDerivative ? NRed::getChipName() : "renoir");
+    snprintf(filename, arrsize(filename), "%s_gpu_info.bin",
+        NRed::callback->chipType < ChipType::Renoir ? NRed::getChipName() : "renoir");
     const auto gpuInfoBin = getFWByName(filename);
     auto *header = reinterpret_cast<const CommonFirmwareHeader *>(gpuInfoBin.data);
     auto *gpuInfo = reinterpret_cast<const GPUInfoFirmware *>(gpuInfoBin.data + header->ucodeOff);
 
-    auto catalina = getKernelVersion() == KernelVersion::Catalina;
-    setHWCapability<UInt32>(that, catalina ? HWCapabilityCatalina::SECount : HWCapability::SECount, gpuInfo->gcNumSe);
-    setHWCapability<UInt32>(that, catalina ? HWCapabilityCatalina::SHPerSE : HWCapability::SHPerSE,
-        gpuInfo->gcNumShPerSe);
-    setHWCapability<UInt32>(that, catalina ? HWCapabilityCatalina::CUPerSH : HWCapability::CUPerSH,
-        gpuInfo->gcNumCuPerSh);
+    setHWCapability<UInt32>(that, HWCapability::SECount, gpuInfo->gcNumSe);
+    setHWCapability<UInt32>(that, HWCapability::SHPerSE, gpuInfo->gcNumShPerSe);
+    setHWCapability<UInt32>(that, HWCapability::CUPerSH, gpuInfo->gcNumCuPerSh);
 
     IOFree(gpuInfoBin.data, gpuInfoBin.size);
-
-    FunctionCast(wrapSetupAndInitializeHWCapabilities, callback->orgSetupAndInitializeHWCapabilities)(that);
-
-    setHWCapability<UInt32>(that, catalina ? HWCapabilityCatalina::DisplayPipeCount : HWCapability::DisplayPipeCount,
-        isRavenDerivative ? 4 : 6);
-    setHWCapability<bool>(that, catalina ? HWCapabilityCatalina::HasUVD0 : HWCapability::HasUVD0, false);
-    setHWCapability<bool>(that, catalina ? HWCapabilityCatalina::HasVCE : HWCapability::HasVCE, false);
-    setHWCapability<bool>(that, catalina ? HWCapabilityCatalina::HasVCN0 : HWCapability::HasVCN0, true);
-    setHWCapability<bool>(that, catalina ? HWCapabilityCatalina::HasSDMAPagingQueue : HWCapability::HasSDMAPagingQueue,
-        false);
+    FunctionCast(wrapGFX9SetupAndInitializeHWCapabilities, callback->orgGFX9SetupAndInitializeHWCapabilities)(that);
 }
 
 void *X5000::wrapGetHWChannel(void *that, UInt32 engineType, UInt32 ringId) {
@@ -308,12 +418,14 @@ void *X5000::wrapObtainAccelChannelGroup1304(void *that, UInt32 priority, void *
 
 UInt32 X5000::wrapHwlConvertChipFamily(void *that, UInt32, UInt32) {
     auto &settings = getMember<Gfx9ChipSettings>(that, getKernelVersion() == KernelVersion::Catalina ? 0x5B18 : 0x5B10);
-    bool renoir = NRed::callback->chipType >= ChipType::Renoir;
     settings.isArcticIsland = 1;
     settings.isRaven = 1;
-    settings.depthPipeXorDisable = NRed::callback->chipType < ChipType::Raven2;
-    settings.htileAlignFix = renoir;
-    settings.applyAliasFix = renoir;
+    if (NRed::callback->chipType < ChipType::Raven2) {
+        settings.depthPipeXorDisable = 1;
+    } else if (NRed::callback->chipType >= ChipType::Renoir) {
+        settings.htileAlignFix = 1;
+        settings.applyAliasFix = 1;
+    }
     settings.isDcn1 = 1;
     settings.metaBaseAlignFix = 1;
     return ADDR_CHIP_FAMILY_AI;
