@@ -50,10 +50,15 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
             {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
                 this->orgGetNumberOfConnectors, kGetNumberOfConnectorsPattern, kGetNumberOfConnectorsMask},
-            {"_dp_receiver_power_ctrl", wrapDpReceiverPowerCtrl, this->orgDpReceiverPowerCtrl, kDpReceiverPowerCtrl},
         };
         PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X6000FB",
             "Failed to route symbols");
+
+        if (checkKernelArgument("-NRedDPDelay")) {
+            RouteRequestPlus request {"_dp_receiver_power_ctrl", wrapDpReceiverPowerCtrl, this->orgDpReceiverPowerCtrl,
+                kDpReceiverPowerCtrl};
+            PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route dp_receiver_power_ctrl");
+        }
 
         bool renoir = NRed::callback->chipType >= ChipType::Renoir;
         if (renoir) {
