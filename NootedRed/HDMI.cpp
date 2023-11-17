@@ -7,11 +7,8 @@
 #include <Headers/kern_api.hpp>
 
 static const char *pathAppleGFXHDA = "/System/Library/Extensions/AppleGFXHDA.kext/Contents/MacOS/AppleGFXHDA";
-static const char *pathAppleHDA = "/System/Library/Extensions/AppleHDA.kext/Contents/MacOS/AppleHDA";
 
 static KernelPatcher::KextInfo kextAppleGFXHDA {"com.apple.driver.AppleGFXHDA", &pathAppleGFXHDA, 1, {true}, {},
-    KernelPatcher::KextInfo::Unloaded};
-static KernelPatcher::KextInfo kextAppleHDA {"com.apple.driver.AppleHDA", &pathAppleHDA, 1, {true}, {},
     KernelPatcher::KextInfo::Unloaded};
 
 HDMI *HDMI::callback = nullptr;
@@ -19,7 +16,6 @@ HDMI *HDMI::callback = nullptr;
 void HDMI::init() {
     callback = this;
     lilu.onKextLoadForce(&kextAppleGFXHDA);
-    lilu.onKextLoadForce(&kextAppleHDA);
 }
 
 bool HDMI::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
@@ -53,16 +49,6 @@ bool HDMI::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slid
             };
             PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "AGFXHDA", "Failed to apply patches");
         }
-
-        return true;
-    } else if (kextAppleHDA.loadIndex == id) {
-        LookupPatchPlus patches[] = {
-            {&kextAppleHDA, kAHDACreate1Original, kAHDACreate1Patched, 2},
-            {&kextAppleHDA, kAHDACreate2Original, kAHDACreate2OriginalMask, kAHDACreate2Patched,
-                kAHDACreate2PatchedMask, 2},
-            {&kextAppleHDA, kAHDACreate3Original, kAHDACreate3Mask, kAHDACreate3Patched, 2},
-        };
-        PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "AHDA", "Failed to apply patches");
 
         return true;
     }
