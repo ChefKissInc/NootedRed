@@ -54,14 +54,14 @@ body:
   - type: checkboxes
     id: terms
     attributes:
-      label: Issue submission terms
-      description: By submitting this issue, you have ensured the following
+      label: Bug report submission terms
+      description: By submitting this bug report, you have ensured the following
       options:
         - label: I am using the latest version of NootedRed.
           required: true
         - label: I am on the latest minor and patch version of macOS (ex. 7 is the minor and 10 is the patch of macOS 11.7.10).
           required: true
-        - label: The issue only happens with NootedRed enabled.
+        - label: The bug only happens with NootedRed enabled.
           required: true
         - label: I have ruled out any external factors that could interfere, including, but not limited to, using OCLP or WhateverGreen.
           required: true
