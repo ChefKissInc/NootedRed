@@ -10,7 +10,7 @@ body:
       value: |
         This form isn't for you to ask for help with your configuration or report issues; it's to request features NootedRed is missing!
   - type: dropdown
-    id: macos_ver
+    id: macos_version
     attributes:
       label: macOS Version
       description: On which macOS version is the feature missing, if not on all? Versions that do not appear in the dropdown are not supported.
@@ -23,21 +23,21 @@ body:
     validations:
       required: false
   - type: input
-    id: cpu_model
+    id: cpu
     attributes:
-      label: What is your CPU model?
+      label: What is your CPU's model?
       placeholder: ex. AMD Athlon Silver 3020e
     validations:
       required: true
   - type: textarea
-    id: feature_description
+    id: description
     attributes:
       label: Please describe the feature in detail.
       placeholder: "I want NootedRed to be able to do Y."
     validations:
       required: true
   - type: textarea
-    id: feature_alternatives
+    id: alternatives
     attributes:
       label: What alternatives have you tried, if any?
       placeholder: "I used X to work around the lack of the feature."

@@ -10,7 +10,7 @@ body:
       value: |
         This form isn't for you to ask for help with your configuration; it's to report behaviour that NootedRed should not be exhibiting under normal conditions!
   - type: dropdown
-    id: macos_ver
+    id: macos_version
     attributes:
       label: macOS Version
       description: On which macOS version is the bug occurring? Versions that do not appear in the dropdown are not supported.
@@ -23,29 +23,29 @@ body:
     validations:
       required: true
   - type: input
-    id: cpu_model
+    id: cpu
     attributes:
-      label: What is your CPU model?
+      label: What is your CPU's model?
       description: Only Ryzen 1st gen to 5th gen, and 7030 series are supported.
       placeholder: ex. AMD Athlon Silver 3020e
     validations:
       required: true
   - type: textarea
-    id: bug_description
+    id: description
     attributes:
       label: Please describe the behaviour in detail.
       placeholder: "I clicked on X, then Y and Z happened."
     validations:
       required: true
   - type: textarea
-    id: bug_expected_behaviour
+    id: expected_behaviour
     attributes:
       label: What should've happened instead?
       placeholder: "X should be doing Y."
     validations:
       required: true
   - type: textarea
-    id: bug_gpurestart_report
+    id: logs
     attributes:
       label: If applicable, attach the `.gpuRestart`, `.panic`, etc file related to this issue.
       description: |
