@@ -34,20 +34,20 @@ body:
     id: description
     attributes:
       label: Please describe the behaviour in detail.
-      placeholder: "I clicked on X, then Y and Z happened."
+      placeholder: I clicked on X, then Y and Z happened.
     validations:
       required: true
   - type: textarea
     id: expected_behaviour
     attributes:
       label: What should've happened instead?
-      placeholder: "X should be doing Y."
+      placeholder: X should be doing Y.
     validations:
       required: true
   - type: textarea
     id: logs
     attributes:
-      label: If applicable, attach the `.gpuRestart`, `.panic`, etc file related to this issue.
+      label: If applicable, attach the .gpuRestart, .panic, etc file related to this issue.
       description: |
         You can find those in `/Library/Logs/DiagnosticReports`.
         If attaching a panic, make sure it was created while you have `keepsyms=1` in your boot args (else the file is useless).

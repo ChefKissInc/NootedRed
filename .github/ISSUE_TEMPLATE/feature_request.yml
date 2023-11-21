@@ -33,14 +33,14 @@ body:
     id: description
     attributes:
       label: Please describe the feature in detail.
-      placeholder: "I want NootedRed to be able to do Y."
+      placeholder: I want NootedRed to be able to do Y.
     validations:
       required: true
   - type: textarea
     id: alternatives
     attributes:
       label: What alternatives have you tried, if any?
-      placeholder: "I used X to work around the lack of the feature."
+      placeholder: I used X to work around the lack of the feature.
     validations:
       required: true
   - type: checkboxes
