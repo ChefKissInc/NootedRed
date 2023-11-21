@@ -1,0 +1,69 @@
+name: Bug Report
+description: Report an issue caused by NootedRed
+labels: ["Bug"]
+projects: ["ChefKissInc/2"]
+assignees:
+  - VisualEhrmanntraut
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This form isn't for you to ask for help with your configuration; it's to report behaviour that NootedRed should not be exhibiting under normal conditions!
+  - type: dropdown
+    id: macos_ver
+    attributes:
+      label: macOS Version
+      description: On which macOS version is the bug occurring? Versions that do not appear in the dropdown are not supported.
+      options:
+       - Catalina
+       - Big Sur
+       - Monterey
+       - Ventura
+       - Sonoma
+    validations:
+      required: true
+  - type: input
+    id: cpu_model
+    attributes:
+      label: What is your CPU model?
+      description: Only Ryzen 1st gen to 5th gen, and 7030 series are supported.
+      placeholder: ex. AMD Athlon Silver 3020e
+    validations:
+      required: true
+  - type: textarea
+    id: bug_description
+    attributes:
+      label: Please describe the behaviour in detail.
+      placeholder: "I clicked on X, then Y and Z happened."
+    validations:
+      required: true
+  - type: textarea
+    id: bug_expected_behaviour
+    attributes:
+      label: What should've happened instead?
+      placeholder: "X should be doing Y."
+    validations:
+      required: true
+  - type: textarea
+    id: bug_gpurestart_report
+    attributes:
+      label: If applicable, attach the `.gpuRestart`, `.panic`, etc file related to this issue.
+      description: |
+        You can find those in `/Library/Logs/DiagnosticReports`.
+        If attaching a panic, make sure it was created while you have `keepsyms=1` in your boot args (else the file is useless).
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Issue submission terms
+      description: By submitting this issue, you have ensured the following
+      options:
+        - label: I am using the latest version of NootedRed.
+          required: true
+        - label: I am on the latest minor and patch version of macOS (ex. 7 is the minor and 10 is the patch of macOS 11.7.10).
+          required: true
+        - label: The issue only happens with NootedRed enabled.
+          required: true
+        - label: I have ruled out any external factors that could interfere, including, but not limited to, using OCLP or WhateverGreen.
+          required: true
+    validations:
+      required: true
