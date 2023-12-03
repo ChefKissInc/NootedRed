@@ -173,26 +173,26 @@ class NRed {
         }
     }
 
+    UInt32 smuWaitForResponse() {
+        UInt32 ret = 0;
+        for (UInt32 i = 0; i < AMDGPU_MAX_USEC_TIMEOUT; i++) {
+            ret = this->readReg32(MP_BASE + mmMP1_SMN_C2PMSG_90);
+            if (ret) return ret;
+
+            IOSleep(1);
+        }
+
+        return ret;
+    }
+
     UInt32 sendMsgToSmc(UInt32 msg, UInt32 param = 0) {
-        auto smuWaitForResp = [=]() {
-            UInt32 ret = 0;
-            for (UInt32 i = 0; i < AMDGPU_MAX_USEC_TIMEOUT; i++) {
-                ret = this->readReg32(MP_BASE + mmMP1_SMN_C2PMSG_90);
-                if (ret) return ret;
-
-                IOSleep(1);
-            }
-
-            return ret;
-        };
-
-        PANIC_COND(smuWaitForResp() != 1, "NRed", "Msg issuing pre-check failed; SMU may be in an improper state");
+        this->smuWaitForResponse();
 
         this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_90, 0);
         this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_82, param);
         this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_66, msg);
 
-        SYSLOG_COND(smuWaitForResp() == 0, "NRed", "No response from SMU");
+        SYSLOG_COND(this->smuWaitForResponse() == 0, "NRed", "No response from SMU");
 
         return this->readReg32(MP_BASE + mmMP1_SMN_C2PMSG_82);
     }
