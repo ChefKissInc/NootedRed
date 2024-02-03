@@ -82,16 +82,23 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
             }
         }
 
-        RouteRequestPlus requests[] = {
-            {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit, kPspCmdKmSubmitPattern,
-                kPspCmdKmSubmitMask},
-            {"_smu_9_0_1_create_function_pointer_list", wrapSmu901CreateFunctionPointerList,
-                getKernelVersion() >= KernelVersion::Ventura ? kSmu901CreateFunctionPointerListVenturaPattern :
-                                                               kSmu901CreateFunctionPointerListPattern,
-                kSmu901CreateFunctionPointerListPatternMask},
-        };
-        PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "HWLibs",
-            "Failed to route symbols");
+        if (getKernelVersion() > KernelVersion::Sonoma ||
+            (getKernelVersion() == KernelVersion::Sonoma && getKernelMinorVersion() >= 4)) {
+            RouteRequestPlus request = {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit,
+                kPspCmdKmSubmitPattern14_4, kPspCmdKmSubmitMask14_4};
+            PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route psp_cmd_km_submit (14.4+)");
+        } else {
+            RouteRequestPlus request = {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit,
+                kPspCmdKmSubmitPattern, kPspCmdKmSubmitMask};
+            PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route psp_cmd_km_submit");
+        }
+
+        RouteRequestPlus request = {"_smu_9_0_1_create_function_pointer_list", wrapSmu901CreateFunctionPointerList,
+            getKernelVersion() >= KernelVersion::Ventura ? kSmu901CreateFunctionPointerListVenturaPattern :
+                                                           kSmu901CreateFunctionPointerListPattern,
+            kSmu901CreateFunctionPointerListPatternMask};
+        PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs",
+            "Failed to route smu_9_0_1_create_function_pointer_list");
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "HWLibs",
             "Failed to enable kernel writing");
