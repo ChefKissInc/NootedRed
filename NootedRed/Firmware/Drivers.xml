@@ -175,28 +175,42 @@
 		<integer>16908288</integer>
 		<key>SWIP_properties</key>
 		<dict>
-			<key>EnableGDDR6MemoryTraining</key>
-			<integer>0</integer>
 			<key>EnableSwVCNFWLoading</key>
 			<integer>0</integer>
-			<key>EnableVCNFWLog</key>
+			<key>EnableVCNDPG</key>
+			<integer>0</integer>
+			<key>EnableswGcFwLoading</key>
+			<integer>0</integer>
+			<key>EnableswSdmaFwLoading</key>
 			<integer>0</integer>
 		</dict>
 		<key>cail_properties</key>
 		<dict>
+			<key>CAIL_AsicRevForRlcFw</key>
+			<integer>161</integer>
+			<key>CAIL_DisableAllClockGating</key>
+			<integer>0</integer>
 			<key>CAIL_DisableCailLoadUcode</key>
+			<integer>1</integer>
+			<key>CAIL_DisableCpPowerGating</key>
+			<integer>0</integer>
+			<key>CAIL_DisableDynamicGfxMGPowerGating</key>
 			<integer>1</integer>
 			<key>CAIL_DisableGfxCGPowerGating</key>
 			<integer>1</integer>
-			<key>CAIL_DisableJpegEngine</key>
+			<key>CAIL_DisableGfxClockGating</key>
 			<integer>0</integer>
-			<key>CAIL_EnableLBPWSupport</key>
+			<key>CAIL_DisablePCIConfigAsicReset</key>
 			<integer>0</integer>
-			<key>CAIL_EnablePeerDataAperture</key>
+			<key>CAIL_DisablePowerGating</key>
 			<integer>0</integer>
-			<key>CAIL_EnableSecureMmFwLoading</key>
+			<key>CAIL_DisableRlcSmuPGHandshake</key>
+			<integer>0</integer>
+			<key>CAIL_DisableSAMUPowerGating</key>
+			<integer>0</integer>
+			<key>CAIL_DisableSysClockGating</key>
 			<integer>1</integer>
-			<key>CAIL_EnableXdmaSupport</key>
+			<key>CAIL_EnableLBPWSupport</key>
 			<integer>0</integer>
 		</dict>
 	</dict>
@@ -293,26 +307,40 @@
 		<integer>16908288</integer>
 		<key>SWIP_properties</key>
 		<dict>
-			<key>EnableGDDR6MemoryTraining</key>
-			<integer>0</integer>
 			<key>EnableSwVCNFWLoading</key>
 			<integer>0</integer>
-			<key>EnableVCNFWLog</key>
+			<key>EnableVCNDPG</key>
+			<integer>0</integer>
+			<key>EnableswGcFwLoading</key>
+			<integer>0</integer>
+			<key>EnableswSdmaFwLoading</key>
 			<integer>0</integer>
 		</dict>
 		<key>cail_properties</key>
 		<dict>
+			<key>CAIL_DisableAllClockGating</key>
+			<integer>0</integer>
 			<key>CAIL_DisableCailLoadUcode</key>
 			<integer>1</integer>
-			<key>CAIL_DisableJpegEngine</key>
+			<key>CAIL_DisableCpPowerGating</key>
+			<integer>0</integer>
+			<key>CAIL_DisableDynamicGfxMGPowerGating</key>
+			<integer>1</integer>
+			<key>CAIL_DisableGfxCGPowerGating</key>
+			<integer>0</integer>
+			<key>CAIL_DisableGfxClockGating</key>
+			<integer>0</integer>
+			<key>CAIL_DisablePCIConfigAsicReset</key>
+			<integer>0</integer>
+			<key>CAIL_DisablePowerGating</key>
+			<integer>0</integer>
+			<key>CAIL_DisableRlcSmuPGHandshake</key>
+			<integer>0</integer>
+			<key>CAIL_DisableSAMUPowerGating</key>
+			<integer>0</integer>
+			<key>CAIL_DisableSysClockGating</key>
 			<integer>0</integer>
 			<key>CAIL_EnableLBPWSupport</key>
-			<integer>0</integer>
-			<key>CAIL_EnablePeerDataAperture</key>
-			<integer>0</integer>
-			<key>CAIL_EnableSecureMmFwLoading</key>
-			<integer>1</integer>
-			<key>CAIL_EnableXdmaSupport</key>
 			<integer>0</integer>
 		</dict>
 	</dict>

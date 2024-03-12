@@ -77,28 +77,24 @@
 			</dict>
 			<key>aty_properties</key>
 			<dict>
-				<key>DalDisableDisplayID2</key>
+				<key>DalForceSingleDispPipeSplit</key>
 				<integer>1</integer>
-				<key>DalDisableLTTPR</key>
+				<key>PP_DisableVoltageIsland</key>
 				<integer>1</integer>
-				<key>DalSkipDetectionLT</key>
+				<key>PP_DriverEnableNBDPM</key>
 				<integer>1</integer>
-				<key>PP_DisableClockStretcher</key>
-				<integer>1</integer>
-				<key>PP_DisableULV</key>
+				<key>PP_GPUPowerDownEnabled</key>
 				<integer>0</integer>
-				<key>PP_EnableUploadFirmware</key>
-				<integer>0</integer>
-				<key>PP_Falcon_QuickTransition_Enable</key>
-				<integer>1</integer>
 				<key>PP_GfxOffControl</key>
 				<integer>1</integer>
-				<key>PP_PhmUseDummyBackEnd</key>
+				<key>PP_SclkDeepSleepDisable</key>
 				<integer>0</integer>
+				<key>PP_ThermalAutoThrottlingEnable</key>
+				<integer>1</integer>
 				<key>PP_ToolsLogSpaceSize</key>
 				<integer>524288</integer>
 				<key>PP_WorkLoadPolicyMask</key>
-				<integer>16</integer>
+				<integer>0</integer>
 			</dict>
 		</dict>
 		<key>com.ChefKissInc.NootedRed</key>
