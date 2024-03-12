@@ -28,11 +28,26 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
         SolveRequestPlus solveRequest {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable, kCailAsicCapsTablePattern};
         PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "X6000FB", "Failed to resolve CAIL_ASIC_CAPS_TABLE");
 
+        bool sonoma144 = getKernelVersion() > KernelVersion::Sonoma ||
+                         (getKernelVersion() == KernelVersion::Sonoma && getKernelMinorVersion() >= 4);
+
         if (NRed::callback->enableBacklight) {
-            SolveRequestPlus solveRequest {"_dce_driver_set_backlight", this->orgDceDriverSetBacklight,
-                kDceDriverSetBacklight};
+            if (sonoma144) {
+                SolveRequestPlus solveRequest {"_dc_link_set_backlight_level", this->orgDcLinkSetBacklightLevel,
+                    kDcLinkSetBacklightLevelPattern14_4};
+                PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "X6000FB",
+                    "Failed to resolve dc_link_set_backlight_level");
+            } else {
+                SolveRequestPlus solveRequest {"_dc_link_set_backlight_level", this->orgDcLinkSetBacklightLevel,
+                    kDcLinkSetBacklightLevelPattern};
+                PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "X6000FB",
+                    "Failed to resolve dc_link_set_backlight_level");
+            }
+
+            SolveRequestPlus solveRequest {"_dc_link_set_backlight_level_nits", this->orgDcLinkSetBacklightLevelNits,
+                kDcLinkSetBacklightLevelNitsPattern, kDcLinkSetBacklightLevelNitsMask};
             PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "X6000FB",
-                "Failed to resolve dce_driver_set_backlight");
+                "Failed to resolve dc_link_set_backlight_level_nits");
         }
 
         bool ventura = getKernelVersion() >= KernelVersion::Ventura;
@@ -80,8 +95,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
 
         if (NRed::callback->enableBacklight) {
             RouteRequestPlus requests[] = {
-                {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit, this->orgDcePanelCntlHwInit,
-                    kDcePanelCntlHwInitPattern},
+                {"_link_create", wrapLinkCreate, this->orgLinkCreate, kLinkCreatePattern, kLinkCreateMask},
                 {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25setAttributeForConnectionEijm",
                     wrapSetAttributeForConnection, this->orgSetAttributeForConnection},
                 {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25getAttributeForConnectionEijPm",
@@ -263,11 +277,6 @@ void X6000FB::registerDispMaxBrightnessNotif() {
     OSSafeReleaseNULL(matching);
 }
 
-UInt32 X6000FB::wrapDcePanelCntlHwInit(void *panelCntl) {
-    callback->panelCntlPtr = panelCntl;
-    return FunctionCast(wrapDcePanelCntlHwInit, callback->orgDcePanelCntlHwInit)(panelCntl);
-}
-
 IOReturn X6000FB::wrapSetAttributeForConnection(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
     uintptr_t value) {
     auto ret = FunctionCast(wrapSetAttributeForConnection, callback->orgSetAttributeForConnection)(framebuffer,
@@ -279,16 +288,33 @@ IOReturn X6000FB::wrapSetAttributeForConnection(IOService *framebuffer, IOIndex 
         return kIOReturnSuccess;
     }
 
-    if (!callback->panelCntlPtr) {
-        DBGLOG("X6000FB", "setAttributeForConnection: May not control backlight at this time; panelCntl is null");
+    if (callback->embeddedPanelLink == nullptr) {
+        DBGLOG("X6000FB",
+            "setAttributeForConnection: May not control backight at this time; embeddedPanelLink is nullptr");
         return kIOReturnSuccess;
     }
 
     //! Set the backlight
     callback->curPwmBacklightLvl = static_cast<UInt32>(value);
     UInt32 percentage = callback->curPwmBacklightLvl * 100 / callback->maxPwmBacklightLvl;
-    UInt32 pwmValue = percentage >= 100 ? 0x1FF00 : ((percentage * 0xFF) / 100) << 8U;
-    callback->orgDceDriverSetBacklight(callback->panelCntlPtr, pwmValue);
+
+    bool out;
+
+    //! AMDGPU doesn't use AUX on HDR/SDR displays that can use it. Why?
+    if (callback->supportsAux) {
+        //! TODO: Obtain the actual max brightness for the screen
+        UInt32 auxValue = (callback->maxOLED * percentage) / 100;
+        //! dc_link_set_backlight_level_nits doesn't print the new backlight level, so we'll do it
+        DBGLOG("X6000FB", "setAttributeForConnection: New AUX brightness: %d millinits (%d nits)", auxValue,
+            (auxValue / 1000));
+        out = callback->orgDcLinkSetBacklightLevelNits(callback->embeddedPanelLink, callback->isHDR, auxValue, 15000);
+    } else {
+        UInt32 pwmValue = percentage >= 100 ? 0x1FF00 : ((percentage * 0xFF) / 100) << 8U;
+        out = callback->orgDcLinkSetBacklightLevel(callback->embeddedPanelLink, pwmValue, 0);
+    }
+
+    DBGLOG_COND(!out, "X6000FB", "Failed to set backlight level");
+
     return kIOReturnSuccess;
 }
 
@@ -349,4 +375,46 @@ UInt32 X6000FB::wrapControllerPowerUp(void *that) {
 void X6000FB::wrapDpReceiverPowerCtrl(void *link, bool power_on) {
     FunctionCast(wrapDpReceiverPowerCtrl, callback->orgDpReceiverPowerCtrl)(link, power_on);
     IOSleep(250);    //! Link needs a bit of delay to change power state
+}
+
+void *X6000FB::wrapLinkCreate(void *data) {
+    void *ret = FunctionCast(wrapLinkCreate, callback->orgLinkCreate)(data);
+    UInt32 signalType = getMember<UInt32>(ret, 0x38);
+    if (signalType == DC_SIGNAL_TYPE_LVDS || signalType == DC_SIGNAL_TYPE_EDP) {
+        callback->embeddedPanelLink = ret;
+        UInt32 fieldBase = 0;
+        switch (getKernelVersion()) {
+            case KernelVersion::Catalina:
+                fieldBase = 0x1EA;
+                break;
+            case KernelVersion::BigSur:
+                fieldBase = 0x26C;
+                break;
+            case KernelVersion::Monterey:
+                fieldBase = 0x284;
+                break;
+            case KernelVersion::Ventura... KernelVersion::Sonoma:
+                fieldBase = 0x28C;
+                break;
+            default:
+                PANIC("X6000FB", "Unsupported kernel version %d", getKernelVersion());
+        }
+        if (getMember<UInt8>(ret, fieldBase) & DC_DPCD_EXT_CAPS_OLED) {
+            DBGLOG("X6000FB", "Display is OLED, using AUX brightness control");
+            callback->supportsAux = true;
+            callback->isHDR = true;
+        } else if (getKernelVersion() == KernelVersion::Catalina &&
+                   getMember<UInt8>(ret, fieldBase) & DC_DPCD_EXT_CAPS_HDR_SUPPORTS_AUX) {
+            DBGLOG("X6000FB", "Display supports AUX and we are on Catalina, enabling AUX control.");
+            callback->supportsAux =
+                true;    //! dc_link_set_brightness_nits or somewhere along the chain will boot us out of setting it
+            callback->isHDR = true;
+        } else if (getKernelVersion() == KernelVersion::Catalina &&
+                   getMember<UInt8>(ret, fieldBase) & DC_DPCD_EXT_CAPS_SDR_SUPPORTS_AUX) {
+            DBGLOG("X6000FB", "Display supports AUX and we are on Catalina, enabling AUX control.");
+            callback->supportsAux =
+                true;    //! dc_link_set_brightness_nits or somewhere along the chain will boot us out of setting it
+        }
+    }
+    return ret;
 }
