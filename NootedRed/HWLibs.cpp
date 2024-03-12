@@ -463,7 +463,6 @@ void X5000HWLibs::smu10PowerUp() {
     NRed::callback->sendMsgToSmc(PPSMC_MSG_ForceGfxContentSave);
     NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerUpSdma);
     NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerUpGfx);
-    NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerGateMmHub);
 }
 
 CAILResult X5000HWLibs::smuInternalSwInit(void *ctx) {
