@@ -61,7 +61,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
 
         RouteRequestPlus requests[] = {
             {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", wrapPopulateVramInfo,
-                kPopulateVramInfoPattern},
+                kPopulateVramInfoPattern, kPopulateVramInfoMask},
             {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
             {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
                 this->orgGetNumberOfConnectors, kGetNumberOfConnectorsPattern, kGetNumberOfConnectorsMask},
@@ -70,21 +70,37 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             "Failed to route symbols");
 
         if (checkKernelArgument("-NRedDPDelay")) {
-            RouteRequestPlus request {"_dp_receiver_power_ctrl", wrapDpReceiverPowerCtrl, this->orgDpReceiverPowerCtrl,
-                kDpReceiverPowerCtrl};
-            PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route dp_receiver_power_ctrl");
+            if (getKernelVersion() > KernelVersion::Sonoma ||
+                (getKernelVersion() == KernelVersion::Sonoma && getKernelMinorVersion() >= 4)) {
+                RouteRequestPlus request {"_dp_receiver_power_ctrl", wrapDpReceiverPowerCtrl,
+                    this->orgDpReceiverPowerCtrl, kDpReceiverPowerCtrl14_4};
+                PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
+                    "Failed to route dp_receiver_power_ctrl (14.4+)");
+            } else {
+                RouteRequestPlus request {"_dp_receiver_power_ctrl", wrapDpReceiverPowerCtrl,
+                    this->orgDpReceiverPowerCtrl, kDpReceiverPowerCtrl};
+                PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
+                    "Failed to route dp_receiver_power_ctrl");
+            }
         }
 
         bool renoir = NRed::callback->chipType >= ChipType::Renoir;
         if (renoir) {
-            RouteRequestPlus requests[] = {
-                {"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware, this->orgIH40IVRingInitHardware,
-                    kIH40IVRingInitHardwarePattern, kIH40IVRingInitHardwareMask},
-                {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister, this->orgIRQMGRWriteRegister,
-                    kIRQMGRWriteRegisterPattern},
-            };
-            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X6000FB",
-                "Failed to route IH symbols");
+            RouteRequestPlus request {"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware,
+                this->orgIH40IVRingInitHardware, kIH40IVRingInitHardwarePattern, kIH40IVRingInitHardwareMask};
+            PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
+                "Failed to route IH_4_0_IVRing_InitHardware");
+            if (getKernelVersion() > KernelVersion::Sonoma ||
+                (getKernelVersion() == KernelVersion::Sonoma && getKernelMinorVersion() >= 4)) {
+                RouteRequestPlus request {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister,
+                    this->orgIRQMGRWriteRegister, kIRQMGRWriteRegisterPattern14_4};
+                PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
+                    "Failed to route IRQMGR_WriteRegister (14.4+)");
+            } else {
+                RouteRequestPlus request {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister,
+                    this->orgIRQMGRWriteRegister, kIRQMGRWriteRegisterPattern};
+                PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route IRQMGR_WriteRegister");
+            }
         }
 
         if (ventura) {
@@ -105,15 +121,29 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
                 "Failed to route backlight symbols");
         }
 
-        const LookupPatchPlus patches[] = {
-            {&kextRadeonX6000Framebuffer, kPopulateDeviceInfoOriginal, kPopulateDeviceInfoMask,
-                kPopulateDeviceInfoPatched, kPopulateDeviceInfoMask, 1},
-            {&kextRadeonX6000Framebuffer, kGetFirmwareInfoNullCheckOriginal, kGetFirmwareInfoNullCheckOriginalMask,
-                kGetFirmwareInfoNullCheckPatched, kGetFirmwareInfoNullCheckPatchedMask, 1},
-            {&kextRadeonX6000Framebuffer, kAgdcServicesGetVendorInfoOriginal, kAgdcServicesGetVendorInfoMask,
-                kAgdcServicesGetVendorInfoPatched, kAgdcServicesGetVendorInfoMask, 1},
-        };
-        PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000FB", "Failed to apply patches");
+        const LookupPatchPlus patch {&kextRadeonX6000Framebuffer, kPopulateDeviceInfoOriginal, kPopulateDeviceInfoMask,
+            kPopulateDeviceInfoPatched, kPopulateDeviceInfoMask, 1};
+        PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply populateDeviceInfo patch");
+
+        if (sonoma144) {
+            const LookupPatchPlus patches[] = {
+                {&kextRadeonX6000Framebuffer, kGetFirmwareInfoNullCheckOriginal14_4,
+                    kGetFirmwareInfoNullCheckOriginalMask14_4, kGetFirmwareInfoNullCheckPatched14_4,
+                    kGetFirmwareInfoNullCheckPatchedMask14_4, 1},
+                {&kextRadeonX6000Framebuffer, kGetVendorInfoOriginal14_4, kGetVendorInfoMask14_4,
+                    kGetVendorInfoPatched14_4, kGetVendorInfoMask14_4, 2},
+            };
+            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000FB",
+                "Failed to apply patches (14.4)");
+        } else {
+            const LookupPatchPlus patches[] = {
+                {&kextRadeonX6000Framebuffer, kGetFirmwareInfoNullCheckOriginal, kGetFirmwareInfoNullCheckOriginalMask,
+                    kGetFirmwareInfoNullCheckPatched, kGetFirmwareInfoNullCheckPatchedMask, 1},
+                {&kextRadeonX6000Framebuffer, kGetVendorInfoOriginal, kGetVendorInfoMask, kGetVendorInfoPatched,
+                    kGetVendorInfoMask, 2},
+            };
+            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000FB", "Failed to apply patches");
+        }
 
         if (getKernelVersion() == KernelVersion::Catalina) {
             const LookupPatchPlus patch {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckCatalinaOriginal,

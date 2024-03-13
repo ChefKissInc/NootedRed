@@ -69,7 +69,7 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
         PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X5000", "Failed to route symbols");
 
         bool ventura = getKernelVersion() >= KernelVersion::Ventura;
-        bool ventura1304 = (ventura && getKernelMinorVersion() >= 5) || getKernelVersion() > KernelVersion::Ventura;
+        bool ventura1304 = getKernelVersion() > KernelVersion::Ventura || (ventura && getKernelMinorVersion() >= 5);
         if (!catalina) {
             RouteRequestPlus requests[] = {
                 {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator9newSharedEv", wrapNewShared},
@@ -93,7 +93,12 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
             }
         }
 
-        if (catalina || ventura1304) {
+        if (getKernelVersion() > KernelVersion::Sonoma ||
+            (getKernelVersion() == KernelVersion::Sonoma && getKernelMinorVersion() >= 4)) {
+            const LookupPatchPlus patch {&kextRadeonX5000, kAddrLibCreateOriginal14_4, kAddrLibCreateOriginalMask14_4,
+                kAddrLibCreatePatched14_4, kAddrLibCreatePatchedMask14_4, 1};
+            PANIC_COND(!patch.apply(patcher, slide, size), "X5000", "Failed to apply 14.4+ Addr::Lib::Create patch");
+        } else if (catalina || ventura1304) {
             const LookupPatchPlus patch {&kextRadeonX5000, kAddrLibCreateOriginal, kAddrLibCreatePatched, 1};
             PANIC_COND(!patch.apply(patcher, slide, size), "X5000",
                 "Failed to apply Catalina & Ventura 13.4+ Addr::Lib::Create patch");

@@ -32,7 +32,8 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
         if (!catalina) {
             SolveRequestPlus solveRequests[] = {
                 {"__ZL15deviceTypeTable", orgDeviceTypeTable, kDeviceTypeTablePattern},
-                {"__ZN11AMDFirmware14createFirmwareEPhjjPKc", this->orgCreateFirmware, kCreateFirmwarePattern},
+                {"__ZN11AMDFirmware14createFirmwareEPhjjPKc", this->orgCreateFirmware, kCreateFirmwarePattern,
+                    kCreateFirmwarePatternMask},
                 {"__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware", this->orgPutFirmware,
                     kPutFirmwarePattern},
             };
@@ -50,6 +51,8 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
 
         bool ventura = getKernelVersion() >= KernelVersion::Ventura;
         bool renoir = NRed::callback->chipType >= ChipType::Renoir;
+        bool sonoma144 = getKernelVersion() > KernelVersion::Sonoma ||
+                         (getKernelVersion() == KernelVersion::Sonoma && getKernelMinorVersion() >= 4);
         if (catalina) {
             RouteRequestPlus requests[] = {
                 {"__ZN16AmdTtlFwServices7getIpFwEjPKcP10_TtlFwInfo", wrapGetIpFw, this->orgGetIpFw},
@@ -62,28 +65,50 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
                 {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv",
                     wrapPopulateFirmwareDirectory, this->orgGetIpFw},
                 {"_psp_bootloader_is_sos_running_3_1", hwLibsGeneralFailure, kPspBootloaderIsSosRunning31Pattern},
-                {"_psp_bootloader_load_sysdrv_3_1", hwLibsNoop, kPspBootloaderLoadSysdrv31Pattern,
-                    kPspBootloaderLoadSysdrv31Mask},
-                {"_psp_bootloader_set_ecc_mode_3_1", hwLibsNoop, kPspBootloaderSetEccMode31Pattern},
-                {"_psp_bootloader_load_sos_3_1", pspBootloaderLoadSos10, kPspBootloaderLoadSos31Pattern,
-                    kPspBootloaderLoadSos31Mask},
                 {"_psp_security_feature_caps_set_3_1",
                     renoir ? pspSecurityFeatureCapsSet12 : pspSecurityFeatureCapsSet10,
                     ventura ? kPspSecurityFeatureCapsSet31VenturaPattern : kPspSecurityFeatureCapsSet31Pattern},
             };
             PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "HWLibs",
-                "Failed to route symbols");
-            if (NRed::callback->chipType >= ChipType::Renoir) {
-                RouteRequestPlus request {"_psp_reset_3_1", psp12Reset, kPspReset31Pattern};
-                PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route psp_reset_3_1");
+                "Failed to route symbols (>10.15)");
+            if (sonoma144) {
+                RouteRequestPlus requests[] = {
+                    {"_psp_bootloader_load_sysdrv_3_1", hwLibsNoop, kPspBootloaderLoadSysdrv31Pattern14_4},
+                    {"_psp_bootloader_set_ecc_mode_3_1", hwLibsNoop, kPspBootloaderSetEccMode31Pattern14_4},
+                    {"_psp_bootloader_load_sos_3_1", pspBootloaderLoadSos10, kPspBootloaderLoadSos31Pattern14_4},
+                };
+                PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "HWLibs",
+                    "Failed to route symbols (>=14.4)");
+                if (NRed::callback->chipType >= ChipType::Renoir) {
+                    RouteRequestPlus request {"_psp_reset_3_1", psp12Reset, kPspReset31Pattern14_4};
+                    PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs",
+                        "Failed to route psp_reset_3_1 (>=14.4)");
+                } else {
+                    RouteRequestPlus request {"_psp_reset_3_1", hwLibsUnsupported, kPspReset31Pattern14_4};
+                    PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs",
+                        "Failed to route psp_reset_3_1 (>=14.4)");
+                }
             } else {
-                RouteRequestPlus request {"_psp_reset_3_1", hwLibsUnsupported, kPspReset31Pattern};
-                PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route psp_reset_3_1");
+                RouteRequestPlus requests[] = {
+                    {"_psp_bootloader_load_sysdrv_3_1", hwLibsNoop, kPspBootloaderLoadSysdrv31Pattern,
+                        kPspBootloaderLoadSysdrv31Mask},
+                    {"_psp_bootloader_set_ecc_mode_3_1", hwLibsNoop, kPspBootloaderSetEccMode31Pattern},
+                    {"_psp_bootloader_load_sos_3_1", pspBootloaderLoadSos10, kPspBootloaderLoadSos31Pattern,
+                        kPspBootloaderLoadSos31Mask},
+                };
+                PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "HWLibs",
+                    "Failed to route symbols (<14.4)");
+                if (NRed::callback->chipType >= ChipType::Renoir) {
+                    RouteRequestPlus request {"_psp_reset_3_1", psp12Reset, kPspReset31Pattern};
+                    PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route psp_reset_3_1");
+                } else {
+                    RouteRequestPlus request {"_psp_reset_3_1", hwLibsUnsupported, kPspReset31Pattern};
+                    PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route psp_reset_3_1");
+                }
             }
         }
 
-        if (getKernelVersion() > KernelVersion::Sonoma ||
-            (getKernelVersion() == KernelVersion::Sonoma && getKernelMinorVersion() >= 4)) {
+        if (sonoma144) {
             RouteRequestPlus request = {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit,
                 kPspCmdKmSubmitPattern14_4, kPspCmdKmSubmitMask14_4};
             PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route psp_cmd_km_submit (14.4+)");
@@ -145,41 +170,75 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
         DBGLOG("HWLibs", "Applied DDI Caps patches");
 
         if (!catalina) {
-            const LookupPatchPlus patches[] = {
-                {&kextRadeonX5000HWLibs, kPspSwInitOriginal1, kPspSwInitPatched1, 1},
-                {&kextRadeonX5000HWLibs, kPspSwInitOriginal2, kPspSwInitOriginalMask2, kPspSwInitPatched2, 1},
-                {&kextRadeonX5000HWLibs, kGcSwInitOriginal, kGcSwInitOriginalMask, kGcSwInitPatched,
-                    kGcSwInitPatchedMask, 1},
-                {&kextRadeonX5000HWLibs, kGcSetFwEntryInfoOriginal, kGcSetFwEntryInfoOriginalMask,
-                    kGcSetFwEntryInfoPatched, kGcSetFwEntryInfoPatchedMask, 1},
-            };
-            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs",
-                "Failed to apply spoof patches");
+            const LookupPatchPlus patch {&kextRadeonX5000HWLibs, kGcSwInitOriginal, kGcSwInitOriginalMask,
+                kGcSwInitPatched, kGcSwInitPatchedMask, 1};
+            PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply gc_sw_init spoof patch");
+            if (sonoma144) {
+                const LookupPatchPlus patches[] = {
+                    {&kextRadeonX5000HWLibs, kPspSwInit1Original14_4, kPspSwInit1Patched14_4, 1},
+                    {&kextRadeonX5000HWLibs, kPspSwInit2Original14_4, kPspSwInit2OriginalMask14_4,
+                        kPspSwInit2Patched14_4, 1},
+                    {&kextRadeonX5000HWLibs, kGcSetFwEntryInfoOriginal14_4, kGcSetFwEntryInfoOriginalMask14_4,
+                        kGcSetFwEntryInfoPatched14_4, kGcSetFwEntryInfoPatchedMask14_4, 1},
+                };
+                PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs",
+                    "Failed to apply spoof patches (>=14.4)");
+            } else {
+                const LookupPatchPlus patches[] = {
+                    {&kextRadeonX5000HWLibs, kPspSwInit1Original, kPspSwInit1Patched, 1},
+                    {&kextRadeonX5000HWLibs, kPspSwInit2Original, kPspSwInit2OriginalMask, kPspSwInit2Patched, 1},
+                    {&kextRadeonX5000HWLibs, kGcSetFwEntryInfoOriginal, kGcSetFwEntryInfoOriginalMask,
+                        kGcSetFwEntryInfoPatched, kGcSetFwEntryInfoPatchedMask, 1},
+                };
+                PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs",
+                    "Failed to apply spoof patches (<14.4)");
+            }
         } else if (renoir) {
             const LookupPatchPlus patches[] = {
-                {&kextRadeonX5000HWLibs, kPspSwInitCatalinaOriginal1, kPspSwInitCatalinaPatched1, 1},
-                {&kextRadeonX5000HWLibs, kPspSwInitCatalinaOriginal2, kPspSwInitCatalinaOriginal2Mask,
-                    kPspSwInitCatalinaPatched2, 1},
+                {&kextRadeonX5000HWLibs, kPspSwInitCatalina1Original, kPspSwInitCatalina1Patched, 1},
+                {&kextRadeonX5000HWLibs, kPspSwInitCatalina2Original, kPspSwInitCatalina2OriginalMask,
+                    kPspSwInitCatalina2Patched, 1},
             };
             PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs",
                 "Failed to apply spoof patches");
         }
 
-        if (getKernelVersion() >= KernelVersion::Monterey) {
-            const LookupPatchPlus patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesMontereyOriginal1,
-                kCreatePowerTuneServicesMontereyPatched1, 1};
-            PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTuneServices patch");
+        if (sonoma144) {
+            const LookupPatchPlus patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServices1Original14_4,
+                kCreatePowerTuneServices1Patched14_4, 1};
+            PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs",
+                "Failed to apply PowerTuneServices patch (>=14.4)");
+        } else if (getKernelVersion() >= KernelVersion::Monterey) {
+            const LookupPatchPlus patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServices1Original12_0,
+                kCreatePowerTuneServices1Patched12_0, 1};
+            PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTuneServices patch (<14.4)");
         } else {
-            const LookupPatchPlus patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesOriginal1,
-                kCreatePowerTuneServicesPatched1, 1};
-            PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTuneServices patch");
+            const LookupPatchPlus patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServices1Original,
+                kCreatePowerTuneServices1Patched, 1};
+            PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTuneServices patch (<12.0)");
         }
 
+        if (sonoma144) {
+            const LookupPatchPlus patches[] = {
+                {&kextRadeonX5000HWLibs, kSmuInitFunctionPointerListOriginal14_4,
+                    kSmuInitFunctionPointerListOriginalMask14_4, kSmuInitFunctionPointerListPatched14_4,
+                    kSmuInitFunctionPointerListPatchedMask14_4, 1},
+                {&kextRadeonX5000HWLibs, kCreatePowerTuneServices2Original14_4, kCreatePowerTuneServices2Mask14_4,
+                    kCreatePowerTuneServices2Patched14_4, 1},
+            };
+            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs",
+                "Failed to apply patches (>=14.4)");
+        } else {
+            const LookupPatchPlus patches[] = {
+                {&kextRadeonX5000HWLibs, kSmuInitFunctionPointerListOriginal, kSmuInitFunctionPointerListOriginalMask,
+                    kSmuInitFunctionPointerListPatched, kSmuInitFunctionPointerListPatchedMask, 1},
+                {&kextRadeonX5000HWLibs, kCreatePowerTuneServices2Original, kCreatePowerTuneServices2Mask,
+                    kCreatePowerTuneServices2Patched, 1},
+            };
+            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs",
+                "Failed to apply patches (<14.4)");
+        }
         const LookupPatchPlus patches[] = {
-            {&kextRadeonX5000HWLibs, kSmuInitFunctionPointerListOriginal, kSmuInitFunctionPointerListOriginalMask,
-                kSmuInitFunctionPointerListPatched, kSmuInitFunctionPointerListPatchedMask, 1},
-            {&kextRadeonX5000HWLibs, kCreatePowerTuneServicesOriginal2, kCreatePowerTuneServicesMask2,
-                kCreatePowerTuneServicesPatched2, 1},
             {&kextRadeonX5000HWLibs, kGcGoldenSettingsExecutionOriginal, kGcGoldenSettingsExecutionOriginalMask,
                 kGcGoldenSettingsExecutionPatched, kGcGoldenSettingsExecutionPatchedMask, 1},
             {&kextRadeonX5000HWLibs, kSdma40GdbExecutionCallOriginal, kSdma40GdbExecutionCallOriginalMask,
@@ -192,10 +251,11 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
         if (ventura) {
             const LookupPatchPlus patches[] = {
                 {&kextRadeonX5000HWLibs, kCailQueryAdapterInfoOriginal, kCailQueryAdapterInfoPatched, 1},
-                {&kextRadeonX5000HWLibs, kSDMAInitFunctionPointerListOriginal, kSDMAInitFunctionPointerListPatched, 1},
+                {&kextRadeonX5000HWLibs, kSDMAInitFunctionPointerListOriginal, kSDMAInitFunctionPointerListOriginalMask,
+                    kSDMAInitFunctionPointerListPatched, kSDMAInitFunctionPointerListPatchedMask, 1},
             };
             PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs",
-                "Failed to apply Ventura patches");
+                "Failed to apply macOS 13.0+ patches");
         }
 
         return true;
