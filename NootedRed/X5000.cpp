@@ -34,8 +34,6 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
                 orgChannelTypes, kChannelTypesPattern},
             {"__ZN31AMDRadeonX5000_AMDGFX9PM4EngineC1Ev", this->orgGFX9PM4EngineConstructor},
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngineC1Ev", this->orgGFX9SDMAEngineConstructor},
-            {"__ZN39AMDRadeonX5000_AMDAccelSharedUserClient5startEP9IOService", this->orgAccelSharedUCStart},
-            {"__ZN39AMDRadeonX5000_AMDAccelSharedUserClient4stopEP9IOService", this->orgAccelSharedUCStop},
             {"__ZN35AMDRadeonX5000_AMDAccelVideoContext10gMetaClassE", NRed::callback->metaClassMap[0][0]},
             {"__ZN37AMDRadeonX5000_AMDAccelDisplayMachine10gMetaClassE", NRed::callback->metaClassMap[1][0]},
             {"__ZN34AMDRadeonX5000_AMDAccelDisplayPipe10gMetaClassE", NRed::callback->metaClassMap[2][0]},
@@ -56,8 +54,6 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
                 wrapGetHWChannel, this->orgGetHWChannel},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20initializeFamilyTypeEv", wrapInitializeFamilyType},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20allocateAMDHWDisplayEv", wrapAllocateAMDHWDisplay},
-            {"__ZN41AMDRadeonX5000_AMDGFX9GraphicsAccelerator15newVideoContextEv", wrapNewVideoContext},
-            {"__ZN31AMDRadeonX5000_IAMDSMLInterface18createSMLInterfaceEj", wrapCreateSMLInterface},
             {"__ZN26AMDRadeonX5000_AMDHWMemory17adjustVRAMAddressEy", wrapAdjustVRAMAddress,
                 this->orgAdjustVRAMAddress},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware25allocateAMDHWAlignManagerEv", wrapAllocateAMDHWAlignManager,
@@ -70,27 +66,17 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
 
         bool ventura = getKernelVersion() >= KernelVersion::Ventura;
         bool ventura1304 = getKernelVersion() > KernelVersion::Ventura || (ventura && getKernelMinorVersion() >= 5);
-        if (!catalina) {
-            RouteRequestPlus requests[] = {
-                {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator9newSharedEv", wrapNewShared},
-                {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator19newSharedUserClientEv", wrapNewSharedUserClient},
-            };
-            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X5000",
-                "Failed to route newShared routes");
 
-            if (ventura1304) {
-                RouteRequestPlus request {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator23obtainAccelChannelGroupE11SS_"
-                                          "PRIORITYP27AMDRadeonX5000_AMDAccelTask",
-                    wrapObtainAccelChannelGroup1304, this->orgObtainAccelChannelGroup};
-                PANIC_COND(!request.route(patcher, id, slide, size), "X5000",
-                    "Failed to route obtainAccelChannelGroup");
-            } else {
-                RouteRequestPlus request {
-                    "__ZN37AMDRadeonX5000_AMDGraphicsAccelerator23obtainAccelChannelGroupE11SS_PRIORITY",
-                    wrapObtainAccelChannelGroup, this->orgObtainAccelChannelGroup};
-                PANIC_COND(!request.route(patcher, id, slide, size), "X5000",
-                    "Failed to route obtainAccelChannelGroup");
-            }
+        if (ventura1304) {
+            RouteRequestPlus request {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator23obtainAccelChannelGroupE11SS_"
+                                      "PRIORITYP27AMDRadeonX5000_AMDAccelTask",
+                wrapObtainAccelChannelGroup1304, this->orgObtainAccelChannelGroup};
+            PANIC_COND(!request.route(patcher, id, slide, size), "X5000", "Failed to route obtainAccelChannelGroup");
+        } else if (!catalina) {
+            RouteRequestPlus request {
+                "__ZN37AMDRadeonX5000_AMDGraphicsAccelerator23obtainAccelChannelGroupE11SS_PRIORITY",
+                wrapObtainAccelChannelGroup, this->orgObtainAccelChannelGroup};
+            PANIC_COND(!request.route(patcher, id, slide, size), "X5000", "Failed to route obtainAccelChannelGroup");
         }
 
         if (getKernelVersion() > KernelVersion::Sonoma ||
@@ -177,10 +163,6 @@ bool X5000::wrapAllocateHWEngines(void *that) {
     auto *sdma0 = OSObject::operator new(0x250);
     callback->orgGFX9SDMAEngineConstructor(sdma0);
     getMember<void *>(that, fieldBase + 0x8) = sdma0;
-
-    auto *vcn0 = OSObject::operator new(0x2D8);
-    X6000::callback->orgVCN2EngineConstructor(vcn0);
-    getMember<void *>(that, fieldBase + (catalina ? 0x30 : 0x40)) = vcn0;
 
     return true;
 }
@@ -333,7 +315,7 @@ void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
     setHWCapability<UInt32>(that, HWCapability::DisplayPipeCount, NRed::callback->chipType < ChipType::Renoir ? 4 : 6);
     setHWCapability<bool>(that, HWCapability::HasUVD0, false);
     setHWCapability<bool>(that, HWCapability::HasVCE, false);
-    setHWCapability<bool>(that, HWCapability::HasVCN0, true);
+    setHWCapability<bool>(that, HWCapability::HasVCN0, false);
     setHWCapability<bool>(that, HWCapability::HasSDMAPagingQueue, false);
 }
 
@@ -366,23 +348,9 @@ void *X5000::wrapAllocateAMDHWDisplay(void *that) {
     return FunctionCast(wrapAllocateAMDHWDisplay, X6000::callback->orgAllocateAMDHWDisplay)(that);
 }
 
-void *X5000::wrapNewVideoContext(void *that) {
-    return FunctionCast(wrapNewVideoContext, X6000::callback->orgNewVideoContext)(that);
-}
-
-void *X5000::wrapCreateSMLInterface(UInt32 configBit) {
-    return FunctionCast(wrapCreateSMLInterface, X6000::callback->orgCreateSMLInterface)(configBit);
-}
-
 UInt64 X5000::wrapAdjustVRAMAddress(void *that, UInt64 addr) {
     auto ret = FunctionCast(wrapAdjustVRAMAddress, callback->orgAdjustVRAMAddress)(that, addr);
     return ret != addr ? (ret + NRed::callback->fbOffset) : ret;
-}
-
-void *X5000::wrapNewShared() { return FunctionCast(wrapNewShared, X6000::callback->orgNewShared)(); }
-
-void *X5000::wrapNewSharedUserClient() {
-    return FunctionCast(wrapNewSharedUserClient, X6000::callback->orgNewSharedUserClient)();
 }
 
 void *X5000::wrapAllocateAMDHWAlignManager() {
