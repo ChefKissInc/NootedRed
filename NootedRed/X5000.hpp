@@ -20,8 +20,6 @@ class X5000 {
     mach_vm_address_t orgGFX9SetupAndInitializeHWCapabilities {0};
     mach_vm_address_t orgGetHWChannel {0};
     mach_vm_address_t orgAdjustVRAMAddress {0};
-    mach_vm_address_t orgAccelSharedUCStart {0};
-    mach_vm_address_t orgAccelSharedUCStop {0};
     mach_vm_address_t orgAllocateAMDHWAlignManager {0};
     mach_vm_address_t orgObtainAccelChannelGroup {0};
     void *hwAlignMgr {nullptr};
@@ -35,10 +33,6 @@ class X5000 {
     static void wrapInitializeFamilyType(void *that);
     static void *wrapAllocateAMDHWDisplay(void *that);
     static UInt64 wrapAdjustVRAMAddress(void *that, UInt64 addr);
-    static void *wrapNewVideoContext(void *that);
-    static void *wrapCreateSMLInterface(UInt32 configBit);
-    static void *wrapNewShared();
-    static void *wrapNewSharedUserClient();
     static void *wrapAllocateAMDHWAlignManager();
     static UInt32 wrapGetDeviceType();
     static UInt32 wrapReturnZero();

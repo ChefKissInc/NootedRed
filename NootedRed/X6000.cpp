@@ -24,10 +24,7 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
         NRed::callback->setRMMIOIfNecessary();
 
         SolveRequestPlus solveRequests[] = {
-            {"__ZN30AMDRadeonX6000_AMDVCN2HWEngineC1Ev", this->orgVCN2EngineConstructor},
             {"__ZN31AMDRadeonX6000_AMDGFX10Hardware20allocateAMDHWDisplayEv", this->orgAllocateAMDHWDisplay},
-            {"__ZN42AMDRadeonX6000_AMDGFX10GraphicsAccelerator15newVideoContextEv", this->orgNewVideoContext},
-            {"__ZN31AMDRadeonX6000_IAMDSMLInterface18createSMLInterfaceEj", this->orgCreateSMLInterface},
             {"__ZN35AMDRadeonX6000_AMDAccelVideoContext10gMetaClassE", NRed::callback->metaClassMap[0][1]},
             {"__ZN37AMDRadeonX6000_AMDAccelDisplayMachine10gMetaClassE", NRed::callback->metaClassMap[1][1]},
             {"__ZN34AMDRadeonX6000_AMDAccelDisplayPipe10gMetaClassE", NRed::callback->metaClassMap[2][1]},
@@ -50,25 +47,6 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
         };
         PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X6000", "Failed to route symbols");
 
-        bool catalina = getKernelVersion() == KernelVersion::Catalina;
-        if (!catalina) {
-            SolveRequestPlus solveRequests[] = {
-                {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator9newSharedEv", this->orgNewShared},
-                {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator19newSharedUserClientEv", this->orgNewSharedUserClient},
-            };
-            PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "X6000",
-                "Failed to resolve newShared symbols");
-
-            RouteRequestPlus requests[] = {
-                {"__ZN39AMDRadeonX6000_AMDAccelSharedUserClient5startEP9IOService", wrapAccelSharedUCStartX6000},
-                {"__ZN39AMDRadeonX6000_AMDAccelSharedUserClient4stopEP9IOService", wrapAccelSharedUCStopX6000},
-                {"__ZN29AMDRadeonX6000_AMDAccelShared11SurfaceCopyEPjyP12IOAccelEvent", wrapAccelSharedSurfaceCopy,
-                    this->orgAccelSharedSurfaceCopy},
-            };
-            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X6000",
-                "Failed to route AccelShared symbols");
-        }
-
         if (NRed::callback->chipType < ChipType::Renoir) {
             RouteRequestPlus request = {"__ZN30AMDRadeonX6000_AMDGFX10Display23initDCNRegistersOffsetsEv",
                 wrapInitDCNRegistersOffsets, this->orgInitDCNRegistersOffsets};
@@ -82,6 +60,7 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
             PANIC_COND(!request.route(patcher, id, slide, size), "X6000", "Failed to route allocateScanout");
         }
 
+        bool catalina = getKernelVersion() == KernelVersion::Catalina;
         if (catalina) {
             const LookupPatchPlus patches[] = {
                 {&kextRadeonX6000, kHWChannelSubmitCommandBufferCatalinaOriginal,
@@ -200,14 +179,6 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
  */
 bool X6000::wrapAccelStartX6000() { return false; }
 
-bool X6000::wrapAccelSharedUCStartX6000(void *that, void *provider) {
-    return FunctionCast(wrapAccelSharedUCStartX6000, X5000::callback->orgAccelSharedUCStart)(that, provider);
-}
-
-bool X6000::wrapAccelSharedUCStopX6000(void *that, void *provider) {
-    return FunctionCast(wrapAccelSharedUCStopX6000, X5000::callback->orgAccelSharedUCStop)(that, provider);
-}
-
 void X6000::wrapInitDCNRegistersOffsets(void *that) {
     FunctionCast(wrapInitDCNRegistersOffsets, callback->orgInitDCNRegistersOffsets)(that);
     auto fieldBase = getKernelVersion() == KernelVersion::Catalina ? 0x4838 :
@@ -278,14 +249,6 @@ void X6000::wrapInitDCNRegistersOffsets(void *that) {
 
 #define HWALIGNMGR_ADJUST getMember<void *>(X5000::callback->hwAlignMgr, 0) = X5000::callback->hwAlignMgrVtX6000;
 #define HWALIGNMGR_REVERT getMember<void *>(X5000::callback->hwAlignMgr, 0) = X5000::callback->hwAlignMgrVtX5000;
-
-UInt64 X6000::wrapAccelSharedSurfaceCopy(void *that, void *param1, UInt64 param2, void *param3) {
-    HWALIGNMGR_ADJUST
-    auto ret =
-        FunctionCast(wrapAccelSharedSurfaceCopy, callback->orgAccelSharedSurfaceCopy)(that, param1, param2, param3);
-    HWALIGNMGR_REVERT
-    return ret;
-}
 
 UInt64 X6000::wrapAllocateScanoutFB(void *that, UInt32 param1, void *param2, void *param3, void *param4) {
     HWALIGNMGR_ADJUST

@@ -14,25 +14,16 @@ class X6000 {
     bool processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 
     private:
-    t_GenericConstructor orgVCN2EngineConstructor {nullptr};
     mach_vm_address_t orgAllocateAMDHWDisplay {0};
-    mach_vm_address_t orgNewVideoContext {0};
-    mach_vm_address_t orgCreateSMLInterface {0};
-    mach_vm_address_t orgNewShared {0};
-    mach_vm_address_t orgNewSharedUserClient {0};
     mach_vm_address_t orgInitDCNRegistersOffsets {0};
     mach_vm_address_t orgGetPreferredSwizzleMode2 {0};
-    mach_vm_address_t orgAccelSharedSurfaceCopy {0};
     mach_vm_address_t orgAllocateScanoutFB {0};
     mach_vm_address_t orgFillUBMSurface {0};
     mach_vm_address_t orgConfigureDisplay {0};
     mach_vm_address_t orgGetDisplayInfo {0};
 
     static bool wrapAccelStartX6000();
-    static bool wrapAccelSharedUCStartX6000(void *that, void *provider);
-    static bool wrapAccelSharedUCStopX6000(void *that, void *provider);
     static void wrapInitDCNRegistersOffsets(void *that);
-    static UInt64 wrapAccelSharedSurfaceCopy(void *that, void *param1, UInt64 param2, void *param3);
     static UInt64 wrapAllocateScanoutFB(void *that, UInt32 param1, void *param2, void *param3, void *param4);
     static UInt64 wrapFillUBMSurface(void *that, UInt32 param1, void *param2, void *param3);
     static bool wrapConfigureDisplay(void *that, UInt32 param1, UInt32 param2, void *param3, void *param4);
