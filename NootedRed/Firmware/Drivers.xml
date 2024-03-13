@@ -310,7 +310,7 @@
 			<key>EnableSwVCNFWLoading</key>
 			<integer>0</integer>
 			<key>EnableVCNDPG</key>
-			<integer>0</integer>
+			<integer>1</integer>
 			<key>EnableswGcFwLoading</key>
 			<integer>0</integer>
 			<key>EnableswSdmaFwLoading</key>
@@ -326,8 +326,6 @@
 			<integer>0</integer>
 			<key>CAIL_DisableDynamicGfxMGPowerGating</key>
 			<integer>1</integer>
-			<key>CAIL_DisableGfxCGPowerGating</key>
-			<integer>0</integer>
 			<key>CAIL_DisableGfxClockGating</key>
 			<integer>0</integer>
 			<key>CAIL_DisablePCIConfigAsicReset</key>
