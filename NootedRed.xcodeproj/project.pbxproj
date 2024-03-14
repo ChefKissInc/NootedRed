@@ -23,8 +23,8 @@
 		40FC5FDE29BF996900367F9D /* HWLibs.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FDC29BF996900367F9D /* HWLibs.hpp */; };
 		40FC5FE129BF9E2500367F9D /* X6000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FC5FDF29BF9E2500367F9D /* X6000.cpp */; };
 		40FC5FE229BF9E2500367F9D /* X6000.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FE029BF9E2500367F9D /* X6000.hpp */; };
-		6C1B36662A407C6100B184DD /* HDMI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6C1B36642A407C6100B184DD /* HDMI.cpp */; };
-		6C1B36672A407C6200B184DD /* HDMI.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 6C1B36652A407C6100B184DD /* HDMI.hpp */; };
+		6C1B36662A407C6100B184DD /* AppleGFXHDA.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6C1B36642A407C6100B184DD /* AppleGFXHDA.cpp */; };
+		6C1B36672A407C6200B184DD /* AppleGFXHDA.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 6C1B36652A407C6100B184DD /* AppleGFXHDA.hpp */; };
 		CE405ED91E4A080700AA0B3D /* plugin_start.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CE405ED81E4A080700AA0B3D /* plugin_start.cpp */; };
 		CE8DA0832517C41A008C44E8 /* libkmod.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CE8DA0822517C41A008C44E8 /* libkmod.a */; };
 		CEA03B5E20EE825A00BA842F /* NRed.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CEA03B5C20EE825A00BA842F /* NRed.cpp */; };
@@ -108,8 +108,8 @@
 		40FC5FDC29BF996900367F9D /* HWLibs.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HWLibs.hpp; sourceTree = "<group>"; };
 		40FC5FDF29BF9E2500367F9D /* X6000.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = X6000.cpp; sourceTree = "<group>"; };
 		40FC5FE029BF9E2500367F9D /* X6000.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = X6000.hpp; sourceTree = "<group>"; };
-		6C1B36642A407C6100B184DD /* HDMI.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HDMI.cpp; sourceTree = "<group>"; };
-		6C1B36652A407C6100B184DD /* HDMI.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HDMI.hpp; sourceTree = "<group>"; };
+		6C1B36642A407C6100B184DD /* AppleGFXHDA.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AppleGFXHDA.cpp; sourceTree = "<group>"; };
+		6C1B36652A407C6100B184DD /* AppleGFXHDA.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AppleGFXHDA.hpp; sourceTree = "<group>"; };
 		CE405EBA1E49DD7100AA0B3D /* kern_compression.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_compression.hpp; sourceTree = "<group>"; };
 		CE405EBB1E49DD7100AA0B3D /* kern_disasm.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_disasm.hpp; sourceTree = "<group>"; };
 		CE405EBC1E49DD7100AA0B3D /* kern_file.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_file.hpp; sourceTree = "<group>"; };
@@ -168,8 +168,8 @@
 				408F201A288AC068002EEC15 /* Firmware */,
 				408F201F288ACBE6002EEC15 /* Firmware.cpp */,
 				408F201E288ACBB0002EEC15 /* Firmware.hpp */,
-				6C1B36642A407C6100B184DD /* HDMI.cpp */,
-				6C1B36652A407C6100B184DD /* HDMI.hpp */,
+				6C1B36642A407C6100B184DD /* AppleGFXHDA.cpp */,
+				6C1B36652A407C6100B184DD /* AppleGFXHDA.hpp */,
 				40FC5FDB29BF996900367F9D /* HWLibs.cpp */,
 				40FC5FDC29BF996900367F9D /* HWLibs.hpp */,
 				1C748C2E1C21952C0024EED2 /* Info.plist */,
@@ -304,7 +304,7 @@
 				40FC5FDE29BF996900367F9D /* HWLibs.hpp in Headers */,
 				4002B2692AE478AA00B40D3B /* ZlibAlloc.hpp in Headers */,
 				4068898C2A229BF600028D22 /* PatcherPlus.hpp in Headers */,
-				6C1B36672A407C6200B184DD /* HDMI.hpp in Headers */,
+				6C1B36672A407C6200B184DD /* AppleGFXHDA.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -407,7 +407,7 @@
 			files = (
 				40FC5FDD29BF996900367F9D /* HWLibs.cpp in Sources */,
 				40FC5FD529BF995000367F9D /* X6000FB.cpp in Sources */,
-				6C1B36662A407C6100B184DD /* HDMI.cpp in Sources */,
+				6C1B36662A407C6100B184DD /* AppleGFXHDA.cpp in Sources */,
 				408F2020288ACBE6002EEC15 /* Firmware.cpp in Sources */,
 				4068898B2A229BF600028D22 /* PatcherPlus.cpp in Sources */,
 				40FC5FE129BF9E2500367F9D /* X6000.cpp in Sources */,
