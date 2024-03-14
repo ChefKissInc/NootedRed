@@ -1,7 +1,7 @@
 //! Copyright © 2022-2023 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5.
 //! See LICENSE for details.
 
-#include "HDMI.hpp"
+#include "AppleGFXHDA.hpp"
 #include "NRed.hpp"
 #include "PatcherPlus.hpp"
 #include <Headers/kern_api.hpp>
@@ -11,14 +11,14 @@ static const char *pathAppleGFXHDA = "/System/Library/Extensions/AppleGFXHDA.kex
 static KernelPatcher::KextInfo kextAppleGFXHDA {"com.apple.driver.AppleGFXHDA", &pathAppleGFXHDA, 1, {true}, {},
     KernelPatcher::KextInfo::Unloaded};
 
-HDMI *HDMI::callback = nullptr;
+AppleGFXHDA *AppleGFXHDA::callback = nullptr;
 
-void HDMI::init() {
+void AppleGFXHDA::init() {
     callback = this;
     lilu.onKextLoadForce(&kextAppleGFXHDA);
 }
 
-bool HDMI::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
+bool AppleGFXHDA::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextAppleGFXHDA.loadIndex == id) {
         const UInt32 probeFind = 0xAB381002;
         const UInt32 probeRepl = NRed::callback->deviceId <= 0x15DD ? 0x15DE1002 : 0x16371002;

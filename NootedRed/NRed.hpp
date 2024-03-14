@@ -59,7 +59,7 @@ static bool checkAtomBios(const UInt8 *bios, size_t size) {
 }
 
 class NRed {
-    friend class HDMI;
+    friend class AppleGFXHDA;
     friend class DYLDPatches;
     friend class X6000FB;
     friend class X5000HWLibs;

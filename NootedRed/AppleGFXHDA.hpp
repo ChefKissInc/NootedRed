@@ -6,9 +6,9 @@
 #include <Headers/kern_patcher.hpp>
 #include <Headers/kern_util.hpp>
 
-class HDMI {
+class AppleGFXHDA {
     public:
-    static HDMI *callback;
+    static AppleGFXHDA *callback;
     void init();
     bool processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 };
