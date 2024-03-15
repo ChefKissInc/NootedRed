@@ -159,7 +159,7 @@
 		<key>IOMatchCategory</key>
 		<string>IOAccelerator</string>
 		<key>IOPCIMatch</key>
-		<string>0x15DD1002 0x15D81002</string>
+		<string>0x15DD1002</string>
 		<key>IOPCITunnelCompatible</key>
 		<true/>
 		<key>IOPropertyMatch</key>
@@ -212,6 +212,110 @@
 			<integer>1</integer>
 			<key>CAIL_EnableLBPWSupport</key>
 			<integer>0</integer>
+		</dict>
+	</dict>
+	<dict>
+		<key>CFBundleIdentifier</key>
+		<string>com.apple.kext.AMDRadeonX5000</string>
+		<key>GPUDCCDisplayable</key>
+		<false/>
+		<key>GPUDebugNullClientMask</key>
+		<integer>0</integer>
+		<key>GpuDebugPolicy</key>
+		<integer>0</integer>
+		<key>IOClass</key>
+		<string>AMDRadeonX5000_AMDVega10GraphicsAccelerator</string>
+		<key>IODVDBundleName</key>
+		<string>AMDRadeonVADriver2</string>
+		<key>IOGVACodec</key>
+		<string>AMDVCN2</string>
+		<key>IOGVAH264EncodeCapabilities</key>
+		<dict>
+			<key>VTQualityRating</key>
+			<integer>50</integer>
+			<key>VTRating</key>
+			<integer>350</integer>
+		</dict>
+		<key>IOGVAHEVCDecode</key>
+		<string>1</string>
+		<key>IOGVAHEVCDecodeCapabilities</key>
+		<dict>
+			<key>VTPerProfileDetails</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>VTMaxDecodeLevel</key>
+					<integer>153</integer>
+				</dict>
+				<key>2</key>
+				<dict>
+					<key>VTMaxDecodeLevel</key>
+					<integer>153</integer>
+				</dict>
+				<key>3</key>
+				<dict>
+					<key>VTMaxDecodeLevel</key>
+					<integer>153</integer>
+				</dict>
+			</dict>
+			<key>VTSupportedProfileArray</key>
+			<array>
+				<integer>1</integer>
+				<integer>2</integer>
+				<integer>3</integer>
+			</array>
+		</dict>
+		<key>IOGVAHEVCEncode</key>
+		<string>1</string>
+		<key>IOGVAHEVCEncodeCapabilities</key>
+		<dict>
+			<key>VTPerProfileDetails</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>VTMaxEncodeLevel</key>
+					<integer>153</integer>
+				</dict>
+			</dict>
+			<key>VTQualityRating</key>
+			<integer>50</integer>
+			<key>VTRating</key>
+			<integer>350</integer>
+			<key>VTSupportedProfileArray</key>
+			<array>
+				<integer>1</integer>
+			</array>
+		</dict>
+		<key>IOKitDebug</key>
+		<integer>0</integer>
+		<key>IOMatchCategory</key>
+		<string>IOAccelerator</string>
+		<key>IOPCIMatch</key>
+		<string>0x15D81002</string>
+		<key>IOPCITunnelCompatible</key>
+		<true/>
+		<key>IOPropertyMatch</key>
+		<dict>
+			<key>LoadAccelerator</key>
+			<true/>
+		</dict>
+		<key>IOProviderClass</key>
+		<string>IOPCIDevice</string>
+		<key>IOSourceVersion</key>
+		<string>0.0.0.0.0</string>
+		<key>IOVARendererID</key>
+		<integer>16908288</integer>
+		<key>SWIP_properties</key>
+		<dict>
+			<key>EnableSwVCNFWLoading</key>
+			<integer>0</integer>
+		</dict>
+		<key>cail_properties</key>
+		<dict>
+			<key>CAIL_AsicRevForRlcFw</key>
+			<integer>161</integer>
+			<key>CAIL_DisableGfxCGPowerGating</key>
+			<integer>1</integer>
 		</dict>
 	</dict>
 	<dict>
