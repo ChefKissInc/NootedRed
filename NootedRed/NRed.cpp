@@ -34,7 +34,7 @@ static X6000 x6000;
 static AppleGFXHDA agfxhda;
 
 void NRed::init() {
-    SYSLOG("NRed", "Copyright 2022-2023 ChefKiss Inc. If you've paid for this, you've been scammed.");
+    SYSLOG("NRed", "Copyright 2022-2024 ChefKiss Inc. If you've paid for this, you've been scammed.");
     callback = this;
 
     lilu.onKextLoadForce(&kextAGDP);

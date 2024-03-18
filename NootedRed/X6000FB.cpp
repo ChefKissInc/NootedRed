@@ -347,7 +347,7 @@ IOReturn X6000FB::wrapSetAttributeForConnection(IOService *framebuffer, IOIndex 
     if (success) {
         return kIOReturnSuccess;
     } else {
-        DBGLOG("X6000FB", "Failed to set backlight level");
+        SYSLOG("X6000FB", "Failed to set backlight level");
         return kIOReturnDeviceError;
     }
 }
@@ -416,7 +416,7 @@ void *X6000FB::wrapLinkCreate(void *data) {
     UInt32 signalType = getMember<UInt32>(ret, 0x38);
     if (signalType == DC_SIGNAL_TYPE_LVDS || signalType == DC_SIGNAL_TYPE_EDP) {
         callback->embeddedPanelLink = ret;
-        UInt32 fieldBase = 0;
+        UInt32 fieldBase;
         switch (getKernelVersion()) {
             case KernelVersion::Catalina:
                 fieldBase = 0x1EA;
@@ -440,14 +440,14 @@ void *X6000FB::wrapLinkCreate(void *data) {
         } else if (getKernelVersion() == KernelVersion::Catalina &&
                    getMember<UInt8>(ret, fieldBase) & DC_DPCD_EXT_CAPS_HDR_SUPPORTS_AUX) {
             DBGLOG("X6000FB", "Display supports AUX and we are on Catalina, enabling AUX control.");
-            callback->supportsAux =
-                true;    //! dc_link_set_brightness_nits or somewhere along the chain will boot us out of setting it
+            //! dc_link_set_brightness_nits or somewhere along the chain will boot us out of setting it
+            callback->supportsAux = true;
             callback->isHDR = true;
         } else if (getKernelVersion() == KernelVersion::Catalina &&
                    getMember<UInt8>(ret, fieldBase) & DC_DPCD_EXT_CAPS_SDR_SUPPORTS_AUX) {
             DBGLOG("X6000FB", "Display supports AUX and we are on Catalina, enabling AUX control.");
-            callback->supportsAux =
-                true;    //! dc_link_set_brightness_nits or somewhere along the chain will boot us out of setting it
+            //! dc_link_set_brightness_nits or somewhere along the chain will boot us out of setting it
+            callback->supportsAux = true;
         }
     }
     return ret;
