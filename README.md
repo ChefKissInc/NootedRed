@@ -1,7 +1,7 @@
 # NootedRed ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/NootInc/NootedRed/main.yml?branch=master&logo=github&style=for-the-badge)
 
 > [!IMPORTANT]
-> The only official source for this kext is the Actions tab of the `ChefKissInc/NootedRed` GitHub repository, provided entirely free of charge.
+> The only official source for this kext is the [Actions](https://github.com/ChefKissInc/NootedRed/actions/workflows/main.yml) tab of the `ChefKissInc/NootedRed` GitHub repository, provided entirely free of charge.
 >
 > Any other source may include malware, be outdated, etc.
 >
