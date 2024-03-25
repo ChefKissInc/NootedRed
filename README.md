@@ -13,11 +13,9 @@ The AMD Vega iGPU support [Lilu](https://github.com/acidanthera/Lilu) (1.6.4+) p
 
 The NootedRed project is licensed under the `Thou Shalt Not Profit License version 1.5`. See `LICENSE`.
 
-If you are experiencing a black screen while using this kext, try adding `-NRedDPDelay` to your boot args.
+If you are experiencing a black screen, try adding `-NRedDPDelay` to your boot args.
 
 > [!NOTE]
 > This project is under active research and development; There will be crashes here and there, but is generally smooth.
 >
 > See repository issues and [our site](https://ChefKissInc.github.io) for more information.
-
-Thanks [Acidanthera](https://github.com/Acidanthera) for the backlight code and UnfairGVA patches in [WhateverGreen](https://github.com/Acidanthera/WhateverGreen).
