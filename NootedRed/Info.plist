@@ -183,6 +183,8 @@
 			</dict>
 			<key>aty_properties</key>
 			<dict>
+				<key>DalForceSingleDispPipeSplit</key>
+				<integer>1</integer>
 				<key>PP_GPUPowerDownEnabled</key>
 				<integer>0</integer>
 				<key>PP_GfxOffControl</key>
