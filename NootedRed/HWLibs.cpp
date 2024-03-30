@@ -513,8 +513,10 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *ctx, void *cmd, void *param3, v
                     snprintf(filename, sizeof(filename), "%srlc_srlist_cntl.bin", prefix);
                     break;
                 case kUCodeDMCUB:
-                    SYSLOG_COND(NRed::callback->chipType < ChipType::Renoir, "HWLibs",
-                        "Driver loaded DMCU version B firmware on a Raven-based chip, this can't be good!");
+                    if (NRed::callback->chipType < ChipType::Renoir) {    // Just in case
+                        SYSLOG("HWLibs", "DMCU version B is not supposed to be loaded on this ASIC!");
+                        return kCAILResultSuccess;
+                    }
                     strncpy(filename, "atidmcub_instruction_dcn21.bin", 31);
                     break;
                 default:
