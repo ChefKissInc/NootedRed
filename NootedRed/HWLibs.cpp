@@ -485,18 +485,18 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *ctx, void *cmd, void *param3, v
                     strncpy(filename, "sdma_4_1_ucode.bin", 19);
                     break;
                 case kUCodeDMCUERAM:
-                    if (NRed::callback->chipType >= ChipType::Renoir) {    // Just in case
-                        SYSLOG("HWLibs", "DMCU ERAM is not supposed to be loaded on this ASIC!");
-                        return kCAILResultSuccess;
+                    if (NRed::callback->chipType < ChipType::Renoir) {
+                        strncpy(filename, "dmcu_eram_dcn10.bin", 20);
+                    } else {
+                        strncpy(filename, "dmcu_eram_dcn21.bin", 20);
                     }
-                    strncpy(filename, "dmcu_eram_dcn10.bin", 20);
                     break;
                 case kUCodeDMCUISR:
-                    if (NRed::callback->chipType >= ChipType::Renoir) {    // Just in case
-                        SYSLOG("HWLibs", "DMCU ISR is not supposed to be loaded on this ASIC!");
-                        return kCAILResultSuccess;
+                    if (NRed::callback->chipType < ChipType::Renoir) {
+                        strncpy(filename, "dmcu_intvectors_dcn10.bin", 26);
+                    } else {
+                        strncpy(filename, "dmcu_intvectors_dcn21.bin", 26);
                     }
-                    strncpy(filename, "dmcu_intvectors_dcn10.bin", 26);
                     break;
                 case kUCodeRLCV:
                     //! No RLC V on Renoir
