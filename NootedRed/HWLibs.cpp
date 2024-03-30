@@ -517,7 +517,7 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *ctx, void *cmd, void *param3, v
                         SYSLOG("HWLibs", "DMCU version B is not supposed to be loaded on this ASIC!");
                         return kCAILResultSuccess;
                     }
-                    strncpy(filename, "atidmcub_instruction_dcn21.bin", 31);
+                    strncpy(filename, "atidmcub_rn.dat", 16);
                     break;
                 default:
                     return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(ctx, cmd, param3, param4);
