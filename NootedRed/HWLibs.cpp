@@ -471,12 +471,12 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *ctx, void *cmd, void *param3, v
                     snprintf(filename, sizeof(filename), "%smec_ucode.bin", prefix);
                     break;
                 case kUCodeRLC:
-                    //! RV1_ForceFakeCGPG workaround in AMD Adrenaline drivers
+                    //! Fake CGPG
                     if (NRed::callback->chipType == ChipType::Raven ||
                         (NRed::callback->deviceId == 0x15D8 &&
                             ((NRed::callback->pciRevision >= 0xC8 && NRed::callback->pciRevision <= 0xCC) ||
                                 (NRed::callback->pciRevision >= 0xD8 && NRed::callback->pciRevision <= 0xDD)))) {
-                        snprintf(filename, sizeof(filename), "%srlc_rv1_ucode.bin", prefix);
+                        snprintf(filename, sizeof(filename), "%srlc_fake_cgpg_ucode.bin", prefix);
                     } else {
                         snprintf(filename, sizeof(filename), "%srlc_ucode.bin", prefix);
                     }
