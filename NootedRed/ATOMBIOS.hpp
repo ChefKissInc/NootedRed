@@ -34,6 +34,15 @@ struct ATOMCommonTableHeader {
 constexpr UInt32 ATOM_ROM_TABLE_PTR = 0x48;
 constexpr UInt32 ATOM_ROM_DATA_PTR = 0x20;
 
+struct AtomFirmwareInfo : public ATOMCommonTableHeader {
+    UInt32 firmwareRevision;
+    UInt32 bootupSclkIn10Khz;
+    UInt32 bootupMclkIn10Khz;
+    UInt32 firmwareCapability;
+    UInt32 mainCallParserEntry;
+    UInt32 biosScratchRegStartAddr;
+};
+
 struct IGPSystemInfoV11 : public ATOMCommonTableHeader {
     UInt32 vbiosMisc;
     UInt32 gpuCapInfo;

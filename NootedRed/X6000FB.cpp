@@ -2,6 +2,7 @@
 //! See LICENSE for details.
 
 #include "X6000FB.hpp"
+#include "ATOMBIOS.hpp"
 #include "NRed.hpp"
 #include "PatcherPlus.hpp"
 #include <Headers/kern_api.hpp>
@@ -182,6 +183,9 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("X6000FB", "Applied DDI Caps patches");
 
+        this->biosScratchReg = NRed::callback->getVBIOSDataTable<AtomFirmwareInfo>(0x4)->biosScratchRegStartAddr;
+        DBGLOG("X6000FB", "BIOS Scratch Reg = 0x%X", this->biosScratchReg);
+
         return true;
     }
 
@@ -337,10 +341,16 @@ IOReturn X6000FB::wrapSetAttributeForConnection(IOService *framebuffer, IOIndex 
         //! dc_link_set_backlight_level_nits doesn't print the new backlight level, so we'll do it
         DBGLOG("X6000FB", "setAttributeForConnection: New AUX brightness: %d millinits (%d nits)", auxValue,
             (auxValue / 1000));
+        //! Save the brightness value so the driver can restore it on its own on some specific occasions.
+        //! For instance, when waking from sleep.
+        NRed::callback->writeReg32(callback->biosScratchReg + 2, auxValue);
         success =
             callback->orgDcLinkSetBacklightLevelNits(callback->embeddedPanelLink, callback->isHDR, auxValue, 15000);
     } else {
         UInt32 pwmValue = percentage >= 100 ? 0x1FF00 : ((percentage * 0xFF) / 100) << 8U;
+        DBGLOG("X6000FB", "setAttributeForConnection: New PWM brightness: 0x%X", pwmValue);
+        //! Ditto.
+        NRed::callback->writeReg32(callback->biosScratchReg + 2, pwmValue);
         success = callback->orgDcLinkSetBacklightLevel(callback->embeddedPanelLink, pwmValue, 0);
     }
 
