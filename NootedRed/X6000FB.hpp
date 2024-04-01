@@ -8,7 +8,7 @@
 
 using t_MessageAccelerator = IOReturn (*)(void *that, UInt32 requestType, void *arg2, void *arg3, void *arg4);
 using t_DcLinkSetBacklightLevel = bool (*)(void *link, UInt32 backlightPwm, UInt32 frameRamp);
-using t_DcLinkSetBacklightLevelNits = bool (*)(void *link, UInt32 backlightMillinits, bool isHDR,
+using t_DcLinkSetBacklightLevelNits = bool (*)(void *link, bool isHDR, UInt32 backlightMillinits,
     UInt32 transitionTimeMs);
 
 class X6000FB {
