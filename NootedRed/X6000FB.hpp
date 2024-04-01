@@ -21,6 +21,7 @@ class X6000FB {
 
     private:
     mach_vm_address_t orgSetAttributeForConnection {0}, orgGetAttributeForConnection {0};
+    UInt32 biosScratchReg {0};
     UInt32 curPwmBacklightLvl {0}, maxPwmBacklightLvl {0xFFFF};
     UInt32 maxOLED {1000 * 512};
     void *embeddedPanelLink {nullptr};
