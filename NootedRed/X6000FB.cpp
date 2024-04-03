@@ -357,7 +357,7 @@ IOReturn X6000FB::wrapSetAttributeForConnection(IOService *framebuffer, IOIndex 
     if (success) {
         return kIOReturnSuccess;
     } else {
-        SYSLOG("X6000FB", "Failed to set backlight level");
+        DBGLOG("X6000FB", "Failed to set backlight level");
         return kIOReturnDeviceError;
     }
 }
@@ -444,20 +444,22 @@ void *X6000FB::wrapLinkCreate(void *data) {
                 PANIC("X6000FB", "Unsupported kernel version %d", getKernelVersion());
         }
         if (getMember<UInt8>(ret, fieldBase) & DC_DPCD_EXT_CAPS_OLED) {
-            DBGLOG("X6000FB", "Display is OLED, using AUX brightness control");
+            DBGLOG("X6000FB", "Display is OLED.");
             callback->supportsAux = true;
             callback->isHDR = true;
-        } else if (getKernelVersion() == KernelVersion::Catalina &&
-                   getMember<UInt8>(ret, fieldBase) & DC_DPCD_EXT_CAPS_HDR_SUPPORTS_AUX) {
-            DBGLOG("X6000FB", "Display supports AUX and we are on Catalina, enabling AUX control.");
-            //! dc_link_set_brightness_nits or somewhere along the chain will boot us out of setting it
+        } else if (getMember<UInt8>(ret, fieldBase) & DC_DPCD_EXT_CAPS_HDR_SUPPORTS_AUX) {
+            DBGLOG("X6000FB", "Display is HDR with aux support.");
             callback->supportsAux = true;
             callback->isHDR = true;
-        } else if (getKernelVersion() == KernelVersion::Catalina &&
-                   getMember<UInt8>(ret, fieldBase) & DC_DPCD_EXT_CAPS_SDR_SUPPORTS_AUX) {
-            DBGLOG("X6000FB", "Display supports AUX and we are on Catalina, enabling AUX control.");
-            //! dc_link_set_brightness_nits or somewhere along the chain will boot us out of setting it
+        } else if (getMember<UInt8>(ret, fieldBase) & DC_DPCD_EXT_CAPS_SDR_SUPPORTS_AUX) {
+            DBGLOG("X6000FB", "Display is SDR with aux support.");
             callback->supportsAux = true;
+        }
+
+        if (callback->supportsAux) {
+            DBGLOG("X6000FB", "Will use aux for display brightness control.");
+        } else {
+            DBGLOG("X6000FB", "Will use DMCU for display brightness control.");
         }
     }
     return ret;
