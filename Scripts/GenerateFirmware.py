@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import zlib
 import os
 import struct
 import sys
@@ -20,8 +19,6 @@ def format_file_name(file_name):
 def lines_for_file(path, file):
     with open(path, "rb") as src_file:
         src_data = src_file.read()
-        src_len_uncompressed = len(src_data)
-        src_data = zlib.compress(src_data)
         src_len = len(src_data)
 
     lines: list[str] = []
@@ -43,8 +40,7 @@ def lines_for_file(path, file):
                          .format(*struct.unpack("BBBBBBBBBBBBBBBB", block)))
     return lines + [
         "};\n",
-        f"const UInt32 {fw_var_name}_compressedSize = sizeof({fw_var_name});\n",
-        f"const UInt32 {fw_var_name}_uncompressedSize = {src_len_uncompressed};\n",
+        f"const UInt32 {fw_var_name}_size = sizeof({fw_var_name});\n",
     ]
 
 
@@ -58,7 +54,7 @@ def process_files(target_file, dir):
         lines += lines_for_file(os.path.join(root, file), file)
         fw_var_name = format_file_name(file)
         file_list_content += [
-            f"    {{FIRMWARE(\"{file}\", {fw_var_name}, {fw_var_name}_compressedSize, {fw_var_name}_uncompressedSize)}},\n"]
+            f"    {{FIRMWARE(\"{file}\", {fw_var_name}, {fw_var_name}_size)}},\n"]
 
     lines += ["\n", "const struct FWDescriptor firmware[] = {\n"]
     lines += file_list_content

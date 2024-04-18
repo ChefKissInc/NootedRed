@@ -144,12 +144,12 @@ void NRed::processPatcher(KernelPatcher &patcher) {
 
     if ((lilu.getRunMode() & LiluAPI::RunningInstallerRecovery) || checkKernelArgument("-CKFBOnly")) { return; }
 
-    const auto driversXML = getFWByName("Drivers.xml");
-    auto *dataNull = new char[driversXML.size + 1];
-    memcpy(dataNull, driversXML.data, driversXML.size);
-    dataNull[driversXML.size] = 0;
+    const auto &driversXML = getFWByName("Drivers.xml");
+    auto *dataNull = new char[driversXML.length + 1];
+    memcpy(dataNull, driversXML.data, driversXML.length);
+    dataNull[driversXML.length] = 0;
     OSString *errStr = nullptr;
-    auto *dataUnserialized = OSUnserializeXML(dataNull, driversXML.size + 1, &errStr);
+    auto *dataUnserialized = OSUnserializeXML(dataNull, driversXML.length + 1, &errStr);
     delete[] dataNull;
     PANIC_COND(!dataUnserialized, "NRed", "Failed to unserialize Drivers.xml: %s",
         errStr ? errStr->getCStringNoCopy() : "Unspecified");
@@ -157,7 +157,6 @@ void NRed::processPatcher(KernelPatcher &patcher) {
     PANIC_COND(!drivers, "NRed", "Failed to cast Drivers.xml data");
     PANIC_COND(!gIOCatalogue->addDrivers(drivers), "NRed", "Failed to add drivers");
     OSSafeReleaseNULL(dataUnserialized);
-    IOFree(driversXML.data, driversXML.size);
 }
 
 OSMetaClassBase *NRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const OSMetaClass *toMeta) {
