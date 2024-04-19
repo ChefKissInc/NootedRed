@@ -23,7 +23,7 @@ jobs:
           - Duplicate kexts.
           - Malformed config.plist caused by configurator software (OCAT, OCC, etc).
           - Lack of TSC synchronisation (use AmdTscSync).
-          - Badly configurated TSC synchronisation (Set IOCPUNumber in the Info.plist to number of threads minus one for macOS 11 and older, 0 for anything newer).
+          - Incorrectly configured TSC synchronisation (set IOCPUNumber in the Info.plist to number of threads minus one for macOS 11 and older, 0 for anything newer).
           - Outdated macOS minor version (e.g. macOS 11.0.0 instead of latest).
           - Using beta versions of macOS.
           - Using the kext during installation or update. There is a Lilu bug which makes macOS stall during the last install phase.
