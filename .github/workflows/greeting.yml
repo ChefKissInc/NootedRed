@@ -1,0 +1,37 @@
+name: First Interaction Greeting
+
+on: [issues]
+
+jobs:
+  greeting:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/first-interaction@v1
+      with:
+        repo-token: ${{ github.token }}
+        issue-message: |
+          Greetings. It seems like this is the first issue you open on this repository.
+
+          We are letting you know that these are for bug reports or feature requests. Most of the reports we receive in this GitHub Organisation are user errors.
+          
+          For the sake of saving time, here are the most common cases:
+          - Outdated version of this kext.
+          - Conflicts with other kexts (e.g. WhateverGreen).
+          - Issues caused by other kexts like memory corruption (e.g. AirportItlwm).
+          - Intended behaviour by Apple (e.g. V-Sync or cursor rendering).
+          - Using cheap hacks like kext/library downgrades (e.g. OCLP, BFixup).
+          - Duplicate kexts.
+          - Malformed config.plist caused by configurator software (OCAT, OCC, etc).
+          - Lack of TSC synchronisation (use AmdTscSync).
+          - Badly configurated TSC synchronisation (Set IOCPUNumber in the Info.plist to number of threads minus one for macOS 11 and older, 0 for anything newer).
+          - Outdated macOS minor version (e.g. macOS 11.0.0 instead of latest).
+          - Using beta versions of macOS.
+          - Using the kext during installation or update. There is a Lilu bug which makes macOS stall during the last install phase.
+          - Incorrect SMBIOS. Please use `iMac1,1`, `MacBookPro16,3`, or `MacPro7,1`.
+          - (e)DP link training failure. `-NRedDPDelay` will fix this as mentioned in the README. This is last resort, black screen can be caused by other factors mentioned.
+
+          We will never support the use of configurator software, solutions like OCLP/BFixup, or using macOS beta versions.
+
+          This issue will be looked over by the respective maintainer when they can. In the meantime, look if you can resolve this yourself via checking the above. 
+          
+          Be patient, we are hobbyists.

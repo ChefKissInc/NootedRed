@@ -1,0 +1,14 @@
+name: Close Pull Request
+
+on:
+  pull_request_target:
+    types: [opened, reopened]
+
+jobs:
+  run:
+    if: github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: superbrothers/close-pull-request@v3
+      with:
+        comment: "We do not accept PRs. If you'd like to propose a change, please contact us at our Telegram supergroup."
