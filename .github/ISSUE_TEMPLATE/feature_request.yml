@@ -8,7 +8,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        This form isn't for you to ask for help with your configuration or report issues; it's to request features NootedRed is missing!
+        This form isn't for you to ask for help with your configuration, report issues or request ETAs; it's to request features NootedRed is missing!
   - type: dropdown
     id: macos_version
     attributes:
@@ -41,21 +41,5 @@ body:
     attributes:
       label: What alternatives have you tried, if any?
       placeholder: I used X to work around the lack of the feature.
-    validations:
-      required: true
-  - type: checkboxes
-    id: terms
-    attributes:
-      label: Feature request submission terms
-      description: By submitting this feature request, you have ensured the following
-      options:
-        - label: I am using the latest version of NootedRed, thereby extension the feature is not already present.
-          required: true
-        - label: I am on the latest minor and patch version of macOS (ex. 7 is the minor and 10 is the patch of macOS 11.7.10).
-          required: true
-        - label: The feature being present in NootedRed makes sense.
-          required: true
-        - label: I have ruled out any external factors that could interfere, including, but not limited to, using OCLP or WhateverGreen.
-          required: true
     validations:
       required: true

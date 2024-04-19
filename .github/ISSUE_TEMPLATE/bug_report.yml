@@ -8,7 +8,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        This form isn't for you to ask for help with your configuration; it's to report behaviour that NootedRed should not be exhibiting under normal conditions!
+        This form isn't for you to ask for help with your configuration or request ETAs; it's to report behaviour that NootedRed should not be exhibiting under normal conditions!
   - type: dropdown
     id: macos_version
     attributes:
@@ -51,19 +51,3 @@ body:
       description: |
         You can find those in `/Library/Logs/DiagnosticReports`.
         If attaching a panic, make sure it was created while you have `keepsyms=1` in your boot args (else the file is useless).
-  - type: checkboxes
-    id: terms
-    attributes:
-      label: Bug report submission terms
-      description: By submitting this bug report, you have ensured the following
-      options:
-        - label: I am using the latest version of NootedRed.
-          required: true
-        - label: I am on the latest minor and patch version of macOS (ex. 7 is the minor and 10 is the patch of macOS 11.7.10).
-          required: true
-        - label: The bug only happens with NootedRed enabled.
-          required: true
-        - label: I have ruled out any external factors that could interfere, including, but not limited to, using OCLP or WhateverGreen.
-          required: true
-    validations:
-      required: true
