@@ -29,6 +29,7 @@ jobs:
           - Using the kext during installation or update. There is a Lilu bug which makes macOS stall during the last install phase.
           - Incorrect SMBIOS. Please use `iMac1,1`, `MacBookPro16,3`, or `MacPro7,1`.
           - (e)DP link training failure. `-NRedDPDelay` will fix this as mentioned in the README. This is last resort, black screen can be caused by other factors mentioned.
+          - Insufficient VRAM size.
 
           We will never support the use of configurator software, solutions like OCLP/BFixup, or using macOS beta versions.
 
