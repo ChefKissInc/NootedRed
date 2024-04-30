@@ -54,12 +54,9 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
         bool sonoma144 = getKernelVersion() > KernelVersion::Sonoma ||
                          (getKernelVersion() == KernelVersion::Sonoma && getKernelMinorVersion() >= 4);
         if (catalina) {
-            RouteRequestPlus requests[] = {
-                {"__ZN16AmdTtlFwServices7getIpFwEjPKcP10_TtlFwInfo", wrapGetIpFw, this->orgGetIpFw},
-                {"_psp_reset_12_0", psp12Reset},
-            };
-            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "HWLibs",
-                "Failed to route Catalina symbols");
+            RouteRequestPlus request {"__ZN16AmdTtlFwServices7getIpFwEjPKcP10_TtlFwInfo", wrapGetIpFw,
+                this->orgGetIpFw};
+            PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route getIpFw");
         } else {
             RouteRequestPlus requests[] = {
                 {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv",
@@ -76,18 +73,10 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
                     {"_psp_bootloader_load_sysdrv_3_1", hwLibsNoop, kPspBootloaderLoadSysdrv31Pattern14_4},
                     {"_psp_bootloader_set_ecc_mode_3_1", hwLibsNoop, kPspBootloaderSetEccMode31Pattern14_4},
                     {"_psp_bootloader_load_sos_3_1", pspBootloaderLoadSos10, kPspBootloaderLoadSos31Pattern14_4},
+                    {"_psp_reset_3_1", hwLibsUnsupported, kPspReset31Pattern14_4},
                 };
                 PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "HWLibs",
                     "Failed to route symbols (>=14.4)");
-                if (NRed::callback->chipType >= ChipType::Renoir) {
-                    RouteRequestPlus request {"_psp_reset_3_1", psp12Reset, kPspReset31Pattern14_4};
-                    PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs",
-                        "Failed to route psp_reset_3_1 (>=14.4)");
-                } else {
-                    RouteRequestPlus request {"_psp_reset_3_1", hwLibsUnsupported, kPspReset31Pattern14_4};
-                    PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs",
-                        "Failed to route psp_reset_3_1 (>=14.4)");
-                }
             } else {
                 RouteRequestPlus requests[] = {
                     {"_psp_bootloader_load_sysdrv_3_1", hwLibsNoop, kPspBootloaderLoadSysdrv31Pattern,
@@ -95,16 +84,10 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
                     {"_psp_bootloader_set_ecc_mode_3_1", hwLibsNoop, kPspBootloaderSetEccMode31Pattern},
                     {"_psp_bootloader_load_sos_3_1", pspBootloaderLoadSos10, kPspBootloaderLoadSos31Pattern,
                         kPspBootloaderLoadSos31Mask},
+                    {"_psp_reset_3_1", hwLibsUnsupported, kPspReset31Pattern},
                 };
                 PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "HWLibs",
                     "Failed to route symbols (<14.4)");
-                if (NRed::callback->chipType >= ChipType::Renoir) {
-                    RouteRequestPlus request {"_psp_reset_3_1", psp12Reset, kPspReset31Pattern};
-                    PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route psp_reset_3_1");
-                } else {
-                    RouteRequestPlus request {"_psp_reset_3_1", hwLibsUnsupported, kPspReset31Pattern};
-                    PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route psp_reset_3_1");
-                }
             }
         }
 
@@ -368,34 +351,6 @@ CAILResult X5000HWLibs::pspSecurityFeatureCapsSet12(void *ctx) {
         if ((policyVer & 0xFFFF0000) == 0xB090000 && (policyVer & 0xFE) > 0x35) { securityCaps |= 1; }
     }
 
-    return kCAILResultSuccess;
-}
-
-CAILResult X5000HWLibs::psp12Reset(void *, UInt32 resetMode) {
-    AMDPSPCommand resetCmd;
-    switch (resetMode) {
-        case 1:
-            resetCmd = kPSPCommandMode1Reset;
-            break;
-        case 2:
-            resetCmd = kPSPCommandMode2Reset;
-            break;
-        default:
-            SYSLOG("HWLibs", "Invalid reset mode for PSP reset");
-            return kCAILResultInvalidArgument;
-    }
-    UInt32 i;
-    for (i = 0; i < AMDGPU_MAX_USEC_TIMEOUT; i++) {
-        if ((NRed::callback->readReg32(MP_BASE + mmMP0_SMN_C2PMSG_64) & 0x8000FFFF) == 0x80000000) { break; }
-        IOSleep(1);
-    }
-    if (i >= AMDGPU_MAX_USEC_TIMEOUT - 1) { return kCAILResultGeneralFailure; }
-    NRed::callback->writeReg32(MP_BASE + mmMP0_SMN_C2PMSG_64, resetCmd);
-    for (i = 0; i < AMDGPU_MAX_USEC_TIMEOUT; i++) {
-        if ((NRed::callback->readReg32(MP_BASE + mmMP0_SMN_C2PMSG_33) & 0x80000000) == 0x80000000) { break; }
-        IOSleep(1);
-    }
-    if (i >= AMDGPU_MAX_USEC_TIMEOUT - 1) { return kCAILResultGeneralFailure; }
     return kCAILResultSuccess;
 }
 

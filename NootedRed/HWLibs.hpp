@@ -29,7 +29,6 @@ class X5000HWLibs {
     static CAILResult pspBootloaderLoadSos10(void *ctx);
     static CAILResult pspSecurityFeatureCapsSet10(void *ctx);
     static CAILResult pspSecurityFeatureCapsSet12(void *ctx);
-    static CAILResult psp12Reset(void *ctx, UInt32 resetMode);
     static CAILResult wrapPspCmdKmSubmit(void *ctx, void *cmd, void *param3, void *param4);
     static void smuSoftReset();
     static void smu10PowerUp();

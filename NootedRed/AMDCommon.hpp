@@ -306,8 +306,6 @@ enum AMDPSPCommand : UInt32 {
     kPSPCommandLoadTA = 1,
     kPSPCommandLoadASD = 4,
     kPSPCommandLoadIPFW = 6,
-    kPSPCommandMode1Reset = 0x70000,
-    kPSPCommandMode2Reset = 0xA0000,
 };
 
 enum AMDUCodeID : UInt32 {
