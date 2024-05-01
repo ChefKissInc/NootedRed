@@ -335,7 +335,7 @@ IOReturn X6000FB::wrapSetAttributeForConnection(IOService *framebuffer, IOIndex 
     bool success;
 
     //! AMDGPU doesn't use AUX on HDR/SDR displays that can use it. Why?
-    if (callback->supportsAux) {
+    if (callback->supportsAUX) {
         //! TODO: Obtain the actual max brightness for the screen
         UInt32 auxValue = (callback->maxOLED * percentage) / 100;
         //! dc_link_set_backlight_level_nits doesn't print the new backlight level, so we'll do it
@@ -445,19 +445,19 @@ void *X6000FB::wrapLinkCreate(void *data) {
         }
         if (getMember<UInt8>(ret, fieldBase) & DC_DPCD_EXT_CAPS_OLED) {
             DBGLOG("X6000FB", "Display is OLED.");
-            callback->supportsAux = true;
+            callback->supportsAUX = true;
             callback->isHDR = true;
         } else if (getMember<UInt8>(ret, fieldBase) & DC_DPCD_EXT_CAPS_HDR_SUPPORTS_AUX) {
-            DBGLOG("X6000FB", "Display is HDR with aux support.");
-            callback->supportsAux = true;
+            DBGLOG("X6000FB", "Display is HDR with AUX support.");
+            callback->supportsAUX = true;
             callback->isHDR = true;
         } else if (getMember<UInt8>(ret, fieldBase) & DC_DPCD_EXT_CAPS_SDR_SUPPORTS_AUX) {
-            DBGLOG("X6000FB", "Display is SDR with aux support.");
-            callback->supportsAux = true;
+            DBGLOG("X6000FB", "Display is SDR with AUX support.");
+            callback->supportsAUX = true;
         }
 
-        if (callback->supportsAux) {
-            DBGLOG("X6000FB", "Will use aux for display brightness control.");
+        if (callback->supportsAUX) {
+            DBGLOG("X6000FB", "Will use AUX for display brightness control.");
         } else {
             DBGLOG("X6000FB", "Will use DMCU for display brightness control.");
         }
