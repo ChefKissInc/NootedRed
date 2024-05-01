@@ -66,6 +66,9 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
             {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
                 this->orgGetNumberOfConnectors, kGetNumberOfConnectorsPattern, kGetNumberOfConnectorsMask},
+            {"__ZN18AmdDalFbTranslator23translateFbToCrtcTimingEP14dc_crtc_timingPK28AmdDetailedTimingInformation",
+                wrapTranslateFbToCrtcTiming, this->orgTranslateFbToCrtcTiming, kTranslateFbToCrtcTimingPattern,
+                kTranslateFbToCrtcTimingMask},
         };
         PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X6000FB",
             "Failed to route symbols");
@@ -461,6 +464,24 @@ void *X6000FB::wrapLinkCreate(void *data) {
         } else {
             DBGLOG("X6000FB", "Will use DMCU for display brightness control.");
         }
+    }
+    return ret;
+}
+
+//! Work around colour banding caused by incorrect colour space selection in AGDC.
+//! Fixing this properly would most likely involve fixing AGDC.
+//! However, as ADGC is mostly stripped and avoids including useful strings,
+//! I'd rather not have to indulge in understanding of its decompilation
+//! in order to fix this issue, so this will do for now.
+//! Thanks Apple, very cool.
+IOReturn X6000FB::wrapTranslateFbToCrtcTiming(void *crtcTiming, const void *timing) {
+    auto ret = FunctionCast(wrapTranslateFbToCrtcTiming, callback->orgTranslateFbToCrtcTiming)(crtcTiming, timing);
+    auto &depthIndex = getMember<UInt32>(crtcTiming, 0x44);
+    auto fbColourDepth = *reinterpret_cast<const UInt16 *>(static_cast<const UInt8 *>(timing) + 0x8A);
+    //! If Depth Index is 2 (10 BPC), but colour space is 888 (8 BPC, 3 components)
+    if (depthIndex == 2 && fbColourDepth == 2) {
+        //! Set Depth Index to 1 which is 8 BPC
+        depthIndex = 1;
     }
     return ret;
 }
