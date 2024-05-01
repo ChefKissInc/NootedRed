@@ -25,7 +25,7 @@ class X6000FB {
     UInt32 curPwmBacklightLvl {0}, maxPwmBacklightLvl {0xFFFF};
     UInt32 maxOLED {1000 * 512};
     void *embeddedPanelLink {nullptr};
-    bool supportsAux {false};
+    bool supportsAUX {false};
     bool isHDR {false};
     IONotifier *dispNotif {nullptr};
     mach_vm_address_t orgGetNumberOfConnectors {0};
