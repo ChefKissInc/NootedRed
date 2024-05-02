@@ -16,18 +16,18 @@ jobs:
           
           For the sake of saving time, here are the most common cases:
           - Outdated version of this kext.
-          - Conflicts with other kexts (e.g. WhateverGreen).
-          - Issues caused by other kexts like memory corruption (e.g. AirportItlwm).
+          - Conflicts with other kexts (e.g. `WhateverGreen`).
+          - Issues caused by other kexts like memory corruption (e.g. `AirportItlwm`).
           - Intended behaviour by Apple (e.g. V-Sync or cursor rendering).
-          - Using cheap hacks like kext/library downgrades (e.g. OCLP, BFixup).
+          - Using cheap hacks like kext/library downgrades (e.g. `OCLP`, `BFixup`).
           - Duplicate kexts.
-          - Malformed config.plist caused by configurator software (OCAT, OCC, etc).
-          - Lack of TSC synchronisation (use AmdTscSync).
-          - Incorrectly configured TSC synchronisation (set IOCPUNumber in the Info.plist to number of threads minus one for macOS 11 and older, 0 for anything newer).
+          - Malformed config.plist caused by configurator software (`OCAT`, `OCC`, etc).
+          - Lack of TSC synchronisation (use `AmdTscSync`).
+          - Incorrectly configured TSC synchronisation (set `IOCPUNumber` in the `Info.plist` to number of threads minus one for macOS 11 and older, 0 for anything newer).
           - Outdated macOS minor version (e.g. macOS 11.0.0 instead of latest).
           - Using beta versions of macOS.
           - Using the kext during installation or update. There is a Lilu bug which makes macOS stall during the last install phase.
-          - Incorrect SMBIOS. Please use `iMac1,1`, `MacBookPro16,3`, or `MacPro7,1`.
+          - Incorrect SMBIOS. Please use `iMac20,1`, `MacBookPro16,3`, `MacPro7,1` or `iMacPro1,1`.
           - (e)DP link training failure. `-NRedDPDelay` will fix this as mentioned in the README. This is last resort, black screen can be caused by other factors mentioned.
           - Insufficient VRAM size.
 
