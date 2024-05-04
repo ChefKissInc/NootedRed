@@ -36,7 +36,6 @@ class X6000FB {
     mach_vm_address_t orgLinkCreate {0};
     t_DcLinkSetBacklightLevel orgDcLinkSetBacklightLevel {0};
     t_DcLinkSetBacklightLevelNits orgDcLinkSetBacklightLevelNits {0};
-    mach_vm_address_t orgTranslateFbToCrtcTiming {0};
 
     static bool OnAppleBacklightDisplayLoad(void *target, void *refCon, IOService *newService, IONotifier *notifier);
     void registerDispMaxBrightnessNotif();
@@ -53,7 +52,6 @@ class X6000FB {
     static UInt32 wrapControllerPowerUp(void *that);
     static void wrapDpReceiverPowerCtrl(void *link, bool power_on);
     static void *wrapLinkCreate(void *data);
-    static IOReturn wrapTranslateFbToCrtcTiming(void *crtcTiming, const void *timing);
 };
 
 //------ Patterns ------//
@@ -109,11 +107,6 @@ static const UInt8 kDcLinkSetBacklightLevelNitsPattern[] = {0x55, 0x48, 0x89, 0x
     0x48, 0x85, 0xFF, 0x74, 0x00};
 static const UInt8 kDcLinkSetBacklightLevelNitsMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00,
     0xFF, 0xFF, 0xFF, 0xFF, 0x00};
-
-static const UInt8 kTranslateFbToCrtcTimingPattern[] = {0x55, 0x48, 0x89, 0xE5, 0x48, 0x85, 0xF6, 0x0F, 0x84, 0x00,
-    0x00, 0x00, 0x00, 0x48, 0x85, 0xFF, 0x0F, 0x84, 0x00, 0x00, 0x00, 0x00, 0x8B};
-static const UInt8 kTranslateFbToCrtcTimingMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00,
-    0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF};
 
 //------ Patches ------//
 
