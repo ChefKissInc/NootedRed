@@ -1,19 +1,17 @@
 # NootedRed ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/NootInc/NootedRed/main.yml?branch=master&logo=github&style=for-the-badge)
 
+The AMD Vega iGPU support [Lilu](https://github.com/acidanthera/Lilu) (1.6.4+) plug-in.
+
 > [!IMPORTANT]
 > The only official source for this kext is the Actions tab of the `ChefKissInc/NootedRed` GitHub repository, provided entirely free of charge.
 >
 > Any other source may include malware, be outdated, etc.
 >
-> Paid for this? Demand a refund.
+> If you purchased this, demand a refund.
 >
-> Got it from an unofficial source? Complain and demand they take it down.
-
-The AMD Vega iGPU support [Lilu](https://github.com/acidanthera/Lilu) (1.6.4+) plug-in.
+> If you got the kext from an unofficial source and you suspect it is violating the license, please help take it down in order to retain our rights to the project.
 
 The NootedRed project is licensed under the `Thou Shalt Not Profit License version 1.5`. See `LICENSE`.
-
-If you are experiencing a black screen, try adding `-NRedDPDelay` to your boot args.
 
 > [!NOTE]
 > This project is under active research and development; There will be crashes here and there, but is generally smooth.
