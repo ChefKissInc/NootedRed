@@ -26,7 +26,6 @@ class X6000FB {
     UInt32 maxOLED {1000 * 512};
     void *embeddedPanelLink {nullptr};
     bool supportsAUX {false};
-    bool isHDR {false};
     IONotifier *dispNotif {nullptr};
     mach_vm_address_t orgGetNumberOfConnectors {0};
     mach_vm_address_t orgIH40IVRingInitHardware {0}, orgIRQMGRWriteRegister {0};

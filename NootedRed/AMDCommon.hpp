@@ -347,12 +347,10 @@ static const UInt32 ddiCapsRenoir[16] = {0x800005, 0x500011FE, 0x80000, 0x110010
 
 static const UInt32 ravenDevAttrFlags = 0x49;
 
-constexpr UInt8 DC_DPCD_EXT_CAPS_SDR_SUPPORTS_AUX = 0x1;
-constexpr UInt8 DC_DPCD_EXT_CAPS_HDR_SUPPORTS_AUX = 0x2;
-constexpr UInt8 DC_DPCD_EXT_CAPS_OLED = 0x10;
-
 constexpr UInt32 DC_SIGNAL_TYPE_LVDS = 0x8;
 constexpr UInt32 DC_SIGNAL_TYPE_EDP = 0x80;
+
+constexpr UInt8 DC_DPCD_EXT_CAPS_OLED = 0x10;
 
 //---- Golden Settings ----//
 
