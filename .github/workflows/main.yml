@@ -33,6 +33,7 @@ jobs:
           file: build/*/*.zip
           tag: ${{ github.ref }}
           file_glob: true
+          prerelease: github.event_name != 'release'
 
   analyse-clang:
     name: Analyse Clang
