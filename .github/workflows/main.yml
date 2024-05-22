@@ -26,8 +26,8 @@ jobs:
         run: src=$(/usr/bin/curl -Lfs https://raw.githubusercontent.com/acidanthera/ocbuild/master/ci-bootstrap.sh) && eval "$src" || exit 1
       - name: Lilu Bootstrap
         run: src=$(/usr/bin/curl -Lfs https://raw.githubusercontent.com/acidanthera/Lilu/master/Lilu/Scripts/bootstrap.sh) && eval "$src" || exit 1
-      - run: xcodebuild -configuration Debug -arch x86_64 clean build
-      - run: xcodebuild -configuration Release -arch x86_64 clean build
+      - run: xcodebuild -configuration Debug -arch x86_64 build
+      - run: xcodebuild -configuration Release -arch x86_64 build
       - name: Upload build
         uses: svenstaro/upload-release-action@2.9.0
         if: github.event_name != 'pull_request'
