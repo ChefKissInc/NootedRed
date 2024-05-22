@@ -31,9 +31,10 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: build/*/*.zip
-          tag: ${{ github.ref }}
+          tag: ${{ github.event_name == 'release' && github.ref || 'nightly' }}
           file_glob: true
-          prerelease: github.event_name != 'release'
+          prerelease: ${{ github.event_name != 'release' }}
+          overwrite: true
 
   analyse-clang:
     name: Analyse Clang
