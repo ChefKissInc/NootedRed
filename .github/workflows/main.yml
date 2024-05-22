@@ -35,6 +35,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: build/*/*.zip
           tag: ${{ github.event_name == 'release' && github.ref || 'nightly' }}
+          body: ${{ github.event_name != 'release' && github.event.head_commit.message || '' }}
           file_glob: true
           prerelease: ${{ github.event_name != 'release' }}
           overwrite: true
