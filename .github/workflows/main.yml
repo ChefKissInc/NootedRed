@@ -28,6 +28,7 @@ jobs:
       - run: xcodebuild -configuration Release
       - name: Upload build
         uses: svenstaro/upload-release-action@2.9.0
+        if: github.event_name != 'pull_request'
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: build/*/*.zip
