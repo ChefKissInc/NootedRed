@@ -3,7 +3,9 @@
 The AMD Vega iGPU support [Lilu](https://github.com/acidanthera/Lilu) (1.6.4+) plug-in.
 
 > [!IMPORTANT]
-> The only official source for this kext is the Actions tab of the `ChefKissInc/NootedRed` GitHub repository, provided entirely free of charge.
+> The only official source for this kext is the releases of the `ChefKissInc/NootedRed` GitHub repository, provided entirely free of charge.
+>
+> Old builds are at the same `ChefKissInc/NootedRed` repository, as artefacts of workflow runs (these expire).
 >
 > Any other source may include malware, be outdated, etc.
 >
