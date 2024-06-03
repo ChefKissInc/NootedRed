@@ -5,6 +5,8 @@ on: [issues]
 jobs:
   greeting:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     steps:
       - uses: actions/first-interaction@v1
         with:

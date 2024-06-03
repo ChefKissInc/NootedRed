@@ -8,6 +8,8 @@ jobs:
   run:
     if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - uses: superbrothers/close-pull-request@v3
         with:
