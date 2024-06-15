@@ -445,7 +445,7 @@ void *X6000FB::wrapLinkCreate(void *data) {
                 case KernelVersion::Monterey:
                     fieldBase = 0x284;
                     break;
-                case KernelVersion::Ventura... KernelVersion::Sonoma:
+                case KernelVersion::Ventura... KernelVersion::Sequoia:
                     fieldBase = 0x28C;
                     break;
                 default:
