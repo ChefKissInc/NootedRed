@@ -3,8 +3,6 @@
 
 #pragma once
 #include <Headers/kern_util.hpp>
-#include <libkern/c++/OSData.h>
-#include <libkern/zlib.h>
 
 struct FWDescriptor {
     const char *name;

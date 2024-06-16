@@ -2,6 +2,7 @@
 //! See LICENSE for details.
 
 #include "X5000.hpp"
+#include "Firmware.hpp"
 #include "NRed.hpp"
 #include "PatcherPlus.hpp"
 #include "X6000.hpp"

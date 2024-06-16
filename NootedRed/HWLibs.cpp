@@ -2,6 +2,7 @@
 //! See LICENSE for details.
 
 #include "HWLibs.hpp"
+#include "Firmware.hpp"
 #include "NRed.hpp"
 #include "PatcherPlus.hpp"
 #include <Headers/kern_api.hpp>

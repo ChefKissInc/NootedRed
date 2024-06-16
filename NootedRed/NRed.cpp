@@ -3,6 +3,7 @@
 
 #include "NRed.hpp"
 #include "AppleGFXHDA.hpp"
+#include "Firmware.hpp"
 #include "HWLibs.hpp"
 #include "Model.hpp"
 #include "PatcherPlus.hpp"
@@ -28,10 +29,10 @@ static KernelPatcher::KextInfo kextMCCSControl {"com.apple.driver.AppleMCCSContr
 NRed *NRed::callback = nullptr;
 
 static X6000FB x6000fb;
-static X5000HWLibs hwlibs;
-static X5000 x5000;
-static X6000 x6000;
 static AppleGFXHDA agfxhda;
+static X5000HWLibs hwlibs;
+static X6000 x6000;
+static X5000 x5000;
 
 void NRed::init() {
     SYSLOG("NRed", "Copyright 2022-2024 ChefKiss Inc. If you've paid for this, you've been scammed.");
@@ -40,8 +41,8 @@ void NRed::init() {
     lilu.onKextLoadForce(&kextAGDP);
     lilu.onKextLoadForce(&kextBacklight);
     lilu.onKextLoadForce(&kextMCCSControl);
-    agfxhda.init();
     x6000fb.init();
+    agfxhda.init();
     hwlibs.init();
     x6000.init();
     x5000.init();
