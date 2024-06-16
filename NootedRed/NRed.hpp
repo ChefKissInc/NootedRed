@@ -4,7 +4,6 @@
 #pragma once
 #include "AMDCommon.hpp"
 #include "ATOMBIOS.hpp"
-#include "Firmware.hpp"
 #include <Headers/kern_patcher.hpp>
 #include <IOKit/acpi/IOACPIPlatformExpert.h>
 #include <IOKit/graphics/IOFramebuffer.h>
@@ -59,9 +58,8 @@ static bool checkAtomBios(const UInt8 *bios, size_t size) {
 }
 
 class NRed {
-    friend class AppleGFXHDA;
-    friend class DYLDPatches;
     friend class X6000FB;
+    friend class AppleGFXHDA;
     friend class X5000HWLibs;
     friend class X6000;
     friend class X5000;

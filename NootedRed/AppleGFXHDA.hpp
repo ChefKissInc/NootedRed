@@ -2,7 +2,6 @@
 //! See LICENSE for details.
 
 #pragma once
-#include "AMDCommon.hpp"
 #include <Headers/kern_patcher.hpp>
 #include <Headers/kern_util.hpp>
 
