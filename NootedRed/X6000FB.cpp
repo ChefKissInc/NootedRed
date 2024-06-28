@@ -1,5 +1,5 @@
-//! Copyright © 2022-2024 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5.
-//! See LICENSE for details.
+// Copyright © 2022-2024 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5.
+// See LICENSE for details.
 
 #include "X6000FB.hpp"
 #include "ATOMBIOS.hpp"
@@ -252,7 +252,7 @@ IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
             [[fallthrough]];
         case kLPDDR4MemType:
             [[fallthrough]];
-        case kDDR5MemType:    //! AMD's Kexts don't know about DDR5
+        case kDDR5MemType:    // AMD's Kexts don't know about DDR5
             [[fallthrough]];
         case kLPDDR5MemType:
             videoMemoryType = kVideoMemoryTypeDDR4;
@@ -262,7 +262,7 @@ IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
             videoMemoryType = kVideoMemoryTypeDDR4;
             break;
     }
-    getMember<UInt32>(fwInfo, 0x20) = channelCount * 64;    //! VRAM Width (64-bit channels)
+    getMember<UInt32>(fwInfo, 0x20) = channelCount * 64;    // VRAM Width (64-bit channels)
     return kIOReturnSuccess;
 }
 
@@ -328,27 +328,27 @@ IOReturn X6000FB::wrapSetAttributeForConnection(IOService *framebuffer, IOIndex 
         return kIOReturnSuccess;
     }
 
-    //! Set the backlight
+    // Set the backlight
     callback->curPwmBacklightLvl = static_cast<UInt32>(value);
     UInt32 percentage = callback->curPwmBacklightLvl * 100 / callback->maxPwmBacklightLvl;
 
     bool success;
 
-    //! AMDGPU doesn't use AUX on HDR/SDR displays that can use it. Why?
+    // AMDGPU doesn't use AUX on HDR/SDR displays that can use it. Why?
     if (callback->supportsAUX) {
-        //! TODO: Obtain the actual max brightness for the screen
+        // TODO: Obtain the actual max brightness for the screen
         UInt32 auxValue = (callback->maxOLED * percentage) / 100;
-        //! dc_link_set_backlight_level_nits doesn't print the new backlight level, so we'll do it
+        // dc_link_set_backlight_level_nits doesn't print the new backlight level, so we'll do it
         DBGLOG("X6000FB", "setAttributeForConnection: New AUX brightness: %d millinits (%d nits)", auxValue,
             (auxValue / 1000));
-        //! Save the brightness value so the driver can restore it on its own on some specific occasions.
-        //! For instance, when waking from sleep.
+        // Save the brightness value so the driver can restore it on its own on some specific occasions.
+        // For instance, when waking from sleep.
         NRed::callback->writeReg32(callback->biosScratchReg + 2, auxValue);
         success = callback->orgDcLinkSetBacklightLevelNits(callback->embeddedPanelLink, true, auxValue, 15000);
     } else {
         UInt32 pwmValue = percentage >= 100 ? 0x1FF00 : ((percentage * 0xFF) / 100) << 8U;
         DBGLOG("X6000FB", "setAttributeForConnection: New PWM brightness: 0x%X", pwmValue);
-        //! Ditto.
+        // Ditto.
         NRed::callback->writeReg32(callback->biosScratchReg + 2, pwmValue);
         success = callback->orgDcLinkSetBacklightLevel(callback->embeddedPanelLink, pwmValue, 0);
     }
@@ -379,7 +379,7 @@ UInt32 X6000FB::wrapGetNumberOfConnectors(void *that) {
             DBGLOG("X6000FB", "getNumberOfConnectors: Fixing VBIOS connectors");
             auto n = objInfo->pathCount;
             for (size_t i = 0, j = 0; i < n; i++) {
-                //! Skip invalid device tags
+                // Skip invalid device tags
                 if (objInfo->paths[i].devTag) {
                     objInfo->paths[j++] = objInfo->paths[i];
                 } else {
@@ -409,7 +409,7 @@ void X6000FB::wrapIRQMGRWriteRegister(void *ctx, UInt64 index, UInt32 value) {
 UInt32 X6000FB::wrapControllerPowerUp(void *that) {
     auto &m_flags = getMember<UInt8>(that, 0x5F18);
     auto send = !(m_flags & 2);
-    m_flags |= 4;    //! All framebuffers enabled
+    m_flags |= 4;    // All framebuffers enabled
     auto ret = FunctionCast(wrapControllerPowerUp, callback->orgControllerPowerUp)(that);
     if (send) { callback->orgMessageAccelerator(that, 0x1B, nullptr, nullptr, nullptr); }
     return ret;
@@ -417,7 +417,7 @@ UInt32 X6000FB::wrapControllerPowerUp(void *that) {
 
 void X6000FB::wrapDpReceiverPowerCtrl(void *link, bool power_on) {
     FunctionCast(wrapDpReceiverPowerCtrl, callback->orgDpReceiverPowerCtrl)(link, power_on);
-    IOSleep(250);    //! Link needs a bit of delay to change power state
+    IOSleep(250);    // Link needs a bit of delay to change power state
 }
 
 void *X6000FB::wrapLinkCreate(void *data) {

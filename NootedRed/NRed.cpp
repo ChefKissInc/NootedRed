@@ -1,5 +1,5 @@
-//! Copyright © 2022-2024 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5.
-//! See LICENSE for details.
+// Copyright © 2022-2024 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5.
+// See LICENSE for details.
 
 #include "NRed.hpp"
 #include "AppleGFXHDA.hpp"
@@ -103,7 +103,7 @@ void NRed::processPatcher(KernelPatcher &patcher) {
             this->iGPU->setProperty("model", const_cast<char *>(model), modelLen);
         }
         this->iGPU->setProperty("ATY,FamilyName", const_cast<char *>("Radeon"), 7);
-        this->iGPU->setProperty("ATY,DeviceName", const_cast<char *>(model) + 11, modelLen - 11);    //! Vega ...
+        this->iGPU->setProperty("ATY,DeviceName", const_cast<char *>(model) + 11, modelLen - 11);    // Vega ...
         this->iGPU->setProperty("AAPL,slot-name", const_cast<char *>("built-in"), 9);
 
         char name[128] = {0};
@@ -306,7 +306,7 @@ bool NRed::wrapApplePanelSetDisplay(IOService *that, IODisplay *display) {
                     auto pd = OSData::withBytes(entry.deviceData, sizeof(entry.deviceData));
                     if (pd) {
                         panels->setObject(entry.deviceName, pd);
-                        //! No release required by current AppleBacklight implementation.
+                        // No release required by current AppleBacklight implementation.
                     } else {
                         SYSLOG("NRed", "setDisplay: Cannot allocate data for %s", entry.deviceName);
                     }

@@ -1,5 +1,5 @@
-//! Copyright © 2022-2024 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5.
-//! See LICENSE for details.
+// Copyright © 2022-2024 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5.
+// See LICENSE for details.
 
 #include "HWLibs.hpp"
 #include "Firmware.hpp"
@@ -257,7 +257,7 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
     const auto &vcnFW = getFWByName(filename);
     DBGLOG("HWLibs", "VCN firmware filename is %s", filename);
 
-    //! VCN 2.2, VCN 1.0
+    // VCN 2.2, VCN 1.0
     auto *fw = callback->orgCreateFirmware(vcnFW.data, vcnFW.length, isRenoirDerivative ? 0x0202 : 0x0100, filename);
     PANIC_COND(!fw, "HWLibs", "Failed to create '%s' firmware", filename);
     auto *fwDir = getMember<void *>(that, getKernelVersion() > KernelVersion::BigSur ? 0xB0 : 0xB8);
@@ -425,7 +425,7 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *ctx, void *cmd, void *param3, v
                     snprintf(filename, sizeof(filename), "%smec_ucode.bin", prefix);
                     break;
                 case kUCodeRLC:
-                    //! Fake CGPG
+                    // Fake CGPG
                     if (NRed::callback->chipType == ChipType::Raven ||
                         (NRed::callback->deviceId == 0x15D8 &&
                             ((NRed::callback->pciRevision >= 0xC8 && NRed::callback->pciRevision <= 0xCC) ||
@@ -453,7 +453,7 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *ctx, void *cmd, void *param3, v
                     }
                     break;
                 case kUCodeRLCV:
-                    //! No RLC V on Renoir
+                    // No RLC V on Renoir
                     if (NRed::callback->chipType >= ChipType::Renoir) { return kCAILResultSuccess; }
                     snprintf(filename, sizeof(filename), "%srlcv_ucode.bin", prefix);
                     break;
@@ -489,7 +489,7 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *ctx, void *cmd, void *param3, v
     return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(ctx, cmd, param3, param4);
 }
 
-void X5000HWLibs::smuSoftReset() {    //! Likely soft resets SDMA, but logic's not present in Linux
+void X5000HWLibs::smuSoftReset() {    // Likely soft resets SDMA, but logic's not present in Linux
     NRed::callback->sendMsgToSmc(PPSMC_MSG_SoftReset, 0x40);
 }
 
@@ -513,7 +513,7 @@ CAILResult X5000HWLibs::smuInternalSwInit(void *ctx) {
         default:
             PANIC("HWLibs", "Unsupported kernel version %d", getKernelVersion());
     }
-    //! is_sw_init
+    // is_sw_init
     getMember<bool>(ctx, fieldBase) = true;
     return kCAILResultSuccess;
 }
@@ -628,7 +628,7 @@ CAILResult X5000HWLibs::wrapSmu901CreateFunctionPointerList(void *ctx) {
     } else {
         getMember<mach_vm_address_t>(ctx, fieldBase + 0x0) = reinterpret_cast<mach_vm_address_t>(smuInternalSwInit);
         getMember<mach_vm_address_t>(ctx, fieldBase + 0x48) = reinterpret_cast<mach_vm_address_t>(smuFullScreenEvent);
-        //! get_ucode_consts
+        // get_ucode_consts
         getMember<mach_vm_address_t>(ctx, fieldBase + 0xE8) = reinterpret_cast<mach_vm_address_t>(hwLibsNoop);
     }
     if (NRed::callback->chipType >= ChipType::Renoir) {
@@ -638,7 +638,7 @@ CAILResult X5000HWLibs::wrapSmu901CreateFunctionPointerList(void *ctx) {
         getMember<mach_vm_address_t>(ctx, fieldBase + 0x8) = reinterpret_cast<mach_vm_address_t>(smu10InternalHwInit);
         getMember<mach_vm_address_t>(ctx, fieldBase + 0x30) = reinterpret_cast<mach_vm_address_t>(smu10NotifyEvent);
     }
-    //! internal_sw_exit
+    // internal_sw_exit
     getMember<mach_vm_address_t>(ctx, fieldBase + 0x10) = reinterpret_cast<mach_vm_address_t>(hwLibsNoop);
     getMember<mach_vm_address_t>(ctx, fieldBase + 0x18) = reinterpret_cast<mach_vm_address_t>(smuInternalHwExit);
     getMember<mach_vm_address_t>(ctx, fieldBase + 0x28) = reinterpret_cast<mach_vm_address_t>(smuFullAsicReset);

@@ -1,5 +1,5 @@
-//! Copyright © 2022-2024 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5.
-//! See LICENSE for details.
+// Copyright © 2022-2024 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5.
+// See LICENSE for details.
 
 #include "X5000.hpp"
 #include "Firmware.hpp"
@@ -116,7 +116,7 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
 
             PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "X5000",
                 "Failed to enable kernel writing");
-            *orgChannelTypes = 1;    //! Make VMPT use SDMA0 instead of SDMA1
+            *orgChannelTypes = 1;    // Make VMPT use SDMA0 instead of SDMA1
             MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
             DBGLOG("X5000", "Applied SDMA1 patches");
         } else {
@@ -139,9 +139,9 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
 
             PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "X5000",
                 "Failed to enable kernel writing");
-            //! createAccelChannels: stop at SDMA0
+            // createAccelChannels: stop at SDMA0
             orgChannelTypes[5] = 1;
-            //! getPagingChannel: get only SDMA0
+            // getPagingChannel: get only SDMA0
             orgChannelTypes[(getKernelVersion() >= KernelVersion::Monterey) ? 12 : 11] = 0;
             MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
             DBGLOG("X5000", "Applied SDMA1 patches");
@@ -208,14 +208,14 @@ struct HWCapabilityVentura {
 };
 
 enum struct HWCapability {
-    DisplayPipeCount = 0,    //! UInt32
-    SECount,                 //! UInt32
-    SHPerSE,                 //! UInt32
-    CUPerSH,                 //! UInt32
-    HasUVD0,                 //! bool
-    HasVCE,                  //! bool
-    HasVCN0,                 //! bool
-    HasSDMAPagingQueue,      //! bool
+    DisplayPipeCount = 0,    // UInt32
+    SECount,                 // UInt32
+    SHPerSE,                 // UInt32
+    CUPerSH,                 // UInt32
+    HasUVD0,                 // bool
+    HasVCE,                  // bool
+    HasVCN0,                 // bool
+    HasSDMAPagingQueue,      // bool
 };
 
 template<typename T>
@@ -336,7 +336,7 @@ void X5000::wrapGFX9SetupAndInitializeHWCapabilities(void *that) {
 }
 
 void *X5000::wrapGetHWChannel(void *that, UInt32 engineType, UInt32 ringId) {
-    //! Redirect SDMA1 to SDMA0
+    // Redirect SDMA1 to SDMA0
     return FunctionCast(wrapGetHWChannel, callback->orgGetHWChannel)(that, (engineType == 2) ? 1 : engineType, ringId);
 }
 
@@ -373,7 +373,7 @@ UInt32 X5000::wrapReturnZero() { return 0; }
 
 static void fixAccelGroup(void *that) {
     auto *&sdma1 = getMember<void *>(that, 0x18);
-    sdma1 = sdma1 ?: getMember<void *>(that, 0x10);    //! Replace field with SDMA0, as we have no SDMA1
+    sdma1 = sdma1 ?: getMember<void *>(that, 0x10);    // Replace field with SDMA0, as we have no SDMA1
 }
 
 void *X5000::wrapObtainAccelChannelGroup(void *that, UInt32 priority) {

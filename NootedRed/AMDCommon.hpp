@@ -1,5 +1,5 @@
-//! Copyright © 2022-2024 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5.
-//! See LICENSE for details.
+// Copyright © 2022-2024 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5.
+// See LICENSE for details.
 
 #pragma once
 #include <Headers/kern_util.hpp>
@@ -277,7 +277,7 @@ enum CAILIPType : UInt32 {
 
 struct CAILASICGoldenRegisters {
     const CAILIPType ipType;
-    const UInt32 instance;    //! Not sure about that one.
+    const UInt32 instance;    // Not sure about that one.
     const CAILIPGoldenRegister *entries;
 } PACKED;
 
@@ -288,7 +288,7 @@ struct CAILASICGoldenRegisters {
     { .ipType = kCAILIPTypeUnknown, .instance = 0, .entries = nullptr }
 
 struct CAILASICGoldenSettings {
-    //! Golden settings for GPUs emulated using the Cadence Palladium Emulation platform. We don't care.
+    // Golden settings for GPUs emulated using the Cadence Palladium Emulation platform. We don't care.
     const CAILASICGoldenRegisters *palladiumGoldenSettings;
     const CAILASICGoldenRegisters *goldenSettings;
 } PACKED;
