@@ -1,5 +1,5 @@
-//! Copyright © 2022-2024 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5.
-//! See LICENSE for details.
+// Copyright © 2022-2024 ChefKiss Inc. Licensed under the Thou Shalt Not Profit License version 1.5.
+// See LICENSE for details.
 
 #pragma once
 #include "AMDCommon.hpp"
@@ -18,12 +18,12 @@ enum struct ChipType : UInt32 {
     Unknown,
 };
 
-//! Hack
+// Hack
 class AppleACPIPlatformExpert : IOACPIPlatformExpert {
     friend class NRed;
 };
 
-//! https://elixir.bootlin.com/linux/latest/source/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c#L49
+// https://elixir.bootlin.com/linux/latest/source/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c#L49
 static bool checkAtomBios(const UInt8 *bios, size_t size) {
     UInt16 tmp, bios_header_start;
 
@@ -140,7 +140,7 @@ class NRed {
             return false;
         }
         auto *fb = reinterpret_cast<const UInt8 *>(bar0->getVirtualAddress());
-        UInt32 size = 256 * 1024;    //! ???
+        UInt32 size = 256 * 1024;    // ???
         if (!checkAtomBios(fb, size)) {
             DBGLOG("NRed", "VRAM VBIOS is not an ATOMBIOS");
             OSSafeReleaseNULL(bar0);
@@ -227,14 +227,14 @@ class NRed {
 
 //------ Patches ------//
 
-//! Change frame-buffer count >= 2 check to >= 1.
+// Change frame-buffer count >= 2 check to >= 1.
 static const UInt8 kAGDPFBCountCheckOriginal[] = {0x02, 0x00, 0x00, 0x83, 0xF8, 0x02};
 static const UInt8 kAGDPFBCountCheckPatched[] = {0x02, 0x00, 0x00, 0x83, 0xF8, 0x01};
 
-//! Ditto
+// Ditto
 static const UInt8 kAGDPFBCountCheckVenturaOriginal[] = {0x41, 0x83, 0xBE, 0x14, 0x02, 0x00, 0x00, 0x02};
 static const UInt8 kAGDPFBCountCheckVenturaPatched[] = {0x41, 0x83, 0xBE, 0x14, 0x02, 0x00, 0x00, 0x01};
 
-//! Neutralise access to AGDP configuration by board identifier.
+// Neutralise access to AGDP configuration by board identifier.
 static const UInt8 kAGDPBoardIDKeyOriginal[] = "board-id";
 static const UInt8 kAGDPBoardIDKeyPatched[] = "applehax";
