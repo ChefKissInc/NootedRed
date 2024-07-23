@@ -1,1 +1,5 @@
-custom: ["https://paypal.me/VisualEhrmanntraut", "https://btc.com/bc1qgu56kptepex2csuzl5nhzc4vxuj8c6ggjzhcem"]
+custom:
+  [
+    "https://paypal.me/VisualEhrmanntraut",
+    "https://btc.com/bc1qgu56kptepex2csuzl5nhzc4vxuj8c6ggjzhcem",
+  ]
