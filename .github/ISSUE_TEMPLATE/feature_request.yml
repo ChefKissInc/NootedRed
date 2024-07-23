@@ -13,13 +13,14 @@ body:
     id: macos_version
     attributes:
       label: macOS Version
-      description: On which macOS version is the feature missing, if not on all? Versions that do not appear in the dropdown are not supported.
+      description: On which macOS version is the feature missing, if not on all of them? Versions that do not appear in the dropdown are not supported.
       options:
-       - Catalina
-       - Big Sur
-       - Monterey
-       - Ventura
-       - Sonoma
+        - Catalina
+        - Big Sur
+        - Monterey
+        - Ventura
+        - Sonoma
+        - Sequoia
     validations:
       required: false
   - type: input
