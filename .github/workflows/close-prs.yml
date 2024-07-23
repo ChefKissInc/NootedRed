@@ -6,7 +6,7 @@ on:
 
 jobs:
   run:
-    if: github.actor != 'dependabot[bot]'
+    if: github.actor != 'dependabot[bot]' && github.actor != 'VisualEhrmanntraut'
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
