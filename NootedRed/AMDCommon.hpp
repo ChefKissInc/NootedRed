@@ -263,10 +263,9 @@ struct CAILIPGoldenRegister {
     const UInt32 orMask;
 } PACKED;
 
-#define GOLDEN_REGISTER(reg, and, or) \
-    { .regOffset = reg, .segment = reg##_BASE_IDX, .andMask = and, .orMask = or }
+#define GOLDEN_REGISTER(reg, and, or) {.regOffset = reg, .segment = reg##_BASE_IDX, .andMask = and, .orMask = or }
 #define GOLDEN_REGISTER_TERMINATOR \
-    { .regOffset = 0xFFFFFFFF, .segment = 0xFFFFFFFF, .andMask = 0xFFFFFFFF, .orMask = 0xFFFFFFFF }
+    {.regOffset = 0xFFFFFFFF, .segment = 0xFFFFFFFF, .andMask = 0xFFFFFFFF, .orMask = 0xFFFFFFFF}
 
 enum CAILIPType : UInt32 {
     kCAILIPTypeUnknown = 0,
@@ -281,11 +280,9 @@ struct CAILASICGoldenRegisters {
     const CAILIPGoldenRegister *entries;
 } PACKED;
 
-#define GOLDEN_REGISTERS(type, inst, ents) \
-    { .ipType = kCAILIPType##type, .instance = inst, .entries = ents }
+#define GOLDEN_REGISTERS(type, inst, ents) {.ipType = kCAILIPType##type, .instance = inst, .entries = ents}
 
-#define GOLDEN_REGISTERS_TERMINATOR \
-    { .ipType = kCAILIPTypeUnknown, .instance = 0, .entries = nullptr }
+#define GOLDEN_REGISTERS_TERMINATOR {.ipType = kCAILIPTypeUnknown, .instance = 0, .entries = nullptr}
 
 struct CAILASICGoldenSettings {
     // Golden settings for GPUs emulated using the Cadence Palladium Emulation platform. We don't care.
