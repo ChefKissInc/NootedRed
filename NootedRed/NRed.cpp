@@ -144,11 +144,13 @@ void NRed::processPatcher(KernelPatcher &patcher) {
     x6000fb.registerDispMaxBrightnessNotif();
 }
 
-static OSArray *getDriversFor(const char *bundleIdentifier) {
-    const auto totalLen = strlen(bundleIdentifier) + 5;
+static OSObject *getDriverXMLForBundle(const char *bundleIdentifier) {
+    const auto identifierLen = strlen(bundleIdentifier);
+    const auto totalLen = identifierLen + 5;
     auto *filename = new char[totalLen];
-    memcpy(filename, bundleIdentifier, totalLen - 5);
+    memcpy(filename, bundleIdentifier, identifierLen);
     strlcat(filename, ".xml", totalLen);
+
     const auto &driversXML = getFWByName(filename);
 
     auto *dataNull = new char[driversXML.length + 1];
@@ -161,14 +163,12 @@ static OSArray *getDriversFor(const char *bundleIdentifier) {
 
     PANIC_COND(dataUnserialized == nullptr, "NRed", "Failed to unserialize %s: %s", filename,
         errStr ? errStr->getCStringNoCopy() : "(nil)");
-    auto *drivers = OSDynamicCast(OSArray, dataUnserialized);
-    PANIC_COND(drivers == nullptr, "NRed", "Failed to cast %s data", filename);
 
     delete[] filename;
-    return drivers;
+    return dataUnserialized;
 }
 
-const char *bundleIdentifiers[] = {
+static const char *DriverBundleIdentifiers[] = {
     "com.apple.driver.AppleGFXHDA",
     "com.apple.kext.AMDRadeonX5000HWServices",
     "com.apple.kext.AMDRadeonX6000",
@@ -176,7 +176,7 @@ const char *bundleIdentifiers[] = {
 };
 
 bool NRed::wrapAddDrivers(void *that, OSArray *array, bool doNubMatching) {
-    bool matches[arrsize(bundleIdentifiers)];
+    bool matches[arrsize(DriverBundleIdentifiers)];
     bzero(matches, sizeof(matches));
 
     auto *iterator = OSCollectionIterator::withCollection(array);
@@ -192,11 +192,11 @@ bool NRed::wrapAddDrivers(void *that, OSArray *array, bool doNubMatching) {
             DBGLOG("NRed", "Warning: element in addDrivers has no bundle identifier.");
             continue;
         }
-        for (size_t i = 0; i < arrsize(bundleIdentifiers); i += 1) {
+        for (size_t i = 0; i < arrsize(DriverBundleIdentifiers); i += 1) {
             if (matches[i]) { continue; }
 
-            auto *matchingIdentifier = bundleIdentifiers[i];
-            if (!strcmp(bundleIdentifier->getCStringNoCopy(), matchingIdentifier)) {
+            auto *matchingIdentifier = DriverBundleIdentifiers[i];
+            if (strcmp(bundleIdentifier->getCStringNoCopy(), matchingIdentifier) == 0) {
                 DBGLOG("NRed", "Matched %s.", matchingIdentifier);
                 matches[i] = true;
             }
@@ -205,11 +205,13 @@ bool NRed::wrapAddDrivers(void *that, OSArray *array, bool doNubMatching) {
     OSSafeReleaseNULL(iterator);
 
     auto res = FunctionCast(wrapAddDrivers, callback->orgAddDrivers)(that, array, doNubMatching);
-    for (size_t i = 0; i < arrsize(bundleIdentifiers); i += 1) {
+    for (size_t i = 0; i < arrsize(DriverBundleIdentifiers); i += 1) {
         if (!matches[i]) { continue; }
-        auto *identifier = bundleIdentifiers[i];
+        auto *identifier = DriverBundleIdentifiers[i];
         DBGLOG("NRed", "Injecting personalities for %s.", identifier);
-        auto *drivers = getDriversFor(identifier);
+        auto *driversObj = getDriverXMLForBundle(identifier);
+        auto *drivers = OSDynamicCast(OSArray, driversObj);
+        PANIC_COND(drivers == nullptr, "NRed", "Failed to cast %s driver data", identifier);
         if (!FunctionCast(wrapAddDrivers, callback->orgAddDrivers)(that, drivers, doNubMatching)) {
             SYSLOG("NRed", "Error: Failed to inject personalities for %s.", identifier);
         }
