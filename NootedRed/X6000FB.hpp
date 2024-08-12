@@ -14,8 +14,9 @@ using t_DcLinkSetBacklightLevelNits = bool (*)(void *link, bool isHDR, UInt32 ba
 class X6000FB {
     friend class NRed;
 
-    public:
     static X6000FB *callback;
+
+    public:
     void init();
     bool processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 
