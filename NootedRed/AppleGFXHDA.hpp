@@ -6,8 +6,9 @@
 #include <Headers/kern_util.hpp>
 
 class AppleGFXHDA {
-    public:
     static AppleGFXHDA *callback;
+
+    public:
     void init();
     bool processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 };
