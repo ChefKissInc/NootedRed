@@ -215,11 +215,13 @@ class NRed {
     UInt16 revision {0};
     UInt32 pciRevision {0};
     IOPCIDevice *iGPU {nullptr};
+    mach_vm_address_t orgAddDrivers {0};
     OSMetaClass *metaClassMap[5][2] = {{nullptr}};
     mach_vm_address_t orgSafeMetaCast {0};
     bool enableBacklight {false};
     mach_vm_address_t orgApplePanelSetDisplay {0};
 
+    static bool wrapAddDrivers(void *that, OSArray *array, bool doNubMatching);
     static OSMetaClassBase *wrapSafeMetaCast(const OSMetaClassBase *anObject, const OSMetaClass *toMeta);
     static size_t wrapFunctionReturnZero();
     static bool wrapApplePanelSetDisplay(IOService *that, IODisplay *display);
