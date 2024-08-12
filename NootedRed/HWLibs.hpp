@@ -10,8 +10,9 @@ using t_createFirmware = void *(*)(const void *data, UInt32 size, UInt32 ipVersi
 using t_putFirmware = bool (*)(void *that, UInt32 deviceType, void *fw);
 
 class X5000HWLibs {
-    public:
     static X5000HWLibs *callback;
+
+    public:
     void init();
     bool processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 

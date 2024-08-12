@@ -64,9 +64,9 @@ class NRed {
     friend class X6000;
     friend class X5000;
 
-    public:
     static NRed *callback;
 
+    public:
     void init();
     void processPatcher(KernelPatcher &patcher);
     void setRMMIOIfNecessary();

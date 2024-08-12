@@ -8,8 +8,9 @@
 class X5000 {
     friend class X6000;
 
-    public:
     static X5000 *callback;
+
+    public:
     void init();
     bool processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 
