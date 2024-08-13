@@ -90,11 +90,21 @@
 		406C86BD2AA66223004F02E2 /* sdma_4_1_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = sdma_4_1_ucode.bin; sourceTree = "<group>"; };
 		406C86BE2AA663EF004F02E2 /* ativvaxy_nv.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = ativvaxy_nv.dat; sourceTree = "<group>"; };
 		406C86BF2AA663EF004F02E2 /* ativvaxy_rv.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = ativvaxy_rv.dat; sourceTree = "<group>"; };
+		407EC2652C6AE6F600A5BEA4 /* atidmcub_rn.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = atidmcub_rn.dat; sourceTree = "<group>"; };
+		407EC2662C6AE6F600A5BEA4 /* com.apple.driver.AppleGFXHDA.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = com.apple.driver.AppleGFXHDA.xml; sourceTree = "<group>"; };
+		407EC2672C6AE6F600A5BEA4 /* com.apple.kext.AMDRadeonX5000.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = com.apple.kext.AMDRadeonX5000.xml; sourceTree = "<group>"; };
+		407EC2682C6AE6F600A5BEA4 /* com.apple.kext.AMDRadeonX5000HWServices.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = com.apple.kext.AMDRadeonX5000HWServices.xml; sourceTree = "<group>"; };
+		407EC2692C6AE6F600A5BEA4 /* com.apple.kext.AMDRadeonX6000.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = com.apple.kext.AMDRadeonX6000.xml; sourceTree = "<group>"; };
+		407EC26A2C6AE6F600A5BEA4 /* com.apple.kext.AMDRadeonX6000Framebuffer.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = com.apple.kext.AMDRadeonX6000Framebuffer.xml; sourceTree = "<group>"; };
+		407EC26B2C6AE6F600A5BEA4 /* dmcu_eram_dcn21.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = dmcu_eram_dcn21.bin; sourceTree = "<group>"; };
+		407EC26C2C6AE6F600A5BEA4 /* dmcu_intvectors_dcn21.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = dmcu_intvectors_dcn21.bin; sourceTree = "<group>"; };
+		407EC26D2C6AE6F600A5BEA4 /* gc_9_1_rlc_fake_cgpg_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_1_rlc_fake_cgpg_ucode.bin; sourceTree = "<group>"; };
+		407EC26E2C6AE6F600A5BEA4 /* gc_9_2_rlc_fake_cgpg_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_2_rlc_fake_cgpg_ucode.bin; sourceTree = "<group>"; };
+		407EC26F2C6AE6F600A5BEA4 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		408F201E288ACBB0002EEC15 /* Firmware.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Firmware.hpp; sourceTree = "<group>"; };
 		408F201F288ACBE6002EEC15 /* Firmware.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Firmware.cpp; sourceTree = "<group>"; };
 		40F6ACB72AA7712100A08558 /* psp_auc.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = psp_auc.bin; sourceTree = "<group>"; };
 		40F6ACB82AA774C100A08558 /* psp_fp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = psp_fp.bin; sourceTree = "<group>"; };
-		40F6ACB92AA7872900A08558 /* atidmcub_instruction_dcn21.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = atidmcub_instruction_dcn21.bin; sourceTree = "<group>"; };
 		40FC5FCE29BF942900367F9D /* ATOMBIOS.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ATOMBIOS.hpp; sourceTree = "<group>"; };
 		40FC5FD329BF995000367F9D /* X6000FB.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = X6000FB.cpp; sourceTree = "<group>"; };
 		40FC5FD429BF995000367F9D /* X6000FB.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = X6000FB.hpp; sourceTree = "<group>"; };
@@ -188,16 +198,24 @@
 		408F201A288AC068002EEC15 /* Firmware */ = {
 			isa = PBXGroup;
 			children = (
-				40F6ACB92AA7872900A08558 /* atidmcub_instruction_dcn21.bin */,
+				407EC2652C6AE6F600A5BEA4 /* atidmcub_rn.dat */,
 				406C86BE2AA663EF004F02E2 /* ativvaxy_nv.dat */,
 				406C86BF2AA663EF004F02E2 /* ativvaxy_rv.dat */,
+				407EC2662C6AE6F600A5BEA4 /* com.apple.driver.AppleGFXHDA.xml */,
+				407EC2672C6AE6F600A5BEA4 /* com.apple.kext.AMDRadeonX5000.xml */,
+				407EC2682C6AE6F600A5BEA4 /* com.apple.kext.AMDRadeonX5000HWServices.xml */,
+				407EC2692C6AE6F600A5BEA4 /* com.apple.kext.AMDRadeonX6000.xml */,
+				407EC26A2C6AE6F600A5BEA4 /* com.apple.kext.AMDRadeonX6000Framebuffer.xml */,
 				40582A042AA7BEAA0066F4D6 /* dmcu_eram_dcn10.bin */,
+				407EC26B2C6AE6F600A5BEA4 /* dmcu_eram_dcn21.bin */,
 				40582A032AA7BEA90066F4D6 /* dmcu_intvectors_dcn10.bin */,
+				407EC26C2C6AE6F600A5BEA4 /* dmcu_intvectors_dcn21.bin */,
 				406C86BA2AA6621C004F02E2 /* gc_9_1_ce_ucode.bin */,
 				406C86A82AA6621B004F02E2 /* gc_9_1_me_ucode.bin */,
 				406C86AC2AA6621B004F02E2 /* gc_9_1_mec_jt_ucode.bin */,
 				406C86B02AA6621B004F02E2 /* gc_9_1_mec_ucode.bin */,
 				406C86AE2AA6621B004F02E2 /* gc_9_1_pfp_ucode.bin */,
+				407EC26D2C6AE6F600A5BEA4 /* gc_9_1_rlc_fake_cgpg_ucode.bin */,
 				406C86A32AA6621B004F02E2 /* gc_9_1_rlc_srlist_cntl.bin */,
 				406C86AA2AA6621B004F02E2 /* gc_9_1_rlc_srlist_gpm_mem.bin */,
 				406C86A72AA6621B004F02E2 /* gc_9_1_rlc_srlist_srm_mem.bin */,
@@ -208,6 +226,7 @@
 				406C86A52AA6621B004F02E2 /* gc_9_2_mec_jt_ucode.bin */,
 				406C86B12AA6621B004F02E2 /* gc_9_2_mec_ucode.bin */,
 				406C86B32AA6621B004F02E2 /* gc_9_2_pfp_ucode.bin */,
+				407EC26E2C6AE6F600A5BEA4 /* gc_9_2_rlc_fake_cgpg_ucode.bin */,
 				406C86B42AA6621B004F02E2 /* gc_9_2_rlc_srlist_cntl.bin */,
 				406C86A62AA6621B004F02E2 /* gc_9_2_rlc_srlist_gpm_mem.bin */,
 				406C86A22AA6621B004F02E2 /* gc_9_2_rlc_srlist_srm_mem.bin */,
@@ -222,6 +241,7 @@
 				406C86B52AA6621C004F02E2 /* gc_9_3_rlc_srlist_gpm_mem.bin */,
 				406C86AF2AA6621B004F02E2 /* gc_9_3_rlc_srlist_srm_mem.bin */,
 				406C86A02AA6621B004F02E2 /* gc_9_3_rlc_ucode.bin */,
+				407EC26F2C6AE6F600A5BEA4 /* LICENSE */,
 				40588A9129D369C400F042E9 /* picasso_gpu_info.bin */,
 				403E67BF2AA7356D00F43943 /* psp_asd.bin */,
 				40F6ACB72AA7712100A08558 /* psp_auc.bin */,
