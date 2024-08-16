@@ -4,7 +4,6 @@
 #include "X6000.hpp"
 #include "NRed.hpp"
 #include "PatcherPlus.hpp"
-#include "X5000.hpp"
 #include <Headers/kern_api.hpp>
 
 static const char *pathRadeonX6000 = "/System/Library/Extensions/AMDRadeonX6000.kext/Contents/MacOS/AMDRadeonX6000";

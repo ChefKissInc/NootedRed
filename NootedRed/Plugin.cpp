@@ -2,7 +2,6 @@
 // See LICENSE for details.
 
 #include "NRed.hpp"
-#include "X6000FB.hpp"
 #include <Headers/kern_api.hpp>
 #include <Headers/plugin_start.hpp>
 
