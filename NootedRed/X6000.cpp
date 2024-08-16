@@ -19,9 +19,38 @@ void X6000::init() {
     lilu.onKextLoadForce(&kextRadeonX6000);
 }
 
+template<UInt32 N>
+struct HWAlignVTableFix {
+    void *func;
+    const UInt32 offs[N];
+    const UInt32 occurances[N];
+    const UInt32 len {N};
+
+    void apply() const {
+        for (UInt32 i = 0; i < this->len; i += 1) {
+            const UInt32 off = this->offs[i];
+            const UInt32 newOff = (off == 0x128) ? 0x230 : (off - 8);
+            const UInt32 count = this->occurances[i];
+            const UInt8 vtableCallPattern[] = {0xFF, 0x00, static_cast<UInt8>(off & 0xFF),
+                static_cast<UInt8>((off >> 8) & 0xFF), static_cast<UInt8>((off >> 16) & 0xFF),
+                static_cast<UInt8>((off >> 24) & 0xFF)};
+            const UInt8 vtableCallMask[] = {0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF};
+            const UInt8 vtableCallReplacement[] = {0xFF, 0x00, static_cast<UInt8>(newOff & 0xFF),
+                static_cast<UInt8>((newOff >> 8) & 0xFF), static_cast<UInt8>((newOff >> 16) & 0xFF),
+                static_cast<UInt8>((newOff >> 24) & 0xFF)};
+            PANIC_COND(!KernelPatcher::findAndReplaceWithMask(this->func, PAGE_SIZE, vtableCallPattern, vtableCallMask,
+                           vtableCallReplacement, vtableCallMask, count, 0),
+                "X6000", "Failed to apply virtual call fix");
+        }
+    }
+};
+
 bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextRadeonX6000.loadIndex == id) {
         NRed::callback->setRMMIOIfNecessary();
+
+        void *orgFillUBMSurface = nullptr, *orgConfigureDisplay = nullptr, *orgGetDisplayInfo = nullptr,
+             *orgAllocateScanoutFB = nullptr;
 
         SolveRequestPlus solveRequests[] = {
             {"__ZN31AMDRadeonX6000_AMDGFX10Hardware20allocateAMDHWDisplayEv", this->orgAllocateAMDHWDisplay},
@@ -30,34 +59,30 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
             {"__ZN34AMDRadeonX6000_AMDAccelDisplayPipe10gMetaClassE", NRed::callback->metaClassMap[2][1]},
             {"__ZN30AMDRadeonX6000_AMDAccelChannel10gMetaClassE", NRed::callback->metaClassMap[3][0]},
             {"__ZN28AMDRadeonX6000_IAMDHWChannel10gMetaClassE", NRed::callback->metaClassMap[4][1]},
-            {"__ZN33AMDRadeonX6000_AMDHWAlignManager224getPreferredSwizzleMode2EP33_ADDR2_COMPUTE_SURFACE_INFO_INPUT",
-                this->orgGetPreferredSwizzleMode2},
+            {"__ZN27AMDRadeonX6000_AMDHWDisplay14fillUBMSurfaceEjP17_FRAMEBUFFER_INFOP13_UBM_SURFINFO",
+                orgFillUBMSurface},
+            {"__ZN27AMDRadeonX6000_AMDHWDisplay16configureDisplayEjjP17_FRAMEBUFFER_INFOP16IOAccelResource2",
+                orgConfigureDisplay},
+            {"__ZN27AMDRadeonX6000_AMDHWDisplay14getDisplayInfoEjbbPvP17_FRAMEBUFFER_INFO", orgGetDisplayInfo},
         };
         PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "X6000",
             "Failed to resolve symbols");
 
-        RouteRequestPlus requests[] = {
-            {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator5startEP9IOService", wrapAccelStartX6000},
-            {"__ZN27AMDRadeonX6000_AMDHWDisplay14fillUBMSurfaceEjP17_FRAMEBUFFER_INFOP13_UBM_SURFINFO",
-                wrapFillUBMSurface, this->orgFillUBMSurface},
-            {"__ZN27AMDRadeonX6000_AMDHWDisplay16configureDisplayEjjP17_FRAMEBUFFER_INFOP16IOAccelResource2",
-                wrapConfigureDisplay, this->orgConfigureDisplay},
-            {"__ZN27AMDRadeonX6000_AMDHWDisplay14getDisplayInfoEjbbPvP17_FRAMEBUFFER_INFO", wrapGetDisplayInfo,
-                this->orgGetDisplayInfo},
-        };
-        PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X6000", "Failed to route symbols");
+        bool ventura = getKernelVersion() >= KernelVersion::Ventura;
+        if (!ventura) {
+            SolveRequestPlus request {"__ZN27AMDRadeonX6000_AMDHWDisplay17allocateScanoutFBEjP16IOAccelResource2S1_Py",
+                orgAllocateScanoutFB};
+            PANIC_COND(!request.solve(patcher, id, slide, size), "X6000", "Failed to resolve allocateScanout");
+        }
+
+        RouteRequestPlus request = {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator5startEP9IOService",
+            wrapAccelStartX6000};
+        PANIC_COND(!request.route(patcher, id, slide, size), "X6000", "Failed to route AMDGraphicsAccelerator::start");
 
         if (NRed::callback->chipType < ChipType::Renoir) {
             RouteRequestPlus request = {"__ZN30AMDRadeonX6000_AMDGFX10Display23initDCNRegistersOffsetsEv",
                 wrapInitDCNRegistersOffsets, this->orgInitDCNRegistersOffsets};
             PANIC_COND(!request.route(patcher, id, slide, size), "X6000", "Failed to route initDCNRegistersOffsets");
-        }
-
-        auto ventura = getKernelVersion() >= KernelVersion::Ventura;
-        if (!ventura) {
-            RouteRequestPlus request {"__ZN27AMDRadeonX6000_AMDHWDisplay17allocateScanoutFBEjP16IOAccelResource2S1_Py",
-                wrapAllocateScanoutFB, this->orgAllocateScanoutFB};
-            PANIC_COND(!request.route(patcher, id, slide, size), "X6000", "Failed to route allocateScanout");
         }
 
         bool catalina = getKernelVersion() == KernelVersion::Catalina;
@@ -167,6 +192,35 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
             patcher.clearError();
         }
 
+        // Now, for AMDHWDisplay, fix the VTable offsets to calls in HWAlignManager2.
+        const HWAlignVTableFix<2> fixOrgFillUBMSurface {
+            orgFillUBMSurface,
+            {0x1B8, 0x218},
+            {1, 1},
+        };
+        fixOrgFillUBMSurface.apply();
+        const HWAlignVTableFix<3> fixConfigureDisplay {
+            orgConfigureDisplay,
+            {0x1B8, 0x200, 0x218},
+            {2, 2, 2},
+        };
+        fixConfigureDisplay.apply();
+        const HWAlignVTableFix<4> fixGetDisplayInfo {
+            orgGetDisplayInfo,
+            {0x128, 0x130, 0x138, 0x1D0},
+            {1, 2, 2, 4},
+        };
+        fixGetDisplayInfo.apply();
+
+        if (orgAllocateScanoutFB != nullptr) {
+            const HWAlignVTableFix<5> fixAllocateScanoutFB {
+                orgAllocateScanoutFB,
+                {0x130, 0x138, 0x190, 0x1B0, 0x218},
+                {1, 1, 1, 1, 1},
+            };
+            fixAllocateScanoutFB.apply();
+        }
+
         return true;
     }
 
@@ -245,37 +299,4 @@ void X6000::wrapInitDCNRegistersOffsets(void *that) {
     getMember<UInt32>(that, fieldBase + 0x7C) = base + mmHUBPREQ1_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
     getMember<UInt32>(that, fieldBase + 0xB4) = base + mmHUBPREQ2_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
     getMember<UInt32>(that, fieldBase + 0xEC) = base + mmHUBPREQ3_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
-}
-
-#define HWALIGNMGR_ADJUST getMember<void *>(X5000::callback->hwAlignMgr, 0) = X5000::callback->hwAlignMgrVtX6000;
-#define HWALIGNMGR_REVERT getMember<void *>(X5000::callback->hwAlignMgr, 0) = X5000::callback->hwAlignMgrVtX5000;
-
-UInt64 X6000::wrapAllocateScanoutFB(void *that, UInt32 param1, void *param2, void *param3, void *param4) {
-    HWALIGNMGR_ADJUST
-    auto ret =
-        FunctionCast(wrapAllocateScanoutFB, callback->orgAllocateScanoutFB)(that, param1, param2, param3, param4);
-    HWALIGNMGR_REVERT
-    return ret;
-}
-
-UInt64 X6000::wrapFillUBMSurface(void *that, UInt32 param1, void *param2, void *param3) {
-    HWALIGNMGR_ADJUST
-    auto ret = FunctionCast(wrapFillUBMSurface, callback->orgFillUBMSurface)(that, param1, param2, param3);
-    HWALIGNMGR_REVERT
-    return ret;
-}
-
-bool X6000::wrapConfigureDisplay(void *that, UInt32 param1, UInt32 param2, void *param3, void *param4) {
-    HWALIGNMGR_ADJUST
-    auto ret = FunctionCast(wrapConfigureDisplay, callback->orgConfigureDisplay)(that, param1, param2, param3, param4);
-    HWALIGNMGR_REVERT
-    return ret;
-}
-
-UInt64 X6000::wrapGetDisplayInfo(void *that, UInt32 param1, bool param2, bool param3, void *param4, void *param5) {
-    HWALIGNMGR_ADJUST
-    auto ret =
-        FunctionCast(wrapGetDisplayInfo, callback->orgGetDisplayInfo)(that, param1, param2, param3, param4, param5);
-    HWALIGNMGR_REVERT
-    return ret;
 }

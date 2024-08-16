@@ -335,8 +335,8 @@ void X5000::wrapGFX9SetupAndInitializeHWCapabilities(void *that) {
     FunctionCast(wrapGFX9SetupAndInitializeHWCapabilities, callback->orgGFX9SetupAndInitializeHWCapabilities)(that);
 }
 
+// Redirect SDMA1 to SDMA0
 void *X5000::wrapGetHWChannel(void *that, UInt32 engineType, UInt32 ringId) {
-    // Redirect SDMA1 to SDMA0
     return FunctionCast(wrapGetHWChannel, callback->orgGetHWChannel)(that, (engineType == 2) ? 1 : engineType, ringId);
 }
 
@@ -353,18 +353,17 @@ UInt64 X5000::wrapAdjustVRAMAddress(void *that, UInt64 addr) {
     return ret != addr ? (ret + NRed::callback->fbOffset) : ret;
 }
 
+static UInt32 fakeGetPreferredSwizzleMode2(void *, void *pIn) { return getMember<UInt32>(pIn, 0x10); }
+
 void *X5000::wrapAllocateAMDHWAlignManager() {
-    auto ret = FunctionCast(wrapAllocateAMDHWAlignManager, callback->orgAllocateAMDHWAlignManager)();
-    callback->hwAlignMgr = ret;
-
-    callback->hwAlignMgrVtX5000 = getMember<UInt8 *>(ret, 0);
-    callback->hwAlignMgrVtX6000 = IONewZero(UInt8, 0x238);
-
-    memcpy(callback->hwAlignMgrVtX6000, callback->hwAlignMgrVtX5000, 0x128);
-    *reinterpret_cast<mach_vm_address_t *>(callback->hwAlignMgrVtX6000 + 0x128) =
-        X6000::callback->orgGetPreferredSwizzleMode2;
-    memcpy(callback->hwAlignMgrVtX6000 + 0x130, callback->hwAlignMgrVtX5000 + 0x128, 0x230 - 0x128);
-    return ret;
+    void *hwAlignManager = FunctionCast(wrapAllocateAMDHWAlignManager, callback->orgAllocateAMDHWAlignManager)();
+    UInt8 *vtableNew = IONewZero(UInt8, 0x238);
+    UInt8 *vtableOriginal = getMember<UInt8 *>(hwAlignManager, 0);
+    getMember<UInt8 *>(hwAlignManager, 0) = vtableNew;
+    memcpy(vtableNew, vtableOriginal, 0x230);
+    *reinterpret_cast<mach_vm_address_t *>(vtableNew + 0x230) =
+        reinterpret_cast<mach_vm_address_t>(fakeGetPreferredSwizzleMode2);
+    return hwAlignManager;
 }
 
 UInt32 X5000::wrapGetDeviceType() { return NRed::callback->chipType < ChipType::Renoir ? 0 : 9; }
