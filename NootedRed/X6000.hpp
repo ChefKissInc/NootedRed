@@ -21,6 +21,31 @@ class X6000 {
     static void wrapInitDCNRegistersOffsets(void *that);
 };
 
+template<UInt32 N>
+struct HWAlignVTableFix {
+    const UInt32 offs[N];
+    const UInt32 occurances[N];
+    const UInt32 len {N};
+
+    void apply(void *toFunction) const {
+        for (UInt32 i = 0; i < this->len; i += 1) {
+            const UInt32 off = this->offs[i];
+            const UInt32 newOff = (off == 0x128) ? 0x230 : (off - 8);
+            const UInt32 count = this->occurances[i];
+            const UInt8 vtableCallPattern[] = {0xFF, 0x00, static_cast<UInt8>(off & 0xFF),
+                static_cast<UInt8>((off >> 8) & 0xFF), static_cast<UInt8>((off >> 16) & 0xFF),
+                static_cast<UInt8>((off >> 24) & 0xFF)};
+            const UInt8 vtableCallMask[] = {0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF};
+            const UInt8 vtableCallReplacement[] = {0xFF, 0x00, static_cast<UInt8>(newOff & 0xFF),
+                static_cast<UInt8>((newOff >> 8) & 0xFF), static_cast<UInt8>((newOff >> 16) & 0xFF),
+                static_cast<UInt8>((newOff >> 24) & 0xFF)};
+            PANIC_COND(!KernelPatcher::findAndReplaceWithMask(toFunction, PAGE_SIZE, vtableCallPattern, vtableCallMask,
+                           vtableCallReplacement, vtableCallMask, count, 0),
+                "X6000", "Failed to apply virtual call fix");
+        }
+    }
+};
+
 //------ Patches ------//
 
 // Mismatched `getTtlInterface` virtual calls
@@ -195,3 +220,23 @@ static const UInt8 kGetHWEngineCallPatched[] = {0x00, 0x00, 0x00, 0xFF, 0x90, 0x
 // Mismatched `getAMDHWHandler` virtual calls.
 static const UInt8 kGetAMDHWHandlerCallOriginal[] = {0xFF, 0x90, 0xD0, 0x02, 0x00, 0x00};
 static const UInt8 kGetAMDHWHandlerCallPatched[] = {0xFF, 0x90, 0xC8, 0x02, 0x00, 0x00};
+
+static const HWAlignVTableFix<2> FillUBMSurfaceVTFix {
+    {0x1B8, 0x218},
+    {1, 1},
+};
+
+static const HWAlignVTableFix<3> ConfigureDisplayVTFix {
+    {0x1B8, 0x200, 0x218},
+    {2, 2, 2},
+};
+
+static const HWAlignVTableFix<4> GetDisplayInfoVTFix {
+    {0x128, 0x130, 0x138, 0x1D0},
+    {1, 2, 2, 4},
+};
+
+static const HWAlignVTableFix<5> AllocateScanoutFBVTFix {
+    {0x130, 0x138, 0x190, 0x1B0, 0x218},
+    {1, 1, 1, 1, 1},
+};

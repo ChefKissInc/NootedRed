@@ -18,32 +18,6 @@ void X6000::init() {
     lilu.onKextLoadForce(&kextRadeonX6000);
 }
 
-template<UInt32 N>
-struct HWAlignVTableFix {
-    void *func;
-    const UInt32 offs[N];
-    const UInt32 occurances[N];
-    const UInt32 len {N};
-
-    void apply() const {
-        for (UInt32 i = 0; i < this->len; i += 1) {
-            const UInt32 off = this->offs[i];
-            const UInt32 newOff = (off == 0x128) ? 0x230 : (off - 8);
-            const UInt32 count = this->occurances[i];
-            const UInt8 vtableCallPattern[] = {0xFF, 0x00, static_cast<UInt8>(off & 0xFF),
-                static_cast<UInt8>((off >> 8) & 0xFF), static_cast<UInt8>((off >> 16) & 0xFF),
-                static_cast<UInt8>((off >> 24) & 0xFF)};
-            const UInt8 vtableCallMask[] = {0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF};
-            const UInt8 vtableCallReplacement[] = {0xFF, 0x00, static_cast<UInt8>(newOff & 0xFF),
-                static_cast<UInt8>((newOff >> 8) & 0xFF), static_cast<UInt8>((newOff >> 16) & 0xFF),
-                static_cast<UInt8>((newOff >> 24) & 0xFF)};
-            PANIC_COND(!KernelPatcher::findAndReplaceWithMask(this->func, PAGE_SIZE, vtableCallPattern, vtableCallMask,
-                           vtableCallReplacement, vtableCallMask, count, 0),
-                "X6000", "Failed to apply virtual call fix");
-        }
-    }
-};
-
 bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextRadeonX6000.loadIndex == id) {
         NRed::callback->setRMMIOIfNecessary();
@@ -192,33 +166,10 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
         }
 
         // Now, for AMDHWDisplay, fix the VTable offsets to calls in HWAlignManager2.
-        const HWAlignVTableFix<2> fixOrgFillUBMSurface {
-            orgFillUBMSurface,
-            {0x1B8, 0x218},
-            {1, 1},
-        };
-        fixOrgFillUBMSurface.apply();
-        const HWAlignVTableFix<3> fixConfigureDisplay {
-            orgConfigureDisplay,
-            {0x1B8, 0x200, 0x218},
-            {2, 2, 2},
-        };
-        fixConfigureDisplay.apply();
-        const HWAlignVTableFix<4> fixGetDisplayInfo {
-            orgGetDisplayInfo,
-            {0x128, 0x130, 0x138, 0x1D0},
-            {1, 2, 2, 4},
-        };
-        fixGetDisplayInfo.apply();
-
-        if (orgAllocateScanoutFB != nullptr) {
-            const HWAlignVTableFix<5> fixAllocateScanoutFB {
-                orgAllocateScanoutFB,
-                {0x130, 0x138, 0x190, 0x1B0, 0x218},
-                {1, 1, 1, 1, 1},
-            };
-            fixAllocateScanoutFB.apply();
-        }
+        FillUBMSurfaceVTFix.apply(orgFillUBMSurface);
+        ConfigureDisplayVTFix.apply(orgConfigureDisplay);
+        GetDisplayInfoVTFix.apply(orgGetDisplayInfo);
+        if (orgAllocateScanoutFB != nullptr) { AllocateScanoutFBVTFix.apply(orgAllocateScanoutFB); }
 
         return true;
     }
