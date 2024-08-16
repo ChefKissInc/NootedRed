@@ -16,18 +16,9 @@ class X6000 {
     private:
     mach_vm_address_t orgAllocateAMDHWDisplay {0};
     mach_vm_address_t orgInitDCNRegistersOffsets {0};
-    mach_vm_address_t orgGetPreferredSwizzleMode2 {0};
-    mach_vm_address_t orgAllocateScanoutFB {0};
-    mach_vm_address_t orgFillUBMSurface {0};
-    mach_vm_address_t orgConfigureDisplay {0};
-    mach_vm_address_t orgGetDisplayInfo {0};
 
     static bool wrapAccelStartX6000();
     static void wrapInitDCNRegistersOffsets(void *that);
-    static UInt64 wrapAllocateScanoutFB(void *that, UInt32 param1, void *param2, void *param3, void *param4);
-    static UInt64 wrapFillUBMSurface(void *that, UInt32 param1, void *param2, void *param3);
-    static bool wrapConfigureDisplay(void *that, UInt32 param1, UInt32 param2, void *param3, void *param4);
-    static UInt64 wrapGetDisplayInfo(void *that, UInt32 param1, bool param2, bool param3, void *param4, void *param5);
 };
 
 //------ Patches ------//
