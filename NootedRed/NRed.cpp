@@ -250,22 +250,22 @@ void NRed::setRMMIOIfNecessary() {
     this->revision = (this->readReg32(0xD2F) & 0xF000000) >> 0x18;
     switch (this->deviceId) {
         case 0x15D8:
-            if (LIKELY(this->revision >= 0x8)) {
+            if (this->revision >= 0x8) {
                 this->chipType = ChipType::Raven2;
                 this->enumRevision = 0x79;
-                break;
+            } else {
+                this->chipType = ChipType::Picasso;
+                this->enumRevision = 0x41;
             }
-            this->chipType = ChipType::Picasso;
-            this->enumRevision = 0x41;
             break;
         case 0x15DD:
-            if (LIKELY(this->revision >= 0x8)) {
+            if (this->revision >= 0x8) {
                 this->chipType = ChipType::Raven2;
                 this->enumRevision = 0x79;
-                break;
+            } else {
+                this->chipType = ChipType::Raven;
+                this->enumRevision = this->revision == 1 ? 0x20 : 0x1;
             }
-            this->chipType = ChipType::Raven;
-            this->enumRevision = 0x10;
             break;
         case 0x164C:
             [[fallthrough]];
