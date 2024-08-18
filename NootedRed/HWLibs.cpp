@@ -467,7 +467,8 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *ctx, void *cmd, void *param3, v
                     snprintf(filename, sizeof(filename), "%srlc_srlist_cntl.bin", prefix);
                     break;
                 case kUCodeDMCUB:
-                    if (NRed::callback->chipType < ChipType::Renoir) {    // Just in case
+                    // Just in case
+                    if (NRed::callback->chipType < ChipType::Renoir) {
                         SYSLOG("HWLibs", "DMCU version B is not supposed to be loaded on this ASIC!");
                         return kCAILResultSuccess;
                     }
