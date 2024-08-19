@@ -329,8 +329,6 @@ IOReturn X6000FB::wrapSetAttributeForConnection(IOService *framebuffer, IOIndex 
     callback->curPwmBacklightLvl = static_cast<UInt32>(value);
     UInt32 percentage = callback->curPwmBacklightLvl * 100 / callback->maxPwmBacklightLvl;
 
-    bool success;
-
     // AMDGPU doesn't use AUX on HDR/SDR displays that can use it. Why?
     if (callback->supportsAUX) {
         // TODO: Obtain the actual max brightness for the screen
@@ -338,14 +336,15 @@ IOReturn X6000FB::wrapSetAttributeForConnection(IOService *framebuffer, IOIndex 
         // dc_link_set_backlight_level_nits doesn't print the new backlight level, so we'll do it
         DBGLOG("X6000FB", "setAttributeForConnection: New AUX brightness: %d millinits (%d nits)", auxValue,
             (auxValue / 1000));
-        success = callback->orgDcLinkSetBacklightLevelNits(callback->embeddedPanelLink, true, auxValue, 15000);
+        if (callback->orgDcLinkSetBacklightLevelNits(callback->embeddedPanelLink, true, auxValue, 15000)) {
+            return kIOReturnSuccess;
+        }
     } else {
         UInt32 pwmValue = percentage >= 100 ? 0x1FF00 : ((percentage * 0xFF) / 100) << 8U;
         DBGLOG("X6000FB", "setAttributeForConnection: New PWM brightness: 0x%X", pwmValue);
-        success = callback->orgDcLinkSetBacklightLevel(callback->embeddedPanelLink, pwmValue, 0);
-    }
 
-    if (success) { return kIOReturnSuccess; }
+        if (callback->orgDcLinkSetBacklightLevel(callback->embeddedPanelLink, pwmValue, 0)) { return kIOReturnSuccess; }
+    }
 
     return kIOReturnDeviceError;
 }
