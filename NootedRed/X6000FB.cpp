@@ -314,16 +314,8 @@ IOReturn X6000FB::wrapSetAttributeForConnection(IOService *framebuffer, IOIndex 
         connectIndex, attribute, value);
     if (attribute != static_cast<UInt32>('bklt')) { return ret; }
 
-    if (!callback->maxPwmBacklightLvl) {
-        DBGLOG("X6000FB", "setAttributeForConnection: May not control backlight at this time; maxPwmBacklightLvl is 0");
-        return kIOReturnSuccess;
-    }
-
-    if (callback->embeddedPanelLink == nullptr) {
-        DBGLOG("X6000FB",
-            "setAttributeForConnection: May not control backight at this time; embeddedPanelLink is nullptr");
-        return kIOReturnSuccess;
-    }
+    if (callback->maxPwmBacklightLvl == 0) { return kIOReturnSuccess; }
+    if (callback->embeddedPanelLink == nullptr) { return kIOReturnNoDevice; }
 
     // Set the backlight
     callback->curPwmBacklightLvl = static_cast<UInt32>(value);
