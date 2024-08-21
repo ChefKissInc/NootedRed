@@ -193,6 +193,7 @@ bool NRed::wrapAddDrivers(void *that, OSArray *array, bool doNubMatching) {
             if (strcmp(bundleIdentifier->getCStringNoCopy(), matchingIdentifier) == 0) {
                 DBGLOG("NRed", "Matched %s.", matchingIdentifier);
                 matches[i] = true;
+                break;
             }
         }
     }
