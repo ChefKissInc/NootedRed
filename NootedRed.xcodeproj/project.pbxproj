@@ -95,7 +95,6 @@
 		407EC2672C6AE6F600A5BEA4 /* com.apple.kext.AMDRadeonX5000.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = com.apple.kext.AMDRadeonX5000.xml; sourceTree = "<group>"; };
 		407EC2682C6AE6F600A5BEA4 /* com.apple.kext.AMDRadeonX5000HWServices.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = com.apple.kext.AMDRadeonX5000HWServices.xml; sourceTree = "<group>"; };
 		407EC2692C6AE6F600A5BEA4 /* com.apple.kext.AMDRadeonX6000.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = com.apple.kext.AMDRadeonX6000.xml; sourceTree = "<group>"; };
-		407EC26A2C6AE6F600A5BEA4 /* com.apple.kext.AMDRadeonX6000Framebuffer.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = com.apple.kext.AMDRadeonX6000Framebuffer.xml; sourceTree = "<group>"; };
 		407EC26B2C6AE6F600A5BEA4 /* dmcu_eram_dcn21.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = dmcu_eram_dcn21.bin; sourceTree = "<group>"; };
 		407EC26C2C6AE6F600A5BEA4 /* dmcu_intvectors_dcn21.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = dmcu_intvectors_dcn21.bin; sourceTree = "<group>"; };
 		407EC26D2C6AE6F600A5BEA4 /* gc_9_1_rlc_fake_cgpg_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_1_rlc_fake_cgpg_ucode.bin; sourceTree = "<group>"; };
@@ -205,7 +204,6 @@
 				407EC2672C6AE6F600A5BEA4 /* com.apple.kext.AMDRadeonX5000.xml */,
 				407EC2682C6AE6F600A5BEA4 /* com.apple.kext.AMDRadeonX5000HWServices.xml */,
 				407EC2692C6AE6F600A5BEA4 /* com.apple.kext.AMDRadeonX6000.xml */,
-				407EC26A2C6AE6F600A5BEA4 /* com.apple.kext.AMDRadeonX6000Framebuffer.xml */,
 				40582A042AA7BEAA0066F4D6 /* dmcu_eram_dcn10.bin */,
 				407EC26B2C6AE6F600A5BEA4 /* dmcu_eram_dcn21.bin */,
 				40582A032AA7BEA90066F4D6 /* dmcu_intvectors_dcn10.bin */,
