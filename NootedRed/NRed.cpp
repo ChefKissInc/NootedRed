@@ -227,65 +227,65 @@ static const char *getDriverXMLForBundle(const char *bundleIdentifier, size_t *l
 }
 
 static const char *DriverBundleIdentifiers[] = {
-    "com.apple.kext.AMDRadeonX6000",
     "com.apple.kext.AMDRadeonX5000",
     "com.apple.kext.AMDRadeonX5000HWServices",
+    "com.apple.kext.AMDRadeonX6000",
+    "com.apple.kext.AMDRadeonX6000Framebuffer",
     "com.apple.driver.AppleGFXHDA",
 };
 
 bool NRed::wrapAddDrivers(void *that, OSArray *array, bool doNubMatching) {
-    bool matches[arrsize(DriverBundleIdentifiers)];
-    bzero(matches, sizeof(matches));
+    UInt8 matched = 0;
 
-    auto *iterator = OSCollectionIterator::withCollection(array);
-    OSObject *object;
-    while ((object = iterator->getNextObject())) {
+    UInt32 driverCount = array->getCount();
+    for (UInt32 driverIndex = 0; driverIndex < driverCount; driverIndex += 1) {
+        OSObject *object = array->getObject(driverIndex);
+        PANIC_COND(object == nullptr, "NRed", "Critical error in addDrivers: Index is out of bounds.");
         auto *dict = OSDynamicCast(OSDictionary, object);
-        if (dict == nullptr) {
-            DBGLOG("NRed", "Warning: element in addDrivers is not a dictionary.");
-            continue;
-        }
+        if (dict == nullptr) { continue; }
         auto *bundleIdentifier = OSDynamicCast(OSString, dict->getObject("CFBundleIdentifier"));
-        if (bundleIdentifier == nullptr) {
-            DBGLOG("NRed", "Warning: element in addDrivers has no bundle identifier.");
-            continue;
-        }
-        for (size_t i = 0; i < arrsize(DriverBundleIdentifiers); i += 1) {
-            if (matches[i]) { continue; }
+        if (bundleIdentifier == nullptr || bundleIdentifier->getLength() == 0) { continue; }
+        auto *bundleIdentifierCStr = bundleIdentifier->getCStringNoCopy();
+        if (bundleIdentifierCStr == nullptr) { continue; }
 
-            auto *matchingIdentifier = DriverBundleIdentifiers[i];
-            if (strcmp(bundleIdentifier->getCStringNoCopy(), matchingIdentifier) == 0) {
-                DBGLOG("NRed", "Matched %s.", matchingIdentifier);
-                matches[i] = true;
+        for (size_t identifierIndex = 0; identifierIndex < arrsize(DriverBundleIdentifiers); identifierIndex += 1) {
+            if ((matched & (1U << identifierIndex)) != 0) { continue; }
+
+            if (strcmp(bundleIdentifierCStr, DriverBundleIdentifiers[identifierIndex]) == 0) {
+                matched |= (1U << identifierIndex);
+
+                DBGLOG("NRed", "Matched %s, injecting.", bundleIdentifierCStr);
+
+                size_t len;
+                auto *driverXML = getDriverXMLForBundle(bundleIdentifierCStr, &len);
+
+                OSString *errStr = nullptr;
+                auto *dataUnserialized = OSUnserializeXML(driverXML, len, &errStr);
+                delete[] driverXML;
+
+                PANIC_COND(dataUnserialized == nullptr, "NRed", "Failed to unserialize driver XML for %s: %s",
+                    bundleIdentifierCStr, errStr ? errStr->getCStringNoCopy() : "(nil)");
+
+                auto *drivers = OSDynamicCast(OSArray, dataUnserialized);
+                PANIC_COND(drivers == nullptr, "NRed", "Failed to cast %s driver data", bundleIdentifierCStr);
+                UInt32 injectedDriverCount = drivers->getCount();
+
+                array->ensureCapacity(driverCount + injectedDriverCount);
+
+                for (UInt32 injectedDriverIndex = 0; injectedDriverIndex < injectedDriverCount;
+                     injectedDriverIndex += 1) {
+                    array->setObject(driverIndex, drivers->getObject(injectedDriverIndex));
+                    driverIndex += 1;
+                    driverCount += 1;
+                }
+
+                dataUnserialized->release();
                 break;
             }
         }
     }
-    OSSafeReleaseNULL(iterator);
 
-    auto res = FunctionCast(wrapAddDrivers, callback->orgAddDrivers)(that, array, doNubMatching);
-    for (size_t i = 0; i < arrsize(DriverBundleIdentifiers); i += 1) {
-        if (!matches[i]) { continue; }
-        auto *identifier = DriverBundleIdentifiers[i];
-        DBGLOG("NRed", "Injecting personalities for %s.", identifier);
-        size_t len;
-        auto *driverXML = getDriverXMLForBundle(identifier, &len);
-
-        OSString *errStr = nullptr;
-        auto *dataUnserialized = OSUnserializeXML(driverXML, len, &errStr);
-        delete[] driverXML;
-
-        PANIC_COND(dataUnserialized == nullptr, "NRed", "Failed to unserialize driver XML for %s: %s", identifier,
-            errStr ? errStr->getCStringNoCopy() : "(nil)");
-
-        auto *drivers = OSDynamicCast(OSArray, dataUnserialized);
-        PANIC_COND(drivers == nullptr, "NRed", "Failed to cast %s driver data", identifier);
-        if (!FunctionCast(wrapAddDrivers, callback->orgAddDrivers)(that, drivers, doNubMatching)) {
-            SYSLOG("NRed", "Error: Failed to inject personalities for %s.", identifier);
-        }
-        dataUnserialized->release();
-    }
-    return res;
+    return FunctionCast(wrapAddDrivers, callback->orgAddDrivers)(that, array, doNubMatching);
 }
 
 OSMetaClassBase *NRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const OSMetaClass *toMeta) {
