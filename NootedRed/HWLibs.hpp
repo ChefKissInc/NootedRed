@@ -3,6 +3,7 @@
 
 #pragma once
 #include "AMDCommon.hpp"
+#include "ObjectField.hpp"
 #include <Headers/kern_patcher.hpp>
 #include <Headers/kern_util.hpp>
 
@@ -17,6 +18,21 @@ class X5000HWLibs {
     bool processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 
     private:
+    ObjectField<void *> fwDirField {};
+    ObjectField<UInt32> pspLoadSOSField {};
+    ObjectField<UInt8> pspSecurityCapsField {};
+    ObjectField<UInt32> pspTOSField {};
+    ObjectField<UInt8 *> pspCommandDataField {};
+    ObjectField<bool> smuSwInitialisedFieldBase {};
+    ObjectField<mach_vm_address_t> smuInternalSWInitField {};
+    ObjectField<mach_vm_address_t> smuFullscreenEventField {};
+    ObjectField<mach_vm_address_t> smuGetUCodeConstsField {};
+    ObjectField<mach_vm_address_t> smuInternalHWInitField {};
+    ObjectField<mach_vm_address_t> smuNotifyEventField {};
+    ObjectField<mach_vm_address_t> smuInternalSWExitField {};
+    ObjectField<mach_vm_address_t> smuInternalHWExitField {};
+    ObjectField<mach_vm_address_t> smuFullAsicResetField {};
+
     mach_vm_address_t orgGetIpFw {0};
     t_createFirmware orgCreateFirmware {nullptr};
     t_putFirmware orgPutFirmware {nullptr};
@@ -30,9 +46,9 @@ class X5000HWLibs {
     static CAILResult pspBootloaderLoadSos10(void *ctx);
     static CAILResult pspSecurityFeatureCapsSet10(void *ctx);
     static CAILResult pspSecurityFeatureCapsSet12(void *ctx);
-    static CAILResult wrapPspCmdKmSubmit(void *ctx, void *cmd, void *param3, void *param4);
-    static void smuSoftReset();
-    static void smu10PowerUp();
+    static CAILResult wrapPspCmdKmSubmit(void *ctx, void *cmd, void *outData, void *outResponse);
+    static CAILResult smuReset();
+    static CAILResult smuPowerUp();
     static CAILResult smuInternalSwInit(void *ctx);
     static CAILResult smu10InternalHwInit(void *ctx);
     static CAILResult smu12InternalHwInit(void *ctx);

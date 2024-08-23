@@ -2,6 +2,7 @@
 // See LICENSE for details.
 
 #pragma once
+#include "ObjectField.hpp"
 #include <Headers/kern_patcher.hpp>
 #include <IOKit/IOService.h>
 #include <IOKit/graphics/IOGraphicsTypes.h>
@@ -21,14 +22,20 @@ class X6000FB {
     bool processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 
     private:
-    mach_vm_address_t orgSetAttributeForConnection {0}, orgGetAttributeForConnection {0};
-    UInt32 curPwmBacklightLvl {0}, maxPwmBacklightLvl {0xFFFF};
+    ObjectField<UInt8> dcLinkCapsField {};
+    bool fixedVBIOS {false};
+
+    UInt32 curPwmBacklightLvl {0}, maxPwmBacklightLvl {0xFF};
     UInt32 maxOLED {1000 * 512};
+    IONotifier *dispNotif {nullptr};
     void *embeddedPanelLink {nullptr};
     bool supportsAUX {false};
-    IONotifier *dispNotif {nullptr};
+
+    mach_vm_address_t orgSetAttributeForConnection {0};
+    mach_vm_address_t orgGetAttributeForConnection {0};
     mach_vm_address_t orgGetNumberOfConnectors {0};
-    mach_vm_address_t orgIH40IVRingInitHardware {0}, orgIRQMGRWriteRegister {0};
+    mach_vm_address_t orgIH40IVRingInitHardware {0};
+    mach_vm_address_t orgIRQMGRWriteRegister {0};
     t_MessageAccelerator orgMessageAccelerator {nullptr};
     mach_vm_address_t orgControllerPowerUp {0};
     mach_vm_address_t orgDpReceiverPowerCtrl {0};

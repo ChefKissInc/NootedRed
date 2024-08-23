@@ -2,28 +2,53 @@
 // See LICENSE for details.
 
 #include "X6000.hpp"
+#include "AMDCommon.hpp"
 #include "NRed.hpp"
 #include "PatcherPlus.hpp"
 #include <Headers/kern_api.hpp>
 
 static const char *pathRadeonX6000 = "/System/Library/Extensions/AMDRadeonX6000.kext/Contents/MacOS/AMDRadeonX6000";
 
-static KernelPatcher::KextInfo kextRadeonX6000 = {"com.apple.kext.AMDRadeonX6000", &pathRadeonX6000, 1, {}, {},
-    KernelPatcher::KextInfo::Unloaded};
+static KernelPatcher::KextInfo kextRadeonX6000 = {
+    "com.apple.kext.AMDRadeonX6000",
+    &pathRadeonX6000,
+    1,
+    {},
+    {},
+    KernelPatcher::KextInfo::Unloaded,
+};
 
 X6000 *X6000::callback = nullptr;
 
 void X6000::init() {
+    switch (getKernelVersion()) {
+        case KernelVersion::Catalina:
+            this->regBaseField = 0x4838;
+            break;
+        case KernelVersion::BigSur:
+        case KernelVersion::Monterey:
+            this->regBaseField = 0x4830;
+            break;
+        case KernelVersion::Ventura:
+        case KernelVersion::Sonoma:
+        case KernelVersion::Sequoia:
+            this->regBaseField = 0x590;
+            break;
+        default:
+            PANIC("X6000", "Unknown kernel version %d", getKernelVersion());
+    }
+
+    SYSLOG("X6000", "Module initialised");
+
     callback = this;
     lilu.onKextLoadForce(&kextRadeonX6000);
 }
 
 bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextRadeonX6000.loadIndex == id) {
-        NRed::callback->setRMMIOIfNecessary();
+        NRed::callback->ensureRMMIO();
 
-        void *orgFillUBMSurface = nullptr, *orgConfigureDisplay = nullptr, *orgGetDisplayInfo = nullptr,
-             *orgAllocateScanoutFB = nullptr;
+        void *orgFillUBMSurface, *orgConfigureDisplay, *orgGetDisplayInfo, *orgAllocateScanoutFB;
 
         SolveRequestPlus solveRequests[] = {
             {"__ZN31AMDRadeonX6000_AMDGFX10Hardware20allocateAMDHWDisplayEv", this->orgAllocateAMDHWDisplay},
@@ -41,8 +66,9 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
         PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "X6000",
             "Failed to resolve symbols");
 
-        bool ventura = getKernelVersion() >= KernelVersion::Ventura;
-        if (!ventura) {
+        if (NRed::callback->attributes.isVenturaAndLater()) {
+            orgAllocateScanoutFB = nullptr;
+        } else {
             SolveRequestPlus request {"__ZN27AMDRadeonX6000_AMDHWDisplay17allocateScanoutFBEjP16IOAccelResource2S1_Py",
                 orgAllocateScanoutFB};
             PANIC_COND(!request.solve(patcher, id, slide, size), "X6000", "Failed to resolve allocateScanout");
@@ -52,20 +78,20 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
             wrapAccelStartX6000};
         PANIC_COND(!request.route(patcher, id, slide, size), "X6000", "Failed to route AMDGraphicsAccelerator::start");
 
-        if (NRed::callback->chipType < ChipType::Renoir) {
+        if (NRed::callback->attributes.isRaven()) {
             RouteRequestPlus request = {"__ZN30AMDRadeonX6000_AMDGFX10Display23initDCNRegistersOffsetsEv",
                 wrapInitDCNRegistersOffsets, this->orgInitDCNRegistersOffsets};
             PANIC_COND(!request.route(patcher, id, slide, size), "X6000", "Failed to route initDCNRegistersOffsets");
         }
 
-        bool catalina = getKernelVersion() == KernelVersion::Catalina;
-        if (catalina) {
+        if (NRed::callback->attributes.isCatalina()) {
             const LookupPatchPlus patches[] = {
                 {&kextRadeonX6000, kHWChannelSubmitCommandBufferCatalinaOriginal,
                     kHWChannelSubmitCommandBufferCatalinaPatched, 1},
                 {&kextRadeonX6000, kDummyWPTRUpdateDiagCallOriginal, kDummyWPTRUpdateDiagCallPatched, 1},
             };
-            SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000", "Failed to apply patches");
+            SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size, true), "X6000",
+                "Failed to apply patches");
             patcher.clearError();
         } else {
             const LookupPatchPlus patch {&kextRadeonX6000, kHWChannelSubmitCommandBufferOriginal,
@@ -74,22 +100,22 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
             patcher.clearError();
         }
 
-        bool monterey = getKernelVersion() == KernelVersion::Monterey;
         const LookupPatchPlus patches[] = {
             {&kextRadeonX6000, kIsDeviceValidCallOriginal, kIsDeviceValidCallPatched,
-                catalina ? 20U :
-                ventura  ? 23 :
-                monterey ? 26 :
-                           24},
+                NRed::callback->attributes.isCatalina()        ? 20U :
+                NRed::callback->attributes.isVenturaAndLater() ? 23 :
+                NRed::callback->attributes.isMonterey()        ? 26 :
+                                                                 24},
             {&kextRadeonX6000, kIsDevicePCITunnelledCallOriginal, kIsDevicePCITunnelledCallPatched,
-                catalina ? 9U :
-                ventura  ? 3 :
-                           1},
+                NRed::callback->attributes.isCatalina()        ? 9U :
+                NRed::callback->attributes.isVenturaAndLater() ? 3 :
+                                                                 1},
         };
-        SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000", "Failed to apply patches");
+        SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size, true), "X6000",
+            "Failed to apply patches");
         patcher.clearError();
 
-        if (catalina) {
+        if (NRed::callback->attributes.isCatalina()) {
             const LookupPatchPlus patches[] = {
                 {&kextRadeonX6000, kWriteWaitForRenderingPipeCallOriginal, kWriteWaitForRenderingPipeCallPatched, 1},
                 {&kextRadeonX6000, kGetTtlInterfaceCallOriginal, kGetTtlInterfaceCallOriginalMask,
@@ -126,23 +152,24 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
                 {&kextRadeonX6000, kDumpASICHangStateCallOriginal, kDumpASICHangStateCallPatched, 2},
                 {&kextRadeonX6000, kGetSchedulerCallCatalinaOriginal, kGetSchedulerCallCatalinaPatched, 22},
             };
-            SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000", "Failed to apply patches");
+            SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size, true), "X6000",
+                "Failed to apply patches");
             patcher.clearError();
         }
 
-        if (ventura) {
+        if (NRed::callback->attributes.isVenturaAndLater()) {
             const LookupPatchPlus patch {&kextRadeonX6000, kGetSchedulerCallVenturaOriginal,
                 kGetSchedulerCallVenturaPatched, 24};
             SYSLOG_COND(!patch.apply(patcher, slide, size), "X6000", "Failed to apply getScheduler patch");
             patcher.clearError();
-        } else if (!catalina) {
+        } else if (!NRed::callback->attributes.isCatalina()) {
             const LookupPatchPlus patch {&kextRadeonX6000, kGetSchedulerCallOriginal, kGetSchedulerCallPatched,
-                monterey ? 21U : 22};
+                NRed::callback->attributes.isMonterey() ? 21U : 22};
             SYSLOG_COND(!patch.apply(patcher, slide, size), "X6000", "Failed to apply getScheduler patch");
             patcher.clearError();
         }
 
-        if (catalina) {
+        if (NRed::callback->attributes.isCatalina()) {
             const LookupPatchPlus patches[] = {
                 {&kextRadeonX6000, kGetGpuDebugPolicyCallCatalinaOriginal, kGetGpuDebugPolicyCallCatalinaPatched, 27},
                 {&kextRadeonX6000, kUpdateUtilizationStatisticsCounterCallOriginal,
@@ -153,14 +180,15 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
                 {&kextRadeonX6000, kGetUbmSwizzleModeCallOriginal, kGetUbmSwizzleModeCallPatched, 1},
                 {&kextRadeonX6000, kGetUbmTileModeCallOriginal, kGetUbmTileModeCallPatched, 1},
             };
-            SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000", "Failed to apply patches");
+            SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size, true), "X6000",
+                "Failed to apply patches");
             patcher.clearError();
         } else {
             const LookupPatchPlus patch {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal,
                 kGetGpuDebugPolicyCallPatched,
-                (getKernelVersion() == KernelVersion::Ventura && getKernelMinorVersion() >= 5) ? 38U :
-                ventura                                                                        ? 37 :
-                                                                                                 28};
+                NRed::callback->attributes.isVentura1304Based() ? 38U :
+                NRed::callback->attributes.isVenturaAndLater()  ? 37 :
+                                                                  28};
             SYSLOG_COND(!patch.apply(patcher, slide, size), "X6000", "Failed to apply getGpuDebugPolicy patch");
             patcher.clearError();
         }
@@ -185,68 +213,65 @@ bool X6000::wrapAccelStartX6000() { return false; }
 
 void X6000::wrapInitDCNRegistersOffsets(void *that) {
     FunctionCast(wrapInitDCNRegistersOffsets, callback->orgInitDCNRegistersOffsets)(that);
-    auto fieldBase = getKernelVersion() == KernelVersion::Catalina ? 0x4838 :
-                     getKernelVersion() > KernelVersion::Monterey  ? 0x590 :
-                                                                     0x4830;
-    auto base = getMember<UInt32>(that, fieldBase);
-    getMember<UInt32>(that, fieldBase + 0x10) = base + mmHUBPREQ0_DCSURF_PRIMARY_SURFACE_ADDRESS;
-    getMember<UInt32>(that, fieldBase + 0x48) = base + mmHUBPREQ1_DCSURF_PRIMARY_SURFACE_ADDRESS;
-    getMember<UInt32>(that, fieldBase + 0x80) = base + mmHUBPREQ2_DCSURF_PRIMARY_SURFACE_ADDRESS;
-    getMember<UInt32>(that, fieldBase + 0xB8) = base + mmHUBPREQ3_DCSURF_PRIMARY_SURFACE_ADDRESS;
-    getMember<UInt32>(that, fieldBase + 0x14) = base + mmHUBPREQ0_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH;
-    getMember<UInt32>(that, fieldBase + 0x4C) = base + mmHUBPREQ1_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH;
-    getMember<UInt32>(that, fieldBase + 0x84) = base + mmHUBPREQ2_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH;
-    getMember<UInt32>(that, fieldBase + 0xBC) = base + mmHUBPREQ3_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH;
-    getMember<UInt32>(that, fieldBase + 0x18) = base + mmHUBP0_DCSURF_SURFACE_CONFIG;
-    getMember<UInt32>(that, fieldBase + 0x50) = base + mmHUBP1_DCSURF_SURFACE_CONFIG;
-    getMember<UInt32>(that, fieldBase + 0x88) = base + mmHUBP2_DCSURF_SURFACE_CONFIG;
-    getMember<UInt32>(that, fieldBase + 0xC0) = base + mmHUBP3_DCSURF_SURFACE_CONFIG;
-    getMember<UInt32>(that, fieldBase + 0x1C) = base + mmHUBPREQ0_DCSURF_SURFACE_PITCH;
-    getMember<UInt32>(that, fieldBase + 0x54) = base + mmHUBPREQ1_DCSURF_SURFACE_PITCH;
-    getMember<UInt32>(that, fieldBase + 0x8C) = base + mmHUBPREQ2_DCSURF_SURFACE_PITCH;
-    getMember<UInt32>(that, fieldBase + 0xC4) = base + mmHUBPREQ3_DCSURF_SURFACE_PITCH;
-    getMember<UInt32>(that, fieldBase + 0x20) = base + mmHUBP0_DCSURF_ADDR_CONFIG;
-    getMember<UInt32>(that, fieldBase + 0x58) = base + mmHUBP1_DCSURF_ADDR_CONFIG;
-    getMember<UInt32>(that, fieldBase + 0x90) = base + mmHUBP2_DCSURF_ADDR_CONFIG;
-    getMember<UInt32>(that, fieldBase + 0xC8) = base + mmHUBP3_DCSURF_ADDR_CONFIG;
-    getMember<UInt32>(that, fieldBase + 0x24) = base + mmHUBP0_DCSURF_TILING_CONFIG;
-    getMember<UInt32>(that, fieldBase + 0x5C) = base + mmHUBP1_DCSURF_TILING_CONFIG;
-    getMember<UInt32>(that, fieldBase + 0x94) = base + mmHUBP2_DCSURF_TILING_CONFIG;
-    getMember<UInt32>(that, fieldBase + 0xCC) = base + mmHUBP3_DCSURF_TILING_CONFIG;
-    getMember<UInt32>(that, fieldBase + 0x28) = base + mmHUBP0_DCSURF_PRI_VIEWPORT_START;
-    getMember<UInt32>(that, fieldBase + 0x60) = base + mmHUBP1_DCSURF_PRI_VIEWPORT_START;
-    getMember<UInt32>(that, fieldBase + 0x98) = base + mmHUBP2_DCSURF_PRI_VIEWPORT_START;
-    getMember<UInt32>(that, fieldBase + 0xD0) = base + mmHUBP3_DCSURF_PRI_VIEWPORT_START;
-    getMember<UInt32>(that, fieldBase + 0x2C) = base + mmHUBP0_DCSURF_PRI_VIEWPORT_DIMENSION;
-    getMember<UInt32>(that, fieldBase + 0x64) = base + mmHUBP1_DCSURF_PRI_VIEWPORT_DIMENSION;
-    getMember<UInt32>(that, fieldBase + 0x9C) = base + mmHUBP2_DCSURF_PRI_VIEWPORT_DIMENSION;
-    getMember<UInt32>(that, fieldBase + 0xD4) = base + mmHUBP3_DCSURF_PRI_VIEWPORT_DIMENSION;
-    getMember<UInt32>(that, fieldBase + 0x30) = base + mmOTG0_OTG_CONTROL;
-    getMember<UInt32>(that, fieldBase + 0x68) = base + mmOTG1_OTG_CONTROL;
-    getMember<UInt32>(that, fieldBase + 0xA0) = base + mmOTG2_OTG_CONTROL;
-    getMember<UInt32>(that, fieldBase + 0xD8) = base + mmOTG3_OTG_CONTROL;
-    getMember<UInt32>(that, fieldBase + 0x110) = base + mmOTG4_OTG_CONTROL;
-    getMember<UInt32>(that, fieldBase + 0x148) = base + mmOTG5_OTG_CONTROL;
-    getMember<UInt32>(that, fieldBase + 0x34) = base + mmOTG0_OTG_INTERLACE_CONTROL;
-    getMember<UInt32>(that, fieldBase + 0x6C) = base + mmOTG1_OTG_INTERLACE_CONTROL;
-    getMember<UInt32>(that, fieldBase + 0xA4) = base + mmOTG2_OTG_INTERLACE_CONTROL;
-    getMember<UInt32>(that, fieldBase + 0xDC) = base + mmOTG3_OTG_INTERLACE_CONTROL;
-    getMember<UInt32>(that, fieldBase + 0x114) = base + mmOTG4_OTG_INTERLACE_CONTROL;
-    getMember<UInt32>(that, fieldBase + 0x14C) = base + mmOTG5_OTG_INTERLACE_CONTROL;
-    getMember<UInt32>(that, fieldBase + 0x38) = base + mmHUBPREQ0_DCSURF_FLIP_CONTROL;
-    getMember<UInt32>(that, fieldBase + 0x70) = base + mmHUBPREQ1_DCSURF_FLIP_CONTROL;
-    getMember<UInt32>(that, fieldBase + 0xA8) = base + mmHUBPREQ2_DCSURF_FLIP_CONTROL;
-    getMember<UInt32>(that, fieldBase + 0xE0) = base + mmHUBPREQ3_DCSURF_FLIP_CONTROL;
-    getMember<UInt32>(that, fieldBase + 0x3C) = base + mmHUBPRET0_HUBPRET_CONTROL;
-    getMember<UInt32>(that, fieldBase + 0x74) = base + mmHUBPRET1_HUBPRET_CONTROL;
-    getMember<UInt32>(that, fieldBase + 0xAC) = base + mmHUBPRET2_HUBPRET_CONTROL;
-    getMember<UInt32>(that, fieldBase + 0xE4) = base + mmHUBPRET3_HUBPRET_CONTROL;
-    getMember<UInt32>(that, fieldBase + 0x40) = base + mmHUBPREQ0_DCSURF_SURFACE_EARLIEST_INUSE;
-    getMember<UInt32>(that, fieldBase + 0x78) = base + mmHUBPREQ1_DCSURF_SURFACE_EARLIEST_INUSE;
-    getMember<UInt32>(that, fieldBase + 0xB0) = base + mmHUBPREQ2_DCSURF_SURFACE_EARLIEST_INUSE;
-    getMember<UInt32>(that, fieldBase + 0xE8) = base + mmHUBPREQ3_DCSURF_SURFACE_EARLIEST_INUSE;
-    getMember<UInt32>(that, fieldBase + 0x44) = base + mmHUBPREQ0_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
-    getMember<UInt32>(that, fieldBase + 0x7C) = base + mmHUBPREQ1_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
-    getMember<UInt32>(that, fieldBase + 0xB4) = base + mmHUBPREQ2_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
-    getMember<UInt32>(that, fieldBase + 0xEC) = base + mmHUBPREQ3_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
+    auto base = callback->regBaseField.get(that);
+    (callback->regBaseField + 0x10).get(that) = base + mmHUBPREQ0_DCSURF_PRIMARY_SURFACE_ADDRESS;
+    (callback->regBaseField + 0x48).get(that) = base + mmHUBPREQ1_DCSURF_PRIMARY_SURFACE_ADDRESS;
+    (callback->regBaseField + 0x80).get(that) = base + mmHUBPREQ2_DCSURF_PRIMARY_SURFACE_ADDRESS;
+    (callback->regBaseField + 0xB8).get(that) = base + mmHUBPREQ3_DCSURF_PRIMARY_SURFACE_ADDRESS;
+    (callback->regBaseField + 0x14).get(that) = base + mmHUBPREQ0_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH;
+    (callback->regBaseField + 0x4C).get(that) = base + mmHUBPREQ1_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH;
+    (callback->regBaseField + 0x84).get(that) = base + mmHUBPREQ2_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH;
+    (callback->regBaseField + 0xBC).get(that) = base + mmHUBPREQ3_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH;
+    (callback->regBaseField + 0x18).get(that) = base + mmHUBP0_DCSURF_SURFACE_CONFIG;
+    (callback->regBaseField + 0x50).get(that) = base + mmHUBP1_DCSURF_SURFACE_CONFIG;
+    (callback->regBaseField + 0x88).get(that) = base + mmHUBP2_DCSURF_SURFACE_CONFIG;
+    (callback->regBaseField + 0xC0).get(that) = base + mmHUBP3_DCSURF_SURFACE_CONFIG;
+    (callback->regBaseField + 0x1C).get(that) = base + mmHUBPREQ0_DCSURF_SURFACE_PITCH;
+    (callback->regBaseField + 0x54).get(that) = base + mmHUBPREQ1_DCSURF_SURFACE_PITCH;
+    (callback->regBaseField + 0x8C).get(that) = base + mmHUBPREQ2_DCSURF_SURFACE_PITCH;
+    (callback->regBaseField + 0xC4).get(that) = base + mmHUBPREQ3_DCSURF_SURFACE_PITCH;
+    (callback->regBaseField + 0x20).get(that) = base + mmHUBP0_DCSURF_ADDR_CONFIG;
+    (callback->regBaseField + 0x58).get(that) = base + mmHUBP1_DCSURF_ADDR_CONFIG;
+    (callback->regBaseField + 0x90).get(that) = base + mmHUBP2_DCSURF_ADDR_CONFIG;
+    (callback->regBaseField + 0xC8).get(that) = base + mmHUBP3_DCSURF_ADDR_CONFIG;
+    (callback->regBaseField + 0x24).get(that) = base + mmHUBP0_DCSURF_TILING_CONFIG;
+    (callback->regBaseField + 0x5C).get(that) = base + mmHUBP1_DCSURF_TILING_CONFIG;
+    (callback->regBaseField + 0x94).get(that) = base + mmHUBP2_DCSURF_TILING_CONFIG;
+    (callback->regBaseField + 0xCC).get(that) = base + mmHUBP3_DCSURF_TILING_CONFIG;
+    (callback->regBaseField + 0x28).get(that) = base + mmHUBP0_DCSURF_PRI_VIEWPORT_START;
+    (callback->regBaseField + 0x60).get(that) = base + mmHUBP1_DCSURF_PRI_VIEWPORT_START;
+    (callback->regBaseField + 0x98).get(that) = base + mmHUBP2_DCSURF_PRI_VIEWPORT_START;
+    (callback->regBaseField + 0xD0).get(that) = base + mmHUBP3_DCSURF_PRI_VIEWPORT_START;
+    (callback->regBaseField + 0x2C).get(that) = base + mmHUBP0_DCSURF_PRI_VIEWPORT_DIMENSION;
+    (callback->regBaseField + 0x64).get(that) = base + mmHUBP1_DCSURF_PRI_VIEWPORT_DIMENSION;
+    (callback->regBaseField + 0x9C).get(that) = base + mmHUBP2_DCSURF_PRI_VIEWPORT_DIMENSION;
+    (callback->regBaseField + 0xD4).get(that) = base + mmHUBP3_DCSURF_PRI_VIEWPORT_DIMENSION;
+    (callback->regBaseField + 0x30).get(that) = base + mmOTG0_OTG_CONTROL;
+    (callback->regBaseField + 0x68).get(that) = base + mmOTG1_OTG_CONTROL;
+    (callback->regBaseField + 0xA0).get(that) = base + mmOTG2_OTG_CONTROL;
+    (callback->regBaseField + 0xD8).get(that) = base + mmOTG3_OTG_CONTROL;
+    (callback->regBaseField + 0x110).get(that) = base + mmOTG4_OTG_CONTROL;
+    (callback->regBaseField + 0x148).get(that) = base + mmOTG5_OTG_CONTROL;
+    (callback->regBaseField + 0x34).get(that) = base + mmOTG0_OTG_INTERLACE_CONTROL;
+    (callback->regBaseField + 0x6C).get(that) = base + mmOTG1_OTG_INTERLACE_CONTROL;
+    (callback->regBaseField + 0xA4).get(that) = base + mmOTG2_OTG_INTERLACE_CONTROL;
+    (callback->regBaseField + 0xDC).get(that) = base + mmOTG3_OTG_INTERLACE_CONTROL;
+    (callback->regBaseField + 0x114).get(that) = base + mmOTG4_OTG_INTERLACE_CONTROL;
+    (callback->regBaseField + 0x14C).get(that) = base + mmOTG5_OTG_INTERLACE_CONTROL;
+    (callback->regBaseField + 0x38).get(that) = base + mmHUBPREQ0_DCSURF_FLIP_CONTROL;
+    (callback->regBaseField + 0x70).get(that) = base + mmHUBPREQ1_DCSURF_FLIP_CONTROL;
+    (callback->regBaseField + 0xA8).get(that) = base + mmHUBPREQ2_DCSURF_FLIP_CONTROL;
+    (callback->regBaseField + 0xE0).get(that) = base + mmHUBPREQ3_DCSURF_FLIP_CONTROL;
+    (callback->regBaseField + 0x3C).get(that) = base + mmHUBPRET0_HUBPRET_CONTROL;
+    (callback->regBaseField + 0x74).get(that) = base + mmHUBPRET1_HUBPRET_CONTROL;
+    (callback->regBaseField + 0xAC).get(that) = base + mmHUBPRET2_HUBPRET_CONTROL;
+    (callback->regBaseField + 0xE4).get(that) = base + mmHUBPRET3_HUBPRET_CONTROL;
+    (callback->regBaseField + 0x40).get(that) = base + mmHUBPREQ0_DCSURF_SURFACE_EARLIEST_INUSE;
+    (callback->regBaseField + 0x78).get(that) = base + mmHUBPREQ1_DCSURF_SURFACE_EARLIEST_INUSE;
+    (callback->regBaseField + 0xB0).get(that) = base + mmHUBPREQ2_DCSURF_SURFACE_EARLIEST_INUSE;
+    (callback->regBaseField + 0xE8).get(that) = base + mmHUBPREQ3_DCSURF_SURFACE_EARLIEST_INUSE;
+    (callback->regBaseField + 0x44).get(that) = base + mmHUBPREQ0_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
+    (callback->regBaseField + 0x7C).get(that) = base + mmHUBPREQ1_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
+    (callback->regBaseField + 0xB4).get(that) = base + mmHUBPREQ2_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
+    (callback->regBaseField + 0xEC).get(that) = base + mmHUBPREQ3_DCSURF_SURFACE_EARLIEST_INUSE_HIGH;
 }

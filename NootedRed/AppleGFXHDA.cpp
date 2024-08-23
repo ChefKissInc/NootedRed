@@ -16,8 +16,14 @@ constexpr UInt32 RenoirHDMIID = (RenoirHDMIDeviceID << 16) | AMDVendorID;
 
 static const char *pathAppleGFXHDA = "/System/Library/Extensions/AppleGFXHDA.kext/Contents/MacOS/AppleGFXHDA";
 
-static KernelPatcher::KextInfo kextAppleGFXHDA {"com.apple.driver.AppleGFXHDA", &pathAppleGFXHDA, 1, {true}, {},
-    KernelPatcher::KextInfo::Unloaded};
+static KernelPatcher::KextInfo kextAppleGFXHDA {
+    "com.apple.driver.AppleGFXHDA",
+    &pathAppleGFXHDA,
+    1,
+    {},
+    {},
+    KernelPatcher::KextInfo::Unloaded,
+};
 
 AppleGFXHDA *AppleGFXHDA::callback = nullptr;
 
@@ -28,10 +34,10 @@ void AppleGFXHDA::init() {
 
 bool AppleGFXHDA::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextAppleGFXHDA.loadIndex == id) {
-        NRed::callback->setRMMIOIfNecessary();
+        NRed::callback->ensureRMMIO();
 
         const UInt32 probeFind = Navi10HDMIID;
-        const UInt32 probeRepl = NRed::callback->chipType < ChipType::Renoir ? RavenHDMIID : RenoirHDMIID;
+        const UInt32 probeRepl = NRed::callback->attributes.isRenoir() ? RenoirHDMIID : RavenHDMIID;
         const LookupPatchPlus patch = {&kextAppleGFXHDA, reinterpret_cast<const UInt8 *>(&probeFind),
             reinterpret_cast<const UInt8 *>(&probeRepl), sizeof(probeFind), 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "AGFXHDA", "Failed to apply patch for HDMI controller probe");

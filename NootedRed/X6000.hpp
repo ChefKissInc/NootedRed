@@ -2,6 +2,7 @@
 // See LICENSE for details.
 
 #pragma once
+#include "ObjectField.hpp"
 #include <Headers/kern_patcher.hpp>
 
 class X6000 {
@@ -14,6 +15,8 @@ class X6000 {
     bool processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 
     private:
+    ObjectField<UInt32> regBaseField {};
+
     mach_vm_address_t orgAllocateAMDHWDisplay {0};
     mach_vm_address_t orgInitDCNRegistersOffsets {0};
 

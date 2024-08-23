@@ -38,6 +38,7 @@ constexpr UInt32 PPSMC_MSG_PowerUpGfx = 0x6;
 constexpr UInt32 PPSMC_MSG_PowerUpSdma = 0xE;
 constexpr UInt32 PPSMC_MSG_DeviceDriverReset = 0x1E;
 constexpr UInt32 PPSMC_MSG_SoftReset = 0x2E;
+constexpr UInt32 PPSMC_MSG_PowerGateMmHub = 0x35;
 constexpr UInt32 PPSMC_MSG_ForceGfxContentSave = 0x39;
 constexpr UInt32 PPSMC_MSG_PowerGateAtHub = 0x3D;
 
@@ -247,8 +248,8 @@ struct CAILAsicCapsInitEntry {
 enum CAILResult : UInt32 {
     kCAILResultSuccess = 0,
     kCAILResultInvalidArgument,
-    kCAILResultGeneralFailure,
-    kCAILResultResourcesExhausted,
+    kCAILResultFailed,
+    kCAILResultUninitialised,
     kCAILResultUnsupported,
 };
 
@@ -307,6 +308,39 @@ enum AMDPSPCommand : UInt32 {
     kPSPCommandLoadASD = 4,
     kPSPCommandLoadIPFW = 6,
 };
+
+enum AMDSMUFWResponse : UInt32 {
+    kSMUFWResponseNoResponse = 0,
+    kSMUFWResponseSuccess = 1,
+    kSMUFWResponseRejectedBusy = 0xFC,
+    kSMUFWResponseRejectedPrereq = 0xFD,
+    kSMUFWResponseUnknownCommand = 0xFE,
+    kSMUFWResponseFailed = 0xFF,
+};
+
+inline CAILResult processSMUFWResponse(const UInt32 value) {
+    switch (value) {
+        case kSMUFWResponseNoResponse:
+            return kCAILResultUninitialised;
+        case kSMUFWResponseSuccess:
+            return kCAILResultSuccess;
+        case kSMUFWResponseRejectedBusy:
+            DBGLOG("AMDCommon", "SMU FW command rejected; SMU is busy");
+            return kCAILResultFailed;
+        case kSMUFWResponseRejectedPrereq:
+            DBGLOG("AMDCommon", "SMU FW command rejected; prequisite was not satisfied");
+            return kCAILResultFailed;
+        case kSMUFWResponseUnknownCommand:
+            DBGLOG("AMDCommon", "Unknown SMU FW command");
+            return kCAILResultUnsupported;
+        case kSMUFWResponseFailed:
+            DBGLOG("AMDCommon", "SMU FW command failed");
+            return kCAILResultFailed;
+        default:
+            SYSLOG("AMDCommon", "Unknown SMU FW response %d", value);
+            return kCAILResultFailed;
+    }
+}
 
 enum AMDUCodeID : UInt32 {
     kUCodeCE = 2,

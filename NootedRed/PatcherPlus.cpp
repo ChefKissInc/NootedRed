@@ -81,13 +81,13 @@ bool LookupPatchPlus::apply(KernelPatcher &patcher, mach_vm_address_t address, s
 }
 
 bool LookupPatchPlus::applyAll(KernelPatcher &patcher, const LookupPatchPlus *patches, size_t count,
-    mach_vm_address_t address, size_t maxSize) {
+    mach_vm_address_t address, size_t maxSize, bool force) {
     for (size_t i = 0; i < count; i++) {
         if (patches[i].apply(patcher, address, maxSize)) {
             DBGLOG("Patcher+", "Applied patches[%zu]", i);
         } else {
             DBGLOG("Patcher+", "Failed to apply patches[%zu]", i);
-            return false;
+            if (!force) { return false; }
         }
     }
     return true;
