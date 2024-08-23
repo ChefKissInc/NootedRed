@@ -3,6 +3,7 @@
 
 #pragma once
 #include "AMDCommon.hpp"
+#include "ObjectField.hpp"
 #include <Headers/kern_patcher.hpp>
 
 class X5000 {
@@ -15,6 +16,19 @@ class X5000 {
     bool processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 
     private:
+    ObjectField<void *> pm4EngineField {};
+    ObjectField<void *> sdma0EngineField {};
+    ObjectField<UInt32> displayPipeCountField {};
+    ObjectField<UInt32> seCountField {};
+    ObjectField<UInt32> shPerSEField {};
+    ObjectField<UInt32> cuPerSHField {};
+    ObjectField<bool> hasUVD0Field {};
+    ObjectField<bool> hasVCEField {};
+    ObjectField<bool> hasVCN0Field {};
+    ObjectField<bool> hasSDMAPagingQueueField {};
+    ObjectField<UInt32> familyTypeField {};
+    ObjectField<Gfx9ChipSettings> chipSettingsField {};
+
     t_GenericConstructor orgGFX9PM4EngineConstructor {nullptr};
     t_GenericConstructor orgGFX9SDMAEngineConstructor {nullptr};
     mach_vm_address_t orgSetupAndInitializeHWCapabilities {0};
