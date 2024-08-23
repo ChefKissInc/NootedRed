@@ -211,11 +211,11 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
 }
 
 bool X5000::wrapAllocateHWEngines(void *that) {
-    auto *pm4 = OSObject::operator new(0x340);
+    auto *pm4 = IOMallocZero(0x340);
     callback->orgGFX9PM4EngineConstructor(pm4);
     callback->pm4EngineField.get(that) = pm4;
 
-    auto *sdma0 = OSObject::operator new(0x250);
+    auto *sdma0 = IOMallocZero(0x250);
     callback->orgGFX9SDMAEngineConstructor(sdma0);
     callback->sdma0EngineField.get(that) = sdma0;
 
