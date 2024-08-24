@@ -351,16 +351,16 @@ CAILResult X5000HWLibs::hwLibsUnsupported() { return kCAILResultUnsupported; }
 CAILResult X5000HWLibs::hwLibsNoop() { return kCAILResultSuccess; }
 
 CAILResult X5000HWLibs::pspBootloaderLoadSos10(void *ctx) {
-    callback->pspLoadSOSField.get(ctx) = NRed::callback->readReg32(MP_BASE + mmMP0_SMN_C2PMSG_59);
-    (callback->pspLoadSOSField + 0x4).get(ctx) = NRed::callback->readReg32(MP_BASE + mmMP0_SMN_C2PMSG_58);
-    (callback->pspLoadSOSField + 0x8).get(ctx) = NRed::callback->readReg32(MP_BASE + mmMP0_SMN_C2PMSG_58);
+    callback->pspLoadSOSField.set(ctx, NRed::callback->readReg32(MP_BASE + mmMP0_SMN_C2PMSG_59));
+    (callback->pspLoadSOSField + 0x4).set(ctx, NRed::callback->readReg32(MP_BASE + mmMP0_SMN_C2PMSG_58));
+    (callback->pspLoadSOSField + 0x8).set(ctx, NRed::callback->readReg32(MP_BASE + mmMP0_SMN_C2PMSG_58));
     return kCAILResultSuccess;
 }
 
 CAILResult X5000HWLibs::pspSecurityFeatureCapsSet10(void *ctx) {
-    auto &securityCaps = callback->pspSecurityCapsField.get(ctx);
+    auto &securityCaps = callback->pspSecurityCapsField.getRef(ctx);
     securityCaps &= ~static_cast<UInt8>(1);
-    auto &tOSVer = callback->pspTOSField.get(ctx);
+    auto tOSVer = callback->pspTOSField.get(ctx);
     if ((tOSVer & 0xFFFF0000) == 0x80000 && (tOSVer & 0xFF) > 0x50) {
         auto policyVer = NRed::callback->readReg32(MP_BASE + mmMP0_SMN_C2PMSG_91);
         SYSLOG_COND((policyVer & 0xFF000000) != 0xA000000, "HWLibs", "Invalid security policy version: 0x%X",
@@ -375,9 +375,9 @@ CAILResult X5000HWLibs::pspSecurityFeatureCapsSet10(void *ctx) {
 }
 
 CAILResult X5000HWLibs::pspSecurityFeatureCapsSet12(void *ctx) {
-    auto &securityCaps = callback->pspSecurityCapsField.get(ctx);
+    auto &securityCaps = callback->pspSecurityCapsField.getRef(ctx);
     securityCaps &= ~static_cast<UInt8>(1);
-    auto &tOSVer = callback->pspTOSField.get(ctx);
+    auto tOSVer = callback->pspTOSField.get(ctx);
     if ((tOSVer & 0xFFFF0000) == 0x110000 && (tOSVer & 0xFF) > 0x2A) {
         auto policyVer = NRed::callback->readReg32(MP_BASE + mmMP0_SMN_C2PMSG_91);
         SYSLOG_COND((policyVer & 0xFF000000) != 0xB000000, "HWLibs", "Invalid security policy version: 0x%X",
@@ -536,7 +536,7 @@ CAILResult X5000HWLibs::smuPowerUp() {
 }
 
 CAILResult X5000HWLibs::smuInternalSwInit(void *ctx) {
-    callback->smuSwInitialisedFieldBase.get(ctx) = true;
+    callback->smuSwInitialisedFieldBase.set(ctx, true);
     return kCAILResultSuccess;
 }
 
@@ -636,21 +636,21 @@ CAILResult X5000HWLibs::smuFullScreenEvent(void *, UInt32 event) {
 
 CAILResult X5000HWLibs::wrapSmu901CreateFunctionPointerList(void *ctx) {
     if (NRed::callback->attributes.isCatalina()) {
-        callback->smuInternalSWInitField.get(ctx) = reinterpret_cast<mach_vm_address_t>(hwLibsNoop);
+        callback->smuInternalSWInitField.set(ctx, reinterpret_cast<mach_vm_address_t>(hwLibsNoop));
     } else {
-        callback->smuInternalSWInitField.get(ctx) = reinterpret_cast<mach_vm_address_t>(smuInternalSwInit);
-        callback->smuGetUCodeConstsField.get(ctx) = reinterpret_cast<mach_vm_address_t>(hwLibsNoop);
+        callback->smuInternalSWInitField.set(ctx, reinterpret_cast<mach_vm_address_t>(smuInternalSwInit));
+        callback->smuGetUCodeConstsField.set(ctx, reinterpret_cast<mach_vm_address_t>(hwLibsNoop));
     }
-    callback->smuFullscreenEventField.get(ctx) = reinterpret_cast<mach_vm_address_t>(smuFullScreenEvent);
+    callback->smuFullscreenEventField.set(ctx, reinterpret_cast<mach_vm_address_t>(smuFullScreenEvent));
     if (NRed::callback->attributes.isRenoir()) {
-        callback->smuInternalHWInitField.get(ctx) = reinterpret_cast<mach_vm_address_t>(smu12InternalHwInit);
-        callback->smuNotifyEventField.get(ctx) = reinterpret_cast<mach_vm_address_t>(smu12NotifyEvent);
+        callback->smuInternalHWInitField.set(ctx, reinterpret_cast<mach_vm_address_t>(smu12InternalHwInit));
+        callback->smuNotifyEventField.set(ctx, reinterpret_cast<mach_vm_address_t>(smu12NotifyEvent));
     } else {
-        callback->smuInternalHWInitField.get(ctx) = reinterpret_cast<mach_vm_address_t>(smu10InternalHwInit);
-        callback->smuNotifyEventField.get(ctx) = reinterpret_cast<mach_vm_address_t>(smu10NotifyEvent);
+        callback->smuInternalHWInitField.set(ctx, reinterpret_cast<mach_vm_address_t>(smu10InternalHwInit));
+        callback->smuNotifyEventField.set(ctx, reinterpret_cast<mach_vm_address_t>(smu10NotifyEvent));
     }
-    callback->smuInternalSWExitField.get(ctx) = reinterpret_cast<mach_vm_address_t>(hwLibsNoop);
-    callback->smuInternalHWExitField.get(ctx) = reinterpret_cast<mach_vm_address_t>(smuInternalHwExit);
-    callback->smuFullAsicResetField.get(ctx) = reinterpret_cast<mach_vm_address_t>(smuFullAsicReset);
+    callback->smuInternalSWExitField.set(ctx, reinterpret_cast<mach_vm_address_t>(hwLibsNoop));
+    callback->smuInternalHWExitField.set(ctx, reinterpret_cast<mach_vm_address_t>(smuInternalHwExit));
+    callback->smuFullAsicResetField.set(ctx, reinterpret_cast<mach_vm_address_t>(smuFullAsicReset));
     return kCAILResultSuccess;
 }

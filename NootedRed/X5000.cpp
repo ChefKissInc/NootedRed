@@ -211,13 +211,13 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
 }
 
 bool X5000::wrapAllocateHWEngines(void *that) {
-    auto *pm4 = IOMallocZero(0x340);
+    auto *pm4 = OSObject::operator new(0x340);
     callback->orgGFX9PM4EngineConstructor(pm4);
-    callback->pm4EngineField.get(that) = pm4;
+    callback->pm4EngineField.set(that, pm4);
 
-    auto *sdma0 = IOMallocZero(0x250);
+    auto *sdma0 = OSObject::operator new(0x250);
     callback->orgGFX9SDMAEngineConstructor(sdma0);
-    callback->sdma0EngineField.get(that) = sdma0;
+    callback->sdma0EngineField.set(that, sdma0);
 
     return true;
 }
@@ -225,11 +225,11 @@ bool X5000::wrapAllocateHWEngines(void *that) {
 void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
     FunctionCast(wrapSetupAndInitializeHWCapabilities, callback->orgSetupAndInitializeHWCapabilities)(that);
 
-    callback->displayPipeCountField.get(that) = NRed::callback->attributes.isRenoir() ? 4 : 6;
-    callback->hasUVD0Field.get(that) = false;
-    callback->hasVCEField.get(that) = false;
-    callback->hasVCN0Field.get(that) = false;
-    callback->hasSDMAPagingQueueField.get(that) = false;
+    callback->displayPipeCountField.set(that, NRed::callback->attributes.isRenoir() ? 4 : 6);
+    callback->hasUVD0Field.set(that, false);
+    callback->hasVCEField.set(that, false);
+    callback->hasVCN0Field.set(that, false);
+    callback->hasSDMAPagingQueueField.set(that, false);
 }
 
 void X5000::wrapGFX9SetupAndInitializeHWCapabilities(void *that) {
@@ -240,9 +240,9 @@ void X5000::wrapGFX9SetupAndInitializeHWCapabilities(void *that) {
     auto *header = reinterpret_cast<const CommonFirmwareHeader *>(gpuInfoBin.data);
     auto *gpuInfo = reinterpret_cast<const GPUInfoFirmware *>(gpuInfoBin.data + header->ucodeOff);
 
-    callback->seCountField.get(that) = gpuInfo->gcNumSe;
-    callback->shPerSEField.get(that) = gpuInfo->gcNumShPerSe;
-    callback->cuPerSHField.get(that) = gpuInfo->gcNumCuPerSh;
+    callback->seCountField.set(that, gpuInfo->gcNumSe);
+    callback->shPerSEField.set(that, gpuInfo->gcNumShPerSe);
+    callback->cuPerSHField.set(that, gpuInfo->gcNumCuPerSh);
 
     FunctionCast(wrapGFX9SetupAndInitializeHWCapabilities, callback->orgGFX9SetupAndInitializeHWCapabilities)(that);
 }
@@ -252,7 +252,7 @@ void *X5000::wrapGetHWChannel(void *that, UInt32 engineType, UInt32 ringId) {
     return FunctionCast(wrapGetHWChannel, callback->orgGetHWChannel)(that, (engineType == 2) ? 1 : engineType, ringId);
 }
 
-void X5000::wrapInitializeFamilyType(void *that) { callback->familyTypeField.get(that) = AMDGPU_FAMILY_RAVEN; }
+void X5000::wrapInitializeFamilyType(void *that) { callback->familyTypeField.set(that, AMDGPU_FAMILY_RAVEN); }
 
 void *X5000::wrapAllocateAMDHWDisplay(void *that) {
     return FunctionCast(wrapAllocateAMDHWDisplay, X6000::callback->orgAllocateAMDHWDisplay)(that);
@@ -301,7 +301,7 @@ void *X5000::wrapObtainAccelChannelGroup1304(void *that, UInt32 priority, void *
 }
 
 UInt32 X5000::wrapHwlConvertChipFamily(void *that, UInt32, UInt32) {
-    auto &settings = callback->chipSettingsField.get(that);
+    auto &settings = callback->chipSettingsField.getRef(that);
     settings.isArcticIsland = 1;
     settings.isRaven = 1;
     if (NRed::callback->attributes.isRenoir()) {
