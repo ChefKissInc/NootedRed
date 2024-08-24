@@ -8,10 +8,7 @@ class ObjectField {
     UInt32 offset {InvalidOffset};
 
     public:
-    inline void operator=(const UInt32 offset) {
-        PANIC_COND(offset == InvalidOffset, "ObjField", "offset == InvalidOffset");
-        this->offset = offset;
-    }
+    inline void operator=(const UInt32 offset) { this->offset = offset; }
 
     inline ObjectField<T> operator+(const UInt32 value) {
         PANIC_COND(this->offset == InvalidOffset, "ObjField", "value == InvalidOffset");
