@@ -17,9 +17,21 @@ class ObjectField {
         return ret;
     }
 
-    inline T &get(void *that) {
+    inline T get(void *that) {
         PANIC_COND(that == nullptr, "ObjField", "that == nullptr");
         PANIC_COND(this->offset == InvalidOffset, "ObjField", "this->offset == InvalidOffset");
         return getMember<T>(that, this->offset);
+    }
+
+    inline T &getRef(void *that) {
+        PANIC_COND(that == nullptr, "ObjField", "that == nullptr");
+        PANIC_COND(this->offset == InvalidOffset, "ObjField", "this->offset == InvalidOffset");
+        return getMember<T>(that, this->offset);
+    }
+
+    inline void set(void *that, T value) {
+        PANIC_COND(that == nullptr, "ObjField", "that == nullptr");
+        PANIC_COND(this->offset == InvalidOffset, "ObjField", "this->offset == InvalidOffset");
+        getMember<T>(that, this->offset) = value;
     }
 };
