@@ -307,9 +307,8 @@ OSMetaClassBase *NRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const O
 }
 
 void NRed::ensureRMMIO() {
-    if (this->rmmio != nullptr && this->rmmio->getLength() != 0) { return; }
+    if (this->rmmio != nullptr) { return; }
 
-    OSSafeReleaseNULL(this->rmmio);
     this->rmmio =
         this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5, kIOMapInhibitCache | kIOMapAnywhere);
     PANIC_COND(this->rmmio == nullptr || this->rmmio->getLength() == 0, "NRed", "Failed to map RMMIO");
