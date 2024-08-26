@@ -295,15 +295,6 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
             PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs",
                 "Failed to apply patches (<14.4)");
         }
-        const LookupPatchPlus patches[] = {
-            {&kextRadeonX5000HWLibs, kGcGoldenSettingsExecutionOriginal, kGcGoldenSettingsExecutionOriginalMask,
-                kGcGoldenSettingsExecutionPatched, kGcGoldenSettingsExecutionPatchedMask, 1},
-            {&kextRadeonX5000HWLibs, kSdma40GdbExecutionCallOriginal, kSdma40GdbExecutionCallOriginalMask,
-                kSdma40GdbExecutionCallPatched, kSdma40GdbExecutionCallPatchedMask, 1},
-            {&kextRadeonX5000HWLibs, kGc90GdbExecutionCallOriginal, kGc90GdbExecutionCallOriginalMask,
-                kGc90GdbExecutionCallPatched, kGc90GdbExecutionCallPatchedMask, 1},
-        };
-        PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs", "Failed to apply patches");
 
         if (NRed::callback->attributes.isVenturaAndLater()) {
             const LookupPatchPlus patches[] = {
