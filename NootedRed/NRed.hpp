@@ -81,11 +81,11 @@ class NRed {
     UInt16 devRevision {0};
     UInt16 enumRevision {0};
 
-    X6000FB x6000fb;
-    AppleGFXHDA agfxhda;
-    X5000HWLibs hwlibs;
-    X6000 x6000;
-    X5000 x5000;
+    X6000FB x6000fb {};
+    AppleGFXHDA agfxhda {};
+    X5000HWLibs hwlibs {};
+    X6000 x6000 {};
+    X5000 x5000 {};
 
     void init();
     void processPatcher(KernelPatcher &patcher);
