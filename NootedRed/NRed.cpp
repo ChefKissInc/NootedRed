@@ -437,7 +437,7 @@ const char *NRed::getGCPrefix() {
 }
 
 UInt32 NRed::readReg32(UInt32 reg) {
-    if ((reg * 4) < this->rmmio->getLength()) {
+    if ((reg * sizeof(UInt32)) < this->rmmio->getLength()) {
         return this->rmmioPtr[reg];
     } else {
         this->rmmioPtr[mmPCIE_INDEX2] = reg;
@@ -446,7 +446,7 @@ UInt32 NRed::readReg32(UInt32 reg) {
 }
 
 void NRed::writeReg32(UInt32 reg, UInt32 val) {
-    if ((reg * 4) < this->rmmio->getLength()) {
+    if ((reg * sizeof(UInt32)) < this->rmmio->getLength()) {
         this->rmmioPtr[reg] = val;
     } else {
         this->rmmioPtr[mmPCIE_INDEX2] = reg;
