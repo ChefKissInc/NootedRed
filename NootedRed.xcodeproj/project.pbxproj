@@ -276,7 +276,7 @@
 				CE405EDA1E4A080F00AA0B3D /* plugin_start.hpp */,
 			);
 			name = Headers;
-			path = Lilu.kext/Contents/Resources/Headers;
+			path = Lilu/Lilu/Headers;
 			sourceTree = SOURCE_ROOT;
 		};
 		CE405EC51E49DD7100AA0B3D /* Library */ = {
@@ -285,7 +285,7 @@
 				CE405ED81E4A080700AA0B3D /* plugin_start.cpp */,
 			);
 			name = Library;
-			path = Lilu.kext/Contents/Resources/Library;
+			path = Lilu/Lilu/Library;
 			sourceTree = SOURCE_ROOT;
 		};
 		CE405EC81E49DD7B00AA0B3D /* SDK */ = {
@@ -485,7 +485,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
-					"$(PROJECT_DIR)/Lilu.kext/Contents/Resources",
+					"$(PROJECT_DIR)/Lilu/Lilu",
 					"$(PROJECT_DIR)/MacKernelSDK/Headers",
 				);
 				KERNEL_EXTENSION_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/MacKernelSDK/Headers";
@@ -544,7 +544,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
-					"$(PROJECT_DIR)/Lilu.kext/Contents/Resources",
+					"$(PROJECT_DIR)/Lilu/Lilu",
 					"$(PROJECT_DIR)/MacKernelSDK/Headers",
 				);
 				KERNEL_EXTENSION_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/MacKernelSDK/Headers";
