@@ -7,9 +7,6 @@ on:
   schedule:
     - cron: "36 19 * * 4"
 
-env:
-  PROJECT_TYPE: KEXT
-
 jobs:
   analyze:
     name: CodeQL Analysis
@@ -33,12 +30,6 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
-      - name: CI Bootstrap
-        run: |
-          src=$(/usr/bin/curl -Lfs https://raw.githubusercontent.com/acidanthera/ocbuild/master/ci-bootstrap.sh) && eval "$src" || exit 1
-      - name: Lilu Bootstrap
-        run: |
-          src=$(/usr/bin/curl -Lfs https://raw.githubusercontent.com/acidanthera/Lilu/master/Lilu/Scripts/bootstrap.sh) && eval "$src" || exit 1
       - run: xcodebuild -configuration Debug
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
