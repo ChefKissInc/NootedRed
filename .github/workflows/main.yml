@@ -7,9 +7,6 @@ on:
   release:
     types: [published]
 
-env:
-  PROJECT_TYPE: KEXT
-
 jobs:
   build:
     name: Build
