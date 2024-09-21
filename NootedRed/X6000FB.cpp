@@ -217,6 +217,40 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("X6000FB", "Applied DDI Caps patches");
 
+        if (ADDPR(debugEnabled)) {
+            auto *logEnableMaskMinors =
+                patcher.solveSymbol<void *>(id, "__ZN14AmdDalDmLogger19LogEnableMaskMinorsE", slide, size);
+            patcher.clearError();
+
+            if (logEnableMaskMinors == nullptr) {
+                size_t offset = 0;
+                PANIC_COND(!KernelPatcher::findPattern(kDalDmLoggerShouldLogPartialPattern,
+                               kDalDmLoggerShouldLogPartialPatternMask, arrsize(kDalDmLoggerShouldLogPartialPattern),
+                               reinterpret_cast<const void *>(slide), size, &offset),
+                    "X6000FB", "Failed to solve LogEnableMaskMinors");
+                auto *instAddr = reinterpret_cast<UInt8 *>(slide + offset);
+                // inst + instSize + imm32 = addr
+                logEnableMaskMinors = instAddr + 7 + *reinterpret_cast<SInt32 *>(instAddr + 3);
+            }
+
+            PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "X6000FB",
+                "Failed to enable kernel writing");
+            memset(logEnableMaskMinors, 0xFF, 0x80);    // Enable all DalDmLogger logs
+            MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
+
+            // Enable all Display Core logs
+            if (NRed::callback->attributes.isCatalina()) {
+                const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kInitPopulateDcInitDataCatalinaOriginal,
+                    kInitPopulateDcInitDataCatalinaPatched, 1};
+                PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
+                    "Failed to apply populateDcInitData patch (10.15)");
+            } else {
+                const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kInitPopulateDcInitDataOriginal,
+                    kInitPopulateDcInitDataPatched, 1};
+                PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply populateDcInitData patch");
+            }
+        }
+
         return true;
     }
 
@@ -514,14 +548,18 @@ constexpr static const char *LogTypes[] = {
     "DisplayStats",
 };
 
+// Needed to prevent stack overflow
 void X6000FB::wrapDmLoggerWrite(void *, const UInt32 logType, const char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
+    va_list va;
+    va_start(va, fmt);
     auto *message = static_cast<char *>(IOMalloc(0x1000));
-    bzero(message, 0x1000);
-    vsnprintf(message, 0x1000, fmt, args);
-    va_end(args);
-    const char *logTypeStr = logType < arrsize(LogTypes) ? LogTypes[logType] : "Info";
-    kprintf("[%s] %s", logTypeStr, message);
+    vsnprintf(message, 0x1000, fmt, va);
+    va_end(va);
+    auto *epilogue = message[strnlen(message, 0x1000) - 1] == '\n' ? "" : "\n";
+    if (logType < arrsize(LogTypes)) {
+        kprintf("[%s]\t%s%s", LogTypes[logType], message, epilogue);
+    } else {
+        kprintf("%s%s", message, epilogue);
+    }
     IOFree(message, 0x1000);
 }
