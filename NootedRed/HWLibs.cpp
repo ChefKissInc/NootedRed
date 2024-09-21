@@ -316,7 +316,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
 
             const LookupPatchPlus patch = {&kextRadeonX5000HWLibs, kAtiPowerPlayServicesConstructorOriginal,
                 kAtiPowerPlayServicesConstructorPatched, 1};
-            PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply macOS 13.0+ patches");
+            PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply MCIL debugLevel patch");
         }
 
         return true;
