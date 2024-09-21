@@ -15,7 +15,7 @@ static KernelPatcher::KextInfo kextRadeonX5000 {
     "com.apple.kext.AMDRadeonX5000",
     &pathRadeonX5000,
     1,
-    {},
+    {true},
     {},
     KernelPatcher::KextInfo::Unloaded,
 };

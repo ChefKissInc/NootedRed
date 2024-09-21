@@ -18,7 +18,7 @@ static KernelPatcher::KextInfo kextAGDP {
     "com.apple.driver.AppleGraphicsDevicePolicy",
     &pathAGDP,
     1,
-    {},
+    {true},
     {},
     KernelPatcher::KextInfo::Unloaded,
 };
@@ -26,7 +26,7 @@ static KernelPatcher::KextInfo kextBacklight {
     "com.apple.driver.AppleBacklight",
     &pathBacklight,
     1,
-    {},
+    {true},
     {},
     KernelPatcher::KextInfo::Unloaded,
 };
@@ -34,7 +34,7 @@ static KernelPatcher::KextInfo kextMCCSControl {
     "com.apple.driver.AppleMCCSControl",
     &pathMCCSControl,
     1,
-    {},
+    {true},
     {},
     KernelPatcher::KextInfo::Unloaded,
 };

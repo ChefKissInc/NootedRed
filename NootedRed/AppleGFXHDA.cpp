@@ -20,7 +20,7 @@ static KernelPatcher::KextInfo kextAppleGFXHDA {
     "com.apple.driver.AppleGFXHDA",
     &pathAppleGFXHDA,
     1,
-    {},
+    {true},
     {},
     KernelPatcher::KextInfo::Unloaded,
 };

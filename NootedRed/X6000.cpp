@@ -13,7 +13,7 @@ static KernelPatcher::KextInfo kextRadeonX6000 = {
     "com.apple.kext.AMDRadeonX6000",
     &pathRadeonX6000,
     1,
-    {},
+    {true},
     {},
     KernelPatcher::KextInfo::Unloaded,
 };
