@@ -110,6 +110,17 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             }
         }
 
+        if (ADDPR(debugEnabled)) {
+            RouteRequestPlus requests[] = {
+                {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo,
+                    this->orgInitWithPciInfo},
+                {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", wrapDoGPUPanic},
+                {"_dm_logger_write", wrapDmLoggerWrite, kDmLoggerWritePattern},
+            };
+            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X6000FB",
+                "Failed to route debug symbols");
+        }
+
         if (NRed::callback->attributes.isRenoir()) {
             RouteRequestPlus request {"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware,
                 this->orgIH40IVRingInitHardware, kIH40IVRingInitHardwarePattern, kIH40IVRingInitHardwareMask};
@@ -445,4 +456,72 @@ void *X6000FB::wrapLinkCreate(void *data) {
     }
 
     return ret;
+}
+
+bool X6000FB::wrapInitWithPciInfo(void *that, void *pciDevice) {
+    auto ret = FunctionCast(wrapInitWithPciInfo, callback->orgInitWithPciInfo)(that, pciDevice);
+    getMember<UInt64>(that, 0x28) = 0xFFFFFFFFFFFFFFFF;    // Enable all log types
+    getMember<UInt32>(that, 0x30) = 0xFFFFFFFF;            // Enable all log severities
+    return ret;
+}
+
+void X6000FB::wrapDoGPUPanic(char const *fmt, ...) {
+    va_list va;
+    va_start(va, fmt);
+    auto *buf = static_cast<char *>(IOMalloc(1000));
+    bzero(buf, 1000);
+    vsnprintf(buf, 1000, fmt, va);
+    va_end(va);
+
+    DBGLOG("X6000FB", "doGPUPanic: %s", buf);
+    IOSleep(10000);
+    panic("%s", buf);
+}
+
+constexpr static const char *LogTypes[] = {
+    "Error",
+    "Warning",
+    "Debug",
+    "DC_Interface",
+    "DTN",
+    "Surface",
+    "HW_Hotplug",
+    "HW_LKTN",
+    "HW_Mode",
+    "HW_Resume",
+    "HW_Audio",
+    "HW_HPDIRQ",
+    "MST",
+    "Scaler",
+    "BIOS",
+    "BWCalcs",
+    "BWValidation",
+    "I2C_AUX",
+    "Sync",
+    "Backlight",
+    "Override",
+    "Edid",
+    "DP_Caps",
+    "Resource",
+    "DML",
+    "Mode",
+    "Detect",
+    "LKTN",
+    "LinkLoss",
+    "Underflow",
+    "InterfaceTrace",
+    "PerfTrace",
+    "DisplayStats",
+};
+
+void X6000FB::wrapDmLoggerWrite(void *, const UInt32 logType, const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    auto *message = static_cast<char *>(IOMalloc(0x1000));
+    bzero(message, 0x1000);
+    vsnprintf(message, 0x1000, fmt, args);
+    va_end(args);
+    const char *logTypeStr = logType < arrsize(LogTypes) ? LogTypes[logType] : "Info";
+    kprintf("[%s] %s", logTypeStr, message);
+    IOFree(message, 0x1000);
 }

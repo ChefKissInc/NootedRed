@@ -306,6 +306,19 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
                 "Failed to apply macOS 13.0+ patches");
         }
 
+        if (ADDPR(debugEnabled)) {
+            RouteRequestPlus request = {"__ZN14AmdTtlServices27cosReadConfigurationSettingEPvP36cos_read_configuration_"
+                                        "setting_inputP37cos_read_configuration_setting_output",
+                wrapCosReadConfigurationSetting, this->orgCosReadConfigurationSetting,
+                kCosReadConfigurationSettingPattern, kCosReadConfigurationSettingPatternMask};
+            PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs",
+                "Failed to route cosReadConfigurationSetting");
+
+            const LookupPatchPlus patch = {&kextRadeonX5000HWLibs, kAtiPowerPlayServicesConstructorOriginal,
+                kAtiPowerPlayServicesConstructorPatched, 1};
+            PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply macOS 13.0+ patches");
+        }
+
         return true;
     }
 
@@ -644,4 +657,23 @@ CAILResult X5000HWLibs::wrapSmu901CreateFunctionPointerList(void *ctx) {
     callback->smuInternalHWExitField.set(ctx, reinterpret_cast<mach_vm_address_t>(smuInternalHwExit));
     callback->smuFullAsicResetField.set(ctx, reinterpret_cast<mach_vm_address_t>(smuFullAsicReset));
     return kCAILResultSuccess;
+}
+
+CAILResult X5000HWLibs::wrapCosReadConfigurationSetting(void *cosHandle, CosReadConfigurationSettingInput *readCfgInput,
+    CosReadConfigurationSettingOutput *readCfgOutput) {
+    if (readCfgInput != nullptr && readCfgInput->settingName != nullptr && readCfgInput->outPtr != nullptr &&
+        readCfgInput->outLen == 4) {
+        if (strncmp(readCfgInput->settingName, "PP_LogLevel", 12) == 0) {
+            memset(readCfgInput->outPtr, 0xFF, 4);
+            readCfgOutput->settingLen = 4;
+            return kCAILResultSuccess;
+        }
+        if (strncmp(readCfgInput->settingName, "PP_LogSource", 13) == 0) {
+            memset(readCfgInput->outPtr, 0xFF, 4);
+            readCfgOutput->settingLen = 4;
+            return kCAILResultSuccess;
+        }
+    }
+    return FunctionCast(wrapCosReadConfigurationSetting, callback->orgCosReadConfigurationSetting)(cosHandle,
+        readCfgInput, readCfgOutput);
 }

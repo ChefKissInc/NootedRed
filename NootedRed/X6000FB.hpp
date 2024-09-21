@@ -42,6 +42,7 @@ class X6000FB {
     mach_vm_address_t orgLinkCreate {0};
     t_DcLinkSetBacklightLevel orgDcLinkSetBacklightLevel {0};
     t_DcLinkSetBacklightLevelNits orgDcLinkSetBacklightLevelNits {0};
+    mach_vm_address_t orgInitWithPciInfo {0};
 
     static bool OnAppleBacklightDisplayLoad(void *target, void *refCon, IOService *newService, IONotifier *notifier);
     void registerDispMaxBrightnessNotif();
@@ -58,6 +59,9 @@ class X6000FB {
     static UInt32 wrapControllerPowerUp(void *that);
     static void wrapDpReceiverPowerCtrl(void *link, bool power_on);
     static void *wrapLinkCreate(void *data);
+    static bool wrapInitWithPciInfo(void *that, void *pciDevice);
+    static void wrapDoGPUPanic(char const *fmt, ...);
+    static void wrapDmLoggerWrite(void *logger, const UInt32 logType, const char *fmt, ...);
 };
 
 //------ Patterns ------//
@@ -113,6 +117,9 @@ static const UInt8 kDcLinkSetBacklightLevelNitsPattern[] = {0x55, 0x48, 0x89, 0x
     0x48, 0x85, 0xFF, 0x74, 0x00};
 static const UInt8 kDcLinkSetBacklightLevelNitsMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00,
     0xFF, 0xFF, 0xFF, 0xFF, 0x00};
+
+static const UInt8 kDmLoggerWritePattern[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54,
+    0x53, 0x48, 0x81, 0xEC, 0x88, 0x04, 0x00, 0x00};
 
 //------ Patches ------//
 
