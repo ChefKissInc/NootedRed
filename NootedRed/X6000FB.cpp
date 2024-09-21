@@ -495,7 +495,7 @@ void *X6000FB::wrapLinkCreate(void *data) {
 bool X6000FB::wrapInitWithPciInfo(void *that, void *pciDevice) {
     auto ret = FunctionCast(wrapInitWithPciInfo, callback->orgInitWithPciInfo)(that, pciDevice);
     getMember<UInt64>(that, 0x28) = 0xFFFFFFFFFFFFFFFF;    // Enable all log types
-    getMember<UInt32>(that, 0x30) = 0xFFFFFFFF;            // Enable all log severities
+    getMember<UInt32>(that, 0x30) = 0xFF;                  // Enable all log severities
     return ret;
 }
 
