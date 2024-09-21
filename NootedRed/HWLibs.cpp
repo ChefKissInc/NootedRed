@@ -663,14 +663,19 @@ CAILResult X5000HWLibs::wrapCosReadConfigurationSetting(void *cosHandle, CosRead
     CosReadConfigurationSettingOutput *readCfgOutput) {
     if (readCfgInput != nullptr && readCfgInput->settingName != nullptr && readCfgInput->outPtr != nullptr &&
         readCfgInput->outLen == 4) {
-        if (strncmp(readCfgInput->settingName, "PP_LogLevel", 12) == 0) {
-            memset(readCfgInput->outPtr, 0xFF, 4);
-            readCfgOutput->settingLen = 4;
+        if (strncmp(readCfgInput->settingName, "PP_LogLevel", 12) == 0 ||
+            strncmp(readCfgInput->settingName, "PP_LogSource", 13) == 0 ||
+            strncmp(readCfgInput->settingName, "PP_LogDestination", 18) == 0 ||
+            strncmp(readCfgInput->settingName, "PP_LogField", 12) == 0) {
+            *static_cast<UInt32 *>(readCfgInput->outPtr) = 0xFFFFFFFF;
+            if (readCfgOutput != nullptr) { readCfgOutput->settingLen = 4; }
             return kCAILResultSuccess;
         }
-        if (strncmp(readCfgInput->settingName, "PP_LogSource", 13) == 0) {
-            memset(readCfgInput->outPtr, 0xFF, 4);
-            readCfgOutput->settingLen = 4;
+        if (strncmp(readCfgInput->settingName, "PP_DumpRegister", 16) == 0 ||
+            strncmp(readCfgInput->settingName, "PP_DumpSMCTable", 16) == 0 ||
+            strncmp(readCfgInput->settingName, "PP_LogDumpTableBuffers", 23) == 0) {
+            *static_cast<UInt32 *>(readCfgInput->outPtr) = 1;
+            if (readCfgOutput != nullptr) { readCfgOutput->settingLen = 4; }
             return kCAILResultSuccess;
         }
     }
