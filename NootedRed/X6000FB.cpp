@@ -18,7 +18,7 @@ static KernelPatcher::KextInfo kextRadeonX6000Framebuffer {
     "com.apple.kext.AMDRadeonX6000Framebuffer",
     &pathRadeonX6000Framebuffer,
     1,
-    {},
+    {true},
     {},
     KernelPatcher::KextInfo::Unloaded,
 };

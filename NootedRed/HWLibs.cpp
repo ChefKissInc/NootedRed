@@ -15,7 +15,7 @@ static KernelPatcher::KextInfo kextRadeonX5000HWLibs {
     "com.apple.kext.AMDRadeonX5000HWLibs",
     &pathRadeonX5000HWLibs,
     1,
-    {},
+    {true},
     {},
     KernelPatcher::KextInfo::Unloaded,
 };
