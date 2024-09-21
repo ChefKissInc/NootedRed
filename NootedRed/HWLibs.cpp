@@ -317,6 +317,11 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
             const LookupPatchPlus patch = {&kextRadeonX5000HWLibs, kAtiPowerPlayServicesConstructorOriginal,
                 kAtiPowerPlayServicesConstructorPatched, 1};
             PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply MCIL debugLevel patch");
+            if (NRed::callback->attributes.isBigSurAndLater()) {
+                const LookupPatchPlus patch = {&kextRadeonX5000HWLibs, kAmdLogPspOriginal, kAmdLogPspOriginalMask,
+                    kAmdLogPspPatched, 1};
+                PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply amd_log_psp patch");
+            }
         }
 
         return true;
