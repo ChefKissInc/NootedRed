@@ -182,6 +182,15 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
         PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs",
             "Failed to route smu_9_0_1_create_function_pointer_list");
 
+        if (ADDPR(debugEnabled)) {
+            RouteRequestPlus request = {"__ZN14AmdTtlServices27cosReadConfigurationSettingEPvP36cos_read_configuration_"
+                                        "setting_inputP37cos_read_configuration_setting_output",
+                wrapCosReadConfigurationSetting, this->orgCosReadConfigurationSetting,
+                kCosReadConfigurationSettingPattern, kCosReadConfigurationSettingPatternMask};
+            PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs",
+                "Failed to route cosReadConfigurationSetting");
+        }
+
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "HWLibs",
             "Failed to enable kernel writing");
         if (orgDeviceTypeTable) { *orgDeviceTypeTable = {.deviceId = NRed::callback->deviceID, .deviceType = 6}; }
@@ -307,13 +316,6 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
         }
 
         if (ADDPR(debugEnabled)) {
-            RouteRequestPlus request = {"__ZN14AmdTtlServices27cosReadConfigurationSettingEPvP36cos_read_configuration_"
-                                        "setting_inputP37cos_read_configuration_setting_output",
-                wrapCosReadConfigurationSetting, this->orgCosReadConfigurationSetting,
-                kCosReadConfigurationSettingPattern, kCosReadConfigurationSettingPatternMask};
-            PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs",
-                "Failed to route cosReadConfigurationSetting");
-
             const LookupPatchPlus patch = {&kextRadeonX5000HWLibs, kAtiPowerPlayServicesConstructorOriginal,
                 kAtiPowerPlayServicesConstructorPatched, 1};
             PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply MCIL debugLevel patch");
