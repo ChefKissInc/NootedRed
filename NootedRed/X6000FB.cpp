@@ -395,7 +395,10 @@ IOReturn X6000FB::wrapSetAttributeForConnection(IOService *framebuffer, IOIndex 
 
     callback->curPwmBacklightLvl = static_cast<UInt32>(value);
 
-    if (callback->panelCntlPtr == nullptr || callback->embeddedPanelLink == nullptr) { return kIOReturnNoDevice; }
+    if ((NRed::callback->attributes.isBigSurAndLater() && callback->panelCntlPtr == nullptr) ||
+        callback->embeddedPanelLink == nullptr) {
+        return kIOReturnNoDevice;
+    }
 
     if (callback->maxPwmBacklightLvl == 0) { return kIOReturnInternalError; }
 
