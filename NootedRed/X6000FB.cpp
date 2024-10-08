@@ -60,6 +60,12 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
         PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "X6000FB", "Failed to resolve CAIL_ASIC_CAPS_TABLE");
 
         if (NRed::callback->attributes.isBacklightEnabled()) {
+            if (NRed::callback->attributes.isBigSurAndLater() && NRed::callback->attributes.isRaven()) {
+                SolveRequestPlus solveRequest {"_dce_driver_set_backlight", this->orgDceDriverSetBacklight,
+                    kDceDriverSetBacklightPattern, kDceDriverSetBacklightPatternMask};
+                PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "X6000FB",
+                    "Failed to resolve dce_driver_set_backlight");
+            }
             if (NRed::callback->attributes.isSonoma1404AndLater()) {
                 SolveRequestPlus solveRequest {"_dc_link_set_backlight_level", this->orgDcLinkSetBacklightLevel,
                     kDcLinkSetBacklightLevelPattern14_4};
@@ -145,6 +151,19 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
         }
 
         if (NRed::callback->attributes.isBacklightEnabled()) {
+            if (NRed::callback->attributes.isBigSurAndLater() && NRed::callback->attributes.isRaven()) {
+                if (NRed::callback->attributes.isSonoma1404AndLater()) {
+                    RouteRequestPlus request = {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit,
+                        this->orgDcePanelCntlHwInit, kDcePanelCntlHwInitPattern14_4};
+                    PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
+                        "Failed to route dce_panel_cntl_hw_init (14.4+)");
+                } else {
+                    RouteRequestPlus request = {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit,
+                        this->orgDcePanelCntlHwInit, kDcePanelCntlHwInitPattern};
+                    PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
+                        "Failed to route dce_panel_cntl_hw_init");
+                }
+            }
             RouteRequestPlus requests[] = {
                 {"_link_create", wrapLinkCreate, this->orgLinkCreate, kLinkCreatePattern, kLinkCreateMask},
                 {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25setAttributeForConnectionEijm",
@@ -354,7 +373,7 @@ bool X6000FB::OnAppleBacklightDisplayLoad(void *, void *, IOService *newService,
 }
 
 void X6000FB::registerDispMaxBrightnessNotif() {
-    if (callback->dispNotif) { return; }
+    if (callback->dispNotif != nullptr) { return; }
 
     auto *matching = IOService::serviceMatching("AppleBacklightDisplay");
     if (matching == nullptr) {
@@ -374,11 +393,12 @@ IOReturn X6000FB::wrapSetAttributeForConnection(IOService *framebuffer, IOIndex 
         connectIndex, attribute, value);
     if (attribute != FbAttributeBacklight) { return ret; }
 
-    if (callback->maxPwmBacklightLvl == 0) { return kIOReturnSuccess; }
-    if (callback->embeddedPanelLink == nullptr) { return kIOReturnNoDevice; }
-
-    // Set the backlight
     callback->curPwmBacklightLvl = static_cast<UInt32>(value);
+
+    if (callback->panelCntlPtr == nullptr || callback->embeddedPanelLink == nullptr) { return kIOReturnNoDevice; }
+
+    if (callback->maxPwmBacklightLvl == 0) { return kIOReturnInternalError; }
+
     UInt32 percentage = callback->curPwmBacklightLvl * 100 / callback->maxPwmBacklightLvl;
 
     // AMDGPU doesn't use AUX on HDR/SDR displays that can use it. Why?
@@ -386,15 +406,18 @@ IOReturn X6000FB::wrapSetAttributeForConnection(IOService *framebuffer, IOIndex 
         // TODO: Obtain the actual max brightness for the screen
         UInt32 auxValue = (callback->maxOLED * percentage) / 100;
         // dc_link_set_backlight_level_nits doesn't print the new backlight level, so we'll do it
-        DBGLOG("X6000FB", "setAttributeForConnection: New AUX brightness: %d millinits (%d nits)", auxValue,
-            (auxValue / 1000));
-        if (callback->orgDcLinkSetBacklightLevelNits(callback->embeddedPanelLink, true, auxValue, 15000)) {
-            return kIOReturnSuccess;
-        }
+        DBGLOG("X6000FB", "%s: New AUX brightness: %d millinits (%d nits)", __FUNCTION__, auxValue, (auxValue / 1000));
+        callback->orgDcLinkSetBacklightLevelNits(callback->embeddedPanelLink, true, auxValue, 15000);
+    } else if (NRed::callback->attributes.isRaven() && NRed::callback->attributes.isBigSurAndLater()) {
+        // XX: Use the old brightness logic for now on Raven
+        // until I can find out the actual problem with DMCU.
+        UInt32 pwmValue = percentage >= 100 ? 0x1FF00 : ((percentage * 0xFF) / 100) << 8U;
+        DBGLOG("X6000FB", "%s: New PWM brightness: 0x%X", __FUNCTION__, pwmValue);
+        callback->orgDceDriverSetBacklight(callback->panelCntlPtr, pwmValue);
+        return kIOReturnSuccess;
     } else {
         UInt32 pwmValue = (percentage * 0xFFFF) / 100;
-        DBGLOG("X6000FB", "setAttributeForConnection: New PWM brightness: 0x%X", pwmValue);
-
+        DBGLOG("X6000FB", "%s: New PWM brightness: 0x%X", __FUNCTION__, pwmValue);
         if (callback->orgDcLinkSetBacklightLevel(callback->embeddedPanelLink, pwmValue, 0)) { return kIOReturnSuccess; }
     }
 
@@ -459,6 +482,11 @@ void X6000FB::wrapDpReceiverPowerCtrl(void *link, bool power_on) {
     IOSleep(250);    // Link needs a bit of delay to change power state
 }
 
+UInt32 X6000FB::wrapDcePanelCntlHwInit(void *panelCntl) {
+    callback->panelCntlPtr = panelCntl;
+    return FunctionCast(wrapDcePanelCntlHwInit, callback->orgDcePanelCntlHwInit)(panelCntl);
+}
+
 void *X6000FB::wrapLinkCreate(void *data) {
     void *ret = FunctionCast(wrapLinkCreate, callback->orgLinkCreate)(data);
 
@@ -480,7 +508,7 @@ void *X6000FB::wrapLinkCreate(void *data) {
                 SYSLOG("X6000FB", "REPORT THIS TO THE DEVELOPERS AS SOON AS POSSIBLE!!!!");
             }
             callback->embeddedPanelLink = ret;
-            if ((callback->dcLinkCapsField.get(ret) & DC_DPCD_EXT_CAPS_OLED) != 0) { callback->supportsAUX = true; }
+            callback->supportsAUX = (callback->dcLinkCapsField.get(ret) & DC_DPCD_EXT_CAPS_OLED) != 0;
 
             DBGLOG("X6000FB", "Will use %s for display brightness control.", callback->supportsAUX ? "AUX" : "DMCU");
         }
