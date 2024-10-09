@@ -268,6 +268,11 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
                     kInitPopulateDcInitDataPatched, 1};
                 PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply populateDcInitData patch");
             }
+
+            const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kBiosParserHelperInitWithDataOriginal,
+                kBiosParserHelperInitWithDataPatched, 1};
+            PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
+                "Failed to apply AmdBiosParserHelper::initWithData patch");
         }
 
         return true;
