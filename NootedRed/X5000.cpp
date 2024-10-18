@@ -81,7 +81,7 @@ void X5000::init() {
 
 bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextRadeonX5000.loadIndex == id) {
-        NRed::callback->ensureRMMIO();
+        NRed::callback->hwLateInit();
 
         UInt32 *orgChannelTypes;
         mach_vm_address_t startHWEngines;

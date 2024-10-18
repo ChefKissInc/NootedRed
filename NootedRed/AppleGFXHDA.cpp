@@ -34,7 +34,7 @@ void AppleGFXHDA::init() {
 
 bool AppleGFXHDA::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextAppleGFXHDA.loadIndex == id) {
-        NRed::callback->ensureRMMIO();
+        NRed::callback->hwLateInit();
 
         const UInt32 probeFind = Navi10HDMIID;
         const UInt32 probeRepl = NRed::callback->attributes.isRenoir() ? RenoirHDMIID : RavenHDMIID;

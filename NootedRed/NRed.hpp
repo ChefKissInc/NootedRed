@@ -89,7 +89,7 @@ class NRed {
 
     void init();
     void processPatcher(KernelPatcher &patcher);
-    void ensureRMMIO();
+    void hwLateInit();
     void processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 
     const char *getChipName();
@@ -109,6 +109,7 @@ class NRed {
     }
 
     private:
+    bool getVBIOSFromExpansionROM();
     bool getVBIOSFromVFCT();
     bool getVBIOSFromVRAM();
     UInt32 smuWaitForResponse();

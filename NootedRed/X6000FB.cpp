@@ -53,7 +53,7 @@ void X6000FB::init() {
 
 bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextRadeonX6000Framebuffer.loadIndex == id) {
-        NRed::callback->ensureRMMIO();
+        NRed::callback->hwLateInit();
 
         CAILAsicCapsEntry *orgAsicCapsTable;
         SolveRequestPlus solveRequest {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable, kCailAsicCapsTablePattern};

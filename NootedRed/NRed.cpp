@@ -159,7 +159,7 @@ void NRed::processPatcher(KernelPatcher &patcher) {
     this->pciRevision = WIOKit::readPCIConfigValue(NRed::callback->iGPU, WIOKit::kIOPCIConfigRevisionID);
 
     SYSLOG_COND(this->iGPU->getProperty("model") != nullptr, "NRed",
-        "WARNING!!! Attempted to manually override the model, this is no longer supported!!");
+        "WARNING!!! Overriding the model is no longer supported!");
 
     auto *model = getBranding(this->deviceID, this->pciRevision);
     auto modelLen = static_cast<UInt32>(strlen(model) + 1);
@@ -179,24 +179,6 @@ void NRed::processPatcher(KernelPatcher &patcher) {
             WIOKit::renameDevice(device, name);
             WIOKit::awaitPublishing(device);
         }
-    }
-
-    auto *prop = OSDynamicCast(OSData, this->iGPU->getProperty("ATY,bin_image"));
-    if (prop == nullptr) {
-        if (!this->getVBIOSFromVFCT()) {
-            SYSLOG("NRed", "Failed to get VBIOS from VFCT, trying to get it from VRAM!");
-            PANIC_COND(!this->getVBIOSFromVRAM(), "NRed", "Failed to get VBIOS!");
-        }
-    } else {
-        SYSLOG("NRed", "WARNING!!! VBIOS MANUALLY OVERRIDDEN, ONLY DO THIS IF YOU KNOW WHAT YOU'RE DOING!!");
-        this->vbiosData = OSData::withBytes(prop->getBytesNoCopy(), prop->getLength());
-        PANIC_COND(this->vbiosData == nullptr, "NRed", "Failed to allocate VBIOS data!");
-    }
-
-    auto len = this->vbiosData->getLength();
-    if (len < 65536) {
-        DBGLOG("NRed", "Padding VBIOS to 65536 bytes (was %u).", len);
-        this->vbiosData->appendByte(0, 65536 - len);
     }
 
     DeviceInfo::deleter(devInfo);
@@ -306,8 +288,35 @@ OSMetaClassBase *NRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const O
     return nullptr;
 }
 
-void NRed::ensureRMMIO() {
+void NRed::hwLateInit() {
     if (this->rmmio != nullptr) { return; }
+
+    auto *atombiosImageProp = OSDynamicCast(OSData, this->iGPU->getProperty("ATY,bin_image"));
+    if (atombiosImageProp == nullptr) {
+        if (this->getVBIOSFromExpansionROM()) {
+            DBGLOG("NRed", "Got VBIOS from PCI Expansion ROM.");
+        } else {
+            SYSLOG("NRed", "Failed to get VBIOS from PCI Expansion ROM, trying to get it from VFCT!");
+            if (this->getVBIOSFromVFCT()) {
+                DBGLOG("NRed", "Got VBIOS from VFCT.");
+            } else {
+                SYSLOG("NRed", "Failed to get VBIOS from VFCT, trying to get it from VRAM!");
+                PANIC_COND(!this->getVBIOSFromVRAM(), "NRed", "Failed to get VBIOS!");
+                DBGLOG("NRed", "Got VBIOS from VRAM.");
+            }
+        }
+        this->iGPU->setProperty("ATY,bin_image", this->vbiosData);
+    } else {
+        atombiosImageProp->retain();
+        this->vbiosData = atombiosImageProp;
+        SYSLOG("NRed", "!!! VBIOS MANUALLY OVERRIDDEN, MAKE SURE YOU KNOW WHAT YOU'RE DOING !!!");
+    }
+
+    auto len = this->vbiosData->getLength();
+    if (len < ATOMBIOS_IMAGE_SIZE) {
+        DBGLOG("NRed", "Padding VBIOS to %u bytes (was %u).", ATOMBIOS_IMAGE_SIZE, len);
+        this->vbiosData->appendByte(0, ATOMBIOS_IMAGE_SIZE - len);
+    }
 
     this->rmmio =
         this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5, kIOMapInhibitCache | kIOMapAnywhere);
@@ -501,6 +510,43 @@ static bool checkAtomBios(const UInt8 *bios, size_t size) {
     return false;
 }
 
+bool NRed::getVBIOSFromExpansionROM() {
+    auto expansionROMBase = this->iGPU->extendedConfigRead32(kIOPCIConfigExpansionROMBase);
+    if (expansionROMBase == 0) {
+        DBGLOG("NRed", "No PCI Expansion ROM available");
+        return false;
+    }
+
+    auto *expansionROM =
+        this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigExpansionROMBase, kIOMapInhibitCache | kIOMapAnywhere);
+    if (expansionROM == nullptr) { return false; }
+    auto expansionROMLength = min(expansionROM->getLength(), ATOMBIOS_IMAGE_SIZE);
+    if (expansionROMLength == 0) {
+        DBGLOG("NRed", "PCI Expansion ROM is empty");
+        expansionROM->release();
+        return false;
+    }
+
+    // Enable reading the expansion ROMs
+    this->iGPU->extendedConfigWrite32(kIOPCIConfigExpansionROMBase, expansionROMBase | 1);
+
+    this->vbiosData = OSData::withBytes(reinterpret_cast<const void *>(expansionROM->getVirtualAddress()),
+        static_cast<UInt32>(expansionROMLength));
+    PANIC_COND(this->vbiosData == nullptr, "NRed", "PCI Expansion ROM OSData::withBytes failed");
+    OSSafeReleaseNULL(expansionROM);
+
+    // Disable reading the expansion ROMs
+    this->iGPU->extendedConfigWrite32(kIOPCIConfigExpansionROMBase, expansionROMBase);
+
+    if (checkAtomBios(static_cast<const UInt8 *>(this->vbiosData->getBytesNoCopy()), expansionROMLength)) {
+        return true;
+    } else {
+        DBGLOG("NRed", "PCI Expansion ROM VBIOS is not an ATOMBIOS");
+        OSSafeReleaseNULL(this->vbiosData);
+        return false;
+    }
+}
+
 // Hack
 class AppleACPIPlatformExpert : IOACPIPlatformExpert {
     friend class NRed;
@@ -545,8 +591,6 @@ bool NRed::getVBIOSFromVFCT() {
 
             this->vbiosData = OSData::withBytes(vContent, vHdr->imageLength);
             PANIC_COND(this->vbiosData == nullptr, "NRed", "VFCT OSData::withBytes failed");
-            this->iGPU->setProperty("ATY,bin_image", this->vbiosData);
-
             return true;
         }
     }
@@ -571,7 +615,6 @@ bool NRed::getVBIOSFromVRAM() {
     }
     this->vbiosData = OSData::withBytes(fb, size);
     PANIC_COND(this->vbiosData == nullptr, "NRed", "VRAM OSData::withBytes failed");
-    this->iGPU->setProperty("ATY,bin_image", this->vbiosData);
     OSSafeReleaseNULL(bar0);
     return true;
 }
