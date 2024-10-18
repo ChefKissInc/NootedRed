@@ -381,7 +381,7 @@ struct CosReadConfigurationSettingOutput {
 
 //-------- AMD Catalyst Constants --------//
 
-constexpr UInt64 DEVICE_CAP_ENTRY_REV_DONT_CARE = 0xDEADCAFEU;
+constexpr UInt64 DEVICE_CAP_ENTRY_REV_DONT_CARE = 0xDEADCAFE;
 
 constexpr UInt32 PP_RESULT_OK = 1;
 
@@ -391,6 +391,10 @@ static const UInt32 ddiCapsRenoir[16] = {0x800005, 0x500011FE, 0x80000, 0x110010
     0x4002, 0x22420001, 0x9E20E18, 0x2000120, 0x0, 0x0, 0x0, 0x0, 0x0};
 
 static const UInt32 ravenDevAttrFlags = 0x49;
+
+constexpr UInt32 ATOMBIOS_IMAGE_SIZE = 0x10000;
+
+//-------- Display Core Constants --------//
 
 constexpr UInt32 DC_SIGNAL_TYPE_LVDS = 0x8;
 constexpr UInt32 DC_SIGNAL_TYPE_EDP = 0x80;
