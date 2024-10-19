@@ -400,7 +400,8 @@ IOReturn X6000FB::wrapSetAttributeForConnection(IOService *framebuffer, IOIndex 
 
     callback->curPwmBacklightLvl = static_cast<UInt32>(value);
 
-    if ((NRed::callback->attributes.isBigSurAndLater() && callback->panelCntlPtr == nullptr) ||
+    if ((NRed::callback->attributes.isBigSurAndLater() && NRed::callback->attributes.isRaven() &&
+            callback->panelCntlPtr == nullptr) ||
         callback->embeddedPanelLink == nullptr) {
         return kIOReturnNoDevice;
     }
@@ -416,7 +417,7 @@ IOReturn X6000FB::wrapSetAttributeForConnection(IOService *framebuffer, IOIndex 
         // dc_link_set_backlight_level_nits doesn't print the new backlight level, so we'll do it
         DBGLOG("X6000FB", "%s: New AUX brightness: %d millinits (%d nits)", __FUNCTION__, auxValue, (auxValue / 1000));
         callback->orgDcLinkSetBacklightLevelNits(callback->embeddedPanelLink, true, auxValue, 15000);
-    } else if (NRed::callback->attributes.isRaven() && NRed::callback->attributes.isBigSurAndLater()) {
+    } else if (NRed::callback->attributes.isBigSurAndLater() && NRed::callback->attributes.isRaven()) {
         // XX: Use the old brightness logic for now on Raven
         // until I can find out the actual problem with DMCU.
         UInt32 pwmValue = percentage >= 100 ? 0x1FF00 : ((percentage * 0xFF) / 100) << 8U;
