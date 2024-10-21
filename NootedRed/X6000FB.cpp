@@ -536,7 +536,7 @@ bool X6000FB::wrapInitWithPciInfo(void *that, void *pciDevice) {
     return ret;
 }
 
-void X6000FB::wrapDoGPUPanic(char const *fmt, ...) {
+void X6000FB::wrapDoGPUPanic(void *, char const *fmt, ...) {
     va_list va;
     va_start(va, fmt);
     auto *buf = static_cast<char *>(IOMalloc(1000));
