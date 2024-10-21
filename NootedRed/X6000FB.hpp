@@ -65,7 +65,7 @@ class X6000FB {
     static UInt32 wrapDcePanelCntlHwInit(void *panelCntl);
     static void *wrapLinkCreate(void *data);
     static bool wrapInitWithPciInfo(void *that, void *pciDevice);
-    static void wrapDoGPUPanic(char const *fmt, ...);
+    static void wrapDoGPUPanic(void *that, char const *fmt, ...);
     static void wrapDmLoggerWrite(void *logger, const UInt32 logType, const char *fmt, ...);
 };
 
