@@ -14,6 +14,7 @@ constexpr UInt32 AMDGPU_MAX_USEC_TIMEOUT = 100000;
 
 constexpr UInt32 MP_BASE = 0x16000;
 constexpr UInt32 MP1_Public = 0x3B00000;
+constexpr UInt32 SMUIO_BASE = 0x16800;
 
 //-------- Generic Registers --------//
 
@@ -225,6 +226,11 @@ constexpr UInt32 mmIH_IH_BUFFER_MEM_CLK_SOFT_OVERRIDE_SHIFT = 0x1A;
 constexpr UInt32 mmIH_DBUS_MUX_CLK_SOFT_OVERRIDE_SHIFT = 0x1B;
 constexpr UInt32 mmIH_CHICKEN = 0x122C;
 constexpr UInt32 mmIH_MC_SPACE_GPA_ENABLE = 0x10;
+
+//-------- SMUIO Registers --------//
+
+constexpr UInt32 mmROM_INDEX = 0x28;
+constexpr UInt32 mmROM_DATA = 0x29;
 
 //-------- AMD Catalyst Data Types --------//
 
