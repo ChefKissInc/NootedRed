@@ -47,6 +47,7 @@ class X6000FB {
     t_DcLinkSetBacklightLevel orgDcLinkSetBacklightLevel {0};
     t_DcLinkSetBacklightLevelNits orgDcLinkSetBacklightLevelNits {0};
     mach_vm_address_t orgInitWithPciInfo {0};
+    mach_vm_address_t orgCreateRegisterAccess {0};
 
     static bool OnAppleBacklightDisplayLoad(void *target, void *refCon, IOService *newService, IONotifier *notifier);
     void registerDispMaxBrightnessNotif();
@@ -67,6 +68,7 @@ class X6000FB {
     static bool wrapInitWithPciInfo(void *that, void *pciDevice);
     static void wrapDoGPUPanic(void *that, char const *fmt, ...);
     static void wrapDmLoggerWrite(void *logger, const UInt32 logType, const char *fmt, ...);
+    static void *wrapCreateRegisterAccess(void *initData);
 };
 
 //------ Patterns ------//

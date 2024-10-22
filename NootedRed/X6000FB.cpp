@@ -98,6 +98,8 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
             {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
                 this->orgGetNumberOfConnectors, kGetNumberOfConnectorsPattern, kGetNumberOfConnectorsMask},
+            {"__ZN32AMDRadeonX6000_AmdRegisterAccess20createRegisterAccessERNS_8InitDataE", wrapCreateRegisterAccess,
+                this->orgCreateRegisterAccess},
         };
         PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X6000FB",
             "Failed to route symbols");
@@ -599,4 +601,10 @@ void X6000FB::wrapDmLoggerWrite(void *, const UInt32 logType, const char *fmt, .
         kprintf("%s%s", message, epilogue);
     }
     IOFree(message, 0x1000);
+}
+
+void *X6000FB::wrapCreateRegisterAccess(void *initData) {
+    getMember<UInt32>(initData, 0x24) = SMUIO_BASE + mmROM_INDEX;
+    getMember<UInt32>(initData, 0x28) = SMUIO_BASE + mmROM_DATA;
+    return FunctionCast(wrapCreateRegisterAccess, callback->orgCreateRegisterAccess)(initData);
 }
