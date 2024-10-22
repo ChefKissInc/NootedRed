@@ -293,16 +293,16 @@ void NRed::hwLateInit() {
 
     auto *atombiosImageProp = OSDynamicCast(OSData, this->iGPU->getProperty("ATY,bin_image"));
     if (atombiosImageProp == nullptr) {
-        if (this->getVBIOSFromExpansionROM()) {
-            DBGLOG("NRed", "Got VBIOS from PCI Expansion ROM.");
+        if (this->getVBIOSFromVFCT()) {
+            DBGLOG("NRed", "Got VBIOS from VFCT.");
         } else {
-            SYSLOG("NRed", "Failed to get VBIOS from PCI Expansion ROM, trying to get it from VFCT!");
-            if (this->getVBIOSFromVFCT()) {
-                DBGLOG("NRed", "Got VBIOS from VFCT.");
-            } else {
-                SYSLOG("NRed", "Failed to get VBIOS from VFCT, trying to get it from VRAM!");
-                PANIC_COND(!this->getVBIOSFromVRAM(), "NRed", "Failed to get VBIOS!");
+            SYSLOG("NRed", "Failed to get VBIOS from VFCT, trying to get it from VRAM!");
+            if (this->getVBIOSFromVRAM()) {
                 DBGLOG("NRed", "Got VBIOS from VRAM.");
+            } else {
+                SYSLOG("NRed", "Failed to get VBIOS from VRAM, trying to get it from PCI Expansion ROM!");
+                PANIC_COND(!this->getVBIOSFromExpansionROM(), "NRed", "Failed to get VBIOS!");
+                DBGLOG("NRed", "Got VBIOS from PCI Expansion ROM.");
             }
         }
         this->iGPU->setProperty("ATY,bin_image", this->vbiosData);
