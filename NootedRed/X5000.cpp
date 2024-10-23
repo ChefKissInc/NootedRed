@@ -213,6 +213,7 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
 }
 
 bool X5000::wrapAllocateHWEngines(void *that) {
+    DBGLOG("X5000", "allocateHWEngines << (that: %p)", that);
     auto *pm4 = OSObject::operator new(0x340);
     callback->orgGFX9PM4EngineConstructor(pm4);
     callback->pm4EngineField.set(that, pm4);
@@ -221,10 +222,12 @@ bool X5000::wrapAllocateHWEngines(void *that) {
     callback->orgGFX9SDMAEngineConstructor(sdma0);
     callback->sdma0EngineField.set(that, sdma0);
 
+    DBGLOG("X5000", "allocateHWEngines >> true");
     return true;
 }
 
 void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
+    DBGLOG("X5000", "setupAndInitializeHWCapabilities << (that: %p)", that);
     FunctionCast(wrapSetupAndInitializeHWCapabilities, callback->orgSetupAndInitializeHWCapabilities)(that);
 
     callback->displayPipeCountField.set(that, NRed::callback->attributes.isRenoir() ? 4 : 6);
@@ -232,9 +235,11 @@ void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
     callback->hasVCEField.set(that, false);
     callback->hasVCN0Field.set(that, false);
     callback->hasSDMAPagingQueueField.set(that, false);
+    DBGLOG("X5000", "setupAndInitializeHWCapabilities >>");
 }
 
 void X5000::wrapGFX9SetupAndInitializeHWCapabilities(void *that) {
+    DBGLOG("X5000", "GFX9::setupAndInitializeHWCapabilities << (that: %p)", that);
     char filename[128] = {0};
     snprintf(filename, arrsize(filename), "%s_gpu_info.bin",
         NRed::callback->attributes.isRenoir() ? "renoir" : NRed::callback->getChipName());
@@ -247,6 +252,7 @@ void X5000::wrapGFX9SetupAndInitializeHWCapabilities(void *that) {
     callback->cuPerSHField.set(that, gpuInfo->gcNumCuPerSh);
 
     FunctionCast(wrapGFX9SetupAndInitializeHWCapabilities, callback->orgGFX9SetupAndInitializeHWCapabilities)(that);
+    DBGLOG("X5000", "GFX9::setupAndInitializeHWCapabilities >>");
 }
 
 static const char *hwEngineToString(AMDHWEngineType ty) {
@@ -263,10 +269,17 @@ void *X5000::wrapGetHWChannel(void *that, AMDHWEngineType engineType, UInt32 rin
     return FunctionCast(wrapGetHWChannel, callback->orgGetHWChannel)(that, engineType, ringId);
 }
 
-void X5000::wrapInitializeFamilyType(void *that) { callback->familyTypeField.set(that, AMDGPU_FAMILY_RAVEN); }
+void X5000::wrapInitializeFamilyType(void *that) {
+    DBGLOG("X5000", "initializeFamilyType << (that: %p)", that);
+    callback->familyTypeField.set(that, AMDGPU_FAMILY_RAVEN);
+    DBGLOG("X5000", "initializeFamilyType >>");
+}
 
 void *X5000::wrapAllocateAMDHWDisplay(void *that) {
-    return FunctionCast(wrapAllocateAMDHWDisplay, X6000::callback->orgAllocateAMDHWDisplay)(that);
+    DBGLOG("X5000", "allocateAMDHWDisplay << (that: %p)", that);
+    auto *ret = FunctionCast(wrapAllocateAMDHWDisplay, X6000::callback->orgAllocateAMDHWDisplay)(that);
+    DBGLOG("X5000", "allocateAMDHWDisplay >> %p", ret);
+    return ret;
 }
 
 UInt64 X5000::wrapAdjustVRAMAddress(void *that, UInt64 addr) {
