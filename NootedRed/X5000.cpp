@@ -137,7 +137,7 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
                                       "PRIORITYP27AMDRadeonX5000_AMDAccelTask",
                 wrapObtainAccelChannelGroup1304, this->orgObtainAccelChannelGroup};
             PANIC_COND(!request.route(patcher, id, slide, size), "X5000", "Failed to route obtainAccelChannelGroup");
-        } else if (!NRed::callback->attributes.isCatalina()) {
+        } else if (NRed::callback->attributes.isBigSurAndLater()) {
             RouteRequestPlus request {
                 "__ZN37AMDRadeonX5000_AMDGraphicsAccelerator23obtainAccelChannelGroupE11SS_PRIORITY",
                 wrapObtainAccelChannelGroup, this->orgObtainAccelChannelGroup};
