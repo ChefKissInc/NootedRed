@@ -12,6 +12,8 @@ constexpr UInt32 AMDGPU_MAX_USEC_TIMEOUT = 100000;
 
 //-------- IP Bases --------//
 
+constexpr UInt32 NBIO_BASE_2 = 0xD20;
+constexpr UInt32 GC_BASE_0 = 0x2000;
 constexpr UInt32 MP_BASE = 0x16000;
 constexpr UInt32 MP1_Public = 0x3B00000;
 constexpr UInt32 SMUIO_BASE = 0x16800;
@@ -20,6 +22,12 @@ constexpr UInt32 SMUIO_BASE = 0x16800;
 
 constexpr UInt32 mmPCIE_INDEX2 = 0xE;
 constexpr UInt32 mmPCIE_DATA2 = 0xF;
+
+//-------- NBIO Registers --------//
+
+constexpr UInt32 mmRCC_DEV0_EPF0_STRAP0 = 0xF;
+constexpr UInt8 RCC_DEV0_EPF0_STRAP0_ATI_REV_ID_SHIFT = 0x18;
+constexpr UInt32 RCC_DEV0_EPF0_STRAP0_ATI_REV_ID_MASK = 0xF000000;
 
 //-------- SMU Registers --------//
 
@@ -47,6 +55,7 @@ constexpr UInt32 PPSMC_MSG_PowerGateAtHub = 0x3D;
 
 //-------- GC Registers --------//
 
+constexpr UInt32 mmMC_VM_FB_OFFSET = 0x96b;
 constexpr UInt32 mmDB_DEBUG2 = 0x60D;
 constexpr UInt32 mmDB_DEBUG2_BASE_IDX = 0;
 constexpr UInt32 mmDB_DEBUG3 = 0x60E;
