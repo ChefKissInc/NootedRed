@@ -249,9 +249,18 @@ void X5000::wrapGFX9SetupAndInitializeHWCapabilities(void *that) {
     FunctionCast(wrapGFX9SetupAndInitializeHWCapabilities, callback->orgGFX9SetupAndInitializeHWCapabilities)(that);
 }
 
-// Redirect SDMA1 to SDMA0
-void *X5000::wrapGetHWChannel(void *that, UInt32 engineType, UInt32 ringId) {
-    return FunctionCast(wrapGetHWChannel, callback->orgGetHWChannel)(that, (engineType == 2) ? 1 : engineType, ringId);
+static const char *hwEngineToString(AMDHWEngineType ty) {
+    if (ty >= kAMDHWEngineTypeMax) { return "Unknown"; }
+    static const char *names[11] = {"PM4", "SDMA0", "SDMA1", "SDMA2", "SDMA3", "UVD0", "UVD1", "VCE", "VCN0", "VCN1",
+        "SAMU"};
+    return names[ty];
+}
+
+void *X5000::wrapGetHWChannel(void *that, AMDHWEngineType engineType, UInt32 ringId) {
+    DBGLOG("X5000", "getHWChannel << (that: %p, engineType: %s, ringId: 0x%X)", that, hwEngineToString(engineType),
+        ringId);
+    if (engineType == kAMDHWEngineTypeSDMA1) { engineType = kAMDHWEngineTypeSDMA0; }
+    return FunctionCast(wrapGetHWChannel, callback->orgGetHWChannel)(that, engineType, ringId);
 }
 
 void X5000::wrapInitializeFamilyType(void *that) { callback->familyTypeField.set(that, AMDGPU_FAMILY_RAVEN); }

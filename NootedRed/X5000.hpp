@@ -6,6 +6,21 @@
 #include "ObjectField.hpp"
 #include <Headers/kern_patcher.hpp>
 
+enum AMDHWEngineType : UInt32 {
+    kAMDHWEngineTypePM4 = 0,
+    kAMDHWEngineTypeSDMA0,
+    kAMDHWEngineTypeSDMA1,
+    kAMDHWEngineTypeSDMA2,
+    kAMDHWEngineTypeSDMA3,
+    kAMDHWEngineTypeUVD0,
+    kAMDHWEngineTypeUVD1,
+    kAMDHWEngineTypeVCE,
+    kAMDHWEngineTypeVCN0,
+    kAMDHWEngineTypeVCN1,
+    kAMDHWEngineTypeSAMU,
+    kAMDHWEngineTypeMax,
+};
+
 class X5000 {
     friend class X6000;
 
@@ -42,7 +57,7 @@ class X5000 {
     static bool wrapAllocateHWEngines(void *that);
     static void wrapSetupAndInitializeHWCapabilities(void *that);
     static void wrapGFX9SetupAndInitializeHWCapabilities(void *that);
-    static void *wrapGetHWChannel(void *that, UInt32 engineType, UInt32 ringId);
+    static void *wrapGetHWChannel(void *that, AMDHWEngineType engineType, UInt32 ringId);
     static void wrapInitializeFamilyType(void *that);
     static void *wrapAllocateAMDHWDisplay(void *that);
     static UInt64 wrapAdjustVRAMAddress(void *that, UInt64 addr);
