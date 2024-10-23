@@ -53,6 +53,7 @@ class X5000 {
     mach_vm_address_t orgAllocateAMDHWAlignManager {0};
     mach_vm_address_t orgObtainAccelChannelGroup {0};
     mach_vm_address_t orgHwlConvertChipFamily {0};
+    mach_vm_address_t orgGetNumericProperty {0};
 
     static bool wrapAllocateHWEngines(void *that);
     static void wrapSetupAndInitializeHWCapabilities(void *that);
@@ -67,6 +68,7 @@ class X5000 {
     static void *wrapObtainAccelChannelGroup(void *that, UInt32 priority);
     static void *wrapObtainAccelChannelGroup1304(void *that, UInt32 priority, void *task);
     static UInt32 wrapHwlConvertChipFamily(void *that, UInt32 family, UInt32 revision);
+    static bool wrapGetNumericProperty(void *that, const char *name, uint32_t *value);
 };
 
 //------ Patterns ------//
