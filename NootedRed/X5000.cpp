@@ -296,8 +296,9 @@ UInt64 X5000::wrapAdjustVRAMAddress(void *that, UInt64 addr) {
 
 static UInt32 fakeGetPreferredSwizzleMode2(void *, void *pIn) { return getMember<UInt32>(pIn, 0x10); }
 
-void *X5000::wrapAllocateAMDHWAlignManager() {
-    auto *hwAlignManager = FunctionCast(wrapAllocateAMDHWAlignManager, callback->orgAllocateAMDHWAlignManager)();
+void *X5000::wrapAllocateAMDHWAlignManager(void *that) {
+    DBGLOG("X5000", "allocateAMDHWAlignManager << (that: %p)", that);
+    auto *hwAlignManager = FunctionCast(wrapAllocateAMDHWAlignManager, callback->orgAllocateAMDHWAlignManager)(that);
     auto *vtableNew = IOMalloc(0x238);
     auto *vtableOriginal = getMember<void *>(hwAlignManager, 0);
     memcpy(vtableNew, vtableOriginal, 0x230);
