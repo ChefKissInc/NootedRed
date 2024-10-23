@@ -324,8 +324,10 @@ void NRed::hwLateInit() {
     PANIC_COND(this->rmmio == nullptr || this->rmmio->getLength() == 0, "NRed", "Failed to map RMMIO");
     this->rmmioPtr = reinterpret_cast<UInt32 *>(this->rmmio->getVirtualAddress());
 
-    this->fbOffset = static_cast<UInt64>(this->readReg32(0x296B)) << 24;
-    this->devRevision = (this->readReg32(0xD2F) & 0xF000000) >> 0x18;
+    this->fbOffset = static_cast<UInt64>(this->readReg32(GC_BASE_0 + mmMC_VM_FB_OFFSET)) << 24;
+    this->devRevision =
+        (this->readReg32(NBIO_BASE_2 + mmRCC_DEV0_EPF0_STRAP0) & RCC_DEV0_EPF0_STRAP0_ATI_REV_ID_MASK) >>
+        RCC_DEV0_EPF0_STRAP0_ATI_REV_ID_SHIFT;
 
     switch (this->deviceID) {
         case 0x15D8:
