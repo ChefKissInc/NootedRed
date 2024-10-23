@@ -35,6 +35,8 @@ constexpr UInt32 mmMP1_SMN_FPS_CNT = 0x2C4;
 constexpr UInt32 smnMP1_FIRMWARE_FLAGS = 0x3010024;
 constexpr UInt32 smnMP1_FIRMWARE_FLAGS_INTERRUPTS_ENABLED = 0x1;
 
+//-------- SMU Messages --------//
+
 constexpr UInt32 PPSMC_MSG_PowerUpGfx = 0x6;
 constexpr UInt32 PPSMC_MSG_PowerUpSdma = 0xE;
 constexpr UInt32 PPSMC_MSG_DeviceDriverReset = 0x1E;
