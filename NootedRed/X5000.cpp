@@ -121,7 +121,8 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
                 this->orgAllocateAMDHWAlignManager},
             {"__ZN43AMDRadeonX5000_AMDVega10GraphicsAccelerator13getDeviceTypeEP11IOPCIDevice", wrapGetDeviceType},
             {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20writeASICHangLogInfoEPPv", wrapReturnZero},
-            {"__ZN4Addr2V27Gfx9Lib20HwlConvertChipFamilyEjj", wrapHwlConvertChipFamily, kHwlConvertChipFamilyPattern},
+            {"__ZN4Addr2V27Gfx9Lib20HwlConvertChipFamilyEjj", wrapHwlConvertChipFamily, this->orgHwlConvertChipFamily,
+                kHwlConvertChipFamilyPattern},
         };
         PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X5000", "Failed to route symbols");
 
@@ -301,17 +302,21 @@ void *X5000::wrapObtainAccelChannelGroup1304(void *that, UInt32 priority, void *
     return ret;
 }
 
-UInt32 X5000::wrapHwlConvertChipFamily(void *that, UInt32, UInt32) {
-    auto &settings = callback->chipSettingsField.getRef(that);
-    settings.isArcticIsland = 1;
-    settings.isRaven = 1;
-    if (NRed::callback->attributes.isRenoir()) {
-        settings.htileAlignFix = 1;
-        settings.applyAliasFix = 1;
-    } else if (NRed::callback->attributes.isRaven()) {
-        settings.depthPipeXorDisable = 1;
+UInt32 X5000::wrapHwlConvertChipFamily(void *that, UInt32 family, UInt32 revision) {
+    DBGLOG("X5000", "HwlConvertChipFamily >> (that: %p family: 0x%X revision: 0x%X)", that, family, revision);
+    if (family == AMDGPU_FAMILY_RAVEN) {
+        auto &settings = callback->chipSettingsField.getRef(that);
+        settings.isArcticIsland = 1;
+        settings.isRaven = 1;
+        if (NRed::callback->attributes.isRenoir()) {
+            settings.htileAlignFix = 1;
+            settings.applyAliasFix = 1;
+        } else if (NRed::callback->attributes.isRaven()) {
+            settings.depthPipeXorDisable = 1;
+        }
+        settings.isDcn1 = 1;
+        settings.metaBaseAlignFix = 1;
+        return ADDR_CHIP_FAMILY_AI;
     }
-    settings.isDcn1 = 1;
-    settings.metaBaseAlignFix = 1;
-    return ADDR_CHIP_FAMILY_AI;
+    return FunctionCast(wrapHwlConvertChipFamily, callback->orgHwlConvertChipFamily)(that, family, revision);
 }
