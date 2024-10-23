@@ -53,6 +53,7 @@ void X6000FB::init() {
 
 bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextRadeonX6000Framebuffer.loadIndex == id) {
+        SYSLOG_COND(ADDPR(debugEnabled), "X6000FB", "slide is 0x%llx", slide);
         NRed::callback->hwLateInit();
 
         CAILAsicCapsEntry *orgAsicCapsTable;

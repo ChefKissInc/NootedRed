@@ -46,6 +46,7 @@ void X6000::init() {
 
 bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextRadeonX6000.loadIndex == id) {
+        SYSLOG_COND(ADDPR(debugEnabled), "X6000", "slide is 0x%llx", slide);
         NRed::callback->hwLateInit();
 
         void *orgFillUBMSurface, *orgConfigureDisplay, *orgGetDisplayInfo, *orgAllocateScanoutFB;

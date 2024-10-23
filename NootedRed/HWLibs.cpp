@@ -97,6 +97,7 @@ void X5000HWLibs::init() {
 
 bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextRadeonX5000HWLibs.loadIndex == id) {
+        SYSLOG_COND(ADDPR(debugEnabled), "X5000HWLibs", "slide is 0x%llx", slide);
         NRed::callback->hwLateInit();
 
         CAILAsicCapsEntry *orgCapsTable;
