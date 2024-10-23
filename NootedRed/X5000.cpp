@@ -293,7 +293,9 @@ UInt64 X5000::wrapAdjustVRAMAddress(void *that, UInt64 addr) {
     if (addr == ret) {
         SYSTRACE_COND(ADDPR(debugEnabled), "X5000", "adjustVRAMAddress: 0x%llx -> 0x%llx NO CHANGE", addr, ret);
     } else {
+        #ifdef DEBUG
         auto originalRet = ret;
+        #endif
         ret += NRed::callback->fbOffset;
         DBGLOG("X5000", "adjustVRAMAddress: 0x%llx -> drv:0x%llx,ours:0x%llx", addr, originalRet, ret);
     }
