@@ -37,6 +37,7 @@ class X5000 {
     mach_vm_address_t orgAdjustVRAMAddress {0};
     mach_vm_address_t orgAllocateAMDHWAlignManager {0};
     mach_vm_address_t orgObtainAccelChannelGroup {0};
+    mach_vm_address_t orgHwlConvertChipFamily {0};
 
     static bool wrapAllocateHWEngines(void *that);
     static void wrapSetupAndInitializeHWCapabilities(void *that);
