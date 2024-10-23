@@ -126,6 +126,12 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
         };
         PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X5000", "Failed to route symbols");
 
+        if (ADDPR(debugEnabled)) {
+            RouteRequestPlus request = {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator18getNumericPropertyEPKcPj",
+                wrapGetNumericProperty, this->orgGetNumericProperty};
+            PANIC_COND(!request.route(patcher, id, slide, size), "X5000", "Failed to route getNumericProperty");
+        }
+
         if (NRed::callback->attributes.isVentura1304AndLater()) {
             RouteRequestPlus request {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator23obtainAccelChannelGroupE11SS_"
                                       "PRIORITYP27AMDRadeonX5000_AMDAccelTask",
@@ -349,4 +355,18 @@ UInt32 X5000::wrapHwlConvertChipFamily(void *that, UInt32 family, UInt32 revisio
         return ADDR_CHIP_FAMILY_AI;
     }
     return FunctionCast(wrapHwlConvertChipFamily, callback->orgHwlConvertChipFamily)(that, family, revision);
+}
+
+bool X5000::wrapGetNumericProperty(void *that, const char *name, uint32_t *value) {
+    DBGLOG("X5000", "getNumericProperty << (that: %p name: %s, value: %p)", that, name, value);
+    auto ret = FunctionCast(wrapGetNumericProperty, callback->orgGetNumericProperty)(that, name, value);
+    if (name != nullptr && value != nullptr && strncmp(name, "GpuDebugPolicy", 15) == 0) {
+        if (ret) {    // Enable entry traces
+            *value |= (1U << 6);
+        } else {
+            *value = (1U << 6);
+        }
+        return true;
+    }
+    return ret;
 }
