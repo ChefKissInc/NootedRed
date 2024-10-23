@@ -61,7 +61,7 @@ class X5000 {
     static void wrapInitializeFamilyType(void *that);
     static void *wrapAllocateAMDHWDisplay(void *that);
     static UInt64 wrapAdjustVRAMAddress(void *that, UInt64 addr);
-    static void *wrapAllocateAMDHWAlignManager();
+    static void *wrapAllocateAMDHWAlignManager(void *that);
     static UInt32 wrapGetDeviceType();
     static UInt32 wrapReturnZero();
     static void *wrapObtainAccelChannelGroup(void *that, UInt32 priority);
