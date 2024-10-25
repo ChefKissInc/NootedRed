@@ -383,8 +383,7 @@ void NRed::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slid
         SYSLOG_COND(!patch.apply(patcher, slide, size), "NRed", "Failed to apply AGDP board-id patch");
 
         if (this->attributes.isVentura()) {
-            const LookupPatchPlus patch {&kextAGDP, kAGDPFBCountCheckVenturaOriginal, kAGDPFBCountCheckVenturaPatched,
-                1};
+            const LookupPatchPlus patch {&kextAGDP, kAGDPFBCountCheckOriginal13, kAGDPFBCountCheckPatched13, 1};
             SYSLOG_COND(!patch.apply(patcher, slide, size), "NRed", "Failed to apply AGDP FB count check patch");
         } else {
             const LookupPatchPlus patch {&kextAGDP, kAGDPFBCountCheckOriginal, kAGDPFBCountCheckPatched, 1};

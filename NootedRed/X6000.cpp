@@ -87,8 +87,8 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
 
         if (NRed::callback->attributes.isCatalina()) {
             const LookupPatchPlus patches[] = {
-                {&kextRadeonX6000, kHWChannelSubmitCommandBufferCatalinaOriginal,
-                    kHWChannelSubmitCommandBufferCatalinaPatched, 1},
+                {&kextRadeonX6000, kHWChannelSubmitCommandBufferOriginal1015, kHWChannelSubmitCommandBufferPatched1015,
+                    1},
                 {&kextRadeonX6000, kDummyWPTRUpdateDiagCallOriginal, kDummyWPTRUpdateDiagCallPatched, 1},
             };
             SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size, true), "X6000",
@@ -151,7 +151,7 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
                 {&kextRadeonX6000, kGetSMLCallOriginal, kGetSMLCallPatched, 10},
                 {&kextRadeonX6000, kGetPM4CommandUtilityCallOriginal, kGetPM4CommandUtilityCallPatched, 2},
                 {&kextRadeonX6000, kDumpASICHangStateCallOriginal, kDumpASICHangStateCallPatched, 2},
-                {&kextRadeonX6000, kGetSchedulerCallCatalinaOriginal, kGetSchedulerCallCatalinaPatched, 22},
+                {&kextRadeonX6000, kGetSchedulerCallOriginal1015, kGetSchedulerCallPatched1015, 22},
             };
             SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size, true), "X6000",
                 "Failed to apply patches");
@@ -159,8 +159,7 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
         }
 
         if (NRed::callback->attributes.isVenturaAndLater()) {
-            const LookupPatchPlus patch {&kextRadeonX6000, kGetSchedulerCallVenturaOriginal,
-                kGetSchedulerCallVenturaPatched, 24};
+            const LookupPatchPlus patch {&kextRadeonX6000, kGetSchedulerCallOriginal13, kGetSchedulerCallPatched13, 24};
             SYSLOG_COND(!patch.apply(patcher, slide, size), "X6000", "Failed to apply getScheduler patch");
             patcher.clearError();
         } else if (!NRed::callback->attributes.isCatalina()) {
@@ -172,7 +171,7 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
 
         if (NRed::callback->attributes.isCatalina()) {
             const LookupPatchPlus patches[] = {
-                {&kextRadeonX6000, kGetGpuDebugPolicyCallCatalinaOriginal, kGetGpuDebugPolicyCallCatalinaPatched, 27},
+                {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal1015, kGetGpuDebugPolicyCallPatched1015, 27},
                 {&kextRadeonX6000, kUpdateUtilizationStatisticsCounterCallOriginal,
                     kUpdateUtilizationStatisticsCounterCallPatched, 2},
                 {&kextRadeonX6000, kDisableGfxOffCallOriginal, kDisableGfxOffCallPatched, 17},

@@ -69,7 +69,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             }
             if (NRed::callback->attributes.isSonoma1404AndLater()) {
                 SolveRequestPlus solveRequest {"_dc_link_set_backlight_level", this->orgDcLinkSetBacklightLevel,
-                    kDcLinkSetBacklightLevelPattern14_4};
+                    kDcLinkSetBacklightLevelPattern1404};
                 PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "X6000FB",
                     "Failed to resolve dc_link_set_backlight_level");
             } else {
@@ -80,7 +80,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             }
 
             SolveRequestPlus solveRequest {"_dc_link_set_backlight_level_nits", this->orgDcLinkSetBacklightLevelNits,
-                kDcLinkSetBacklightLevelNitsPattern, kDcLinkSetBacklightLevelNitsMask};
+                kDcLinkSetBacklightLevelNitsPattern, kDcLinkSetBacklightLevelNitsPatternMask};
             PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "X6000FB",
                 "Failed to resolve dc_link_set_backlight_level_nits");
         }
@@ -95,10 +95,10 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
 
         RouteRequestPlus requests[] = {
             {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", wrapPopulateVramInfo,
-                kPopulateVramInfoPattern, kPopulateVramInfoMask},
+                kPopulateVramInfoPattern, kPopulateVramInfoPatternMask},
             {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
             {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
-                this->orgGetNumberOfConnectors, kGetNumberOfConnectorsPattern, kGetNumberOfConnectorsMask},
+                this->orgGetNumberOfConnectors, kGetNumberOfConnectorsPattern, kGetNumberOfConnectorsPatternMask},
         };
         PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X6000FB",
             "Failed to route symbols");
@@ -112,12 +112,12 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
         if (checkKernelArgument("-NRedDPDelay")) {
             if (NRed::callback->attributes.isSonoma1404AndLater()) {
                 RouteRequestPlus request {"_dp_receiver_power_ctrl", wrapDpReceiverPowerCtrl,
-                    this->orgDpReceiverPowerCtrl, kDpReceiverPowerCtrl14_4};
+                    this->orgDpReceiverPowerCtrl, kDpReceiverPowerCtrlPattern1404};
                 PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
                     "Failed to route dp_receiver_power_ctrl (14.4+)");
             } else {
                 RouteRequestPlus request {"_dp_receiver_power_ctrl", wrapDpReceiverPowerCtrl,
-                    this->orgDpReceiverPowerCtrl, kDpReceiverPowerCtrl};
+                    this->orgDpReceiverPowerCtrl, kDpReceiverPowerCtrlPattern};
                 PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
                     "Failed to route dp_receiver_power_ctrl");
             }
@@ -136,12 +136,12 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
 
         if (NRed::callback->attributes.isRenoir()) {
             RouteRequestPlus request {"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware,
-                this->orgIH40IVRingInitHardware, kIH40IVRingInitHardwarePattern, kIH40IVRingInitHardwareMask};
+                this->orgIH40IVRingInitHardware, kIH40IVRingInitHardwarePattern, kIH40IVRingInitHardwarePatternMask};
             PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
                 "Failed to route IH_4_0_IVRing_InitHardware");
             if (NRed::callback->attributes.isSonoma1404AndLater()) {
                 RouteRequestPlus request {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister,
-                    this->orgIRQMGRWriteRegister, kIRQMGRWriteRegisterPattern14_4};
+                    this->orgIRQMGRWriteRegister, kIRQMGRWriteRegisterPattern1404};
                 PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
                     "Failed to route IRQMGR_WriteRegister (14.4+)");
             } else {
@@ -151,7 +151,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             }
         } else {
             RouteRequestPlus request {"__ZN18AmdDalDmcubService18createDmcubServiceERKNS_13DmcubInitInfoE",
-                wrapCreateDmcubService, kCreateDmcubService};
+                wrapCreateDmcubService, kCreateDmcubServicePattern};
             PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route createDmcubService");
         }
 
@@ -165,7 +165,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             if (NRed::callback->attributes.isBigSurAndLater() && NRed::callback->attributes.isRaven()) {
                 if (NRed::callback->attributes.isSonoma1404AndLater()) {
                     RouteRequestPlus request = {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit,
-                        this->orgDcePanelCntlHwInit, kDcePanelCntlHwInitPattern14_4};
+                        this->orgDcePanelCntlHwInit, kDcePanelCntlHwInitPattern1404};
                     PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
                         "Failed to route dce_panel_cntl_hw_init (14.4+)");
                 } else {
@@ -176,7 +176,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
                 }
             }
             RouteRequestPlus requests[] = {
-                {"_link_create", wrapLinkCreate, this->orgLinkCreate, kLinkCreatePattern, kLinkCreateMask},
+                {"_link_create", wrapLinkCreate, this->orgLinkCreate, kLinkCreatePattern, kLinkCreatePatternMask},
                 {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25setAttributeForConnectionEijm",
                     wrapSetAttributeForConnection, this->orgSetAttributeForConnection},
                 {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25getAttributeForConnectionEijPm",
@@ -192,11 +192,11 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
 
         if (NRed::callback->attributes.isSonoma1404AndLater()) {
             const LookupPatchPlus patches[] = {
-                {&kextRadeonX6000Framebuffer, kGetFirmwareInfoNullCheckOriginal14_4,
-                    kGetFirmwareInfoNullCheckOriginalMask14_4, kGetFirmwareInfoNullCheckPatched14_4,
-                    kGetFirmwareInfoNullCheckPatchedMask14_4, 1},
-                {&kextRadeonX6000Framebuffer, kGetVendorInfoOriginal14_4, kGetVendorInfoMask14_4,
-                    kGetVendorInfoPatched14_4, kGetVendorInfoPatchedMask14_4, 1},
+                {&kextRadeonX6000Framebuffer, kGetFirmwareInfoNullCheckOriginal1404,
+                    kGetFirmwareInfoNullCheckOriginalMask1404, kGetFirmwareInfoNullCheckPatched1404,
+                    kGetFirmwareInfoNullCheckPatchedMask1404, 1},
+                {&kextRadeonX6000Framebuffer, kGetVendorInfoOriginal1404, kGetVendorInfoMask1404,
+                    kGetVendorInfoPatched1404, kGetVendorInfoPatchedMask1404, 1},
             };
             PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000FB",
                 "Failed to apply patches (14.4)");
@@ -211,8 +211,8 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
         }
 
         if (NRed::callback->attributes.isCatalina()) {
-            const LookupPatchPlus patch {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckCatalinaOriginal,
-                kAmdAtomVramInfoNullCheckCatalinaMask, kAmdAtomVramInfoNullCheckCatalinaPatched, 1};
+            const LookupPatchPlus patch {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckOriginal1015,
+                kAmdAtomVramInfoNullCheckOriginalMask1015, kAmdAtomVramInfoNullCheckPatched1015, 1};
             PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply null check patch");
         } else {
             const LookupPatchPlus patches[] = {
@@ -240,8 +240,8 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
                 "Failed to apply initializeDmcubServices family id patch");
             if (NRed::callback->attributes.isSonoma1404AndLater()) {
-                const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kInitializeDmcubServices2Original14_4,
-                    kInitializeDmcubServices2Patched14_4, 1};
+                const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kInitializeDmcubServices2Original1404,
+                    kInitializeDmcubServices2Patched1404, 1};
                 PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
                     "Failed to apply initializeDmcubServices ASIC patch (14.4+)");
             } else {

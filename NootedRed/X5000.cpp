@@ -145,8 +145,8 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
         }
 
         if (NRed::callback->attributes.isSonoma1404AndLater()) {
-            const LookupPatchPlus patch {&kextRadeonX5000, kAddrLibCreateOriginal14_4, kAddrLibCreateOriginalMask14_4,
-                kAddrLibCreatePatched14_4, kAddrLibCreatePatchedMask14_4, 1};
+            const LookupPatchPlus patch {&kextRadeonX5000, kAddrLibCreateOriginal1404, kAddrLibCreateOriginalMask1404,
+                kAddrLibCreatePatched1404, kAddrLibCreatePatchedMask1404, 1};
             PANIC_COND(!patch.apply(patcher, slide, size), "X5000", "Failed to apply 14.4+ Addr::Lib::Create patch");
         } else if (NRed::callback->attributes.isCatalina() || NRed::callback->attributes.isVentura1304AndLater()) {
             const LookupPatchPlus patch {&kextRadeonX5000, kAddrLibCreateOriginal, kAddrLibCreatePatched, 1};
@@ -293,9 +293,9 @@ UInt64 X5000::wrapAdjustVRAMAddress(void *that, UInt64 addr) {
     if (addr == ret) {
         SYSTRACE_COND(ADDPR(debugEnabled), "X5000", "adjustVRAMAddress: 0x%llx -> 0x%llx NO CHANGE", addr, ret);
     } else {
-        #ifdef DEBUG
+#ifdef DEBUG
         auto originalRet = ret;
-        #endif
+#endif
         ret += NRed::callback->fbOffset;
         DBGLOG("X5000", "adjustVRAMAddress: 0x%llx -> drv:0x%llx,ours:0x%llx", addr, originalRet, ret);
     }
