@@ -234,6 +234,24 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
                 "Failed to apply logic revert patches");
         }
 
+        if (NRed::callback->attributes.isRenoir()) {
+            const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kInitializeDmcubServices1Original,
+                kInitializeDmcubServices1Patched, 1};
+            PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
+                "Failed to apply initializeDmcubServices family id patch");
+            if (NRed::callback->attributes.isSonoma1404AndLater()) {
+                const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kInitializeDmcubServices2Original14_4,
+                    kInitializeDmcubServices2Patched14_4, 1};
+                PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
+                    "Failed to apply initializeDmcubServices ASIC patch (14.4+)");
+            } else {
+                const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kInitializeDmcubServices2Original,
+                    kInitializeDmcubServices2Patched, 1};
+                PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
+                    "Failed to apply initializeDmcubServices ASIC patch");
+            }
+        }
+
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "X6000FB",
             "Failed to enable kernel writing");
         *orgAsicCapsTable = {
