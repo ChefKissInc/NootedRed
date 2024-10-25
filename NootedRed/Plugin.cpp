@@ -5,7 +5,7 @@
 #include <Headers/kern_api.hpp>
 #include <Headers/plugin_start.hpp>
 
-static NRed nred;
+static NRed nred {};
 
 static const char *bootargDebug = "-NRedDebug";
 
