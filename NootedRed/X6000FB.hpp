@@ -69,6 +69,7 @@ class X6000FB {
     static void wrapDoGPUPanic(void *that, char const *fmt, ...);
     static void wrapDmLoggerWrite(void *logger, const UInt32 logType, const char *fmt, ...);
     static void *wrapCreateRegisterAccess(void *initData);
+    static void *wrapCreateDmcubService();
 };
 
 //------ Patterns ------//
@@ -140,6 +141,9 @@ static const UInt8 kDalDmLoggerShouldLogPartialPattern[] = {0x48, 0x8D, 0x0D, 0x
     0x0F, 0xA3, 0xD0, 0x0F, 0x92, 0xC0};
 static const UInt8 kDalDmLoggerShouldLogPartialPatternMask[] = {0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+
+static const UInt8 kCreateDmcubService[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x56, 0x53, 0x48, 0x83, 0x3F, 0x00, 0x74,
+    0x27};
 
 //------ Patches ------//
 
