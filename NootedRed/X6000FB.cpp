@@ -149,6 +149,10 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
                     this->orgIRQMGRWriteRegister, kIRQMGRWriteRegisterPattern};
                 PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route IRQMGR_WriteRegister");
             }
+        } else {
+            RouteRequestPlus request {"__ZN18AmdDalDmcubService18createDmcubServiceERKNS_13DmcubInitInfoE",
+                wrapCreateDmcubService, kCreateDmcubService};
+            PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route createDmcubService");
         }
 
         if (NRed::callback->attributes.isVenturaAndLater()) {
@@ -613,3 +617,5 @@ void *X6000FB::wrapCreateRegisterAccess(void *initData) {
     getMember<UInt32>(initData, 0x28) = SMUIO_BASE + mmROM_DATA;
     return FunctionCast(wrapCreateRegisterAccess, callback->orgCreateRegisterAccess)(initData);
 }
+
+void *X6000FB::wrapCreateDmcubService() { return nullptr; }
