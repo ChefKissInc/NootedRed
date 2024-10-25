@@ -15,7 +15,7 @@
 #include <IOKit/pci/IOPCIDevice.h>
 
 class NRedAttributes {
-    static constexpr UInt16 EnableBacklight = (1U << 0);
+    static constexpr UInt16 IsBacklightEnabled = (1U << 0);
     static constexpr UInt16 IsCatalina = (1U << 1);
     static constexpr UInt16 IsBigSurAndLater = (1U << 2);
     static constexpr UInt16 IsMonterey = (1U << 3);
@@ -34,7 +34,7 @@ class NRedAttributes {
     UInt16 value {0};
 
     public:
-    inline bool isBacklightEnabled() const { return (this->value & EnableBacklight) != 0; }
+    inline bool isBacklightEnabled() const { return (this->value & IsBacklightEnabled) != 0; }
     inline bool isCatalina() const { return (this->value & IsCatalina) != 0; }
     inline bool isBigSurAndLater() const { return (this->value & IsBigSurAndLater) != 0; }
     inline bool isMonterey() const { return (this->value & IsMonterey) != 0; }
@@ -50,7 +50,7 @@ class NRedAttributes {
     inline bool isRenoir() const { return (this->value & IsRenoir) != 0; }
     inline bool isGreenSardine() const { return (this->value & IsGreenSardine) != 0; }
 
-    inline void setBacklightEnabled() { this->value |= EnableBacklight; }
+    inline void setBacklightEnabled() { this->value |= IsBacklightEnabled; }
     inline void setCatalina() { this->value |= IsCatalina; }
     inline void setBigSurAndLater() { this->value |= IsBigSurAndLater; }
     inline void setMonterey() { this->value |= IsMonterey; }
