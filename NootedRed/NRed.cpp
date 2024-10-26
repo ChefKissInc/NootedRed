@@ -292,6 +292,9 @@ OSMetaClassBase *NRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const O
 void NRed::hwLateInit() {
     if (this->rmmio != nullptr) { return; }
 
+    this->iGPU->setMemoryEnable(true);
+    this->iGPU->setBusMasterEnable(true);
+
     auto *atombiosImageProp = OSDynamicCast(OSData, this->iGPU->getProperty("ATY,bin_image"));
     if (atombiosImageProp == nullptr) {
         if (this->getVBIOSFromVFCT()) {
