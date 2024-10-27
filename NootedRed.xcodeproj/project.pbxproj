@@ -642,7 +642,6 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/MacKernelSDK/Library/x86_64",
 				);
-				LLVM_LTO = YES_THIN;
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MODULE_NAME = org.ChefKiss.NootedRed;
 				MODULE_START = "$(PRODUCT_NAME)_kern_start";
