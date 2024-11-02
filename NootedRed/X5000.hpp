@@ -68,7 +68,7 @@ class X5000 {
     static void *wrapObtainAccelChannelGroup(void *that, UInt32 priority);
     static void *wrapObtainAccelChannelGroup1304(void *that, UInt32 priority, void *task);
     static UInt32 wrapHwlConvertChipFamily(void *that, UInt32 family, UInt32 revision);
-    static bool wrapGetNumericProperty(void *that, const char *name, uint32_t *value);
+    static bool wrapGetNumericProperty(void *that, const char *name, UInt32 *value);
 };
 
 //------ Patterns ------//
