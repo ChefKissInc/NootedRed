@@ -254,14 +254,12 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "X6000FB",
             "Failed to enable kernel writing");
-        *orgAsicCapsTable = {
-            .familyId = AMDGPU_FAMILY_RAVEN,
-            .caps = NRed::callback->attributes.isRenoir() ? ddiCapsRenoir : ddiCapsRaven,
-            .deviceId = NRed::callback->deviceID,
-            .revision = NRed::callback->devRevision,
-            .extRevision = static_cast<UInt32>(NRed::callback->enumRevision) + NRed::callback->devRevision,
-            .pciRevision = NRed::callback->pciRevision,
-        };
+        orgAsicCapsTable->familyId = AMDGPU_FAMILY_RAVEN;
+        orgAsicCapsTable->caps = NRed::callback->attributes.isRenoir() ? ddiCapsRenoir : ddiCapsRaven;
+        orgAsicCapsTable->deviceId = NRed::callback->deviceID;
+        orgAsicCapsTable->revision = NRed::callback->devRevision;
+        orgAsicCapsTable->extRevision = static_cast<UInt32>(NRed::callback->enumRevision) + NRed::callback->devRevision;
+        orgAsicCapsTable->pciRevision = NRed::callback->pciRevision;
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("X6000FB", "Applied DDI Caps patches");
 
