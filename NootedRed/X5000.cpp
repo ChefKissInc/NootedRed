@@ -261,12 +261,14 @@ void X5000::wrapGFX9SetupAndInitializeHWCapabilities(void *that) {
     DBGLOG("X5000", "GFX9::setupAndInitializeHWCapabilities >>");
 }
 
+#ifdef DEBUG
 static const char *hwEngineToString(AMDHWEngineType ty) {
     if (ty >= kAMDHWEngineTypeMax) { return "Unknown"; }
     static const char *names[11] = {"PM4", "SDMA0", "SDMA1", "SDMA2", "SDMA3", "UVD0", "UVD1", "VCE", "VCN0", "VCN1",
         "SAMU"};
     return names[ty];
 }
+#endif
 
 void *X5000::wrapGetHWChannel(void *that, AMDHWEngineType engineType, UInt32 ringId) {
     DBGLOG("X5000", "getHWChannel << (that: %p, engineType: %s, ringId: 0x%X)", that, hwEngineToString(engineType),
