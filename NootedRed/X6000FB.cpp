@@ -263,6 +263,48 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("X6000FB", "Applied DDI Caps patches");
 
+        // XX: DCN 2 and newer have 6 display pipes, while DCN 1 (which is what Raven has) has only 4.
+        // We need to patch the kext to create only 4 cursors, links and underflow trackers.
+        if (NRed::callback->attributes.isRaven()) {
+            auto *const orgCreateControllerServices = patcher.solveSymbol<void *>(id,
+                "__ZN40AMDRadeonX6000_AmdRadeonControllerNavi1024createControllerServicesEv", slide, size);
+            PANIC_COND(orgCreateControllerServices == nullptr, "X6000FB", "Failed to solve createControllerServices");
+
+            auto *const orgSetupCursors = patcher.solveSymbol<void *>(id,
+                "__ZN34AMDRadeonX6000_AmdRadeonController12setupCursorsEv", slide, size);
+            PANIC_COND(orgSetupCursors == nullptr, "X6000FB", "Failed to solve setupCursors");
+
+            auto *const orgCreateLinks =
+                patcher.solveSymbol<void *>(id, "__ZN34AMDRadeonX6000_AmdRadeonController11createLinksEv", slide, size);
+            PANIC_COND(orgCreateLinks == nullptr, "X6000FB", "Failed to solve createLinks");
+
+            if (NRed::callback->attributes.isCatalina()) {
+                PANIC_COND(!KernelPatcher::findAndReplaceWithMask(orgCreateControllerServices, PAGE_SIZE,
+                               kCreateControllerServicesOriginal1015, kCreateControllerServicesOriginalMask1015,
+                               kCreateControllerServicesPatched1015, kCreateControllerServicesPatchedMask1015, 1, 0),
+                    "X6000FB", "Failed to apply createControllerServices patch (10.15)");
+            } else {
+                PANIC_COND(!KernelPatcher::findAndReplaceWithMask(orgCreateControllerServices, PAGE_SIZE,
+                               kCreateControllerServicesOriginal, kCreateControllerServicesOriginalMask,
+                               kCreateControllerServicesPatched, kCreateControllerServicesPatchedMask, 2, 0),
+                    "X6000FB", "Failed to apply createControllerServices patch");
+            }
+
+            if (NRed::callback->attributes.isMontereyAndLater()) {
+                PANIC_COND(!KernelPatcher::findAndReplaceWithMask(orgSetupCursors, PAGE_SIZE, kSetupCursorsOriginal12,
+                               kSetupCursorsOriginalMask12, kSetupCursorsPatched12, kSetupCursorsPatchedMask12, 1, 0),
+                    "X6000FB", "Failed to apply setupCursors patch (12.0)");
+            } else {
+                PANIC_COND(!KernelPatcher::findAndReplaceWithMask(orgSetupCursors, PAGE_SIZE, kSetupCursorsOriginal,
+                               kSetupCursorsOriginalMask, kSetupCursorsPatched, kSetupCursorsPatchedMask, 1, 0),
+                    "X6000FB", "Failed to apply setupCursors patch");
+            }
+
+            PANIC_COND(!KernelPatcher::findAndReplaceWithMask(orgCreateLinks, PAGE_SIZE, kCreateLinksOriginal,
+                           kCreateLinksOriginalMask, kCreateLinksPatched, kCreateLinksPatchedMask, 1, 0),
+                "X6000FB", "Failed to apply createLinks patch");
+        }
+
         if (ADDPR(debugEnabled)) {
             auto *logEnableMaskMinors =
                 patcher.solveSymbol<void *>(id, "__ZN14AmdDalDmLogger19LogEnableMaskMinorsE", slide, size);
