@@ -1,68 +1,86 @@
 #!/usr/bin/python3
 
+# Copyright © 2022-2024 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
+# See LICENSE for details.
+
 import os
-import struct
 import sys
 
-header = '''
-//! Copyright © 2022-2024 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
-//! See LICENSE for details.
+header = """#include "Firmware.hpp"
 
-#include "Firmware.hpp"
-'''
+#define A(N, D) static const UInt8 N[] = D 
+#define F(N, D, L) {.name = N, .metadata = {.data = D, .length = L}}
+"""
+
+special_chars = {
+    0x0: "\\0",
+    0x7: "\\a",
+    0x8: "\\b",
+    0x9: "\\t",
+    0xA: "\\n",
+    0xB: "\\v",
+    0xC: "\\f",
+    0xD: "\\r",
+}
+symbols = b" !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+needs_escape = b'"\\'
 
 
-def format_file_name(file_name):
-    return file_name.replace(".", "_").replace("-", "_")
-
-
-def lines_for_file(path, file):
-    with open(path, "rb") as src_file:
-        src_data = src_file.read()
-        src_len = len(src_data)
-
-    lines: list[str] = []
-    fw_var_name = format_file_name(file)
-    lines.append(f"\nconst unsigned char {fw_var_name}[] = {{\n")
-    index = 0
-    block = []
-    while index < src_len:
-        block = src_data[index:src_len if index +
-                         16 >= src_len else index + 16]
-        index += 16
-
-        if len(block) < 16:
-            lines.append(
-                f"    {', '.join(f'0x{b:X}' for b in block)}\n")
+def byte_to_char(b, is_text: bool):
+    if b in special_chars:
+        return special_chars[b]
+    elif b in symbols:
+        if b in needs_escape:
+            return "\\" + chr(b)
         else:
-            lines.append("    0x{:X}, 0x{:X}, 0x{:X}, 0x{:X}, 0x{:X}, 0x{:X}, 0x{:X}, 0x{:X}, "
-                         "0x{:X}, 0x{:X}, 0x{:X}, 0x{:X}, 0x{:X}, 0x{:X}, 0x{:X}, 0x{:X},\n"
-                         .format(*struct.unpack("BBBBBBBBBBBBBBBB", block)))
-    return lines + [
-        "};\n",
-        f"const UInt32 {fw_var_name}_size = sizeof({fw_var_name});\n",
-    ]
+            return chr(b)
+    elif is_text:
+        if 0 <= b <= 127 and chr(b).isalnum():
+            return chr(b)
+        else:
+            assert False
+    else:
+        return f"\\x{b:X}"
+
+
+def bytes_to_cstr(data, is_text=False):
+    return '"' + "".join(byte_to_char(b, is_text) for b in data) + '"'
+
+
+def is_file_excluded(name: str) -> bool:
+    return name.startswith(".") or name == "LICENSE"
+
+
+def is_file_text(name: str) -> bool:
+    return not name.endswith(".dat") and not name.endswith(".bin")
 
 
 def process_files(target_file, dir):
     os.makedirs(os.path.dirname(target_file), exist_ok=True)
-    lines: list[str] = header.splitlines(keepends=True)
-    files = list(filter(lambda v: not os.path.basename(v[1]).startswith('.') and not os.path.basename(v[1]) == "LICENSE", [
-        (root, file) for root, _, files in os.walk(dir) for file in files]))
-    file_list_content: list[str] = []
+    lines = header.splitlines(keepends=True) + ["\n"]
+    file_list_content = []
+    files = filter(
+        lambda v: not is_file_excluded(os.path.basename(v[1])),
+        [(root, file) for root, _, files in os.walk(dir) for file in files],
+    )
     for root, file in files:
-        lines += lines_for_file(os.path.join(root, file), file)
-        fw_var_name = format_file_name(file)
-        file_list_content += [
-            f"    {{FIRMWARE(\"{file}\", {fw_var_name}, {fw_var_name}_size)}},\n"]
+        with open(os.path.join(root, file), "rb") as src_file:
+            src_data = src_file.read()
+            src_len = len(src_data)
+        is_text = is_file_text(os.path.basename(file))
+        var_ident = file.replace(".", "_").replace("-", "_")
+        var_contents = bytes_to_cstr(src_data, is_text)
+        lines.append(f"A({var_ident}, {var_contents});\n")
+        var_len = src_len + 1 if is_text else src_len  # NUL Byte
+        file_list_content.append(f'    F("{file}", {var_ident}, 0x{var_len:X}),\n')
 
-    lines += ["\n", "const struct FWDescriptor firmware[] = {\n"]
+    lines.append("\nconst struct FWDescriptor firmware[] = {\n")
     lines += file_list_content
-    lines += ["};\n", f"const size_t firmwareCount = {len(files)};\n"]
+    lines += ["};\n", f"const size_t firmwareCount = {len(file_list_content)};\n"]
 
     with open(target_file, "w") as file:
         file.writelines(lines)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     process_files(sys.argv[1], sys.argv[2])

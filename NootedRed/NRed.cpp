@@ -209,12 +209,8 @@ static const char *getDriverXMLForBundle(const char *bundleIdentifier, size_t *l
     const auto &driversXML = getFWByName(filename);
     delete[] filename;
 
-    *len = driversXML.length + 1;
-    auto *dataNull = new char[*len];
-    memcpy(dataNull, driversXML.data, driversXML.length);
-    dataNull[driversXML.length] = 0;
-
-    return dataNull;
+    *len = driversXML.length;
+    return reinterpret_cast<const char *>(driversXML.data);
 }
 
 static const char *DriverBundleIdentifiers[] = {
@@ -252,7 +248,6 @@ bool NRed::wrapAddDrivers(void *that, OSArray *array, bool doNubMatching) {
 
                 OSString *errStr = nullptr;
                 auto *dataUnserialized = OSUnserializeXML(driverXML, len, &errStr);
-                delete[] driverXML;
 
                 PANIC_COND(dataUnserialized == nullptr, "NRed", "Failed to unserialize driver XML for %s: %s",
                     bundleIdentifierCStr, errStr ? errStr->getCStringNoCopy() : "(nil)");

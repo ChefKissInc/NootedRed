@@ -4,21 +4,24 @@
 #pragma once
 #include <Headers/kern_util.hpp>
 
-struct FWDescriptor {
-    const char *name;
+struct FWMetadata {
     const UInt8 *data;
     const UInt32 length;
 };
 
-#define FIRMWARE(name_, data_, length_) .name = name_, .data = data_, .length = length_
+struct FWDescriptor {
+    const char *name;
+    const FWMetadata metadata;
+};
+
 extern const struct FWDescriptor firmware[];
 extern const size_t firmwareCount;
 
-inline const FWDescriptor &getFWByName(const char *name) {
+inline const FWMetadata &getFWByName(const char *name) {
     for (size_t i = 0; i < firmwareCount; i++) {
         if (strcmp(firmware[i].name, name)) { continue; }
 
-        return firmware[i];
+        return firmware[i].metadata;
     }
     PANIC("FW", "'%s' not found", name);
 }
