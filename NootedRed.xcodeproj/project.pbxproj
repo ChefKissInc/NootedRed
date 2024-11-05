@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1C748C2D1C21952C0024EED2 /* Plugin.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C748C2C1C21952C0024EED2 /* Plugin.cpp */; };
+		401075932CDA8746002D1CD7 /* Model.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 401075922CDA8742002D1CD7 /* Model.cpp */; };
 		4014D9722C74AA7000FDE986 /* ObjectField.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4014D9712C74AA5F00FDE986 /* ObjectField.hpp */; };
 		40364DB629B79DFD0070A2B4 /* Model.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40364DB529B79DFD0070A2B4 /* Model.hpp */; };
 		4068898B2A229BF600028D22 /* PatcherPlus.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 406889892A229BF600028D22 /* PatcherPlus.cpp */; };
@@ -47,6 +48,7 @@
 		1C748C271C21952C0024EED2 /* NootedRed.kext */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NootedRed.kext; sourceTree = BUILT_PRODUCTS_DIR; };
 		1C748C2C1C21952C0024EED2 /* Plugin.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Plugin.cpp; sourceTree = "<group>"; };
 		1C748C2E1C21952C0024EED2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		401075922CDA8742002D1CD7 /* Model.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Model.cpp; sourceTree = "<group>"; };
 		4014D9712C74AA5F00FDE986 /* ObjectField.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ObjectField.hpp; sourceTree = "<group>"; };
 		40364DB529B79DFD0070A2B4 /* Model.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Model.hpp; sourceTree = "<group>"; };
 		403E67BD2AA7356D00F43943 /* psp_hdcp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = psp_hdcp.bin; sourceTree = "<group>"; };
@@ -171,29 +173,30 @@
 		1C748C291C21952C0024EED2 /* NootedRed */ = {
 			isa = PBXGroup;
 			children = (
-				4014D9712C74AA5F00FDE986 /* ObjectField.hpp */,
 				CEB402A71F181D8300716912 /* AMDCommon.hpp */,
+				6C1B36652A407C6100B184DD /* AppleGFXHDA.hpp */,
+				6C1B36642A407C6100B184DD /* AppleGFXHDA.cpp */,
 				40FC5FCE29BF942900367F9D /* ATOMBIOS.hpp */,
+				408F201E288ACBB0002EEC15 /* Firmware.hpp */,
 				408F201A288AC068002EEC15 /* Firmware */,
 				408F201F288ACBE6002EEC15 /* Firmware.cpp */,
-				408F201E288ACBB0002EEC15 /* Firmware.hpp */,
-				6C1B36642A407C6100B184DD /* AppleGFXHDA.cpp */,
-				6C1B36652A407C6100B184DD /* AppleGFXHDA.hpp */,
-				40FC5FDB29BF996900367F9D /* HWLibs.cpp */,
 				40FC5FDC29BF996900367F9D /* HWLibs.hpp */,
+				40FC5FDB29BF996900367F9D /* HWLibs.cpp */,
 				1C748C2E1C21952C0024EED2 /* Info.plist */,
 				40364DB529B79DFD0070A2B4 /* Model.hpp */,
-				CEA03B5C20EE825A00BA842F /* NRed.cpp */,
+				401075922CDA8742002D1CD7 /* Model.cpp */,
 				CEA03B5D20EE825A00BA842F /* NRed.hpp */,
-				406889892A229BF600028D22 /* PatcherPlus.cpp */,
+				CEA03B5C20EE825A00BA842F /* NRed.cpp */,
+				4014D9712C74AA5F00FDE986 /* ObjectField.hpp */,
 				4068898A2A229BF600028D22 /* PatcherPlus.hpp */,
+				406889892A229BF600028D22 /* PatcherPlus.cpp */,
 				1C748C2C1C21952C0024EED2 /* Plugin.cpp */,
-				40FC5FD729BF995E00367F9D /* X5000.cpp */,
 				40FC5FD829BF995E00367F9D /* X5000.hpp */,
-				40FC5FDF29BF9E2500367F9D /* X6000.cpp */,
+				40FC5FD729BF995E00367F9D /* X5000.cpp */,
 				40FC5FE029BF9E2500367F9D /* X6000.hpp */,
-				40FC5FD329BF995000367F9D /* X6000FB.cpp */,
+				40FC5FDF29BF9E2500367F9D /* X6000.cpp */,
 				40FC5FD429BF995000367F9D /* X6000FB.hpp */,
+				40FC5FD329BF995000367F9D /* X6000FB.cpp */,
 			);
 			path = NootedRed;
 			sourceTree = "<group>";
@@ -428,6 +431,7 @@
 				408F2020288ACBE6002EEC15 /* Firmware.cpp in Sources */,
 				4068898B2A229BF600028D22 /* PatcherPlus.cpp in Sources */,
 				40FC5FE129BF9E2500367F9D /* X6000.cpp in Sources */,
+				401075932CDA8746002D1CD7 /* Model.cpp in Sources */,
 				CEA03B5E20EE825A00BA842F /* NRed.cpp in Sources */,
 				CE405ED91E4A080700AA0B3D /* plugin_start.cpp in Sources */,
 				40FC5FD929BF995E00367F9D /* X5000.cpp in Sources */,

@@ -162,11 +162,17 @@ void NRed::processPatcher(KernelPatcher &patcher) {
     SYSLOG_COND(this->iGPU->getProperty("model") != nullptr, "NRed",
         "WARNING!!! Overriding the model is no longer supported!");
 
-    auto *model = getBranding(this->deviceID, this->pciRevision);
+    auto *model = getBrandingNameForDev(this->iGPU);
     auto modelLen = static_cast<UInt32>(strlen(model) + 1);
     this->iGPU->setProperty("model", const_cast<char *>(model), modelLen);
-    this->iGPU->setProperty("ATY,FamilyName", const_cast<char *>("Radeon"), 7);
-    this->iGPU->setProperty("ATY,DeviceName", const_cast<char *>(model) + 11, modelLen - 11);    // Vega ...
+    // Device name is everything after AMD Radeon RX/Pro.
+    if (model[11] == 'P' && model[12] == 'r' && model[13] == 'o' && model[14] == ' ') {
+        this->iGPU->setProperty("ATY,FamilyName", const_cast<char *>("Radeon Pro"), 11);
+        this->iGPU->setProperty("ATY,DeviceName", const_cast<char *>(model) + 15, modelLen - 15);
+    } else {
+        this->iGPU->setProperty("ATY,FamilyName", const_cast<char *>("Radeon RX"), 10);
+        this->iGPU->setProperty("ATY,DeviceName", const_cast<char *>(model) + 14, modelLen - 14);
+    }
     this->iGPU->setProperty("AAPL,slot-name", const_cast<char *>("built-in"), 9);
 
     char name[128];
