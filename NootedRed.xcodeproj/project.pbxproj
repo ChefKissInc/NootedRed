@@ -11,10 +11,10 @@
 		401075932CDA8746002D1CD7 /* Model.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 401075922CDA8742002D1CD7 /* Model.cpp */; };
 		4014D9722C74AA7000FDE986 /* ObjectField.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4014D9712C74AA5F00FDE986 /* ObjectField.hpp */; };
 		40364DB629B79DFD0070A2B4 /* Model.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40364DB529B79DFD0070A2B4 /* Model.hpp */; };
+		405460872CDBD5B5007865E5 /* Firmware.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 405460862CDBD5B5007865E5 /* Firmware.cpp */; };
 		4068898B2A229BF600028D22 /* PatcherPlus.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 406889892A229BF600028D22 /* PatcherPlus.cpp */; };
 		4068898C2A229BF600028D22 /* PatcherPlus.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4068898A2A229BF600028D22 /* PatcherPlus.hpp */; };
 		4069F00F29C3A241005293B4 /* ATOMBIOS.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FCE29BF942900367F9D /* ATOMBIOS.hpp */; };
-		408F2020288ACBE6002EEC15 /* Firmware.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 408F201F288ACBE6002EEC15 /* Firmware.cpp */; };
 		40FC5FD529BF995000367F9D /* X6000FB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FC5FD329BF995000367F9D /* X6000FB.cpp */; };
 		40FC5FD629BF995000367F9D /* X6000FB.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FD429BF995000367F9D /* X6000FB.hpp */; };
 		40FC5FD929BF995E00367F9D /* X5000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FC5FD729BF995E00367F9D /* X5000.cpp */; };
@@ -56,6 +56,7 @@
 		403E67BF2AA7356D00F43943 /* psp_asd.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = psp_asd.bin; sourceTree = "<group>"; };
 		405460812CDBBE12007865E5 /* FwGen.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = FwGen.sh; sourceTree = "<group>"; };
 		405460822CDBBE12007865E5 /* GenerateFirmware.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = GenerateFirmware.py; sourceTree = "<group>"; };
+		405460862CDBD5B5007865E5 /* Firmware.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Firmware.cpp; sourceTree = "<group>"; };
 		40582A032AA7BEA90066F4D6 /* dmcu_intvectors_dcn10.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = dmcu_intvectors_dcn10.bin; sourceTree = "<group>"; };
 		40582A042AA7BEAA0066F4D6 /* dmcu_eram_dcn10.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = dmcu_eram_dcn10.bin; sourceTree = "<group>"; };
 		40588A8E29D369C400F042E9 /* raven_gpu_info.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_gpu_info.bin; sourceTree = "<group>"; };
@@ -107,7 +108,6 @@
 		407EC26E2C6AE6F600A5BEA4 /* gc_9_2_rlc_fake_cgpg_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_2_rlc_fake_cgpg_ucode.bin; sourceTree = "<group>"; };
 		407EC26F2C6AE6F600A5BEA4 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		408F201E288ACBB0002EEC15 /* Firmware.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Firmware.hpp; sourceTree = "<group>"; };
-		408F201F288ACBE6002EEC15 /* Firmware.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Firmware.cpp; sourceTree = "<group>"; };
 		40EEB2AA2C7A095F0040F443 /* com.apple.kext.AMDRadeonX6000Framebuffer.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = com.apple.kext.AMDRadeonX6000Framebuffer.xml; sourceTree = "<group>"; };
 		40F6ACB72AA7712100A08558 /* psp_auc.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = psp_auc.bin; sourceTree = "<group>"; };
 		40F6ACB82AA774C100A08558 /* psp_fp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = psp_fp.bin; sourceTree = "<group>"; };
@@ -156,7 +156,6 @@
 		1C748C281C21952C0024EED2 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				408F201F288ACBE6002EEC15 /* Firmware.cpp */,
 				1C748C271C21952C0024EED2 /* NootedRed.kext */,
 			);
 			name = Products;
@@ -165,6 +164,7 @@
 		1C748C291C21952C0024EED2 /* NootedRed */ = {
 			isa = PBXGroup;
 			children = (
+				405460862CDBD5B5007865E5 /* Firmware.cpp */,
 				405460802CDBB84B007865E5 /* PrivateHeaders */,
 				6C1B36642A407C6100B184DD /* AppleGFXHDA.cpp */,
 				408F201A288AC068002EEC15 /* Firmware */,
@@ -416,10 +416,10 @@
 				40FC5FDD29BF996900367F9D /* HWLibs.cpp in Sources */,
 				40FC5FD529BF995000367F9D /* X6000FB.cpp in Sources */,
 				6C1B36662A407C6100B184DD /* AppleGFXHDA.cpp in Sources */,
-				408F2020288ACBE6002EEC15 /* Firmware.cpp in Sources */,
 				4068898B2A229BF600028D22 /* PatcherPlus.cpp in Sources */,
 				40FC5FE129BF9E2500367F9D /* X6000.cpp in Sources */,
 				401075932CDA8746002D1CD7 /* Model.cpp in Sources */,
+				405460872CDBD5B5007865E5 /* Firmware.cpp in Sources */,
 				CEA03B5E20EE825A00BA842F /* NRed.cpp in Sources */,
 				CE405ED91E4A080700AA0B3D /* plugin_start.cpp in Sources */,
 				40FC5FD929BF995E00367F9D /* X5000.cpp in Sources */,
