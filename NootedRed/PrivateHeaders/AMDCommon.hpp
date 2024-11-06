@@ -641,3 +641,8 @@ constexpr UInt32 Dcn1NonBpp64SwModeMask = 0x2220221;
 constexpr UInt32 Dcn1Bpp64SwModeMask = 0x6660661;
 constexpr UInt32 Dcn2NonBpp64SwModeMask = 0x2020201;
 constexpr UInt32 Dcn2Bpp64SwModeMask = 0x6060601;
+
+constexpr UInt32 Dcn1NonBpp64SwModeMask1015 = 0x22222221;
+constexpr UInt32 Dcn1Bpp64SwModeMask1015 = 0x66666661;
+constexpr UInt32 Dcn2NonBpp64SwModeMask1015 = 0x22022201;
+constexpr UInt32 Dcn2Bpp64SwModeMask1015 = 0x66066601;

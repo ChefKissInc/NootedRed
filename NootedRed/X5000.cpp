@@ -159,23 +159,24 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
                 2};
             PANIC_COND(!patch.apply(patcher, slide, size), "X5000", "Failed to patch createAccelChannels");
 
-            UInt32 findNonBpp64 = 0x22222221;
-            UInt32 replNonBpp64 =
-                NRed::callback->attributes.isRenoir() ? Dcn2NonBpp64SwModeMask : Dcn1NonBpp64SwModeMask;
-            UInt32 findBpp64 = 0x44444440;
-            UInt32 replBpp64Pt2 = NRed::callback->attributes.isRenoir() ? Dcn2Bpp64SwModeMask : Dcn1Bpp64SwModeMask;
-            UInt32 replBpp64 = replNonBpp64 ^ replBpp64Pt2;
-            UInt32 findBpp64Pt2 = 0x66666661;
-            const LookupPatchPlus patches[] = {
-                {&kextRadeonX5000, reinterpret_cast<const UInt8 *>(&findNonBpp64),
-                    reinterpret_cast<const UInt8 *>(&replNonBpp64), sizeof(UInt32), 2},
-                {&kextRadeonX5000, reinterpret_cast<const UInt8 *>(&findBpp64),
-                    reinterpret_cast<const UInt8 *>(&replBpp64), sizeof(UInt32), 1},
-                {&kextRadeonX5000, reinterpret_cast<const UInt8 *>(&findBpp64Pt2),
-                    reinterpret_cast<const UInt8 *>(&replBpp64Pt2), sizeof(UInt32), 1},
-            };
-            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X5000",
-                "Failed to patch swizzle mode");
+            if (NRed::callback->attributes.isRenoir()) {
+                UInt32 findNonBpp64 = Dcn1NonBpp64SwModeMask1015;
+                UInt32 replNonBpp64 = Dcn2NonBpp64SwModeMask1015;
+                UInt32 findBpp64 = Dcn1NonBpp64SwModeMask1015 ^ Dcn1Bpp64SwModeMask1015;
+                UInt32 replBpp64 = Dcn2NonBpp64SwModeMask1015 ^ Dcn2Bpp64SwModeMask1015;
+                UInt32 findBpp64Pt2 = Dcn1Bpp64SwModeMask1015;
+                UInt32 replBpp64Pt2 = Dcn2Bpp64SwModeMask1015;
+                const LookupPatchPlus patches[] = {
+                    {&kextRadeonX5000, reinterpret_cast<const UInt8 *>(&findNonBpp64),
+                        reinterpret_cast<const UInt8 *>(&replNonBpp64), sizeof(UInt32), 2},
+                    {&kextRadeonX5000, reinterpret_cast<const UInt8 *>(&findBpp64),
+                        reinterpret_cast<const UInt8 *>(&replBpp64), sizeof(UInt32), 1},
+                    {&kextRadeonX5000, reinterpret_cast<const UInt8 *>(&findBpp64Pt2),
+                        reinterpret_cast<const UInt8 *>(&replBpp64Pt2), sizeof(UInt32), 1},
+                };
+                PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X5000",
+                    "Failed to patch swizzle mode");
+            }
 
             PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "X5000",
                 "Failed to enable kernel writing");
