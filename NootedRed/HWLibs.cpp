@@ -1,11 +1,11 @@
 // Copyright © 2022-2024 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
-#include "HWLibs.hpp"
-#include "AMDCommon.hpp"
-#include "Firmware.hpp"
-#include "NRed.hpp"
-#include "PatcherPlus.hpp"
+#include "PrivateHeaders/HWLibs.hpp"
+#include "PrivateHeaders/AMDCommon.hpp"
+#include "PrivateHeaders/Firmware.hpp"
+#include "PrivateHeaders/NRed.hpp"
+#include "PrivateHeaders/PatcherPlus.hpp"
 #include <Headers/kern_api.hpp>
 
 static const char *pathRadeonX5000HWLibs = "/System/Library/Extensions/AMDRadeonX5000HWServices.kext/Contents/PlugIns/"

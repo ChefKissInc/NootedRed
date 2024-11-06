@@ -1,13 +1,13 @@
 // Copyright © 2022-2024 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
-#include "X5000.hpp"
-#include "Firmware.hpp"
-#include "Headers/kern_util.hpp"
-#include "NRed.hpp"
-#include "PatcherPlus.hpp"
-#include "X6000.hpp"
+#include "PrivateHeaders/X5000.hpp"
+#include "PrivateHeaders/Firmware.hpp"
+#include "PrivateHeaders/NRed.hpp"
+#include "PrivateHeaders/PatcherPlus.hpp"
+#include "PrivateHeaders/X6000.hpp"
 #include <Headers/kern_api.hpp>
+#include <Headers/kern_util.hpp>
 
 static const char *pathRadeonX5000 = "/System/Library/Extensions/AMDRadeonX5000.kext/Contents/MacOS/AMDRadeonX5000";
 

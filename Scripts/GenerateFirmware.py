@@ -6,7 +6,7 @@
 import os
 import sys
 
-header = """#include "Firmware.hpp"
+header = """#include "PrivateHeaders/Firmware.hpp"
 
 #define A(N, D) static const UInt8 N[] = D 
 #define F(N, D, L) {.name = N, .metadata = {.data = D, .length = L}}

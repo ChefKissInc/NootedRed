@@ -1,11 +1,11 @@
 // Copyright © 2022-2024 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
-#include "NRed.hpp"
-#include "AMDCommon.hpp"
-#include "Firmware.hpp"
-#include "Model.hpp"
-#include "PatcherPlus.hpp"
+#include "PrivateHeaders/NRed.hpp"
+#include "PrivateHeaders/AMDCommon.hpp"
+#include "PrivateHeaders/Firmware.hpp"
+#include "PrivateHeaders/Model.hpp"
+#include "PrivateHeaders/PatcherPlus.hpp"
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_devinfo.hpp>
 
