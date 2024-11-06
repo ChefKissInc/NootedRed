@@ -485,8 +485,6 @@ CAILResult NRed::sendMsgToSmc(UInt32 msg, UInt32 param, UInt32 *outParam) {
 
 // https://elixir.bootlin.com/linux/latest/source/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c#L49
 static bool checkAtomBios(const UInt8 *bios, size_t size) {
-    UInt16 tmp, bios_header_start;
-
     if (size < 0x49) {
         DBGLOG("NRed", "VBIOS size is invalid");
         return false;
@@ -497,13 +495,13 @@ static bool checkAtomBios(const UInt8 *bios, size_t size) {
         return false;
     }
 
-    bios_header_start = bios[0x48] | (bios[0x49] << 8);
+    UInt16 bios_header_start = bios[0x48] | static_cast<UInt16>(bios[0x49] << 8);
     if (!bios_header_start) {
         DBGLOG("NRed", "Unable to locate VBIOS header");
         return false;
     }
 
-    tmp = bios_header_start + 4;
+    UInt16 tmp = bios_header_start + 4;
     if (size < tmp) {
         DBGLOG("NRed", "BIOS header is broken");
         return false;
