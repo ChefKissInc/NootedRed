@@ -54,6 +54,8 @@
 		403E67BD2AA7356D00F43943 /* psp_hdcp.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = psp_hdcp.bin; sourceTree = "<group>"; };
 		403E67BE2AA7356D00F43943 /* psp_dtm.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = psp_dtm.bin; sourceTree = "<group>"; };
 		403E67BF2AA7356D00F43943 /* psp_asd.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = psp_asd.bin; sourceTree = "<group>"; };
+		405460812CDBBE12007865E5 /* FwGen.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = FwGen.sh; sourceTree = "<group>"; };
+		405460822CDBBE12007865E5 /* GenerateFirmware.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = GenerateFirmware.py; sourceTree = "<group>"; };
 		40582A032AA7BEA90066F4D6 /* dmcu_intvectors_dcn10.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = dmcu_intvectors_dcn10.bin; sourceTree = "<group>"; };
 		40582A042AA7BEAA0066F4D6 /* dmcu_eram_dcn10.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = dmcu_eram_dcn10.bin; sourceTree = "<group>"; };
 		40588A8E29D369C400F042E9 /* raven_gpu_info.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = raven_gpu_info.bin; sourceTree = "<group>"; };
@@ -120,19 +122,7 @@
 		40FC5FE029BF9E2500367F9D /* X6000.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = X6000.hpp; sourceTree = "<group>"; };
 		6C1B36642A407C6100B184DD /* AppleGFXHDA.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AppleGFXHDA.cpp; sourceTree = "<group>"; };
 		6C1B36652A407C6100B184DD /* AppleGFXHDA.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AppleGFXHDA.hpp; sourceTree = "<group>"; };
-		CE405EBA1E49DD7100AA0B3D /* kern_compression.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_compression.hpp; sourceTree = "<group>"; };
-		CE405EBB1E49DD7100AA0B3D /* kern_disasm.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_disasm.hpp; sourceTree = "<group>"; };
-		CE405EBC1E49DD7100AA0B3D /* kern_file.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_file.hpp; sourceTree = "<group>"; };
-		CE405EBD1E49DD7100AA0B3D /* kern_iokit.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_iokit.hpp; sourceTree = "<group>"; };
-		CE405EBE1E49DD7100AA0B3D /* kern_mach.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_mach.hpp; sourceTree = "<group>"; };
-		CE405EBF1E49DD7100AA0B3D /* kern_patcher.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_patcher.hpp; sourceTree = "<group>"; };
-		CE405EC01E49DD7100AA0B3D /* kern_policy.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_policy.hpp; sourceTree = "<group>"; };
-		CE405EC31E49DD7100AA0B3D /* kern_user.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_user.hpp; sourceTree = "<group>"; };
-		CE405EC41E49DD7100AA0B3D /* kern_util.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_util.hpp; sourceTree = "<group>"; };
-		CE405ECF1E49EC9100AA0B3D /* kern_config.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = kern_config.hpp; sourceTree = "<group>"; };
-		CE405ED21E49F9FC00AA0B3D /* kern_api.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = kern_api.hpp; sourceTree = "<group>"; };
 		CE405ED81E4A080700AA0B3D /* plugin_start.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = plugin_start.cpp; sourceTree = "<group>"; };
-		CE405EDA1E4A080F00AA0B3D /* plugin_start.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = plugin_start.hpp; sourceTree = "<group>"; };
 		CE8DA0822517C41A008C44E8 /* libkmod.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libkmod.a; path = MacKernelSDK/Library/x86_64/libkmod.a; sourceTree = SOURCE_ROOT; };
 		CEA03B5C20EE825A00BA842F /* NRed.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = NRed.cpp; sourceTree = "<group>"; };
 		CEA03B5D20EE825A00BA842F /* NRed.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = NRed.hpp; sourceTree = "<group>"; };
@@ -155,9 +145,10 @@
 			isa = PBXGroup;
 			children = (
 				1C748C291C21952C0024EED2 /* NootedRed */,
-				CE405EC81E49DD7B00AA0B3D /* SDK */,
-				1C748C281C21952C0024EED2 /* Products */,
+				405460832CDBBE12007865E5 /* Scripts */,
 				CE8DA0812517C41A008C44E8 /* Frameworks */,
+				1C748C281C21952C0024EED2 /* Products */,
+				CE405EC81E49DD7B00AA0B3D /* SDK */,
 			);
 			sourceTree = "<group>";
 			usesTabs = 1;
@@ -207,6 +198,15 @@
 				40FC5FD429BF995000367F9D /* X6000FB.hpp */,
 			);
 			path = PrivateHeaders;
+			sourceTree = "<group>";
+		};
+		405460832CDBBE12007865E5 /* Scripts */ = {
+			isa = PBXGroup;
+			children = (
+				405460812CDBBE12007865E5 /* FwGen.sh */,
+				405460822CDBBE12007865E5 /* GenerateFirmware.py */,
+			);
+			path = Scripts;
 			sourceTree = "<group>";
 		};
 		408F201A288AC068002EEC15 /* Firmware */ = {
@@ -270,26 +270,6 @@
 			path = Firmware;
 			sourceTree = "<group>";
 		};
-		CE405EB91E49DD7100AA0B3D /* Headers */ = {
-			isa = PBXGroup;
-			children = (
-				CE405ED21E49F9FC00AA0B3D /* kern_api.hpp */,
-				CE405ECF1E49EC9100AA0B3D /* kern_config.hpp */,
-				CE405EBA1E49DD7100AA0B3D /* kern_compression.hpp */,
-				CE405EBB1E49DD7100AA0B3D /* kern_disasm.hpp */,
-				CE405EBC1E49DD7100AA0B3D /* kern_file.hpp */,
-				CE405EBD1E49DD7100AA0B3D /* kern_iokit.hpp */,
-				CE405EBE1E49DD7100AA0B3D /* kern_mach.hpp */,
-				CE405EBF1E49DD7100AA0B3D /* kern_patcher.hpp */,
-				CE405EC01E49DD7100AA0B3D /* kern_policy.hpp */,
-				CE405EC31E49DD7100AA0B3D /* kern_user.hpp */,
-				CE405EC41E49DD7100AA0B3D /* kern_util.hpp */,
-				CE405EDA1E4A080F00AA0B3D /* plugin_start.hpp */,
-			);
-			name = Headers;
-			path = Lilu/Lilu/Headers;
-			sourceTree = SOURCE_ROOT;
-		};
 		CE405EC51E49DD7100AA0B3D /* Library */ = {
 			isa = PBXGroup;
 			children = (
@@ -302,7 +282,6 @@
 		CE405EC81E49DD7B00AA0B3D /* SDK */ = {
 			isa = PBXGroup;
 			children = (
-				CE405EB91E49DD7100AA0B3D /* Headers */,
 				CE405EC51E49DD7100AA0B3D /* Library */,
 			);
 			name = SDK;
