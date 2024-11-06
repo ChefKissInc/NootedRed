@@ -7,6 +7,7 @@ import os
 import sys
 
 header = """#include "PrivateHeaders/Firmware.hpp"
+#include <Headers/kern_util.hpp>
 
 #define A(N, D) static const UInt8 N[] = D 
 #define F(N, D, L) {.name = N, .metadata = {.data = D, .length = L}}
@@ -16,7 +17,6 @@ special_chars = {
     0x0: "\\0",
     0x7: "\\a",
     0x8: "\\b",
-    0x9: "\\t",
     0xA: "\\n",
     0xB: "\\v",
     0xC: "\\f",
@@ -34,6 +34,8 @@ def byte_to_char(b, is_text: bool):
             return "\\" + chr(b)
         else:
             return chr(b)
+    elif b == 0x9:
+        return chr(b)
     elif is_text:
         if 0 <= b <= 127 and chr(b).isalnum():
             return chr(b)
@@ -57,7 +59,7 @@ def is_file_text(name: str) -> bool:
 
 def process_files(target_file, dir):
     os.makedirs(os.path.dirname(target_file), exist_ok=True)
-    lines = header.splitlines(keepends=True) + ["\n"]
+    lines = header.splitlines(keepends=True) + [""]
     file_list_content = []
     files = filter(
         lambda v: not is_file_excluded(os.path.basename(v[1])),
@@ -66,20 +68,20 @@ def process_files(target_file, dir):
     for root, file in files:
         with open(os.path.join(root, file), "rb") as src_file:
             src_data = src_file.read()
-            src_len = len(src_data)
         is_text = is_file_text(os.path.basename(file))
         var_ident = file.replace(".", "_").replace("-", "_")
         var_contents = bytes_to_cstr(src_data, is_text)
-        lines.append(f"A({var_ident}, {var_contents});\n")
-        var_len = src_len + 1 if is_text else src_len  # NUL Byte
-        file_list_content.append(f'    F("{file}", {var_ident}, 0x{var_len:X}),\n')
+        lines += [f"A({var_ident}, {var_contents});"]
+        file_list_content += [
+            f'    F("{file}", {var_ident}, sizeof({var_ident}){"" if is_text else " - 1"}),'
+        ]
 
-    lines.append("\nconst struct FWDescriptor firmware[] = {\n")
+    lines += ["", "const struct FWDescriptor firmware[] = {"]
     lines += file_list_content
-    lines += ["};\n", f"const size_t firmwareCount = {len(file_list_content)};\n"]
+    lines += ["};", "const size_t firmwareCount = arrsize(firmware);"]
 
     with open(target_file, "w") as file:
-        file.writelines(lines)
+        file.writelines(map(lambda v: v + "\n", lines))
 
 
 if __name__ == "__main__":
