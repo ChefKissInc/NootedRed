@@ -6,11 +6,11 @@
 #include <Headers/kern_util.hpp>
 
 class AppleGFXHDA {
-    static AppleGFXHDA *callback;
-
     public:
+    static AppleGFXHDA &singleton();
+
     void init();
-    bool processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
+    void processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 
     private:
     OSMetaClass *orgFunctionGroupTahiti {nullptr};

@@ -2,9 +2,9 @@
 // See LICENSE for details.
 
 #pragma once
-#include "AMDCommon.hpp"
-#include "ObjectField.hpp"
 #include <Headers/kern_patcher.hpp>
+#include <PrivateHeaders/AMDCommon.hpp>
+#include <PrivateHeaders/ObjectField.hpp>
 
 enum AMDHWEngineType : UInt32 {
     kAMDHWEngineTypePM4 = 0,
@@ -24,11 +24,11 @@ enum AMDHWEngineType : UInt32 {
 class X5000 {
     friend class X6000;
 
-    static X5000 *callback;
-
     public:
+    static X5000 &singleton();
+
     void init();
-    bool processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
+    void processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 
     private:
     ObjectField<void *> pm4EngineField {};

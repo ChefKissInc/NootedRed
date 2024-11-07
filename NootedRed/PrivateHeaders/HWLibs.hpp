@@ -2,20 +2,20 @@
 // See LICENSE for details.
 
 #pragma once
-#include "AMDCommon.hpp"
-#include "ObjectField.hpp"
 #include <Headers/kern_patcher.hpp>
 #include <Headers/kern_util.hpp>
+#include <PrivateHeaders/AMDCommon.hpp>
+#include <PrivateHeaders/ObjectField.hpp>
 
 using t_createFirmware = void *(*)(const void *data, UInt32 size, UInt32 ipVersion, const char *filename);
 using t_putFirmware = bool (*)(void *that, UInt32 deviceType, void *fw);
 
 class X5000HWLibs {
-    static X5000HWLibs *callback;
-
     public:
+    static X5000HWLibs &singleton();
+
     void init();
-    bool processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
+    void processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 
     private:
     ObjectField<void *> fwDirField {};

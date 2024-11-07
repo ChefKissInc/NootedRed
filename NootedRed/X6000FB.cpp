@@ -1,15 +1,17 @@
 // Copyright © 2022-2024 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
-#include "PrivateHeaders/X6000FB.hpp"
-#include "PrivateHeaders/AMDCommon.hpp"
-#include "PrivateHeaders/ATOMBIOS.hpp"
-#include "PrivateHeaders/NRed.hpp"
-#include "PrivateHeaders/PatcherPlus.hpp"
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_devinfo.hpp>
+#include <PrivateHeaders/AMDCommon.hpp>
+#include <PrivateHeaders/ATOMBIOS.hpp>
+#include <PrivateHeaders/NRed.hpp>
+#include <PrivateHeaders/PatcherPlus.hpp>
+#include <PrivateHeaders/X6000FB.hpp>
 
 constexpr UInt32 FbAttributeBacklight = static_cast<UInt32>('bklt');
+
+//------ Target Kexts ------//
 
 static const char *pathRadeonX6000Framebuffer =
     "/System/Library/Extensions/AMDRadeonX6000Framebuffer.kext/Contents/MacOS/AMDRadeonX6000Framebuffer";
@@ -23,7 +25,11 @@ static KernelPatcher::KextInfo kextRadeonX6000Framebuffer {
     KernelPatcher::KextInfo::Unloaded,
 };
 
-X6000FB *X6000FB::callback = nullptr;
+//------ Module Logic ------//
+
+static X6000FB module {};
+
+X6000FB &X6000FB::singleton() { return module; }
 
 void X6000FB::init() {
     switch (getKernelVersion()) {
@@ -47,27 +53,37 @@ void X6000FB::init() {
 
     SYSLOG("X6000FB", "Module initialised");
 
-    callback = this;
-    lilu.onKextLoadForce(&kextRadeonX6000Framebuffer);
+    if (NRed::singleton().getAttributes().isBacklightEnabled()) {
+        lilu.onPatcherLoadForce(
+            [](void *user, KernelPatcher &) { static_cast<X6000FB *>(user)->registerDispMaxBrightnessNotif(); }, this);
+    }
+    lilu.onKextLoadForce(
+        &kextRadeonX6000Framebuffer, 1,
+        [](void *user, KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
+            static_cast<X6000FB *>(user)->processKext(patcher, id, slide, size);
+        },
+        this);
 }
 
-bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
+void X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextRadeonX6000Framebuffer.loadIndex == id) {
         SYSLOG_COND(ADDPR(debugEnabled), "X6000FB", "slide is 0x%llx", slide);
-        NRed::callback->hwLateInit();
+        NRed::singleton().hwLateInit();
 
         CAILAsicCapsEntry *orgAsicCapsTable;
-        SolveRequestPlus solveRequest {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable, kCailAsicCapsTablePattern};
-        PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "X6000FB", "Failed to resolve CAIL_ASIC_CAPS_TABLE");
+        SolveRequestPlus cailAsicCapsSolveRequest {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable,
+            kCailAsicCapsTablePattern};
+        PANIC_COND(!cailAsicCapsSolveRequest.solve(patcher, id, slide, size), "X6000FB",
+            "Failed to resolve CAIL_ASIC_CAPS_TABLE");
 
-        if (NRed::callback->attributes.isBacklightEnabled()) {
-            if (NRed::callback->attributes.isBigSurAndLater() && NRed::callback->attributes.isRaven()) {
+        if (NRed::singleton().getAttributes().isBacklightEnabled()) {
+            if (NRed::singleton().getAttributes().isBigSurAndLater() && NRed::singleton().getAttributes().isRaven()) {
                 SolveRequestPlus solveRequest {"_dce_driver_set_backlight", this->orgDceDriverSetBacklight,
                     kDceDriverSetBacklightPattern, kDceDriverSetBacklightPatternMask};
                 PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "X6000FB",
                     "Failed to resolve dce_driver_set_backlight");
             }
-            if (NRed::callback->attributes.isSonoma1404AndLater()) {
+            if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
                 SolveRequestPlus solveRequest {"_dc_link_set_backlight_level", this->orgDcLinkSetBacklightLevel,
                     kDcLinkSetBacklightLevelPattern1404};
                 PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "X6000FB",
@@ -85,7 +101,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
                 "Failed to resolve dc_link_set_backlight_level_nits");
         }
 
-        if (NRed::callback->attributes.isVenturaAndLater()) {
+        if (NRed::singleton().getAttributes().isVenturaAndLater()) {
             SolveRequestPlus solveRequest {
                 "__ZNK34AMDRadeonX6000_AmdRadeonController18messageAcceleratorE25_eAMDAccelIOFBRequestTypePvS1_S1_",
                 this->orgMessageAccelerator};
@@ -103,14 +119,14 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
         PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X6000FB",
             "Failed to route symbols");
 
-        if (NRed::callback->attributes.isBigSurAndLater()) {
+        if (NRed::singleton().getAttributes().isBigSurAndLater()) {
             RouteRequestPlus request = {"__ZN32AMDRadeonX6000_AmdRegisterAccess20createRegisterAccessERNS_8InitDataE",
                 wrapCreateRegisterAccess, this->orgCreateRegisterAccess};
             PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route createRegisterAccess");
         }
 
         if (checkKernelArgument("-NRedDPDelay")) {
-            if (NRed::callback->attributes.isSonoma1404AndLater()) {
+            if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
                 RouteRequestPlus request {"_dp_receiver_power_ctrl", wrapDpReceiverPowerCtrl,
                     this->orgDpReceiverPowerCtrl, kDpReceiverPowerCtrlPattern1404};
                 PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
@@ -134,12 +150,12 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
                 "Failed to route debug symbols");
         }
 
-        if (NRed::callback->attributes.isRenoir()) {
+        if (NRed::singleton().getAttributes().isRenoir()) {
             RouteRequestPlus request {"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware,
                 this->orgIH40IVRingInitHardware, kIH40IVRingInitHardwarePattern, kIH40IVRingInitHardwarePatternMask};
             PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
                 "Failed to route IH_4_0_IVRing_InitHardware");
-            if (NRed::callback->attributes.isSonoma1404AndLater()) {
+            if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
                 RouteRequestPlus request {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister,
                     this->orgIRQMGRWriteRegister, kIRQMGRWriteRegisterPattern1404};
                 PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
@@ -155,15 +171,15 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route createDmcubService");
         }
 
-        if (NRed::callback->attributes.isVenturaAndLater()) {
+        if (NRed::singleton().getAttributes().isVenturaAndLater()) {
             RouteRequestPlus request {"__ZN34AMDRadeonX6000_AmdRadeonController7powerUpEv", wrapControllerPowerUp,
                 this->orgControllerPowerUp};
             PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route powerUp");
         }
 
-        if (NRed::callback->attributes.isBacklightEnabled()) {
-            if (NRed::callback->attributes.isBigSurAndLater() && NRed::callback->attributes.isRaven()) {
-                if (NRed::callback->attributes.isSonoma1404AndLater()) {
+        if (NRed::singleton().getAttributes().isBacklightEnabled()) {
+            if (NRed::singleton().getAttributes().isBigSurAndLater() && NRed::singleton().getAttributes().isRaven()) {
+                if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
                     RouteRequestPlus request = {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit,
                         this->orgDcePanelCntlHwInit, kDcePanelCntlHwInitPattern1404};
                     PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
@@ -190,7 +206,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             kPopulateDeviceInfoPatched, kPopulateDeviceInfoMask, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply populateDeviceInfo patch");
 
-        if (NRed::callback->attributes.isSonoma1404AndLater()) {
+        if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
             const LookupPatchPlus patches[] = {
                 {&kextRadeonX6000Framebuffer, kGetFirmwareInfoNullCheckOriginal1404,
                     kGetFirmwareInfoNullCheckOriginalMask1404, kGetFirmwareInfoNullCheckPatched1404,
@@ -210,7 +226,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000FB", "Failed to apply patches");
         }
 
-        if (NRed::callback->attributes.isCatalina()) {
+        if (NRed::singleton().getAttributes().isCatalina()) {
             const LookupPatchPlus patch {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckOriginal1015,
                 kAmdAtomVramInfoNullCheckOriginalMask1015, kAmdAtomVramInfoNullCheckPatched1015, 1};
             PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply null check patch");
@@ -224,7 +240,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
                 "Failed to apply null check patches");
         }
 
-        if (NRed::callback->attributes.isVenturaAndLater()) {
+        if (NRed::singleton().getAttributes().isVenturaAndLater()) {
             const LookupPatchPlus patches[] = {
                 {&kextRadeonX6000Framebuffer, kControllerPowerUpOriginal, kControllerPowerUpOriginalMask,
                     kControllerPowerUpReplace, kControllerPowerUpReplaceMask, 1},
@@ -234,12 +250,12 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
                 "Failed to apply logic revert patches");
         }
 
-        if (NRed::callback->attributes.isRenoir()) {
+        if (NRed::singleton().getAttributes().isRenoir()) {
             const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kInitializeDmcubServices1Original,
                 kInitializeDmcubServices1Patched, 1};
             PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
                 "Failed to apply initializeDmcubServices family id patch");
-            if (NRed::callback->attributes.isSonoma1404AndLater()) {
+            if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
                 const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kInitializeDmcubServices2Original1404,
                     kInitializeDmcubServices2Patched1404, 1};
                 PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
@@ -255,17 +271,18 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "X6000FB",
             "Failed to enable kernel writing");
         orgAsicCapsTable->familyId = AMDGPU_FAMILY_RAVEN;
-        orgAsicCapsTable->caps = NRed::callback->attributes.isRenoir() ? ddiCapsRenoir : ddiCapsRaven;
-        orgAsicCapsTable->deviceId = NRed::callback->deviceID;
-        orgAsicCapsTable->revision = NRed::callback->devRevision;
-        orgAsicCapsTable->extRevision = static_cast<UInt32>(NRed::callback->enumRevision) + NRed::callback->devRevision;
-        orgAsicCapsTable->pciRevision = NRed::callback->pciRevision;
+        orgAsicCapsTable->caps = NRed::singleton().getAttributes().isRenoir() ? ddiCapsRenoir : ddiCapsRaven;
+        orgAsicCapsTable->deviceId = NRed::singleton().getDeviceID();
+        orgAsicCapsTable->revision = NRed::singleton().getDevRevision();
+        orgAsicCapsTable->extRevision =
+            static_cast<UInt32>(NRed::singleton().getEnumRevision()) + NRed::singleton().getDevRevision();
+        orgAsicCapsTable->pciRevision = NRed::singleton().getPciRevision();
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("X6000FB", "Applied DDI Caps patches");
 
         // XX: DCN 2 and newer have 6 display pipes, while DCN 1 (which is what Raven has) has only 4.
         // We need to patch the kext to create only 4 cursors, links and underflow trackers.
-        if (NRed::callback->attributes.isRaven()) {
+        if (NRed::singleton().getAttributes().isRaven()) {
             auto *const orgCreateControllerServices = patcher.solveSymbol<void *>(id,
                 "__ZN40AMDRadeonX6000_AmdRadeonControllerNavi1024createControllerServicesEv", slide, size);
             PANIC_COND(orgCreateControllerServices == nullptr, "X6000FB", "Failed to solve createControllerServices");
@@ -278,7 +295,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
                 patcher.solveSymbol<void *>(id, "__ZN34AMDRadeonX6000_AmdRadeonController11createLinksEv", slide, size);
             PANIC_COND(orgCreateLinks == nullptr, "X6000FB", "Failed to solve createLinks");
 
-            if (NRed::callback->attributes.isCatalina()) {
+            if (NRed::singleton().getAttributes().isCatalina()) {
                 PANIC_COND(!KernelPatcher::findAndReplaceWithMask(orgCreateControllerServices, PAGE_SIZE,
                                kCreateControllerServicesOriginal1015, kCreateControllerServicesOriginalMask1015,
                                kCreateControllerServicesPatched1015, kCreateControllerServicesPatchedMask1015, 1, 0),
@@ -290,7 +307,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
                     "X6000FB", "Failed to apply createControllerServices patch");
             }
 
-            if (NRed::callback->attributes.isMontereyAndLater()) {
+            if (NRed::singleton().getAttributes().isMontereyAndLater()) {
                 PANIC_COND(!KernelPatcher::findAndReplaceWithMask(orgSetupCursors, PAGE_SIZE, kSetupCursorsOriginal12,
                                kSetupCursorsOriginalMask12, kSetupCursorsPatched12, kSetupCursorsPatchedMask12, 1, 0),
                     "X6000FB", "Failed to apply setupCursors patch (12.0)");
@@ -327,7 +344,7 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
             // Enable all Display Core logs
-            if (NRed::callback->attributes.isCatalina()) {
+            if (NRed::singleton().getAttributes().isCatalina()) {
                 const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kInitPopulateDcInitDataCatalinaOriginal,
                     kInitPopulateDcInitDataCatalinaPatched, 1};
                 PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
@@ -343,18 +360,14 @@ bool X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
                 "Failed to apply AmdBiosParserHelper::initWithData patch");
         }
-
-        return true;
     }
-
-    return false;
 }
 
-UInt16 X6000FB::wrapGetEnumeratedRevision() { return NRed::callback->enumRevision; }
+UInt16 X6000FB::wrapGetEnumeratedRevision() { return NRed::singleton().getEnumRevision(); }
 
 IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
     UInt32 channelCount = 1;
-    auto *table = NRed::callback->getVBIOSDataTable<IGPSystemInfo>(0x1E);
+    auto *table = NRed::singleton().getVBIOSDataTable<IGPSystemInfo>(0x1E);
     UInt8 memoryType = 0;
     if (table) {
         DBGLOG("X6000FB", "Fetching VRAM info from iGPU System Info");
@@ -440,14 +453,14 @@ bool X6000FB::OnAppleBacklightDisplayLoad(void *, void *, IOService *newService,
         return false;
     }
 
-    callback->maxPwmBacklightLvl = maxBrightness->unsigned32BitValue();
-    DBGLOG("X6000FB", "%s: Max brightness: 0x%X", __FUNCTION__, callback->maxPwmBacklightLvl);
+    singleton().maxPwmBacklightLvl = maxBrightness->unsigned32BitValue();
+    DBGLOG("X6000FB", "%s: Max brightness: 0x%X", __FUNCTION__, singleton().maxPwmBacklightLvl);
 
     return true;
 }
 
 void X6000FB::registerDispMaxBrightnessNotif() {
-    if (callback->dispNotif != nullptr) { return; }
+    if (singleton().dispNotif != nullptr) { return; }
 
     auto *matching = IOService::serviceMatching("AppleBacklightDisplay");
     if (matching == nullptr) {
@@ -455,48 +468,50 @@ void X6000FB::registerDispMaxBrightnessNotif() {
         return;
     }
 
-    callback->dispNotif =
+    singleton().dispNotif =
         IOService::addMatchingNotification(gIOFirstMatchNotification, matching, OnAppleBacklightDisplayLoad, nullptr);
-    SYSLOG_COND(callback->dispNotif == nullptr, "X6000FB", "%s: Failed to register notification", __FUNCTION__);
+    SYSLOG_COND(singleton().dispNotif == nullptr, "X6000FB", "%s: Failed to register notification", __FUNCTION__);
     OSSafeReleaseNULL(matching);
 }
 
 IOReturn X6000FB::wrapSetAttributeForConnection(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
     uintptr_t value) {
-    auto ret = FunctionCast(wrapSetAttributeForConnection, callback->orgSetAttributeForConnection)(framebuffer,
+    auto ret = FunctionCast(wrapSetAttributeForConnection, singleton().orgSetAttributeForConnection)(framebuffer,
         connectIndex, attribute, value);
     if (attribute != FbAttributeBacklight) { return ret; }
 
-    callback->curPwmBacklightLvl = static_cast<UInt32>(value);
+    singleton().curPwmBacklightLvl = static_cast<UInt32>(value);
 
-    if ((NRed::callback->attributes.isBigSurAndLater() && NRed::callback->attributes.isRaven() &&
-            callback->panelCntlPtr == nullptr) ||
-        callback->embeddedPanelLink == nullptr) {
+    if ((NRed::singleton().getAttributes().isBigSurAndLater() && NRed::singleton().getAttributes().isRaven() &&
+            singleton().panelCntlPtr == nullptr) ||
+        singleton().embeddedPanelLink == nullptr) {
         return kIOReturnNoDevice;
     }
 
-    if (callback->maxPwmBacklightLvl == 0) { return kIOReturnInternalError; }
+    if (singleton().maxPwmBacklightLvl == 0) { return kIOReturnInternalError; }
 
-    UInt32 percentage = callback->curPwmBacklightLvl * 100 / callback->maxPwmBacklightLvl;
+    UInt32 percentage = singleton().curPwmBacklightLvl * 100 / singleton().maxPwmBacklightLvl;
 
     // AMDGPU doesn't use AUX on HDR/SDR displays that can use it. Why?
-    if (callback->supportsAUX) {
+    if (singleton().supportsAUX) {
         // TODO: Obtain the actual max brightness for the screen
-        UInt32 auxValue = (callback->maxOLED * percentage) / 100;
+        UInt32 auxValue = (singleton().maxOLED * percentage) / 100;
         // dc_link_set_backlight_level_nits doesn't print the new backlight level, so we'll do it
         DBGLOG("X6000FB", "%s: New AUX brightness: %d millinits (%d nits)", __FUNCTION__, auxValue, (auxValue / 1000));
-        callback->orgDcLinkSetBacklightLevelNits(callback->embeddedPanelLink, true, auxValue, 15000);
-    } else if (NRed::callback->attributes.isBigSurAndLater() && NRed::callback->attributes.isRaven()) {
+        singleton().orgDcLinkSetBacklightLevelNits(singleton().embeddedPanelLink, true, auxValue, 15000);
+    } else if (NRed::singleton().getAttributes().isBigSurAndLater() && NRed::singleton().getAttributes().isRaven()) {
         // XX: Use the old brightness logic for now on Raven
         // until I can find out the actual problem with DMCU.
         UInt32 pwmValue = percentage >= 100 ? 0x1FF00 : ((percentage * 0xFF) / 100) << 8U;
         DBGLOG("X6000FB", "%s: New PWM brightness: 0x%X", __FUNCTION__, pwmValue);
-        callback->orgDceDriverSetBacklight(callback->panelCntlPtr, pwmValue);
+        singleton().orgDceDriverSetBacklight(singleton().panelCntlPtr, pwmValue);
         return kIOReturnSuccess;
     } else {
         UInt32 pwmValue = (percentage * 0xFFFF) / 100;
         DBGLOG("X6000FB", "%s: New PWM brightness: 0x%X", __FUNCTION__, pwmValue);
-        if (callback->orgDcLinkSetBacklightLevel(callback->embeddedPanelLink, pwmValue, 0)) { return kIOReturnSuccess; }
+        if (singleton().orgDcLinkSetBacklightLevel(singleton().embeddedPanelLink, pwmValue, 0)) {
+            return kIOReturnSuccess;
+        }
     }
 
     return kIOReturnDeviceError;
@@ -504,16 +519,16 @@ IOReturn X6000FB::wrapSetAttributeForConnection(IOService *framebuffer, IOIndex 
 
 IOReturn X6000FB::wrapGetAttributeForConnection(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
     uintptr_t *value) {
-    auto ret = FunctionCast(wrapGetAttributeForConnection, callback->orgGetAttributeForConnection)(framebuffer,
+    auto ret = FunctionCast(wrapGetAttributeForConnection, singleton().orgGetAttributeForConnection)(framebuffer,
         connectIndex, attribute, value);
     if (attribute != FbAttributeBacklight) { return ret; }
-    *value = callback->curPwmBacklightLvl;
+    *value = singleton().curPwmBacklightLvl;
     return kIOReturnSuccess;
 }
 
 UInt32 X6000FB::wrapGetNumberOfConnectors(void *that) {
-    if (!callback->fixedVBIOS) {
-        callback->fixedVBIOS = true;
+    if (!singleton().fixedVBIOS) {
+        singleton().fixedVBIOS = true;
         struct DispObjInfoTableV1_4 *objInfo = getMember<DispObjInfoTableV1_4 *>(that, 0x28);
         if (objInfo->formatRev == 1 && (objInfo->contentRev == 4 || objInfo->contentRev == 5)) {
             DBGLOG("X6000FB", "getNumberOfConnectors: Fixing VBIOS connectors");
@@ -528,12 +543,12 @@ UInt32 X6000FB::wrapGetNumberOfConnectors(void *that) {
             }
         }
     }
-    return FunctionCast(wrapGetNumberOfConnectors, callback->orgGetNumberOfConnectors)(that);
+    return FunctionCast(wrapGetNumberOfConnectors, singleton().orgGetNumberOfConnectors)(that);
 }
 
 bool X6000FB::wrapIH40IVRingInitHardware(void *ctx, void *param2) {
-    auto ret = FunctionCast(wrapIH40IVRingInitHardware, callback->orgIH40IVRingInitHardware)(ctx, param2);
-    NRed::callback->writeReg32(mmIH_CHICKEN, NRed::callback->readReg32(mmIH_CHICKEN) | mmIH_MC_SPACE_GPA_ENABLE);
+    auto ret = FunctionCast(wrapIH40IVRingInitHardware, singleton().orgIH40IVRingInitHardware)(ctx, param2);
+    NRed::singleton().writeReg32(mmIH_CHICKEN, NRed::singleton().readReg32(mmIH_CHICKEN) | mmIH_MC_SPACE_GPA_ENABLE);
     return ret;
 }
 
@@ -543,52 +558,52 @@ void X6000FB::wrapIRQMGRWriteRegister(void *ctx, UInt64 index, UInt32 value) {
             value |= (1U << mmIH_IH_BUFFER_MEM_CLK_SOFT_OVERRIDE_SHIFT);
         }
     }
-    FunctionCast(wrapIRQMGRWriteRegister, callback->orgIRQMGRWriteRegister)(ctx, index, value);
+    FunctionCast(wrapIRQMGRWriteRegister, singleton().orgIRQMGRWriteRegister)(ctx, index, value);
 }
 
 UInt32 X6000FB::wrapControllerPowerUp(void *that) {
     auto &m_flags = getMember<UInt8>(that, 0x5F18);
     auto send = (m_flags & 2) == 0;
     m_flags |= 4;    // All framebuffers enabled
-    auto ret = FunctionCast(wrapControllerPowerUp, callback->orgControllerPowerUp)(that);
-    if (send) { callback->orgMessageAccelerator(that, 0x1B, nullptr, nullptr, nullptr); }
+    auto ret = FunctionCast(wrapControllerPowerUp, singleton().orgControllerPowerUp)(that);
+    if (send) { singleton().orgMessageAccelerator(that, 0x1B, nullptr, nullptr, nullptr); }
     return ret;
 }
 
 void X6000FB::wrapDpReceiverPowerCtrl(void *link, bool power_on) {
-    FunctionCast(wrapDpReceiverPowerCtrl, callback->orgDpReceiverPowerCtrl)(link, power_on);
+    FunctionCast(wrapDpReceiverPowerCtrl, singleton().orgDpReceiverPowerCtrl)(link, power_on);
     IOSleep(250);    // Link needs a bit of delay to change power state
 }
 
 UInt32 X6000FB::wrapDcePanelCntlHwInit(void *panelCntl) {
-    callback->panelCntlPtr = panelCntl;
-    return FunctionCast(wrapDcePanelCntlHwInit, callback->orgDcePanelCntlHwInit)(panelCntl);
+    singleton().panelCntlPtr = panelCntl;
+    return FunctionCast(wrapDcePanelCntlHwInit, singleton().orgDcePanelCntlHwInit)(panelCntl);
 }
 
 void *X6000FB::wrapLinkCreate(void *data) {
-    void *ret = FunctionCast(wrapLinkCreate, callback->orgLinkCreate)(data);
+    void *ret = FunctionCast(wrapLinkCreate, singleton().orgLinkCreate)(data);
 
     if (ret == nullptr) { return nullptr; }
 
     auto signalType = getMember<UInt32>(ret, 0x38);
     switch (signalType) {
         case DC_SIGNAL_TYPE_LVDS: {
-            if (callback->embeddedPanelLink != nullptr) {
+            if (singleton().embeddedPanelLink != nullptr) {
                 SYSLOG("X6000FB", "EMBEDDED PANEL LINK WAS ALREADY SET AND DISCOVERED NEW ONE!!!!");
                 SYSLOG("X6000FB", "REPORT THIS TO THE DEVELOPERS AS SOON AS POSSIBLE!!!!");
             }
-            callback->embeddedPanelLink = ret;
+            singleton().embeddedPanelLink = ret;
             DBGLOG("X6000FB", "Will use DMCU for display brightness control.");
         }
         case DC_SIGNAL_TYPE_EDP: {
-            if (callback->embeddedPanelLink != nullptr) {
+            if (singleton().embeddedPanelLink != nullptr) {
                 SYSLOG("X6000FB", "EMBEDDED PANEL LINK WAS ALREADY SET AND DISCOVERED NEW ONE!!!!");
                 SYSLOG("X6000FB", "REPORT THIS TO THE DEVELOPERS AS SOON AS POSSIBLE!!!!");
             }
-            callback->embeddedPanelLink = ret;
-            callback->supportsAUX = (callback->dcLinkCapsField.get(ret) & DC_DPCD_EXT_CAPS_OLED) != 0;
+            singleton().embeddedPanelLink = ret;
+            singleton().supportsAUX = (singleton().dcLinkCapsField.get(ret) & DC_DPCD_EXT_CAPS_OLED) != 0;
 
-            DBGLOG("X6000FB", "Will use %s for display brightness control.", callback->supportsAUX ? "AUX" : "DMCU");
+            DBGLOG("X6000FB", "Will use %s for display brightness control.", singleton().supportsAUX ? "AUX" : "DMCU");
         }
         default: {
             break;
@@ -599,7 +614,7 @@ void *X6000FB::wrapLinkCreate(void *data) {
 }
 
 bool X6000FB::wrapInitWithPciInfo(void *that, void *pciDevice) {
-    auto ret = FunctionCast(wrapInitWithPciInfo, callback->orgInitWithPciInfo)(that, pciDevice);
+    auto ret = FunctionCast(wrapInitWithPciInfo, singleton().orgInitWithPciInfo)(that, pciDevice);
     getMember<UInt64>(that, 0x28) = 0xFFFFFFFFFFFFFFFF;    // Enable all log types
     getMember<UInt32>(that, 0x30) = 0xFF;                  // Enable all log severities
     return ret;
@@ -673,7 +688,7 @@ void X6000FB::wrapDmLoggerWrite(void *, const UInt32 logType, const char *fmt, .
 void *X6000FB::wrapCreateRegisterAccess(void *initData) {
     getMember<UInt32>(initData, 0x24) = SMUIO_BASE + mmROM_INDEX;
     getMember<UInt32>(initData, 0x28) = SMUIO_BASE + mmROM_DATA;
-    return FunctionCast(wrapCreateRegisterAccess, callback->orgCreateRegisterAccess)(initData);
+    return FunctionCast(wrapCreateRegisterAccess, singleton().orgCreateRegisterAccess)(initData);
 }
 
 void *X6000FB::wrapCreateDmcubService() { return nullptr; }

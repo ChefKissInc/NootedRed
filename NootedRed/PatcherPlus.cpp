@@ -1,7 +1,7 @@
 // Copyright © 2022-2024 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
-#include "PrivateHeaders/PatcherPlus.hpp"
+#include <PrivateHeaders/PatcherPlus.hpp>
 
 bool SolveRequestPlus::solve(KernelPatcher &patcher, size_t id, mach_vm_address_t address, size_t maxSize) {
     PANIC_COND(!this->address, "Patcher+", "this->address is null");

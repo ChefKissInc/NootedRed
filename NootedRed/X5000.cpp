@@ -1,13 +1,15 @@
 // Copyright © 2022-2024 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
-#include "PrivateHeaders/X5000.hpp"
-#include "PrivateHeaders/Firmware.hpp"
-#include "PrivateHeaders/NRed.hpp"
-#include "PrivateHeaders/PatcherPlus.hpp"
-#include "PrivateHeaders/X6000.hpp"
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_util.hpp>
+#include <PrivateHeaders/Firmware.hpp>
+#include <PrivateHeaders/NRed.hpp>
+#include <PrivateHeaders/PatcherPlus.hpp>
+#include <PrivateHeaders/X5000.hpp>
+#include <PrivateHeaders/X6000.hpp>
+
+//------ Target Kexts ------//
 
 static const char *pathRadeonX5000 = "/System/Library/Extensions/AMDRadeonX5000.kext/Contents/MacOS/AMDRadeonX5000";
 
@@ -20,7 +22,11 @@ static KernelPatcher::KextInfo kextRadeonX5000 {
     KernelPatcher::KextInfo::Unloaded,
 };
 
-X5000 *X5000::callback = nullptr;
+//------ Module Logic ------//
+
+static X5000 module {};
+
+X5000 &X5000::singleton() { return module; }
 
 void X5000::init() {
     switch (getKernelVersion()) {
@@ -75,31 +81,35 @@ void X5000::init() {
 
     SYSLOG("X5000", "Module initialised");
 
-    callback = this;
-    lilu.onKextLoadForce(&kextRadeonX5000);
+    lilu.onKextLoadForce(
+        &kextRadeonX5000, 1,
+        [](void *user, KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
+            static_cast<X5000 *>(user)->processKext(patcher, id, slide, size);
+        },
+        this);
 }
 
-bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
+void X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextRadeonX5000.loadIndex == id) {
         SYSLOG_COND(ADDPR(debugEnabled), "X5000", "slide is 0x%llx", slide);
-        NRed::callback->hwLateInit();
+        NRed::singleton().hwLateInit();
 
         UInt32 *orgChannelTypes;
         mach_vm_address_t startHWEngines;
 
         SolveRequestPlus solveRequests[] = {
-            {NRed::callback->attributes.isCatalina() ?
+            {NRed::singleton().getAttributes().isCatalina() ?
                     "__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator22getAdditionalQueueListEPPK18_"
                     "AMDQueueSpecifierE27additionalQueueList_Default" :
                     "__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator19createAccelChannelsEbE12channelTypes",
                 orgChannelTypes, kChannelTypesPattern},
             {"__ZN31AMDRadeonX5000_AMDGFX9PM4EngineC1Ev", this->orgGFX9PM4EngineConstructor},
             {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngineC1Ev", this->orgGFX9SDMAEngineConstructor},
-            {"__ZN35AMDRadeonX5000_AMDAccelVideoContext10gMetaClassE", NRed::callback->metaClassMap[0][0]},
-            {"__ZN37AMDRadeonX5000_AMDAccelDisplayMachine10gMetaClassE", NRed::callback->metaClassMap[1][0]},
-            {"__ZN34AMDRadeonX5000_AMDAccelDisplayPipe10gMetaClassE", NRed::callback->metaClassMap[2][0]},
-            {"__ZN30AMDRadeonX5000_AMDAccelChannel10gMetaClassE", NRed::callback->metaClassMap[3][1]},
-            {"__ZN28AMDRadeonX5000_IAMDHWChannel10gMetaClassE", NRed::callback->metaClassMap[4][0]},
+            {"__ZN35AMDRadeonX5000_AMDAccelVideoContext10gMetaClassE", NRed::singleton().metaClassMap[0][0]},
+            {"__ZN37AMDRadeonX5000_AMDAccelDisplayMachine10gMetaClassE", NRed::singleton().metaClassMap[1][0]},
+            {"__ZN34AMDRadeonX5000_AMDAccelDisplayPipe10gMetaClassE", NRed::singleton().metaClassMap[2][0]},
+            {"__ZN30AMDRadeonX5000_AMDAccelChannel10gMetaClassE", NRed::singleton().metaClassMap[3][1]},
+            {"__ZN28AMDRadeonX5000_IAMDHWChannel10gMetaClassE", NRed::singleton().metaClassMap[4][0]},
             {"__ZN26AMDRadeonX5000_AMDHardware14startHWEnginesEv", startHWEngines},
         };
         PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "X5000",
@@ -132,34 +142,35 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
             PANIC_COND(!request.route(patcher, id, slide, size), "X5000", "Failed to route getNumericProperty");
         }
 
-        if (NRed::callback->attributes.isVentura1304AndLater()) {
+        if (NRed::singleton().getAttributes().isVentura1304AndLater()) {
             RouteRequestPlus request {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator23obtainAccelChannelGroupE11SS_"
                                       "PRIORITYP27AMDRadeonX5000_AMDAccelTask",
                 wrapObtainAccelChannelGroup1304, this->orgObtainAccelChannelGroup};
             PANIC_COND(!request.route(patcher, id, slide, size), "X5000", "Failed to route obtainAccelChannelGroup");
-        } else if (NRed::callback->attributes.isBigSurAndLater()) {
+        } else if (NRed::singleton().getAttributes().isBigSurAndLater()) {
             RouteRequestPlus request {
                 "__ZN37AMDRadeonX5000_AMDGraphicsAccelerator23obtainAccelChannelGroupE11SS_PRIORITY",
                 wrapObtainAccelChannelGroup, this->orgObtainAccelChannelGroup};
             PANIC_COND(!request.route(patcher, id, slide, size), "X5000", "Failed to route obtainAccelChannelGroup");
         }
 
-        if (NRed::callback->attributes.isSonoma1404AndLater()) {
+        if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
             const LookupPatchPlus patch {&kextRadeonX5000, kAddrLibCreateOriginal1404, kAddrLibCreateOriginalMask1404,
                 kAddrLibCreatePatched1404, kAddrLibCreatePatchedMask1404, 1};
             PANIC_COND(!patch.apply(patcher, slide, size), "X5000", "Failed to apply 14.4+ Addr::Lib::Create patch");
-        } else if (NRed::callback->attributes.isCatalina() || NRed::callback->attributes.isVentura1304AndLater()) {
+        } else if (NRed::singleton().getAttributes().isCatalina() ||
+                   NRed::singleton().getAttributes().isVentura1304AndLater()) {
             const LookupPatchPlus patch {&kextRadeonX5000, kAddrLibCreateOriginal, kAddrLibCreatePatched, 1};
             PANIC_COND(!patch.apply(patcher, slide, size), "X5000",
                 "Failed to apply Catalina & Ventura 13.4+ Addr::Lib::Create patch");
         }
 
-        if (NRed::callback->attributes.isCatalina()) {
+        if (NRed::singleton().getAttributes().isCatalina()) {
             const LookupPatchPlus patch {&kextRadeonX5000, kCreateAccelChannelsOriginal, kCreateAccelChannelsPatched,
                 2};
             PANIC_COND(!patch.apply(patcher, slide, size), "X5000", "Failed to patch createAccelChannels");
 
-            if (NRed::callback->attributes.isRenoir()) {
+            if (NRed::singleton().getAttributes().isRenoir()) {
                 UInt32 findNonBpp64 = Dcn1NonBpp64SwModeMask1015;
                 UInt32 replNonBpp64 = Dcn2NonBpp64SwModeMask1015;
                 UInt32 findBpp64 = Dcn1NonBpp64SwModeMask1015 ^ Dcn1Bpp64SwModeMask1015;
@@ -185,19 +196,20 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
             DBGLOG("X5000", "Applied SDMA1 patches");
         } else {
             const LookupPatchPlus patch {&kextRadeonX5000, kStartHWEnginesOriginal, kStartHWEnginesMask,
-                kStartHWEnginesPatched, kStartHWEnginesMask, NRed::callback->attributes.isVenturaAndLater() ? 2U : 1};
+                kStartHWEnginesPatched, kStartHWEnginesMask,
+                NRed::singleton().getAttributes().isVenturaAndLater() ? 2U : 1};
             PANIC_COND(!patch.apply(patcher, startHWEngines, PAGE_SIZE), "X5000", "Failed to patch startHWEngines");
 
-            if (NRed::callback->attributes.isRenoir()) {
+            if (NRed::singleton().getAttributes().isRenoir()) {
                 UInt32 findBpp64 = Dcn1Bpp64SwModeMask, replBpp64 = Dcn2Bpp64SwModeMask;
                 UInt32 findNonBpp64 = Dcn1NonBpp64SwModeMask, replNonBpp64 = Dcn2NonBpp64SwModeMask;
                 const LookupPatchPlus patches[] = {
                     {&kextRadeonX5000, reinterpret_cast<const UInt8 *>(&findBpp64),
                         reinterpret_cast<const UInt8 *>(&replBpp64), sizeof(UInt32),
-                        NRed::callback->attributes.isVentura1304AndLater() ? 2U : 4},
+                        NRed::singleton().getAttributes().isVentura1304AndLater() ? 2U : 4},
                     {&kextRadeonX5000, reinterpret_cast<const UInt8 *>(&findNonBpp64),
                         reinterpret_cast<const UInt8 *>(&replNonBpp64), sizeof(UInt32),
-                        NRed::callback->attributes.isVentura1304AndLater() ? 2U : 4},
+                        NRed::singleton().getAttributes().isVentura1304AndLater() ? 2U : 4},
                 };
                 PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X5000",
                     "Failed to patch swizzle mode");
@@ -208,26 +220,22 @@ bool X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
             // createAccelChannels: stop at SDMA0
             orgChannelTypes[5] = 1;
             // getPagingChannel: get only SDMA0
-            orgChannelTypes[NRed::callback->attributes.isMontereyAndLater() ? 12 : 11] = 0;
+            orgChannelTypes[NRed::singleton().getAttributes().isMontereyAndLater() ? 12 : 11] = 0;
             MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
             DBGLOG("X5000", "Applied SDMA1 patches");
         }
-
-        return true;
     }
-
-    return false;
 }
 
 bool X5000::wrapAllocateHWEngines(void *that) {
     DBGLOG("X5000", "allocateHWEngines << (that: %p)", that);
     auto *pm4 = OSObject::operator new(0x340);
-    callback->orgGFX9PM4EngineConstructor(pm4);
-    callback->pm4EngineField.set(that, pm4);
+    singleton().orgGFX9PM4EngineConstructor(pm4);
+    singleton().pm4EngineField.set(that, pm4);
 
     auto *sdma0 = OSObject::operator new(0x250);
-    callback->orgGFX9SDMAEngineConstructor(sdma0);
-    callback->sdma0EngineField.set(that, sdma0);
+    singleton().orgGFX9SDMAEngineConstructor(sdma0);
+    singleton().sdma0EngineField.set(that, sdma0);
 
     DBGLOG("X5000", "allocateHWEngines >> true");
     return true;
@@ -235,13 +243,13 @@ bool X5000::wrapAllocateHWEngines(void *that) {
 
 void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
     DBGLOG("X5000", "setupAndInitializeHWCapabilities << (that: %p)", that);
-    FunctionCast(wrapSetupAndInitializeHWCapabilities, callback->orgSetupAndInitializeHWCapabilities)(that);
+    FunctionCast(wrapSetupAndInitializeHWCapabilities, singleton().orgSetupAndInitializeHWCapabilities)(that);
 
-    callback->displayPipeCountField.set(that, NRed::callback->attributes.isRenoir() ? 4 : 6);
-    callback->hasUVD0Field.set(that, false);
-    callback->hasVCEField.set(that, false);
-    callback->hasVCN0Field.set(that, false);
-    callback->hasSDMAPagingQueueField.set(that, false);
+    singleton().displayPipeCountField.set(that, NRed::singleton().getAttributes().isRenoir() ? 4 : 6);
+    singleton().hasUVD0Field.set(that, false);
+    singleton().hasVCEField.set(that, false);
+    singleton().hasVCN0Field.set(that, false);
+    singleton().hasSDMAPagingQueueField.set(that, false);
     DBGLOG("X5000", "setupAndInitializeHWCapabilities >>");
 }
 
@@ -249,16 +257,16 @@ void X5000::wrapGFX9SetupAndInitializeHWCapabilities(void *that) {
     DBGLOG("X5000", "GFX9::setupAndInitializeHWCapabilities << (that: %p)", that);
     char filename[128] = {0};
     snprintf(filename, arrsize(filename), "%s_gpu_info.bin",
-        NRed::callback->attributes.isRenoir() ? "renoir" : NRed::callback->getChipName());
+        NRed::singleton().getAttributes().isRenoir() ? "renoir" : NRed::singleton().getAttributes().getChipName());
     const auto &gpuInfoBin = getFWByName(filename);
     auto *header = reinterpret_cast<const CommonFirmwareHeader *>(gpuInfoBin.data);
     auto *gpuInfo = reinterpret_cast<const GPUInfoFirmware *>(gpuInfoBin.data + header->ucodeOff);
 
-    callback->seCountField.set(that, gpuInfo->gcNumSe);
-    callback->shPerSEField.set(that, gpuInfo->gcNumShPerSe);
-    callback->cuPerSHField.set(that, gpuInfo->gcNumCuPerSh);
+    singleton().seCountField.set(that, gpuInfo->gcNumSe);
+    singleton().shPerSEField.set(that, gpuInfo->gcNumShPerSe);
+    singleton().cuPerSHField.set(that, gpuInfo->gcNumCuPerSh);
 
-    FunctionCast(wrapGFX9SetupAndInitializeHWCapabilities, callback->orgGFX9SetupAndInitializeHWCapabilities)(that);
+    FunctionCast(wrapGFX9SetupAndInitializeHWCapabilities, singleton().orgGFX9SetupAndInitializeHWCapabilities)(that);
     DBGLOG("X5000", "GFX9::setupAndInitializeHWCapabilities >>");
 }
 
@@ -275,31 +283,31 @@ void *X5000::wrapGetHWChannel(void *that, AMDHWEngineType engineType, UInt32 rin
     DBGLOG("X5000", "getHWChannel << (that: %p, engineType: %s, ringId: 0x%X)", that, hwEngineToString(engineType),
         ringId);
     if (engineType == kAMDHWEngineTypeSDMA1) { engineType = kAMDHWEngineTypeSDMA0; }
-    return FunctionCast(wrapGetHWChannel, callback->orgGetHWChannel)(that, engineType, ringId);
+    return FunctionCast(wrapGetHWChannel, singleton().orgGetHWChannel)(that, engineType, ringId);
 }
 
 void X5000::wrapInitializeFamilyType(void *that) {
     DBGLOG("X5000", "initializeFamilyType << (that: %p)", that);
-    callback->familyTypeField.set(that, AMDGPU_FAMILY_RAVEN);
+    singleton().familyTypeField.set(that, AMDGPU_FAMILY_RAVEN);
     DBGLOG("X5000", "initializeFamilyType >>");
 }
 
 void *X5000::wrapAllocateAMDHWDisplay(void *that) {
     DBGLOG("X5000", "allocateAMDHWDisplay << (that: %p)", that);
-    auto *ret = FunctionCast(wrapAllocateAMDHWDisplay, X6000::callback->orgAllocateAMDHWDisplay)(that);
+    auto *ret = FunctionCast(wrapAllocateAMDHWDisplay, X6000::singleton().orgAllocateAMDHWDisplay)(that);
     DBGLOG("X5000", "allocateAMDHWDisplay >> %p", ret);
     return ret;
 }
 
 UInt64 X5000::wrapAdjustVRAMAddress(void *that, UInt64 addr) {
-    auto ret = FunctionCast(wrapAdjustVRAMAddress, callback->orgAdjustVRAMAddress)(that, addr);
+    auto ret = FunctionCast(wrapAdjustVRAMAddress, singleton().orgAdjustVRAMAddress)(that, addr);
     if (addr == ret) {
         SYSTRACE_COND(ADDPR(debugEnabled), "X5000", "adjustVRAMAddress: 0x%llx -> 0x%llx NO CHANGE", addr, ret);
     } else {
 #ifdef DEBUG
         auto originalRet = ret;
 #endif
-        ret += NRed::callback->fbOffset;
+        ret += NRed::singleton().getFbOffset();
         DBGLOG("X5000", "adjustVRAMAddress: 0x%llx -> drv:0x%llx,ours:0x%llx", addr, originalRet, ret);
     }
     return ret;
@@ -309,7 +317,7 @@ static UInt32 fakeGetPreferredSwizzleMode2(void *, void *pIn) { return getMember
 
 void *X5000::wrapAllocateAMDHWAlignManager(void *that) {
     DBGLOG("X5000", "allocateAMDHWAlignManager << (that: %p)", that);
-    auto *hwAlignManager = FunctionCast(wrapAllocateAMDHWAlignManager, callback->orgAllocateAMDHWAlignManager)(that);
+    auto *hwAlignManager = FunctionCast(wrapAllocateAMDHWAlignManager, singleton().orgAllocateAMDHWAlignManager)(that);
     auto *vtableNew = IOMalloc(0x238);
     auto *vtableOriginal = getMember<void *>(hwAlignManager, 0);
     memcpy(vtableNew, vtableOriginal, 0x230);
@@ -318,7 +326,7 @@ void *X5000::wrapAllocateAMDHWAlignManager(void *that) {
     return hwAlignManager;
 }
 
-UInt32 X5000::wrapGetDeviceType() { return NRed::callback->attributes.isRenoir() ? 9 : 0; }
+UInt32 X5000::wrapGetDeviceType() { return NRed::singleton().getAttributes().isRenoir() ? 9 : 0; }
 
 UInt32 X5000::wrapReturnZero() { return 0; }
 
@@ -329,7 +337,7 @@ static void fixAccelGroup(void *that) {
 }
 
 void *X5000::wrapObtainAccelChannelGroup(void *that, UInt32 priority) {
-    auto ret = FunctionCast(wrapObtainAccelChannelGroup, callback->orgObtainAccelChannelGroup)(that, priority);
+    auto ret = FunctionCast(wrapObtainAccelChannelGroup, singleton().orgObtainAccelChannelGroup)(that, priority);
     if (ret == nullptr) { return nullptr; }
     fixAccelGroup(ret);
     return ret;
@@ -337,7 +345,7 @@ void *X5000::wrapObtainAccelChannelGroup(void *that, UInt32 priority) {
 
 void *X5000::wrapObtainAccelChannelGroup1304(void *that, UInt32 priority, void *task) {
     auto ret =
-        FunctionCast(wrapObtainAccelChannelGroup1304, callback->orgObtainAccelChannelGroup)(that, priority, task);
+        FunctionCast(wrapObtainAccelChannelGroup1304, singleton().orgObtainAccelChannelGroup)(that, priority, task);
     if (ret == nullptr) { return nullptr; }
     fixAccelGroup(ret);
     return ret;
@@ -346,25 +354,25 @@ void *X5000::wrapObtainAccelChannelGroup1304(void *that, UInt32 priority, void *
 UInt32 X5000::wrapHwlConvertChipFamily(void *that, UInt32 family, UInt32 revision) {
     DBGLOG("X5000", "HwlConvertChipFamily >> (that: %p family: 0x%X revision: 0x%X)", that, family, revision);
     if (family == AMDGPU_FAMILY_RAVEN) {
-        auto &settings = callback->chipSettingsField.getRef(that);
+        auto &settings = singleton().chipSettingsField.getRef(that);
         settings.isArcticIsland = 1;
         settings.isRaven = 1;
-        if (NRed::callback->attributes.isRenoir()) {
+        if (NRed::singleton().getAttributes().isRenoir()) {
             settings.htileAlignFix = 1;
             settings.applyAliasFix = 1;
-        } else if (NRed::callback->attributes.isRaven()) {
+        } else if (NRed::singleton().getAttributes().isRaven()) {
             settings.depthPipeXorDisable = 1;
         }
         settings.isDcn1 = 1;
         settings.metaBaseAlignFix = 1;
         return ADDR_CHIP_FAMILY_AI;
     }
-    return FunctionCast(wrapHwlConvertChipFamily, callback->orgHwlConvertChipFamily)(that, family, revision);
+    return FunctionCast(wrapHwlConvertChipFamily, singleton().orgHwlConvertChipFamily)(that, family, revision);
 }
 
 bool X5000::wrapGetNumericProperty(void *that, const char *name, uint32_t *value) {
     DBGLOG("X5000", "getNumericProperty << (that: %p name: %s, value: %p)", that, name, value);
-    auto ret = FunctionCast(wrapGetNumericProperty, callback->orgGetNumericProperty)(that, name, value);
+    auto ret = FunctionCast(wrapGetNumericProperty, singleton().orgGetNumericProperty)(that, name, value);
     if (name != nullptr && value != nullptr && strncmp(name, "GpuDebugPolicy", 15) == 0) {
         if (ret) {    // Enable entry traces
             *value |= (1U << 6);

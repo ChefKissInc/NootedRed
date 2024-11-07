@@ -2,24 +2,24 @@
 // See LICENSE for details.
 
 #pragma once
-#include "ObjectField.hpp"
 #include <Headers/kern_patcher.hpp>
+#include <PrivateHeaders/ObjectField.hpp>
 
 class X6000 {
     friend class X5000;
 
-    static X6000 *callback;
-
-    public:
-    void init();
-    bool processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
-
-    private:
     ObjectField<UInt32> regBaseField {};
 
     mach_vm_address_t orgAllocateAMDHWDisplay {0};
     mach_vm_address_t orgInitDCNRegistersOffsets {0};
 
+    public:
+    static X6000 &singleton();
+
+    void init();
+    bool processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
+
+    private:
     static bool wrapAccelStartX6000();
     static void wrapInitDCNRegistersOffsets(void *that);
 };

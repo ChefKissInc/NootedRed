@@ -1,12 +1,14 @@
 // Copyright © 2022-2024 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
-#include "PrivateHeaders/HWLibs.hpp"
-#include "PrivateHeaders/AMDCommon.hpp"
-#include "PrivateHeaders/Firmware.hpp"
-#include "PrivateHeaders/NRed.hpp"
-#include "PrivateHeaders/PatcherPlus.hpp"
 #include <Headers/kern_api.hpp>
+#include <PrivateHeaders/AMDCommon.hpp>
+#include <PrivateHeaders/Firmware.hpp>
+#include <PrivateHeaders/HWLibs.hpp>
+#include <PrivateHeaders/NRed.hpp>
+#include <PrivateHeaders/PatcherPlus.hpp>
+
+//------ Target Kexts ------//
 
 static const char *pathRadeonX5000HWLibs = "/System/Library/Extensions/AMDRadeonX5000HWServices.kext/Contents/PlugIns/"
                                            "AMDRadeonX5000HWLibs.kext/Contents/MacOS/AMDRadeonX5000HWLibs";
@@ -20,7 +22,11 @@ static KernelPatcher::KextInfo kextRadeonX5000HWLibs {
     KernelPatcher::KextInfo::Unloaded,
 };
 
-X5000HWLibs *X5000HWLibs::callback = nullptr;
+//------ Module Logic ------//
+
+static X5000HWLibs module {};
+
+X5000HWLibs &X5000HWLibs::singleton() { return module; };
 
 void X5000HWLibs::init() {
     switch (getKernelVersion()) {
@@ -91,21 +97,25 @@ void X5000HWLibs::init() {
 
     SYSLOG("HWLibs", "Module initialised");
 
-    callback = this;
-    lilu.onKextLoadForce(&kextRadeonX5000HWLibs);
+    lilu.onKextLoadForce(
+        &kextRadeonX5000HWLibs, 1,
+        [](void *user, KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
+            static_cast<X5000HWLibs *>(user)->processKext(patcher, id, slide, size);
+        },
+        this);
 }
 
-bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
+void X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextRadeonX5000HWLibs.loadIndex == id) {
         SYSLOG_COND(ADDPR(debugEnabled), "X5000HWLibs", "slide is 0x%llx", slide);
-        NRed::callback->hwLateInit();
+        NRed::singleton().hwLateInit();
 
         CAILAsicCapsEntry *orgCapsTable;
         CAILAsicCapsInitEntry *orgCapsInitTable;
         CAILDeviceTypeEntry *orgDeviceTypeTable;
         DeviceCapabilityEntry *orgDevCapTable;
 
-        if (NRed::callback->attributes.isCatalina()) {
+        if (NRed::singleton().getAttributes().isCatalina()) {
             orgDeviceTypeTable = nullptr;
         } else {
             SolveRequestPlus solveRequests[] = {
@@ -127,7 +137,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
         PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "HWLibs",
             "Failed to resolve symbols");
 
-        if (NRed::callback->attributes.isCatalina()) {
+        if (NRed::singleton().getAttributes().isCatalina()) {
             RouteRequestPlus request {"__ZN16AmdTtlFwServices7getIpFwEjPKcP10_TtlFwInfo", wrapGetIpFw,
                 this->orgGetIpFw};
             PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route getIpFw");
@@ -137,13 +147,14 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
                     wrapPopulateFirmwareDirectory, this->orgGetIpFw},
                 {"_psp_bootloader_is_sos_running_3_1", hwLibsGeneralFailure, kPspBootloaderIsSosRunning31Pattern},
                 {"_psp_security_feature_caps_set_3_1",
-                    NRed::callback->attributes.isRenoir() ? pspSecurityFeatureCapsSet12 : pspSecurityFeatureCapsSet10,
-                    NRed::callback->attributes.isVenturaAndLater() ? kPspSecurityFeatureCapsSet31Pattern13 :
-                                                                     kPspSecurityFeatureCapsSet31Pattern},
+                    NRed::singleton().getAttributes().isRenoir() ? pspSecurityFeatureCapsSet12 :
+                                                                   pspSecurityFeatureCapsSet10,
+                    NRed::singleton().getAttributes().isVenturaAndLater() ? kPspSecurityFeatureCapsSet31Pattern13 :
+                                                                            kPspSecurityFeatureCapsSet31Pattern},
             };
             PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "HWLibs",
                 "Failed to route symbols (>10.15)");
-            if (NRed::callback->attributes.isSonoma1404AndLater()) {
+            if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
                 RouteRequestPlus requests[] = {
                     {"_psp_bootloader_load_sysdrv_3_1", hwLibsNoop, kPspBootloaderLoadSysdrv31Pattern1404},
                     {"_psp_bootloader_set_ecc_mode_3_1", hwLibsNoop, kPspBootloaderSetEccMode31Pattern1404},
@@ -166,7 +177,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
             }
         }
 
-        if (NRed::callback->attributes.isSonoma1404AndLater()) {
+        if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
             RouteRequestPlus request = {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit,
                 kPspCmdKmSubmitPattern1404, kPspCmdKmSubmitPatternMask1404};
             PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route psp_cmd_km_submit (14.4+)");
@@ -177,8 +188,8 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
         }
 
         RouteRequestPlus request = {"_smu_9_0_1_create_function_pointer_list", wrapSmu901CreateFunctionPointerList,
-            NRed::callback->attributes.isVenturaAndLater() ? kSmu901CreateFunctionPointerListPattern13 :
-                                                             kSmu901CreateFunctionPointerListPattern,
+            NRed::singleton().getAttributes().isVenturaAndLater() ? kSmu901CreateFunctionPointerListPattern13 :
+                                                                    kSmu901CreateFunctionPointerListPattern,
             kSmu901CreateFunctionPointerListPatternMask};
         PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs",
             "Failed to route smu_9_0_1_create_function_pointer_list");
@@ -194,22 +205,25 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "HWLibs",
             "Failed to enable kernel writing");
-        if (orgDeviceTypeTable) { *orgDeviceTypeTable = {.deviceId = NRed::callback->deviceID, .deviceType = 6}; }
+        if (orgDeviceTypeTable) {
+            *orgDeviceTypeTable = {.deviceId = NRed::singleton().getDeviceID(), .deviceType = 6};
+        }
 
-        auto targetDeviceId = NRed::callback->attributes.isRenoir() ? 0x1636 : NRed::callback->deviceID;
+        auto targetDeviceId = NRed::singleton().getAttributes().isRenoir() ? 0x1636 : NRed::singleton().getDeviceID();
         for (; orgCapsInitTable->deviceId != 0xFFFFFFFF; orgCapsInitTable++) {
             if (orgCapsInitTable->familyId == AMDGPU_FAMILY_RAVEN && orgCapsInitTable->deviceId == targetDeviceId) {
-                orgCapsInitTable->deviceId = NRed::callback->deviceID;
-                orgCapsInitTable->revision = NRed::callback->devRevision;
+                orgCapsInitTable->deviceId = NRed::singleton().getDeviceID();
+                orgCapsInitTable->revision = NRed::singleton().getDevRevision();
                 orgCapsInitTable->extRevision =
-                    static_cast<UInt64>(NRed::callback->enumRevision) + NRed::callback->devRevision;
-                orgCapsInitTable->pciRevision = NRed::callback->pciRevision;
+                    static_cast<UInt64>(NRed::singleton().getEnumRevision()) + NRed::singleton().getDevRevision();
+                orgCapsInitTable->pciRevision = NRed::singleton().getPciRevision();
                 *orgCapsTable = {
                     .familyId = AMDGPU_FAMILY_RAVEN,
-                    .deviceId = NRed::callback->deviceID,
-                    .revision = NRed::callback->devRevision,
-                    .extRevision = static_cast<UInt32>(NRed::callback->enumRevision) + NRed::callback->devRevision,
-                    .pciRevision = NRed::callback->pciRevision,
+                    .deviceId = NRed::singleton().getDeviceID(),
+                    .revision = NRed::singleton().getDevRevision(),
+                    .extRevision =
+                        static_cast<UInt32>(NRed::singleton().getEnumRevision()) + NRed::singleton().getDevRevision(),
+                    .pciRevision = NRed::singleton().getPciRevision(),
                     .caps = orgCapsInitTable->caps,
                 };
                 break;
@@ -218,16 +232,16 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
         PANIC_COND(orgCapsInitTable->deviceId == 0xFFFFFFFF, "HWLibs", "Failed to find init caps table entry");
         for (; orgDevCapTable->familyId; orgDevCapTable++) {
             if (orgDevCapTable->familyId == AMDGPU_FAMILY_RAVEN && orgDevCapTable->deviceId == targetDeviceId) {
-                orgDevCapTable->deviceId = NRed::callback->deviceID;
+                orgDevCapTable->deviceId = NRed::singleton().getDeviceID();
                 orgDevCapTable->extRevision =
-                    static_cast<UInt64>(NRed::callback->enumRevision) + NRed::callback->devRevision;
+                    static_cast<UInt64>(NRed::singleton().getEnumRevision()) + NRed::singleton().getDevRevision();
                 orgDevCapTable->revision = DEVICE_CAP_ENTRY_REV_DONT_CARE;
                 orgDevCapTable->enumRevision = DEVICE_CAP_ENTRY_REV_DONT_CARE;
 
                 orgDevCapTable->asicGoldenSettings->goldenSettings =
-                    NRed::callback->attributes.isRaven2() ? goldenSettingsRaven2 :
-                    NRed::callback->attributes.isRenoir() ? goldenSettingsRenoir :
-                                                            goldenSettingsRaven;
+                    NRed::singleton().getAttributes().isRaven2() ? goldenSettingsRaven2 :
+                    NRed::singleton().getAttributes().isRenoir() ? goldenSettingsRenoir :
+                                                                   goldenSettingsRaven;
 
                 break;
             }
@@ -236,11 +250,11 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("HWLibs", "Applied DDI Caps patches");
 
-        if (!NRed::callback->attributes.isCatalina()) {
+        if (!NRed::singleton().getAttributes().isCatalina()) {
             const LookupPatchPlus patch {&kextRadeonX5000HWLibs, kGcSwInitOriginal, kGcSwInitOriginalMask,
                 kGcSwInitPatched, kGcSwInitPatchedMask, 1};
             PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply gc_sw_init spoof patch");
-            if (NRed::callback->attributes.isSonoma1404AndLater()) {
+            if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
                 const LookupPatchPlus patches[] = {
                     {&kextRadeonX5000HWLibs, kPspSwInit1Original1404, kPspSwInit1Patched1404, 1},
                     {&kextRadeonX5000HWLibs, kPspSwInit2Original1404, kPspSwInit2OriginalMask1404,
@@ -260,7 +274,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
                 PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs",
                     "Failed to apply spoof patches (<14.4)");
             }
-        } else if (NRed::callback->attributes.isRenoir()) {
+        } else if (NRed::singleton().getAttributes().isRenoir()) {
             const LookupPatchPlus patches[] = {
                 {&kextRadeonX5000HWLibs, kPspSwInit1Original1015, kPspSwInit1Patched1015, 1},
                 {&kextRadeonX5000HWLibs, kPspSwInit2Original1015, kPspSwInit2OriginalMask1015, kPspSwInit2Patched1015,
@@ -270,12 +284,12 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
                 "Failed to apply spoof patches");
         }
 
-        if (NRed::callback->attributes.isSonoma1404AndLater()) {
+        if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
             const LookupPatchPlus patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServices1Original1404,
                 kCreatePowerTuneServices1Patched1404, 1};
             PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs",
                 "Failed to apply PowerTuneServices patch (>=14.4)");
-        } else if (NRed::callback->attributes.isMontereyAndLater()) {
+        } else if (NRed::singleton().getAttributes().isMontereyAndLater()) {
             const LookupPatchPlus patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServices1Original12,
                 kCreatePowerTuneServices1Patched12, 1};
             PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTuneServices patch (<14.4)");
@@ -285,7 +299,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
             PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTuneServices patch (<12.0)");
         }
 
-        if (NRed::callback->attributes.isSonoma1404AndLater()) {
+        if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
             const LookupPatchPlus patches[] = {
                 {&kextRadeonX5000HWLibs, kSmuInitFunctionPointerListOriginal1404,
                     kSmuInitFunctionPointerListOriginalMask1404, kSmuInitFunctionPointerListPatched1404,
@@ -306,7 +320,7 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
                 "Failed to apply patches (<14.4)");
         }
 
-        if (NRed::callback->attributes.isVenturaAndLater()) {
+        if (NRed::singleton().getAttributes().isVenturaAndLater()) {
             const LookupPatchPlus patches[] = {
                 {&kextRadeonX5000HWLibs, kCailQueryAdapterInfoOriginal, kCailQueryAdapterInfoPatched, 1},
                 {&kextRadeonX5000HWLibs, kSDMAInitFunctionPointerListOriginal, kSDMAInitFunctionPointerListOriginalMask,
@@ -320,31 +334,27 @@ bool X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
             const LookupPatchPlus patch = {&kextRadeonX5000HWLibs, kAtiPowerPlayServicesConstructorOriginal,
                 kAtiPowerPlayServicesConstructorPatched, 1};
             PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply MCIL debugLevel patch");
-            if (NRed::callback->attributes.isBigSurAndLater()) {
+            if (NRed::singleton().getAttributes().isBigSurAndLater()) {
                 const LookupPatchPlus patch = {&kextRadeonX5000HWLibs, kAmdLogPspOriginal, kAmdLogPspOriginalMask,
                     kAmdLogPspPatched, 1};
                 PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply amd_log_psp patch");
             }
         }
-
-        return true;
     }
-
-    return false;
 }
 
 void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
-    FunctionCast(wrapPopulateFirmwareDirectory, callback->orgGetIpFw)(that);
+    FunctionCast(wrapPopulateFirmwareDirectory, singleton().orgGetIpFw)(that);
 
-    auto *filename = NRed::callback->attributes.isRenoir() ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
+    auto *filename = NRed::singleton().getAttributes().isRenoir() ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
     const auto &vcnFW = getFWByName(filename);
     DBGLOG("HWLibs", "VCN firmware filename is %s", filename);
 
     // VCN 2.2, VCN 1.0
-    auto *fw = callback->orgCreateFirmware(vcnFW.data, vcnFW.length,
-        NRed::callback->attributes.isRenoir() ? 0x0202 : 0x0100, filename);
+    auto *fw = singleton().orgCreateFirmware(vcnFW.data, vcnFW.length,
+        NRed::singleton().getAttributes().isRenoir() ? 0x0202 : 0x0100, filename);
     PANIC_COND(fw == nullptr, "HWLibs", "Failed to create '%s' firmware", filename);
-    PANIC_COND(!callback->orgPutFirmware(callback->fwDirField.get(that), 6, fw), "HWLibs",
+    PANIC_COND(!singleton().orgPutFirmware(singleton().fwDirField.get(that), 6, fw), "HWLibs",
         "Failed to insert '%s' firmware", filename);
 }
 
@@ -355,7 +365,7 @@ bool X5000HWLibs::wrapGetIpFw(void *that, UInt32 ipVersion, char *name, void *ou
         getMember<UInt32>(out, 0x8) = fwDesc.length;
         return true;
     }
-    return FunctionCast(wrapGetIpFw, callback->orgGetIpFw)(that, ipVersion, name, out);
+    return FunctionCast(wrapGetIpFw, singleton().orgGetIpFw)(that, ipVersion, name, out);
 }
 
 CAILResult X5000HWLibs::hwLibsGeneralFailure() { return kCAILResultFailed; }
@@ -363,18 +373,18 @@ CAILResult X5000HWLibs::hwLibsUnsupported() { return kCAILResultUnsupported; }
 CAILResult X5000HWLibs::hwLibsNoop() { return kCAILResultSuccess; }
 
 CAILResult X5000HWLibs::pspBootloaderLoadSos10(void *ctx) {
-    callback->pspLoadSOSField.set(ctx, NRed::callback->readReg32(MP_BASE + mmMP0_SMN_C2PMSG_59));
-    (callback->pspLoadSOSField + 0x4).set(ctx, NRed::callback->readReg32(MP_BASE + mmMP0_SMN_C2PMSG_58));
-    (callback->pspLoadSOSField + 0x8).set(ctx, NRed::callback->readReg32(MP_BASE + mmMP0_SMN_C2PMSG_58));
+    singleton().pspLoadSOSField.set(ctx, NRed::singleton().readReg32(MP_BASE + mmMP0_SMN_C2PMSG_59));
+    (singleton().pspLoadSOSField + 0x4).set(ctx, NRed::singleton().readReg32(MP_BASE + mmMP0_SMN_C2PMSG_58));
+    (singleton().pspLoadSOSField + 0x8).set(ctx, NRed::singleton().readReg32(MP_BASE + mmMP0_SMN_C2PMSG_58));
     return kCAILResultSuccess;
 }
 
 CAILResult X5000HWLibs::pspSecurityFeatureCapsSet10(void *ctx) {
-    auto &securityCaps = callback->pspSecurityCapsField.getRef(ctx);
+    auto &securityCaps = singleton().pspSecurityCapsField.getRef(ctx);
     securityCaps &= ~static_cast<UInt8>(1);
-    auto tOSVer = callback->pspTOSField.get(ctx);
+    auto tOSVer = singleton().pspTOSField.get(ctx);
     if ((tOSVer & 0xFFFF0000) == 0x80000 && (tOSVer & 0xFF) > 0x50) {
-        auto policyVer = NRed::callback->readReg32(MP_BASE + mmMP0_SMN_C2PMSG_91);
+        auto policyVer = NRed::singleton().readReg32(MP_BASE + mmMP0_SMN_C2PMSG_91);
         SYSLOG_COND((policyVer & 0xFF000000) != 0xA000000, "HWLibs", "Invalid security policy version: 0x%X",
             policyVer);
         if (policyVer == 0xA02031A || ((policyVer & 0xFFFFFF00) == 0xA020400 && (policyVer & 0xFC) > 0x23) ||
@@ -387,11 +397,11 @@ CAILResult X5000HWLibs::pspSecurityFeatureCapsSet10(void *ctx) {
 }
 
 CAILResult X5000HWLibs::pspSecurityFeatureCapsSet12(void *ctx) {
-    auto &securityCaps = callback->pspSecurityCapsField.getRef(ctx);
+    auto &securityCaps = singleton().pspSecurityCapsField.getRef(ctx);
     securityCaps &= ~static_cast<UInt8>(1);
-    auto tOSVer = callback->pspTOSField.get(ctx);
+    auto tOSVer = singleton().pspTOSField.get(ctx);
     if ((tOSVer & 0xFFFF0000) == 0x110000 && (tOSVer & 0xFF) > 0x2A) {
-        auto policyVer = NRed::callback->readReg32(MP_BASE + mmMP0_SMN_C2PMSG_91);
+        auto policyVer = NRed::singleton().readReg32(MP_BASE + mmMP0_SMN_C2PMSG_91);
         SYSLOG_COND((policyVer & 0xFF000000) != 0xB000000, "HWLibs", "Invalid security policy version: 0x%X",
             policyVer);
         if ((policyVer & 0xFFFF0000) == 0xB090000 && (policyVer & 0xFE) > 0x35) { securityCaps |= 1; }
@@ -404,7 +414,7 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *ctx, void *cmd, void *outData, 
     char filename[64];
     bzero(filename, sizeof(filename));
 
-    auto *data = callback->pspCommandDataField.get(ctx);
+    auto *data = singleton().pspCommandDataField.get(ctx);
 
     switch (getMember<AMDPSPCommand>(cmd, 0x0)) {
         case kPSPCommandLoadTA: {
@@ -425,14 +435,14 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *ctx, void *cmd, void *outData, 
                 strncpy(filename, "psp_fp.bin", 11);
                 break;
             }
-            return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(ctx, cmd, outData, outResponse);
+            return FunctionCast(wrapPspCmdKmSubmit, singleton().orgPspCmdKmSubmit)(ctx, cmd, outData, outResponse);
         }
         case kPSPCommandLoadASD: {
             strncpy(filename, "psp_asd.bin", 12);
             break;
         }
         case kPSPCommandLoadIPFW: {
-            auto *prefix = NRed::callback->getGCPrefix();
+            auto *prefix = NRed::singleton().getAttributes().getGCPrefix();
             switch (getMember<AMDUCodeID>(cmd, 0x10)) {
                 case kUCodeCE:
                     snprintf(filename, sizeof(filename), "%sce_ucode.bin", prefix);
@@ -447,23 +457,26 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *ctx, void *cmd, void *outData, 
                     snprintf(filename, sizeof(filename), "%smec_jt_ucode.bin", prefix);
                     break;
                 case kUCodeMEC2JT:
-                    if (NRed::callback->attributes.isRenoir()) { return kCAILResultSuccess; }
+                    if (NRed::singleton().getAttributes().isRenoir()) { return kCAILResultSuccess; }
                     snprintf(filename, sizeof(filename), "%smec_jt_ucode.bin", prefix);
                     break;
                 case kUCodeMEC1:
                     snprintf(filename, sizeof(filename), "%smec_ucode.bin", prefix);
                     break;
                 case kUCodeMEC2:
-                    if (NRed::callback->attributes.isRenoir()) { return kCAILResultSuccess; }
+                    if (NRed::singleton().getAttributes().isRenoir()) { return kCAILResultSuccess; }
                     snprintf(filename, sizeof(filename), "%smec_ucode.bin", prefix);
                     break;
                 case kUCodeRLC:
                     // Fake CGPG
-                    if ((!NRed::callback->attributes.isPicasso() && !NRed::callback->attributes.isRaven2() &&
-                            NRed::callback->attributes.isRaven()) ||
-                        (NRed::callback->attributes.isPicasso() &&
-                            ((NRed::callback->pciRevision >= 0xC8 && NRed::callback->pciRevision <= 0xCC) ||
-                                (NRed::callback->pciRevision >= 0xD8 && NRed::callback->pciRevision <= 0xDD)))) {
+                    if ((!NRed::singleton().getAttributes().isPicasso() &&
+                            !NRed::singleton().getAttributes().isRaven2() &&
+                            NRed::singleton().getAttributes().isRaven()) ||
+                        (NRed::singleton().getAttributes().isPicasso() &&
+                            ((NRed::singleton().getPciRevision() >= 0xC8 &&
+                                 NRed::singleton().getPciRevision() <= 0xCC) ||
+                                (NRed::singleton().getPciRevision() >= 0xD8 &&
+                                    NRed::singleton().getPciRevision() <= 0xDD)))) {
                         snprintf(filename, sizeof(filename), "%srlc_fake_cgpg_ucode.bin", prefix);
                     } else {
                         snprintf(filename, sizeof(filename), "%srlc_ucode.bin", prefix);
@@ -473,14 +486,14 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *ctx, void *cmd, void *outData, 
                     strncpy(filename, "sdma_4_1_ucode.bin", 19);
                     break;
                 case kUCodeDMCUERAM:
-                    if (NRed::callback->attributes.isRenoir()) {
+                    if (NRed::singleton().getAttributes().isRenoir()) {
                         strncpy(filename, "dmcu_eram_dcn21.bin", 20);
                     } else {
                         strncpy(filename, "dmcu_eram_dcn10.bin", 20);
                     }
                     break;
                 case kUCodeDMCUISR:
-                    if (NRed::callback->attributes.isRenoir()) {
+                    if (NRed::singleton().getAttributes().isRenoir()) {
                         strncpy(filename, "dmcu_intvectors_dcn21.bin", 26);
                     } else {
                         strncpy(filename, "dmcu_intvectors_dcn10.bin", 26);
@@ -488,7 +501,7 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *ctx, void *cmd, void *outData, 
                     break;
                 case kUCodeRLCV:
                     // No RLC V on Renoir
-                    if (NRed::callback->attributes.isRenoir()) { return kCAILResultSuccess; }
+                    if (NRed::singleton().getAttributes().isRenoir()) { return kCAILResultSuccess; }
                     snprintf(filename, sizeof(filename), "%srlcv_ucode.bin", prefix);
                     break;
                 case kUCodeRLCSRListGPM:
@@ -502,53 +515,53 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void *ctx, void *cmd, void *outData, 
                     break;
                 case kUCodeDMCUB:
                     // Just in case
-                    if (NRed::callback->attributes.isRenoir()) {
+                    if (NRed::singleton().getAttributes().isRenoir()) {
                         strncpy(filename, "atidmcub_rn.dat", 16);
                         break;
                     }
                     SYSLOG("HWLibs", "DMCU version B is not supposed to be loaded on this ASIC!");
                     return kCAILResultSuccess;
                 default:
-                    return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(ctx, cmd, outData,
+                    return FunctionCast(wrapPspCmdKmSubmit, singleton().orgPspCmdKmSubmit)(ctx, cmd, outData,
                         outResponse);
             }
             break;
         }
         default:
-            return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(ctx, cmd, outData, outResponse);
+            return FunctionCast(wrapPspCmdKmSubmit, singleton().orgPspCmdKmSubmit)(ctx, cmd, outData, outResponse);
     }
 
     const auto &fw = getFWByName(filename);
     memcpy(data, fw.data, fw.length);
     getMember<UInt32>(cmd, 0xC) = fw.length;
 
-    return FunctionCast(wrapPspCmdKmSubmit, callback->orgPspCmdKmSubmit)(ctx, cmd, outData, outResponse);
+    return FunctionCast(wrapPspCmdKmSubmit, singleton().orgPspCmdKmSubmit)(ctx, cmd, outData, outResponse);
 }
 
 CAILResult X5000HWLibs::smuReset() {
     // Linux has got no information on parameters of SoftReset.
     // There is no debug information nor is there debug prints in amdkmdag.sys related to this call.
-    return NRed::callback->sendMsgToSmc(PPSMC_MSG_SoftReset, 0x40);
+    return NRed::singleton().sendMsgToSmc(PPSMC_MSG_SoftReset, 0x40);
 }
 
 CAILResult X5000HWLibs::smuPowerUp() {
-    auto res = NRed::callback->sendMsgToSmc(PPSMC_MSG_ForceGfxContentSave);
+    auto res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_ForceGfxContentSave);
     if (res != kCAILResultSuccess && res != kCAILResultUnsupported) { return res; }
 
-    res = NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerUpSdma);
+    res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerUpSdma);
     if (res != kCAILResultSuccess) { return res; }
 
-    res = NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerUpGfx);
+    res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerUpGfx);
     if (res != kCAILResultSuccess) { return res; }
 
-    res = NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerGateMmHub);
+    res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerGateMmHub);
     if (res == kCAILResultUnsupported) { return kCAILResultSuccess; }
 
     return res;
 }
 
 CAILResult X5000HWLibs::smuInternalSwInit(void *ctx) {
-    callback->smuSwInitialisedFieldBase.set(ctx, true);
+    singleton().smuSwInitialisedFieldBase.set(ctx, true);
     return kCAILResultSuccess;
 }
 
@@ -562,7 +575,8 @@ CAILResult X5000HWLibs::smu10InternalHwInit(void *) {
 CAILResult X5000HWLibs::smu12InternalHwInit(void *) {
     UInt32 i = 0;
     for (; i < AMDGPU_MAX_USEC_TIMEOUT; i++) {
-        if (NRed::callback->readReg32(MP1_Public | smnMP1_FIRMWARE_FLAGS) & smnMP1_FIRMWARE_FLAGS_INTERRUPTS_ENABLED) {
+        if (NRed::singleton().readReg32(MP1_Public | smnMP1_FIRMWARE_FLAGS) &
+            smnMP1_FIRMWARE_FLAGS_INTERRUPTS_ENABLED) {
             break;
         }
         IOSleep(1);
@@ -575,7 +589,7 @@ CAILResult X5000HWLibs::smu12InternalHwInit(void *) {
     res = smuPowerUp();
     if (res != kCAILResultSuccess) { return res; }
 
-    res = NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerGateAtHub);
+    res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerGateAtHub);
     if (res == kCAILResultUnsupported) { return kCAILResultSuccess; }
 
     return res;
@@ -584,7 +598,7 @@ CAILResult X5000HWLibs::smu12InternalHwInit(void *) {
 CAILResult X5000HWLibs::smuInternalHwExit(void *) { return smuReset(); }
 
 CAILResult X5000HWLibs::smuFullAsicReset(void *, void *data) {
-    return NRed::callback->sendMsgToSmc(PPSMC_MSG_DeviceDriverReset, getMember<UInt32>(data, 4));
+    return NRed::singleton().sendMsgToSmc(PPSMC_MSG_DeviceDriverReset, getMember<UInt32>(data, 4));
 }
 
 CAILResult X5000HWLibs::smu10NotifyEvent(void *, void *data) {
@@ -615,7 +629,7 @@ CAILResult X5000HWLibs::smu12NotifyEvent(void *, void *data) {
         case 4:
         case 8:
         case 10:    // Reinitialise
-            return NRed::callback->sendMsgToSmc(PPSMC_MSG_PowerUpSdma);
+            return NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerUpSdma);
         case 1:
         case 2:
         case 3:
@@ -634,11 +648,11 @@ CAILResult X5000HWLibs::smu12NotifyEvent(void *, void *data) {
 CAILResult X5000HWLibs::smuFullScreenEvent(void *, UInt32 event) {
     switch (event) {
         case 1:
-            NRed::callback->writeReg32(MP_BASE + mmMP1_SMN_FPS_CNT,
-                NRed::callback->readReg32(MP_BASE + mmMP1_SMN_FPS_CNT) + 1);
+            NRed::singleton().writeReg32(MP_BASE + mmMP1_SMN_FPS_CNT,
+                NRed::singleton().readReg32(MP_BASE + mmMP1_SMN_FPS_CNT) + 1);
             return kCAILResultSuccess;
         case 2:
-            NRed::callback->writeReg32(MP_BASE + mmMP1_SMN_FPS_CNT, 0);
+            NRed::singleton().writeReg32(MP_BASE + mmMP1_SMN_FPS_CNT, 0);
             return kCAILResultSuccess;
         default:
             SYSLOG("HWLibs", "Invalid input event to SMU full screen event");
@@ -647,23 +661,23 @@ CAILResult X5000HWLibs::smuFullScreenEvent(void *, UInt32 event) {
 }
 
 CAILResult X5000HWLibs::wrapSmu901CreateFunctionPointerList(void *ctx) {
-    if (NRed::callback->attributes.isCatalina()) {
-        callback->smuInternalSWInitField.set(ctx, reinterpret_cast<mach_vm_address_t>(hwLibsNoop));
+    if (NRed::singleton().getAttributes().isCatalina()) {
+        singleton().smuInternalSWInitField.set(ctx, reinterpret_cast<mach_vm_address_t>(hwLibsNoop));
     } else {
-        callback->smuInternalSWInitField.set(ctx, reinterpret_cast<mach_vm_address_t>(smuInternalSwInit));
-        callback->smuGetUCodeConstsField.set(ctx, reinterpret_cast<mach_vm_address_t>(hwLibsNoop));
+        singleton().smuInternalSWInitField.set(ctx, reinterpret_cast<mach_vm_address_t>(smuInternalSwInit));
+        singleton().smuGetUCodeConstsField.set(ctx, reinterpret_cast<mach_vm_address_t>(hwLibsNoop));
     }
-    callback->smuFullscreenEventField.set(ctx, reinterpret_cast<mach_vm_address_t>(smuFullScreenEvent));
-    if (NRed::callback->attributes.isRenoir()) {
-        callback->smuInternalHWInitField.set(ctx, reinterpret_cast<mach_vm_address_t>(smu12InternalHwInit));
-        callback->smuNotifyEventField.set(ctx, reinterpret_cast<mach_vm_address_t>(smu12NotifyEvent));
+    singleton().smuFullscreenEventField.set(ctx, reinterpret_cast<mach_vm_address_t>(smuFullScreenEvent));
+    if (NRed::singleton().getAttributes().isRenoir()) {
+        singleton().smuInternalHWInitField.set(ctx, reinterpret_cast<mach_vm_address_t>(smu12InternalHwInit));
+        singleton().smuNotifyEventField.set(ctx, reinterpret_cast<mach_vm_address_t>(smu12NotifyEvent));
     } else {
-        callback->smuInternalHWInitField.set(ctx, reinterpret_cast<mach_vm_address_t>(smu10InternalHwInit));
-        callback->smuNotifyEventField.set(ctx, reinterpret_cast<mach_vm_address_t>(smu10NotifyEvent));
+        singleton().smuInternalHWInitField.set(ctx, reinterpret_cast<mach_vm_address_t>(smu10InternalHwInit));
+        singleton().smuNotifyEventField.set(ctx, reinterpret_cast<mach_vm_address_t>(smu10NotifyEvent));
     }
-    callback->smuInternalSWExitField.set(ctx, reinterpret_cast<mach_vm_address_t>(hwLibsNoop));
-    callback->smuInternalHWExitField.set(ctx, reinterpret_cast<mach_vm_address_t>(smuInternalHwExit));
-    callback->smuFullAsicResetField.set(ctx, reinterpret_cast<mach_vm_address_t>(smuFullAsicReset));
+    singleton().smuInternalSWExitField.set(ctx, reinterpret_cast<mach_vm_address_t>(hwLibsNoop));
+    singleton().smuInternalHWExitField.set(ctx, reinterpret_cast<mach_vm_address_t>(smuInternalHwExit));
+    singleton().smuFullAsicResetField.set(ctx, reinterpret_cast<mach_vm_address_t>(smuFullAsicReset));
     return kCAILResultSuccess;
 }
 
@@ -687,6 +701,6 @@ CAILResult X5000HWLibs::wrapCosReadConfigurationSetting(void *cosHandle, CosRead
             return kCAILResultSuccess;
         }
     }
-    return FunctionCast(wrapCosReadConfigurationSetting, callback->orgCosReadConfigurationSetting)(cosHandle,
+    return FunctionCast(wrapCosReadConfigurationSetting, singleton().orgCosReadConfigurationSetting)(cosHandle,
         readCfgInput, readCfgOutput);
 }

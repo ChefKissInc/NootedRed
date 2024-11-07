@@ -1,11 +1,13 @@
 // Copyright © 2022-2024 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
-#include "PrivateHeaders/X6000.hpp"
-#include "PrivateHeaders/AMDCommon.hpp"
-#include "PrivateHeaders/NRed.hpp"
-#include "PrivateHeaders/PatcherPlus.hpp"
 #include <Headers/kern_api.hpp>
+#include <PrivateHeaders/AMDCommon.hpp>
+#include <PrivateHeaders/NRed.hpp>
+#include <PrivateHeaders/PatcherPlus.hpp>
+#include <PrivateHeaders/X6000.hpp>
+
+//------ Target Kexts ------//
 
 static const char *pathRadeonX6000 = "/System/Library/Extensions/AMDRadeonX6000.kext/Contents/MacOS/AMDRadeonX6000";
 
@@ -18,7 +20,11 @@ static KernelPatcher::KextInfo kextRadeonX6000 = {
     KernelPatcher::KextInfo::Unloaded,
 };
 
-X6000 *X6000::callback = nullptr;
+//------ Module Logic ------//
+
+static X6000 module {};
+
+X6000 &X6000::singleton() { return module; }
 
 void X6000::init() {
     switch (getKernelVersion()) {
@@ -40,24 +46,28 @@ void X6000::init() {
 
     SYSLOG("X6000", "Module initialised");
 
-    callback = this;
-    lilu.onKextLoadForce(&kextRadeonX6000);
+    lilu.onKextLoadForce(
+        &kextRadeonX6000, 1,
+        [](void *user, KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
+            static_cast<X6000 *>(user)->processKext(patcher, id, slide, size);
+        },
+        this);
 }
 
 bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextRadeonX6000.loadIndex == id) {
         SYSLOG_COND(ADDPR(debugEnabled), "X6000", "slide is 0x%llx", slide);
-        NRed::callback->hwLateInit();
+        NRed::singleton().hwLateInit();
 
         void *orgFillUBMSurface, *orgConfigureDisplay, *orgGetDisplayInfo, *orgAllocateScanoutFB;
 
         SolveRequestPlus solveRequests[] = {
             {"__ZN31AMDRadeonX6000_AMDGFX10Hardware20allocateAMDHWDisplayEv", this->orgAllocateAMDHWDisplay},
-            {"__ZN35AMDRadeonX6000_AMDAccelVideoContext10gMetaClassE", NRed::callback->metaClassMap[0][1]},
-            {"__ZN37AMDRadeonX6000_AMDAccelDisplayMachine10gMetaClassE", NRed::callback->metaClassMap[1][1]},
-            {"__ZN34AMDRadeonX6000_AMDAccelDisplayPipe10gMetaClassE", NRed::callback->metaClassMap[2][1]},
-            {"__ZN30AMDRadeonX6000_AMDAccelChannel10gMetaClassE", NRed::callback->metaClassMap[3][0]},
-            {"__ZN28AMDRadeonX6000_IAMDHWChannel10gMetaClassE", NRed::callback->metaClassMap[4][1]},
+            {"__ZN35AMDRadeonX6000_AMDAccelVideoContext10gMetaClassE", NRed::singleton().metaClassMap[0][1]},
+            {"__ZN37AMDRadeonX6000_AMDAccelDisplayMachine10gMetaClassE", NRed::singleton().metaClassMap[1][1]},
+            {"__ZN34AMDRadeonX6000_AMDAccelDisplayPipe10gMetaClassE", NRed::singleton().metaClassMap[2][1]},
+            {"__ZN30AMDRadeonX6000_AMDAccelChannel10gMetaClassE", NRed::singleton().metaClassMap[3][0]},
+            {"__ZN28AMDRadeonX6000_IAMDHWChannel10gMetaClassE", NRed::singleton().metaClassMap[4][1]},
             {"__ZN27AMDRadeonX6000_AMDHWDisplay14fillUBMSurfaceEjP17_FRAMEBUFFER_INFOP13_UBM_SURFINFO",
                 orgFillUBMSurface},
             {"__ZN27AMDRadeonX6000_AMDHWDisplay16configureDisplayEjjP17_FRAMEBUFFER_INFOP16IOAccelResource2",
@@ -67,7 +77,7 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
         PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "X6000",
             "Failed to resolve symbols");
 
-        if (NRed::callback->attributes.isVenturaAndLater()) {
+        if (NRed::singleton().getAttributes().isVenturaAndLater()) {
             orgAllocateScanoutFB = nullptr;
         } else {
             SolveRequestPlus request {"__ZN27AMDRadeonX6000_AMDHWDisplay17allocateScanoutFBEjP16IOAccelResource2S1_Py",
@@ -75,17 +85,18 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
             PANIC_COND(!request.solve(patcher, id, slide, size), "X6000", "Failed to resolve allocateScanout");
         }
 
-        RouteRequestPlus request = {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator5startEP9IOService",
+        RouteRequestPlus accelStartRequest = {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator5startEP9IOService",
             wrapAccelStartX6000};
-        PANIC_COND(!request.route(patcher, id, slide, size), "X6000", "Failed to route AMDGraphicsAccelerator::start");
+        PANIC_COND(!accelStartRequest.route(patcher, id, slide, size), "X6000",
+            "Failed to route AMDGraphicsAccelerator::start");
 
-        if (NRed::callback->attributes.isRaven()) {
+        if (NRed::singleton().getAttributes().isRaven()) {
             RouteRequestPlus request = {"__ZN30AMDRadeonX6000_AMDGFX10Display23initDCNRegistersOffsetsEv",
                 wrapInitDCNRegistersOffsets, this->orgInitDCNRegistersOffsets};
             PANIC_COND(!request.route(patcher, id, slide, size), "X6000", "Failed to route initDCNRegistersOffsets");
         }
 
-        if (NRed::callback->attributes.isCatalina()) {
+        if (NRed::singleton().getAttributes().isCatalina()) {
             const LookupPatchPlus patches[] = {
                 {&kextRadeonX6000, kHWChannelSubmitCommandBufferOriginal1015, kHWChannelSubmitCommandBufferPatched1015,
                     1},
@@ -103,20 +114,20 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
 
         const LookupPatchPlus patches[] = {
             {&kextRadeonX6000, kIsDeviceValidCallOriginal, kIsDeviceValidCallPatched,
-                NRed::callback->attributes.isCatalina()        ? 20U :
-                NRed::callback->attributes.isVenturaAndLater() ? 23 :
-                NRed::callback->attributes.isMonterey()        ? 26 :
-                                                                 24},
+                NRed::singleton().getAttributes().isCatalina()        ? 20U :
+                NRed::singleton().getAttributes().isVenturaAndLater() ? 23 :
+                NRed::singleton().getAttributes().isMonterey()        ? 26 :
+                                                                        24},
             {&kextRadeonX6000, kIsDevicePCITunnelledCallOriginal, kIsDevicePCITunnelledCallPatched,
-                NRed::callback->attributes.isCatalina()        ? 9U :
-                NRed::callback->attributes.isVenturaAndLater() ? 3 :
-                                                                 1},
+                NRed::singleton().getAttributes().isCatalina()        ? 9U :
+                NRed::singleton().getAttributes().isVenturaAndLater() ? 3 :
+                                                                        1},
         };
         SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size, true), "X6000",
             "Failed to apply patches");
         patcher.clearError();
 
-        if (NRed::callback->attributes.isCatalina()) {
+        if (NRed::singleton().getAttributes().isCatalina()) {
             const LookupPatchPlus patches[] = {
                 {&kextRadeonX6000, kWriteWaitForRenderingPipeCallOriginal, kWriteWaitForRenderingPipeCallPatched, 1},
                 {&kextRadeonX6000, kGetTtlInterfaceCallOriginal, kGetTtlInterfaceCallOriginalMask,
@@ -158,18 +169,18 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
             patcher.clearError();
         }
 
-        if (NRed::callback->attributes.isVenturaAndLater()) {
+        if (NRed::singleton().getAttributes().isVenturaAndLater()) {
             const LookupPatchPlus patch {&kextRadeonX6000, kGetSchedulerCallOriginal13, kGetSchedulerCallPatched13, 24};
             SYSLOG_COND(!patch.apply(patcher, slide, size), "X6000", "Failed to apply getScheduler patch");
             patcher.clearError();
-        } else if (!NRed::callback->attributes.isCatalina()) {
+        } else if (!NRed::singleton().getAttributes().isCatalina()) {
             const LookupPatchPlus patch {&kextRadeonX6000, kGetSchedulerCallOriginal, kGetSchedulerCallPatched,
-                NRed::callback->attributes.isMonterey() ? 21U : 22};
+                NRed::singleton().getAttributes().isMonterey() ? 21U : 22};
             SYSLOG_COND(!patch.apply(patcher, slide, size), "X6000", "Failed to apply getScheduler patch");
             patcher.clearError();
         }
 
-        if (NRed::callback->attributes.isCatalina()) {
+        if (NRed::singleton().getAttributes().isCatalina()) {
             const LookupPatchPlus patches[] = {
                 {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal1015, kGetGpuDebugPolicyCallPatched1015, 27},
                 {&kextRadeonX6000, kUpdateUtilizationStatisticsCounterCallOriginal,
@@ -186,9 +197,9 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
         } else {
             const LookupPatchPlus patch {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal,
                 kGetGpuDebugPolicyCallPatched,
-                NRed::callback->attributes.isVentura1304Based() ? 38U :
-                NRed::callback->attributes.isVenturaAndLater()  ? 37 :
-                                                                  28};
+                NRed::singleton().getAttributes().isVentura1304Based() ? 38U :
+                NRed::singleton().getAttributes().isVenturaAndLater()  ? 37 :
+                                                                         28};
             SYSLOG_COND(!patch.apply(patcher, slide, size), "X6000", "Failed to apply getGpuDebugPolicy patch");
             patcher.clearError();
         }
@@ -212,66 +223,66 @@ bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
 bool X6000::wrapAccelStartX6000() { return false; }
 
 void X6000::wrapInitDCNRegistersOffsets(void *that) {
-    FunctionCast(wrapInitDCNRegistersOffsets, callback->orgInitDCNRegistersOffsets)(that);
-    auto base = callback->regBaseField.get(that);
-    (callback->regBaseField + 0x10).set(that, base + mmHUBPREQ0_DCSURF_PRIMARY_SURFACE_ADDRESS);
-    (callback->regBaseField + 0x48).set(that, base + mmHUBPREQ1_DCSURF_PRIMARY_SURFACE_ADDRESS);
-    (callback->regBaseField + 0x80).set(that, base + mmHUBPREQ2_DCSURF_PRIMARY_SURFACE_ADDRESS);
-    (callback->regBaseField + 0xB8).set(that, base + mmHUBPREQ3_DCSURF_PRIMARY_SURFACE_ADDRESS);
-    (callback->regBaseField + 0x14).set(that, base + mmHUBPREQ0_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH);
-    (callback->regBaseField + 0x4C).set(that, base + mmHUBPREQ1_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH);
-    (callback->regBaseField + 0x84).set(that, base + mmHUBPREQ2_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH);
-    (callback->regBaseField + 0xBC).set(that, base + mmHUBPREQ3_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH);
-    (callback->regBaseField + 0x18).set(that, base + mmHUBP0_DCSURF_SURFACE_CONFIG);
-    (callback->regBaseField + 0x50).set(that, base + mmHUBP1_DCSURF_SURFACE_CONFIG);
-    (callback->regBaseField + 0x88).set(that, base + mmHUBP2_DCSURF_SURFACE_CONFIG);
-    (callback->regBaseField + 0xC0).set(that, base + mmHUBP3_DCSURF_SURFACE_CONFIG);
-    (callback->regBaseField + 0x1C).set(that, base + mmHUBPREQ0_DCSURF_SURFACE_PITCH);
-    (callback->regBaseField + 0x54).set(that, base + mmHUBPREQ1_DCSURF_SURFACE_PITCH);
-    (callback->regBaseField + 0x8C).set(that, base + mmHUBPREQ2_DCSURF_SURFACE_PITCH);
-    (callback->regBaseField + 0xC4).set(that, base + mmHUBPREQ3_DCSURF_SURFACE_PITCH);
-    (callback->regBaseField + 0x20).set(that, base + mmHUBP0_DCSURF_ADDR_CONFIG);
-    (callback->regBaseField + 0x58).set(that, base + mmHUBP1_DCSURF_ADDR_CONFIG);
-    (callback->regBaseField + 0x90).set(that, base + mmHUBP2_DCSURF_ADDR_CONFIG);
-    (callback->regBaseField + 0xC8).set(that, base + mmHUBP3_DCSURF_ADDR_CONFIG);
-    (callback->regBaseField + 0x24).set(that, base + mmHUBP0_DCSURF_TILING_CONFIG);
-    (callback->regBaseField + 0x5C).set(that, base + mmHUBP1_DCSURF_TILING_CONFIG);
-    (callback->regBaseField + 0x94).set(that, base + mmHUBP2_DCSURF_TILING_CONFIG);
-    (callback->regBaseField + 0xCC).set(that, base + mmHUBP3_DCSURF_TILING_CONFIG);
-    (callback->regBaseField + 0x28).set(that, base + mmHUBP0_DCSURF_PRI_VIEWPORT_START);
-    (callback->regBaseField + 0x60).set(that, base + mmHUBP1_DCSURF_PRI_VIEWPORT_START);
-    (callback->regBaseField + 0x98).set(that, base + mmHUBP2_DCSURF_PRI_VIEWPORT_START);
-    (callback->regBaseField + 0xD0).set(that, base + mmHUBP3_DCSURF_PRI_VIEWPORT_START);
-    (callback->regBaseField + 0x2C).set(that, base + mmHUBP0_DCSURF_PRI_VIEWPORT_DIMENSION);
-    (callback->regBaseField + 0x64).set(that, base + mmHUBP1_DCSURF_PRI_VIEWPORT_DIMENSION);
-    (callback->regBaseField + 0x9C).set(that, base + mmHUBP2_DCSURF_PRI_VIEWPORT_DIMENSION);
-    (callback->regBaseField + 0xD4).set(that, base + mmHUBP3_DCSURF_PRI_VIEWPORT_DIMENSION);
-    (callback->regBaseField + 0x30).set(that, base + mmOTG0_OTG_CONTROL);
-    (callback->regBaseField + 0x68).set(that, base + mmOTG1_OTG_CONTROL);
-    (callback->regBaseField + 0xA0).set(that, base + mmOTG2_OTG_CONTROL);
-    (callback->regBaseField + 0xD8).set(that, base + mmOTG3_OTG_CONTROL);
-    (callback->regBaseField + 0x110).set(that, base + mmOTG4_OTG_CONTROL);
-    (callback->regBaseField + 0x148).set(that, base + mmOTG5_OTG_CONTROL);
-    (callback->regBaseField + 0x34).set(that, base + mmOTG0_OTG_INTERLACE_CONTROL);
-    (callback->regBaseField + 0x6C).set(that, base + mmOTG1_OTG_INTERLACE_CONTROL);
-    (callback->regBaseField + 0xA4).set(that, base + mmOTG2_OTG_INTERLACE_CONTROL);
-    (callback->regBaseField + 0xDC).set(that, base + mmOTG3_OTG_INTERLACE_CONTROL);
-    (callback->regBaseField + 0x114).set(that, base + mmOTG4_OTG_INTERLACE_CONTROL);
-    (callback->regBaseField + 0x14C).set(that, base + mmOTG5_OTG_INTERLACE_CONTROL);
-    (callback->regBaseField + 0x38).set(that, base + mmHUBPREQ0_DCSURF_FLIP_CONTROL);
-    (callback->regBaseField + 0x70).set(that, base + mmHUBPREQ1_DCSURF_FLIP_CONTROL);
-    (callback->regBaseField + 0xA8).set(that, base + mmHUBPREQ2_DCSURF_FLIP_CONTROL);
-    (callback->regBaseField + 0xE0).set(that, base + mmHUBPREQ3_DCSURF_FLIP_CONTROL);
-    (callback->regBaseField + 0x3C).set(that, base + mmHUBPRET0_HUBPRET_CONTROL);
-    (callback->regBaseField + 0x74).set(that, base + mmHUBPRET1_HUBPRET_CONTROL);
-    (callback->regBaseField + 0xAC).set(that, base + mmHUBPRET2_HUBPRET_CONTROL);
-    (callback->regBaseField + 0xE4).set(that, base + mmHUBPRET3_HUBPRET_CONTROL);
-    (callback->regBaseField + 0x40).set(that, base + mmHUBPREQ0_DCSURF_SURFACE_EARLIEST_INUSE);
-    (callback->regBaseField + 0x78).set(that, base + mmHUBPREQ1_DCSURF_SURFACE_EARLIEST_INUSE);
-    (callback->regBaseField + 0xB0).set(that, base + mmHUBPREQ2_DCSURF_SURFACE_EARLIEST_INUSE);
-    (callback->regBaseField + 0xE8).set(that, base + mmHUBPREQ3_DCSURF_SURFACE_EARLIEST_INUSE);
-    (callback->regBaseField + 0x44).set(that, base + mmHUBPREQ0_DCSURF_SURFACE_EARLIEST_INUSE_HIGH);
-    (callback->regBaseField + 0x7C).set(that, base + mmHUBPREQ1_DCSURF_SURFACE_EARLIEST_INUSE_HIGH);
-    (callback->regBaseField + 0xB4).set(that, base + mmHUBPREQ2_DCSURF_SURFACE_EARLIEST_INUSE_HIGH);
-    (callback->regBaseField + 0xEC).set(that, base + mmHUBPREQ3_DCSURF_SURFACE_EARLIEST_INUSE_HIGH);
+    FunctionCast(wrapInitDCNRegistersOffsets, singleton().orgInitDCNRegistersOffsets)(that);
+    auto base = singleton().regBaseField.get(that);
+    (singleton().regBaseField + 0x10).set(that, base + mmHUBPREQ0_DCSURF_PRIMARY_SURFACE_ADDRESS);
+    (singleton().regBaseField + 0x48).set(that, base + mmHUBPREQ1_DCSURF_PRIMARY_SURFACE_ADDRESS);
+    (singleton().regBaseField + 0x80).set(that, base + mmHUBPREQ2_DCSURF_PRIMARY_SURFACE_ADDRESS);
+    (singleton().regBaseField + 0xB8).set(that, base + mmHUBPREQ3_DCSURF_PRIMARY_SURFACE_ADDRESS);
+    (singleton().regBaseField + 0x14).set(that, base + mmHUBPREQ0_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH);
+    (singleton().regBaseField + 0x4C).set(that, base + mmHUBPREQ1_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH);
+    (singleton().regBaseField + 0x84).set(that, base + mmHUBPREQ2_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH);
+    (singleton().regBaseField + 0xBC).set(that, base + mmHUBPREQ3_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH);
+    (singleton().regBaseField + 0x18).set(that, base + mmHUBP0_DCSURF_SURFACE_CONFIG);
+    (singleton().regBaseField + 0x50).set(that, base + mmHUBP1_DCSURF_SURFACE_CONFIG);
+    (singleton().regBaseField + 0x88).set(that, base + mmHUBP2_DCSURF_SURFACE_CONFIG);
+    (singleton().regBaseField + 0xC0).set(that, base + mmHUBP3_DCSURF_SURFACE_CONFIG);
+    (singleton().regBaseField + 0x1C).set(that, base + mmHUBPREQ0_DCSURF_SURFACE_PITCH);
+    (singleton().regBaseField + 0x54).set(that, base + mmHUBPREQ1_DCSURF_SURFACE_PITCH);
+    (singleton().regBaseField + 0x8C).set(that, base + mmHUBPREQ2_DCSURF_SURFACE_PITCH);
+    (singleton().regBaseField + 0xC4).set(that, base + mmHUBPREQ3_DCSURF_SURFACE_PITCH);
+    (singleton().regBaseField + 0x20).set(that, base + mmHUBP0_DCSURF_ADDR_CONFIG);
+    (singleton().regBaseField + 0x58).set(that, base + mmHUBP1_DCSURF_ADDR_CONFIG);
+    (singleton().regBaseField + 0x90).set(that, base + mmHUBP2_DCSURF_ADDR_CONFIG);
+    (singleton().regBaseField + 0xC8).set(that, base + mmHUBP3_DCSURF_ADDR_CONFIG);
+    (singleton().regBaseField + 0x24).set(that, base + mmHUBP0_DCSURF_TILING_CONFIG);
+    (singleton().regBaseField + 0x5C).set(that, base + mmHUBP1_DCSURF_TILING_CONFIG);
+    (singleton().regBaseField + 0x94).set(that, base + mmHUBP2_DCSURF_TILING_CONFIG);
+    (singleton().regBaseField + 0xCC).set(that, base + mmHUBP3_DCSURF_TILING_CONFIG);
+    (singleton().regBaseField + 0x28).set(that, base + mmHUBP0_DCSURF_PRI_VIEWPORT_START);
+    (singleton().regBaseField + 0x60).set(that, base + mmHUBP1_DCSURF_PRI_VIEWPORT_START);
+    (singleton().regBaseField + 0x98).set(that, base + mmHUBP2_DCSURF_PRI_VIEWPORT_START);
+    (singleton().regBaseField + 0xD0).set(that, base + mmHUBP3_DCSURF_PRI_VIEWPORT_START);
+    (singleton().regBaseField + 0x2C).set(that, base + mmHUBP0_DCSURF_PRI_VIEWPORT_DIMENSION);
+    (singleton().regBaseField + 0x64).set(that, base + mmHUBP1_DCSURF_PRI_VIEWPORT_DIMENSION);
+    (singleton().regBaseField + 0x9C).set(that, base + mmHUBP2_DCSURF_PRI_VIEWPORT_DIMENSION);
+    (singleton().regBaseField + 0xD4).set(that, base + mmHUBP3_DCSURF_PRI_VIEWPORT_DIMENSION);
+    (singleton().regBaseField + 0x30).set(that, base + mmOTG0_OTG_CONTROL);
+    (singleton().regBaseField + 0x68).set(that, base + mmOTG1_OTG_CONTROL);
+    (singleton().regBaseField + 0xA0).set(that, base + mmOTG2_OTG_CONTROL);
+    (singleton().regBaseField + 0xD8).set(that, base + mmOTG3_OTG_CONTROL);
+    (singleton().regBaseField + 0x110).set(that, base + mmOTG4_OTG_CONTROL);
+    (singleton().regBaseField + 0x148).set(that, base + mmOTG5_OTG_CONTROL);
+    (singleton().regBaseField + 0x34).set(that, base + mmOTG0_OTG_INTERLACE_CONTROL);
+    (singleton().regBaseField + 0x6C).set(that, base + mmOTG1_OTG_INTERLACE_CONTROL);
+    (singleton().regBaseField + 0xA4).set(that, base + mmOTG2_OTG_INTERLACE_CONTROL);
+    (singleton().regBaseField + 0xDC).set(that, base + mmOTG3_OTG_INTERLACE_CONTROL);
+    (singleton().regBaseField + 0x114).set(that, base + mmOTG4_OTG_INTERLACE_CONTROL);
+    (singleton().regBaseField + 0x14C).set(that, base + mmOTG5_OTG_INTERLACE_CONTROL);
+    (singleton().regBaseField + 0x38).set(that, base + mmHUBPREQ0_DCSURF_FLIP_CONTROL);
+    (singleton().regBaseField + 0x70).set(that, base + mmHUBPREQ1_DCSURF_FLIP_CONTROL);
+    (singleton().regBaseField + 0xA8).set(that, base + mmHUBPREQ2_DCSURF_FLIP_CONTROL);
+    (singleton().regBaseField + 0xE0).set(that, base + mmHUBPREQ3_DCSURF_FLIP_CONTROL);
+    (singleton().regBaseField + 0x3C).set(that, base + mmHUBPRET0_HUBPRET_CONTROL);
+    (singleton().regBaseField + 0x74).set(that, base + mmHUBPRET1_HUBPRET_CONTROL);
+    (singleton().regBaseField + 0xAC).set(that, base + mmHUBPRET2_HUBPRET_CONTROL);
+    (singleton().regBaseField + 0xE4).set(that, base + mmHUBPRET3_HUBPRET_CONTROL);
+    (singleton().regBaseField + 0x40).set(that, base + mmHUBPREQ0_DCSURF_SURFACE_EARLIEST_INUSE);
+    (singleton().regBaseField + 0x78).set(that, base + mmHUBPREQ1_DCSURF_SURFACE_EARLIEST_INUSE);
+    (singleton().regBaseField + 0xB0).set(that, base + mmHUBPREQ2_DCSURF_SURFACE_EARLIEST_INUSE);
+    (singleton().regBaseField + 0xE8).set(that, base + mmHUBPREQ3_DCSURF_SURFACE_EARLIEST_INUSE);
+    (singleton().regBaseField + 0x44).set(that, base + mmHUBPREQ0_DCSURF_SURFACE_EARLIEST_INUSE_HIGH);
+    (singleton().regBaseField + 0x7C).set(that, base + mmHUBPREQ1_DCSURF_SURFACE_EARLIEST_INUSE_HIGH);
+    (singleton().regBaseField + 0xB4).set(that, base + mmHUBPREQ2_DCSURF_SURFACE_EARLIEST_INUSE_HIGH);
+    (singleton().regBaseField + 0xEC).set(that, base + mmHUBPREQ3_DCSURF_SURFACE_EARLIEST_INUSE_HIGH);
 }

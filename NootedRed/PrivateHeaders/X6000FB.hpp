@@ -2,10 +2,10 @@
 // See LICENSE for details.
 
 #pragma once
-#include "ObjectField.hpp"
 #include <Headers/kern_patcher.hpp>
 #include <IOKit/IOService.h>
 #include <IOKit/graphics/IOGraphicsTypes.h>
+#include <PrivateHeaders/ObjectField.hpp>
 
 using t_MessageAccelerator = IOReturn (*)(void *that, UInt32 requestType, void *arg2, void *arg3, void *arg4);
 using t_DceDriverSetBacklight = void (*)(void *panelCntl, UInt32 backlightPwm);
@@ -14,13 +14,11 @@ using t_DcLinkSetBacklightLevelNits = bool (*)(void *link, bool isHDR, UInt32 ba
     UInt32 transitionTimeMs);
 
 class X6000FB {
-    friend class NRed;
-
-    static X6000FB *callback;
-
     public:
+    static X6000FB &singleton();
+
     void init();
-    bool processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
+    void processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 
     private:
     ObjectField<UInt8> dcLinkCapsField {};

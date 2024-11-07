@@ -1,27 +1,26 @@
 // Copyright © 2022-2024 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
-#include "PrivateHeaders/NRed.hpp"
-#include "PrivateHeaders/AMDCommon.hpp"
-#include "PrivateHeaders/Firmware.hpp"
-#include "PrivateHeaders/Model.hpp"
-#include "PrivateHeaders/PatcherPlus.hpp"
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_devinfo.hpp>
+#include <IOKit/acpi/IOACPIPlatformExpert.h>
+#include <PrivateHeaders/AMDCommon.hpp>
+#include <PrivateHeaders/AppleGFXHDA.hpp>
+#include <PrivateHeaders/Firmware.hpp>
+#include <PrivateHeaders/HWLibs.hpp>
+#include <PrivateHeaders/Hotfixes/AGDP.hpp>
+#include <PrivateHeaders/Model.hpp>
+#include <PrivateHeaders/NRed.hpp>
+#include <PrivateHeaders/PatcherPlus.hpp>
+#include <PrivateHeaders/X5000.hpp>
+#include <PrivateHeaders/X6000.hpp>
+#include <PrivateHeaders/X6000FB.hpp>
 
-static const char *pathAGDP = "/System/Library/Extensions/AppleGraphicsControl.kext/Contents/PlugIns/"
-                              "AppleGraphicsDevicePolicy.kext/Contents/MacOS/AppleGraphicsDevicePolicy";
+//------ Target Kexts ------//
+
 static const char *pathBacklight = "/System/Library/Extensions/AppleBacklight.kext/Contents/MacOS/AppleBacklight";
 static const char *pathMCCSControl = "/System/Library/Extensions/AppleMCCSControl.kext/Contents/MacOS/AppleMCCSControl";
 
-static KernelPatcher::KextInfo kextAGDP {
-    "com.apple.driver.AppleGraphicsDevicePolicy",
-    &pathAGDP,
-    1,
-    {true},
-    {},
-    KernelPatcher::KextInfo::Unloaded,
-};
 static KernelPatcher::KextInfo kextBacklight {
     "com.apple.driver.AppleBacklight",
     &pathBacklight,
@@ -39,15 +38,16 @@ static KernelPatcher::KextInfo kextMCCSControl {
     KernelPatcher::KextInfo::Unloaded,
 };
 
-NRed *NRed::callback = nullptr;
+static NRed module {};
+
+NRed &NRed::singleton() { return module; }
 
 void NRed::init() {
     SYSLOG("NRed", "Copyright 2022-2024 ChefKiss. If you've paid for this, you've been scammed.");
 
-    bool backlightBootArg = false;
-    if (PE_parse_boot_argn("AMDBacklight", &backlightBootArg, sizeof(backlightBootArg))) {
-        if (backlightBootArg) { this->attributes.setBacklightEnabled(); }
-    } else if (BaseDeviceInfo::get().modelType == WIOKit::ComputerModel::ComputerLaptop) {
+    bool bkltArg = false;
+    if (BaseDeviceInfo::get().modelType == WIOKit::ComputerModel::ComputerLaptop ||
+        (PE_parse_boot_argn("AMDBacklight", &bkltArg, sizeof(bkltArg)) && bkltArg)) {
         this->attributes.setBacklightEnabled();
     }
 
@@ -103,17 +103,16 @@ void NRed::init() {
     DBGLOG("NRed", "sonoma1404AndLater = %s", this->attributes.isSonoma1404AndLater() ? "yes" : "no");
     DBGLOG("NRed", "If any of the above values look incorrect, please report this to the developers.");
 
-    callback = this;
-    lilu.onKextLoadForce(&kextAGDP);
+    Hotfixes::AGDP::singleton().init();
     if (this->attributes.isBacklightEnabled()) {
         lilu.onKextLoadForce(&kextBacklight);
         lilu.onKextLoadForce(&kextMCCSControl);
     }
-    this->x6000fb.init();
-    this->agfxhda.init();
-    this->hwlibs.init();
-    this->x6000.init();
-    this->x5000.init();
+    X6000FB::singleton().init();
+    AppleGFXHDA::singleton().init();
+    X5000HWLibs::singleton().init();
+    X6000::singleton().init();
+    X5000::singleton().init();
 
     lilu.onPatcherLoadForce(
         [](void *user, KernelPatcher &patcher) { static_cast<NRed *>(user)->processPatcher(patcher); }, this);
@@ -123,6 +122,76 @@ void NRed::init() {
             static_cast<NRed *>(user)->processKext(patcher, id, slide, size);
         },
         this);
+}
+
+void NRed::hwLateInit() {
+    if (this->rmmio != nullptr) { return; }
+
+    this->iGPU->setMemoryEnable(true);
+    this->iGPU->setBusMasterEnable(true);
+
+    auto *atombiosImageProp = OSDynamicCast(OSData, this->iGPU->getProperty("ATY,bin_image"));
+    if (atombiosImageProp == nullptr) {
+        if (this->getVBIOSFromVFCT()) {
+            DBGLOG("NRed", "Got VBIOS from VFCT.");
+        } else {
+            SYSLOG("NRed", "Failed to get VBIOS from VFCT, trying to get it from VRAM!");
+            if (this->getVBIOSFromVRAM()) {
+                DBGLOG("NRed", "Got VBIOS from VRAM.");
+            } else {
+                SYSLOG("NRed", "Failed to get VBIOS from VRAM, trying to get it from PCI Expansion ROM!");
+                PANIC_COND(!this->getVBIOSFromExpansionROM(), "NRed", "Failed to get VBIOS!");
+                DBGLOG("NRed", "Got VBIOS from PCI Expansion ROM.");
+            }
+        }
+
+        auto len = this->vbiosData->getLength();
+        if (len < ATOMBIOS_IMAGE_SIZE) {
+            DBGLOG("NRed", "Padding VBIOS to %u bytes (was %u).", ATOMBIOS_IMAGE_SIZE, len);
+            this->vbiosData->appendByte(0, ATOMBIOS_IMAGE_SIZE - len);
+        }
+
+        this->iGPU->setProperty("ATY,bin_image", this->vbiosData);
+    } else {
+        atombiosImageProp->retain();
+        this->vbiosData = atombiosImageProp;
+        SYSLOG("NRed", "!!! VBIOS MANUALLY OVERRIDDEN, MAKE SURE YOU KNOW WHAT YOU'RE DOING !!!");
+    }
+
+    this->rmmio =
+        this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5, kIOMapInhibitCache | kIOMapAnywhere);
+    PANIC_COND(this->rmmio == nullptr || this->rmmio->getLength() == 0, "NRed", "Failed to map RMMIO");
+    this->rmmioPtr = reinterpret_cast<UInt32 *>(this->rmmio->getVirtualAddress());
+
+    this->fbOffset = static_cast<UInt64>(this->readReg32(GC_BASE_0 + mmMC_VM_FB_OFFSET)) << 24;
+    this->devRevision =
+        (this->readReg32(NBIO_BASE_2 + mmRCC_DEV0_EPF0_STRAP0) & RCC_DEV0_EPF0_STRAP0_ATI_REV_ID_MASK) >>
+        RCC_DEV0_EPF0_STRAP0_ATI_REV_ID_SHIFT;
+
+    if (this->attributes.isRaven()) {
+        if (this->devRevision >= 0x8) {
+            this->attributes.setRaven2();
+            this->enumRevision = 0x79;
+        } else if (this->attributes.isPicasso()) {
+            this->enumRevision = 0x41;
+        } else if (this->devRevision == 1) {
+            this->enumRevision = 0x20;
+        } else {
+            this->enumRevision = 0x1;
+        }
+    }
+
+    DBGLOG("NRed", "deviceID = 0x%X", this->deviceID);
+    DBGLOG("NRed", "pciRevision = 0x%X", this->pciRevision);
+    DBGLOG("NRed", "fbOffset = 0x%llX", this->fbOffset);
+    DBGLOG("NRed", "devRevision = 0x%X", this->devRevision);
+    DBGLOG("NRed", "isRaven = %s", this->attributes.isRaven() ? "yes" : "no");
+    DBGLOG("NRed", "isPicasso = %s", this->attributes.isPicasso() ? "yes" : "no");
+    DBGLOG("NRed", "isRaven2 = %s", this->attributes.isRaven2() ? "yes" : "no");
+    DBGLOG("NRed", "isRenoir = %s", this->attributes.isRenoir() ? "yes" : "no");
+    DBGLOG("NRed", "isGreenSardine = %s", this->attributes.isGreenSardine() ? "yes" : "no");
+    DBGLOG("NRed", "enumRevision = 0x%X", this->enumRevision);
+    DBGLOG("NRed", "If any of the above values look incorrect, please report this to the developers.");
 }
 
 void NRed::processPatcher(KernelPatcher &patcher) {
@@ -157,7 +226,29 @@ void NRed::processPatcher(KernelPatcher &patcher) {
     this->iGPU->setProperty("built-in", builtIn, arrsize(builtIn));
 
     this->deviceID = WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigDeviceID);
-    this->pciRevision = WIOKit::readPCIConfigValue(NRed::callback->iGPU, WIOKit::kIOPCIConfigRevisionID);
+    switch (this->deviceID) {
+        case 0x15D8:
+            this->attributes.setRaven();
+            this->attributes.setPicasso();
+            break;
+        case 0x15DD:
+            this->attributes.setRaven();
+            break;
+        case 0x164C:
+        case 0x1636:
+            this->attributes.setRenoir();
+            this->enumRevision = 0x91;
+            break;
+        case 0x15E7:
+        case 0x1638:
+            this->attributes.setRenoir();
+            this->attributes.setGreenSardine();
+            this->enumRevision = 0xA1;
+            break;
+        default:
+            PANIC("NRed", "Unknown device ID: 0x%X", this->deviceID);
+    }
+    this->pciRevision = WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigRevisionID);
 
     SYSLOG_COND(this->iGPU->getProperty("model") != nullptr, "NRed",
         "WARNING!!! Overriding the model is no longer supported!");
@@ -195,8 +286,6 @@ void NRed::processPatcher(KernelPatcher &patcher) {
         {"__ZN11IOCatalogue10addDriversEP7OSArrayb", wrapAddDrivers, this->orgAddDrivers},
     };
     PANIC_COND(!patcher.routeMultipleLong(KernelPatcher::KernelID, requests), "NRed", "Failed to route kernel symbols");
-
-    this->x6000fb.registerDispMaxBrightnessNotif();
 }
 
 static const char *getDriverXMLForBundle(const char *bundleIdentifier, size_t *len) {
@@ -271,138 +360,36 @@ bool NRed::wrapAddDrivers(void *that, OSArray *array, bool doNubMatching) {
         }
     }
 
-    return FunctionCast(wrapAddDrivers, callback->orgAddDrivers)(that, array, doNubMatching);
+    return FunctionCast(wrapAddDrivers, singleton().orgAddDrivers)(that, array, doNubMatching);
 }
 
 OSMetaClassBase *NRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const OSMetaClass *toMeta) {
-    auto ret = FunctionCast(wrapSafeMetaCast, callback->orgSafeMetaCast)(anObject, toMeta);
+    auto ret = FunctionCast(wrapSafeMetaCast, singleton().orgSafeMetaCast)(anObject, toMeta);
 
     if (LIKELY(ret)) { return ret; }
 
-    for (const auto &ent : callback->metaClassMap) {
+    for (const auto &ent : singleton().metaClassMap) {
         if (UNLIKELY(ent[0] == toMeta)) {
-            return FunctionCast(wrapSafeMetaCast, callback->orgSafeMetaCast)(anObject, ent[1]);
+            return FunctionCast(wrapSafeMetaCast, singleton().orgSafeMetaCast)(anObject, ent[1]);
         } else if (UNLIKELY(ent[1] == toMeta)) {
-            return FunctionCast(wrapSafeMetaCast, callback->orgSafeMetaCast)(anObject, ent[0]);
+            return FunctionCast(wrapSafeMetaCast, singleton().orgSafeMetaCast)(anObject, ent[0]);
         }
     }
 
     return nullptr;
 }
 
-void NRed::hwLateInit() {
-    if (this->rmmio != nullptr) { return; }
-
-    this->iGPU->setMemoryEnable(true);
-    this->iGPU->setBusMasterEnable(true);
-
-    auto *atombiosImageProp = OSDynamicCast(OSData, this->iGPU->getProperty("ATY,bin_image"));
-    if (atombiosImageProp == nullptr) {
-        if (this->getVBIOSFromVFCT()) {
-            DBGLOG("NRed", "Got VBIOS from VFCT.");
-        } else {
-            SYSLOG("NRed", "Failed to get VBIOS from VFCT, trying to get it from VRAM!");
-            if (this->getVBIOSFromVRAM()) {
-                DBGLOG("NRed", "Got VBIOS from VRAM.");
-            } else {
-                SYSLOG("NRed", "Failed to get VBIOS from VRAM, trying to get it from PCI Expansion ROM!");
-                PANIC_COND(!this->getVBIOSFromExpansionROM(), "NRed", "Failed to get VBIOS!");
-                DBGLOG("NRed", "Got VBIOS from PCI Expansion ROM.");
-            }
-        }
-
-        auto len = this->vbiosData->getLength();
-        if (len < ATOMBIOS_IMAGE_SIZE) {
-            DBGLOG("NRed", "Padding VBIOS to %u bytes (was %u).", ATOMBIOS_IMAGE_SIZE, len);
-            this->vbiosData->appendByte(0, ATOMBIOS_IMAGE_SIZE - len);
-        }
-
-        this->iGPU->setProperty("ATY,bin_image", this->vbiosData);
-    } else {
-        atombiosImageProp->retain();
-        this->vbiosData = atombiosImageProp;
-        SYSLOG("NRed", "!!! VBIOS MANUALLY OVERRIDDEN, MAKE SURE YOU KNOW WHAT YOU'RE DOING !!!");
-    }
-
-    this->rmmio =
-        this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5, kIOMapInhibitCache | kIOMapAnywhere);
-    PANIC_COND(this->rmmio == nullptr || this->rmmio->getLength() == 0, "NRed", "Failed to map RMMIO");
-    this->rmmioPtr = reinterpret_cast<UInt32 *>(this->rmmio->getVirtualAddress());
-
-    this->fbOffset = static_cast<UInt64>(this->readReg32(GC_BASE_0 + mmMC_VM_FB_OFFSET)) << 24;
-    this->devRevision =
-        (this->readReg32(NBIO_BASE_2 + mmRCC_DEV0_EPF0_STRAP0) & RCC_DEV0_EPF0_STRAP0_ATI_REV_ID_MASK) >>
-        RCC_DEV0_EPF0_STRAP0_ATI_REV_ID_SHIFT;
-
-    switch (this->deviceID) {
-        case 0x15D8:
-            this->attributes.setRaven();
-            this->attributes.setPicasso();
-            if (this->devRevision >= 0x8) {
-                this->attributes.setRaven2();
-                this->enumRevision = 0x79;
-            } else {
-                this->enumRevision = 0x41;
-            }
-            break;
-        case 0x15DD:
-            this->attributes.setRaven();
-            if (this->devRevision >= 0x8) {
-                this->attributes.setRaven2();
-                this->enumRevision = 0x79;
-            } else {
-                this->enumRevision = this->devRevision == 1 ? 0x20 : 0x1;
-            }
-            break;
-        case 0x164C:
-        case 0x1636:
-            this->attributes.setRenoir();
-            this->enumRevision = 0x91;
-            break;
-        case 0x15E7:
-        case 0x1638:
-            this->attributes.setRenoir();
-            this->attributes.setGreenSardine();
-            this->enumRevision = 0xA1;
-            break;
-        default:
-            PANIC("NRed", "Unknown device ID: 0x%X", this->deviceID);
-    }
-
-    DBGLOG("NRed", "Device ID = 0x%X", this->deviceID);
-    DBGLOG("NRed", "Device PCI Revision = 0x%X", this->pciRevision);
-    DBGLOG("NRed", "Device Framebuffer Offset = 0x%llX", this->fbOffset);
-    DBGLOG("NRed", "Device Revision = 0x%X", this->devRevision);
-    DBGLOG("NRed", "Device Is Raven = %s", this->attributes.isRaven() ? "yes" : "no");
-    DBGLOG("NRed", "Device Is Picasso = %s", this->attributes.isPicasso() ? "yes" : "no");
-    DBGLOG("NRed", "Device Is Raven2 = %s", this->attributes.isRaven2() ? "yes" : "no");
-    DBGLOG("NRed", "Device Is Renoir = %s", this->attributes.isRenoir() ? "yes" : "no");
-    DBGLOG("NRed", "Device Is Green Sardine = %s", this->attributes.isGreenSardine() ? "yes" : "no");
-    DBGLOG("NRed", "Device Enumerated Revision = 0x%X", this->enumRevision);
-    DBGLOG("NRed", "If any of the above values look incorrect, please report this to the developers.");
-}
-
 void NRed::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
-    if (kextAGDP.loadIndex == id) {
-        const LookupPatchPlus patch {&kextAGDP, kAGDPBoardIDKeyOriginal, kAGDPBoardIDKeyPatched, 1};
-        SYSLOG_COND(!patch.apply(patcher, slide, size), "NRed", "Failed to apply AGDP board-id patch");
-
-        if (this->attributes.isVentura()) {
-            const LookupPatchPlus patch {&kextAGDP, kAGDPFBCountCheckOriginal13, kAGDPFBCountCheckPatched13, 1};
-            SYSLOG_COND(!patch.apply(patcher, slide, size), "NRed", "Failed to apply AGDP FB count check patch");
-        } else {
-            const LookupPatchPlus patch {&kextAGDP, kAGDPFBCountCheckOriginal, kAGDPFBCountCheckPatched, 1};
-            SYSLOG_COND(!patch.apply(patcher, slide, size), "NRed", "Failed to apply AGDP FB count check patch");
-        }
-    } else if (kextBacklight.loadIndex == id) {
+    if (kextBacklight.loadIndex == id) {
         KernelPatcher::RouteRequest request {"__ZN15AppleIntelPanel10setDisplayEP9IODisplay", wrapApplePanelSetDisplay,
             orgApplePanelSetDisplay};
         if (patcher.routeMultiple(kextBacklight.loadIndex, &request, 1, slide, size)) {
-            const UInt8 find[] = {"F%uT%04x"};
-            const UInt8 replace[] = {"F%uTxxxx"};
+            static const UInt8 find[] = "F%uT%04x";
+            static const UInt8 replace[] = "F%uTxxxx";
             const LookupPatchPlus patch {&kextBacklight, find, replace, 1};
             SYSLOG_COND(!patch.apply(patcher, slide, size), "NRed", "Failed to apply backlight patch");
         }
+        patcher.clearError();
     } else if (kextMCCSControl.loadIndex == id) {
         KernelPatcher::RouteRequest requests[] = {
             {"__ZN25AppleMCCSControlGibraltar5probeEP9IOServicePi", wrapFunctionReturnZero},
@@ -410,48 +397,10 @@ void NRed::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slid
         };
         patcher.routeMultiple(id, requests, slide, size);
         patcher.clearError();
-    } else if (this->agfxhda.processKext(patcher, id, slide, size)) {
-        DBGLOG("NRed", "Processed AppleGFXHDA");
-    } else if (this->x6000fb.processKext(patcher, id, slide, size)) {
-        DBGLOG("NRed", "Processed AMDRadeonX6000Framebuffer");
-    } else if (this->hwlibs.processKext(patcher, id, slide, size)) {
-        DBGLOG("NRed", "Processed AMDRadeonX5000HWLibs");
-    } else if (this->x6000.processKext(patcher, id, slide, size)) {
-        DBGLOG("NRed", "Processed AMDRadeonX6000");
-    } else if (this->x5000.processKext(patcher, id, slide, size)) {
-        DBGLOG("NRed", "Processed AMDRadeonX5000");
     }
 }
 
-const char *NRed::getChipName() {
-    if (this->attributes.isRaven2()) {
-        return "raven2";
-    } else if (this->attributes.isPicasso()) {
-        return "picasso";
-    } else if (this->attributes.isRaven()) {
-        return "raven";
-    } else if (this->attributes.isGreenSardine()) {
-        return "green_sardine";
-    } else if (this->attributes.isRenoir()) {
-        return "renoir";
-    } else {
-        PANIC("NRed", "Internal error: Device is unknown");
-    }
-}
-
-const char *NRed::getGCPrefix() {
-    if (this->attributes.isRaven2()) {
-        return "gc_9_2_";
-    } else if (this->attributes.isRaven()) {
-        return "gc_9_1_";
-    } else if (this->attributes.isRenoir()) {
-        return "gc_9_3_";
-    } else {
-        PANIC("NRed", "Internal error: Device is unknown");
-    }
-}
-
-UInt32 NRed::readReg32(UInt32 reg) {
+UInt32 NRed::readReg32(UInt32 reg) const {
     if ((reg * sizeof(UInt32)) < this->rmmio->getLength()) {
         return this->rmmioPtr[reg];
     } else {
@@ -460,7 +409,7 @@ UInt32 NRed::readReg32(UInt32 reg) {
     }
 }
 
-void NRed::writeReg32(UInt32 reg, UInt32 val) {
+void NRed::writeReg32(UInt32 reg, UInt32 val) const {
     if ((reg * sizeof(UInt32)) < this->rmmio->getLength()) {
         this->rmmioPtr[reg] = val;
     } else {
@@ -469,7 +418,19 @@ void NRed::writeReg32(UInt32 reg, UInt32 val) {
     }
 }
 
-CAILResult NRed::sendMsgToSmc(UInt32 msg, UInt32 param, UInt32 *outParam) {
+UInt32 NRed::smuWaitForResponse() const {
+    UInt32 ret = AMDSMUFWResponse::kSMUFWResponseNoResponse;
+    for (UInt32 i = 0; i < AMDGPU_MAX_USEC_TIMEOUT; i++) {
+        ret = this->readReg32(MP_BASE + mmMP1_SMN_C2PMSG_90);
+        if (ret != AMDSMUFWResponse::kSMUFWResponseNoResponse) { break; }
+
+        IOSleep(1);
+    }
+
+    return ret;
+}
+
+CAILResult NRed::sendMsgToSmc(UInt32 msg, UInt32 param, UInt32 *outParam) const {
     this->smuWaitForResponse();
 
     this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_90, 0);
@@ -624,17 +585,6 @@ bool NRed::getVBIOSFromVRAM() {
     return true;
 }
 
-UInt32 NRed::smuWaitForResponse() {
-    for (UInt32 i = 0; i < AMDGPU_MAX_USEC_TIMEOUT; i++) {
-        UInt32 ret = this->readReg32(MP_BASE + mmMP1_SMN_C2PMSG_90);
-        if (ret != AMDSMUFWResponse::kSMUFWResponseNoResponse) { return ret; }
-
-        IOSleep(1);
-    }
-
-    return AMDSMUFWResponse::kSMUFWResponseNoResponse;
-}
-
 struct ApplePanelData {
     const char *deviceName;
     UInt8 deviceData[36];
@@ -694,7 +644,7 @@ bool NRed::wrapApplePanelSetDisplay(IOService *that, IODisplay *display) {
         }
     }
 
-    bool ret = FunctionCast(wrapApplePanelSetDisplay, callback->orgApplePanelSetDisplay)(that, display);
+    bool ret = FunctionCast(wrapApplePanelSetDisplay, singleton().orgApplePanelSetDisplay)(that, display);
     DBGLOG("NRed", "setDisplay >> %d", ret);
     return ret;
 }
