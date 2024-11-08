@@ -55,7 +55,7 @@ class NRed {
         return offset ? reinterpret_cast<T *>(const_cast<UInt8 *>(vbios) + offset) : nullptr;
     }
 
-    // NOTE: Temporary hack, will removed when HWDisplay reimplementation lands!
+    // NOTE: Temporary hack, will be removed when HWDisplay reimplementation lands!
     OSMetaClass *metaClassMap[5][2] = {{nullptr}};
 
     private:

@@ -373,6 +373,7 @@ bool NRed::wrapAddDrivers(void *that, OSArray *array, bool doNubMatching) {
     return FunctionCast(wrapAddDrivers, singleton().orgAddDrivers)(that, array, doNubMatching);
 }
 
+// TODO: Remove this unholy mess.
 OSMetaClassBase *NRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const OSMetaClass *toMeta) {
     auto ret = FunctionCast(wrapSafeMetaCast, singleton().orgSafeMetaCast)(anObject, toMeta);
 
