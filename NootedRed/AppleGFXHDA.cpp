@@ -47,7 +47,6 @@ void AppleGFXHDA::init() {
 
 void AppleGFXHDA::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextAppleGFXHDA.loadIndex == id) {
-        SYSLOG_COND(ADDPR(debugEnabled), "AGFXHDA", "slide is 0x%llx", slide);
         NRed::singleton().hwLateInit();
 
         const UInt32 probeFind = Navi10HDMIID;

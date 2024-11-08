@@ -94,7 +94,6 @@ void X5000::init() {
 
 void X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextRadeonX5000.loadIndex == id) {
-        SYSLOG_COND(ADDPR(debugEnabled), "X5000", "slide is 0x%llx", slide);
         NRed::singleton().hwLateInit();
 
         UInt32 *orgChannelTypes;
