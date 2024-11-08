@@ -100,25 +100,7 @@ void NRed::hwLateInit() {
     this->iGPU->setMemoryEnable(true);
     this->iGPU->setBusMasterEnable(true);
 
-    auto *atombiosImageProp = OSDynamicCast(OSData, this->iGPU->getProperty("ATY,bin_image"));
-    if (atombiosImageProp == nullptr) {
-        if (this->getVBIOSFromVFCT()) {
-            DBGLOG("NRed", "Got VBIOS from VFCT.");
-        } else {
-            SYSLOG("NRed", "Failed to get VBIOS from VFCT, trying to get it from VRAM!");
-            if (this->getVBIOSFromVRAM()) {
-                DBGLOG("NRed", "Got VBIOS from VRAM.");
-            } else {
-                SYSLOG("NRed", "Failed to get VBIOS from VRAM, trying to get it from PCI Expansion ROM!");
-                PANIC_COND(!this->getVBIOSFromExpansionROM(), "NRed", "Failed to get VBIOS!");
-                DBGLOG("NRed", "Got VBIOS from PCI Expansion ROM.");
-            }
-        }
-
-    } else {
-        this->vbiosData = OSData::withData(atombiosImageProp);
-        SYSLOG("NRed", "!!! VBIOS MANUALLY OVERRIDDEN, MAKE SURE YOU KNOW WHAT YOU'RE DOING !!!");
-    }
+    PANIC_COND(!this->getVBIOS(), "NRed", "Failed to get VBIOS!");
 
     auto len = this->vbiosData->getLength();
     if (len < ATOMBIOS_IMAGE_SIZE) {
@@ -448,6 +430,36 @@ bool NRed::getVBIOSFromVRAM() {
     this->vbiosData = OSData::withBytes(fb, size);
     PANIC_COND(this->vbiosData == nullptr, "NRed", "VRAM OSData::withBytes failed");
     OSSafeReleaseNULL(bar0);
+    return true;
+}
+
+bool NRed::getVBIOS() {
+    auto *biosImageProp = OSDynamicCast(OSData, this->iGPU->getProperty("ATY,bin_image"));
+    if (biosImageProp != nullptr) {
+        if (checkAtomBios(static_cast<const UInt8 *>(biosImageProp->getBytesNoCopy()), biosImageProp->getLength())) {
+            this->vbiosData = OSData::withData(biosImageProp);
+            SYSLOG("NRed", "Warning: VBIOS manually overridden, make sure you know what you're doing.");
+            return true;
+        } else {
+            SYSLOG("NRed", "Error: VBIOS override is invalid.");
+        }
+    }
+    if (this->getVBIOSFromVFCT()) {
+        DBGLOG("NRed", "Got VBIOS from VFCT.");
+    } else {
+        SYSLOG("NRed", "Error: Failed to get VBIOS from VFCT, trying to get it from VRAM.");
+        if (this->getVBIOSFromVRAM()) {
+            DBGLOG("NRed", "Got VBIOS from VRAM.");
+        } else {
+            SYSLOG("NRed", "Error: Failed to get VBIOS from VRAM, trying to get it from PCI Expansion ROM!");
+            if (this->getVBIOSFromExpansionROM()) {
+                DBGLOG("NRed", "Got VBIOS from PCI Expansion ROM.");
+            } else {
+                SYSLOG("NRed", "Error: Failed to get VBIOS from PCI Expansion ROM!");
+                return false;
+            }
+        }
+    }
     return true;
 }
 

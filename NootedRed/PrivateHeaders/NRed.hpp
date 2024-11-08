@@ -60,6 +60,7 @@ class NRed {
     bool getVBIOSFromExpansionROM();
     bool getVBIOSFromVFCT();
     bool getVBIOSFromVRAM();
+    bool getVBIOS();
 
     static bool wrapAddDrivers(void *that, OSArray *array, bool doNubMatching);
     static OSMetaClassBase *wrapSafeMetaCast(const OSMetaClassBase *anObject, const OSMetaClass *toMeta);
