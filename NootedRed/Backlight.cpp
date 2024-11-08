@@ -223,7 +223,7 @@ bool Backlight::OnAppleBacklightDisplayLoad(void *, void *, IOService *newServic
 }
 
 void Backlight::registerDispMaxBrightnessNotif() {
-    if (singleton().dispNotif != nullptr) { return; }
+    if (this->dispNotif != nullptr) { return; }
 
     auto *matching = IOService::serviceMatching("AppleBacklightDisplay");
     if (matching == nullptr) {
@@ -231,9 +231,9 @@ void Backlight::registerDispMaxBrightnessNotif() {
         return;
     }
 
-    singleton().dispNotif =
+    this->dispNotif =
         IOService::addMatchingNotification(gIOFirstMatchNotification, matching, OnAppleBacklightDisplayLoad, nullptr);
-    SYSLOG_COND(singleton().dispNotif == nullptr, "Backlight", "%s: Failed to register notification", __FUNCTION__);
+    SYSLOG_COND(this->dispNotif == nullptr, "Backlight", "%s: Failed to register notification", __FUNCTION__);
     OSSafeReleaseNULL(matching);
 }
 
