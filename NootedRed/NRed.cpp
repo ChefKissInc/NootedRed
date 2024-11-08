@@ -7,6 +7,7 @@
 #include <IOKit/acpi/IOACPIPlatformExpert.h>
 #include <PrivateHeaders/AMDCommon.hpp>
 #include <PrivateHeaders/AppleGFXHDA.hpp>
+#include <PrivateHeaders/Backlight.hpp>
 #include <PrivateHeaders/Firmware.hpp>
 #include <PrivateHeaders/HWLibs.hpp>
 #include <PrivateHeaders/Hotfixes/AGDP.hpp>
@@ -17,27 +18,7 @@
 #include <PrivateHeaders/X6000.hpp>
 #include <PrivateHeaders/X6000FB.hpp>
 
-//------ Target Kexts ------//
-
-static const char *pathBacklight = "/System/Library/Extensions/AppleBacklight.kext/Contents/MacOS/AppleBacklight";
-static const char *pathMCCSControl = "/System/Library/Extensions/AppleMCCSControl.kext/Contents/MacOS/AppleMCCSControl";
-
-static KernelPatcher::KextInfo kextBacklight {
-    "com.apple.driver.AppleBacklight",
-    &pathBacklight,
-    1,
-    {true},
-    {},
-    KernelPatcher::KextInfo::Unloaded,
-};
-static KernelPatcher::KextInfo kextMCCSControl {
-    "com.apple.driver.AppleMCCSControl",
-    &pathMCCSControl,
-    1,
-    {true},
-    {},
-    KernelPatcher::KextInfo::Unloaded,
-};
+//------ Module Logic ------//
 
 static NRed module {};
 
@@ -48,12 +29,6 @@ void NRed::init() {
     this->initialised = true;
 
     SYSLOG("NRed", "Copyright 2022-2024 ChefKiss. If you've paid for this, you've been scammed.");
-
-    bool bkltArg = false;
-    if (BaseDeviceInfo::get().modelType == WIOKit::ComputerModel::ComputerLaptop ||
-        (PE_parse_boot_argn("AMDBacklight", &bkltArg, sizeof(bkltArg)) && bkltArg)) {
-        this->attributes.setBacklightEnabled();
-    }
 
     switch (getKernelVersion()) {
         case KernelVersion::Catalina:
@@ -108,10 +83,7 @@ void NRed::init() {
     DBGLOG("NRed", "If any of the above values look incorrect, please report this to the developers.");
 
     Hotfixes::AGDP::singleton().init();
-    if (this->attributes.isBacklightEnabled()) {
-        lilu.onKextLoadForce(&kextBacklight);
-        lilu.onKextLoadForce(&kextMCCSControl);
-    }
+    Backlight::singleton().init();
     X6000FB::singleton().init();
     AppleGFXHDA::singleton().init();
     X5000HWLibs::singleton().init();
@@ -120,12 +92,6 @@ void NRed::init() {
 
     lilu.onPatcherLoadForce(
         [](void *user, KernelPatcher &patcher) { static_cast<NRed *>(user)->processPatcher(patcher); }, this);
-    lilu.onKextLoadForce(
-        nullptr, 0,
-        [](void *user, KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
-            static_cast<NRed *>(user)->processKext(patcher, id, slide, size);
-        },
-        this);
 }
 
 void NRed::hwLateInit() {
@@ -393,27 +359,6 @@ OSMetaClassBase *NRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const O
     return nullptr;
 }
 
-void NRed::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
-    if (kextBacklight.loadIndex == id) {
-        KernelPatcher::RouteRequest request {"__ZN15AppleIntelPanel10setDisplayEP9IODisplay", wrapApplePanelSetDisplay,
-            orgApplePanelSetDisplay};
-        if (patcher.routeMultiple(kextBacklight.loadIndex, &request, 1, slide, size)) {
-            static const UInt8 find[] = "F%uT%04x";
-            static const UInt8 replace[] = "F%uTxxxx";
-            const LookupPatchPlus patch {&kextBacklight, find, replace, 1};
-            SYSLOG_COND(!patch.apply(patcher, slide, size), "NRed", "Failed to apply backlight patch");
-        }
-        patcher.clearError();
-    } else if (kextMCCSControl.loadIndex == id) {
-        KernelPatcher::RouteRequest requests[] = {
-            {"__ZN25AppleMCCSControlGibraltar5probeEP9IOServicePi", wrapFunctionReturnZero},
-            {"__ZN21AppleMCCSControlCello5probeEP9IOServicePi", wrapFunctionReturnZero},
-        };
-        patcher.routeMultiple(id, requests, slide, size);
-        patcher.clearError();
-    }
-}
-
 UInt32 NRed::readReg32(UInt32 reg) const {
     if ((reg * sizeof(UInt32)) < this->rmmio->getLength()) {
         return this->rmmioPtr[reg];
@@ -458,7 +403,6 @@ CAILResult NRed::sendMsgToSmc(UInt32 msg, UInt32 param, UInt32 *outParam) const 
     return processSMUFWResponse(resp);
 }
 
-// https://elixir.bootlin.com/linux/latest/source/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c#L49
 static bool checkAtomBios(const UInt8 *bios, size_t size) {
     if (size < 0x49) {
         DBGLOG("NRed", "VBIOS size is invalid");
@@ -597,68 +541,4 @@ bool NRed::getVBIOSFromVRAM() {
     PANIC_COND(this->vbiosData == nullptr, "NRed", "VRAM OSData::withBytes failed");
     OSSafeReleaseNULL(bar0);
     return true;
-}
-
-struct ApplePanelData {
-    const char *deviceName;
-    UInt8 deviceData[36];
-};
-
-static ApplePanelData appleBacklightData[] = {
-    {"F14Txxxx", {0x00, 0x11, 0x00, 0x00, 0x00, 0x34, 0x00, 0x52, 0x00, 0x73, 0x00, 0x94, 0x00, 0xBE, 0x00, 0xFA, 0x01,
-                     0x36, 0x01, 0x72, 0x01, 0xC5, 0x02, 0x2F, 0x02, 0xB9, 0x03, 0x60, 0x04, 0x1A, 0x05, 0x0A, 0x06,
-                     0x0E, 0x07, 0x10}},
-    {"F15Txxxx", {0x00, 0x11, 0x00, 0x00, 0x00, 0x36, 0x00, 0x54, 0x00, 0x7D, 0x00, 0xB2, 0x00, 0xF5, 0x01, 0x49, 0x01,
-                     0xB1, 0x02, 0x2B, 0x02, 0xB8, 0x03, 0x59, 0x04, 0x13, 0x04, 0xEC, 0x05, 0xF3, 0x07, 0x34, 0x08,
-                     0xAF, 0x0A, 0xD9}},
-    {"F16Txxxx", {0x00, 0x11, 0x00, 0x00, 0x00, 0x18, 0x00, 0x27, 0x00, 0x3A, 0x00, 0x52, 0x00, 0x71, 0x00, 0x96, 0x00,
-                     0xC4, 0x00, 0xFC, 0x01, 0x40, 0x01, 0x93, 0x01, 0xF6, 0x02, 0x6E, 0x02, 0xFE, 0x03, 0xAA, 0x04,
-                     0x78, 0x05, 0x6C}},
-    {"F17Txxxx", {0x00, 0x11, 0x00, 0x00, 0x00, 0x1F, 0x00, 0x34, 0x00, 0x4F, 0x00, 0x71, 0x00, 0x9B, 0x00, 0xCF, 0x01,
-                     0x0E, 0x01, 0x5D, 0x01, 0xBB, 0x02, 0x2F, 0x02, 0xB9, 0x03, 0x60, 0x04, 0x29, 0x05, 0x1E, 0x06,
-                     0x44, 0x07, 0xA1}},
-    {"F18Txxxx", {0x00, 0x11, 0x00, 0x00, 0x00, 0x53, 0x00, 0x8C, 0x00, 0xD5, 0x01, 0x31, 0x01, 0xA2, 0x02, 0x2E, 0x02,
-                     0xD8, 0x03, 0xAE, 0x04, 0xAC, 0x05, 0xE5, 0x07, 0x59, 0x09, 0x1C, 0x0B, 0x3B, 0x0D, 0xD0, 0x10,
-                     0xEA, 0x14, 0x99}},
-    {"F19Txxxx", {0x00, 0x11, 0x00, 0x00, 0x02, 0x8F, 0x03, 0x53, 0x04, 0x5A, 0x05, 0xA1, 0x07, 0xAE, 0x0A, 0x3D, 0x0E,
-                     0x14, 0x13, 0x74, 0x1A, 0x5E, 0x24, 0x18, 0x31, 0xA9, 0x44, 0x59, 0x5E, 0x76, 0x83, 0x11, 0xB6,
-                     0xC7, 0xFF, 0x7B}},
-    {"F24Txxxx", {0x00, 0x11, 0x00, 0x01, 0x00, 0x34, 0x00, 0x52, 0x00, 0x73, 0x00, 0x94, 0x00, 0xBE, 0x00, 0xFA, 0x01,
-                     0x36, 0x01, 0x72, 0x01, 0xC5, 0x02, 0x2F, 0x02, 0xB9, 0x03, 0x60, 0x04, 0x1A, 0x05, 0x0A, 0x06,
-                     0x0E, 0x07, 0x10}},
-};
-
-size_t NRed::wrapFunctionReturnZero() { return 0; }
-
-bool NRed::wrapApplePanelSetDisplay(IOService *that, IODisplay *display) {
-    static bool once = false;
-    if (!once) {
-        once = true;
-        auto *panels = OSDynamicCast(OSDictionary, that->getProperty("ApplePanels"));
-        if (panels) {
-            auto *rawPanels = panels->copyCollection();
-            panels = OSDynamicCast(OSDictionary, rawPanels);
-
-            if (panels) {
-                for (auto &entry : appleBacklightData) {
-                    auto pd = OSData::withBytes(entry.deviceData, sizeof(entry.deviceData));
-                    if (pd) {
-                        panels->setObject(entry.deviceName, pd);
-                        // No release required by current AppleBacklight implementation.
-                    } else {
-                        SYSLOG("NRed", "setDisplay: Cannot allocate data for %s", entry.deviceName);
-                    }
-                }
-                that->setProperty("ApplePanels", panels);
-            }
-
-            OSSafeReleaseNULL(rawPanels);
-        } else {
-            SYSLOG("NRed", "setDisplay: Missing ApplePanels property");
-        }
-    }
-
-    bool ret = FunctionCast(wrapApplePanelSetDisplay, singleton().orgApplePanelSetDisplay)(that, display);
-    DBGLOG("NRed", "setDisplay >> %d", ret);
-    return ret;
 }

@@ -3,7 +3,6 @@
 
 #pragma once
 #include <Headers/kern_patcher.hpp>
-#include <IOKit/graphics/IOFramebuffer.h>
 #include <IOKit/pci/IOPCIDevice.h>
 #include <PrivateHeaders/AMDCommon.hpp>
 #include <PrivateHeaders/ATOMBIOS.hpp>
@@ -24,7 +23,6 @@ class NRed {
 
     mach_vm_address_t orgAddDrivers {0};    // TODO: Move all these to separate modules!
     mach_vm_address_t orgSafeMetaCast {0};
-    mach_vm_address_t orgApplePanelSetDisplay {0};
 
     public:
     static NRed &singleton();
@@ -39,7 +37,6 @@ class NRed {
     void init();
     void hwLateInit();
     void processPatcher(KernelPatcher &patcher);
-    void processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 
     UInt32 readReg32(UInt32 reg) const;
     void writeReg32(UInt32 reg, UInt32 val) const;
@@ -66,6 +63,4 @@ class NRed {
 
     static bool wrapAddDrivers(void *that, OSArray *array, bool doNubMatching);
     static OSMetaClassBase *wrapSafeMetaCast(const OSMetaClassBase *anObject, const OSMetaClass *toMeta);
-    static size_t wrapFunctionReturnZero();
-    static bool wrapApplePanelSetDisplay(IOService *that, IODisplay *display);
 };

@@ -24,13 +24,6 @@ enum AMDHWEngineType : UInt32 {
 class X5000 {
     friend class X6000;
 
-    public:
-    static X5000 &singleton();
-
-    void init();
-    void processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
-
-    private:
     bool initialised {false};
     ObjectField<void *> pm4EngineField {};
     ObjectField<void *> sdma0EngineField {};
@@ -44,7 +37,6 @@ class X5000 {
     ObjectField<bool> hasSDMAPagingQueueField {};
     ObjectField<UInt32> familyTypeField {};
     ObjectField<Gfx9ChipSettings> chipSettingsField {};
-
     t_GenericConstructor orgGFX9PM4EngineConstructor {nullptr};
     t_GenericConstructor orgGFX9SDMAEngineConstructor {nullptr};
     mach_vm_address_t orgSetupAndInitializeHWCapabilities {0};
@@ -56,6 +48,13 @@ class X5000 {
     mach_vm_address_t orgHwlConvertChipFamily {0};
     mach_vm_address_t orgGetNumericProperty {0};
 
+    public:
+    static X5000 &singleton();
+
+    void init();
+
+    private:
+    void processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
     static bool wrapAllocateHWEngines(void *that);
     static void wrapSetupAndInitializeHWCapabilities(void *that);
     static void wrapGFX9SetupAndInitializeHWCapabilities(void *that);

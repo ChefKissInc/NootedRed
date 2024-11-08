@@ -11,13 +11,6 @@ using t_createFirmware = void *(*)(const void *data, UInt32 size, UInt32 ipVersi
 using t_putFirmware = bool (*)(void *that, UInt32 deviceType, void *fw);
 
 class X5000HWLibs {
-    public:
-    static X5000HWLibs &singleton();
-
-    void init();
-    void processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
-
-    private:
     bool initialised {false};
     ObjectField<void *> fwDirField {};
     ObjectField<UInt32> pspLoadSOSField {};
@@ -33,12 +26,19 @@ class X5000HWLibs {
     ObjectField<mach_vm_address_t> smuInternalSWExitField {};
     ObjectField<mach_vm_address_t> smuInternalHWExitField {};
     ObjectField<mach_vm_address_t> smuFullAsicResetField {};
-
     mach_vm_address_t orgGetIpFw {0};
     t_createFirmware orgCreateFirmware {nullptr};
     t_putFirmware orgPutFirmware {nullptr};
     mach_vm_address_t orgPspCmdKmSubmit {0};
     mach_vm_address_t orgCosReadConfigurationSetting {0};
+
+    public:
+    static X5000HWLibs &singleton();
+
+    void init();
+
+    private:
+    void processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 
     static void wrapPopulateFirmwareDirectory(void *that);
     static bool wrapGetIpFw(void *that, UInt32 ipVersion, char *name, void *out);

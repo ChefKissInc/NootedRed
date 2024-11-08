@@ -2,14 +2,11 @@
 // See LICENSE for details.
 
 #include <Headers/kern_api.hpp>
-#include <Headers/kern_devinfo.hpp>
 #include <PrivateHeaders/AMDCommon.hpp>
 #include <PrivateHeaders/ATOMBIOS.hpp>
 #include <PrivateHeaders/NRed.hpp>
 #include <PrivateHeaders/PatcherPlus.hpp>
 #include <PrivateHeaders/X6000FB.hpp>
-
-constexpr UInt32 FbAttributeBacklight = static_cast<UInt32>('bklt');
 
 //------ Target Kexts ------//
 
@@ -25,6 +22,187 @@ static KernelPatcher::KextInfo kextRadeonX6000Framebuffer {
     KernelPatcher::KextInfo::Unloaded,
 };
 
+//------ Patterns ------//
+
+static const UInt8 kCailAsicCapsTablePattern[] = {0x6E, 0x00, 0x00, 0x00, 0x98, 0x67, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x01, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00};
+
+static const UInt8 kPopulateVramInfoPattern[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x53, 0x48, 0x81, 0xEC,
+    0x08, 0x01, 0x00, 0x00, 0x40, 0x89, 0xF0, 0x40, 0x89, 0xF0, 0x4C, 0x8D, 0xBD, 0xE0, 0xFE, 0xFF, 0xFF};
+static const UInt8 kPopulateVramInfoPatternMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xF0, 0xFF, 0xF0, 0xF0, 0xFF, 0xF0, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+
+static const UInt8 kGetNumberOfConnectorsPattern[] = {0x55, 0x48, 0x89, 0xE5, 0x40, 0x8B, 0x40, 0x28, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x85, 0x00, 0x74, 0x00};
+static const UInt8 kGetNumberOfConnectorsPatternMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xF0, 0xFF, 0xF0, 0xFF, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00};
+
+static const UInt8 kIH40IVRingInitHardwarePattern[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41,
+    0x54, 0x53, 0x50, 0x40, 0x89, 0xF0, 0x49, 0x89, 0xF0, 0x40, 0x8B, 0x00, 0x00, 0x44, 0x00, 0x00};
+static const UInt8 kIH40IVRingInitHardwarePatternMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xF0, 0xFF, 0xF0, 0xFF, 0xFF, 0xF0, 0xF0, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF};
+
+static const UInt8 kIRQMGRWriteRegisterPattern[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41,
+    0x54, 0x53, 0x50, 0x41, 0x89, 0xD6, 0x49, 0x89, 0xF7, 0x48, 0x89, 0xFB, 0x48, 0x8B, 0x87, 0xB0, 0x00, 0x00, 0x00,
+    0x48, 0x85, 0xC0};
+static const UInt8 kIRQMGRWriteRegisterPattern1404[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55,
+    0x41, 0x54, 0x53, 0x50, 0x89, 0xD3, 0x49, 0x89, 0xF7, 0x49, 0x89, 0xFE, 0x48, 0x8B, 0x87, 0xB0, 0x00, 0x00, 0x00,
+    0x48, 0x85, 0xC0};
+
+static const UInt8 kDpReceiverPowerCtrlPattern[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x54, 0x53,
+    0x48, 0x83, 0xEC, 0x10, 0x89, 0xF3, 0xB0, 0x02, 0x28, 0xD8};
+static const UInt8 kDpReceiverPowerCtrlPattern1404[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x54,
+    0x53, 0x48, 0x83, 0xEC, 0x10, 0x41, 0x89, 0xF7, 0xB0, 0x02, 0x44, 0x28, 0xF8};
+
+static const UInt8 kDmLoggerWritePattern[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54,
+    0x53, 0x48, 0x81, 0xEC, 0x88, 0x04, 0x00, 0x00};
+
+static const UInt8 kDalDmLoggerShouldLogPartialPattern[] = {0x48, 0x8D, 0x0D, 0x00, 0x00, 0x00, 0x00, 0x8B, 0x04, 0x81,
+    0x0F, 0xA3, 0xD0, 0x0F, 0x92, 0xC0};
+static const UInt8 kDalDmLoggerShouldLogPartialPatternMask[] = {0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+
+static const UInt8 kCreateDmcubServicePattern[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x56, 0x53, 0x48, 0x83, 0x3F, 0x00,
+    0x74, 0x27};
+
+//------ Patches ------//
+
+// Fix register read (0xD31 -> 0xD2F) and family ID (0x8F -> 0x8E).
+static const UInt8 kPopulateDeviceInfoOriginal[] {0xBE, 0x31, 0x0D, 0x00, 0x00, 0xFF, 0x90, 0x40, 0x01, 0x00, 0x00,
+    0xC7, 0x43, 0x00, 0x8F, 0x00, 0x00, 0x00};
+static const UInt8 kPopulateDeviceInfoMask[] {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF};
+static const UInt8 kPopulateDeviceInfoPatched[] {0xBE, 0x2F, 0x0D, 0x00, 0x00, 0xFF, 0x90, 0x40, 0x01, 0x00, 0x00, 0xC7,
+    0x43, 0x00, 0x8E, 0x00, 0x00, 0x00};
+
+// Neutralise `AmdAtomVramInfo` creation null check.
+// We don't have this entry in our VBIOS.
+static const UInt8 kAmdAtomVramInfoNullCheckOriginal[] = {0x48, 0x89, 0x83, 0x90, 0x00, 0x00, 0x00, 0x48, 0x85, 0xC0,
+    0x0F, 0x84, 0x89, 0x00, 0x00, 0x00, 0x48, 0x8B, 0x7B, 0x18};
+static const UInt8 kAmdAtomVramInfoNullCheckPatched[] = {0x48, 0x89, 0x83, 0x90, 0x00, 0x00, 0x00, 0x66, 0x90, 0x66,
+    0x90, 0x66, 0x90, 0x66, 0x90, 0x90, 0x48, 0x8B, 0x7B, 0x18};
+
+// Ditto
+static const UInt8 kAmdAtomVramInfoNullCheckOriginal1015[] = {0x48, 0x89, 0x83, 0x80, 0x00, 0x00, 0x00, 0x48, 0x85,
+    0xC0, 0x74, 0x00};
+static const UInt8 kAmdAtomVramInfoNullCheckOriginalMask1015[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0x00};
+static const UInt8 kAmdAtomVramInfoNullCheckPatched1015[] = {0x48, 0x89, 0x83, 0x80, 0x00, 0x00, 0x00, 0x66, 0x90, 0x66,
+    0x90, 0x90};
+
+// Neutralise `AmdAtomPspDirectory` creation null check.
+// We don't have this entry in our VBIOS.
+static const UInt8 kAmdAtomPspDirectoryNullCheckOriginal[] = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00, 0x48, 0x85,
+    0xC0, 0x0F, 0x84, 0xA1, 0x00, 0x00, 0x00, 0x48, 0x8B, 0x7B, 0x18};
+static const UInt8 kAmdAtomPspDirectoryNullCheckPatched[] = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00, 0x66, 0x90, 0x66,
+    0x90, 0x66, 0x90, 0x66, 0x90, 0x90, 0x48, 0x8B, 0x7B, 0x18};
+
+// Neutralise `AmdAtomVramInfo` null check.
+static const UInt8 kGetFirmwareInfoNullCheckOriginal[] = {0x48, 0x83, 0xBB, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x84,
+    0x00, 0x00, 0x00, 0x00, 0x49, 0x89};
+static const UInt8 kGetFirmwareInfoNullCheckOriginalMask[] = {0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF};
+static const UInt8 kGetFirmwareInfoNullCheckPatched[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x66, 0x90,
+    0x66, 0x90, 0x66, 0x90, 0x00, 0x00};
+static const UInt8 kGetFirmwareInfoNullCheckPatchedMask[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00};
+static const UInt8 kGetFirmwareInfoNullCheckOriginal1404[] = {0x49, 0x83, 0xBC, 0x24, 0x90, 0x00, 0x00, 0x00, 0x00,
+    0x0F, 0x84, 0x00, 0x00, 0x00, 0x00, 0x49, 0x89};
+static const UInt8 kGetFirmwareInfoNullCheckOriginalMask1404[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF};
+static const UInt8 kGetFirmwareInfoNullCheckPatched1404[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x66,
+    0x90, 0x66, 0x90, 0x66, 0x90, 0x00, 0x00};
+static const UInt8 kGetFirmwareInfoNullCheckPatchedMask1404[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00};
+
+// Tell AGDC that we're an iGPU.
+static const UInt8 kGetVendorInfoOriginal[] = {0x48, 0x00, 0x02, 0x10, 0x00, 0x00, 0x02};
+static const UInt8 kGetVendorInfoMask[] = {0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+static const UInt8 kGetVendorInfoPatched[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+static const UInt8 kGetVendorInfoPatchedMask[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF};
+static const UInt8 kGetVendorInfoOriginal1404[] = {0xC7, 0x00, 0x24, 0x02, 0x10, 0x00, 0x00, 0xC7, 0x00, 0x28, 0x02,
+    0x00, 0x00, 0x00};
+static const UInt8 kGetVendorInfoMask1404[] = {0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF};
+static const UInt8 kGetVendorInfoPatched1404[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+    0x00, 0x00, 0x00};
+static const UInt8 kGetVendorInfoPatchedMask1404[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF,
+    0x00, 0x00, 0x00};
+
+// Remove new FB count condition so we can restore the original behaviour before Ventura.
+static const UInt8 kControllerPowerUpOriginal[] = {0x38, 0xC8, 0x0F, 0x42, 0xC8, 0x88, 0x8F, 0xBC, 0x00, 0x00, 0x00,
+    0x72, 0x00};
+static const UInt8 kControllerPowerUpOriginalMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0x00};
+static const UInt8 kControllerPowerUpReplace[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0xEB, 0x00};
+static const UInt8 kControllerPowerUpReplaceMask[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0xFF, 0x00};
+
+// Remove new problematic Ventura pixel clock multiplier calculation which causes timing validation mishaps.
+static const UInt8 kValidateDetailedTimingOriginal[] = {0x66, 0x0F, 0x2E, 0xC1, 0x76, 0x06, 0xF2, 0x0F, 0x5E, 0xC1};
+static const UInt8 kValidateDetailedTimingPatched[] = {0x66, 0x0F, 0x2E, 0xC1, 0x66, 0x90, 0xF2, 0x0F, 0x5E, 0xC1};
+
+// Enable all Display Core logs
+static const UInt8 kInitPopulateDcInitDataOriginal[] = {0x48, 0xB9, 0xDB, 0x1B, 0xFF, 0x7E, 0x10, 0x00, 0x00, 0x00};
+static const UInt8 kInitPopulateDcInitDataPatched[] = {0x48, 0xB9, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+
+// Ditto, for Catalina
+static const UInt8 kInitPopulateDcInitDataCatalinaOriginal[] = {0x48, 0xC7, 0x87, 0x20, 0x02, 0x00, 0x00, 0xDB, 0x1B,
+    0xFF, 0x7E};
+static const UInt8 kInitPopulateDcInitDataCatalinaPatched[] = {0x48, 0xC7, 0x87, 0x20, 0x02, 0x00, 0x00, 0xFF, 0xFF,
+    0xFF, 0xFF};
+
+// Enable all AmdBiosParserHelper logs
+static const UInt8 kBiosParserHelperInitWithDataOriginal[] = {0x08, 0xC7, 0x07, 0x01, 0x00, 0x00, 0x00};
+static const UInt8 kBiosParserHelperInitWithDataPatched[] = {0x08, 0xC7, 0x07, 0xFF, 0x00, 0x00, 0x00};
+
+// Remove check for Navi family
+static const UInt8 kInitializeDmcubServices1Original[] = {0x81, 0x79, 0x2C, 0x8F, 0x00, 0x00, 0x00};
+static const UInt8 kInitializeDmcubServices1Patched[] = {0x39, 0xC0, 0x66, 0x90, 0x66, 0x90, 0x90};
+
+// Set DMCUB ASIC constant to DCN 2.1
+static const UInt8 kInitializeDmcubServices2Original[] = {0x83, 0xC0, 0xC4, 0x83, 0xF8, 0x0A, 0xB8, 0x03, 0x00, 0x00,
+    0x00, 0x83, 0xD0, 0x00};
+static const UInt8 kInitializeDmcubServices2Patched[] = {0xB8, 0x02, 0x00, 0x00, 0x00, 0x66, 0x90, 0x66, 0x90, 0x66,
+    0x90, 0x66, 0x90, 0x90};
+
+// Ditto, 14.4+
+static const UInt8 kInitializeDmcubServices2Original1404[] = {0x83, 0xC0, 0xC4, 0x31, 0xC9, 0x83, 0xF8, 0x0A, 0x83,
+    0xD1, 0x03};
+static const UInt8 kInitializeDmcubServices2Patched1404[] = {0xB9, 0x02, 0x00, 0x00, 0x00, 0x66, 0x90, 0x66, 0x90, 0x66,
+    0x90};
+
+// Raven: Change cursor and underflow tracker count to 4 instead of 6.
+static const UInt8 kCreateControllerServicesOriginal[] = {0x40, 0x00, 0x00, 0x40, 0x83, 0x00, 0x06};
+static const UInt8 kCreateControllerServicesOriginalMask[] = {0xF0, 0x00, 0x00, 0xF0, 0xFF, 0x00, 0xFF};
+static const UInt8 kCreateControllerServicesPatched[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04};
+static const UInt8 kCreateControllerServicesPatchedMask[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F};
+
+// Ditto, 10.15.
+static const UInt8 kCreateControllerServicesOriginal1015[] = {0x48, 0x00, 0x00, 0x48, 0x83, 0x00, 0x05};
+static const UInt8 kCreateControllerServicesOriginalMask1015[] = {0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0xFF};
+static const UInt8 kCreateControllerServicesPatched1015[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03};
+static const UInt8 kCreateControllerServicesPatchedMask1015[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F};
+
+// Raven: Change cursor count to 4 instead of 6.
+static const UInt8 kSetupCursorsOriginal[] = {0x40, 0x83, 0x00, 0x05};
+static const UInt8 kSetupCursorsOriginalMask[] = {0xF0, 0xFF, 0x00, 0xFF};
+static const UInt8 kSetupCursorsPatched[] = {0x00, 0x00, 0x00, 0x03};
+static const UInt8 kSetupCursorsPatchedMask[] = {0x00, 0x00, 0x00, 0x0F};
+
+// Ditto, 12.0+.
+static const UInt8 kSetupCursorsOriginal12[] = {0x40, 0x83, 0x00, 0x06};
+static const UInt8 kSetupCursorsOriginalMask12[] = {0xF0, 0xFF, 0x00, 0xFF};
+static const UInt8 kSetupCursorsPatched12[] = {0x00, 0x00, 0x00, 0x04};
+static const UInt8 kSetupCursorsPatchedMask12[] = {0x00, 0x00, 0x00, 0x0F};
+
+// Raven: Change link count to 4 instead of 6.
+static const UInt8 kCreateLinksOriginal[] = {0x06, 0x00, 0x00, 0x00, 0x40};
+static const UInt8 kCreateLinksOriginalMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xF0};
+static const UInt8 kCreateLinksPatched[] = {0x04, 0x00, 0x00, 0x00, 0x00};
+static const UInt8 kCreateLinksPatchedMask[] = {0x0F, 0x00, 0x00, 0x00, 0x00};
+
 //------ Module Logic ------//
 
 static X6000FB module {};
@@ -35,31 +213,8 @@ void X6000FB::init() {
     PANIC_COND(this->initialised, "X6000FB", "Attempted to initialise module twice!");
     this->initialised = true;
 
-    switch (getKernelVersion()) {
-        case KernelVersion::Catalina:
-            this->dcLinkCapsField = 0x1EA;
-            break;
-        case KernelVersion::BigSur:
-            this->dcLinkCapsField = 0x26C;
-            break;
-        case KernelVersion::Monterey:
-            this->dcLinkCapsField = 0x284;
-            break;
-        case KernelVersion::Ventura:
-        case KernelVersion::Sonoma:
-        case KernelVersion::Sequoia:
-            this->dcLinkCapsField = 0x28C;
-            break;
-        default:
-            PANIC("X6000FB", "Unsupported kernel version %d", getKernelVersion());
-    }
-
     SYSLOG("X6000FB", "Module initialised");
 
-    if (NRed::singleton().getAttributes().isBacklightEnabled()) {
-        lilu.onPatcherLoadForce(
-            [](void *user, KernelPatcher &) { static_cast<X6000FB *>(user)->registerDispMaxBrightnessNotif(); }, this);
-    }
     lilu.onKextLoadForce(
         &kextRadeonX6000Framebuffer, 1,
         [](void *user, KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
@@ -78,31 +233,6 @@ void X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             kCailAsicCapsTablePattern};
         PANIC_COND(!cailAsicCapsSolveRequest.solve(patcher, id, slide, size), "X6000FB",
             "Failed to resolve CAIL_ASIC_CAPS_TABLE");
-
-        if (NRed::singleton().getAttributes().isBacklightEnabled()) {
-            if (NRed::singleton().getAttributes().isBigSurAndLater() && NRed::singleton().getAttributes().isRaven()) {
-                SolveRequestPlus solveRequest {"_dce_driver_set_backlight", this->orgDceDriverSetBacklight,
-                    kDceDriverSetBacklightPattern, kDceDriverSetBacklightPatternMask};
-                PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "X6000FB",
-                    "Failed to resolve dce_driver_set_backlight");
-            }
-            if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
-                SolveRequestPlus solveRequest {"_dc_link_set_backlight_level", this->orgDcLinkSetBacklightLevel,
-                    kDcLinkSetBacklightLevelPattern1404};
-                PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "X6000FB",
-                    "Failed to resolve dc_link_set_backlight_level");
-            } else {
-                SolveRequestPlus solveRequest {"_dc_link_set_backlight_level", this->orgDcLinkSetBacklightLevel,
-                    kDcLinkSetBacklightLevelPattern};
-                PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "X6000FB",
-                    "Failed to resolve dc_link_set_backlight_level");
-            }
-
-            SolveRequestPlus solveRequest {"_dc_link_set_backlight_level_nits", this->orgDcLinkSetBacklightLevelNits,
-                kDcLinkSetBacklightLevelNitsPattern, kDcLinkSetBacklightLevelNitsPatternMask};
-            PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "X6000FB",
-                "Failed to resolve dc_link_set_backlight_level_nits");
-        }
 
         if (NRed::singleton().getAttributes().isVenturaAndLater()) {
             SolveRequestPlus solveRequest {
@@ -178,31 +308,6 @@ void X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
             RouteRequestPlus request {"__ZN34AMDRadeonX6000_AmdRadeonController7powerUpEv", wrapControllerPowerUp,
                 this->orgControllerPowerUp};
             PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route powerUp");
-        }
-
-        if (NRed::singleton().getAttributes().isBacklightEnabled()) {
-            if (NRed::singleton().getAttributes().isBigSurAndLater() && NRed::singleton().getAttributes().isRaven()) {
-                if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
-                    RouteRequestPlus request = {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit,
-                        this->orgDcePanelCntlHwInit, kDcePanelCntlHwInitPattern1404};
-                    PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
-                        "Failed to route dce_panel_cntl_hw_init (14.4+)");
-                } else {
-                    RouteRequestPlus request = {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit,
-                        this->orgDcePanelCntlHwInit, kDcePanelCntlHwInitPattern};
-                    PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
-                        "Failed to route dce_panel_cntl_hw_init");
-                }
-            }
-            RouteRequestPlus requests[] = {
-                {"_link_create", wrapLinkCreate, this->orgLinkCreate, kLinkCreatePattern, kLinkCreatePatternMask},
-                {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25setAttributeForConnectionEijm",
-                    wrapSetAttributeForConnection, this->orgSetAttributeForConnection},
-                {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25getAttributeForConnectionEijPm",
-                    wrapGetAttributeForConnection, this->orgGetAttributeForConnection},
-            };
-            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X6000FB",
-                "Failed to route backlight symbols");
         }
 
         const LookupPatchPlus patch {&kextRadeonX6000Framebuffer, kPopulateDeviceInfoOriginal, kPopulateDeviceInfoMask,
@@ -432,103 +537,6 @@ IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
     return kIOReturnSuccess;
 }
 
-bool X6000FB::OnAppleBacklightDisplayLoad(void *, void *, IOService *newService, IONotifier *) {
-    OSDictionary *params = OSDynamicCast(OSDictionary, newService->getProperty("IODisplayParameters"));
-    if (params == nullptr) {
-        DBGLOG("X6000FB", "%s: No 'IODisplayParameters' property", __FUNCTION__);
-        return false;
-    }
-
-    OSDictionary *linearBrightness = OSDynamicCast(OSDictionary, params->getObject("linear-brightness"));
-    if (linearBrightness == nullptr) {
-        DBGLOG("X6000FB", "%s: No 'linear-brightness' property", __FUNCTION__);
-        return false;
-    }
-
-    OSNumber *maxBrightness = OSDynamicCast(OSNumber, linearBrightness->getObject("max"));
-    if (maxBrightness == nullptr) {
-        DBGLOG("X6000FB", "%s: No 'max' property", __FUNCTION__);
-        return false;
-    }
-
-    if (maxBrightness->unsigned32BitValue() == 0) {
-        DBGLOG("X6000FB", "%s: 'max' property is 0", __FUNCTION__);
-        return false;
-    }
-
-    singleton().maxPwmBacklightLvl = maxBrightness->unsigned32BitValue();
-    DBGLOG("X6000FB", "%s: Max brightness: 0x%X", __FUNCTION__, singleton().maxPwmBacklightLvl);
-
-    return true;
-}
-
-void X6000FB::registerDispMaxBrightnessNotif() {
-    if (singleton().dispNotif != nullptr) { return; }
-
-    auto *matching = IOService::serviceMatching("AppleBacklightDisplay");
-    if (matching == nullptr) {
-        SYSLOG("X6000FB", "%s: Failed to create match dictionary", __FUNCTION__);
-        return;
-    }
-
-    singleton().dispNotif =
-        IOService::addMatchingNotification(gIOFirstMatchNotification, matching, OnAppleBacklightDisplayLoad, nullptr);
-    SYSLOG_COND(singleton().dispNotif == nullptr, "X6000FB", "%s: Failed to register notification", __FUNCTION__);
-    OSSafeReleaseNULL(matching);
-}
-
-IOReturn X6000FB::wrapSetAttributeForConnection(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
-    uintptr_t value) {
-    auto ret = FunctionCast(wrapSetAttributeForConnection, singleton().orgSetAttributeForConnection)(framebuffer,
-        connectIndex, attribute, value);
-    if (attribute != FbAttributeBacklight) { return ret; }
-
-    singleton().curPwmBacklightLvl = static_cast<UInt32>(value);
-
-    if ((NRed::singleton().getAttributes().isBigSurAndLater() && NRed::singleton().getAttributes().isRaven() &&
-            singleton().panelCntlPtr == nullptr) ||
-        singleton().embeddedPanelLink == nullptr) {
-        return kIOReturnNoDevice;
-    }
-
-    if (singleton().maxPwmBacklightLvl == 0) { return kIOReturnInternalError; }
-
-    UInt32 percentage = singleton().curPwmBacklightLvl * 100 / singleton().maxPwmBacklightLvl;
-
-    // AMDGPU doesn't use AUX on HDR/SDR displays that can use it. Why?
-    if (singleton().supportsAUX) {
-        // TODO: Obtain the actual max brightness for the screen
-        UInt32 auxValue = (singleton().maxOLED * percentage) / 100;
-        // dc_link_set_backlight_level_nits doesn't print the new backlight level, so we'll do it
-        DBGLOG("X6000FB", "%s: New AUX brightness: %d millinits (%d nits)", __FUNCTION__, auxValue, (auxValue / 1000));
-        singleton().orgDcLinkSetBacklightLevelNits(singleton().embeddedPanelLink, true, auxValue, 15000);
-    } else if (NRed::singleton().getAttributes().isBigSurAndLater() && NRed::singleton().getAttributes().isRaven()) {
-        // XX: Use the old brightness logic for now on Raven
-        // until I can find out the actual problem with DMCU.
-        UInt32 pwmValue = percentage >= 100 ? 0x1FF00 : ((percentage * 0xFF) / 100) << 8U;
-        DBGLOG("X6000FB", "%s: New PWM brightness: 0x%X", __FUNCTION__, pwmValue);
-        singleton().orgDceDriverSetBacklight(singleton().panelCntlPtr, pwmValue);
-        return kIOReturnSuccess;
-    } else {
-        UInt32 pwmValue = (percentage * 0xFFFF) / 100;
-        DBGLOG("X6000FB", "%s: New PWM brightness: 0x%X", __FUNCTION__, pwmValue);
-        if (singleton().orgDcLinkSetBacklightLevel(singleton().embeddedPanelLink, pwmValue, 0)) {
-            return kIOReturnSuccess;
-        }
-    }
-
-    return kIOReturnDeviceError;
-}
-
-IOReturn X6000FB::wrapGetAttributeForConnection(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
-    uintptr_t *value) {
-    auto ret = FunctionCast(wrapGetAttributeForConnection, singleton().orgGetAttributeForConnection)(framebuffer,
-        connectIndex, attribute, value);
-    if (attribute != FbAttributeBacklight) { return ret; }
-    *value = singleton().curPwmBacklightLvl;
-    return kIOReturnSuccess;
-}
-
 UInt32 X6000FB::wrapGetNumberOfConnectors(void *that) {
     if (!singleton().fixedVBIOS) {
         singleton().fixedVBIOS = true;
@@ -576,44 +584,6 @@ UInt32 X6000FB::wrapControllerPowerUp(void *that) {
 void X6000FB::wrapDpReceiverPowerCtrl(void *link, bool power_on) {
     FunctionCast(wrapDpReceiverPowerCtrl, singleton().orgDpReceiverPowerCtrl)(link, power_on);
     IOSleep(250);    // Link needs a bit of delay to change power state
-}
-
-UInt32 X6000FB::wrapDcePanelCntlHwInit(void *panelCntl) {
-    singleton().panelCntlPtr = panelCntl;
-    return FunctionCast(wrapDcePanelCntlHwInit, singleton().orgDcePanelCntlHwInit)(panelCntl);
-}
-
-void *X6000FB::wrapLinkCreate(void *data) {
-    void *ret = FunctionCast(wrapLinkCreate, singleton().orgLinkCreate)(data);
-
-    if (ret == nullptr) { return nullptr; }
-
-    auto signalType = getMember<UInt32>(ret, 0x38);
-    switch (signalType) {
-        case DC_SIGNAL_TYPE_LVDS: {
-            if (singleton().embeddedPanelLink != nullptr) {
-                SYSLOG("X6000FB", "EMBEDDED PANEL LINK WAS ALREADY SET AND DISCOVERED NEW ONE!!!!");
-                SYSLOG("X6000FB", "REPORT THIS TO THE DEVELOPERS AS SOON AS POSSIBLE!!!!");
-            }
-            singleton().embeddedPanelLink = ret;
-            DBGLOG("X6000FB", "Will use DMCU for display brightness control.");
-        }
-        case DC_SIGNAL_TYPE_EDP: {
-            if (singleton().embeddedPanelLink != nullptr) {
-                SYSLOG("X6000FB", "EMBEDDED PANEL LINK WAS ALREADY SET AND DISCOVERED NEW ONE!!!!");
-                SYSLOG("X6000FB", "REPORT THIS TO THE DEVELOPERS AS SOON AS POSSIBLE!!!!");
-            }
-            singleton().embeddedPanelLink = ret;
-            singleton().supportsAUX = (singleton().dcLinkCapsField.get(ret) & DC_DPCD_EXT_CAPS_OLED) != 0;
-
-            DBGLOG("X6000FB", "Will use %s for display brightness control.", singleton().supportsAUX ? "AUX" : "DMCU");
-        }
-        default: {
-            break;
-        }
-    }
-
-    return ret;
 }
 
 bool X6000FB::wrapInitWithPciInfo(void *that, void *pciDevice) {

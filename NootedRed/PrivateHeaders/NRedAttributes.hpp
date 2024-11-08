@@ -6,26 +6,24 @@
 #include <IOKit/IOTypes.h>
 
 class NRedAttributes {
-    static constexpr UInt16 IsBacklightEnabled = (1U << 0);
-    static constexpr UInt16 IsCatalina = (1U << 1);
-    static constexpr UInt16 IsBigSurAndLater = (1U << 2);
-    static constexpr UInt16 IsMonterey = (1U << 3);
-    static constexpr UInt16 IsMontereyAndLater = (1U << 4);
-    static constexpr UInt16 IsVentura = (1U << 5);
-    static constexpr UInt16 IsVenturaAndLater = (1U << 6);
-    static constexpr UInt16 IsVentura1304Based = (1U << 7);
-    static constexpr UInt16 IsVentura1304AndLater = (1U << 8);
-    static constexpr UInt16 IsSonoma1404AndLater = (1U << 9);
-    static constexpr UInt16 IsRaven = (1U << 10);
-    static constexpr UInt16 IsPicasso = (1U << 11);
-    static constexpr UInt16 IsRaven2 = (1U << 12);
-    static constexpr UInt16 IsRenoir = (1U << 13);
-    static constexpr UInt16 IsGreenSardine = (1U << 14);
+    static constexpr UInt16 IsCatalina = (1U << 0);
+    static constexpr UInt16 IsBigSurAndLater = (1U << 1);
+    static constexpr UInt16 IsMonterey = (1U << 2);
+    static constexpr UInt16 IsMontereyAndLater = (1U << 3);
+    static constexpr UInt16 IsVentura = (1U << 4);
+    static constexpr UInt16 IsVenturaAndLater = (1U << 5);
+    static constexpr UInt16 IsVentura1304Based = (1U << 6);
+    static constexpr UInt16 IsVentura1304AndLater = (1U << 7);
+    static constexpr UInt16 IsSonoma1404AndLater = (1U << 8);
+    static constexpr UInt16 IsRaven = (1U << 9);
+    static constexpr UInt16 IsPicasso = (1U << 10);
+    static constexpr UInt16 IsRaven2 = (1U << 11);
+    static constexpr UInt16 IsRenoir = (1U << 12);
+    static constexpr UInt16 IsGreenSardine = (1U << 13);
 
     UInt16 value {0};
 
     public:
-    inline const bool isBacklightEnabled() const { return (this->value & IsBacklightEnabled) != 0; }
     inline const bool isCatalina() const { return (this->value & IsCatalina) != 0; }
     inline const bool isBigSurAndLater() const { return (this->value & IsBigSurAndLater) != 0; }
     inline const bool isMonterey() const { return (this->value & IsMonterey) != 0; }
@@ -41,7 +39,6 @@ class NRedAttributes {
     inline const bool isRenoir() const { return (this->value & IsRenoir) != 0; }
     inline const bool isGreenSardine() const { return (this->value & IsGreenSardine) != 0; }
 
-    inline void setBacklightEnabled() { this->value |= IsBacklightEnabled; }
     inline void setCatalina() { this->value |= IsCatalina; }
     inline void setBigSurAndLater() { this->value |= IsBigSurAndLater; }
     inline void setMonterey() { this->value |= IsMonterey; }

@@ -17,9 +17,10 @@ class X6000 {
     static X6000 &singleton();
 
     void init();
-    bool processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 
     private:
+    bool processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
+
     static bool wrapAccelStartX6000();
     static void wrapInitDCNRegistersOffsets(void *that);
 };

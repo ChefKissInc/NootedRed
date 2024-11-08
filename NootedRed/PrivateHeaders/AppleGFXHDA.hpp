@@ -6,6 +6,12 @@
 #include <Headers/kern_util.hpp>
 
 class AppleGFXHDA {
+    bool initialised {false};
+    OSMetaClass *orgFunctionGroupTahiti {nullptr};
+    OSMetaClass *orgWidget1002AAA0 {nullptr};
+    mach_vm_address_t orgCreateAppleHDAFunctionGroup {0};
+    mach_vm_address_t orgCreateAppleHDAWidget {0};
+
     public:
     static AppleGFXHDA &singleton();
 
@@ -13,12 +19,6 @@ class AppleGFXHDA {
     void processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 
     private:
-    bool initialised {false};
-    OSMetaClass *orgFunctionGroupTahiti {nullptr};
-    OSMetaClass *orgWidget1002AAA0 {nullptr};
-    mach_vm_address_t orgCreateAppleHDAFunctionGroup {0};
-    mach_vm_address_t orgCreateAppleHDAWidget {0};
-
     static void *wrapCreateAppleHDAFunctionGroup(void *devId);
     static void *wrapCreateAppleHDAWidget(void *devId);
 };
