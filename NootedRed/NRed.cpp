@@ -267,98 +267,6 @@ void NRed::processPatcher(KernelPatcher &patcher) {
     PANIC_COND(!patcher.routeMultipleLong(KernelPatcher::KernelID, requests), "NRed", "Failed to route kernel symbols");
 }
 
-static const char *getDriverXMLForBundle(const char *bundleIdentifier, size_t *len) {
-    const auto identifierLen = strlen(bundleIdentifier);
-    const auto totalLen = identifierLen + 5;
-    auto *filename = new char[totalLen];
-    memcpy(filename, bundleIdentifier, identifierLen);
-    strlcat(filename, ".xml", totalLen);
-
-    const auto &driversXML = getFWByName(filename);
-    delete[] filename;
-
-    *len = driversXML.length;
-    return reinterpret_cast<const char *>(driversXML.data);
-}
-
-static const char *DriverBundleIdentifiers[] = {
-    "com.apple.kext.AMDRadeonX5000",
-    "com.apple.kext.AMDRadeonX5000HWServices",
-    "com.apple.kext.AMDRadeonX6000",
-    "com.apple.kext.AMDRadeonX6000Framebuffer",
-    "com.apple.driver.AppleGFXHDA",
-};
-
-static UInt8 matchedDrivers = 0;
-
-bool NRed::wrapAddDrivers(void *that, OSArray *array, bool doNubMatching) {
-    UInt32 driverCount = array->getCount();
-    for (UInt32 driverIndex = 0; driverIndex < driverCount; driverIndex += 1) {
-        OSObject *object = array->getObject(driverIndex);
-        PANIC_COND(object == nullptr, "NRed", "Critical error in addDrivers: Index is out of bounds.");
-        auto *dict = OSDynamicCast(OSDictionary, object);
-        if (dict == nullptr) { continue; }
-        auto *bundleIdentifier = OSDynamicCast(OSString, dict->getObject("CFBundleIdentifier"));
-        if (bundleIdentifier == nullptr || bundleIdentifier->getLength() == 0) { continue; }
-        auto *bundleIdentifierCStr = bundleIdentifier->getCStringNoCopy();
-        if (bundleIdentifierCStr == nullptr) { continue; }
-
-        for (size_t identifierIndex = 0; identifierIndex < arrsize(DriverBundleIdentifiers); identifierIndex += 1) {
-            if ((matchedDrivers & (1U << identifierIndex)) != 0) { continue; }
-
-            if (strcmp(bundleIdentifierCStr, DriverBundleIdentifiers[identifierIndex]) == 0) {
-                matchedDrivers |= (1U << identifierIndex);
-
-                DBGLOG("NRed", "Matched %s, injecting.", bundleIdentifierCStr);
-
-                size_t len;
-                auto *driverXML = getDriverXMLForBundle(bundleIdentifierCStr, &len);
-
-                OSString *errStr = nullptr;
-                auto *dataUnserialized = OSUnserializeXML(driverXML, len, &errStr);
-
-                PANIC_COND(dataUnserialized == nullptr, "NRed", "Failed to unserialize driver XML for %s: %s",
-                    bundleIdentifierCStr, errStr ? errStr->getCStringNoCopy() : "(nil)");
-
-                auto *drivers = OSDynamicCast(OSArray, dataUnserialized);
-                PANIC_COND(drivers == nullptr, "NRed", "Failed to cast %s driver data", bundleIdentifierCStr);
-                UInt32 injectedDriverCount = drivers->getCount();
-
-                array->ensureCapacity(driverCount + injectedDriverCount);
-
-                for (UInt32 injectedDriverIndex = 0; injectedDriverIndex < injectedDriverCount;
-                     injectedDriverIndex += 1) {
-                    array->setObject(driverIndex, drivers->getObject(injectedDriverIndex));
-                    driverIndex += 1;
-                    driverCount += 1;
-                }
-
-                dataUnserialized->release();
-                break;
-            }
-        }
-    }
-
-    return FunctionCast(wrapAddDrivers, singleton().orgAddDrivers)(that, array, doNubMatching);
-}
-
-// TODO: Remove this unholy mess.
-OSMetaClassBase *NRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const OSMetaClass *toMeta) {
-    auto ret = FunctionCast(wrapSafeMetaCast, singleton().orgSafeMetaCast)(anObject, toMeta);
-
-    if (LIKELY(ret)) { return ret; }
-
-    for (const auto &ent : singleton().metaClassMap) {
-        if (UNLIKELY(ent[0] == toMeta)) {
-            return FunctionCast(wrapSafeMetaCast, singleton().orgSafeMetaCast)(anObject, ent[1]);
-        } else if (UNLIKELY(ent[1] == toMeta)) {
-            return FunctionCast(wrapSafeMetaCast, singleton().orgSafeMetaCast)(anObject, ent[0]);
-        }
-    }
-
-    return nullptr;
-}
-
 UInt32 NRed::readReg32(UInt32 reg) const {
     if ((reg * sizeof(UInt32)) < this->rmmio->getLength()) {
         return this->rmmioPtr[reg];
@@ -541,4 +449,96 @@ bool NRed::getVBIOSFromVRAM() {
     PANIC_COND(this->vbiosData == nullptr, "NRed", "VRAM OSData::withBytes failed");
     OSSafeReleaseNULL(bar0);
     return true;
+}
+
+static const char *getDriverXMLForBundle(const char *bundleIdentifier, size_t *len) {
+    const auto identifierLen = strlen(bundleIdentifier);
+    const auto totalLen = identifierLen + 5;
+    auto *filename = new char[totalLen];
+    memcpy(filename, bundleIdentifier, identifierLen);
+    strlcat(filename, ".xml", totalLen);
+
+    const auto &driversXML = getFWByName(filename);
+    delete[] filename;
+
+    *len = driversXML.length;
+    return reinterpret_cast<const char *>(driversXML.data);
+}
+
+static const char *DriverBundleIdentifiers[] = {
+    "com.apple.kext.AMDRadeonX5000",
+    "com.apple.kext.AMDRadeonX5000HWServices",
+    "com.apple.kext.AMDRadeonX6000",
+    "com.apple.kext.AMDRadeonX6000Framebuffer",
+    "com.apple.driver.AppleGFXHDA",
+};
+
+static UInt8 matchedDrivers = 0;
+
+bool NRed::wrapAddDrivers(void *that, OSArray *array, bool doNubMatching) {
+    UInt32 driverCount = array->getCount();
+    for (UInt32 driverIndex = 0; driverIndex < driverCount; driverIndex += 1) {
+        OSObject *object = array->getObject(driverIndex);
+        PANIC_COND(object == nullptr, "NRed", "Critical error in addDrivers: Index is out of bounds.");
+        auto *dict = OSDynamicCast(OSDictionary, object);
+        if (dict == nullptr) { continue; }
+        auto *bundleIdentifier = OSDynamicCast(OSString, dict->getObject("CFBundleIdentifier"));
+        if (bundleIdentifier == nullptr || bundleIdentifier->getLength() == 0) { continue; }
+        auto *bundleIdentifierCStr = bundleIdentifier->getCStringNoCopy();
+        if (bundleIdentifierCStr == nullptr) { continue; }
+
+        for (size_t identifierIndex = 0; identifierIndex < arrsize(DriverBundleIdentifiers); identifierIndex += 1) {
+            if ((matchedDrivers & (1U << identifierIndex)) != 0) { continue; }
+
+            if (strcmp(bundleIdentifierCStr, DriverBundleIdentifiers[identifierIndex]) == 0) {
+                matchedDrivers |= (1U << identifierIndex);
+
+                DBGLOG("NRed", "Matched %s, injecting.", bundleIdentifierCStr);
+
+                size_t len;
+                auto *driverXML = getDriverXMLForBundle(bundleIdentifierCStr, &len);
+
+                OSString *errStr = nullptr;
+                auto *dataUnserialized = OSUnserializeXML(driverXML, len, &errStr);
+
+                PANIC_COND(dataUnserialized == nullptr, "NRed", "Failed to unserialize driver XML for %s: %s",
+                    bundleIdentifierCStr, errStr ? errStr->getCStringNoCopy() : "(nil)");
+
+                auto *drivers = OSDynamicCast(OSArray, dataUnserialized);
+                PANIC_COND(drivers == nullptr, "NRed", "Failed to cast %s driver data", bundleIdentifierCStr);
+                UInt32 injectedDriverCount = drivers->getCount();
+
+                array->ensureCapacity(driverCount + injectedDriverCount);
+
+                for (UInt32 injectedDriverIndex = 0; injectedDriverIndex < injectedDriverCount;
+                     injectedDriverIndex += 1) {
+                    array->setObject(driverIndex, drivers->getObject(injectedDriverIndex));
+                    driverIndex += 1;
+                    driverCount += 1;
+                }
+
+                dataUnserialized->release();
+                break;
+            }
+        }
+    }
+
+    return FunctionCast(wrapAddDrivers, singleton().orgAddDrivers)(that, array, doNubMatching);
+}
+
+// TODO: Remove this unholy mess.
+OSMetaClassBase *NRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const OSMetaClass *toMeta) {
+    auto ret = FunctionCast(wrapSafeMetaCast, singleton().orgSafeMetaCast)(anObject, toMeta);
+
+    if (LIKELY(ret)) { return ret; }
+
+    for (const auto &ent : singleton().metaClassMap) {
+        if (UNLIKELY(ent[0] == toMeta)) {
+            return FunctionCast(wrapSafeMetaCast, singleton().orgSafeMetaCast)(anObject, ent[1]);
+        } else if (UNLIKELY(ent[1] == toMeta)) {
+            return FunctionCast(wrapSafeMetaCast, singleton().orgSafeMetaCast)(anObject, ent[0]);
+        }
+    }
+
+    return nullptr;
 }
