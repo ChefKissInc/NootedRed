@@ -46,31 +46,30 @@ void AppleGFXHDA::init() {
 }
 
 void AppleGFXHDA::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
-    if (kextAppleGFXHDA.loadIndex == id) {
-        NRed::singleton().hwLateInit();
+    if (kextAppleGFXHDA.loadIndex != id) { return; }
 
-        const UInt32 probeFind = Navi10HDMIID;
-        const UInt32 probeRepl = NRed::singleton().getAttributes().isRenoir() ? RenoirHDMIID : RavenHDMIID;
-        const LookupPatchPlus patch = {&kextAppleGFXHDA, reinterpret_cast<const UInt8 *>(&probeFind),
-            reinterpret_cast<const UInt8 *>(&probeRepl), sizeof(probeFind), 1};
-        PANIC_COND(!patch.apply(patcher, slide, size), "AGFXHDA", "Failed to apply patch for HDMI controller probe");
+    NRed::singleton().hwLateInit();
 
-        SolveRequestPlus solveRequests[] = {
-            {"__ZN34AppleGFXHDAFunctionGroupATI_Tahiti10gMetaClassE", this->orgFunctionGroupTahiti},
-            {"__ZN26AppleGFXHDAWidget_1002AAA010gMetaClassE", this->orgWidget1002AAA0},
-        };
-        PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "AGFXHDA",
-            "Failed to solve symbols");
+    const UInt32 probeFind = Navi10HDMIID;
+    const UInt32 probeRepl = NRed::singleton().getAttributes().isRenoir() ? RenoirHDMIID : RavenHDMIID;
+    const LookupPatchPlus patch = {&kextAppleGFXHDA, reinterpret_cast<const UInt8 *>(&probeFind),
+        reinterpret_cast<const UInt8 *>(&probeRepl), sizeof(probeFind), 1};
+    PANIC_COND(!patch.apply(patcher, slide, size), "AGFXHDA", "Failed to apply patch for HDMI controller probe");
 
-        RouteRequestPlus requests[] = {
-            {"__ZN31AppleGFXHDAFunctionGroupFactory27createAppleHDAFunctionGroupEP11DevIdStruct",
-                wrapCreateAppleHDAFunctionGroup, this->orgCreateAppleHDAFunctionGroup},
-            {"__ZN24AppleGFXHDAWidgetFactory20createAppleHDAWidgetEP11DevIdStruct", wrapCreateAppleHDAWidget,
-                this->orgCreateAppleHDAWidget},
-        };
-        PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "AGFXHDA",
-            "Failed to route symbols");
-    }
+    SolveRequestPlus solveRequests[] = {
+        {"__ZN34AppleGFXHDAFunctionGroupATI_Tahiti10gMetaClassE", this->orgFunctionGroupTahiti},
+        {"__ZN26AppleGFXHDAWidget_1002AAA010gMetaClassE", this->orgWidget1002AAA0},
+    };
+    PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "AGFXHDA",
+        "Failed to solve symbols");
+
+    RouteRequestPlus requests[] = {
+        {"__ZN31AppleGFXHDAFunctionGroupFactory27createAppleHDAFunctionGroupEP11DevIdStruct",
+            wrapCreateAppleHDAFunctionGroup, this->orgCreateAppleHDAFunctionGroup},
+        {"__ZN24AppleGFXHDAWidgetFactory20createAppleHDAWidgetEP11DevIdStruct", wrapCreateAppleHDAWidget,
+            this->orgCreateAppleHDAWidget},
+    };
+    PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "AGFXHDA", "Failed to route symbols");
 }
 
 void *AppleGFXHDA::wrapCreateAppleHDAFunctionGroup(void *devId) {

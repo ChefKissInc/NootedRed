@@ -49,11 +49,6 @@ static const UInt8 kIRQMGRWriteRegisterPattern1404[] = {0x55, 0x48, 0x89, 0xE5, 
     0x41, 0x54, 0x53, 0x50, 0x89, 0xD3, 0x49, 0x89, 0xF7, 0x49, 0x89, 0xFE, 0x48, 0x8B, 0x87, 0xB0, 0x00, 0x00, 0x00,
     0x48, 0x85, 0xC0};
 
-static const UInt8 kDpReceiverPowerCtrlPattern[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x54, 0x53,
-    0x48, 0x83, 0xEC, 0x10, 0x89, 0xF3, 0xB0, 0x02, 0x28, 0xD8};
-static const UInt8 kDpReceiverPowerCtrlPattern1404[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x54,
-    0x53, 0x48, 0x83, 0xEC, 0x10, 0x41, 0x89, 0xF7, 0xB0, 0x02, 0x44, 0x28, 0xF8};
-
 static const UInt8 kDmLoggerWritePattern[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54,
     0x53, 0x48, 0x81, 0xEC, 0x88, 0x04, 0x00, 0x00};
 
@@ -128,20 +123,6 @@ static const UInt8 kGetVendorInfoPatched1404[] = {0x00, 0x00, 0x00, 0x00, 0x00, 
     0x00, 0x00, 0x00};
 static const UInt8 kGetVendorInfoPatchedMask1404[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF,
     0x00, 0x00, 0x00};
-
-// Remove new FB count condition so we can restore the original behaviour before Ventura.
-static const UInt8 kControllerPowerUpOriginal[] = {0x38, 0xC8, 0x0F, 0x42, 0xC8, 0x88, 0x8F, 0xBC, 0x00, 0x00, 0x00,
-    0x72, 0x00};
-static const UInt8 kControllerPowerUpOriginalMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0x00};
-static const UInt8 kControllerPowerUpReplace[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0xEB, 0x00};
-static const UInt8 kControllerPowerUpReplaceMask[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0xFF, 0x00};
-
-// Remove new problematic Ventura pixel clock multiplier calculation which causes timing validation mishaps.
-static const UInt8 kValidateDetailedTimingOriginal[] = {0x66, 0x0F, 0x2E, 0xC1, 0x76, 0x06, 0xF2, 0x0F, 0x5E, 0xC1};
-static const UInt8 kValidateDetailedTimingPatched[] = {0x66, 0x0F, 0x2E, 0xC1, 0x66, 0x90, 0xF2, 0x0F, 0x5E, 0xC1};
 
 // Enable all Display Core logs
 static const UInt8 kInitPopulateDcInitDataOriginal[] = {0x48, 0xB9, 0xDB, 0x1B, 0xFF, 0x7E, 0x10, 0x00, 0x00, 0x00};
@@ -224,249 +205,209 @@ void X6000FB::init() {
 }
 
 void X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
-    if (kextRadeonX6000Framebuffer.loadIndex == id) {
-        NRed::singleton().hwLateInit();
+    if (kextRadeonX6000Framebuffer.loadIndex != id) { return; }
 
-        CAILAsicCapsEntry *orgAsicCapsTable;
-        SolveRequestPlus cailAsicCapsSolveRequest {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable,
-            kCailAsicCapsTablePattern};
-        PANIC_COND(!cailAsicCapsSolveRequest.solve(patcher, id, slide, size), "X6000FB",
-            "Failed to resolve CAIL_ASIC_CAPS_TABLE");
+    NRed::singleton().hwLateInit();
 
-        if (NRed::singleton().getAttributes().isVenturaAndLater()) {
-            SolveRequestPlus solveRequest {
-                "__ZNK34AMDRadeonX6000_AmdRadeonController18messageAcceleratorE25_eAMDAccelIOFBRequestTypePvS1_S1_",
-                this->orgMessageAccelerator};
-            PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "X6000FB",
-                "Failed to resolve messageAccelerator");
-        }
+    CAILAsicCapsEntry *orgAsicCapsTable;
+    SolveRequestPlus cailAsicCapsSolveRequest {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable,
+        kCailAsicCapsTablePattern};
+    PANIC_COND(!cailAsicCapsSolveRequest.solve(patcher, id, slide, size), "X6000FB",
+        "Failed to resolve CAIL_ASIC_CAPS_TABLE");
 
+    RouteRequestPlus requests[] = {
+        {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", wrapPopulateVramInfo, kPopulateVramInfoPattern,
+            kPopulateVramInfoPatternMask},
+        {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
+        {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
+            this->orgGetNumberOfConnectors, kGetNumberOfConnectorsPattern, kGetNumberOfConnectorsPatternMask},
+    };
+    PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X6000FB", "Failed to route symbols");
+
+    if (NRed::singleton().getAttributes().isBigSurAndLater()) {
+        RouteRequestPlus request = {"__ZN32AMDRadeonX6000_AmdRegisterAccess20createRegisterAccessERNS_8InitDataE",
+            wrapCreateRegisterAccess, this->orgCreateRegisterAccess};
+        PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route createRegisterAccess");
+    }
+
+    if (ADDPR(debugEnabled)) {
         RouteRequestPlus requests[] = {
-            {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", wrapPopulateVramInfo,
-                kPopulateVramInfoPattern, kPopulateVramInfoPatternMask},
-            {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", wrapGetEnumeratedRevision},
-            {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
-                this->orgGetNumberOfConnectors, kGetNumberOfConnectorsPattern, kGetNumberOfConnectorsPatternMask},
+            {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo,
+                this->orgInitWithPciInfo},
+            {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", wrapDoGPUPanic},
+            {"_dm_logger_write", wrapDmLoggerWrite, kDmLoggerWritePattern},
         };
         PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X6000FB",
-            "Failed to route symbols");
+            "Failed to route debug symbols");
+    }
 
-        if (NRed::singleton().getAttributes().isBigSurAndLater()) {
-            RouteRequestPlus request = {"__ZN32AMDRadeonX6000_AmdRegisterAccess20createRegisterAccessERNS_8InitDataE",
-                wrapCreateRegisterAccess, this->orgCreateRegisterAccess};
-            PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route createRegisterAccess");
-        }
-
-        if (checkKernelArgument("-NRedDPDelay")) {
-            if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
-                RouteRequestPlus request {"_dp_receiver_power_ctrl", wrapDpReceiverPowerCtrl,
-                    this->orgDpReceiverPowerCtrl, kDpReceiverPowerCtrlPattern1404};
-                PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
-                    "Failed to route dp_receiver_power_ctrl (14.4+)");
-            } else {
-                RouteRequestPlus request {"_dp_receiver_power_ctrl", wrapDpReceiverPowerCtrl,
-                    this->orgDpReceiverPowerCtrl, kDpReceiverPowerCtrlPattern};
-                PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
-                    "Failed to route dp_receiver_power_ctrl");
-            }
-        }
-
-        if (ADDPR(debugEnabled)) {
-            RouteRequestPlus requests[] = {
-                {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo,
-                    this->orgInitWithPciInfo},
-                {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", wrapDoGPUPanic},
-                {"_dm_logger_write", wrapDmLoggerWrite, kDmLoggerWritePattern},
-            };
-            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X6000FB",
-                "Failed to route debug symbols");
-        }
-
-        if (NRed::singleton().getAttributes().isRenoir()) {
-            RouteRequestPlus request {"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware,
-                this->orgIH40IVRingInitHardware, kIH40IVRingInitHardwarePattern, kIH40IVRingInitHardwarePatternMask};
-            PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
-                "Failed to route IH_4_0_IVRing_InitHardware");
-            if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
-                RouteRequestPlus request {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister,
-                    this->orgIRQMGRWriteRegister, kIRQMGRWriteRegisterPattern1404};
-                PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
-                    "Failed to route IRQMGR_WriteRegister (14.4+)");
-            } else {
-                RouteRequestPlus request {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister,
-                    this->orgIRQMGRWriteRegister, kIRQMGRWriteRegisterPattern};
-                PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route IRQMGR_WriteRegister");
-            }
-        } else {
-            RouteRequestPlus request {"__ZN18AmdDalDmcubService18createDmcubServiceERKNS_13DmcubInitInfoE",
-                wrapCreateDmcubService, kCreateDmcubServicePattern};
-            PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route createDmcubService");
-        }
-
-        if (NRed::singleton().getAttributes().isVenturaAndLater()) {
-            RouteRequestPlus request {"__ZN34AMDRadeonX6000_AmdRadeonController7powerUpEv", wrapControllerPowerUp,
-                this->orgControllerPowerUp};
-            PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route powerUp");
-        }
-
-        const LookupPatchPlus patch {&kextRadeonX6000Framebuffer, kPopulateDeviceInfoOriginal, kPopulateDeviceInfoMask,
-            kPopulateDeviceInfoPatched, kPopulateDeviceInfoMask, 1};
-        PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply populateDeviceInfo patch");
-
+    if (NRed::singleton().getAttributes().isRenoir()) {
+        RouteRequestPlus request {"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware,
+            this->orgIH40IVRingInitHardware, kIH40IVRingInitHardwarePattern, kIH40IVRingInitHardwarePatternMask};
+        PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route IH_4_0_IVRing_InitHardware");
         if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
-            const LookupPatchPlus patches[] = {
-                {&kextRadeonX6000Framebuffer, kGetFirmwareInfoNullCheckOriginal1404,
-                    kGetFirmwareInfoNullCheckOriginalMask1404, kGetFirmwareInfoNullCheckPatched1404,
-                    kGetFirmwareInfoNullCheckPatchedMask1404, 1},
-                {&kextRadeonX6000Framebuffer, kGetVendorInfoOriginal1404, kGetVendorInfoMask1404,
-                    kGetVendorInfoPatched1404, kGetVendorInfoPatchedMask1404, 1},
-            };
-            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000FB",
-                "Failed to apply patches (14.4)");
+            RouteRequestPlus request {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister, this->orgIRQMGRWriteRegister,
+                kIRQMGRWriteRegisterPattern1404};
+            PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
+                "Failed to route IRQMGR_WriteRegister (14.4+)");
         } else {
-            const LookupPatchPlus patches[] = {
-                {&kextRadeonX6000Framebuffer, kGetFirmwareInfoNullCheckOriginal, kGetFirmwareInfoNullCheckOriginalMask,
-                    kGetFirmwareInfoNullCheckPatched, kGetFirmwareInfoNullCheckPatchedMask, 1},
-                {&kextRadeonX6000Framebuffer, kGetVendorInfoOriginal, kGetVendorInfoMask, kGetVendorInfoPatched,
-                    kGetVendorInfoPatchedMask, 1},
-            };
-            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000FB", "Failed to apply patches");
+            RouteRequestPlus request {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister, this->orgIRQMGRWriteRegister,
+                kIRQMGRWriteRegisterPattern};
+            PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route IRQMGR_WriteRegister");
         }
+    } else {
+        RouteRequestPlus request {"__ZN18AmdDalDmcubService18createDmcubServiceERKNS_13DmcubInitInfoE",
+            wrapCreateDmcubService, kCreateDmcubServicePattern};
+        PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route createDmcubService");
+    }
+
+    const LookupPatchPlus patch {&kextRadeonX6000Framebuffer, kPopulateDeviceInfoOriginal, kPopulateDeviceInfoMask,
+        kPopulateDeviceInfoPatched, kPopulateDeviceInfoMask, 1};
+    PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply populateDeviceInfo patch");
+
+    if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
+        const LookupPatchPlus patches[] = {
+            {&kextRadeonX6000Framebuffer, kGetFirmwareInfoNullCheckOriginal1404,
+                kGetFirmwareInfoNullCheckOriginalMask1404, kGetFirmwareInfoNullCheckPatched1404,
+                kGetFirmwareInfoNullCheckPatchedMask1404, 1},
+            {&kextRadeonX6000Framebuffer, kGetVendorInfoOriginal1404, kGetVendorInfoMask1404, kGetVendorInfoPatched1404,
+                kGetVendorInfoPatchedMask1404, 1},
+        };
+        PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000FB",
+            "Failed to apply patches (14.4)");
+    } else {
+        const LookupPatchPlus patches[] = {
+            {&kextRadeonX6000Framebuffer, kGetFirmwareInfoNullCheckOriginal, kGetFirmwareInfoNullCheckOriginalMask,
+                kGetFirmwareInfoNullCheckPatched, kGetFirmwareInfoNullCheckPatchedMask, 1},
+            {&kextRadeonX6000Framebuffer, kGetVendorInfoOriginal, kGetVendorInfoMask, kGetVendorInfoPatched,
+                kGetVendorInfoPatchedMask, 1},
+        };
+        PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000FB", "Failed to apply patches");
+    }
+
+    if (NRed::singleton().getAttributes().isCatalina()) {
+        const LookupPatchPlus patch {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckOriginal1015,
+            kAmdAtomVramInfoNullCheckOriginalMask1015, kAmdAtomVramInfoNullCheckPatched1015, 1};
+        PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply null check patch");
+    } else {
+        const LookupPatchPlus patches[] = {
+            {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckOriginal, kAmdAtomVramInfoNullCheckPatched, 1},
+            {&kextRadeonX6000Framebuffer, kAmdAtomPspDirectoryNullCheckOriginal, kAmdAtomPspDirectoryNullCheckPatched,
+                1},
+        };
+        PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000FB",
+            "Failed to apply null check patches");
+    }
+
+    if (NRed::singleton().getAttributes().isRenoir()) {
+        const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kInitializeDmcubServices1Original,
+            kInitializeDmcubServices1Patched, 1};
+        PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
+            "Failed to apply initializeDmcubServices family id patch");
+        if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
+            const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kInitializeDmcubServices2Original1404,
+                kInitializeDmcubServices2Patched1404, 1};
+            PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
+                "Failed to apply initializeDmcubServices ASIC patch (14.4+)");
+        } else {
+            const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kInitializeDmcubServices2Original,
+                kInitializeDmcubServices2Patched, 1};
+            PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
+                "Failed to apply initializeDmcubServices ASIC patch");
+        }
+    }
+
+    PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "X6000FB",
+        "Failed to enable kernel writing");
+    orgAsicCapsTable->familyId = AMDGPU_FAMILY_RAVEN;
+    orgAsicCapsTable->caps = NRed::singleton().getAttributes().isRenoir() ? ddiCapsRenoir : ddiCapsRaven;
+    orgAsicCapsTable->deviceId = NRed::singleton().getDeviceID();
+    orgAsicCapsTable->revision = NRed::singleton().getDevRevision();
+    orgAsicCapsTable->extRevision =
+        static_cast<UInt32>(NRed::singleton().getEnumRevision()) + NRed::singleton().getDevRevision();
+    orgAsicCapsTable->pciRevision = NRed::singleton().getPciRevision();
+    MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
+    DBGLOG("X6000FB", "Applied DDI Caps patches");
+
+    // XX: DCN 2 and newer have 6 display pipes, while DCN 1 (which is what Raven has) has only 4.
+    // We need to patch the kext to create only 4 cursors, links and underflow trackers.
+    if (NRed::singleton().getAttributes().isRaven()) {
+        auto *const orgCreateControllerServices = patcher.solveSymbol<void *>(id,
+            "__ZN40AMDRadeonX6000_AmdRadeonControllerNavi1024createControllerServicesEv", slide, size);
+        PANIC_COND(orgCreateControllerServices == nullptr, "X6000FB", "Failed to solve createControllerServices");
+
+        auto *const orgSetupCursors =
+            patcher.solveSymbol<void *>(id, "__ZN34AMDRadeonX6000_AmdRadeonController12setupCursorsEv", slide, size);
+        PANIC_COND(orgSetupCursors == nullptr, "X6000FB", "Failed to solve setupCursors");
+
+        auto *const orgCreateLinks =
+            patcher.solveSymbol<void *>(id, "__ZN34AMDRadeonX6000_AmdRadeonController11createLinksEv", slide, size);
+        PANIC_COND(orgCreateLinks == nullptr, "X6000FB", "Failed to solve createLinks");
 
         if (NRed::singleton().getAttributes().isCatalina()) {
-            const LookupPatchPlus patch {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckOriginal1015,
-                kAmdAtomVramInfoNullCheckOriginalMask1015, kAmdAtomVramInfoNullCheckPatched1015, 1};
-            PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply null check patch");
+            PANIC_COND(!KernelPatcher::findAndReplaceWithMask(orgCreateControllerServices, PAGE_SIZE,
+                           kCreateControllerServicesOriginal1015, kCreateControllerServicesOriginalMask1015,
+                           kCreateControllerServicesPatched1015, kCreateControllerServicesPatchedMask1015, 1, 0),
+                "X6000FB", "Failed to apply createControllerServices patch (10.15)");
         } else {
-            const LookupPatchPlus patches[] = {
-                {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckOriginal, kAmdAtomVramInfoNullCheckPatched, 1},
-                {&kextRadeonX6000Framebuffer, kAmdAtomPspDirectoryNullCheckOriginal,
-                    kAmdAtomPspDirectoryNullCheckPatched, 1},
-            };
-            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000FB",
-                "Failed to apply null check patches");
+            PANIC_COND(!KernelPatcher::findAndReplaceWithMask(orgCreateControllerServices, PAGE_SIZE,
+                           kCreateControllerServicesOriginal, kCreateControllerServicesOriginalMask,
+                           kCreateControllerServicesPatched, kCreateControllerServicesPatchedMask, 2, 0),
+                "X6000FB", "Failed to apply createControllerServices patch");
         }
 
-        if (NRed::singleton().getAttributes().isVenturaAndLater()) {
-            const LookupPatchPlus patches[] = {
-                {&kextRadeonX6000Framebuffer, kControllerPowerUpOriginal, kControllerPowerUpOriginalMask,
-                    kControllerPowerUpReplace, kControllerPowerUpReplaceMask, 1},
-                {&kextRadeonX6000Framebuffer, kValidateDetailedTimingOriginal, kValidateDetailedTimingPatched, 1},
-            };
-            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000FB",
-                "Failed to apply logic revert patches");
+        if (NRed::singleton().getAttributes().isMontereyAndLater()) {
+            PANIC_COND(!KernelPatcher::findAndReplaceWithMask(orgSetupCursors, PAGE_SIZE, kSetupCursorsOriginal12,
+                           kSetupCursorsOriginalMask12, kSetupCursorsPatched12, kSetupCursorsPatchedMask12, 1, 0),
+                "X6000FB", "Failed to apply setupCursors patch (12.0)");
+        } else {
+            PANIC_COND(!KernelPatcher::findAndReplaceWithMask(orgSetupCursors, PAGE_SIZE, kSetupCursorsOriginal,
+                           kSetupCursorsOriginalMask, kSetupCursorsPatched, kSetupCursorsPatchedMask, 1, 0),
+                "X6000FB", "Failed to apply setupCursors patch");
         }
 
-        if (NRed::singleton().getAttributes().isRenoir()) {
-            const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kInitializeDmcubServices1Original,
-                kInitializeDmcubServices1Patched, 1};
-            PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
-                "Failed to apply initializeDmcubServices family id patch");
-            if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
-                const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kInitializeDmcubServices2Original1404,
-                    kInitializeDmcubServices2Patched1404, 1};
-                PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
-                    "Failed to apply initializeDmcubServices ASIC patch (14.4+)");
-            } else {
-                const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kInitializeDmcubServices2Original,
-                    kInitializeDmcubServices2Patched, 1};
-                PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
-                    "Failed to apply initializeDmcubServices ASIC patch");
-            }
+        PANIC_COND(!KernelPatcher::findAndReplaceWithMask(orgCreateLinks, PAGE_SIZE, kCreateLinksOriginal,
+                       kCreateLinksOriginalMask, kCreateLinksPatched, kCreateLinksPatchedMask, 1, 0),
+            "X6000FB", "Failed to apply createLinks patch");
+    }
+
+    if (ADDPR(debugEnabled)) {
+        auto *logEnableMaskMinors =
+            patcher.solveSymbol<void *>(id, "__ZN14AmdDalDmLogger19LogEnableMaskMinorsE", slide, size);
+        patcher.clearError();
+
+        if (logEnableMaskMinors == nullptr) {
+            size_t offset = 0;
+            PANIC_COND(!KernelPatcher::findPattern(kDalDmLoggerShouldLogPartialPattern,
+                           kDalDmLoggerShouldLogPartialPatternMask, arrsize(kDalDmLoggerShouldLogPartialPattern),
+                           reinterpret_cast<const void *>(slide), size, &offset),
+                "X6000FB", "Failed to solve LogEnableMaskMinors");
+            auto *instAddr = reinterpret_cast<UInt8 *>(slide + offset);
+            // inst + instSize + imm32 = addr
+            logEnableMaskMinors = instAddr + 7 + *reinterpret_cast<SInt32 *>(instAddr + 3);
         }
 
         PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "X6000FB",
             "Failed to enable kernel writing");
-        orgAsicCapsTable->familyId = AMDGPU_FAMILY_RAVEN;
-        orgAsicCapsTable->caps = NRed::singleton().getAttributes().isRenoir() ? ddiCapsRenoir : ddiCapsRaven;
-        orgAsicCapsTable->deviceId = NRed::singleton().getDeviceID();
-        orgAsicCapsTable->revision = NRed::singleton().getDevRevision();
-        orgAsicCapsTable->extRevision =
-            static_cast<UInt32>(NRed::singleton().getEnumRevision()) + NRed::singleton().getDevRevision();
-        orgAsicCapsTable->pciRevision = NRed::singleton().getPciRevision();
+        memset(logEnableMaskMinors, 0xFF, 0x80);    // Enable all DalDmLogger logs
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
-        DBGLOG("X6000FB", "Applied DDI Caps patches");
 
-        // XX: DCN 2 and newer have 6 display pipes, while DCN 1 (which is what Raven has) has only 4.
-        // We need to patch the kext to create only 4 cursors, links and underflow trackers.
-        if (NRed::singleton().getAttributes().isRaven()) {
-            auto *const orgCreateControllerServices = patcher.solveSymbol<void *>(id,
-                "__ZN40AMDRadeonX6000_AmdRadeonControllerNavi1024createControllerServicesEv", slide, size);
-            PANIC_COND(orgCreateControllerServices == nullptr, "X6000FB", "Failed to solve createControllerServices");
-
-            auto *const orgSetupCursors = patcher.solveSymbol<void *>(id,
-                "__ZN34AMDRadeonX6000_AmdRadeonController12setupCursorsEv", slide, size);
-            PANIC_COND(orgSetupCursors == nullptr, "X6000FB", "Failed to solve setupCursors");
-
-            auto *const orgCreateLinks =
-                patcher.solveSymbol<void *>(id, "__ZN34AMDRadeonX6000_AmdRadeonController11createLinksEv", slide, size);
-            PANIC_COND(orgCreateLinks == nullptr, "X6000FB", "Failed to solve createLinks");
-
-            if (NRed::singleton().getAttributes().isCatalina()) {
-                PANIC_COND(!KernelPatcher::findAndReplaceWithMask(orgCreateControllerServices, PAGE_SIZE,
-                               kCreateControllerServicesOriginal1015, kCreateControllerServicesOriginalMask1015,
-                               kCreateControllerServicesPatched1015, kCreateControllerServicesPatchedMask1015, 1, 0),
-                    "X6000FB", "Failed to apply createControllerServices patch (10.15)");
-            } else {
-                PANIC_COND(!KernelPatcher::findAndReplaceWithMask(orgCreateControllerServices, PAGE_SIZE,
-                               kCreateControllerServicesOriginal, kCreateControllerServicesOriginalMask,
-                               kCreateControllerServicesPatched, kCreateControllerServicesPatchedMask, 2, 0),
-                    "X6000FB", "Failed to apply createControllerServices patch");
-            }
-
-            if (NRed::singleton().getAttributes().isMontereyAndLater()) {
-                PANIC_COND(!KernelPatcher::findAndReplaceWithMask(orgSetupCursors, PAGE_SIZE, kSetupCursorsOriginal12,
-                               kSetupCursorsOriginalMask12, kSetupCursorsPatched12, kSetupCursorsPatchedMask12, 1, 0),
-                    "X6000FB", "Failed to apply setupCursors patch (12.0)");
-            } else {
-                PANIC_COND(!KernelPatcher::findAndReplaceWithMask(orgSetupCursors, PAGE_SIZE, kSetupCursorsOriginal,
-                               kSetupCursorsOriginalMask, kSetupCursorsPatched, kSetupCursorsPatchedMask, 1, 0),
-                    "X6000FB", "Failed to apply setupCursors patch");
-            }
-
-            PANIC_COND(!KernelPatcher::findAndReplaceWithMask(orgCreateLinks, PAGE_SIZE, kCreateLinksOriginal,
-                           kCreateLinksOriginalMask, kCreateLinksPatched, kCreateLinksPatchedMask, 1, 0),
-                "X6000FB", "Failed to apply createLinks patch");
-        }
-
-        if (ADDPR(debugEnabled)) {
-            auto *logEnableMaskMinors =
-                patcher.solveSymbol<void *>(id, "__ZN14AmdDalDmLogger19LogEnableMaskMinorsE", slide, size);
-            patcher.clearError();
-
-            if (logEnableMaskMinors == nullptr) {
-                size_t offset = 0;
-                PANIC_COND(!KernelPatcher::findPattern(kDalDmLoggerShouldLogPartialPattern,
-                               kDalDmLoggerShouldLogPartialPatternMask, arrsize(kDalDmLoggerShouldLogPartialPattern),
-                               reinterpret_cast<const void *>(slide), size, &offset),
-                    "X6000FB", "Failed to solve LogEnableMaskMinors");
-                auto *instAddr = reinterpret_cast<UInt8 *>(slide + offset);
-                // inst + instSize + imm32 = addr
-                logEnableMaskMinors = instAddr + 7 + *reinterpret_cast<SInt32 *>(instAddr + 3);
-            }
-
-            PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "X6000FB",
-                "Failed to enable kernel writing");
-            memset(logEnableMaskMinors, 0xFF, 0x80);    // Enable all DalDmLogger logs
-            MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
-
-            // Enable all Display Core logs
-            if (NRed::singleton().getAttributes().isCatalina()) {
-                const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kInitPopulateDcInitDataCatalinaOriginal,
-                    kInitPopulateDcInitDataCatalinaPatched, 1};
-                PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
-                    "Failed to apply populateDcInitData patch (10.15)");
-            } else {
-                const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kInitPopulateDcInitDataOriginal,
-                    kInitPopulateDcInitDataPatched, 1};
-                PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply populateDcInitData patch");
-            }
-
-            const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kBiosParserHelperInitWithDataOriginal,
-                kBiosParserHelperInitWithDataPatched, 1};
+        // Enable all Display Core logs
+        if (NRed::singleton().getAttributes().isCatalina()) {
+            const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kInitPopulateDcInitDataCatalinaOriginal,
+                kInitPopulateDcInitDataCatalinaPatched, 1};
             PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
-                "Failed to apply AmdBiosParserHelper::initWithData patch");
+                "Failed to apply populateDcInitData patch (10.15)");
+        } else {
+            const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kInitPopulateDcInitDataOriginal,
+                kInitPopulateDcInitDataPatched, 1};
+            PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply populateDcInitData patch");
         }
+
+        const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kBiosParserHelperInitWithDataOriginal,
+            kBiosParserHelperInitWithDataPatched, 1};
+        PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
+            "Failed to apply AmdBiosParserHelper::initWithData patch");
     }
 }
 
@@ -569,20 +510,6 @@ void X6000FB::wrapIRQMGRWriteRegister(void *ctx, UInt64 index, UInt32 value) {
         }
     }
     FunctionCast(wrapIRQMGRWriteRegister, singleton().orgIRQMGRWriteRegister)(ctx, index, value);
-}
-
-UInt32 X6000FB::wrapControllerPowerUp(void *that) {
-    auto &m_flags = getMember<UInt8>(that, 0x5F18);
-    auto send = (m_flags & 2) == 0;
-    m_flags |= 4;    // All framebuffers enabled
-    auto ret = FunctionCast(wrapControllerPowerUp, singleton().orgControllerPowerUp)(that);
-    if (send) { singleton().orgMessageAccelerator(that, 0x1B, nullptr, nullptr, nullptr); }
-    return ret;
-}
-
-void X6000FB::wrapDpReceiverPowerCtrl(void *link, bool power_on) {
-    FunctionCast(wrapDpReceiverPowerCtrl, singleton().orgDpReceiverPowerCtrl)(link, power_on);
-    IOSleep(250);    // Link needs a bit of delay to change power state
 }
 
 bool X6000FB::wrapInitWithPciInfo(void *that, void *pciDevice) {

@@ -109,238 +109,232 @@ void X5000HWLibs::init() {
 }
 
 void X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
-    if (kextRadeonX5000HWLibs.loadIndex == id) {
-        NRed::singleton().hwLateInit();
+    if (kextRadeonX5000HWLibs.loadIndex != id) { return; }
 
-        CAILAsicCapsEntry *orgCapsTable;
-        CAILAsicCapsInitEntry *orgCapsInitTable;
-        CAILDeviceTypeEntry *orgDeviceTypeTable;
-        DeviceCapabilityEntry *orgDevCapTable;
+    NRed::singleton().hwLateInit();
 
-        if (NRed::singleton().getAttributes().isCatalina()) {
-            orgDeviceTypeTable = nullptr;
-        } else {
-            SolveRequestPlus solveRequests[] = {
-                {"__ZL15deviceTypeTable", orgDeviceTypeTable, kDeviceTypeTablePattern},
-                {"__ZN11AMDFirmware14createFirmwareEPhjjPKc", this->orgCreateFirmware, kCreateFirmwarePattern,
-                    kCreateFirmwarePatternMask},
-                {"__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware", this->orgPutFirmware,
-                    kPutFirmwarePattern},
-            };
-            PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "HWLibs",
-                "Failed to resolve symbols");
-        }
+    CAILAsicCapsEntry *orgCapsTable;
+    CAILAsicCapsInitEntry *orgCapsInitTable;
+    CAILDeviceTypeEntry *orgDeviceTypeTable;
+    DeviceCapabilityEntry *orgDevCapTable;
 
+    if (NRed::singleton().getAttributes().isCatalina()) {
+        orgDeviceTypeTable = nullptr;
+    } else {
         SolveRequestPlus solveRequests[] = {
-            {"__ZL20CAIL_ASIC_CAPS_TABLE", orgCapsTable, kCailAsicCapsTableHWLibsPattern},
-            {"_CAILAsicCapsInitTable", orgCapsInitTable, kCAILAsicCapsInitTablePattern},
-            {"_DeviceCapabilityTbl", orgDevCapTable, kDeviceCapabilityTblPattern},
+            {"__ZL15deviceTypeTable", orgDeviceTypeTable, kDeviceTypeTablePattern},
+            {"__ZN11AMDFirmware14createFirmwareEPhjjPKc", this->orgCreateFirmware, kCreateFirmwarePattern,
+                kCreateFirmwarePatternMask},
+            {"__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware", this->orgPutFirmware,
+                kPutFirmwarePattern},
         };
         PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "HWLibs",
             "Failed to resolve symbols");
+    }
 
-        if (NRed::singleton().getAttributes().isCatalina()) {
-            RouteRequestPlus request {"__ZN16AmdTtlFwServices7getIpFwEjPKcP10_TtlFwInfo", wrapGetIpFw,
-                this->orgGetIpFw};
-            PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route getIpFw");
-        } else {
+    SolveRequestPlus solveRequests[] = {
+        {"__ZL20CAIL_ASIC_CAPS_TABLE", orgCapsTable, kCailAsicCapsTableHWLibsPattern},
+        {"_CAILAsicCapsInitTable", orgCapsInitTable, kCAILAsicCapsInitTablePattern},
+        {"_DeviceCapabilityTbl", orgDevCapTable, kDeviceCapabilityTblPattern},
+    };
+    PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "HWLibs",
+        "Failed to resolve symbols");
+
+    if (NRed::singleton().getAttributes().isCatalina()) {
+        RouteRequestPlus request {"__ZN16AmdTtlFwServices7getIpFwEjPKcP10_TtlFwInfo", wrapGetIpFw, this->orgGetIpFw};
+        PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route getIpFw");
+    } else {
+        RouteRequestPlus requests[] = {
+            {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory,
+                this->orgGetIpFw},
+            {"_psp_bootloader_is_sos_running_3_1", hwLibsGeneralFailure, kPspBootloaderIsSosRunning31Pattern},
+            {"_psp_security_feature_caps_set_3_1",
+                NRed::singleton().getAttributes().isRenoir() ? pspSecurityFeatureCapsSet12 :
+                                                               pspSecurityFeatureCapsSet10,
+                NRed::singleton().getAttributes().isVenturaAndLater() ? kPspSecurityFeatureCapsSet31Pattern13 :
+                                                                        kPspSecurityFeatureCapsSet31Pattern},
+        };
+        PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "HWLibs",
+            "Failed to route symbols (>10.15)");
+        if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
             RouteRequestPlus requests[] = {
-                {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv",
-                    wrapPopulateFirmwareDirectory, this->orgGetIpFw},
-                {"_psp_bootloader_is_sos_running_3_1", hwLibsGeneralFailure, kPspBootloaderIsSosRunning31Pattern},
-                {"_psp_security_feature_caps_set_3_1",
-                    NRed::singleton().getAttributes().isRenoir() ? pspSecurityFeatureCapsSet12 :
-                                                                   pspSecurityFeatureCapsSet10,
-                    NRed::singleton().getAttributes().isVenturaAndLater() ? kPspSecurityFeatureCapsSet31Pattern13 :
-                                                                            kPspSecurityFeatureCapsSet31Pattern},
+                {"_psp_bootloader_load_sysdrv_3_1", hwLibsNoop, kPspBootloaderLoadSysdrv31Pattern1404},
+                {"_psp_bootloader_set_ecc_mode_3_1", hwLibsNoop, kPspBootloaderSetEccMode31Pattern1404},
+                {"_psp_bootloader_load_sos_3_1", pspBootloaderLoadSos10, kPspBootloaderLoadSos31Pattern1404},
+                {"_psp_reset_3_1", hwLibsUnsupported, kPspReset31Pattern1404},
             };
             PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "HWLibs",
-                "Failed to route symbols (>10.15)");
-            if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
-                RouteRequestPlus requests[] = {
-                    {"_psp_bootloader_load_sysdrv_3_1", hwLibsNoop, kPspBootloaderLoadSysdrv31Pattern1404},
-                    {"_psp_bootloader_set_ecc_mode_3_1", hwLibsNoop, kPspBootloaderSetEccMode31Pattern1404},
-                    {"_psp_bootloader_load_sos_3_1", pspBootloaderLoadSos10, kPspBootloaderLoadSos31Pattern1404},
-                    {"_psp_reset_3_1", hwLibsUnsupported, kPspReset31Pattern1404},
-                };
-                PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "HWLibs",
-                    "Failed to route symbols (>=14.4)");
-            } else {
-                RouteRequestPlus requests[] = {
-                    {"_psp_bootloader_load_sysdrv_3_1", hwLibsNoop, kPspBootloaderLoadSysdrv31Pattern,
-                        kPspBootloaderLoadSysdrv31PatternMask},
-                    {"_psp_bootloader_set_ecc_mode_3_1", hwLibsNoop, kPspBootloaderSetEccMode31Pattern},
-                    {"_psp_bootloader_load_sos_3_1", pspBootloaderLoadSos10, kPspBootloaderLoadSos31Pattern,
-                        kPspBootloaderLoadSos31PatternMask},
-                    {"_psp_reset_3_1", hwLibsUnsupported, kPspReset31Pattern},
-                };
-                PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "HWLibs",
-                    "Failed to route symbols (<14.4)");
-            }
-        }
-
-        if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
-            RouteRequestPlus request = {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit,
-                kPspCmdKmSubmitPattern1404, kPspCmdKmSubmitPatternMask1404};
-            PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route psp_cmd_km_submit (14.4+)");
+                "Failed to route symbols (>=14.4)");
         } else {
-            RouteRequestPlus request = {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit,
-                kPspCmdKmSubmitPattern, kPspCmdKmSubmitPatternMask};
-            PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route psp_cmd_km_submit");
+            RouteRequestPlus requests[] = {
+                {"_psp_bootloader_load_sysdrv_3_1", hwLibsNoop, kPspBootloaderLoadSysdrv31Pattern,
+                    kPspBootloaderLoadSysdrv31PatternMask},
+                {"_psp_bootloader_set_ecc_mode_3_1", hwLibsNoop, kPspBootloaderSetEccMode31Pattern},
+                {"_psp_bootloader_load_sos_3_1", pspBootloaderLoadSos10, kPspBootloaderLoadSos31Pattern,
+                    kPspBootloaderLoadSos31PatternMask},
+                {"_psp_reset_3_1", hwLibsUnsupported, kPspReset31Pattern},
+            };
+            PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "HWLibs",
+                "Failed to route symbols (<14.4)");
         }
+    }
 
-        RouteRequestPlus request = {"_smu_9_0_1_create_function_pointer_list", wrapSmu901CreateFunctionPointerList,
-            NRed::singleton().getAttributes().isVenturaAndLater() ? kSmu901CreateFunctionPointerListPattern13 :
-                                                                    kSmu901CreateFunctionPointerListPattern,
-            kSmu901CreateFunctionPointerListPatternMask};
-        PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs",
-            "Failed to route smu_9_0_1_create_function_pointer_list");
+    if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
+        RouteRequestPlus request = {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit,
+            kPspCmdKmSubmitPattern1404, kPspCmdKmSubmitPatternMask1404};
+        PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route psp_cmd_km_submit (14.4+)");
+    } else {
+        RouteRequestPlus request = {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit,
+            kPspCmdKmSubmitPattern, kPspCmdKmSubmitPatternMask};
+        PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route psp_cmd_km_submit");
+    }
 
-        if (ADDPR(debugEnabled)) {
-            RouteRequestPlus request = {"__ZN14AmdTtlServices27cosReadConfigurationSettingEPvP36cos_read_configuration_"
-                                        "setting_inputP37cos_read_configuration_setting_output",
-                wrapCosReadConfigurationSetting, this->orgCosReadConfigurationSetting,
-                kCosReadConfigurationSettingPattern, kCosReadConfigurationSettingPatternMask};
-            PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs",
-                "Failed to route cosReadConfigurationSetting");
+    RouteRequestPlus request = {"_smu_9_0_1_create_function_pointer_list", wrapSmu901CreateFunctionPointerList,
+        NRed::singleton().getAttributes().isVenturaAndLater() ? kSmu901CreateFunctionPointerListPattern13 :
+                                                                kSmu901CreateFunctionPointerListPattern,
+        kSmu901CreateFunctionPointerListPatternMask};
+    PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs",
+        "Failed to route smu_9_0_1_create_function_pointer_list");
+
+    if (ADDPR(debugEnabled)) {
+        RouteRequestPlus request = {"__ZN14AmdTtlServices27cosReadConfigurationSettingEPvP36cos_read_configuration_"
+                                    "setting_inputP37cos_read_configuration_setting_output",
+            wrapCosReadConfigurationSetting, this->orgCosReadConfigurationSetting, kCosReadConfigurationSettingPattern,
+            kCosReadConfigurationSettingPatternMask};
+        PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route cosReadConfigurationSetting");
+    }
+
+    PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "HWLibs",
+        "Failed to enable kernel writing");
+    if (orgDeviceTypeTable) { *orgDeviceTypeTable = {.deviceId = NRed::singleton().getDeviceID(), .deviceType = 6}; }
+
+    auto targetDeviceId = NRed::singleton().getAttributes().isRenoir() ? 0x1636 : NRed::singleton().getDeviceID();
+    for (; orgCapsInitTable->deviceId != 0xFFFFFFFF; orgCapsInitTable++) {
+        if (orgCapsInitTable->familyId == AMDGPU_FAMILY_RAVEN && orgCapsInitTable->deviceId == targetDeviceId) {
+            orgCapsInitTable->deviceId = NRed::singleton().getDeviceID();
+            orgCapsInitTable->revision = NRed::singleton().getDevRevision();
+            orgCapsInitTable->extRevision =
+                static_cast<UInt64>(NRed::singleton().getEnumRevision()) + NRed::singleton().getDevRevision();
+            orgCapsInitTable->pciRevision = NRed::singleton().getPciRevision();
+            *orgCapsTable = {
+                .familyId = AMDGPU_FAMILY_RAVEN,
+                .deviceId = NRed::singleton().getDeviceID(),
+                .revision = NRed::singleton().getDevRevision(),
+                .extRevision =
+                    static_cast<UInt32>(NRed::singleton().getEnumRevision()) + NRed::singleton().getDevRevision(),
+                .pciRevision = NRed::singleton().getPciRevision(),
+                .caps = orgCapsInitTable->caps,
+            };
+            break;
         }
+    }
+    PANIC_COND(orgCapsInitTable->deviceId == 0xFFFFFFFF, "HWLibs", "Failed to find init caps table entry");
+    for (; orgDevCapTable->familyId; orgDevCapTable++) {
+        if (orgDevCapTable->familyId == AMDGPU_FAMILY_RAVEN && orgDevCapTable->deviceId == targetDeviceId) {
+            orgDevCapTable->deviceId = NRed::singleton().getDeviceID();
+            orgDevCapTable->extRevision =
+                static_cast<UInt64>(NRed::singleton().getEnumRevision()) + NRed::singleton().getDevRevision();
+            orgDevCapTable->revision = DEVICE_CAP_ENTRY_REV_DONT_CARE;
+            orgDevCapTable->enumRevision = DEVICE_CAP_ENTRY_REV_DONT_CARE;
 
-        PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "HWLibs",
-            "Failed to enable kernel writing");
-        if (orgDeviceTypeTable) {
-            *orgDeviceTypeTable = {.deviceId = NRed::singleton().getDeviceID(), .deviceType = 6};
+            orgDevCapTable->asicGoldenSettings->goldenSettings =
+                NRed::singleton().getAttributes().isRaven2() ? goldenSettingsRaven2 :
+                NRed::singleton().getAttributes().isRenoir() ? goldenSettingsRenoir :
+                                                               goldenSettingsRaven;
+
+            break;
         }
+    }
+    PANIC_COND(orgDevCapTable->familyId == 0, "HWLibs", "Failed to find device capability table entry");
+    MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
+    DBGLOG("HWLibs", "Applied DDI Caps patches");
 
-        auto targetDeviceId = NRed::singleton().getAttributes().isRenoir() ? 0x1636 : NRed::singleton().getDeviceID();
-        for (; orgCapsInitTable->deviceId != 0xFFFFFFFF; orgCapsInitTable++) {
-            if (orgCapsInitTable->familyId == AMDGPU_FAMILY_RAVEN && orgCapsInitTable->deviceId == targetDeviceId) {
-                orgCapsInitTable->deviceId = NRed::singleton().getDeviceID();
-                orgCapsInitTable->revision = NRed::singleton().getDevRevision();
-                orgCapsInitTable->extRevision =
-                    static_cast<UInt64>(NRed::singleton().getEnumRevision()) + NRed::singleton().getDevRevision();
-                orgCapsInitTable->pciRevision = NRed::singleton().getPciRevision();
-                *orgCapsTable = {
-                    .familyId = AMDGPU_FAMILY_RAVEN,
-                    .deviceId = NRed::singleton().getDeviceID(),
-                    .revision = NRed::singleton().getDevRevision(),
-                    .extRevision =
-                        static_cast<UInt32>(NRed::singleton().getEnumRevision()) + NRed::singleton().getDevRevision(),
-                    .pciRevision = NRed::singleton().getPciRevision(),
-                    .caps = orgCapsInitTable->caps,
-                };
-                break;
-            }
-        }
-        PANIC_COND(orgCapsInitTable->deviceId == 0xFFFFFFFF, "HWLibs", "Failed to find init caps table entry");
-        for (; orgDevCapTable->familyId; orgDevCapTable++) {
-            if (orgDevCapTable->familyId == AMDGPU_FAMILY_RAVEN && orgDevCapTable->deviceId == targetDeviceId) {
-                orgDevCapTable->deviceId = NRed::singleton().getDeviceID();
-                orgDevCapTable->extRevision =
-                    static_cast<UInt64>(NRed::singleton().getEnumRevision()) + NRed::singleton().getDevRevision();
-                orgDevCapTable->revision = DEVICE_CAP_ENTRY_REV_DONT_CARE;
-                orgDevCapTable->enumRevision = DEVICE_CAP_ENTRY_REV_DONT_CARE;
-
-                orgDevCapTable->asicGoldenSettings->goldenSettings =
-                    NRed::singleton().getAttributes().isRaven2() ? goldenSettingsRaven2 :
-                    NRed::singleton().getAttributes().isRenoir() ? goldenSettingsRenoir :
-                                                                   goldenSettingsRaven;
-
-                break;
-            }
-        }
-        PANIC_COND(orgDevCapTable->familyId == 0, "HWLibs", "Failed to find device capability table entry");
-        MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
-        DBGLOG("HWLibs", "Applied DDI Caps patches");
-
-        if (!NRed::singleton().getAttributes().isCatalina()) {
-            const LookupPatchPlus patch {&kextRadeonX5000HWLibs, kGcSwInitOriginal, kGcSwInitOriginalMask,
-                kGcSwInitPatched, kGcSwInitPatchedMask, 1};
-            PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply gc_sw_init spoof patch");
-            if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
-                const LookupPatchPlus patches[] = {
-                    {&kextRadeonX5000HWLibs, kPspSwInit1Original1404, kPspSwInit1Patched1404, 1},
-                    {&kextRadeonX5000HWLibs, kPspSwInit2Original1404, kPspSwInit2OriginalMask1404,
-                        kPspSwInit2Patched1404, 1},
-                    {&kextRadeonX5000HWLibs, kGcSetFwEntryInfoOriginal1404, kGcSetFwEntryInfoOriginalMask1404,
-                        kGcSetFwEntryInfoPatched1404, kGcSetFwEntryInfoPatchedMask1404, 1},
-                };
-                PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs",
-                    "Failed to apply spoof patches (>=14.4)");
-            } else {
-                const LookupPatchPlus patches[] = {
-                    {&kextRadeonX5000HWLibs, kPspSwInit1Original, kPspSwInit1Patched, 1},
-                    {&kextRadeonX5000HWLibs, kPspSwInit2Original, kPspSwInit2OriginalMask, kPspSwInit2Patched, 1},
-                    {&kextRadeonX5000HWLibs, kGcSetFwEntryInfoOriginal, kGcSetFwEntryInfoOriginalMask,
-                        kGcSetFwEntryInfoPatched, kGcSetFwEntryInfoPatchedMask, 1},
-                };
-                PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs",
-                    "Failed to apply spoof patches (<14.4)");
-            }
-        } else if (NRed::singleton().getAttributes().isRenoir()) {
+    if (!NRed::singleton().getAttributes().isCatalina()) {
+        const LookupPatchPlus patch {&kextRadeonX5000HWLibs, kGcSwInitOriginal, kGcSwInitOriginalMask, kGcSwInitPatched,
+            kGcSwInitPatchedMask, 1};
+        PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply gc_sw_init spoof patch");
+        if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
             const LookupPatchPlus patches[] = {
-                {&kextRadeonX5000HWLibs, kPspSwInit1Original1015, kPspSwInit1Patched1015, 1},
-                {&kextRadeonX5000HWLibs, kPspSwInit2Original1015, kPspSwInit2OriginalMask1015, kPspSwInit2Patched1015,
+                {&kextRadeonX5000HWLibs, kPspSwInit1Original1404, kPspSwInit1Patched1404, 1},
+                {&kextRadeonX5000HWLibs, kPspSwInit2Original1404, kPspSwInit2OriginalMask1404, kPspSwInit2Patched1404,
                     1},
+                {&kextRadeonX5000HWLibs, kGcSetFwEntryInfoOriginal1404, kGcSetFwEntryInfoOriginalMask1404,
+                    kGcSetFwEntryInfoPatched1404, kGcSetFwEntryInfoPatchedMask1404, 1},
             };
             PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs",
-                "Failed to apply spoof patches");
-        }
-
-        if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
-            const LookupPatchPlus patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServices1Original1404,
-                kCreatePowerTuneServices1Patched1404, 1};
-            PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs",
-                "Failed to apply PowerTuneServices patch (>=14.4)");
-        } else if (NRed::singleton().getAttributes().isMontereyAndLater()) {
-            const LookupPatchPlus patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServices1Original12,
-                kCreatePowerTuneServices1Patched12, 1};
-            PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTuneServices patch (<14.4)");
-        } else {
-            const LookupPatchPlus patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServices1Original,
-                kCreatePowerTuneServices1Patched, 1};
-            PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTuneServices patch (<12.0)");
-        }
-
-        if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
-            const LookupPatchPlus patches[] = {
-                {&kextRadeonX5000HWLibs, kSmuInitFunctionPointerListOriginal1404,
-                    kSmuInitFunctionPointerListOriginalMask1404, kSmuInitFunctionPointerListPatched1404,
-                    kSmuInitFunctionPointerListPatchedMask1404, 1},
-                {&kextRadeonX5000HWLibs, kCreatePowerTuneServices2Original1404, kCreatePowerTuneServices2Mask1404,
-                    kCreatePowerTuneServices2Patched1404, 1},
-            };
-            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs",
-                "Failed to apply patches (>=14.4)");
+                "Failed to apply spoof patches (>=14.4)");
         } else {
             const LookupPatchPlus patches[] = {
-                {&kextRadeonX5000HWLibs, kSmuInitFunctionPointerListOriginal, kSmuInitFunctionPointerListOriginalMask,
-                    kSmuInitFunctionPointerListPatched, kSmuInitFunctionPointerListPatchedMask, 1},
-                {&kextRadeonX5000HWLibs, kCreatePowerTuneServices2Original, kCreatePowerTuneServices2Mask,
-                    kCreatePowerTuneServices2Patched, 1},
+                {&kextRadeonX5000HWLibs, kPspSwInit1Original, kPspSwInit1Patched, 1},
+                {&kextRadeonX5000HWLibs, kPspSwInit2Original, kPspSwInit2OriginalMask, kPspSwInit2Patched, 1},
+                {&kextRadeonX5000HWLibs, kGcSetFwEntryInfoOriginal, kGcSetFwEntryInfoOriginalMask,
+                    kGcSetFwEntryInfoPatched, kGcSetFwEntryInfoPatchedMask, 1},
             };
             PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs",
-                "Failed to apply patches (<14.4)");
+                "Failed to apply spoof patches (<14.4)");
         }
+    } else if (NRed::singleton().getAttributes().isRenoir()) {
+        const LookupPatchPlus patches[] = {
+            {&kextRadeonX5000HWLibs, kPspSwInit1Original1015, kPspSwInit1Patched1015, 1},
+            {&kextRadeonX5000HWLibs, kPspSwInit2Original1015, kPspSwInit2OriginalMask1015, kPspSwInit2Patched1015, 1},
+        };
+        PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs",
+            "Failed to apply spoof patches");
+    }
 
-        if (NRed::singleton().getAttributes().isVenturaAndLater()) {
-            const LookupPatchPlus patches[] = {
-                {&kextRadeonX5000HWLibs, kCailQueryAdapterInfoOriginal, kCailQueryAdapterInfoPatched, 1},
-                {&kextRadeonX5000HWLibs, kSDMAInitFunctionPointerListOriginal, kSDMAInitFunctionPointerListOriginalMask,
-                    kSDMAInitFunctionPointerListPatched, kSDMAInitFunctionPointerListPatchedMask, 1},
-            };
-            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs",
-                "Failed to apply macOS 13.0+ patches");
-        }
+    if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
+        const LookupPatchPlus patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServices1Original1404,
+            kCreatePowerTuneServices1Patched1404, 1};
+        PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTuneServices patch (>=14.4)");
+    } else if (NRed::singleton().getAttributes().isMontereyAndLater()) {
+        const LookupPatchPlus patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServices1Original12,
+            kCreatePowerTuneServices1Patched12, 1};
+        PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTuneServices patch (<14.4)");
+    } else {
+        const LookupPatchPlus patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServices1Original,
+            kCreatePowerTuneServices1Patched, 1};
+        PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTuneServices patch (<12.0)");
+    }
 
-        if (ADDPR(debugEnabled)) {
-            const LookupPatchPlus patch = {&kextRadeonX5000HWLibs, kAtiPowerPlayServicesConstructorOriginal,
-                kAtiPowerPlayServicesConstructorPatched, 1};
-            PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply MCIL debugLevel patch");
-            if (NRed::singleton().getAttributes().isBigSurAndLater()) {
-                const LookupPatchPlus patch = {&kextRadeonX5000HWLibs, kAmdLogPspOriginal, kAmdLogPspOriginalMask,
-                    kAmdLogPspPatched, 1};
-                PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply amd_log_psp patch");
-            }
+    if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
+        const LookupPatchPlus patches[] = {
+            {&kextRadeonX5000HWLibs, kSmuInitFunctionPointerListOriginal1404,
+                kSmuInitFunctionPointerListOriginalMask1404, kSmuInitFunctionPointerListPatched1404,
+                kSmuInitFunctionPointerListPatchedMask1404, 1},
+            {&kextRadeonX5000HWLibs, kCreatePowerTuneServices2Original1404, kCreatePowerTuneServices2Mask1404,
+                kCreatePowerTuneServices2Patched1404, 1},
+        };
+        PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs",
+            "Failed to apply patches (>=14.4)");
+    } else {
+        const LookupPatchPlus patches[] = {
+            {&kextRadeonX5000HWLibs, kSmuInitFunctionPointerListOriginal, kSmuInitFunctionPointerListOriginalMask,
+                kSmuInitFunctionPointerListPatched, kSmuInitFunctionPointerListPatchedMask, 1},
+            {&kextRadeonX5000HWLibs, kCreatePowerTuneServices2Original, kCreatePowerTuneServices2Mask,
+                kCreatePowerTuneServices2Patched, 1},
+        };
+        PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs",
+            "Failed to apply patches (<14.4)");
+    }
+
+    if (NRed::singleton().getAttributes().isVenturaAndLater()) {
+        const LookupPatchPlus patches[] = {
+            {&kextRadeonX5000HWLibs, kCailQueryAdapterInfoOriginal, kCailQueryAdapterInfoPatched, 1},
+            {&kextRadeonX5000HWLibs, kSDMAInitFunctionPointerListOriginal, kSDMAInitFunctionPointerListOriginalMask,
+                kSDMAInitFunctionPointerListPatched, kSDMAInitFunctionPointerListPatchedMask, 1},
+        };
+        PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs",
+            "Failed to apply macOS 13.0+ patches");
+    }
+
+    if (ADDPR(debugEnabled)) {
+        const LookupPatchPlus patch = {&kextRadeonX5000HWLibs, kAtiPowerPlayServicesConstructorOriginal,
+            kAtiPowerPlayServicesConstructorPatched, 1};
+        PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply MCIL debugLevel patch");
+        if (NRed::singleton().getAttributes().isBigSurAndLater()) {
+            const LookupPatchPlus patch = {&kextRadeonX5000HWLibs, kAmdLogPspOriginal, kAmdLogPspOriginalMask,
+                kAmdLogPspPatched, 1};
+            PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply amd_log_psp patch");
         }
     }
 }

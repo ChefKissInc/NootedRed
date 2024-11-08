@@ -57,165 +57,155 @@ void X6000::init() {
         this);
 }
 
-bool X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
-    if (kextRadeonX6000.loadIndex == id) {
-        NRed::singleton().hwLateInit();
+void X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
+    if (kextRadeonX6000.loadIndex != id) { return; }
 
-        void *orgFillUBMSurface, *orgConfigureDisplay, *orgGetDisplayInfo, *orgAllocateScanoutFB;
+    NRed::singleton().hwLateInit();
 
-        SolveRequestPlus solveRequests[] = {
-            {"__ZN31AMDRadeonX6000_AMDGFX10Hardware20allocateAMDHWDisplayEv", this->orgAllocateAMDHWDisplay},
-            {"__ZN35AMDRadeonX6000_AMDAccelVideoContext10gMetaClassE", NRed::singleton().metaClassMap[0][1]},
-            {"__ZN37AMDRadeonX6000_AMDAccelDisplayMachine10gMetaClassE", NRed::singleton().metaClassMap[1][1]},
-            {"__ZN34AMDRadeonX6000_AMDAccelDisplayPipe10gMetaClassE", NRed::singleton().metaClassMap[2][1]},
-            {"__ZN30AMDRadeonX6000_AMDAccelChannel10gMetaClassE", NRed::singleton().metaClassMap[3][0]},
-            {"__ZN28AMDRadeonX6000_IAMDHWChannel10gMetaClassE", NRed::singleton().metaClassMap[4][1]},
-            {"__ZN27AMDRadeonX6000_AMDHWDisplay14fillUBMSurfaceEjP17_FRAMEBUFFER_INFOP13_UBM_SURFINFO",
-                orgFillUBMSurface},
-            {"__ZN27AMDRadeonX6000_AMDHWDisplay16configureDisplayEjjP17_FRAMEBUFFER_INFOP16IOAccelResource2",
-                orgConfigureDisplay},
-            {"__ZN27AMDRadeonX6000_AMDHWDisplay14getDisplayInfoEjbbPvP17_FRAMEBUFFER_INFO", orgGetDisplayInfo},
-        };
-        PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "X6000",
-            "Failed to resolve symbols");
+    void *orgFillUBMSurface, *orgConfigureDisplay, *orgGetDisplayInfo, *orgAllocateScanoutFB;
 
-        if (NRed::singleton().getAttributes().isVenturaAndLater()) {
-            orgAllocateScanoutFB = nullptr;
-        } else {
-            SolveRequestPlus request {"__ZN27AMDRadeonX6000_AMDHWDisplay17allocateScanoutFBEjP16IOAccelResource2S1_Py",
-                orgAllocateScanoutFB};
-            PANIC_COND(!request.solve(patcher, id, slide, size), "X6000", "Failed to resolve allocateScanout");
-        }
+    SolveRequestPlus solveRequests[] = {
+        {"__ZN31AMDRadeonX6000_AMDGFX10Hardware20allocateAMDHWDisplayEv", this->orgAllocateAMDHWDisplay},
+        {"__ZN35AMDRadeonX6000_AMDAccelVideoContext10gMetaClassE", NRed::singleton().metaClassMap[0][1]},
+        {"__ZN37AMDRadeonX6000_AMDAccelDisplayMachine10gMetaClassE", NRed::singleton().metaClassMap[1][1]},
+        {"__ZN34AMDRadeonX6000_AMDAccelDisplayPipe10gMetaClassE", NRed::singleton().metaClassMap[2][1]},
+        {"__ZN30AMDRadeonX6000_AMDAccelChannel10gMetaClassE", NRed::singleton().metaClassMap[3][0]},
+        {"__ZN28AMDRadeonX6000_IAMDHWChannel10gMetaClassE", NRed::singleton().metaClassMap[4][1]},
+        {"__ZN27AMDRadeonX6000_AMDHWDisplay14fillUBMSurfaceEjP17_FRAMEBUFFER_INFOP13_UBM_SURFINFO", orgFillUBMSurface},
+        {"__ZN27AMDRadeonX6000_AMDHWDisplay16configureDisplayEjjP17_FRAMEBUFFER_INFOP16IOAccelResource2",
+            orgConfigureDisplay},
+        {"__ZN27AMDRadeonX6000_AMDHWDisplay14getDisplayInfoEjbbPvP17_FRAMEBUFFER_INFO", orgGetDisplayInfo},
+    };
+    PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "X6000",
+        "Failed to resolve symbols");
 
-        RouteRequestPlus accelStartRequest = {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator5startEP9IOService",
-            wrapAccelStartX6000};
-        PANIC_COND(!accelStartRequest.route(patcher, id, slide, size), "X6000",
-            "Failed to route AMDGraphicsAccelerator::start");
+    if (NRed::singleton().getAttributes().isVenturaAndLater()) {
+        orgAllocateScanoutFB = nullptr;
+    } else {
+        SolveRequestPlus request {"__ZN27AMDRadeonX6000_AMDHWDisplay17allocateScanoutFBEjP16IOAccelResource2S1_Py",
+            orgAllocateScanoutFB};
+        PANIC_COND(!request.solve(patcher, id, slide, size), "X6000", "Failed to resolve allocateScanout");
+    }
 
-        if (NRed::singleton().getAttributes().isRaven()) {
-            RouteRequestPlus request = {"__ZN30AMDRadeonX6000_AMDGFX10Display23initDCNRegistersOffsetsEv",
-                wrapInitDCNRegistersOffsets, this->orgInitDCNRegistersOffsets};
-            PANIC_COND(!request.route(patcher, id, slide, size), "X6000", "Failed to route initDCNRegistersOffsets");
-        }
+    RouteRequestPlus accelStartRequest = {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator5startEP9IOService",
+        wrapAccelStartX6000};
+    PANIC_COND(!accelStartRequest.route(patcher, id, slide, size), "X6000",
+        "Failed to route AMDGraphicsAccelerator::start");
 
-        if (NRed::singleton().getAttributes().isCatalina()) {
-            const LookupPatchPlus patches[] = {
-                {&kextRadeonX6000, kHWChannelSubmitCommandBufferOriginal1015, kHWChannelSubmitCommandBufferPatched1015,
-                    1},
-                {&kextRadeonX6000, kDummyWPTRUpdateDiagCallOriginal, kDummyWPTRUpdateDiagCallPatched, 1},
-            };
-            SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size, true), "X6000",
-                "Failed to apply patches");
-            patcher.clearError();
-        } else {
-            const LookupPatchPlus patch {&kextRadeonX6000, kHWChannelSubmitCommandBufferOriginal,
-                kHWChannelSubmitCommandBufferPatched, 1};
-            SYSLOG_COND(!patch.apply(patcher, slide, size), "X6000", "Failed to apply submitCommandBuffer patch");
-            patcher.clearError();
-        }
+    if (NRed::singleton().getAttributes().isRaven()) {
+        RouteRequestPlus request = {"__ZN30AMDRadeonX6000_AMDGFX10Display23initDCNRegistersOffsetsEv",
+            wrapInitDCNRegistersOffsets, this->orgInitDCNRegistersOffsets};
+        PANIC_COND(!request.route(patcher, id, slide, size), "X6000", "Failed to route initDCNRegistersOffsets");
+    }
 
+    if (NRed::singleton().getAttributes().isCatalina()) {
         const LookupPatchPlus patches[] = {
-            {&kextRadeonX6000, kIsDeviceValidCallOriginal, kIsDeviceValidCallPatched,
-                NRed::singleton().getAttributes().isCatalina()        ? 20U :
-                NRed::singleton().getAttributes().isVenturaAndLater() ? 23 :
-                NRed::singleton().getAttributes().isMonterey()        ? 26 :
-                                                                        24},
-            {&kextRadeonX6000, kIsDevicePCITunnelledCallOriginal, kIsDevicePCITunnelledCallPatched,
-                NRed::singleton().getAttributes().isCatalina()        ? 9U :
-                NRed::singleton().getAttributes().isVenturaAndLater() ? 3 :
-                                                                        1},
+            {&kextRadeonX6000, kHWChannelSubmitCommandBufferOriginal1015, kHWChannelSubmitCommandBufferPatched1015, 1},
+            {&kextRadeonX6000, kDummyWPTRUpdateDiagCallOriginal, kDummyWPTRUpdateDiagCallPatched, 1},
         };
         SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size, true), "X6000",
             "Failed to apply patches");
         patcher.clearError();
-
-        if (NRed::singleton().getAttributes().isCatalina()) {
-            const LookupPatchPlus patches[] = {
-                {&kextRadeonX6000, kWriteWaitForRenderingPipeCallOriginal, kWriteWaitForRenderingPipeCallPatched, 1},
-                {&kextRadeonX6000, kGetTtlInterfaceCallOriginal, kGetTtlInterfaceCallOriginalMask,
-                    kGetTtlInterfaceCallPatched, kGetTtlInterfaceCallPatchedMask, 38},
-                {&kextRadeonX6000, kGetAMDHWHandlerCallOriginal, kGetAMDHWHandlerCallPatched, 19},
-                {&kextRadeonX6000, kGetAMDHWHandlerCallOriginal, kGetAMDHWHandlerCallPatched,
-                    arrsize(kGetAMDHWHandlerCallOriginal), 64, 1},
-                {&kextRadeonX6000, kGetHWRegistersCallOriginal, kGetHWRegistersCallOriginalMask,
-                    kGetHWRegistersCallPatched, kGetHWRegistersCallPatchedMask, 13},
-                {&kextRadeonX6000, kGetHWMemoryCallOriginal, kGetHWMemoryCallPatched, 11},
-                {&kextRadeonX6000, kGetHWGartCallOriginal, kGetHWGartCallPatched, 9},
-                {&kextRadeonX6000, kGetHWAlignManagerCall1Original, kGetHWAlignManagerCall1OriginalMask,
-                    kGetHWAlignManagerCall1Patched, kGetHWAlignManagerCall1PatchedMask, 33},
-                {&kextRadeonX6000, kGetHWAlignManagerCall2Original, kGetHWAlignManagerCall2Patched, 1},
-                {&kextRadeonX6000, kGetHWEngineCallOriginal, kGetHWEngineCallPatched, 31},
-                {&kextRadeonX6000, kGetHWChannelCall1Original, kGetHWChannelCall1Patched, 2},
-                {&kextRadeonX6000, kGetHWChannelCall2Original, kGetHWChannelCall2Patched, 53},
-                {&kextRadeonX6000, kGetHWChannelCall3Original, kGetHWChannelCall3Patched, 20},
-                {&kextRadeonX6000, kRegisterChannelCallOriginal, kRegisterChannelCallPatched, 1},
-                {&kextRadeonX6000, kGetChannelCountCallOriginal, kGetChannelCountCallPatched, 7},
-                {&kextRadeonX6000, kGetChannelWriteBackFrameOffsetCall1Original,
-                    kGetChannelWriteBackFrameOffsetCall1Patched, 4},
-                {&kextRadeonX6000, kGetChannelWriteBackFrameOffsetCall2Original,
-                    kGetChannelWriteBackFrameOffsetCall2Patched, 1},
-                {&kextRadeonX6000, kGetChannelWriteBackFrameAddrCallOriginal,
-                    kGetChannelWriteBackFrameAddrCallOriginalMask, kGetChannelWriteBackFrameAddrCallPatched,
-                    kGetChannelWriteBackFrameAddrCallPatchedMask, 10},
-                {&kextRadeonX6000, kGetDoorbellMemoryBaseAddressCallOriginal, kGetDoorbellMemoryBaseAddressCallPatched,
-                    1},
-                {&kextRadeonX6000, kGetChannelDoorbellOffsetCallOriginal, kGetChannelDoorbellOffsetCallPatched, 1},
-                {&kextRadeonX6000, kGetIOPCIDeviceCallOriginal, kGetIOPCIDeviceCallPatched, 5},
-                {&kextRadeonX6000, kGetSMLCallOriginal, kGetSMLCallPatched, 10},
-                {&kextRadeonX6000, kGetPM4CommandUtilityCallOriginal, kGetPM4CommandUtilityCallPatched, 2},
-                {&kextRadeonX6000, kDumpASICHangStateCallOriginal, kDumpASICHangStateCallPatched, 2},
-                {&kextRadeonX6000, kGetSchedulerCallOriginal1015, kGetSchedulerCallPatched1015, 22},
-            };
-            SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size, true), "X6000",
-                "Failed to apply patches");
-            patcher.clearError();
-        }
-
-        if (NRed::singleton().getAttributes().isVenturaAndLater()) {
-            const LookupPatchPlus patch {&kextRadeonX6000, kGetSchedulerCallOriginal13, kGetSchedulerCallPatched13, 24};
-            SYSLOG_COND(!patch.apply(patcher, slide, size), "X6000", "Failed to apply getScheduler patch");
-            patcher.clearError();
-        } else if (!NRed::singleton().getAttributes().isCatalina()) {
-            const LookupPatchPlus patch {&kextRadeonX6000, kGetSchedulerCallOriginal, kGetSchedulerCallPatched,
-                NRed::singleton().getAttributes().isMonterey() ? 21U : 22};
-            SYSLOG_COND(!patch.apply(patcher, slide, size), "X6000", "Failed to apply getScheduler patch");
-            patcher.clearError();
-        }
-
-        if (NRed::singleton().getAttributes().isCatalina()) {
-            const LookupPatchPlus patches[] = {
-                {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal1015, kGetGpuDebugPolicyCallPatched1015, 27},
-                {&kextRadeonX6000, kUpdateUtilizationStatisticsCounterCallOriginal,
-                    kUpdateUtilizationStatisticsCounterCallPatched, 2},
-                {&kextRadeonX6000, kDisableGfxOffCallOriginal, kDisableGfxOffCallPatched, 17},
-                {&kextRadeonX6000, kEnableGfxOffCallOriginal, kEnableGfxOffCallPatched, 16},
-                {&kextRadeonX6000, kFlushSystemCachesCallOriginal, kFlushSystemCachesCallPatched, 4},
-                {&kextRadeonX6000, kGetUbmSwizzleModeCallOriginal, kGetUbmSwizzleModeCallPatched, 1},
-                {&kextRadeonX6000, kGetUbmTileModeCallOriginal, kGetUbmTileModeCallPatched, 1},
-            };
-            SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size, true), "X6000",
-                "Failed to apply patches");
-            patcher.clearError();
-        } else {
-            const LookupPatchPlus patch {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal,
-                kGetGpuDebugPolicyCallPatched,
-                NRed::singleton().getAttributes().isVentura1304Based() ? 38U :
-                NRed::singleton().getAttributes().isVenturaAndLater()  ? 37 :
-                                                                         28};
-            SYSLOG_COND(!patch.apply(patcher, slide, size), "X6000", "Failed to apply getGpuDebugPolicy patch");
-            patcher.clearError();
-        }
-
-        // Now, for AMDHWDisplay, fix the VTable offsets to calls in HWAlignManager2.
-        FillUBMSurfaceVTFix.apply(orgFillUBMSurface);
-        ConfigureDisplayVTFix.apply(orgConfigureDisplay);
-        GetDisplayInfoVTFix.apply(orgGetDisplayInfo);
-        if (orgAllocateScanoutFB != nullptr) { AllocateScanoutFBVTFix.apply(orgAllocateScanoutFB); }
-
-        return true;
+    } else {
+        const LookupPatchPlus patch {&kextRadeonX6000, kHWChannelSubmitCommandBufferOriginal,
+            kHWChannelSubmitCommandBufferPatched, 1};
+        SYSLOG_COND(!patch.apply(patcher, slide, size), "X6000", "Failed to apply submitCommandBuffer patch");
+        patcher.clearError();
     }
 
-    return false;
+    const LookupPatchPlus patches[] = {
+        {&kextRadeonX6000, kIsDeviceValidCallOriginal, kIsDeviceValidCallPatched,
+            NRed::singleton().getAttributes().isCatalina()        ? 20U :
+            NRed::singleton().getAttributes().isVenturaAndLater() ? 23 :
+            NRed::singleton().getAttributes().isMonterey()        ? 26 :
+                                                                    24},
+        {&kextRadeonX6000, kIsDevicePCITunnelledCallOriginal, kIsDevicePCITunnelledCallPatched,
+            NRed::singleton().getAttributes().isCatalina()        ? 9U :
+            NRed::singleton().getAttributes().isVenturaAndLater() ? 3 :
+                                                                    1},
+    };
+    SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size, true), "X6000", "Failed to apply patches");
+    patcher.clearError();
+
+    if (NRed::singleton().getAttributes().isCatalina()) {
+        const LookupPatchPlus patches[] = {
+            {&kextRadeonX6000, kWriteWaitForRenderingPipeCallOriginal, kWriteWaitForRenderingPipeCallPatched, 1},
+            {&kextRadeonX6000, kGetTtlInterfaceCallOriginal, kGetTtlInterfaceCallOriginalMask,
+                kGetTtlInterfaceCallPatched, kGetTtlInterfaceCallPatchedMask, 38},
+            {&kextRadeonX6000, kGetAMDHWHandlerCallOriginal, kGetAMDHWHandlerCallPatched, 19},
+            {&kextRadeonX6000, kGetAMDHWHandlerCallOriginal, kGetAMDHWHandlerCallPatched,
+                arrsize(kGetAMDHWHandlerCallOriginal), 64, 1},
+            {&kextRadeonX6000, kGetHWRegistersCallOriginal, kGetHWRegistersCallOriginalMask, kGetHWRegistersCallPatched,
+                kGetHWRegistersCallPatchedMask, 13},
+            {&kextRadeonX6000, kGetHWMemoryCallOriginal, kGetHWMemoryCallPatched, 11},
+            {&kextRadeonX6000, kGetHWGartCallOriginal, kGetHWGartCallPatched, 9},
+            {&kextRadeonX6000, kGetHWAlignManagerCall1Original, kGetHWAlignManagerCall1OriginalMask,
+                kGetHWAlignManagerCall1Patched, kGetHWAlignManagerCall1PatchedMask, 33},
+            {&kextRadeonX6000, kGetHWAlignManagerCall2Original, kGetHWAlignManagerCall2Patched, 1},
+            {&kextRadeonX6000, kGetHWEngineCallOriginal, kGetHWEngineCallPatched, 31},
+            {&kextRadeonX6000, kGetHWChannelCall1Original, kGetHWChannelCall1Patched, 2},
+            {&kextRadeonX6000, kGetHWChannelCall2Original, kGetHWChannelCall2Patched, 53},
+            {&kextRadeonX6000, kGetHWChannelCall3Original, kGetHWChannelCall3Patched, 20},
+            {&kextRadeonX6000, kRegisterChannelCallOriginal, kRegisterChannelCallPatched, 1},
+            {&kextRadeonX6000, kGetChannelCountCallOriginal, kGetChannelCountCallPatched, 7},
+            {&kextRadeonX6000, kGetChannelWriteBackFrameOffsetCall1Original,
+                kGetChannelWriteBackFrameOffsetCall1Patched, 4},
+            {&kextRadeonX6000, kGetChannelWriteBackFrameOffsetCall2Original,
+                kGetChannelWriteBackFrameOffsetCall2Patched, 1},
+            {&kextRadeonX6000, kGetChannelWriteBackFrameAddrCallOriginal, kGetChannelWriteBackFrameAddrCallOriginalMask,
+                kGetChannelWriteBackFrameAddrCallPatched, kGetChannelWriteBackFrameAddrCallPatchedMask, 10},
+            {&kextRadeonX6000, kGetDoorbellMemoryBaseAddressCallOriginal, kGetDoorbellMemoryBaseAddressCallPatched, 1},
+            {&kextRadeonX6000, kGetChannelDoorbellOffsetCallOriginal, kGetChannelDoorbellOffsetCallPatched, 1},
+            {&kextRadeonX6000, kGetIOPCIDeviceCallOriginal, kGetIOPCIDeviceCallPatched, 5},
+            {&kextRadeonX6000, kGetSMLCallOriginal, kGetSMLCallPatched, 10},
+            {&kextRadeonX6000, kGetPM4CommandUtilityCallOriginal, kGetPM4CommandUtilityCallPatched, 2},
+            {&kextRadeonX6000, kDumpASICHangStateCallOriginal, kDumpASICHangStateCallPatched, 2},
+            {&kextRadeonX6000, kGetSchedulerCallOriginal1015, kGetSchedulerCallPatched1015, 22},
+        };
+        SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size, true), "X6000",
+            "Failed to apply patches");
+        patcher.clearError();
+    }
+
+    if (NRed::singleton().getAttributes().isVenturaAndLater()) {
+        const LookupPatchPlus patch {&kextRadeonX6000, kGetSchedulerCallOriginal13, kGetSchedulerCallPatched13, 24};
+        SYSLOG_COND(!patch.apply(patcher, slide, size), "X6000", "Failed to apply getScheduler patch");
+        patcher.clearError();
+    } else if (!NRed::singleton().getAttributes().isCatalina()) {
+        const LookupPatchPlus patch {&kextRadeonX6000, kGetSchedulerCallOriginal, kGetSchedulerCallPatched,
+            NRed::singleton().getAttributes().isMonterey() ? 21U : 22};
+        SYSLOG_COND(!patch.apply(patcher, slide, size), "X6000", "Failed to apply getScheduler patch");
+        patcher.clearError();
+    }
+
+    if (NRed::singleton().getAttributes().isCatalina()) {
+        const LookupPatchPlus patches[] = {
+            {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal1015, kGetGpuDebugPolicyCallPatched1015, 27},
+            {&kextRadeonX6000, kUpdateUtilizationStatisticsCounterCallOriginal,
+                kUpdateUtilizationStatisticsCounterCallPatched, 2},
+            {&kextRadeonX6000, kDisableGfxOffCallOriginal, kDisableGfxOffCallPatched, 17},
+            {&kextRadeonX6000, kEnableGfxOffCallOriginal, kEnableGfxOffCallPatched, 16},
+            {&kextRadeonX6000, kFlushSystemCachesCallOriginal, kFlushSystemCachesCallPatched, 4},
+            {&kextRadeonX6000, kGetUbmSwizzleModeCallOriginal, kGetUbmSwizzleModeCallPatched, 1},
+            {&kextRadeonX6000, kGetUbmTileModeCallOriginal, kGetUbmTileModeCallPatched, 1},
+        };
+        SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size, true), "X6000",
+            "Failed to apply patches");
+        patcher.clearError();
+    } else {
+        const LookupPatchPlus patch {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal, kGetGpuDebugPolicyCallPatched,
+            NRed::singleton().getAttributes().isVentura1304Based() ? 38U :
+            NRed::singleton().getAttributes().isVenturaAndLater()  ? 37 :
+                                                                     28};
+        SYSLOG_COND(!patch.apply(patcher, slide, size), "X6000", "Failed to apply getGpuDebugPolicy patch");
+        patcher.clearError();
+    }
+
+    // Now, for AMDHWDisplay, fix the VTable offsets to calls in HWAlignManager2.
+    FillUBMSurfaceVTFix.apply(orgFillUBMSurface);
+    ConfigureDisplayVTFix.apply(orgConfigureDisplay);
+    GetDisplayInfoVTFix.apply(orgGetDisplayInfo);
+    if (orgAllocateScanoutFB != nullptr) { AllocateScanoutFBVTFix.apply(orgAllocateScanoutFB); }
 }
 
 /**

@@ -11,6 +11,7 @@
 #include <PrivateHeaders/Firmware.hpp>
 #include <PrivateHeaders/HWLibs.hpp>
 #include <PrivateHeaders/Hotfixes/AGDP.hpp>
+#include <PrivateHeaders/Hotfixes/X6000FB.hpp>
 #include <PrivateHeaders/Model.hpp>
 #include <PrivateHeaders/NRed.hpp>
 #include <PrivateHeaders/PatcherPlus.hpp>
@@ -83,6 +84,7 @@ void NRed::init() {
     DBGLOG("NRed", "If any of the above values look incorrect, please report this to the developers.");
 
     Hotfixes::AGDP::singleton().init();
+    Hotfixes::X6000FB::singleton().init();
     Backlight::singleton().init();
     X6000FB::singleton().init();
     AppleGFXHDA::singleton().init();

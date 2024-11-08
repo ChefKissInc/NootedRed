@@ -54,16 +54,16 @@ void Hotfixes::AGDP::init() {
 }
 
 void Hotfixes::AGDP::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
-    if (kextAGDP.loadIndex == id) {
-        const LookupPatchPlus boardIdPatch {&kextAGDP, kAGDPBoardIDKeyOriginal, kAGDPBoardIDKeyPatched, 1};
-        SYSLOG_COND(!boardIdPatch.apply(patcher, slide, size), "AGDP", "Failed to apply AGDP board-id patch");
+    if (kextAGDP.loadIndex != id) { return; }
 
-        if (NRed::singleton().getAttributes().isVentura()) {
-            const LookupPatchPlus patch {&kextAGDP, kAGDPFBCountCheckOriginal13, kAGDPFBCountCheckPatched13, 1};
-            SYSLOG_COND(!patch.apply(patcher, slide, size), "AGDP", "Failed to apply AGDP FB count check patch");
-        } else {
-            const LookupPatchPlus patch {&kextAGDP, kAGDPFBCountCheckOriginal, kAGDPFBCountCheckPatched, 1};
-            SYSLOG_COND(!patch.apply(patcher, slide, size), "AGDP", "Failed to apply AGDP FB count check patch");
-        }
+    const LookupPatchPlus boardIdPatch {&kextAGDP, kAGDPBoardIDKeyOriginal, kAGDPBoardIDKeyPatched, 1};
+    SYSLOG_COND(!boardIdPatch.apply(patcher, slide, size), "AGDP", "Failed to apply AGDP board-id patch");
+
+    if (NRed::singleton().getAttributes().isVentura()) {
+        const LookupPatchPlus patch {&kextAGDP, kAGDPFBCountCheckOriginal13, kAGDPFBCountCheckPatched13, 1};
+        SYSLOG_COND(!patch.apply(patcher, slide, size), "AGDP", "Failed to apply AGDP FB count check patch");
+    } else {
+        const LookupPatchPlus patch {&kextAGDP, kAGDPFBCountCheckOriginal, kAGDPFBCountCheckPatched, 1};
+        SYSLOG_COND(!patch.apply(patcher, slide, size), "AGDP", "Failed to apply AGDP FB count check patch");
     }
 }

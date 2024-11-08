@@ -19,7 +19,7 @@ class X6000 {
     void init();
 
     private:
-    bool processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
+    void processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 
     static bool wrapAccelStartX6000();
     static void wrapInitDCNRegistersOffsets(void *that);

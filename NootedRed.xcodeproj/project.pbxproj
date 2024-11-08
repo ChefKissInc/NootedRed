@@ -20,6 +20,8 @@
 		4069F00F29C3A241005293B4 /* ATOMBIOS.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FCE29BF942900367F9D /* ATOMBIOS.hpp */; };
 		40F39FDC2CDD609E007AE975 /* Backlight.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40F39FDB2CDD6087007AE975 /* Backlight.hpp */; };
 		40F39FDE2CDD60A4007AE975 /* Backlight.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40F39FDD2CDD60A3007AE975 /* Backlight.cpp */; };
+		40F39FE02CDE842B007AE975 /* X6000FB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40F39FDF2CDE8424007AE975 /* X6000FB.cpp */; };
+		40F39FE22CDE864A007AE975 /* X6000FB.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40F39FE12CDE8643007AE975 /* X6000FB.hpp */; };
 		40FC5FD529BF995000367F9D /* X6000FB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FC5FD329BF995000367F9D /* X6000FB.cpp */; };
 		40FC5FD629BF995000367F9D /* X6000FB.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FD429BF995000367F9D /* X6000FB.hpp */; };
 		40FC5FD929BF995E00367F9D /* X5000.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FC5FD729BF995E00367F9D /* X5000.cpp */; };
@@ -67,6 +69,8 @@
 		408F201E288ACBB0002EEC15 /* Firmware.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Firmware.hpp; sourceTree = "<group>"; };
 		40F39FDB2CDD6087007AE975 /* Backlight.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Backlight.hpp; sourceTree = "<group>"; };
 		40F39FDD2CDD60A3007AE975 /* Backlight.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Backlight.cpp; sourceTree = "<group>"; };
+		40F39FDF2CDE8424007AE975 /* X6000FB.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = X6000FB.cpp; sourceTree = "<group>"; };
+		40F39FE12CDE8643007AE975 /* X6000FB.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = X6000FB.hpp; sourceTree = "<group>"; };
 		40FC5FCE29BF942900367F9D /* ATOMBIOS.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ATOMBIOS.hpp; sourceTree = "<group>"; };
 		40FC5FD329BF995000367F9D /* X6000FB.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = X6000FB.cpp; sourceTree = "<group>"; };
 		40FC5FD429BF995000367F9D /* X6000FB.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = X6000FB.hpp; sourceTree = "<group>"; };
@@ -173,6 +177,7 @@
 			isa = PBXGroup;
 			children = (
 				4054608B2CDBDF89007865E5 /* AGDP.cpp */,
+				40F39FDF2CDE8424007AE975 /* X6000FB.cpp */,
 			);
 			path = Hotfixes;
 			sourceTree = "<group>";
@@ -180,6 +185,7 @@
 		4054608F2CDBF1CA007865E5 /* Hotfixes */ = {
 			isa = PBXGroup;
 			children = (
+				40F39FE12CDE8643007AE975 /* X6000FB.hpp */,
 				405460882CDBDF58007865E5 /* AGDP.hpp */,
 			);
 			path = Hotfixes;
@@ -230,6 +236,7 @@
 				6C1B36672A407C6200B184DD /* AppleGFXHDA.hpp in Headers */,
 				405460892CDBDF6A007865E5 /* AGDP.hpp in Headers */,
 				40F39FDC2CDD609E007AE975 /* Backlight.hpp in Headers */,
+				40F39FE22CDE864A007AE975 /* X6000FB.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -335,6 +342,7 @@
 				40FC5FD529BF995000367F9D /* X6000FB.cpp in Sources */,
 				6C1B36662A407C6100B184DD /* AppleGFXHDA.cpp in Sources */,
 				4068898B2A229BF600028D22 /* PatcherPlus.cpp in Sources */,
+				40F39FE02CDE842B007AE975 /* X6000FB.cpp in Sources */,
 				40FC5FE129BF9E2500367F9D /* X6000.cpp in Sources */,
 				401075932CDA8746002D1CD7 /* Model.cpp in Sources */,
 				405460872CDBD5B5007865E5 /* Firmware.cpp in Sources */,
