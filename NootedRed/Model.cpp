@@ -22,6 +22,7 @@ struct DevicePair {
     UInt16 deviceId;
     const Model *models;
     size_t count;
+    const char *fallback;
 };
 
 static const Model dev15DD[] = {
@@ -158,9 +159,9 @@ static const Model dev1636[] = {
 };
 
 static const DevicePair devices[] = {
-    {0x15DD, dev15DD, arrsize(dev15DD)},
-    {0x15D8, dev15D8, arrsize(dev15D8)},
-    {0x1636, dev1636, arrsize(dev1636)},
+    {0x15DD, dev15DD, arrsize(dev15DD), "AMD Radeon RX Graphics"},
+    {0x15D8, dev15D8, arrsize(dev15D8), "AMD Radeon RX Graphics"},
+    {0x1636, dev1636, arrsize(dev1636), "AMD Radeon RX Graphics"},
 };
 
 const char *getBrandingNameForDev(IOPCIDevice *device) {
@@ -168,22 +169,22 @@ const char *getBrandingNameForDev(IOPCIDevice *device) {
     auto revisionId = WIOKit::readPCIConfigValue(device, WIOKit::kIOPCIConfigRevisionID);
     auto subsystemId = WIOKit::readPCIConfigValue(device, WIOKit::kIOPCIConfigSubSystemID);
     auto subsystemVendor = WIOKit::readPCIConfigValue(device, WIOKit::kIOPCIConfigSubSystemVendorID);
-    for (auto &device : devices) {
-        if (device.deviceId != deviceId) { continue; }
+    for (auto &devicePair : devices) {
+        if (devicePair.deviceId == deviceId) {
+            for (size_t i = 0; i < devicePair.count; i++) {
+                auto &model = devicePair.models[i];
+                if (model.revision != revisionId ||
+                    (model.matchType == MatchType::RevSubsys &&
+                        (model.subsystemId != subsystemId || model.subsystemVendor != subsystemVendor))) {
+                    continue;
+                }
 
-        for (size_t i = 0; i < device.count; i++) {
-            auto &model = device.models[i];
-            if (model.revision != revisionId ||
-                (model.matchType == MatchType::RevSubsys &&
-                    (model.subsystemId != subsystemId || model.subsystemVendor != subsystemVendor))) {
-                continue;
+                return model.name;
             }
 
-            return model.name;
+            return devicePair.fallback;
         }
-
-        break;
     }
 
-    return "AMD Radeon RX Graphics";
+    return nullptr;
 }

@@ -3,6 +3,7 @@
 
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_devinfo.hpp>
+#include <Headers/kern_iokit.hpp>
 #include <IOKit/acpi/IOACPIPlatformExpert.h>
 #include <PrivateHeaders/AMDCommon.hpp>
 #include <PrivateHeaders/AppleGFXHDA.hpp>
@@ -194,6 +195,32 @@ void NRed::hwLateInit() {
     DBGLOG("NRed", "If any of the above values look incorrect, please report this to the developers.");
 }
 
+static void updatePropertiesForDevice(IOPCIDevice *device) {
+    UInt8 builtIn[] = {0x00};
+    device->setProperty("built-in", builtIn, arrsize(builtIn));
+    auto vendorId = WIOKit::readPCIConfigValue(device, WIOKit::kIOPCIConfigVendorID);
+    auto deviceId = WIOKit::readPCIConfigValue(device, WIOKit::kIOPCIConfigDeviceID);
+    SYSLOG_COND(device->getProperty("model") != nullptr, "NRed",
+        "[%X:%X] WARNING!!! Overriding the model is no longer supported!", vendorId, deviceId);
+
+    auto *model = getBrandingNameForDev(device);
+    if (model == nullptr) {
+        SYSLOG("NRed", "[%X:%X] Warning: No model found.", vendorId, deviceId);
+        return;
+    }
+    auto modelLen = static_cast<UInt32>(strlen(model) + 1);
+    device->setProperty("model", const_cast<char *>(model), modelLen);
+    // Device name is everything after AMD Radeon RX/Pro.
+    if (model[11] == 'P' && model[12] == 'r' && model[13] == 'o' && model[14] == ' ') {
+        device->setProperty("ATY,FamilyName", const_cast<char *>("Radeon Pro"), 11);
+        device->setProperty("ATY,DeviceName", const_cast<char *>(model) + 15, modelLen - 15);
+    } else {
+        device->setProperty("ATY,FamilyName", const_cast<char *>("Radeon RX"), 10);
+        device->setProperty("ATY,DeviceName", const_cast<char *>(model) + 14, modelLen - 14);
+    }
+    device->setProperty("AAPL,slot-name", const_cast<char *>("built-in"), 9);
+}
+
 void NRed::processPatcher(KernelPatcher &patcher) {
     auto *devInfo = DeviceInfo::create();
     PANIC_COND(devInfo == nullptr, "NRed", "Failed to create device info!");
@@ -221,9 +248,7 @@ void NRed::processPatcher(KernelPatcher &patcher) {
 
     WIOKit::renameDevice(this->iGPU, "IGPU");
     WIOKit::awaitPublishing(this->iGPU);
-
-    UInt8 builtIn[] = {0x00};
-    this->iGPU->setProperty("built-in", builtIn, arrsize(builtIn));
+    updatePropertiesForDevice(this->iGPU);
 
     this->deviceID = WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigDeviceID);
     switch (this->deviceID) {
@@ -250,22 +275,6 @@ void NRed::processPatcher(KernelPatcher &patcher) {
     }
     this->pciRevision = WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigRevisionID);
 
-    SYSLOG_COND(this->iGPU->getProperty("model") != nullptr, "NRed",
-        "WARNING!!! Overriding the model is no longer supported!");
-
-    auto *model = getBrandingNameForDev(this->iGPU);
-    auto modelLen = static_cast<UInt32>(strlen(model) + 1);
-    this->iGPU->setProperty("model", const_cast<char *>(model), modelLen);
-    // Device name is everything after AMD Radeon RX/Pro.
-    if (model[11] == 'P' && model[12] == 'r' && model[13] == 'o' && model[14] == ' ') {
-        this->iGPU->setProperty("ATY,FamilyName", const_cast<char *>("Radeon Pro"), 11);
-        this->iGPU->setProperty("ATY,DeviceName", const_cast<char *>(model) + 15, modelLen - 15);
-    } else {
-        this->iGPU->setProperty("ATY,FamilyName", const_cast<char *>("Radeon RX"), 10);
-        this->iGPU->setProperty("ATY,DeviceName", const_cast<char *>(model) + 14, modelLen - 14);
-    }
-    this->iGPU->setProperty("AAPL,slot-name", const_cast<char *>("built-in"), 9);
-
     char name[128];
     bzero(name, sizeof(name));
     for (size_t i = 0, ii = 0; i < devInfo->videoExternal.size(); i++) {
@@ -276,6 +285,7 @@ void NRed::processPatcher(KernelPatcher &patcher) {
             snprintf(name, arrsize(name), "GFX%zu", ii++);
             WIOKit::renameDevice(device, name);
             WIOKit::awaitPublishing(device);
+            updatePropertiesForDevice(device);
         }
     }
 
