@@ -27,6 +27,9 @@ static X6000 module {};
 X6000 &X6000::singleton() { return module; }
 
 void X6000::init() {
+    PANIC_COND(this->initialised, "X6000", "Attempted to initialise module twice!");
+    this->initialised = true;
+
     switch (getKernelVersion()) {
         case KernelVersion::Catalina:
             this->regBaseField = 0x4838;

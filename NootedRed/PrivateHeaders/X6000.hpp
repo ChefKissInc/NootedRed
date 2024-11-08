@@ -8,8 +8,8 @@
 class X6000 {
     friend class X5000;
 
+    bool initialised {false};
     ObjectField<UInt32> regBaseField {};
-
     mach_vm_address_t orgAllocateAMDHWDisplay {0};
     mach_vm_address_t orgInitDCNRegistersOffsets {0};
 

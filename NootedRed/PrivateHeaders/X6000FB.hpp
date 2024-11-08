@@ -22,6 +22,7 @@ class X6000FB {
 
     private:
     ObjectField<UInt8> dcLinkCapsField {};
+    bool initialised {false};
     bool fixedVBIOS {false};
 
     UInt32 curPwmBacklightLvl {0}, maxPwmBacklightLvl {0xFFFF};

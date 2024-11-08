@@ -44,6 +44,9 @@ static NRed module {};
 NRed &NRed::singleton() { return module; }
 
 void NRed::init() {
+    PANIC_COND(this->initialised, "NRed", "Attempted to initialise module twice!");
+    this->initialised = true;
+
     SYSLOG("NRed", "Copyright 2022-2024 ChefKiss. If you've paid for this, you've been scammed.");
 
     bool bkltArg = false;

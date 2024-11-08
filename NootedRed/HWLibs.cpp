@@ -29,6 +29,9 @@ static X5000HWLibs module {};
 X5000HWLibs &X5000HWLibs::singleton() { return module; };
 
 void X5000HWLibs::init() {
+    PANIC_COND(this->initialised, "HWLibs", "Attempted to initialise module twice!");
+    this->initialised = true;
+
     switch (getKernelVersion()) {
         case KernelVersion::Catalina:
             this->fwDirField = 0xB8;

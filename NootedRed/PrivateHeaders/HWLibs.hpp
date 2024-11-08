@@ -18,6 +18,7 @@ class X5000HWLibs {
     void processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 
     private:
+    bool initialised {false};
     ObjectField<void *> fwDirField {};
     ObjectField<UInt32> pspLoadSOSField {};
     ObjectField<UInt8> pspSecurityCapsField {};

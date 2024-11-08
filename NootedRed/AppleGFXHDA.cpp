@@ -34,6 +34,9 @@ static AppleGFXHDA module {};
 AppleGFXHDA &AppleGFXHDA::singleton() { return module; }
 
 void AppleGFXHDA::init() {
+    PANIC_COND(this->initialised, "AGFXHDA", "Attempted to initialise module twice!");
+    this->initialised = true;
+
     lilu.onKextLoadForce(
         &kextAppleGFXHDA, 1,
         [](void *user, KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {

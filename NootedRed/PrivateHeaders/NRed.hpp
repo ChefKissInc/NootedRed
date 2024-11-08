@@ -10,6 +10,7 @@
 #include <PrivateHeaders/NRedAttributes.hpp>
 
 class NRed {
+    bool initialised {false};
     NRedAttributes attributes {};
     IOPCIDevice *iGPU {nullptr};
     IOMemoryMap *rmmio {nullptr};

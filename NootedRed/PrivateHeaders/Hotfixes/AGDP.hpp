@@ -5,6 +5,8 @@
 
 namespace Hotfixes {
     class AGDP {
+        bool initialised {false};
+
         public:
         static AGDP &singleton();
 

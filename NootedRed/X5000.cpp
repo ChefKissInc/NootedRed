@@ -29,6 +29,9 @@ static X5000 module {};
 X5000 &X5000::singleton() { return module; }
 
 void X5000::init() {
+    PANIC_COND(this->initialised, "X5000", "Attempted to initialise module twice!");
+    this->initialised = true;
+
     switch (getKernelVersion()) {
         case KernelVersion::Catalina:
             this->pm4EngineField = 0x348;

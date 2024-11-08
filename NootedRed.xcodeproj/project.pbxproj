@@ -136,7 +136,6 @@
 		405460802CDBB84B007865E5 /* PrivateHeaders */ = {
 			isa = PBXGroup;
 			children = (
-				405460902CDBF215007865E5 /* NRedAttributes.hpp */,
 				4054608F2CDBF1CA007865E5 /* Hotfixes */,
 				CEB402A71F181D8300716912 /* AMDCommon.hpp */,
 				6C1B36652A407C6100B184DD /* AppleGFXHDA.hpp */,
@@ -145,6 +144,7 @@
 				40FC5FDC29BF996900367F9D /* HWLibs.hpp */,
 				40364DB529B79DFD0070A2B4 /* Model.hpp */,
 				CEA03B5D20EE825A00BA842F /* NRed.hpp */,
+				405460902CDBF215007865E5 /* NRedAttributes.hpp */,
 				4014D9712C74AA5F00FDE986 /* ObjectField.hpp */,
 				4068898A2A229BF600028D22 /* PatcherPlus.hpp */,
 				40FC5FD829BF995E00367F9D /* X5000.hpp */,

@@ -32,6 +32,9 @@ static X6000FB module {};
 X6000FB &X6000FB::singleton() { return module; }
 
 void X6000FB::init() {
+    PANIC_COND(this->initialised, "X6000FB", "Attempted to initialise module twice!");
+    this->initialised = true;
+
     switch (getKernelVersion()) {
         case KernelVersion::Catalina:
             this->dcLinkCapsField = 0x1EA;

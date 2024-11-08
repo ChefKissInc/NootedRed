@@ -31,6 +31,7 @@ class X5000 {
     void processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 
     private:
+    bool initialised {false};
     ObjectField<void *> pm4EngineField {};
     ObjectField<void *> sdma0EngineField {};
     ObjectField<UInt32> displayPipeCountField {};
