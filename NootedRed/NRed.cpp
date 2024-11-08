@@ -146,18 +146,18 @@ void NRed::hwLateInit() {
             }
         }
 
-        auto len = this->vbiosData->getLength();
-        if (len < ATOMBIOS_IMAGE_SIZE) {
-            DBGLOG("NRed", "Padding VBIOS to %u bytes (was %u).", ATOMBIOS_IMAGE_SIZE, len);
-            this->vbiosData->appendByte(0, ATOMBIOS_IMAGE_SIZE - len);
-        }
-
-        this->iGPU->setProperty("ATY,bin_image", this->vbiosData);
     } else {
-        atombiosImageProp->retain();
-        this->vbiosData = atombiosImageProp;
+        this->vbiosData = OSData::withData(atombiosImageProp);
         SYSLOG("NRed", "!!! VBIOS MANUALLY OVERRIDDEN, MAKE SURE YOU KNOW WHAT YOU'RE DOING !!!");
     }
+
+    auto len = this->vbiosData->getLength();
+    if (len < ATOMBIOS_IMAGE_SIZE) {
+        DBGLOG("NRed", "Padding VBIOS to %u bytes (was %u).", ATOMBIOS_IMAGE_SIZE, len);
+        this->vbiosData->appendByte(0, ATOMBIOS_IMAGE_SIZE - len);
+    }
+
+    this->iGPU->setProperty("ATY,bin_image", this->vbiosData);
 
     this->rmmio =
         this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5, kIOMapInhibitCache | kIOMapAnywhere);
