@@ -284,8 +284,8 @@ UInt32 NRed::smuWaitForResponse() const {
 CAILResult NRed::sendMsgToSmc(UInt32 msg, UInt32 param, UInt32 *outParam) const {
     this->smuWaitForResponse();
 
-    this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_90, 0);
     this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_82, param);
+    this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_90, 0);
     this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_66, msg);
 
     const auto resp = this->smuWaitForResponse();
