@@ -59,7 +59,7 @@ def is_file_text(name: str) -> bool:
 
 def process_files(target_file, dir):
     os.makedirs(os.path.dirname(target_file), exist_ok=True)
-    lines = header.splitlines(keepends=True) + [""]
+    lines = header.splitlines(keepends=True) + ["\n"]
     file_list_content = []
     files = filter(
         lambda v: not is_file_excluded(os.path.basename(v[1])),
@@ -71,17 +71,17 @@ def process_files(target_file, dir):
         is_text = is_file_text(os.path.basename(file))
         var_ident = file.replace(".", "_").replace("-", "_")
         var_contents = bytes_to_cstr(src_data, is_text)
-        lines += [f"A({var_ident}, {var_contents});"]
+        lines += [f"A({var_ident}, {var_contents});\n"]
         file_list_content += [
-            f'    F("{file}", {var_ident}, sizeof({var_ident}){"" if is_text else " - 1"}),'
+            f'    F("{file}", {var_ident}, sizeof({var_ident}){"" if is_text else " - 1"}),\n'
         ]
 
-    lines += ["", "const struct FWDescriptor firmware[] = {"]
+    lines += ["\n", "const struct FWDescriptor firmware[] = {\n"]
     lines += file_list_content
-    lines += ["};", "const size_t firmwareCount = arrsize(firmware);"]
+    lines += ["};\n", "const size_t firmwareCount = arrsize(firmware);\n"]
 
     with open(target_file, "w") as file:
-        file.writelines(map(lambda v: v + "\n", lines))
+        file.writelines(lines)
 
 
 if __name__ == "__main__":
