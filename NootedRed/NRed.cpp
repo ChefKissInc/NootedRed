@@ -386,8 +386,8 @@ bool NRed::getVBIOSFromVFCT() {
     auto *vfct = static_cast<const VFCT *>(vfctData->getBytesNoCopy());
     PANIC_COND(vfct == nullptr, "NRed", "VFCT OSData::getBytesNoCopy returned null");
 
-    if (vfctData->getLength() > sizeof(VFCT)) {
-        DBGLOG("NRed", "VFCT table present but broken (too short #1).");
+    if (sizeof(VFCT) > vfctData->getLength()) {
+        DBGLOG("NRed", "VFCT table present but broken (too short).");
         return false;
     }
 
