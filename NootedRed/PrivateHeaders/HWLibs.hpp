@@ -4,13 +4,15 @@
 #pragma once
 #include <Headers/kern_patcher.hpp>
 #include <Headers/kern_util.hpp>
-#include <PrivateHeaders/AMDCommon.hpp>
+#include <PrivateHeaders/GPUDriversAMD/CAIL/COS.hpp>
+#include <PrivateHeaders/GPUDriversAMD/CAIL/DeviceType.hpp>
+#include <PrivateHeaders/GPUDriversAMD/CAIL/Result.hpp>
 #include <PrivateHeaders/ObjectField.hpp>
 
-using t_createFirmware = void *(*)(const void *data, UInt32 size, UInt32 ipVersion, const char *filename);
-using t_putFirmware = bool (*)(void *that, UInt32 deviceType, void *fw);
-
 class X5000HWLibs {
+    using t_createFirmware = void *(*)(const void *data, UInt32 size, UInt32 ipVersion, const char *filename);
+    using t_putFirmware = bool (*)(void *that, AMDDeviceType deviceType, void *fw);
+
     bool initialised {false};
     ObjectField<void *> fwDirField {};
     ObjectField<UInt32> pspLoadSOSField {};

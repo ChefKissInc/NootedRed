@@ -4,6 +4,8 @@
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_devinfo.hpp>
 #include <PrivateHeaders/Backlight.hpp>
+#include <PrivateHeaders/GPUDriversAMD/DC/DPCD.hpp>
+#include <PrivateHeaders/GPUDriversAMD/DC/SignalTypes.hpp>
 #include <PrivateHeaders/NRed.hpp>
 #include <PrivateHeaders/PatcherPlus.hpp>
 
@@ -301,7 +303,7 @@ void *Backlight::wrapLinkCreate(void *data) {
 
     auto signalType = getMember<UInt32>(ret, 0x38);
     switch (signalType) {
-        case DC_SIGNAL_TYPE_LVDS: {
+        case SIGNAL_TYPE_LVDS: {
             if (singleton().embeddedPanelLink != nullptr) {
                 SYSLOG("Backlight", "EMBEDDED PANEL LINK WAS ALREADY SET AND DISCOVERED NEW ONE!!!!");
                 SYSLOG("Backlight", "REPORT THIS TO THE DEVELOPERS AS SOON AS POSSIBLE!!!!");
@@ -309,7 +311,7 @@ void *Backlight::wrapLinkCreate(void *data) {
             singleton().embeddedPanelLink = ret;
             DBGLOG("Backlight", "Will use DMCU for display brightness control.");
         }
-        case DC_SIGNAL_TYPE_EDP: {
+        case SIGNAL_TYPE_EDP: {
             if (singleton().embeddedPanelLink != nullptr) {
                 SYSLOG("Backlight", "EMBEDDED PANEL LINK WAS ALREADY SET AND DISCOVERED NEW ONE!!!!");
                 SYSLOG("Backlight", "REPORT THIS TO THE DEVELOPERS AS SOON AS POSSIBLE!!!!");

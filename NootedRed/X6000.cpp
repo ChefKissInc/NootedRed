@@ -2,10 +2,10 @@
 // See LICENSE for details.
 
 #include <Headers/kern_api.hpp>
-#include <PrivateHeaders/AMDCommon.hpp>
 #include <PrivateHeaders/NRed.hpp>
 #include <PrivateHeaders/PatcherPlus.hpp>
 #include <PrivateHeaders/X6000.hpp>
+#include <PrivateHeaders/iVega/Regs/DCN1.hpp>
 
 //------ Target Kexts ------//
 

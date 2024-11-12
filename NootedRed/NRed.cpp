@@ -5,10 +5,10 @@
 #include <Headers/kern_devinfo.hpp>
 #include <Headers/kern_iokit.hpp>
 #include <IOKit/acpi/IOACPIPlatformExpert.h>
-#include <PrivateHeaders/AMDCommon.hpp>
 #include <PrivateHeaders/AppleGFXHDA.hpp>
 #include <PrivateHeaders/Backlight.hpp>
 #include <PrivateHeaders/Firmware.hpp>
+#include <PrivateHeaders/GPUDriversAMD/Driver.hpp>
 #include <PrivateHeaders/HWLibs.hpp>
 #include <PrivateHeaders/Hotfixes/AGDP.hpp>
 #include <PrivateHeaders/Hotfixes/X6000FB.hpp>
@@ -18,6 +18,10 @@
 #include <PrivateHeaders/X5000.hpp>
 #include <PrivateHeaders/X6000.hpp>
 #include <PrivateHeaders/X6000FB.hpp>
+#include <PrivateHeaders/iVega/IPOffset.hpp>
+#include <PrivateHeaders/iVega/Regs/GC.hpp>
+#include <PrivateHeaders/iVega/Regs/NBIO.hpp>
+#include <PrivateHeaders/iVega/Regs/SMU.hpp>
 
 //------ Module Logic ------//
 
@@ -271,7 +275,7 @@ void NRed::writeReg32(UInt32 reg, UInt32 val) const {
 
 UInt32 NRed::smuWaitForResponse() const {
     UInt32 ret = AMDSMUFWResponse::kSMUFWResponseNoResponse;
-    for (UInt32 i = 0; i < AMDGPU_MAX_USEC_TIMEOUT; i++) {
+    for (UInt32 i = 0; i < AMD_MAX_USEC_TIMEOUT; i++) {
         ret = this->readReg32(MP_BASE + mmMP1_SMN_C2PMSG_90);
         if (ret != AMDSMUFWResponse::kSMUFWResponseNoResponse) { break; }
 

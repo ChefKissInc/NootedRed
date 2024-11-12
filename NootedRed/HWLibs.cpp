@@ -2,11 +2,19 @@
 // See LICENSE for details.
 
 #include <Headers/kern_api.hpp>
-#include <PrivateHeaders/AMDCommon.hpp>
 #include <PrivateHeaders/Firmware.hpp>
+#include <PrivateHeaders/GPUDriversAMD/CAIL/ASICCaps.hpp>
+#include <PrivateHeaders/GPUDriversAMD/CAIL/DevCaps.hpp>
+#include <PrivateHeaders/GPUDriversAMD/Driver.hpp>
+#include <PrivateHeaders/GPUDriversAMD/Family.hpp>
+#include <PrivateHeaders/GPUDriversAMD/PSP.hpp>
 #include <PrivateHeaders/HWLibs.hpp>
 #include <PrivateHeaders/NRed.hpp>
 #include <PrivateHeaders/PatcherPlus.hpp>
+#include <PrivateHeaders/iVega/GoldenSettings.hpp>
+#include <PrivateHeaders/iVega/IPOffset.hpp>
+#include <PrivateHeaders/iVega/Regs/SMU.hpp>
+#include <PrivateHeaders/iVega/RenoirPPSMC.hpp>
 
 //------ Target Kexts ------//
 
@@ -115,8 +123,8 @@ void X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
 
     CAILAsicCapsEntry *orgCapsTable;
     CAILAsicCapsInitEntry *orgCapsInitTable;
-    CAILDeviceTypeEntry *orgDeviceTypeTable;
-    DeviceCapabilityEntry *orgDevCapTable;
+    AMDDeviceTypeEntry *orgDeviceTypeTable;
+    AMDDeviceCapabilities *orgDevCapTable;
 
     if (NRed::singleton().getAttributes().isCatalina()) {
         orgDeviceTypeTable = nullptr;
@@ -206,31 +214,33 @@ void X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
 
     PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "HWLibs",
         "Failed to enable kernel writing");
-    if (orgDeviceTypeTable) { *orgDeviceTypeTable = {.deviceId = NRed::singleton().getDeviceID(), .deviceType = 6}; }
+    if (orgDeviceTypeTable) {
+        *orgDeviceTypeTable = {.deviceId = NRed::singleton().getDeviceID(), .deviceType = kAMDDeviceTypeNavi21};
+    }
 
     auto targetDeviceId = NRed::singleton().getAttributes().isRenoir() ? 0x1636 : NRed::singleton().getDeviceID();
     for (; orgCapsInitTable->deviceId != 0xFFFFFFFF; orgCapsInitTable++) {
-        if (orgCapsInitTable->familyId == AMDGPU_FAMILY_RAVEN && orgCapsInitTable->deviceId == targetDeviceId) {
+        if (orgCapsInitTable->familyId == AMD_FAMILY_RAVEN && orgCapsInitTable->deviceId == targetDeviceId) {
             orgCapsInitTable->deviceId = NRed::singleton().getDeviceID();
             orgCapsInitTable->revision = NRed::singleton().getDevRevision();
             orgCapsInitTable->extRevision =
                 static_cast<UInt64>(NRed::singleton().getEnumRevision()) + NRed::singleton().getDevRevision();
             orgCapsInitTable->pciRevision = NRed::singleton().getPciRevision();
             *orgCapsTable = {
-                .familyId = AMDGPU_FAMILY_RAVEN,
+                .familyId = AMD_FAMILY_RAVEN,
                 .deviceId = NRed::singleton().getDeviceID(),
                 .revision = NRed::singleton().getDevRevision(),
                 .extRevision =
                     static_cast<UInt32>(NRed::singleton().getEnumRevision()) + NRed::singleton().getDevRevision(),
                 .pciRevision = NRed::singleton().getPciRevision(),
-                .caps = orgCapsInitTable->caps,
+                .ddiCaps = orgCapsInitTable->ddiCaps,
             };
             break;
         }
     }
     PANIC_COND(orgCapsInitTable->deviceId == 0xFFFFFFFF, "HWLibs", "Failed to find init caps table entry");
     for (; orgDevCapTable->familyId; orgDevCapTable++) {
-        if (orgDevCapTable->familyId == AMDGPU_FAMILY_RAVEN && orgDevCapTable->deviceId == targetDeviceId) {
+        if (orgDevCapTable->familyId == AMD_FAMILY_RAVEN && orgDevCapTable->deviceId == targetDeviceId) {
             orgDevCapTable->deviceId = NRed::singleton().getDeviceID();
             orgDevCapTable->extRevision =
                 static_cast<UInt64>(NRed::singleton().getEnumRevision()) + NRed::singleton().getDevRevision();
@@ -350,7 +360,7 @@ void X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
     auto *fw = singleton().orgCreateFirmware(vcnFW.data, vcnFW.length,
         NRed::singleton().getAttributes().isRenoir() ? 0x0202 : 0x0100, filename);
     PANIC_COND(fw == nullptr, "HWLibs", "Failed to create '%s' firmware", filename);
-    PANIC_COND(!singleton().orgPutFirmware(singleton().fwDirField.get(that), 6, fw), "HWLibs",
+    PANIC_COND(!singleton().orgPutFirmware(singleton().fwDirField.get(that), kAMDDeviceTypeNavi21, fw), "HWLibs",
         "Failed to insert '%s' firmware", filename);
 }
 
@@ -570,14 +580,14 @@ CAILResult X5000HWLibs::smu10InternalHwInit(void *) {
 
 CAILResult X5000HWLibs::smu12InternalHwInit(void *) {
     UInt32 i = 0;
-    for (; i < AMDGPU_MAX_USEC_TIMEOUT; i++) {
+    for (; i < AMD_MAX_USEC_TIMEOUT; i++) {
         if (NRed::singleton().readReg32(MP1_Public | smnMP1_FIRMWARE_FLAGS) &
             smnMP1_FIRMWARE_FLAGS_INTERRUPTS_ENABLED) {
             break;
         }
         IOSleep(1);
     }
-    if (i >= AMDGPU_MAX_USEC_TIMEOUT) { return kCAILResultFailed; }
+    if (i >= AMD_MAX_USEC_TIMEOUT) { return kCAILResultFailed; }
 
     auto res = smuReset();
     if (res != kCAILResultSuccess) { return res; }

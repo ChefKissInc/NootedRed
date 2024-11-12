@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		1C748C2D1C21952C0024EED2 /* Plugin.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C748C2C1C21952C0024EED2 /* Plugin.cpp */; };
 		401075932CDA8746002D1CD7 /* Model.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 401075922CDA8742002D1CD7 /* Model.cpp */; };
+		4012096C2CE2FD96006E2812 /* DPCD.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4012096B2CE2FD96006E2812 /* DPCD.hpp */; };
 		4014D9722C74AA7000FDE986 /* ObjectField.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4014D9712C74AA5F00FDE986 /* ObjectField.hpp */; };
 		40364DB629B79DFD0070A2B4 /* Model.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40364DB529B79DFD0070A2B4 /* Model.hpp */; };
 		405460872CDBD5B5007865E5 /* Firmware.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 405460862CDBD5B5007865E5 /* Firmware.cpp */; };
@@ -18,6 +19,35 @@
 		4068898B2A229BF600028D22 /* PatcherPlus.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 406889892A229BF600028D22 /* PatcherPlus.cpp */; };
 		4068898C2A229BF600028D22 /* PatcherPlus.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4068898A2A229BF600028D22 /* PatcherPlus.hpp */; };
 		4069F00F29C3A241005293B4 /* ATOMBIOS.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FCE29BF942900367F9D /* ATOMBIOS.hpp */; };
+		408B3DD42CDFA3D200CAE5D2 /* GoldenSettings.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408B3DD32CDFA3CC00CAE5D2 /* GoldenSettings.hpp */; };
+		408B3DD82CDFA42700CAE5D2 /* GC.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408B3DD72CDFA42300CAE5D2 /* GC.hpp */; };
+		408B3DDA2CDFA42E00CAE5D2 /* SDMA0.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408B3DD92CDFA42A00CAE5D2 /* SDMA0.hpp */; };
+		408B3DDC2CDFA44100CAE5D2 /* IPOffset.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408B3DDB2CDFA43C00CAE5D2 /* IPOffset.hpp */; };
+		408B3DDE2CDFA46B00CAE5D2 /* NBIO.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408B3DDD2CDFA46800CAE5D2 /* NBIO.hpp */; };
+		408B3DE02CDFA60E00CAE5D2 /* SMU.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408B3DDF2CDFA60900CAE5D2 /* SMU.hpp */; };
+		408B3DE22CDFA66F00CAE5D2 /* DCN1.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408B3DE12CDFA66C00CAE5D2 /* DCN1.hpp */; };
+		408B3DE52CDFA77800CAE5D2 /* SMUIO.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408B3DE42CDFA77100CAE5D2 /* SMUIO.hpp */; };
+		408B3DE72CDFA7AC00CAE5D2 /* RavenPPSMC.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408B3DE62CDFA7A200CAE5D2 /* RavenPPSMC.hpp */; };
+		408B3DE92CDFA81200CAE5D2 /* RenoirPPSMC.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408B3DE82CDFA80B00CAE5D2 /* RenoirPPSMC.hpp */; };
+		408B3DEC2CDFB7DE00CAE5D2 /* HWBlock.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408B3DEB2CDFB7DA00CAE5D2 /* HWBlock.hpp */; };
+		408B3DEE2CDFB80700CAE5D2 /* GoldenSettings.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408B3DED2CDFB80000CAE5D2 /* GoldenSettings.hpp */; };
+		408B3DF02CDFB91F00CAE5D2 /* DevCaps.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408B3DEF2CDFB91800CAE5D2 /* DevCaps.hpp */; };
+		408B3DF22CDFB98800CAE5D2 /* Result.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408B3DF12CDFB98500CAE5D2 /* Result.hpp */; };
+		409127542CE2CBC0004DBDB5 /* PSP.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127532CE2CBB2004DBDB5 /* PSP.hpp */; };
+		409127562CE2CC01004DBDB5 /* ASICCaps.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127552CE2CC01004DBDB5 /* ASICCaps.hpp */; };
+		409127592CE2EBCD004DBDB5 /* VidMemType.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127582CE2EBCD004DBDB5 /* VidMemType.hpp */; };
+		4091275E2CE2ED98004DBDB5 /* COS.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4091275D2CE2ED98004DBDB5 /* COS.hpp */; };
+		409127612CE2EDC6004DBDB5 /* DeviceType.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127602CE2EDC6004DBDB5 /* DeviceType.hpp */; };
+		409127642CE2F2D2004DBDB5 /* ASICCaps.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127632CE2F2D2004DBDB5 /* ASICCaps.hpp */; };
+		409127662CE2F2F4004DBDB5 /* PowerPlay.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127652CE2F2F4004DBDB5 /* PowerPlay.hpp */; };
+		409127682CE2F360004DBDB5 /* DevCaps.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127672CE2F360004DBDB5 /* DevCaps.hpp */; };
+		4091276A2CE2F5EF004DBDB5 /* AddrLib.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127692CE2F5EF004DBDB5 /* AddrLib.hpp */; };
+		4091276D2CE2F681004DBDB5 /* SignalTypes.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4091276C2CE2F681004DBDB5 /* SignalTypes.hpp */; };
+		409127702CE2F724004DBDB5 /* Family.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4091276F2CE2F724004DBDB5 /* Family.hpp */; };
+		409127722CE2F76C004DBDB5 /* Driver.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127712CE2F76C004DBDB5 /* Driver.hpp */; };
+		409127742CE2F7B0004DBDB5 /* SMU.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127732CE2F7B0004DBDB5 /* SMU.hpp */; };
+		409127762CE2F7EA004DBDB5 /* Linux.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127752CE2F7EA004DBDB5 /* Linux.hpp */; };
+		409127792CE2F866004DBDB5 /* HWEngine.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127782CE2F866004DBDB5 /* HWEngine.hpp */; };
 		40F39FDC2CDD609E007AE975 /* Backlight.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40F39FDB2CDD6087007AE975 /* Backlight.hpp */; };
 		40F39FDE2CDD60A4007AE975 /* Backlight.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40F39FDD2CDD60A3007AE975 /* Backlight.cpp */; };
 		40F39FE02CDE842B007AE975 /* X6000FB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40F39FDF2CDE8424007AE975 /* X6000FB.cpp */; };
@@ -56,6 +86,7 @@
 		1C748C2C1C21952C0024EED2 /* Plugin.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Plugin.cpp; sourceTree = "<group>"; };
 		1C748C2E1C21952C0024EED2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		401075922CDA8742002D1CD7 /* Model.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Model.cpp; sourceTree = "<group>"; };
+		4012096B2CE2FD96006E2812 /* DPCD.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DPCD.hpp; sourceTree = "<group>"; };
 		4014D9712C74AA5F00FDE986 /* ObjectField.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ObjectField.hpp; sourceTree = "<group>"; };
 		40364DB529B79DFD0070A2B4 /* Model.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Model.hpp; sourceTree = "<group>"; };
 		405460812CDBBE12007865E5 /* FwGen.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = FwGen.sh; sourceTree = "<group>"; };
@@ -66,7 +97,37 @@
 		405460902CDBF215007865E5 /* NRedAttributes.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = NRedAttributes.hpp; sourceTree = "<group>"; };
 		406889892A229BF600028D22 /* PatcherPlus.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = PatcherPlus.cpp; sourceTree = "<group>"; };
 		4068898A2A229BF600028D22 /* PatcherPlus.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PatcherPlus.hpp; sourceTree = "<group>"; };
+		408B3DD32CDFA3CC00CAE5D2 /* GoldenSettings.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = GoldenSettings.hpp; sourceTree = "<group>"; };
+		408B3DD72CDFA42300CAE5D2 /* GC.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = GC.hpp; sourceTree = "<group>"; };
+		408B3DD92CDFA42A00CAE5D2 /* SDMA0.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SDMA0.hpp; sourceTree = "<group>"; };
+		408B3DDB2CDFA43C00CAE5D2 /* IPOffset.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = IPOffset.hpp; sourceTree = "<group>"; };
+		408B3DDD2CDFA46800CAE5D2 /* NBIO.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = NBIO.hpp; sourceTree = "<group>"; };
+		408B3DDF2CDFA60900CAE5D2 /* SMU.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SMU.hpp; sourceTree = "<group>"; };
+		408B3DE12CDFA66C00CAE5D2 /* DCN1.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DCN1.hpp; sourceTree = "<group>"; };
+		408B3DE32CDFA6F300CAE5D2 /* DCN2.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DCN2.hpp; sourceTree = "<group>"; };
+		408B3DE42CDFA77100CAE5D2 /* SMUIO.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SMUIO.hpp; sourceTree = "<group>"; };
+		408B3DE62CDFA7A200CAE5D2 /* RavenPPSMC.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = RavenPPSMC.hpp; sourceTree = "<group>"; };
+		408B3DE82CDFA80B00CAE5D2 /* RenoirPPSMC.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = RenoirPPSMC.hpp; sourceTree = "<group>"; };
+		408B3DEB2CDFB7DA00CAE5D2 /* HWBlock.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HWBlock.hpp; sourceTree = "<group>"; };
+		408B3DED2CDFB80000CAE5D2 /* GoldenSettings.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = GoldenSettings.hpp; sourceTree = "<group>"; };
+		408B3DEF2CDFB91800CAE5D2 /* DevCaps.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DevCaps.hpp; sourceTree = "<group>"; };
+		408B3DF12CDFB98500CAE5D2 /* Result.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Result.hpp; sourceTree = "<group>"; };
 		408F201E288ACBB0002EEC15 /* Firmware.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Firmware.hpp; sourceTree = "<group>"; };
+		409127532CE2CBB2004DBDB5 /* PSP.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PSP.hpp; sourceTree = "<group>"; };
+		409127552CE2CC01004DBDB5 /* ASICCaps.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ASICCaps.hpp; sourceTree = "<group>"; };
+		409127582CE2EBCD004DBDB5 /* VidMemType.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = VidMemType.hpp; sourceTree = "<group>"; };
+		4091275D2CE2ED98004DBDB5 /* COS.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = COS.hpp; sourceTree = "<group>"; };
+		409127602CE2EDC6004DBDB5 /* DeviceType.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DeviceType.hpp; sourceTree = "<group>"; };
+		409127632CE2F2D2004DBDB5 /* ASICCaps.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ASICCaps.hpp; sourceTree = "<group>"; };
+		409127652CE2F2F4004DBDB5 /* PowerPlay.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PowerPlay.hpp; sourceTree = "<group>"; };
+		409127672CE2F360004DBDB5 /* DevCaps.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DevCaps.hpp; sourceTree = "<group>"; };
+		409127692CE2F5EF004DBDB5 /* AddrLib.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AddrLib.hpp; sourceTree = "<group>"; };
+		4091276C2CE2F681004DBDB5 /* SignalTypes.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SignalTypes.hpp; sourceTree = "<group>"; };
+		4091276F2CE2F724004DBDB5 /* Family.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Family.hpp; sourceTree = "<group>"; };
+		409127712CE2F76C004DBDB5 /* Driver.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Driver.hpp; sourceTree = "<group>"; };
+		409127732CE2F7B0004DBDB5 /* SMU.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SMU.hpp; sourceTree = "<group>"; };
+		409127752CE2F7EA004DBDB5 /* Linux.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Linux.hpp; sourceTree = "<group>"; };
+		409127782CE2F866004DBDB5 /* HWEngine.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HWEngine.hpp; sourceTree = "<group>"; };
 		40F39FDB2CDD6087007AE975 /* Backlight.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Backlight.hpp; sourceTree = "<group>"; };
 		40F39FDD2CDD60A3007AE975 /* Backlight.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Backlight.cpp; sourceTree = "<group>"; };
 		40F39FDF2CDE8424007AE975 /* X6000FB.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = X6000FB.cpp; sourceTree = "<group>"; };
@@ -86,7 +147,6 @@
 		CE8DA0822517C41A008C44E8 /* libkmod.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libkmod.a; path = MacKernelSDK/Library/x86_64/libkmod.a; sourceTree = SOURCE_ROOT; };
 		CEA03B5C20EE825A00BA842F /* NRed.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = NRed.cpp; sourceTree = "<group>"; };
 		CEA03B5D20EE825A00BA842F /* NRed.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = NRed.hpp; sourceTree = "<group>"; };
-		CEB402A71F181D8300716912 /* AMDCommon.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AMDCommon.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -145,10 +205,10 @@
 		405460802CDBB84B007865E5 /* PrivateHeaders */ = {
 			isa = PBXGroup;
 			children = (
+				409127572CE2EB96004DBDB5 /* GPUDriversAMD */,
 				4054608F2CDBF1CA007865E5 /* Hotfixes */,
-				CEB402A71F181D8300716912 /* AMDCommon.hpp */,
+				408B3DD12CDFA36200CAE5D2 /* iVega */,
 				6C1B36652A407C6100B184DD /* AppleGFXHDA.hpp */,
-				40FC5FCE29BF942900367F9D /* ATOMBIOS.hpp */,
 				40F39FDB2CDD6087007AE975 /* Backlight.hpp */,
 				408F201E288ACBB0002EEC15 /* Firmware.hpp */,
 				40FC5FDC29BF996900367F9D /* HWLibs.hpp */,
@@ -191,6 +251,84 @@
 			path = Hotfixes;
 			sourceTree = "<group>";
 		};
+		408B3DD12CDFA36200CAE5D2 /* iVega */ = {
+			isa = PBXGroup;
+			children = (
+				408B3DD62CDFA41A00CAE5D2 /* Regs */,
+				408B3DD32CDFA3CC00CAE5D2 /* GoldenSettings.hpp */,
+				408B3DDB2CDFA43C00CAE5D2 /* IPOffset.hpp */,
+				408B3DE62CDFA7A200CAE5D2 /* RavenPPSMC.hpp */,
+				408B3DE82CDFA80B00CAE5D2 /* RenoirPPSMC.hpp */,
+				409127632CE2F2D2004DBDB5 /* ASICCaps.hpp */,
+				409127672CE2F360004DBDB5 /* DevCaps.hpp */,
+			);
+			path = iVega;
+			sourceTree = "<group>";
+		};
+		408B3DD62CDFA41A00CAE5D2 /* Regs */ = {
+			isa = PBXGroup;
+			children = (
+				408B3DE42CDFA77100CAE5D2 /* SMUIO.hpp */,
+				408B3DE12CDFA66C00CAE5D2 /* DCN1.hpp */,
+				408B3DE32CDFA6F300CAE5D2 /* DCN2.hpp */,
+				408B3DD72CDFA42300CAE5D2 /* GC.hpp */,
+				408B3DDD2CDFA46800CAE5D2 /* NBIO.hpp */,
+				408B3DD92CDFA42A00CAE5D2 /* SDMA0.hpp */,
+				408B3DDF2CDFA60900CAE5D2 /* SMU.hpp */,
+			);
+			path = Regs;
+			sourceTree = "<group>";
+		};
+		408B3DEA2CDFB7CE00CAE5D2 /* CAIL */ = {
+			isa = PBXGroup;
+			children = (
+				408B3DEF2CDFB91800CAE5D2 /* DevCaps.hpp */,
+				408B3DED2CDFB80000CAE5D2 /* GoldenSettings.hpp */,
+				408B3DEB2CDFB7DA00CAE5D2 /* HWBlock.hpp */,
+				408B3DF12CDFB98500CAE5D2 /* Result.hpp */,
+				409127552CE2CC01004DBDB5 /* ASICCaps.hpp */,
+				4091275D2CE2ED98004DBDB5 /* COS.hpp */,
+				409127602CE2EDC6004DBDB5 /* DeviceType.hpp */,
+			);
+			path = CAIL;
+			sourceTree = "<group>";
+		};
+		409127572CE2EB96004DBDB5 /* GPUDriversAMD */ = {
+			isa = PBXGroup;
+			children = (
+				409127772CE2F854004DBDB5 /* Accel */,
+				408B3DEA2CDFB7CE00CAE5D2 /* CAIL */,
+				4091276B2CE2F664004DBDB5 /* DC */,
+				409127692CE2F5EF004DBDB5 /* AddrLib.hpp */,
+				40FC5FCE29BF942900367F9D /* ATOMBIOS.hpp */,
+				409127712CE2F76C004DBDB5 /* Driver.hpp */,
+				4091276F2CE2F724004DBDB5 /* Family.hpp */,
+				409127752CE2F7EA004DBDB5 /* Linux.hpp */,
+				409127652CE2F2F4004DBDB5 /* PowerPlay.hpp */,
+				409127532CE2CBB2004DBDB5 /* PSP.hpp */,
+				409127732CE2F7B0004DBDB5 /* SMU.hpp */,
+				409127582CE2EBCD004DBDB5 /* VidMemType.hpp */,
+			);
+			path = GPUDriversAMD;
+			sourceTree = "<group>";
+		};
+		4091276B2CE2F664004DBDB5 /* DC */ = {
+			isa = PBXGroup;
+			children = (
+				4091276C2CE2F681004DBDB5 /* SignalTypes.hpp */,
+				4012096B2CE2FD96006E2812 /* DPCD.hpp */,
+			);
+			path = DC;
+			sourceTree = "<group>";
+		};
+		409127772CE2F854004DBDB5 /* Accel */ = {
+			isa = PBXGroup;
+			children = (
+				409127782CE2F866004DBDB5 /* HWEngine.hpp */,
+			);
+			path = Accel;
+			sourceTree = "<group>";
+		};
 		CE405EC51E49DD7100AA0B3D /* Library */ = {
 			isa = PBXGroup;
 			children = (
@@ -224,19 +362,49 @@
 			buildActionMask = 2147483647;
 			files = (
 				4069F00F29C3A241005293B4 /* ATOMBIOS.hpp in Headers */,
+				409127742CE2F7B0004DBDB5 /* SMU.hpp in Headers */,
 				40FC5FDA29BF995E00367F9D /* X5000.hpp in Headers */,
+				4091275E2CE2ED98004DBDB5 /* COS.hpp in Headers */,
 				40FC5FE229BF9E2500367F9D /* X6000.hpp in Headers */,
+				409127762CE2F7EA004DBDB5 /* Linux.hpp in Headers */,
+				409127722CE2F76C004DBDB5 /* Driver.hpp in Headers */,
 				40364DB629B79DFD0070A2B4 /* Model.hpp in Headers */,
 				4014D9722C74AA7000FDE986 /* ObjectField.hpp in Headers */,
+				4091276D2CE2F681004DBDB5 /* SignalTypes.hpp in Headers */,
 				CEA03B5F20EE825A00BA842F /* NRed.hpp in Headers */,
+				409127662CE2F2F4004DBDB5 /* PowerPlay.hpp in Headers */,
+				408B3DE52CDFA77800CAE5D2 /* SMUIO.hpp in Headers */,
+				408B3DE92CDFA81200CAE5D2 /* RenoirPPSMC.hpp in Headers */,
+				408B3DD82CDFA42700CAE5D2 /* GC.hpp in Headers */,
 				40FC5FD629BF995000367F9D /* X6000FB.hpp in Headers */,
+				408B3DEE2CDFB80700CAE5D2 /* GoldenSettings.hpp in Headers */,
+				4012096C2CE2FD96006E2812 /* DPCD.hpp in Headers */,
+				408B3DDC2CDFA44100CAE5D2 /* IPOffset.hpp in Headers */,
 				40FC5FDE29BF996900367F9D /* HWLibs.hpp in Headers */,
 				4068898C2A229BF600028D22 /* PatcherPlus.hpp in Headers */,
 				405460912CDBF221007865E5 /* NRedAttributes.hpp in Headers */,
+				408B3DE22CDFA66F00CAE5D2 /* DCN1.hpp in Headers */,
+				409127642CE2F2D2004DBDB5 /* ASICCaps.hpp in Headers */,
+				409127682CE2F360004DBDB5 /* DevCaps.hpp in Headers */,
+				408B3DEC2CDFB7DE00CAE5D2 /* HWBlock.hpp in Headers */,
 				6C1B36672A407C6200B184DD /* AppleGFXHDA.hpp in Headers */,
+				409127612CE2EDC6004DBDB5 /* DeviceType.hpp in Headers */,
+				408B3DDA2CDFA42E00CAE5D2 /* SDMA0.hpp in Headers */,
+				408B3DF02CDFB91F00CAE5D2 /* DevCaps.hpp in Headers */,
+				409127792CE2F866004DBDB5 /* HWEngine.hpp in Headers */,
+				409127592CE2EBCD004DBDB5 /* VidMemType.hpp in Headers */,
+				408B3DE72CDFA7AC00CAE5D2 /* RavenPPSMC.hpp in Headers */,
+				409127562CE2CC01004DBDB5 /* ASICCaps.hpp in Headers */,
+				408B3DE02CDFA60E00CAE5D2 /* SMU.hpp in Headers */,
+				408B3DDE2CDFA46B00CAE5D2 /* NBIO.hpp in Headers */,
 				405460892CDBDF6A007865E5 /* AGDP.hpp in Headers */,
+				4091276A2CE2F5EF004DBDB5 /* AddrLib.hpp in Headers */,
+				409127542CE2CBC0004DBDB5 /* PSP.hpp in Headers */,
+				409127702CE2F724004DBDB5 /* Family.hpp in Headers */,
 				40F39FDC2CDD609E007AE975 /* Backlight.hpp in Headers */,
 				40F39FE22CDE864A007AE975 /* X6000FB.hpp in Headers */,
+				408B3DD42CDFA3D200CAE5D2 /* GoldenSettings.hpp in Headers */,
+				408B3DF22CDFB98800CAE5D2 /* Result.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -371,7 +539,7 @@
 				CLANG_ANALYZER_SECURITY_FLOATLOOPCOUNTER = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_RAND = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++1y";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_TIDY_BUGPRONE_REDUNDANT_BRANCH_CONDITION = YES;
 				CLANG_TIDY_MISC_REDUNDANT_EXPRESSION = YES;
@@ -413,7 +581,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				GCC_C_LANGUAGE_STANDARD = c11;
+				GCC_C_LANGUAGE_STANDARD = c17;
 				GCC_ENABLE_OBJC_EXCEPTIONS = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -469,7 +637,7 @@
 				CLANG_ANALYZER_SECURITY_FLOATLOOPCOUNTER = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_RAND = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++1y";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_TIDY_BUGPRONE_REDUNDANT_BRANCH_CONDITION = YES;
 				CLANG_TIDY_MISC_REDUNDANT_EXPRESSION = YES;
@@ -511,7 +679,7 @@
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_C_LANGUAGE_STANDARD = c11;
+				GCC_C_LANGUAGE_STANDARD = c17;
 				GCC_ENABLE_OBJC_EXCEPTIONS = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -606,7 +774,7 @@
 				CLANG_ANALYZER_SECURITY_FLOATLOOPCOUNTER = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_RAND = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++1y";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_TIDY_BUGPRONE_REDUNDANT_BRANCH_CONDITION = YES;
 				CLANG_TIDY_MISC_REDUNDANT_EXPRESSION = YES;
@@ -648,7 +816,7 @@
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_C_LANGUAGE_STANDARD = c11;
+				GCC_C_LANGUAGE_STANDARD = c17;
 				GCC_ENABLE_OBJC_EXCEPTIONS = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -723,7 +891,7 @@
 				CLANG_ANALYZER_SECURITY_FLOATLOOPCOUNTER = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_RAND = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++1y";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_STATIC_ANALYZER_MODE = deep;
 				CLANG_TIDY_BUGPRONE_REDUNDANT_BRANCH_CONDITION = YES;
@@ -766,7 +934,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				GCC_C_LANGUAGE_STANDARD = c11;
+				GCC_C_LANGUAGE_STANDARD = c17;
 				GCC_ENABLE_OBJC_EXCEPTIONS = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_NO_COMMON_BLOCKS = YES;

@@ -2,7 +2,9 @@
 // See LICENSE for details.
 
 #pragma once
-#include <Headers/kern_util.hpp>
+#include <IOKit/IOTypes.h>
+
+constexpr UInt32 ATOMBIOS_IMAGE_SIZE = 0x10000;
 
 struct VFCT {
     char signature[4];
@@ -16,25 +18,26 @@ struct VFCT {
     char tableUUID[16];
     UInt32 vbiosImageOffset, lib1ImageOffset;
     UInt32 reserved[4];
-} PACKED;
+};
 
 struct GOPVideoBIOSHeader {
     UInt32 pciBus, pciDevice, pciFunction;
     UInt16 vendorID, deviceID;
     UInt16 ssvId, ssId;
     UInt32 revision, imageLength;
-} PACKED;
+};
 
 struct ATOMCommonTableHeader {
     UInt16 structureSize;
     UInt8 formatRev;
     UInt8 contentRev;
-} PACKED;
+};
 
 constexpr UInt32 ATOM_ROM_TABLE_PTR = 0x48;
 constexpr UInt32 ATOM_ROM_DATA_PTR = 0x20;
 
-struct AtomFirmwareInfo : public ATOMCommonTableHeader {
+struct AtomFirmwareInfo {
+    ATOMCommonTableHeader header;
     UInt32 firmwareRevision;
     UInt32 bootupSclkIn10Khz;
     UInt32 bootupMclkIn10Khz;
@@ -43,7 +46,8 @@ struct AtomFirmwareInfo : public ATOMCommonTableHeader {
     UInt32 biosScratchRegStartAddr;
 };
 
-struct IGPSystemInfoV11 : public ATOMCommonTableHeader {
+struct IGPSystemInfoV11 {
+    ATOMCommonTableHeader header;
     UInt32 vbiosMisc;
     UInt32 gpuCapInfo;
     UInt32 systemConfig;
@@ -61,7 +65,7 @@ struct IGPSystemInfoV11 : public ATOMCommonTableHeader {
     UInt16 backlightPwmHz;
     UInt8 memoryType;
     UInt8 umaChannelCount;
-} PACKED;
+};
 
 enum DMIT17MemType : UInt8 {
     kDDR2MemType = 0x13,
@@ -85,7 +89,7 @@ struct IGPSystemInfoV2 : public ATOMCommonTableHeader {
     UInt16 dpPhyOverride;
     UInt8 memoryType;
     UInt8 umaChannelCount;
-} PACKED;
+};
 
 union IGPSystemInfo {
     ATOMCommonTableHeader header;
@@ -103,11 +107,11 @@ struct ATOMDispObjPathV2 {
     UInt16 devTag;
     UInt8 priorityId;
     UInt8 _reserved;
-} PACKED;
+};
 
 struct DispObjInfoTableV1_4 : public ATOMCommonTableHeader {
     UInt16 supportedDevices;
     UInt8 pathCount;
     UInt8 _reserved;
     ATOMDispObjPathV2 paths[];
-} PACKED;
+};

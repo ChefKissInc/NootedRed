@@ -4,8 +4,8 @@
 #pragma once
 #include <Headers/kern_patcher.hpp>
 #include <IOKit/pci/IOPCIDevice.h>
-#include <PrivateHeaders/AMDCommon.hpp>
-#include <PrivateHeaders/ATOMBIOS.hpp>
+#include <PrivateHeaders/GPUDriversAMD/ATOMBIOS.hpp>
+#include <PrivateHeaders/GPUDriversAMD/CAIL/Result.hpp>
 #include <PrivateHeaders/NRedAttributes.hpp>
 
 class NRed {

@@ -3,25 +3,13 @@
 
 #pragma once
 #include <Headers/kern_patcher.hpp>
-#include <PrivateHeaders/AMDCommon.hpp>
+#include <PrivateHeaders/GPUDriversAMD/Accel/HWEngine.hpp>
+#include <PrivateHeaders/GPUDriversAMD/AddrLib.hpp>
 #include <PrivateHeaders/ObjectField.hpp>
 
-enum AMDHWEngineType : UInt32 {
-    kAMDHWEngineTypePM4 = 0,
-    kAMDHWEngineTypeSDMA0,
-    kAMDHWEngineTypeSDMA1,
-    kAMDHWEngineTypeSDMA2,
-    kAMDHWEngineTypeSDMA3,
-    kAMDHWEngineTypeUVD0,
-    kAMDHWEngineTypeUVD1,
-    kAMDHWEngineTypeVCE,
-    kAMDHWEngineTypeVCN0,
-    kAMDHWEngineTypeVCN1,
-    kAMDHWEngineTypeSAMU,
-    kAMDHWEngineTypeMax,
-};
-
 class X5000 {
+    using t_GenericConstructor = void (*)(void *that);
+
     friend class X6000;
 
     bool initialised {false};

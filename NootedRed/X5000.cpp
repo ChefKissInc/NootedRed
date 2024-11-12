@@ -4,6 +4,8 @@
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_util.hpp>
 #include <PrivateHeaders/Firmware.hpp>
+#include <PrivateHeaders/GPUDriversAMD/Family.hpp>
+#include <PrivateHeaders/GPUDriversAMD/Linux.hpp>
 #include <PrivateHeaders/NRed.hpp>
 #include <PrivateHeaders/PatcherPlus.hpp>
 #include <PrivateHeaders/X5000.hpp>
@@ -287,7 +289,7 @@ void *X5000::wrapGetHWChannel(void *that, AMDHWEngineType engineType, UInt32 rin
 
 void X5000::wrapInitializeFamilyType(void *that) {
     DBGLOG("X5000", "initializeFamilyType << (that: %p)", that);
-    singleton().familyTypeField.set(that, AMDGPU_FAMILY_RAVEN);
+    singleton().familyTypeField.set(that, AMD_FAMILY_RAVEN);
     DBGLOG("X5000", "initializeFamilyType >>");
 }
 
@@ -352,7 +354,7 @@ void *X5000::wrapObtainAccelChannelGroup1304(void *that, UInt32 priority, void *
 
 UInt32 X5000::wrapHwlConvertChipFamily(void *that, UInt32 family, UInt32 revision) {
     DBGLOG("X5000", "HwlConvertChipFamily >> (that: %p family: 0x%X revision: 0x%X)", that, family, revision);
-    if (family == AMDGPU_FAMILY_RAVEN) {
+    if (family == AMD_FAMILY_RAVEN) {
         auto &settings = singleton().chipSettingsField.getRef(that);
         settings.isArcticIsland = 1;
         settings.isRaven = 1;
