@@ -5,29 +5,29 @@
 #include <Headers/kern_devinfo.hpp>
 #include <Headers/kern_iokit.hpp>
 #include <IOKit/acpi/IOACPIPlatformExpert.h>
-#include <PrivateHeaders/AppleGFXHDA.hpp>
 #include <PrivateHeaders/Backlight.hpp>
 #include <PrivateHeaders/Firmware.hpp>
 #include <PrivateHeaders/GPUDriversAMD/Driver.hpp>
-#include <PrivateHeaders/HWLibs.hpp>
 #include <PrivateHeaders/Hotfixes/AGDP.hpp>
 #include <PrivateHeaders/Hotfixes/X6000FB.hpp>
 #include <PrivateHeaders/Model.hpp>
 #include <PrivateHeaders/NRed.hpp>
 #include <PrivateHeaders/PatcherPlus.hpp>
-#include <PrivateHeaders/X5000.hpp>
-#include <PrivateHeaders/X6000.hpp>
-#include <PrivateHeaders/X6000FB.hpp>
+#include <PrivateHeaders/iVega/AppleGFXHDA.hpp>
+#include <PrivateHeaders/iVega/HWLibs.hpp>
 #include <PrivateHeaders/iVega/IPOffset.hpp>
 #include <PrivateHeaders/iVega/Regs/GC.hpp>
 #include <PrivateHeaders/iVega/Regs/NBIO.hpp>
 #include <PrivateHeaders/iVega/Regs/SMU.hpp>
+#include <PrivateHeaders/iVega/X5000.hpp>
+#include <PrivateHeaders/iVega/X6000.hpp>
+#include <PrivateHeaders/iVega/X6000FB.hpp>
 
 //------ Module Logic ------//
 
-static NRed module {};
+static NRed instance {};
 
-NRed &NRed::singleton() { return module; }
+NRed &NRed::singleton() { return instance; }
 
 void NRed::init() {
     PANIC_COND(this->initialised, "NRed", "Attempted to initialise module twice!");
@@ -90,11 +90,11 @@ void NRed::init() {
     Hotfixes::AGDP::singleton().init();
     Hotfixes::X6000FB::singleton().init();
     Backlight::singleton().init();
-    X6000FB::singleton().init();
-    AppleGFXHDA::singleton().init();
-    X5000HWLibs::singleton().init();
-    X6000::singleton().init();
-    X5000::singleton().init();
+    iVega::X6000FB::singleton().init();
+    iVega::AppleGFXHDA::singleton().init();
+    iVega::X5000HWLibs::singleton().init();
+    iVega::X6000::singleton().init();
+    iVega::X5000::singleton().init();
 
     lilu.onPatcherLoadForce(
         [](void *user, KernelPatcher &patcher) { static_cast<NRed *>(user)->processPatcher(patcher); }, this);

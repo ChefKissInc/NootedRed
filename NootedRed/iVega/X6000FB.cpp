@@ -8,11 +8,11 @@
 #include <PrivateHeaders/GPUDriversAMD/VidMemType.hpp>
 #include <PrivateHeaders/NRed.hpp>
 #include <PrivateHeaders/PatcherPlus.hpp>
-#include <PrivateHeaders/X6000FB.hpp>
 #include <PrivateHeaders/iVega/ASICCaps.hpp>
 #include <PrivateHeaders/iVega/IPOffset.hpp>
 #include <PrivateHeaders/iVega/Regs/DCN2.hpp>
 #include <PrivateHeaders/iVega/Regs/SMUIO.hpp>
+#include <PrivateHeaders/iVega/X6000FB.hpp>
 
 //------ Target Kexts ------//
 
@@ -196,11 +196,11 @@ static const UInt8 kCreateLinksPatchedMask[] = {0x0F, 0x00, 0x00, 0x00, 0x00};
 
 //------ Module Logic ------//
 
-static X6000FB module {};
+static iVega::X6000FB instance {};
 
-X6000FB &X6000FB::singleton() { return module; }
+iVega::X6000FB &iVega::X6000FB::singleton() { return instance; }
 
-void X6000FB::init() {
+void iVega::X6000FB::init() {
     PANIC_COND(this->initialised, "X6000FB", "Attempted to initialise module twice!");
     this->initialised = true;
 
@@ -209,12 +209,12 @@ void X6000FB::init() {
     lilu.onKextLoadForce(
         &kextRadeonX6000Framebuffer, 1,
         [](void *user, KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
-            static_cast<X6000FB *>(user)->processKext(patcher, id, slide, size);
+            static_cast<iVega::X6000FB *>(user)->processKext(patcher, id, slide, size);
         },
         this);
 }
 
-void X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
+void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextRadeonX6000Framebuffer.loadIndex != id) { return; }
 
     NRed::singleton().hwLateInit();
@@ -426,9 +426,9 @@ void X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t s
     }
 }
 
-UInt16 X6000FB::wrapGetEnumeratedRevision() { return NRed::singleton().getEnumRevision(); }
+UInt16 iVega::X6000FB::wrapGetEnumeratedRevision() { return NRed::singleton().getEnumRevision(); }
 
-IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
+IOReturn iVega::X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
     UInt32 channelCount = 1;
     auto *table = NRed::singleton().getVBIOSDataTable<IGPSystemInfo>(0x1E);
     UInt8 memoryType = 0;
@@ -492,7 +492,7 @@ IOReturn X6000FB::wrapPopulateVramInfo(void *, void *fwInfo) {
     return kIOReturnSuccess;
 }
 
-UInt32 X6000FB::wrapGetNumberOfConnectors(void *that) {
+UInt32 iVega::X6000FB::wrapGetNumberOfConnectors(void *that) {
     if (!singleton().fixedVBIOS) {
         singleton().fixedVBIOS = true;
         struct DispObjInfoTableV1_4 *objInfo = getMember<DispObjInfoTableV1_4 *>(that, 0x28);
@@ -512,13 +512,13 @@ UInt32 X6000FB::wrapGetNumberOfConnectors(void *that) {
     return FunctionCast(wrapGetNumberOfConnectors, singleton().orgGetNumberOfConnectors)(that);
 }
 
-bool X6000FB::wrapIH40IVRingInitHardware(void *ctx, void *param2) {
+bool iVega::X6000FB::wrapIH40IVRingInitHardware(void *ctx, void *param2) {
     auto ret = FunctionCast(wrapIH40IVRingInitHardware, singleton().orgIH40IVRingInitHardware)(ctx, param2);
     NRed::singleton().writeReg32(mmIH_CHICKEN, NRed::singleton().readReg32(mmIH_CHICKEN) | mmIH_MC_SPACE_GPA_ENABLE);
     return ret;
 }
 
-void X6000FB::wrapIRQMGRWriteRegister(void *ctx, UInt64 index, UInt32 value) {
+void iVega::X6000FB::wrapIRQMGRWriteRegister(void *ctx, UInt64 index, UInt32 value) {
     if (index == mmIH_CLK_CTRL) {
         if ((value & (1U << mmIH_DBUS_MUX_CLK_SOFT_OVERRIDE_SHIFT)) != 0) {
             value |= (1U << mmIH_IH_BUFFER_MEM_CLK_SOFT_OVERRIDE_SHIFT);
@@ -527,14 +527,14 @@ void X6000FB::wrapIRQMGRWriteRegister(void *ctx, UInt64 index, UInt32 value) {
     FunctionCast(wrapIRQMGRWriteRegister, singleton().orgIRQMGRWriteRegister)(ctx, index, value);
 }
 
-bool X6000FB::wrapInitWithPciInfo(void *that, void *pciDevice) {
+bool iVega::X6000FB::wrapInitWithPciInfo(void *that, void *pciDevice) {
     auto ret = FunctionCast(wrapInitWithPciInfo, singleton().orgInitWithPciInfo)(that, pciDevice);
     getMember<UInt64>(that, 0x28) = 0xFFFFFFFFFFFFFFFF;    // Enable all log types
     getMember<UInt32>(that, 0x30) = 0xFF;                  // Enable all log severities
     return ret;
 }
 
-void X6000FB::wrapDoGPUPanic(void *, char const *fmt, ...) {
+void iVega::X6000FB::wrapDoGPUPanic(void *, char const *fmt, ...) {
     va_list va;
     va_start(va, fmt);
     auto *buf = static_cast<char *>(IOMalloc(1000));
@@ -584,7 +584,7 @@ constexpr static const char *LogTypes[] = {
 };
 
 // Needed to prevent stack overflow
-void X6000FB::wrapDmLoggerWrite(void *, const UInt32 logType, const char *fmt, ...) {
+void iVega::X6000FB::wrapDmLoggerWrite(void *, const UInt32 logType, const char *fmt, ...) {
     va_list va;
     va_start(va, fmt);
     auto *message = static_cast<char *>(IOMalloc(0x1000));
@@ -599,10 +599,10 @@ void X6000FB::wrapDmLoggerWrite(void *, const UInt32 logType, const char *fmt, .
     IOFree(message, 0x1000);
 }
 
-void *X6000FB::wrapCreateRegisterAccess(void *initData) {
+void *iVega::X6000FB::wrapCreateRegisterAccess(void *initData) {
     getMember<UInt32>(initData, 0x24) = SMUIO_BASE + mmROM_INDEX;
     getMember<UInt32>(initData, 0x28) = SMUIO_BASE + mmROM_DATA;
     return FunctionCast(wrapCreateRegisterAccess, singleton().orgCreateRegisterAccess)(initData);
 }
 
-void *X6000FB::wrapCreateDmcubService() { return nullptr; }
+void *iVega::X6000FB::wrapCreateDmcubService() { return nullptr; }

@@ -8,8 +8,8 @@
 #include <PrivateHeaders/GPUDriversAMD/Linux.hpp>
 #include <PrivateHeaders/NRed.hpp>
 #include <PrivateHeaders/PatcherPlus.hpp>
-#include <PrivateHeaders/X5000.hpp>
-#include <PrivateHeaders/X6000.hpp>
+#include <PrivateHeaders/iVega/X5000.hpp>
+#include <PrivateHeaders/iVega/X6000.hpp>
 
 //------ Target Kexts ------//
 
@@ -24,13 +24,46 @@ static KernelPatcher::KextInfo kextRadeonX5000 {
     KernelPatcher::KextInfo::Unloaded,
 };
 
+//------ Patterns ------//
+
+static const UInt8 kChannelTypesPattern[] = {0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00,
+    0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00};
+
+static const UInt8 kHwlConvertChipFamilyPattern[] = {0x81, 0xFE, 0x8D, 0x00, 0x00, 0x00, 0x0F};
+
+//------ Patches ------//
+
+// Make for loop stop after one SDMA engine.
+static const UInt8 kStartHWEnginesOriginal[] = {0x40, 0x83, 0xF0, 0x02};
+static const UInt8 kStartHWEnginesMask[] = {0xF0, 0xFF, 0xF0, 0xFF};
+static const UInt8 kStartHWEnginesPatched[] = {0x40, 0x83, 0xF0, 0x01};
+
+// The check in Addr::Lib::Create on 10.15 & 13.4+ is `familyId == 0x8D` instead of `familyId - 0x8D < 2`.
+// So, change the 0x8D (AI) to 0x8E (RV).
+static const UInt8 kAddrLibCreateOriginal[] = {0x41, 0x81, 0x7D, 0x08, 0x8D, 0x00, 0x00, 0x00};
+static const UInt8 kAddrLibCreatePatched[] = {0x41, 0x81, 0x7D, 0x08, 0x8E, 0x00, 0x00, 0x00};
+
+// For some reason Navi (`0x8F`) was added in 14.4 here. Lazy copy pasting?
+static const UInt8 kAddrLibCreateOriginal1404[] = {0x41, 0x8B, 0x46, 0x08, 0x3D, 0x8F, 0x00, 0x00, 0x00, 0x74, 0x00,
+    0x3D, 0x8D, 0x00, 0x00, 0x00, 0x0F, 0x85, 0x00, 0x00, 0x00, 0x00};
+static const UInt8 kAddrLibCreateOriginalMask1404[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00};
+static const UInt8 kAddrLibCreatePatched1404[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x8E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static const UInt8 kAddrLibCreatePatchedMask1404[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+// Catalina only. Change loop condition to skip SDMA1_HP.
+static const UInt8 kCreateAccelChannelsOriginal[] = {0x8D, 0x44, 0x09, 0x02};
+static const UInt8 kCreateAccelChannelsPatched[] = {0x8D, 0x44, 0x09, 0x01};
+
 //------ Module Logic ------//
 
-static X5000 module {};
+static iVega::X5000 instance {};
 
-X5000 &X5000::singleton() { return module; }
+iVega::X5000 &iVega::X5000::singleton() { return instance; }
 
-void X5000::init() {
+void iVega::X5000::init() {
     PANIC_COND(this->initialised, "X5000", "Attempted to initialise module twice!");
     this->initialised = true;
 
@@ -89,12 +122,12 @@ void X5000::init() {
     lilu.onKextLoadForce(
         &kextRadeonX5000, 1,
         [](void *user, KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
-            static_cast<X5000 *>(user)->processKext(patcher, id, slide, size);
+            static_cast<iVega::X5000 *>(user)->processKext(patcher, id, slide, size);
         },
         this);
 }
 
-void X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
+void iVega::X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextRadeonX5000.loadIndex != id) { return; }
 
     NRed::singleton().hwLateInit();
@@ -228,7 +261,7 @@ void X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t sli
     }
 }
 
-bool X5000::wrapAllocateHWEngines(void *that) {
+bool iVega::X5000::wrapAllocateHWEngines(void *that) {
     DBGLOG("X5000", "allocateHWEngines << (that: %p)", that);
     auto *pm4 = OSObject::operator new(0x340);
     singleton().orgGFX9PM4EngineConstructor(pm4);
@@ -242,7 +275,7 @@ bool X5000::wrapAllocateHWEngines(void *that) {
     return true;
 }
 
-void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
+void iVega::X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
     DBGLOG("X5000", "setupAndInitializeHWCapabilities << (that: %p)", that);
     FunctionCast(wrapSetupAndInitializeHWCapabilities, singleton().orgSetupAndInitializeHWCapabilities)(that);
 
@@ -254,7 +287,7 @@ void X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
     DBGLOG("X5000", "setupAndInitializeHWCapabilities >>");
 }
 
-void X5000::wrapGFX9SetupAndInitializeHWCapabilities(void *that) {
+void iVega::X5000::wrapGFX9SetupAndInitializeHWCapabilities(void *that) {
     DBGLOG("X5000", "GFX9::setupAndInitializeHWCapabilities << (that: %p)", that);
     char filename[128] = {0};
     snprintf(filename, arrsize(filename), "%s_gpu_info.bin",
@@ -280,27 +313,27 @@ static const char *hwEngineToString(AMDHWEngineType ty) {
 }
 #endif
 
-void *X5000::wrapGetHWChannel(void *that, AMDHWEngineType engineType, UInt32 ringId) {
+void *iVega::X5000::wrapGetHWChannel(void *that, AMDHWEngineType engineType, UInt32 ringId) {
     DBGLOG("X5000", "getHWChannel << (that: %p, engineType: %s, ringId: 0x%X)", that, hwEngineToString(engineType),
         ringId);
     if (engineType == kAMDHWEngineTypeSDMA1) { engineType = kAMDHWEngineTypeSDMA0; }
     return FunctionCast(wrapGetHWChannel, singleton().orgGetHWChannel)(that, engineType, ringId);
 }
 
-void X5000::wrapInitializeFamilyType(void *that) {
+void iVega::X5000::wrapInitializeFamilyType(void *that) {
     DBGLOG("X5000", "initializeFamilyType << (that: %p)", that);
     singleton().familyTypeField.set(that, AMD_FAMILY_RAVEN);
     DBGLOG("X5000", "initializeFamilyType >>");
 }
 
-void *X5000::wrapAllocateAMDHWDisplay(void *that) {
+void *iVega::X5000::wrapAllocateAMDHWDisplay(void *that) {
     DBGLOG("X5000", "allocateAMDHWDisplay << (that: %p)", that);
     auto *ret = FunctionCast(wrapAllocateAMDHWDisplay, X6000::singleton().orgAllocateAMDHWDisplay)(that);
     DBGLOG("X5000", "allocateAMDHWDisplay >> %p", ret);
     return ret;
 }
 
-UInt64 X5000::wrapAdjustVRAMAddress(void *that, UInt64 addr) {
+UInt64 iVega::X5000::wrapAdjustVRAMAddress(void *that, UInt64 addr) {
     auto ret = FunctionCast(wrapAdjustVRAMAddress, singleton().orgAdjustVRAMAddress)(that, addr);
     if (addr == ret) {
         SYSTRACE_COND(ADDPR(debugEnabled), "X5000", "adjustVRAMAddress: 0x%llx -> 0x%llx NO CHANGE", addr, ret);
@@ -316,7 +349,7 @@ UInt64 X5000::wrapAdjustVRAMAddress(void *that, UInt64 addr) {
 
 static UInt32 fakeGetPreferredSwizzleMode2(void *, void *pIn) { return getMember<UInt32>(pIn, 0x10); }
 
-void *X5000::wrapAllocateAMDHWAlignManager(void *that) {
+void *iVega::X5000::wrapAllocateAMDHWAlignManager(void *that) {
     DBGLOG("X5000", "allocateAMDHWAlignManager << (that: %p)", that);
     auto *hwAlignManager = FunctionCast(wrapAllocateAMDHWAlignManager, singleton().orgAllocateAMDHWAlignManager)(that);
     auto *vtableNew = IOMalloc(0x238);
@@ -327,9 +360,9 @@ void *X5000::wrapAllocateAMDHWAlignManager(void *that) {
     return hwAlignManager;
 }
 
-UInt32 X5000::wrapGetDeviceType() { return NRed::singleton().getAttributes().isRenoir() ? 9 : 0; }
+UInt32 iVega::X5000::wrapGetDeviceType() { return NRed::singleton().getAttributes().isRenoir() ? 9 : 0; }
 
-UInt32 X5000::wrapReturnZero() { return 0; }
+UInt32 iVega::X5000::wrapReturnZero() { return 0; }
 
 static void fixAccelGroup(void *that) {
     auto *&sdma1 = getMember<void *>(that, 0x18);
@@ -337,14 +370,14 @@ static void fixAccelGroup(void *that) {
     if (sdma1 == nullptr) { sdma1 = getMember<void *>(that, 0x10); }
 }
 
-void *X5000::wrapObtainAccelChannelGroup(void *that, UInt32 priority) {
+void *iVega::X5000::wrapObtainAccelChannelGroup(void *that, UInt32 priority) {
     auto ret = FunctionCast(wrapObtainAccelChannelGroup, singleton().orgObtainAccelChannelGroup)(that, priority);
     if (ret == nullptr) { return nullptr; }
     fixAccelGroup(ret);
     return ret;
 }
 
-void *X5000::wrapObtainAccelChannelGroup1304(void *that, UInt32 priority, void *task) {
+void *iVega::X5000::wrapObtainAccelChannelGroup1304(void *that, UInt32 priority, void *task) {
     auto ret =
         FunctionCast(wrapObtainAccelChannelGroup1304, singleton().orgObtainAccelChannelGroup)(that, priority, task);
     if (ret == nullptr) { return nullptr; }
@@ -352,7 +385,7 @@ void *X5000::wrapObtainAccelChannelGroup1304(void *that, UInt32 priority, void *
     return ret;
 }
 
-UInt32 X5000::wrapHwlConvertChipFamily(void *that, UInt32 family, UInt32 revision) {
+UInt32 iVega::X5000::wrapHwlConvertChipFamily(void *that, UInt32 family, UInt32 revision) {
     DBGLOG("X5000", "HwlConvertChipFamily >> (that: %p family: 0x%X revision: 0x%X)", that, family, revision);
     if (family == AMD_FAMILY_RAVEN) {
         auto &settings = singleton().chipSettingsField.getRef(that);
@@ -371,7 +404,7 @@ UInt32 X5000::wrapHwlConvertChipFamily(void *that, UInt32 family, UInt32 revisio
     return FunctionCast(wrapHwlConvertChipFamily, singleton().orgHwlConvertChipFamily)(that, family, revision);
 }
 
-bool X5000::wrapGetNumericProperty(void *that, const char *name, uint32_t *value) {
+bool iVega::X5000::wrapGetNumericProperty(void *that, const char *name, uint32_t *value) {
     DBGLOG("X5000", "getNumericProperty << (that: %p name: %s, value: %p)", that, name, value);
     auto ret = FunctionCast(wrapGetNumericProperty, singleton().orgGetNumericProperty)(that, name, value);
     if (name != nullptr && value != nullptr && strncmp(name, "GpuDebugPolicy", 15) == 0) {

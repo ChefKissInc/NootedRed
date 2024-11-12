@@ -79,9 +79,9 @@ static const UInt8 kDcLinkSetBacklightLevelNitsPatternMask[] = {0xFF, 0xFF, 0xFF
 
 constexpr UInt32 FbAttributeBacklight = static_cast<UInt32>('bklt');
 
-static Backlight module {};
+static Backlight instance {};
 
-Backlight &Backlight::singleton() { return module; }
+Backlight &Backlight::singleton() { return instance; }
 
 void Backlight::init() {
     PANIC_COND(this->initialised, "Backlight", "Attempted to initialise module twice!");

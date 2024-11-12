@@ -2,9 +2,9 @@
 // See LICENSE for details.
 
 #include <Headers/kern_api.hpp>
-#include <PrivateHeaders/AppleGFXHDA.hpp>
 #include <PrivateHeaders/NRed.hpp>
 #include <PrivateHeaders/PatcherPlus.hpp>
+#include <PrivateHeaders/iVega/AppleGFXHDA.hpp>
 
 constexpr UInt32 AMDVendorID = 0x1002;
 constexpr UInt32 Navi10HDMIDeviceID = 0xAB38;
@@ -29,23 +29,23 @@ static KernelPatcher::KextInfo kextAppleGFXHDA {
 
 //------ Module Logic ------//
 
-static AppleGFXHDA module {};
+static iVega::AppleGFXHDA instance {};
 
-AppleGFXHDA &AppleGFXHDA::singleton() { return module; }
+iVega::AppleGFXHDA &iVega::AppleGFXHDA::singleton() { return instance; }
 
-void AppleGFXHDA::init() {
+void iVega::AppleGFXHDA::init() {
     PANIC_COND(this->initialised, "AGFXHDA", "Attempted to initialise module twice!");
     this->initialised = true;
 
     lilu.onKextLoadForce(
         &kextAppleGFXHDA, 1,
         [](void *user, KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
-            static_cast<AppleGFXHDA *>(user)->processKext(patcher, id, slide, size);
+            static_cast<iVega::AppleGFXHDA *>(user)->processKext(patcher, id, slide, size);
         },
         this);
 }
 
-void AppleGFXHDA::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
+void iVega::AppleGFXHDA::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextAppleGFXHDA.loadIndex != id) { return; }
 
     NRed::singleton().hwLateInit();
@@ -72,7 +72,7 @@ void AppleGFXHDA::processKext(KernelPatcher &patcher, size_t id, mach_vm_address
     PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "AGFXHDA", "Failed to route symbols");
 }
 
-void *AppleGFXHDA::wrapCreateAppleHDAFunctionGroup(void *devId) {
+void *iVega::AppleGFXHDA::wrapCreateAppleHDAFunctionGroup(void *devId) {
     auto vendorID = getMember<UInt16>(devId, 0x2);
     auto deviceID = getMember<UInt32>(devId, 0x8);
     if (vendorID == AMDVendorID && (deviceID == RavenHDMIDeviceID || deviceID == RenoirHDMIDeviceID)) {
@@ -81,7 +81,7 @@ void *AppleGFXHDA::wrapCreateAppleHDAFunctionGroup(void *devId) {
     return FunctionCast(wrapCreateAppleHDAFunctionGroup, singleton().orgCreateAppleHDAFunctionGroup)(devId);
 }
 
-void *AppleGFXHDA::wrapCreateAppleHDAWidget(void *devId) {
+void *iVega::AppleGFXHDA::wrapCreateAppleHDAWidget(void *devId) {
     auto vendorID = getMember<UInt16>(devId, 0x2);
     auto deviceID = getMember<UInt32>(devId, 0x8);
     if (vendorID == AMDVendorID && (deviceID == RavenHDMIDeviceID || deviceID == RenoirHDMIDeviceID)) {

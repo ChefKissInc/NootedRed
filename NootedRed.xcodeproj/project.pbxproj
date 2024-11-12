@@ -11,6 +11,8 @@
 		401075932CDA8746002D1CD7 /* Model.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 401075922CDA8742002D1CD7 /* Model.cpp */; };
 		4012096C2CE2FD96006E2812 /* DPCD.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4012096B2CE2FD96006E2812 /* DPCD.hpp */; };
 		4014D9722C74AA7000FDE986 /* ObjectField.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4014D9712C74AA5F00FDE986 /* ObjectField.hpp */; };
+		4035DA612CE3BBA6002707B3 /* Firmware.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408F201E288ACBB0002EEC15 /* Firmware.hpp */; };
+		4035DA622CE3BBBB002707B3 /* DCN2.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408B3DE32CDFA6F300CAE5D2 /* DCN2.hpp */; };
 		40364DB629B79DFD0070A2B4 /* Model.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40364DB529B79DFD0070A2B4 /* Model.hpp */; };
 		405460872CDBD5B5007865E5 /* Firmware.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 405460862CDBD5B5007865E5 /* Firmware.cpp */; };
 		405460892CDBDF6A007865E5 /* AGDP.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 405460882CDBDF58007865E5 /* AGDP.hpp */; };
@@ -186,20 +188,28 @@
 			children = (
 				405460802CDBB84B007865E5 /* PrivateHeaders */,
 				4054608A2CDBDF70007865E5 /* Hotfixes */,
-				6C1B36642A407C6100B184DD /* AppleGFXHDA.cpp */,
+				4035DA602CE3A118002707B3 /* iVega */,
 				40F39FDD2CDD60A3007AE975 /* Backlight.cpp */,
 				405460862CDBD5B5007865E5 /* Firmware.cpp */,
-				40FC5FDB29BF996900367F9D /* HWLibs.cpp */,
 				1C748C2E1C21952C0024EED2 /* Info.plist */,
 				401075922CDA8742002D1CD7 /* Model.cpp */,
 				CEA03B5C20EE825A00BA842F /* NRed.cpp */,
 				406889892A229BF600028D22 /* PatcherPlus.cpp */,
 				1C748C2C1C21952C0024EED2 /* Plugin.cpp */,
+			);
+			path = NootedRed;
+			sourceTree = "<group>";
+		};
+		4035DA602CE3A118002707B3 /* iVega */ = {
+			isa = PBXGroup;
+			children = (
+				6C1B36642A407C6100B184DD /* AppleGFXHDA.cpp */,
+				40FC5FDB29BF996900367F9D /* HWLibs.cpp */,
 				40FC5FD729BF995E00367F9D /* X5000.cpp */,
 				40FC5FDF29BF9E2500367F9D /* X6000.cpp */,
 				40FC5FD329BF995000367F9D /* X6000FB.cpp */,
 			);
-			path = NootedRed;
+			path = iVega;
 			sourceTree = "<group>";
 		};
 		405460802CDBB84B007865E5 /* PrivateHeaders */ = {
@@ -208,18 +218,13 @@
 				409127572CE2EB96004DBDB5 /* GPUDriversAMD */,
 				4054608F2CDBF1CA007865E5 /* Hotfixes */,
 				408B3DD12CDFA36200CAE5D2 /* iVega */,
-				6C1B36652A407C6100B184DD /* AppleGFXHDA.hpp */,
 				40F39FDB2CDD6087007AE975 /* Backlight.hpp */,
 				408F201E288ACBB0002EEC15 /* Firmware.hpp */,
-				40FC5FDC29BF996900367F9D /* HWLibs.hpp */,
 				40364DB529B79DFD0070A2B4 /* Model.hpp */,
 				CEA03B5D20EE825A00BA842F /* NRed.hpp */,
 				405460902CDBF215007865E5 /* NRedAttributes.hpp */,
 				4014D9712C74AA5F00FDE986 /* ObjectField.hpp */,
 				4068898A2A229BF600028D22 /* PatcherPlus.hpp */,
-				40FC5FD829BF995E00367F9D /* X5000.hpp */,
-				40FC5FE029BF9E2500367F9D /* X6000.hpp */,
-				40FC5FD429BF995000367F9D /* X6000FB.hpp */,
 			);
 			path = PrivateHeaders;
 			sourceTree = "<group>";
@@ -261,6 +266,11 @@
 				408B3DE82CDFA80B00CAE5D2 /* RenoirPPSMC.hpp */,
 				409127632CE2F2D2004DBDB5 /* ASICCaps.hpp */,
 				409127672CE2F360004DBDB5 /* DevCaps.hpp */,
+				6C1B36652A407C6100B184DD /* AppleGFXHDA.hpp */,
+				40FC5FDC29BF996900367F9D /* HWLibs.hpp */,
+				40FC5FD829BF995E00367F9D /* X5000.hpp */,
+				40FC5FE029BF9E2500367F9D /* X6000.hpp */,
+				40FC5FD429BF995000367F9D /* X6000FB.hpp */,
 			);
 			path = iVega;
 			sourceTree = "<group>";
@@ -404,7 +414,9 @@
 				40F39FDC2CDD609E007AE975 /* Backlight.hpp in Headers */,
 				40F39FE22CDE864A007AE975 /* X6000FB.hpp in Headers */,
 				408B3DD42CDFA3D200CAE5D2 /* GoldenSettings.hpp in Headers */,
+				4035DA622CE3BBBB002707B3 /* DCN2.hpp in Headers */,
 				408B3DF22CDFB98800CAE5D2 /* Result.hpp in Headers */,
+				4035DA612CE3BBA6002707B3 /* Firmware.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

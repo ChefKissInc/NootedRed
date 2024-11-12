@@ -35,9 +35,9 @@ static const UInt8 kAGDPBoardIDKeyPatched[] = "applehax";
 
 //------ Module Logic ------//
 
-static Hotfixes::AGDP module {};
+static Hotfixes::AGDP instance {};
 
-Hotfixes::AGDP &Hotfixes::AGDP::singleton() { return module; }
+Hotfixes::AGDP &Hotfixes::AGDP::singleton() { return instance; }
 
 void Hotfixes::AGDP::init() {
     PANIC_COND(this->initialised, "AGDP", "Attempted to initialise module twice!");
@@ -48,7 +48,7 @@ void Hotfixes::AGDP::init() {
     lilu.onKextLoadForce(
         &kextAGDP, 1,
         [](void *user, KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
-            static_cast<AGDP *>(user)->processKext(patcher, id, slide, size);
+            static_cast<Hotfixes::AGDP *>(user)->processKext(patcher, id, slide, size);
         },
         this);
 }

@@ -45,9 +45,9 @@ static const UInt8 kValidateDetailedTimingPatched[] = {0x66, 0x0F, 0x2E, 0xC1, 0
 
 //------ Module Logic ------//
 
-static Hotfixes::X6000FB module {};
+static Hotfixes::X6000FB instance {};
 
-Hotfixes::X6000FB &Hotfixes::X6000FB::singleton() { return module; }
+Hotfixes::X6000FB &Hotfixes::X6000FB::singleton() { return instance; }
 
 void Hotfixes::X6000FB::init() {
     PANIC_COND(this->initialised, "X6000FB", "Attempted to initialise module twice!");
@@ -58,7 +58,7 @@ void Hotfixes::X6000FB::init() {
     lilu.onKextLoadForce(
         &kextRadeonX6000Framebuffer, 1,
         [](void *user, KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
-            static_cast<X6000FB *>(user)->processKext(patcher, id, slide, size);
+            static_cast<Hotfixes::X6000FB *>(user)->processKext(patcher, id, slide, size);
         },
         this);
 }
