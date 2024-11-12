@@ -386,6 +386,16 @@ bool NRed::getVBIOSFromVFCT() {
     auto *vfct = static_cast<const VFCT *>(vfctData->getBytesNoCopy());
     PANIC_COND(vfct == nullptr, "NRed", "VFCT OSData::getBytesNoCopy returned null");
 
+    if (vfctData->getLength() > sizeof(VFCT)) {
+        DBGLOG("NRed", "VFCT table present but broken (too short #1).");
+        return false;
+    }
+
+    auto vendor = WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigVendorID);
+    auto busNum = this->iGPU->getBusNumber();
+    auto devNum = this->iGPU->getDeviceNumber();
+    auto devFunc = this->iGPU->getFunctionNumber();
+
     for (auto offset = vfct->vbiosImageOffset; offset < vfctData->getLength();) {
         auto *vHdr =
             static_cast<const GOPVideoBIOSHeader *>(vfctData->getBytesNoCopy(offset, sizeof(GOPVideoBIOSHeader)));
@@ -403,18 +413,25 @@ bool NRed::getVBIOSFromVFCT() {
 
         offset += sizeof(GOPVideoBIOSHeader) + vHdr->imageLength;
 
-        if (vHdr->deviceID == this->deviceID) {
-            if (!checkAtomBios(vContent, vHdr->imageLength)) {
-                DBGLOG("NRed", "VFCT VBIOS is not an ATOMBIOS");
-                return false;
+        if (vHdr->imageLength != 0 && vHdr->pciBus == busNum && vHdr->pciDevice == devNum &&
+            vHdr->pciFunction == devFunc && vHdr->vendorID == vendor && vHdr->deviceID == this->deviceID) {
+            if (checkAtomBios(vContent, vHdr->imageLength)) {
+                this->vbiosData = OSData::withBytes(vContent, vHdr->imageLength);
+                PANIC_COND(this->vbiosData == nullptr, "NRed", "VFCT OSData::withBytes failed");
+                return true;
             }
 
-            this->vbiosData = OSData::withBytes(vContent, vHdr->imageLength);
-            PANIC_COND(this->vbiosData == nullptr, "NRed", "VFCT OSData::withBytes failed");
-            return true;
+            DBGLOG("NRed", "VFCT VBIOS is not an ATOMBIOS");
+            return false;
+        } else {
+            DBGLOG("NRed",
+                "VFCT image does not match (pciBus: 0x%X pciDevice: 0x%X pciFunction: 0x%X "
+                "vendorID: 0x%X deviceID: 0x%X) or length is 0 (imageLength: 0x%X)",
+                vHdr->pciBus, vHdr->pciDevice, vHdr->pciFunction, vHdr->vendorID, vHdr->deviceID, vHdr->imageLength);
         }
     }
 
+    DBGLOG("NRed", "VFCT table present but broken.");
     return false;
 }
 
