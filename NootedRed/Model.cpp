@@ -161,7 +161,10 @@ static const Model dev1636[] = {
 static const DevicePair devices[] = {
     {0x15DD, dev15DD, arrsize(dev15DD), "AMD Radeon RX Graphics"},
     {0x15D8, dev15D8, arrsize(dev15D8), "AMD Radeon RX Graphics"},
+    {0x15E7, nullptr, 0, "AMD Radeon RX Graphics"},
     {0x1636, dev1636, arrsize(dev1636), "AMD Radeon RX Graphics"},
+    {0x1638, nullptr, 0, "AMD Radeon RX Graphics"},
+    {0x164C, nullptr, 0, "AMD Radeon RX Graphics"},
 };
 
 const char *getBrandingNameForDev(IOPCIDevice *device) {
