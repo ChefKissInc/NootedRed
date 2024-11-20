@@ -164,6 +164,16 @@ static const UInt8 kInitializeDmcubServices2Patched1404[] = {0xB9, 0x02, 0x00, 0
 static const UInt8 kInitializeDmcubServices2Original1015[] = {0xC7, 0x46, 0x20, 0x01, 0x00, 0x00, 0x00};
 static const UInt8 kInitializeDmcubServices2Patched1015[] = {0xC7, 0x46, 0x20, 0x02, 0x00, 0x00, 0x00};
 
+// 10.15: Disable DMCUB firmware loading from DAL. HWLibs should be doing that.
+static const UInt8 kAmdDalServicesInitializeOriginal[] = {0xBE, 0x01, 0x00, 0x00, 0x00, 0xE8, 0x00, 0x00, 0x00, 0x00,
+    0x49, 0x00, 0x00, 0x60};
+static const UInt8 kAmdDalServicesInitializeOriginalMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00,
+    0x00, 0xFF, 0x00, 0x00, 0xFF};
+static const UInt8 kAmdDalServicesInitializePatched[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00};
+static const UInt8 kAmdDalServicesInitializePatchedMask[] = {0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00};
+
 // Raven: Change cursor and underflow tracker count to 4 instead of 6.
 static const UInt8 kCreateControllerServicesOriginal[] = {0x40, 0x00, 0x00, 0x40, 0x83, 0x00, 0x06};
 static const UInt8 kCreateControllerServicesOriginalMask[] = {0xF0, 0x00, 0x00, 0xF0, 0xFF, 0x00, 0xFF};
@@ -315,10 +325,14 @@ void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_addr
         PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
             "Failed to apply initializeDmcubServices family id patch");
         if (NRed::singleton().getAttributes().isCatalina()) {
-            const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kInitializeDmcubServices2Original1015,
-                kInitializeDmcubServices2Patched1015, 1};
-            PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
-                "Failed to apply initializeDmcubServices ASIC patch (10.15)");
+            const LookupPatchPlus patches[] = {
+                {&kextRadeonX6000Framebuffer, kInitializeDmcubServices2Original1015,
+                    kInitializeDmcubServices2Patched1015, 1},
+                {&kextRadeonX6000Framebuffer, kAmdDalServicesInitializeOriginal, kAmdDalServicesInitializeOriginalMask,
+                    kAmdDalServicesInitializePatched, kAmdDalServicesInitializePatchedMask, 1},
+            };
+            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000FB",
+                "Failed to apply initializeDmcubServices ASIC and AmdDalServices::initialize patch (10.15)");
         } else if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
             const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kInitializeDmcubServices2Original1404,
                 kInitializeDmcubServices2Patched1404, 1};
