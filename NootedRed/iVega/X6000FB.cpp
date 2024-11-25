@@ -142,6 +142,20 @@ static const UInt8 kInitializeDmcubServices2Patched1404[] = {0xB9, 0x02, 0x00, 0
 static const UInt8 kInitializeDmcubServices2Original1015[] = {0xC7, 0x46, 0x20, 0x01, 0x00, 0x00, 0x00};
 static const UInt8 kInitializeDmcubServices2Patched1015[] = {0xC7, 0x46, 0x20, 0x02, 0x00, 0x00, 0x00};
 
+// 10.15: Set inst_const_size/bss_data_size to 0. Again to disable DMCUB firmware loading logic.
+static const UInt8 kInitializeHardware1Original[] = {0x49, 0xBC, 0x00, 0x0A, 0x01, 0x00, 0xF4, 0x01, 0x00, 0x00};
+static const UInt8 kInitializeHardware1Patched[] = {0x49, 0xC7, 0xC4, 0x00, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90};
+
+// 10.15: Set fw_inst_const to nullptr, pt.2 of above.
+static const UInt8 kInitializeHardware2Original[] = {0x4C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4C, 0x00, 0x00, 0x10,
+    0x4C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4C};
+static const UInt8 kInitializeHardware2OriginalMask[] = {0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00,
+    0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF};
+static const UInt8 kInitializeHardware2Patched[] = {0x49, 0xC7, 0xC5, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static const UInt8 kInitializeHardware2PatchedMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
 // 10.15: Disable DMCUB firmware loading from DAL. HWLibs should be doing that.
 static const UInt8 kAmdDalServicesInitializeOriginal[] = {0xBE, 0x01, 0x00, 0x00, 0x00, 0xE8, 0x00, 0x00, 0x00, 0x00,
     0x49, 0x00, 0x00, 0x60};
@@ -151,22 +165,6 @@ static const UInt8 kAmdDalServicesInitializePatched[] = {0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00};
 static const UInt8 kAmdDalServicesInitializePatchedMask[] = {0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00};
-
-// 10.15: Set inst_const_size/bss_data_size to 0. Again to disable DMCUB firmware loading logic.
-static const UInt8 kAmdDalDmcubServiceInitializeHardware1Original[] = {0x49, 0xBC, 0x00, 0x0A, 0x01, 0x00, 0xF4, 0x01,
-    0x00, 0x00};
-static const UInt8 kAmdDalDmcubServiceInitializeHardware1Patched[] = {0x49, 0xC7, 0xC4, 0x00, 0x00, 0x00, 0x00, 0x90,
-    0x90, 0x90};
-
-// 10.15: Set fw_inst_const to nullptr, pt.2 of above.
-static const UInt8 kAmdDalDmcubServiceInitializeHardware2Original[] = {0x4C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4C,
-    0x00, 0x00, 0x10, 0x4C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4C};
-static const UInt8 kAmdDalDmcubServiceInitializeHardware2OriginalMask[] = {0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF};
-static const UInt8 kAmdDalDmcubServiceInitializeHardware2Patched[] = {0x49, 0xC7, 0xC5, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-static const UInt8 kAmdDalDmcubServiceInitializeHardware2PatchedMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 // Raven: Change cursor and underflow tracker count to 4 instead of 6.
 static const UInt8 kCreateControllerServicesOriginal[] = {0x40, 0x00, 0x00, 0x40, 0x83, 0x00, 0x06};
@@ -311,16 +309,14 @@ void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_addr
             const LookupPatchPlus patches[] = {
                 {&kextRadeonX6000Framebuffer, kInitializeDmcubServices2Original1015,
                     kInitializeDmcubServices2Patched1015, 1},
+                {&kextRadeonX6000Framebuffer, kInitializeHardware1Original, kInitializeHardware1Patched, 1},
+                {&kextRadeonX6000Framebuffer, kInitializeHardware2Original, kInitializeHardware2OriginalMask,
+                    kInitializeHardware2Patched, kInitializeHardware2PatchedMask, 1},
                 {&kextRadeonX6000Framebuffer, kAmdDalServicesInitializeOriginal, kAmdDalServicesInitializeOriginalMask,
                     kAmdDalServicesInitializePatched, kAmdDalServicesInitializePatchedMask, 1},
-                {&kextRadeonX6000Framebuffer, kAmdDalDmcubServiceInitializeHardware1Original,
-                    kAmdDalDmcubServiceInitializeHardware1Patched, 1},
-                {&kextRadeonX6000Framebuffer, kAmdDalDmcubServiceInitializeHardware2Original,
-                    kAmdDalDmcubServiceInitializeHardware2OriginalMask, kAmdDalDmcubServiceInitializeHardware2Patched,
-                    kAmdDalDmcubServiceInitializeHardware2PatchedMask, 1},
             };
             PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000FB",
-                "Failed to apply initializeDmcubServices ASIC and AmdDalServices::initialize patch (10.15)");
+                "Failed to apply AmdDalDmcubService and AmdDalServices::initialize patches (10.15)");
         } else if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
             const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kInitializeDmcubServices2Original1404,
                 kInitializeDmcubServices2Patched1404, 1};
