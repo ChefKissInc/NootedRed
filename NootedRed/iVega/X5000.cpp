@@ -331,16 +331,8 @@ void *iVega::X5000::wrapAllocateAMDHWDisplay(void *that) {
 
 UInt64 iVega::X5000::wrapAdjustVRAMAddress(void *that, UInt64 addr) {
     auto ret = FunctionCast(wrapAdjustVRAMAddress, singleton().orgAdjustVRAMAddress)(that, addr);
-    if (addr == ret) {
-        SYSTRACE_COND(ADDPR(debugEnabled), "X5000", "adjustVRAMAddress: 0x%llx -> 0x%llx NO CHANGE", addr, ret);
-    } else {
-#ifdef DEBUG
-        auto originalRet = ret;
-#endif
-        ret += NRed::singleton().getFbOffset();
-        DBGLOG("X5000", "adjustVRAMAddress: 0x%llx -> drv:0x%llx,ours:0x%llx", addr, originalRet, ret);
-    }
-    return ret;
+    if (addr == ret) { return ret; }
+    return ret + NRed::singleton().getFbOffset();
 }
 
 static UInt32 fakeGetPreferredSwizzleMode2(void *, void *pIn) { return getMember<UInt32>(pIn, 0x10); }
