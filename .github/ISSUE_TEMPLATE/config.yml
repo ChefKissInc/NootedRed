@@ -1,1 +1,8 @@
 blank_issues_enabled: false
+contact_links:
+  - name: Telegram Supergroup
+    url: https://t.me/+Bx3MO9Hq8whhNzk9
+    about: Please ask your questions here.
+  - name: GitHub Discussions
+    url: https://github.com/ChefKissInc/NootedRed/discussions
+    about: Alternative to the Telegram supergroup.
