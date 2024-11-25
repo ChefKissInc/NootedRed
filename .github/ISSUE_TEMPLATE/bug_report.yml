@@ -1,6 +1,6 @@
 name: Bug Report
 description: Report an issue caused by NootedRed
-labels: ["Bug"]
+type: "Bug"
 projects: ["ChefKissInc/2"]
 assignees:
   - VisualEhrmanntraut
@@ -8,21 +8,29 @@ body:
   - type: markdown
     attributes:
       value: |
-        This form isn't for you to ask for help with your configuration or request ETAs; it's to report behaviour that NootedRed should not be exhibiting under normal conditions!
+        # This form is not for asking questions, requesting time estimates, asking for help or similar. The Discussions tab or the Telegram supergroup are better suited for those.
   - type: dropdown
-    id: macos_version
+    id: os
     attributes:
       label: macOS Version
-      description: On which macOS version is the bug occurring, if not on all of them? Versions that do not appear in the dropdown are not supported.
+      description: On which OS is the bug occurring? OSes that do not appear in the dropdown are not supported.
       options:
-        - Catalina
-        - Big Sur
-        - Monterey
-        - Ventura
-        - Sonoma
-        - Sequoia
+        - All supported macOS versions
+        - macOS Catalina
+        - macOS Big Sur
+        - macOS Monterey
+        - macOS Ventura
+        - macOS Sonoma
+        - macOS Sequoia
     validations:
-      required: false
+      required: true
+  - type: input
+    id: os_version
+    attributes:
+      label: What is the precise OS version on which the bug is occurring?
+      placeholder: ex. 15.2 Beta (24C5089c)
+    validations:
+      required: true
   - type: input
     id: cpu
     attributes:
@@ -34,8 +42,8 @@ body:
   - type: textarea
     id: description
     attributes:
-      label: Please describe the behaviour in detail.
-      placeholder: I clicked on X, then Y and Z happened.
+      label: Describe the unexpected behaviour in detail.
+      placeholder: I clicked on X, then Y, and Z happened.
     validations:
       required: true
   - type: textarea
@@ -48,7 +56,22 @@ body:
   - type: textarea
     id: logs
     attributes:
-      label: If applicable, attach the .gpuRestart, .panic, etc file related to this issue.
+      label: Attach any logs related to this issue. For example .gpuRestart, .panic, etc files.
       description: |
         You can find those in `/Library/Logs/DiagnosticReports`.
-        If attaching a panic, make sure it was created while you have `keepsyms=1` in your boot args (else the file is useless).
+        If attaching a panic, make sure it was created while you have `keepsyms=1` in your boot args (it's useless without symbol names).
+  - type: checkboxes
+    attributes:
+      label: Issue Submission Terms
+      description: By submitting this bug, you agree to the following terms
+      options:
+        - label: You have made sure that there are no other reports about this bug.
+          required: true
+        - label: You do not use configurator software (e.g. OpenCore Auxiliary Tools, OpenCore Configurator).
+          required: true
+        - label: You have made your own EFI according to the ChefKiss Hackintosh Guide.
+          required: true
+        - label: You are not using any software that may conflict, including, but not limited to, OpenCore Legacy Patcher, BFixup, WhateverGreen.
+          required: true
+        - label: You acknowledge that violation of these terms may result in your issue being closed or your user being blocked from the organisation.
+          required: true

@@ -1,6 +1,6 @@
 name: Feature Request
-description: Request a feature be added to NootedRed
-labels: ["Enhancement"]
+description: Request a new feature be added to NootedRed
+type: "Feature"
 projects: ["ChefKissInc/2"]
 assignees:
   - VisualEhrmanntraut
@@ -8,21 +8,29 @@ body:
   - type: markdown
     attributes:
       value: |
-        This form isn't for you to ask for help with your configuration, report issues or request ETAs; it's to request features NootedRed is missing!
+        # This form is not for asking questions, requesting time estimates, asking for help or similar. The Discussions tab or the Telegram supergroup are better suited for those.
   - type: dropdown
-    id: macos_version
+    id: os
     attributes:
-      label: macOS Version
-      description: On which macOS version is the feature missing, if not on all of them? Versions that do not appear in the dropdown are not supported.
+      label: OS
+      description: On which OS is the feature missing, if not on all of them? OSes that do not appear in the dropdown are not supported.
       options:
-        - Catalina
-        - Big Sur
-        - Monterey
-        - Ventura
-        - Sonoma
-        - Sequoia
+        - All supported macOS versions
+        - macOS Catalina
+        - macOS Big Sur
+        - macOS Monterey
+        - macOS Ventura
+        - macOS Sonoma
+        - macOS Sequoia
     validations:
-      required: false
+      required: true
+  - type: input
+    id: os_version
+    attributes:
+      label: What is the precise OS version on which the feature is missing?
+      placeholder: ex. 15.2 Beta (24C5089c)
+    validations:
+      required: true
   - type: input
     id: cpu
     attributes:
@@ -33,14 +41,29 @@ body:
   - type: textarea
     id: description
     attributes:
-      label: Please describe the feature in detail.
+      label: Describe the feature in detail.
       placeholder: I want NootedRed to be able to do Y.
     validations:
       required: true
   - type: textarea
     id: alternatives
     attributes:
-      label: What alternatives have you tried, if any?
+      label: Have you tried any alternatives? If so, what are they?
       placeholder: I used X to work around the lack of the feature.
     validations:
       required: true
+  - type: checkboxes
+    attributes:
+      label: Issue Submission Terms
+      description: By submitting this feature request, you agree to the following terms
+      options:
+        - label: You have made sure that there are no other requests about this feature.
+          required: true
+        - label: You do not use configurator software (e.g. OpenCore Auxiliary Tools, OpenCore Configurator).
+          required: true
+        - label: You have made your own EFI according to the ChefKiss Hackintosh Guide.
+          required: true
+        - label: You are not using any software that may conflict, including, but not limited to, OpenCore Legacy Patcher, BFixup, WhateverGreen.
+          required: true
+        - label: You acknowledge that violation of these terms may result in your issue being closed or your user being blocked from the organisation.
+          required: true
