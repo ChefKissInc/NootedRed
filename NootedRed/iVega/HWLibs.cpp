@@ -137,11 +137,6 @@ static const UInt8 kSmu901CreateFunctionPointerListPattern13[] = {0x55, 0x48, 0x
     0x00, 0x00, 0x00, 0x48, 0x8D, 0x05, 0x00, 0x00, 0x00, 0x00, 0x48, 0x89, 0x87, 0x08, 0x00, 0x00, 0x00, 0x48, 0x8D,
     0x05, 0x00, 0x00, 0x00, 0x00, 0x48, 0x89, 0x87, 0x08, 0x00, 0x00, 0x00};
 
-static const UInt8 kCosReadConfigurationSettingPattern[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x54,
-    0x53, 0x48, 0x85, 0xF6, 0x74, 0x00, 0x40, 0x89, 0xD0};
-static const UInt8 kCosReadConfigurationSettingPatternMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xF0, 0xFF, 0xF0};
-
 //------ Patches ------//
 
 // Replace call to `_gc_get_hw_version` with constant (0x090001).
@@ -265,21 +260,6 @@ static const UInt8 kSDMAInitFunctionPointerListPatched[] = {0x66, 0x90, 0x66, 0x
 static const UInt8 kSDMAInitFunctionPointerListPatchedMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00,
     0x00, 0x00, 0x00};
 
-// Enable all MCIL debug prints (debugLevel = 0xFFFFFFFF, mostly for PP_Log).
-static const UInt8 kAtiPowerPlayServicesConstructorOriginal[] = {0x8B, 0x40, 0x60, 0x48, 0x8D};
-static const UInt8 kAtiPowerPlayServicesConstructorPatched[] = {0x83, 0xC8, 0xFF, 0x48, 0x8D};
-
-// Enable printing of all PSP event logs
-static const UInt8 kAmdLogPspOriginal[] = {0x83, 0x00, 0x02, 0x0F, 0x85, 0x00, 0x00, 0x00, 0x00, 0x41, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x83, 0x00, 0x02, 0x72, 0x00, 0x41, 0x00, 0x00, 0x09, 0x02, 0x18, 0x00, 0x74, 0x00, 0x41, 0x00,
-    0x00, 0x01, 0x06, 0x10, 0x00, 0x0f, 0x85, 0x00, 0x00, 0x00, 0x00};
-static const UInt8 kAmdLogPspOriginalMask[] = {0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF,
-    0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00};
-static const UInt8 kAmdLogPspPatched[] = {0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66,
-    0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90,
-    0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x90};
-
 //------ Module Logic ------//
 
 static iVega::X5000HWLibs instance {};
@@ -356,7 +336,7 @@ void iVega::X5000HWLibs::init() {
             PANIC("HWLibs", "Unsupported kernel version %d", getKernelVersion());
     }
 
-    SYSLOG("HWLibs", "Module initialised");
+    SYSLOG("HWLibs", "Module initialised.");
 
     lilu.onKextLoadForce(
         &kextRadeonX5000HWLibs, 1,
@@ -453,14 +433,6 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_
         kSmu901CreateFunctionPointerListPatternMask};
     PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs",
         "Failed to route smu_9_0_1_create_function_pointer_list");
-
-    if (ADDPR(debugEnabled)) {
-        RouteRequestPlus request = {"__ZN14AmdTtlServices27cosReadConfigurationSettingEPvP36cos_read_configuration_"
-                                    "setting_inputP37cos_read_configuration_setting_output",
-            wrapCosReadConfigurationSetting, this->orgCosReadConfigurationSetting, kCosReadConfigurationSettingPattern,
-            kCosReadConfigurationSettingPatternMask};
-        PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route cosReadConfigurationSetting");
-    }
 
     PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "HWLibs",
         "Failed to enable kernel writing");
@@ -585,17 +557,6 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_
         };
         PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "HWLibs",
             "Failed to apply macOS 13.0+ patches");
-    }
-
-    if (ADDPR(debugEnabled)) {
-        const LookupPatchPlus patch = {&kextRadeonX5000HWLibs, kAtiPowerPlayServicesConstructorOriginal,
-            kAtiPowerPlayServicesConstructorPatched, 1};
-        PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply MCIL debugLevel patch");
-        if (NRed::singleton().getAttributes().isBigSurAndLater()) {
-            const LookupPatchPlus patch = {&kextRadeonX5000HWLibs, kAmdLogPspOriginal, kAmdLogPspOriginalMask,
-                kAmdLogPspPatched, 1};
-            PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply amd_log_psp patch");
-        }
     }
 }
 
@@ -935,28 +896,4 @@ CAILResult iVega::X5000HWLibs::wrapSmu901CreateFunctionPointerList(void *ctx) {
     singleton().smuInternalHWExitField.set(ctx, reinterpret_cast<mach_vm_address_t>(smuInternalHwExit));
     singleton().smuFullAsicResetField.set(ctx, reinterpret_cast<mach_vm_address_t>(smuFullAsicReset));
     return kCAILResultSuccess;
-}
-
-CAILResult iVega::X5000HWLibs::wrapCosReadConfigurationSetting(void *cosHandle,
-    CosReadConfigurationSettingInput *readCfgInput, CosReadConfigurationSettingOutput *readCfgOutput) {
-    if (readCfgInput != nullptr && readCfgInput->settingName != nullptr && readCfgInput->outPtr != nullptr &&
-        readCfgInput->outLen == 4) {
-        if (strncmp(readCfgInput->settingName, "PP_LogLevel", 12) == 0 ||
-            strncmp(readCfgInput->settingName, "PP_LogSource", 13) == 0 ||
-            strncmp(readCfgInput->settingName, "PP_LogDestination", 18) == 0 ||
-            strncmp(readCfgInput->settingName, "PP_LogField", 12) == 0) {
-            *static_cast<UInt32 *>(readCfgInput->outPtr) = 0xFFFFFFFF;
-            if (readCfgOutput != nullptr) { readCfgOutput->settingLen = 4; }
-            return kCAILResultSuccess;
-        }
-        if (strncmp(readCfgInput->settingName, "PP_DumpRegister", 16) == 0 ||
-            strncmp(readCfgInput->settingName, "PP_DumpSMCTable", 16) == 0 ||
-            strncmp(readCfgInput->settingName, "PP_LogDumpTableBuffers", 23) == 0) {
-            *static_cast<UInt32 *>(readCfgInput->outPtr) = 1;
-            if (readCfgOutput != nullptr) { readCfgOutput->settingLen = 4; }
-            return kCAILResultSuccess;
-        }
-    }
-    return FunctionCast(wrapCosReadConfigurationSetting, singleton().orgCosReadConfigurationSetting)(cosHandle,
-        readCfgInput, readCfgOutput);
 }

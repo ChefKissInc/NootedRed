@@ -6,6 +6,7 @@
 #include <Headers/kern_iokit.hpp>
 #include <IOKit/acpi/IOACPIPlatformExpert.h>
 #include <PrivateHeaders/Backlight.hpp>
+#include <PrivateHeaders/DebugEnabler.hpp>
 #include <PrivateHeaders/Firmware.hpp>
 #include <PrivateHeaders/GPUDriversAMD/Driver.hpp>
 #include <PrivateHeaders/Hotfixes/AGDP.hpp>
@@ -90,6 +91,7 @@ void NRed::init() {
     Hotfixes::AGDP::singleton().init();
     Hotfixes::X6000FB::singleton().init();
     Backlight::singleton().init();
+    DebugEnabler::singleton().init();
     iVega::X6000FB::singleton().init();
     iVega::AppleGFXHDA::singleton().init();
     iVega::X5000HWLibs::singleton().init();

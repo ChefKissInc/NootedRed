@@ -35,7 +35,6 @@ namespace iVega {
         mach_vm_address_t orgAllocateAMDHWAlignManager {0};
         mach_vm_address_t orgObtainAccelChannelGroup {0};
         mach_vm_address_t orgHwlConvertChipFamily {0};
-        mach_vm_address_t orgGetNumericProperty {0};
 
         public:
         static X5000 &singleton();
@@ -57,6 +56,5 @@ namespace iVega {
         static void *wrapObtainAccelChannelGroup(void *that, UInt32 priority);
         static void *wrapObtainAccelChannelGroup1304(void *that, UInt32 priority, void *task);
         static UInt32 wrapHwlConvertChipFamily(void *that, UInt32 family, UInt32 revision);
-        static bool wrapGetNumericProperty(void *that, const char *name, UInt32 *value);
     };
 };    // namespace iVega

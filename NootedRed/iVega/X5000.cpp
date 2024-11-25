@@ -119,8 +119,10 @@ void iVega::X5000::init() {
 
     SYSLOG("X5000", "Module initialised");
 
+    lilu.onKextLoadForce(&kextRadeonX5000);
+
     lilu.onKextLoadForce(
-        &kextRadeonX5000, 1,
+        nullptr, 0,
         [](void *user, KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
             static_cast<iVega::X5000 *>(user)->processKext(patcher, id, slide, size);
         },
@@ -172,12 +174,6 @@ void iVega::X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_addres
             kHwlConvertChipFamilyPattern},
     };
     PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X5000", "Failed to route symbols");
-
-    if (ADDPR(debugEnabled)) {
-        RouteRequestPlus request = {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator18getNumericPropertyEPKcPj",
-            wrapGetNumericProperty, this->orgGetNumericProperty};
-        PANIC_COND(!request.route(patcher, id, slide, size), "X5000", "Failed to route getNumericProperty");
-    }
 
     if (NRed::singleton().getAttributes().isVentura1304AndLater()) {
         RouteRequestPlus request {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator23obtainAccelChannelGroupE11SS_"
@@ -402,18 +398,4 @@ UInt32 iVega::X5000::wrapHwlConvertChipFamily(void *that, UInt32 family, UInt32 
         return ADDR_CHIP_FAMILY_AI;
     }
     return FunctionCast(wrapHwlConvertChipFamily, singleton().orgHwlConvertChipFamily)(that, family, revision);
-}
-
-bool iVega::X5000::wrapGetNumericProperty(void *that, const char *name, uint32_t *value) {
-    DBGLOG("X5000", "getNumericProperty << (that: %p name: %s, value: %p)", that, name, value);
-    auto ret = FunctionCast(wrapGetNumericProperty, singleton().orgGetNumericProperty)(that, name, value);
-    if (name != nullptr && value != nullptr && strncmp(name, "GpuDebugPolicy", 15) == 0) {
-        if (ret) {    // Enable entry traces
-            *value |= (1U << 6);
-        } else {
-            *value = (1U << 6);
-        }
-        return true;
-    }
-    return ret;
 }

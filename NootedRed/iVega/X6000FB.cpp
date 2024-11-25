@@ -55,14 +55,6 @@ static const UInt8 kIRQMGRWriteRegisterPattern1404[] = {0x55, 0x48, 0x89, 0xE5, 
     0x41, 0x54, 0x53, 0x50, 0x89, 0xD3, 0x49, 0x89, 0xF7, 0x49, 0x89, 0xFE, 0x48, 0x8B, 0x87, 0xB0, 0x00, 0x00, 0x00,
     0x48, 0x85, 0xC0};
 
-static const UInt8 kDmLoggerWritePattern[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54,
-    0x53, 0x48, 0x81, 0xEC, 0x88, 0x04, 0x00, 0x00};
-
-static const UInt8 kDalDmLoggerShouldLogPartialPattern[] = {0x48, 0x8D, 0x0D, 0x00, 0x00, 0x00, 0x00, 0x8B, 0x04, 0x81,
-    0x0F, 0xA3, 0xD0, 0x0F, 0x92, 0xC0};
-static const UInt8 kDalDmLoggerShouldLogPartialPatternMask[] = {0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-
 static const UInt8 kCreateDmcubServicePattern[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x56, 0x53, 0x48, 0x83, 0x3F, 0x00,
     0x74, 0x27};
 
@@ -129,20 +121,6 @@ static const UInt8 kGetVendorInfoPatched1404[] = {0x00, 0x00, 0x00, 0x00, 0x00, 
     0x00, 0x00, 0x00};
 static const UInt8 kGetVendorInfoPatchedMask1404[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF,
     0x00, 0x00, 0x00};
-
-// Enable all Display Core logs
-static const UInt8 kInitPopulateDcInitDataOriginal[] = {0x48, 0xB9, 0xDB, 0x1B, 0xFF, 0x7E, 0x10, 0x00, 0x00, 0x00};
-static const UInt8 kInitPopulateDcInitDataPatched[] = {0x48, 0xB9, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-
-// Ditto, for Catalina
-static const UInt8 kInitPopulateDcInitDataCatalinaOriginal[] = {0x48, 0xC7, 0x87, 0x20, 0x02, 0x00, 0x00, 0xDB, 0x1B,
-    0xFF, 0x7E};
-static const UInt8 kInitPopulateDcInitDataCatalinaPatched[] = {0x48, 0xC7, 0x87, 0x20, 0x02, 0x00, 0x00, 0xFF, 0xFF,
-    0xFF, 0xFF};
-
-// Enable all AmdBiosParserHelper logs
-static const UInt8 kBiosParserHelperInitWithDataOriginal[] = {0x08, 0xC7, 0x07, 0x01, 0x00, 0x00, 0x00};
-static const UInt8 kBiosParserHelperInitWithDataPatched[] = {0x08, 0xC7, 0x07, 0xFF, 0x00, 0x00, 0x00};
 
 // Remove check for Navi family
 static const UInt8 kInitializeDmcubServices1Original[] = {0x81, 0x79, 0x2C, 0x8F, 0x00, 0x00, 0x00};
@@ -264,17 +242,6 @@ void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_addr
         RouteRequestPlus request = {"__ZN32AMDRadeonX6000_AmdRegisterAccess20createRegisterAccessERNS_8InitDataE",
             wrapCreateRegisterAccess, this->orgCreateRegisterAccess};
         PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route createRegisterAccess");
-    }
-
-    if (ADDPR(debugEnabled)) {
-        RouteRequestPlus requests[] = {
-            {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo,
-                this->orgInitWithPciInfo},
-            {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", wrapDoGPUPanic},
-            {"_dm_logger_write", wrapDmLoggerWrite, kDmLoggerWritePattern},
-        };
-        PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X6000FB",
-            "Failed to route debug symbols");
     }
 
     if (NRed::singleton().getAttributes().isRenoir()) {
@@ -420,45 +387,6 @@ void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_addr
                        kCreateLinksOriginalMask, kCreateLinksPatched, kCreateLinksPatchedMask, 1, 0),
             "X6000FB", "Failed to apply createLinks patch");
     }
-
-    if (ADDPR(debugEnabled)) {
-        auto *logEnableMaskMinors =
-            patcher.solveSymbol<void *>(id, "__ZN14AmdDalDmLogger19LogEnableMaskMinorsE", slide, size);
-        patcher.clearError();
-
-        if (logEnableMaskMinors == nullptr) {
-            size_t offset = 0;
-            PANIC_COND(!KernelPatcher::findPattern(kDalDmLoggerShouldLogPartialPattern,
-                           kDalDmLoggerShouldLogPartialPatternMask, arrsize(kDalDmLoggerShouldLogPartialPattern),
-                           reinterpret_cast<const void *>(slide), size, &offset),
-                "X6000FB", "Failed to solve LogEnableMaskMinors");
-            auto *instAddr = reinterpret_cast<UInt8 *>(slide + offset);
-            // inst + instSize + imm32 = addr
-            logEnableMaskMinors = instAddr + 7 + *reinterpret_cast<SInt32 *>(instAddr + 3);
-        }
-
-        PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "X6000FB",
-            "Failed to enable kernel writing");
-        memset(logEnableMaskMinors, 0xFF, 0x80);    // Enable all DalDmLogger logs
-        MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
-
-        // Enable all Display Core logs
-        if (NRed::singleton().getAttributes().isCatalina()) {
-            const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kInitPopulateDcInitDataCatalinaOriginal,
-                kInitPopulateDcInitDataCatalinaPatched, 1};
-            PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
-                "Failed to apply populateDcInitData patch (10.15)");
-        } else {
-            const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kInitPopulateDcInitDataOriginal,
-                kInitPopulateDcInitDataPatched, 1};
-            PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply populateDcInitData patch");
-        }
-
-        const LookupPatchPlus patch = {&kextRadeonX6000Framebuffer, kBiosParserHelperInitWithDataOriginal,
-            kBiosParserHelperInitWithDataPatched, 1};
-        PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
-            "Failed to apply AmdBiosParserHelper::initWithData patch");
-    }
 }
 
 UInt16 iVega::X6000FB::wrapGetEnumeratedRevision() { return NRed::singleton().getEnumRevision(); }
@@ -560,78 +488,6 @@ void iVega::X6000FB::wrapIRQMGRWriteRegister(void *ctx, UInt64 index, UInt32 val
         }
     }
     FunctionCast(wrapIRQMGRWriteRegister, singleton().orgIRQMGRWriteRegister)(ctx, index, value);
-}
-
-bool iVega::X6000FB::wrapInitWithPciInfo(void *that, void *pciDevice) {
-    auto ret = FunctionCast(wrapInitWithPciInfo, singleton().orgInitWithPciInfo)(that, pciDevice);
-    getMember<UInt64>(that, 0x28) = 0xFFFFFFFFFFFFFFFF;    // Enable all log types
-    getMember<UInt32>(that, 0x30) = 0xFF;                  // Enable all log severities
-    return ret;
-}
-
-void iVega::X6000FB::wrapDoGPUPanic(void *, char const *fmt, ...) {
-    va_list va;
-    va_start(va, fmt);
-    auto *buf = static_cast<char *>(IOMalloc(1000));
-    bzero(buf, 1000);
-    vsnprintf(buf, 1000, fmt, va);
-    va_end(va);
-
-    DBGLOG("X6000FB", "doGPUPanic: %s", buf);
-    IOSleep(10000);
-    panic("%s", buf);
-}
-
-constexpr static const char *LogTypes[] = {
-    "Error",
-    "Warning",
-    "Debug",
-    "DC_Interface",
-    "DTN",
-    "Surface",
-    "HW_Hotplug",
-    "HW_LKTN",
-    "HW_Mode",
-    "HW_Resume",
-    "HW_Audio",
-    "HW_HPDIRQ",
-    "MST",
-    "Scaler",
-    "BIOS",
-    "BWCalcs",
-    "BWValidation",
-    "I2C_AUX",
-    "Sync",
-    "Backlight",
-    "Override",
-    "Edid",
-    "DP_Caps",
-    "Resource",
-    "DML",
-    "Mode",
-    "Detect",
-    "LKTN",
-    "LinkLoss",
-    "Underflow",
-    "InterfaceTrace",
-    "PerfTrace",
-    "DisplayStats",
-};
-
-// Needed to prevent stack overflow
-void iVega::X6000FB::wrapDmLoggerWrite(void *, const UInt32 logType, const char *fmt, ...) {
-    va_list va;
-    va_start(va, fmt);
-    auto *message = static_cast<char *>(IOMalloc(0x1000));
-    vsnprintf(message, 0x1000, fmt, va);
-    va_end(va);
-    auto *epilogue = message[strnlen(message, 0x1000) - 1] == '\n' ? "" : "\n";
-    if (logType < arrsize(LogTypes)) {
-        kprintf("[%s]\t%s%s", LogTypes[logType], message, epilogue);
-    } else {
-        kprintf("%s%s", message, epilogue);
-    }
-    IOFree(message, 0x1000);
 }
 
 void *iVega::X6000FB::wrapCreateRegisterAccess(void *initData) {

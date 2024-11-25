@@ -11,7 +11,6 @@ namespace iVega {
         mach_vm_address_t orgGetNumberOfConnectors {0};
         mach_vm_address_t orgIH40IVRingInitHardware {0};
         mach_vm_address_t orgIRQMGRWriteRegister {0};
-        mach_vm_address_t orgInitWithPciInfo {0};
         mach_vm_address_t orgCreateRegisterAccess {0};
 
         public:
@@ -26,9 +25,6 @@ namespace iVega {
         static UInt32 wrapGetNumberOfConnectors(void *that);
         static bool wrapIH40IVRingInitHardware(void *ctx, void *param2);
         static void wrapIRQMGRWriteRegister(void *ctx, UInt64 index, UInt32 value);
-        static bool wrapInitWithPciInfo(void *that, void *pciDevice);
-        static void wrapDoGPUPanic(void *that, char const *fmt, ...);
-        static void wrapDmLoggerWrite(void *logger, const UInt32 logType, const char *fmt, ...);
         static void *wrapCreateRegisterAccess(void *initData);
         static void *wrapCreateDmcubService();
     };

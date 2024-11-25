@@ -4,7 +4,6 @@
 #pragma once
 #include <Headers/kern_patcher.hpp>
 #include <Headers/kern_util.hpp>
-#include <PrivateHeaders/GPUDriversAMD/CAIL/COS.hpp>
 #include <PrivateHeaders/GPUDriversAMD/CAIL/DeviceType.hpp>
 #include <PrivateHeaders/GPUDriversAMD/CAIL/Result.hpp>
 #include <PrivateHeaders/ObjectField.hpp>
@@ -33,7 +32,6 @@ namespace iVega {
         t_createFirmware orgCreateFirmware {nullptr};
         t_putFirmware orgPutFirmware {nullptr};
         mach_vm_address_t orgPspCmdKmSubmit {0};
-        mach_vm_address_t orgCosReadConfigurationSetting {0};
 
         public:
         static X5000HWLibs &singleton();
@@ -63,7 +61,5 @@ namespace iVega {
         static CAILResult smu12NotifyEvent(void *ctx, void *data);
         static CAILResult smuFullScreenEvent(void *ctx, UInt32 event);
         static CAILResult wrapSmu901CreateFunctionPointerList(void *ctx);
-        static CAILResult wrapCosReadConfigurationSetting(void *cosHandle,
-            CosReadConfigurationSettingInput *readCfgInput, CosReadConfigurationSettingOutput *readCfgOutput);
     };
 };    // namespace iVega
