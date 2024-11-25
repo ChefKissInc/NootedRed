@@ -267,7 +267,7 @@ void iVega::X6000::init() {
             PANIC("X6000", "Unknown kernel version %d", getKernelVersion());
     }
 
-    SYSLOG("X6000", "Module initialised");
+    SYSLOG("X6000", "Module initialised.");
 
     lilu.onKextLoadForce(
         &kextRadeonX6000, 1,

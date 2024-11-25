@@ -113,7 +113,7 @@ void Backlight::init() {
             PANIC("Backlight", "Unsupported kernel version %d", getKernelVersion());
     }
 
-    SYSLOG("Backlight", "Module initialised");
+    SYSLOG("Backlight", "Module initialised.");
 
     lilu.onKextLoadForce(&kextRadeonX6000Framebuffer);
     lilu.onKextLoadForce(&kextBacklight);

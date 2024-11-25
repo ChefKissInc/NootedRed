@@ -76,7 +76,7 @@ void NRed::init() {
             PANIC("NRed", "Unknown kernel version %d", getKernelVersion());
     }
 
-    SYSLOG("NRed", "Module initialised");
+    SYSLOG("NRed", "Module initialised.");
     DBGLOG("NRed", "catalina = %s", this->attributes.isCatalina() ? "yes" : "no");
     DBGLOG("NRed", "bigSurAndLater = %s", this->attributes.isBigSurAndLater() ? "yes" : "no");
     DBGLOG("NRed", "monterey = %s", this->attributes.isMonterey() ? "yes" : "no");

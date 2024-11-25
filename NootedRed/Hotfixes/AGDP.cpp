@@ -43,7 +43,7 @@ void Hotfixes::AGDP::init() {
     PANIC_COND(this->initialised, "AGDP", "Attempted to initialise module twice!");
     this->initialised = true;
 
-    SYSLOG("AGDP", "Module initialised");
+    SYSLOG("AGDP", "Module initialised.");
 
     lilu.onKextLoadForce(
         &kextAGDP, 1,

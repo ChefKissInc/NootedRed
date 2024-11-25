@@ -117,7 +117,7 @@ void iVega::X5000::init() {
             PANIC("X5000", "Unknown kernel version %d", getKernelVersion());
     }
 
-    SYSLOG("X5000", "Module initialised");
+    SYSLOG("X5000", "Module initialised.");
 
     lilu.onKextLoadForce(&kextRadeonX5000);
 

@@ -208,7 +208,7 @@ void iVega::X6000FB::init() {
     PANIC_COND(this->initialised, "X6000FB", "Attempted to initialise module twice!");
     this->initialised = true;
 
-    SYSLOG("X6000FB", "Module initialised");
+    SYSLOG("X6000FB", "Module initialised.");
 
     lilu.onKextLoadForce(
         &kextRadeonX6000Framebuffer, 1,
