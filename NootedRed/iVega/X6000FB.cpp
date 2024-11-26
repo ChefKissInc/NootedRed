@@ -256,10 +256,6 @@ void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_addr
                 kIRQMGRWriteRegisterPattern};
             PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route IRQMGR_WriteRegister");
         }
-    } else {
-        RouteRequestPlus request {"__ZN18AmdDalDmcubService18createDmcubServiceERKNS_13DmcubInitInfoE",
-            wrapCreateDmcubService, kCreateDmcubServicePattern};
-        PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route createDmcubService");
     }
 
     const LookupPatchPlus patch {&kextRadeonX6000Framebuffer, kPopulateDeviceInfoOriginal, kPopulateDeviceInfoMask,
@@ -491,5 +487,3 @@ void *iVega::X6000FB::wrapCreateRegisterAccess(void *initData) {
     getMember<UInt32>(initData, 0x28) = SMUIO_BASE + mmROM_DATA;
     return FunctionCast(wrapCreateRegisterAccess, singleton().orgCreateRegisterAccess)(initData);
 }
-
-void *iVega::X6000FB::wrapCreateDmcubService() { return nullptr; }

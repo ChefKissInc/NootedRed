@@ -26,6 +26,5 @@ namespace iVega {
         static bool wrapIH40IVRingInitHardware(void *ctx, void *param2);
         static void wrapIRQMGRWriteRegister(void *ctx, UInt64 index, UInt32 value);
         static void *wrapCreateRegisterAccess(void *initData);
-        static void *wrapCreateDmcubService();
     };
 };    // namespace iVega
