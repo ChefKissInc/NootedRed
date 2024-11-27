@@ -23,6 +23,7 @@
 		4068898B2A229BF600028D22 /* PatcherPlus.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 406889892A229BF600028D22 /* PatcherPlus.cpp */; };
 		4068898C2A229BF600028D22 /* PatcherPlus.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4068898A2A229BF600028D22 /* PatcherPlus.hpp */; };
 		4069F00F29C3A241005293B4 /* ATOMBIOS.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FCE29BF942900367F9D /* ATOMBIOS.hpp */; };
+		407905672CF6F323000900FA /* VendorInfo.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 407905662CF6F323000900FA /* VendorInfo.hpp */; };
 		408B3DD42CDFA3D200CAE5D2 /* GoldenSettings.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408B3DD32CDFA3CC00CAE5D2 /* GoldenSettings.hpp */; };
 		408B3DD82CDFA42700CAE5D2 /* GC.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408B3DD72CDFA42300CAE5D2 /* GC.hpp */; };
 		408B3DDA2CDFA42E00CAE5D2 /* SDMA0.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408B3DD92CDFA42A00CAE5D2 /* SDMA0.hpp */; };
@@ -104,6 +105,7 @@
 		405460902CDBF215007865E5 /* NRedAttributes.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = NRedAttributes.hpp; sourceTree = "<group>"; };
 		406889892A229BF600028D22 /* PatcherPlus.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = PatcherPlus.cpp; sourceTree = "<group>"; };
 		4068898A2A229BF600028D22 /* PatcherPlus.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PatcherPlus.hpp; sourceTree = "<group>"; };
+		407905662CF6F323000900FA /* VendorInfo.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = VendorInfo.hpp; sourceTree = "<group>"; };
 		408B3DD32CDFA3CC00CAE5D2 /* GoldenSettings.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = GoldenSettings.hpp; sourceTree = "<group>"; };
 		408B3DD72CDFA42300CAE5D2 /* GC.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = GC.hpp; sourceTree = "<group>"; };
 		408B3DD92CDFA42A00CAE5D2 /* SDMA0.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SDMA0.hpp; sourceTree = "<group>"; };
@@ -222,6 +224,7 @@
 		405460802CDBB84B007865E5 /* PrivateHeaders */ = {
 			isa = PBXGroup;
 			children = (
+				407905642CF6F2F5000900FA /* AGDC */,
 				409127572CE2EB96004DBDB5 /* GPUDriversAMD */,
 				4054608F2CDBF1CA007865E5 /* Hotfixes */,
 				408B3DD12CDFA36200CAE5D2 /* iVega */,
@@ -262,6 +265,14 @@
 				405460882CDBDF58007865E5 /* AGDP.hpp */,
 			);
 			path = Hotfixes;
+			sourceTree = "<group>";
+		};
+		407905642CF6F2F5000900FA /* AGDC */ = {
+			isa = PBXGroup;
+			children = (
+				407905662CF6F323000900FA /* VendorInfo.hpp */,
+			);
+			path = AGDC;
 			sourceTree = "<group>";
 		};
 		408B3DD12CDFA36200CAE5D2 /* iVega */ = {
@@ -413,6 +424,7 @@
 				40E812F42CF5A1FB004FDCC7 /* AmdDeviceMemoryManager.hpp in Headers */,
 				408B3DE22CDFA66F00CAE5D2 /* DCN1.hpp in Headers */,
 				409127642CE2F2D2004DBDB5 /* ASICCaps.hpp in Headers */,
+				407905672CF6F323000900FA /* VendorInfo.hpp in Headers */,
 				409127682CE2F360004DBDB5 /* DevCaps.hpp in Headers */,
 				408B3DEC2CDFB7DE00CAE5D2 /* HWBlock.hpp in Headers */,
 				401B4A022CF43589002B75A6 /* DebugEnabler.hpp in Headers */,
