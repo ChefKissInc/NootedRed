@@ -52,6 +52,7 @@
 		409127742CE2F7B0004DBDB5 /* SMU.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127732CE2F7B0004DBDB5 /* SMU.hpp */; };
 		409127762CE2F7EA004DBDB5 /* Linux.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127752CE2F7EA004DBDB5 /* Linux.hpp */; };
 		409127792CE2F866004DBDB5 /* HWEngine.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127782CE2F866004DBDB5 /* HWEngine.hpp */; };
+		40E812F42CF5A1FB004FDCC7 /* AmdDeviceMemoryManager.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40E812F32CF5A1FB004FDCC7 /* AmdDeviceMemoryManager.hpp */; };
 		40F39FDC2CDD609E007AE975 /* Backlight.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40F39FDB2CDD6087007AE975 /* Backlight.hpp */; };
 		40F39FDE2CDD60A4007AE975 /* Backlight.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40F39FDD2CDD60A3007AE975 /* Backlight.cpp */; };
 		40F39FE02CDE842B007AE975 /* X6000FB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40F39FDF2CDE8424007AE975 /* X6000FB.cpp */; };
@@ -134,6 +135,7 @@
 		409127732CE2F7B0004DBDB5 /* SMU.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SMU.hpp; sourceTree = "<group>"; };
 		409127752CE2F7EA004DBDB5 /* Linux.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Linux.hpp; sourceTree = "<group>"; };
 		409127782CE2F866004DBDB5 /* HWEngine.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HWEngine.hpp; sourceTree = "<group>"; };
+		40E812F32CF5A1FB004FDCC7 /* AmdDeviceMemoryManager.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AmdDeviceMemoryManager.hpp; sourceTree = "<group>"; };
 		40F39FDB2CDD6087007AE975 /* Backlight.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Backlight.hpp; sourceTree = "<group>"; };
 		40F39FDD2CDD60A3007AE975 /* Backlight.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Backlight.cpp; sourceTree = "<group>"; };
 		40F39FDF2CDE8424007AE975 /* X6000FB.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = X6000FB.cpp; sourceTree = "<group>"; };
@@ -315,6 +317,7 @@
 				409127772CE2F854004DBDB5 /* Accel */,
 				408B3DEA2CDFB7CE00CAE5D2 /* CAIL */,
 				4091276B2CE2F664004DBDB5 /* DC */,
+				40E812F12CF5A1BF004FDCC7 /* FB */,
 				409127692CE2F5EF004DBDB5 /* AddrLib.hpp */,
 				40FC5FCE29BF942900367F9D /* ATOMBIOS.hpp */,
 				409127712CE2F76C004DBDB5 /* Driver.hpp */,
@@ -343,6 +346,14 @@
 				409127782CE2F866004DBDB5 /* HWEngine.hpp */,
 			);
 			path = Accel;
+			sourceTree = "<group>";
+		};
+		40E812F12CF5A1BF004FDCC7 /* FB */ = {
+			isa = PBXGroup;
+			children = (
+				40E812F32CF5A1FB004FDCC7 /* AmdDeviceMemoryManager.hpp */,
+			);
+			path = FB;
 			sourceTree = "<group>";
 		};
 		CE405EC51E49DD7100AA0B3D /* Library */ = {
@@ -399,6 +410,7 @@
 				40FC5FDE29BF996900367F9D /* HWLibs.hpp in Headers */,
 				4068898C2A229BF600028D22 /* PatcherPlus.hpp in Headers */,
 				405460912CDBF221007865E5 /* NRedAttributes.hpp in Headers */,
+				40E812F42CF5A1FB004FDCC7 /* AmdDeviceMemoryManager.hpp in Headers */,
 				408B3DE22CDFA66F00CAE5D2 /* DCN1.hpp in Headers */,
 				409127642CE2F2D2004DBDB5 /* ASICCaps.hpp in Headers */,
 				409127682CE2F360004DBDB5 /* DevCaps.hpp in Headers */,

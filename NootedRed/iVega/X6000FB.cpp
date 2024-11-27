@@ -243,9 +243,17 @@ void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_addr
     }
 
     if (NRed::singleton().getAttributes().isRenoir()) {
-        RouteRequestPlus request {"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware,
-            this->orgIH40IVRingInitHardware, kIH40IVRingInitHardwarePattern, kIH40IVRingInitHardwarePatternMask};
-        PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route IH_4_0_IVRing_InitHardware");
+        SolveRequestPlus solveRequest {
+            "__ZN37AMDRadeonX6000_AmdDeviceMemoryManager17mapMemorySubRangeE25AmdReservedMemorySelectoryyj",
+            this->orgMapMemorySubRange};
+        PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "X6000FB", "Failed to solve mapMemorySubRange");
+        RouteRequestPlus requests[] = {
+            {"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware, this->orgIH40IVRingInitHardware,
+                kIH40IVRingInitHardwarePattern, kIH40IVRingInitHardwarePatternMask},
+            {"__ZN41AMDRadeonX6000_AmdDeviceMemoryManagerNavi21intializeReservedVramEv", wrapIntializeReservedVram},
+        };
+        PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X6000FB",
+            "Failed to route IH_4_0_IVRing_InitHardware and intializeReservedVram");
         if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
             RouteRequestPlus request {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister, this->orgIRQMGRWriteRegister,
                 kIRQMGRWriteRegisterPattern1404};
@@ -486,4 +494,52 @@ void *iVega::X6000FB::wrapCreateRegisterAccess(void *initData) {
     getMember<UInt32>(initData, 0x24) = SMUIO_BASE + mmROM_INDEX;
     getMember<UInt32>(initData, 0x28) = SMUIO_BASE + mmROM_DATA;
     return FunctionCast(wrapCreateRegisterAccess, singleton().orgCreateRegisterAccess)(initData);
+}
+
+IOReturn iVega::X6000FB::wrapIntializeReservedVram(void *that) {    // AMD made this typo, not me
+    static constexpr IOOptionBits VramMappingOptions = kIOMapWriteCombineCache | kIOMapAnywhere;
+    auto ret =
+        singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorCursor1_32bpp, 0, 0x40000, VramMappingOptions);
+    if (ret != kIOReturnSuccess) { return ret; }
+    ret = singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorCursor1_2bpp, 0x40000, 0x40000,
+        VramMappingOptions);
+    if (ret != kIOReturnSuccess) { return ret; }
+    ret = singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorCursor2_32bpp, 0x80000, 0x40000,
+        VramMappingOptions);
+    if (ret != kIOReturnSuccess) { return ret; }
+    ret = singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorCursor2_2bpp, 0xC0000, 0x40000,
+        VramMappingOptions);
+    if (ret != kIOReturnSuccess) { return ret; }
+    ret = singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorCursor3_32bpp, 0x100000, 0x40000,
+        VramMappingOptions);
+    if (ret != kIOReturnSuccess) { return ret; }
+    ret = singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorCursor3_2bpp, 0x140000, 0x40000,
+        VramMappingOptions);
+    if (ret != kIOReturnSuccess) { return ret; }
+    ret = singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorCursor4_32bpp, 0x180000, 0x40000,
+        VramMappingOptions);
+    if (ret != kIOReturnSuccess) { return ret; }
+    ret = singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorCursor4_2bpp, 0x1C0000, 0x40000,
+        VramMappingOptions);
+    if (ret != kIOReturnSuccess) { return ret; }
+    ret = singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorCursor5_32bpp, 0x200000, 0x40000,
+        VramMappingOptions);
+    if (ret != kIOReturnSuccess) { return ret; }
+    ret = singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorCursor5_2bpp, 0x240000, 0x40000,
+        VramMappingOptions);
+    if (ret != kIOReturnSuccess) { return ret; }
+    ret = singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorCursor6_32bpp, 0x280000, 0x40000,
+        VramMappingOptions);
+    if (ret != kIOReturnSuccess) { return ret; }
+    ret = singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorCursor6_2bpp, 0x2C0000, 0x40000,
+        VramMappingOptions);
+    if (ret != kIOReturnSuccess) { return ret; }
+    ret = singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorPPLIBReserved, 0x300000, 0x100000,
+        VramMappingOptions);
+    if (ret != kIOReturnSuccess) { return ret; }
+    ret = singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorDMCUBReserved, 0x400000, 0x100000,
+        VramMappingOptions);
+    if (ret != kIOReturnSuccess) { return ret; }
+    return singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorReserveVRAM, 0, 0x500000,
+        VramMappingOptions);
 }
