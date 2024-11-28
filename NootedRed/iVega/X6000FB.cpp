@@ -337,7 +337,9 @@ void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_addr
     PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "X6000FB",
         "Failed to enable kernel writing");
     orgAsicCapsTable->familyId = AMD_FAMILY_RAVEN;
-    orgAsicCapsTable->ddiCaps = NRed::singleton().getAttributes().isRenoir() ? ddiCapsRenoir : ddiCapsRaven;
+    orgAsicCapsTable->ddiCaps = NRed::singleton().getAttributes().isRenoirE() ? ddiCapsRenoirE :
+                                NRed::singleton().getAttributes().isRenoir()  ? ddiCapsRenoir :
+                                                                                ddiCapsRaven;
     orgAsicCapsTable->deviceId = NRed::singleton().getDeviceID();
     orgAsicCapsTable->revision = NRed::singleton().getDevRevision();
     orgAsicCapsTable->extRevision =

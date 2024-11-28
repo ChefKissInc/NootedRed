@@ -10,6 +10,7 @@
 #include <PrivateHeaders/GPUDriversAMD/PSP.hpp>
 #include <PrivateHeaders/NRed.hpp>
 #include <PrivateHeaders/PatcherPlus.hpp>
+#include <PrivateHeaders/iVega/ASICCaps.hpp>
 #include <PrivateHeaders/iVega/GoldenSettings.hpp>
 #include <PrivateHeaders/iVega/HWLibs.hpp>
 #include <PrivateHeaders/iVega/IPOffset.hpp>
@@ -448,6 +449,9 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_
             orgCapsInitTable->extRevision =
                 static_cast<UInt64>(NRed::singleton().getEnumRevision()) + NRed::singleton().getDevRevision();
             orgCapsInitTable->pciRevision = NRed::singleton().getPciRevision();
+            orgCapsInitTable->ddiCaps = NRed::singleton().getAttributes().isRenoirE() ? ddiCapsRenoirE :
+                                        NRed::singleton().getAttributes().isRenoir()  ? ddiCapsRenoir :
+                                                                                        ddiCapsRaven;
             *orgCapsTable = {
                 .familyId = AMD_FAMILY_RAVEN,
                 .deviceId = NRed::singleton().getDeviceID(),

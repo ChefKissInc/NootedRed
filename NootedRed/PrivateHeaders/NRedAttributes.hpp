@@ -19,7 +19,8 @@ class NRedAttributes {
     static constexpr UInt16 IsPicasso = (1U << 10);
     static constexpr UInt16 IsRaven2 = (1U << 11);
     static constexpr UInt16 IsRenoir = (1U << 12);
-    static constexpr UInt16 IsGreenSardine = (1U << 13);
+    static constexpr UInt16 IsRenoirE = (1U << 13);
+    static constexpr UInt16 IsGreenSardine = (1U << 14);
 
     UInt16 value {0};
 
@@ -37,6 +38,7 @@ class NRedAttributes {
     inline const bool isPicasso() const { return (this->value & IsPicasso) != 0; }
     inline const bool isRaven2() const { return (this->value & IsRaven2) != 0; }
     inline const bool isRenoir() const { return (this->value & IsRenoir) != 0; }
+    inline const bool isRenoirE() const { return (this->value & IsRenoirE) != 0; }
     inline const bool isGreenSardine() const { return (this->value & IsGreenSardine) != 0; }
 
     inline void setCatalina() { this->value |= IsCatalina; }
@@ -52,6 +54,7 @@ class NRedAttributes {
     inline void setPicasso() { this->value |= IsPicasso; }
     inline void setRaven2() { this->value |= IsRaven2; }
     inline void setRenoir() { this->value |= IsRenoir; }
+    inline void setRenoirE() { this->value |= IsRenoirE; }
     inline void setGreenSardine() { this->value |= IsGreenSardine; }
 
     inline const char *getChipName() const {

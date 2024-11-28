@@ -139,6 +139,9 @@ void NRed::hwLateInit() {
         } else {
             this->enumRevision = 0x1;
         }
+    } else if (this->attributes.isRenoir() && !this->attributes.isGreenSardine() && this->devRevision == 0 &&
+               this->pciRevision >= 0x80 && this->pciRevision <= 0x84) {
+        this->attributes.setRenoirE();
     }
 
     DBGLOG("NRed", "deviceID = 0x%X", this->deviceID);
