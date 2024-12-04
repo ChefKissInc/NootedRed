@@ -43,7 +43,7 @@
 	<key>OSBundleLibraries</key>
 	<dict>
 		<key>as.vit9696.Lilu</key>
-		<string>1.6.4</string>
+		<string>1.7.0</string>
 		<key>com.apple.iokit.IOPCIFamily</key>
 		<string>1.0.0b1</string>
 		<key>com.apple.kpi.bsd</key>

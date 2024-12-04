@@ -189,24 +189,10 @@ void NRed::processPatcher(KernelPatcher &patcher) {
 
     devInfo->processSwitchOff();
 
-    if (devInfo->videoBuiltin == nullptr) {
-        for (size_t i = 0; i < devInfo->videoExternal.size(); i++) {
-            auto *device = OSDynamicCast(IOPCIDevice, devInfo->videoExternal[i].video);
-            if (device == nullptr) { continue; }
-            auto devid = WIOKit::readPCIConfigValue(device, WIOKit::kIOPCIConfigDeviceID) & 0xFF00;
-            if (WIOKit::readPCIConfigValue(device, WIOKit::kIOPCIConfigVendorID) == WIOKit::VendorID::ATIAMD &&
-                (devid == 0x1500 || devid == 0x1600)) {
-                this->iGPU = device;
-                break;
-            }
-        }
-        PANIC_COND(this->iGPU == nullptr, "NRed", "No iGPU found");
-    } else {
-        this->iGPU = OSDynamicCast(IOPCIDevice, devInfo->videoBuiltin);
-        PANIC_COND(this->iGPU == nullptr, "NRed", "videoBuiltin is not IOPCIDevice");
-        PANIC_COND(WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD,
-            "NRed", "videoBuiltin is not AMD");
-    }
+    this->iGPU = OSDynamicCast(IOPCIDevice, devInfo->videoBuiltin);
+    PANIC_COND(this->iGPU == nullptr, "NRed", "videoBuiltin is not IOPCIDevice");
+    PANIC_COND(WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD, "NRed",
+        "videoBuiltin is not AMD");
 
     WIOKit::renameDevice(this->iGPU, "IGPU");
     WIOKit::awaitPublishing(this->iGPU);
@@ -241,14 +227,12 @@ void NRed::processPatcher(KernelPatcher &patcher) {
     bzero(name, sizeof(name));
     for (size_t i = 0, ii = 0; i < devInfo->videoExternal.size(); i++) {
         auto *device = OSDynamicCast(IOPCIDevice, devInfo->videoExternal[i].video);
-        if (device != nullptr &&
-            (WIOKit::readPCIConfigValue(device, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD ||
-                WIOKit::readPCIConfigValue(device, WIOKit::kIOPCIConfigDeviceID) != this->deviceID)) {
-            snprintf(name, arrsize(name), "GFX%zu", ii++);
-            WIOKit::renameDevice(device, name);
-            WIOKit::awaitPublishing(device);
-            updatePropertiesForDevice(device);
-        }
+        if (device == nullptr) { continue; }
+
+        snprintf(name, arrsize(name), "GFX%zu", ii++);
+        WIOKit::renameDevice(device, name);
+        WIOKit::awaitPublishing(device);
+        updatePropertiesForDevice(device);
     }
 
     DeviceInfo::deleter(devInfo);
