@@ -1,4 +1,4 @@
-// Copyright © 2022-2024 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
+// Copyright © 2022-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
 #include <PrivateHeaders/PatcherPlus.hpp>
@@ -6,9 +6,11 @@
 bool SolveRequestPlus::solve(KernelPatcher &patcher, size_t id, mach_vm_address_t address, size_t maxSize) {
     PANIC_COND(!this->address, "Patcher+", "this->address is null");
 
-    *this->address = patcher.solveSymbol(id, this->symbol);
-    if (*this->address) { return true; }
-    patcher.clearError();
+    if (this->symbol != nullptr) {
+        *this->address = patcher.solveSymbol(id, this->symbol);
+        if (*this->address) { return true; }
+        patcher.clearError();
+    }
 
     if (!this->pattern || !this->patternSize) {
         DBGLOG("Patcher+", "Failed to solve %s using symbol", safeString(this->symbol));
@@ -36,8 +38,10 @@ bool SolveRequestPlus::solveAll(KernelPatcher &patcher, size_t id, SolveRequestP
 }
 
 bool RouteRequestPlus::route(KernelPatcher &patcher, size_t id, mach_vm_address_t address, size_t maxSize) {
-    if (patcher.routeMultiple(id, this, 1, address, maxSize)) { return true; }
-    patcher.clearError();
+    if (this->symbol != nullptr) {
+        if (patcher.routeMultiple(id, this, 1, address, maxSize)) { return true; }
+        patcher.clearError();
+    }
 
     if (!this->pattern || !this->patternSize) {
         DBGLOG("Patcher+", "Failed to route %s using symbol", safeString(this->symbol));
