@@ -244,6 +244,8 @@ void NRed::processPatcher(KernelPatcher &patcher) {
     PANIC_COND(!patcher.routeMultipleLong(KernelPatcher::KernelID, requests), "NRed", "Failed to route kernel symbols");
 }
 
+void NRed::setProp32(const char *key, UInt32 value) { this->iGPU->setProperty(key, value, 32); }
+
 UInt32 NRed::readReg32(UInt32 reg) const {
     if ((reg * sizeof(UInt32)) < this->rmmio->getLength()) {
         return this->rmmioPtr[reg];

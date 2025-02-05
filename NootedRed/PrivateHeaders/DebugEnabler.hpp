@@ -8,7 +8,6 @@
 class DebugEnabler {
     bool initialised {false};
     mach_vm_address_t orgInitWithPciInfo {0};
-    mach_vm_address_t orgCosReadConfigurationSetting {0};
     mach_vm_address_t orgGetNumericProperty {0};
 
     public:
@@ -25,7 +24,5 @@ class DebugEnabler {
     static bool wrapInitWithPciInfo(void *that, void *pciDevice);
     static void wrapDoGPUPanic(void *that, char const *fmt, ...);
     static void wrapDmLoggerWrite(void *logger, const UInt32 logType, const char *fmt, ...);
-    static CAILResult wrapCosReadConfigurationSetting(void *cosHandle, CosReadConfigurationSettingInput *readCfgInput,
-        CosReadConfigurationSettingOutput *readCfgOutput);
     static bool wrapGetNumericProperty(void *that, const char *name, UInt32 *value);
 };

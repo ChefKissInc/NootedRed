@@ -38,6 +38,7 @@ class NRed {
     void hwLateInit();
     void processPatcher(KernelPatcher &patcher);
 
+    void setProp32(const char *key, UInt32 value);
     UInt32 readReg32(UInt32 reg) const;
     void writeReg32(UInt32 reg, UInt32 val) const;
     UInt32 smuWaitForResponse() const;

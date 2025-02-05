@@ -51,12 +51,6 @@ static const UInt8 kDalDmLoggerShouldLogPartialPattern[] = {0x48, 0x8D, 0x0D, 0x
 static const UInt8 kDalDmLoggerShouldLogPartialPatternMask[] = {0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
-// HWLibs
-static const UInt8 kCosReadConfigurationSettingPattern[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x54,
-    0x53, 0x48, 0x85, 0xF6, 0x74, 0x00, 0x40, 0x89, 0xD0};
-static const UInt8 kCosReadConfigurationSettingPatternMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xF0, 0xFF, 0xF0};
-
 //------ Patches ------//
 
 // X6000FB: Enable all Display Core logs.
@@ -94,6 +88,23 @@ static DebugEnabler instance {};
 
 DebugEnabler &DebugEnabler::singleton() { return instance; }
 
+enum GpuChannelDebugPolicy {
+    CHANNEL_WAIT_FOR_PM4_IDLE = 0x1,
+    CHANNEL_WAIT_FOR_TS_AFTER_SUBMISSION = 0x2,
+    // 0x8, 0x10 = ??, PM4-related
+    CHANNEL_DISABLE_PREEMPTION = 0x20,
+};
+
+enum GpuDebugPolicy {
+    WAIT_FOR_PM4_IDLE = 0x1,
+    WAIT_FOR_TS_AFTER_SUBMISSION = 0x2,
+    PANIC_AFTER_DUMPING_LOG = 0x4,
+    PANIC_ON_POWEROFF_REGISTER_ACCESS = 0x8,
+    PRINT_FUNC_ENTRY_EXIT = 0x40,
+    DBX_SLEEP_BEFORE_GPU_RESTART = 0x200,
+    DISABLE_PREEMPTION = 0x80000000,
+};
+
 void DebugEnabler::init() {
     PANIC_COND(this->initialised, "DebugEnabler", "Attempted to initialise module twice!");
     this->initialised = true;
@@ -115,6 +126,14 @@ void DebugEnabler::init() {
 }
 
 void DebugEnabler::processX6000FB(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
+    NRed::singleton().setProp32("PP_LogLevel", 0xFFFFFFFF);
+    NRed::singleton().setProp32("PP_LogSource", 0xFFFFFFFF);
+    NRed::singleton().setProp32("PP_LogDestination", 0xFFFFFFFF);
+    NRed::singleton().setProp32("PP_LogField", 0xFFFFFFFF);
+    NRed::singleton().setProp32("PP_DumpRegister", TRUE);
+    NRed::singleton().setProp32("PP_DumpSMCTable", TRUE);
+    NRed::singleton().setProp32("PP_LogDumpTableBuffers", TRUE);
+
     RouteRequestPlus requests[] = {
         {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo,
             this->orgInitWithPciInfo},
@@ -163,13 +182,7 @@ void DebugEnabler::processX6000FB(KernelPatcher &patcher, size_t id, mach_vm_add
         "Failed to apply AmdBiosParserHelper::initWithData patch");
 }
 
-void DebugEnabler::processX5000HWLibs(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
-    RouteRequestPlus request = {"__ZN14AmdTtlServices27cosReadConfigurationSettingEPvP36cos_read_configuration_"
-                                "setting_inputP37cos_read_configuration_setting_output",
-        wrapCosReadConfigurationSetting, this->orgCosReadConfigurationSetting, kCosReadConfigurationSettingPattern,
-        kCosReadConfigurationSettingPatternMask};
-    PANIC_COND(!request.route(patcher, id, slide, size), "DebugEnabler", "Failed to route cosReadConfigurationSetting");
-
+void DebugEnabler::processX5000HWLibs(KernelPatcher &patcher, size_t, mach_vm_address_t slide, size_t size) {
     const LookupPatchPlus atiPpSvcCtrPatch = {&kextX5000HWLibs, kAtiPowerPlayServicesConstructorOriginal,
         kAtiPowerPlayServicesConstructorPatched, 1};
     PANIC_COND(!atiPpSvcCtrPatch.apply(patcher, slide, size), "DebugEnabler", "Failed to apply MCIL debugLevel patch");
@@ -236,39 +249,15 @@ void DebugEnabler::wrapDmLoggerWrite(void *, const UInt32 logType, const char *f
     IOFree(message, 0x1000);
 }
 
-CAILResult DebugEnabler::wrapCosReadConfigurationSetting(void *cosHandle,
-    CosReadConfigurationSettingInput *readCfgInput, CosReadConfigurationSettingOutput *readCfgOutput) {
-    if (readCfgInput != nullptr && readCfgInput->settingName != nullptr && readCfgInput->outPtr != nullptr &&
-        readCfgInput->outLen == 4) {
-        if (strncmp(readCfgInput->settingName, "PP_LogLevel", 12) == 0 ||
-            strncmp(readCfgInput->settingName, "PP_LogSource", 13) == 0 ||
-            strncmp(readCfgInput->settingName, "PP_LogDestination", 18) == 0 ||
-            strncmp(readCfgInput->settingName, "PP_LogField", 12) == 0) {
-            *static_cast<UInt32 *>(readCfgInput->outPtr) = 0xFFFFFFFF;
-            if (readCfgOutput != nullptr) { readCfgOutput->settingLen = 4; }
-            return kCAILResultSuccess;
-        }
-        if (strncmp(readCfgInput->settingName, "PP_DumpRegister", 16) == 0 ||
-            strncmp(readCfgInput->settingName, "PP_DumpSMCTable", 16) == 0 ||
-            strncmp(readCfgInput->settingName, "PP_LogDumpTableBuffers", 23) == 0) {
-            *static_cast<UInt32 *>(readCfgInput->outPtr) = 1;
-            if (readCfgOutput != nullptr) { readCfgOutput->settingLen = 4; }
-            return kCAILResultSuccess;
-        }
-    }
-    return FunctionCast(wrapCosReadConfigurationSetting, singleton().orgCosReadConfigurationSetting)(cosHandle,
-        readCfgInput, readCfgOutput);
-}
-
 bool DebugEnabler::wrapGetNumericProperty(void *that, const char *name, uint32_t *value) {
     auto ret = FunctionCast(wrapGetNumericProperty, singleton().orgGetNumericProperty)(that, name, value);
     if (name == nullptr || strncmp(name, "GpuDebugPolicy", 15) != 0) { return ret; }
     if (value != nullptr) {
         // Enable entry traces
         if (ret) {
-            *value |= (1U << 6);
+            *value |= PRINT_FUNC_ENTRY_EXIT;
         } else {
-            *value = (1U << 6);
+            *value = PRINT_FUNC_ENTRY_EXIT;
         }
     }
     return true;
