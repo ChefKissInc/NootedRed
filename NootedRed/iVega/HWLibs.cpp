@@ -437,8 +437,8 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_
 
     PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "HWLibs",
         "Failed to enable kernel writing");
-    if (orgDeviceTypeTable) {
-        *orgDeviceTypeTable = {.deviceId = NRed::singleton().getDeviceID(), .deviceType = kAMDDeviceTypeNavi21};
+    if (orgDeviceTypeTable != nullptr) {
+        *orgDeviceTypeTable = {.deviceId = NRed::singleton().getDeviceID(), .deviceType = kAMDDeviceTypeNavi10};
     }
 
     auto targetDeviceId = NRed::singleton().getAttributes().isRenoir() ? 0x1636 : NRed::singleton().getDeviceID();
@@ -567,16 +567,17 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_
 void iVega::X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
     FunctionCast(wrapPopulateFirmwareDirectory, singleton().orgGetIpFw)(that);
 
-    auto *filename = NRed::singleton().getAttributes().isRenoir() ? "ativvaxy_nv.dat" : "ativvaxy_rv.dat";
-    const auto &vcnFW = getFWByName(filename);
-    DBGLOG("HWLibs", "VCN firmware filename is %s", filename);
+    const auto &ravenFwData = getFWByName("ativvaxy_rv.dat");
+    auto *ravenFw = singleton().orgCreateFirmware(ravenFwData.data, ravenFwData.length, 0x0100, "ativvaxy_rv.dat");
+    PANIC_COND(ravenFw == nullptr, "HWLibs", "Failed to create Raven firmware");
+    PANIC_COND(!singleton().orgPutFirmware(singleton().fwDirField.get(that), kAMDDeviceTypeNavi10, ravenFw), "HWLibs",
+        "Failed to insert Raven firmware");
 
-    // VCN 2.2, VCN 1.0
-    auto *fw = singleton().orgCreateFirmware(vcnFW.data, vcnFW.length,
-        NRed::singleton().getAttributes().isRenoir() ? 0x0202 : 0x0100, filename);
-    PANIC_COND(fw == nullptr, "HWLibs", "Failed to create '%s' firmware", filename);
-    PANIC_COND(!singleton().orgPutFirmware(singleton().fwDirField.get(that), kAMDDeviceTypeNavi21, fw), "HWLibs",
-        "Failed to insert '%s' firmware", filename);
+    const auto &renoirFwData = getFWByName("ativvaxy_nv.dat");
+    auto *renoirFw = singleton().orgCreateFirmware(renoirFwData.data, renoirFwData.length, 0x0202, "ativvaxy_nv.dat");
+    PANIC_COND(renoirFw == nullptr, "HWLibs", "Failed to create Renoir firmware");
+    PANIC_COND(!singleton().orgPutFirmware(singleton().fwDirField.get(that), kAMDDeviceTypeNavi10, renoirFw), "HWLibs",
+        "Failed to insert Renoir firmware");
 }
 
 bool iVega::X5000HWLibs::wrapGetIpFw(void *that, UInt32 ipVersion, char *name, void *out) {
