@@ -1,4 +1,4 @@
-// Copyright © 2024 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
+// Copyright © 2024-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
 #pragma once
@@ -15,7 +15,7 @@ class Backlight {
         UInt32 transitionTimeMs);
 
     bool initialised {false};
-    ObjectField<UInt8> dcLinkCapsField {};
+    ObjectField<UInt8> dcLinkCapsField {"DC Link Capabilities"};
     UInt32 curPwmBacklightLvl {0}, maxPwmBacklightLvl {0xFFFF};
     UInt32 maxOLED {1000 * 512};
     IONotifier *dispNotif {nullptr};

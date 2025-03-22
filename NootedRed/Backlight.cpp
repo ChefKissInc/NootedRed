@@ -1,4 +1,4 @@
-// Copyright © 2024 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
+// Copyright © 2024-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
 #include <Headers/kern_api.hpp>
@@ -131,48 +131,49 @@ void Backlight::init() {
 void Backlight::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextRadeonX6000Framebuffer.loadIndex == id) {
         if (NRed::singleton().getAttributes().isBigSurAndLater() && NRed::singleton().getAttributes().isRaven()) {
-            SolveRequestPlus solveRequest {"_dce_driver_set_backlight", this->orgDceDriverSetBacklight,
+            PatcherPlus::PatternSolveRequest solveRequest {"_dce_driver_set_backlight", this->orgDceDriverSetBacklight,
                 kDceDriverSetBacklightPattern, kDceDriverSetBacklightPatternMask};
             PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "Backlight",
                 "Failed to resolve dce_driver_set_backlight");
         }
         if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
-            SolveRequestPlus solveRequest {"_dc_link_set_backlight_level", this->orgDcLinkSetBacklightLevel,
-                kDcLinkSetBacklightLevelPattern1404};
+            PatcherPlus::PatternSolveRequest solveRequest {"_dc_link_set_backlight_level",
+                this->orgDcLinkSetBacklightLevel, kDcLinkSetBacklightLevelPattern1404};
             PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "Backlight",
                 "Failed to resolve dc_link_set_backlight_level");
         } else {
-            SolveRequestPlus solveRequest {"_dc_link_set_backlight_level", this->orgDcLinkSetBacklightLevel,
-                kDcLinkSetBacklightLevelPattern};
+            PatcherPlus::PatternSolveRequest solveRequest {"_dc_link_set_backlight_level",
+                this->orgDcLinkSetBacklightLevel, kDcLinkSetBacklightLevelPattern};
             PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "Backlight",
                 "Failed to resolve dc_link_set_backlight_level");
         }
 
-        SolveRequestPlus solveRequest {"_dc_link_set_backlight_level_nits", this->orgDcLinkSetBacklightLevelNits,
-            kDcLinkSetBacklightLevelNitsPattern, kDcLinkSetBacklightLevelNitsPatternMask};
+        PatcherPlus::PatternSolveRequest solveRequest {"_dc_link_set_backlight_level_nits",
+            this->orgDcLinkSetBacklightLevelNits, kDcLinkSetBacklightLevelNitsPattern,
+            kDcLinkSetBacklightLevelNitsPatternMask};
         PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "Backlight",
             "Failed to resolve dc_link_set_backlight_level_nits");
         if (NRed::singleton().getAttributes().isBigSurAndLater() && NRed::singleton().getAttributes().isRaven()) {
             if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
-                RouteRequestPlus request = {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit,
+                PatcherPlus::PatternRouteRequest request = {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit,
                     this->orgDcePanelCntlHwInit, kDcePanelCntlHwInitPattern1404};
                 PANIC_COND(!request.route(patcher, id, slide, size), "Backlight",
                     "Failed to route dce_panel_cntl_hw_init (14.4+)");
             } else {
-                RouteRequestPlus request = {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit,
+                PatcherPlus::PatternRouteRequest request = {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit,
                     this->orgDcePanelCntlHwInit, kDcePanelCntlHwInitPattern};
                 PANIC_COND(!request.route(patcher, id, slide, size), "Backlight",
                     "Failed to route dce_panel_cntl_hw_init");
             }
         }
-        RouteRequestPlus requests[] = {
+        PatcherPlus::PatternRouteRequest requests[] = {
             {"_link_create", wrapLinkCreate, this->orgLinkCreate, kLinkCreatePattern, kLinkCreatePatternMask},
             {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25setAttributeForConnectionEijm", wrapSetAttributeForConnection,
                 this->orgSetAttributeForConnection},
             {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25getAttributeForConnectionEijPm", wrapGetAttributeForConnection,
                 this->orgGetAttributeForConnection},
         };
-        PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "Backlight",
+        PANIC_COND(!PatcherPlus::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "Backlight",
             "Failed to route backlight symbols");
     } else if (kextBacklight.loadIndex == id) {
         KernelPatcher::RouteRequest request {"__ZN15AppleIntelPanel10setDisplayEP9IODisplay", wrapApplePanelSetDisplay,
@@ -180,7 +181,7 @@ void Backlight::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t
         if (patcher.routeMultiple(kextBacklight.loadIndex, &request, 1, slide, size)) {
             static const UInt8 find[] = "F%uT%04x";
             static const UInt8 replace[] = "F%uTxxxx";
-            const LookupPatchPlus patch {&kextBacklight, find, replace, 1};
+            const PatcherPlus::MaskedLookupPatch patch {&kextBacklight, find, replace, 1};
             SYSLOG_COND(!patch.apply(patcher, slide, size), "Backlight", "Failed to apply backlight patch");
         }
         patcher.clearError();

@@ -1,4 +1,4 @@
-// Copyright © 2024 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
+// Copyright © 2024-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
 #include <Headers/kern_api.hpp>
@@ -126,7 +126,7 @@ void DebugEnabler::init() {
 }
 
 void DebugEnabler::processX6000FB(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
-    NRed::singleton().setProp32("PP_LogLevel", 0xFFFFFFFF);
+    NRed::singleton().setProp32("PP_LogLevel", 0xFFFF);
     NRed::singleton().setProp32("PP_LogSource", 0xFFFFFFFF);
     NRed::singleton().setProp32("PP_LogDestination", 0xFFFFFFFF);
     NRed::singleton().setProp32("PP_LogField", 0xFFFFFFFF);
@@ -134,13 +134,13 @@ void DebugEnabler::processX6000FB(KernelPatcher &patcher, size_t id, mach_vm_add
     NRed::singleton().setProp32("PP_DumpSMCTable", TRUE);
     NRed::singleton().setProp32("PP_LogDumpTableBuffers", TRUE);
 
-    RouteRequestPlus requests[] = {
+    PatcherPlus::PatternRouteRequest requests[] = {
         {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo,
             this->orgInitWithPciInfo},
         {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", wrapDoGPUPanic},
         {"_dm_logger_write", wrapDmLoggerWrite, kDmLoggerWritePattern},
     };
-    PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "DebugEnabler",
+    PANIC_COND(!PatcherPlus::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "DebugEnabler",
         "Failed to route X6000FB debug symbols");
 
     // Enable all DalDmLogger logs
@@ -165,35 +165,53 @@ void DebugEnabler::processX6000FB(KernelPatcher &patcher, size_t id, mach_vm_add
 
     // Enable all Display Core logs
     if (NRed::singleton().getAttributes().isCatalina()) {
-        const LookupPatchPlus patch = {&kextX6000FB, kInitPopulateDcInitDataCatalinaOriginal,
+        const PatcherPlus::MaskedLookupPatch patch = {&kextX6000FB, kInitPopulateDcInitDataCatalinaOriginal,
             kInitPopulateDcInitDataCatalinaPatched, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "DebugEnabler",
             "Failed to apply populateDcInitData patch (10.15)");
     } else {
-        const LookupPatchPlus patch = {&kextX6000FB, kInitPopulateDcInitDataOriginal, kInitPopulateDcInitDataPatched,
-            1};
+        const PatcherPlus::MaskedLookupPatch patch = {&kextX6000FB, kInitPopulateDcInitDataOriginal,
+            kInitPopulateDcInitDataPatched, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "DebugEnabler", "Failed to apply populateDcInitData patch");
     }
 
     // Enable all bios parser logs
-    const LookupPatchPlus patch = {&kextX6000FB, kBiosParserHelperInitWithDataOriginal,
+    const PatcherPlus::MaskedLookupPatch patch = {&kextX6000FB, kBiosParserHelperInitWithDataOriginal,
         kBiosParserHelperInitWithDataPatched, 1};
     PANIC_COND(!patch.apply(patcher, slide, size), "DebugEnabler",
         "Failed to apply AmdBiosParserHelper::initWithData patch");
 }
 
-void DebugEnabler::processX5000HWLibs(KernelPatcher &patcher, size_t, mach_vm_address_t slide, size_t size) {
-    const LookupPatchPlus atiPpSvcCtrPatch = {&kextX5000HWLibs, kAtiPowerPlayServicesConstructorOriginal,
+void DebugEnabler::processX5000HWLibs(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
+    // TODO: Find the empty functions using a pattern of a call to them for Monterey and newer.
+    if (!NRed::singleton().getAttributes().isMontereyAndLater()) {
+        KernelPatcher::RouteRequest requests[] = {
+            {"_dmcu_assertion", ipAssertion},
+            {"_gc_assertion", ipAssertion},
+            {"_gvm_assertion", ipAssertion},
+            {"_mes_assertion", ipAssertion},
+            {"_psp_assertion", ipAssertion},
+            {"_sdma_assertion", ipAssertion},
+            {"_smu_assertion", ipAssertion},
+            {"_vcn_assertion", ipAssertion},
+            {"_gc_debug_print", gcDebugPrint},
+            {"_psp_debug_print", pspDebugPrint},
+        };
+        SYSLOG_COND(!patcher.routeMultiple(id, requests, slide, size, true, true), "DebugEnabler",
+            "Failed to route X5000HWLibs debug symbols");
+    }
+
+    const PatcherPlus::MaskedLookupPatch atiPpSvcCtrPatch = {&kextX5000HWLibs, kAtiPowerPlayServicesConstructorOriginal,
         kAtiPowerPlayServicesConstructorPatched, 1};
     PANIC_COND(!atiPpSvcCtrPatch.apply(patcher, slide, size), "DebugEnabler", "Failed to apply MCIL debugLevel patch");
     if (NRed::singleton().getAttributes().isBigSurAndLater()) {
-        const LookupPatchPlus amdLogPspPatch = {&kextX5000HWLibs, kAmdLogPspOriginal, kAmdLogPspOriginalMask,
-            kAmdLogPspPatched, 1};
+        const PatcherPlus::MaskedLookupPatch amdLogPspPatch = {&kextX5000HWLibs, kAmdLogPspOriginal,
+            kAmdLogPspOriginalMask, kAmdLogPspPatched, 1};
         PANIC_COND(!amdLogPspPatch.apply(patcher, slide, size), "DebugEnabler", "Failed to apply amd_log_psp patch");
     }
 }
 void DebugEnabler::processX5000(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
-    RouteRequestPlus request = {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator18getNumericPropertyEPKcPj",
+    PatcherPlus::PatternRouteRequest request = {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator18getNumericPropertyEPKcPj",
         wrapGetNumericProperty, this->orgGetNumericProperty};
     PANIC_COND(!request.route(patcher, id, slide, size), "DebugEnabler", "Failed to route getNumericProperty");
 }
@@ -249,7 +267,35 @@ void DebugEnabler::wrapDmLoggerWrite(void *, const UInt32 logType, const char *f
     IOFree(message, 0x1000);
 }
 
-bool DebugEnabler::wrapGetNumericProperty(void *that, const char *name, uint32_t *value) {
+// Port of `AmdTtlServices::cosDebugAssert` for empty `_*_assertion` functions
+void DebugEnabler::ipAssertion(void *, UInt32 cond, const char *func, const char *file, UInt32 line, const char *msg) {
+    if (cond != 0) { return; }
+
+    kprintf("AMD TTL COS: \n----------------------------------------------------------------\n");
+    kprintf("AMD TTL COS: ASSERT FUNCTION: %s\n", safeString(func));
+    kprintf("AMD TTL COS: ASSERT FILE: %s\n", safeString(file));
+    kprintf("AMD TTL COS: ASSERT LINE: %d\n", line);
+    kprintf("AMD TTL COS: ASSERT REASON: %s\n", safeString(msg));
+    kprintf("AMD TTL COS: \n----------------------------------------------------------------\n");
+}
+
+void DebugEnabler::gcDebugPrint(void *, const char *fmt, ...) {
+    kprintf("[GC DEBUG]: ");
+    va_list args;
+    va_start(args, fmt);
+    vprintf(fmt, args);
+    va_end(args);
+}
+
+void DebugEnabler::pspDebugPrint(void *, const char *fmt, ...) {
+    kprintf("[PSP DEBUG]: ");
+    va_list args;
+    va_start(args, fmt);
+    vprintf(fmt, args);
+    va_end(args);
+}
+
+bool DebugEnabler::wrapGetNumericProperty(void *that, const char *name, UInt32 *value) {
     auto ret = FunctionCast(wrapGetNumericProperty, singleton().orgGetNumericProperty)(that, name, value);
     if (name == nullptr || strncmp(name, "GpuDebugPolicy", 15) != 0) { return ret; }
     if (value != nullptr) {

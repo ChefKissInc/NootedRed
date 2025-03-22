@@ -1,4 +1,4 @@
-// Copyright © 2022-2024 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
+// Copyright © 2022-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
 #include <Headers/kern_api.hpp>
@@ -137,7 +137,7 @@ void iVega::X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_addres
     UInt32 *orgChannelTypes;
     mach_vm_address_t startHWEngines;
 
-    SolveRequestPlus solveRequests[] = {
+    PatcherPlus::PatternSolveRequest solveRequests[] = {
         {NRed::singleton().getAttributes().isCatalina() ?
                 "__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator22getAdditionalQueueListEPPK18_"
                 "AMDQueueSpecifierE27additionalQueueList_Default" :
@@ -152,10 +152,10 @@ void iVega::X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_addres
         {"__ZN28AMDRadeonX5000_IAMDHWChannel10gMetaClassE", NRed::singleton().metaClassMap[4][0]},
         {"__ZN26AMDRadeonX5000_AMDHardware14startHWEnginesEv", startHWEngines},
     };
-    PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "X5000",
+    PANIC_COND(!PatcherPlus::PatternSolveRequest::solveAll(patcher, id, solveRequests, slide, size), "X5000",
         "Failed to resolve symbols");
 
-    RouteRequestPlus requests[] = {
+    PatcherPlus::PatternRouteRequest requests[] = {
         {"__ZN32AMDRadeonX5000_AMDVega10Hardware17allocateHWEnginesEv", wrapAllocateHWEngines},
         {"__ZN32AMDRadeonX5000_AMDVega10Hardware32setupAndInitializeHWCapabilitiesEv",
             wrapSetupAndInitializeHWCapabilities, this->orgSetupAndInitializeHWCapabilities},
@@ -173,32 +173,36 @@ void iVega::X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_addres
         {"__ZN4Addr2V27Gfx9Lib20HwlConvertChipFamilyEjj", wrapHwlConvertChipFamily, this->orgHwlConvertChipFamily,
             kHwlConvertChipFamilyPattern},
     };
-    PANIC_COND(!RouteRequestPlus::routeAll(patcher, id, requests, slide, size), "X5000", "Failed to route symbols");
+    PANIC_COND(!PatcherPlus::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "X5000",
+        "Failed to route symbols");
 
     if (NRed::singleton().getAttributes().isVentura1304AndLater()) {
-        RouteRequestPlus request {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator23obtainAccelChannelGroupE11SS_"
-                                  "PRIORITYP27AMDRadeonX5000_AMDAccelTask",
+        PatcherPlus::PatternRouteRequest request {
+            "__ZN37AMDRadeonX5000_AMDGraphicsAccelerator23obtainAccelChannelGroupE11SS_"
+            "PRIORITYP27AMDRadeonX5000_AMDAccelTask",
             wrapObtainAccelChannelGroup1304, this->orgObtainAccelChannelGroup};
         PANIC_COND(!request.route(patcher, id, slide, size), "X5000", "Failed to route obtainAccelChannelGroup");
     } else if (NRed::singleton().getAttributes().isBigSurAndLater()) {
-        RouteRequestPlus request {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator23obtainAccelChannelGroupE11SS_PRIORITY",
+        PatcherPlus::PatternRouteRequest request {
+            "__ZN37AMDRadeonX5000_AMDGraphicsAccelerator23obtainAccelChannelGroupE11SS_PRIORITY",
             wrapObtainAccelChannelGroup, this->orgObtainAccelChannelGroup};
         PANIC_COND(!request.route(patcher, id, slide, size), "X5000", "Failed to route obtainAccelChannelGroup");
     }
 
     if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
-        const LookupPatchPlus patch {&kextRadeonX5000, kAddrLibCreateOriginal1404, kAddrLibCreateOriginalMask1404,
-            kAddrLibCreatePatched1404, kAddrLibCreatePatchedMask1404, 1};
+        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX5000, kAddrLibCreateOriginal1404,
+            kAddrLibCreateOriginalMask1404, kAddrLibCreatePatched1404, kAddrLibCreatePatchedMask1404, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "X5000", "Failed to apply 14.4+ Addr::Lib::Create patch");
     } else if (NRed::singleton().getAttributes().isCatalina() ||
                NRed::singleton().getAttributes().isVentura1304AndLater()) {
-        const LookupPatchPlus patch {&kextRadeonX5000, kAddrLibCreateOriginal, kAddrLibCreatePatched, 1};
+        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX5000, kAddrLibCreateOriginal, kAddrLibCreatePatched, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "X5000",
             "Failed to apply Catalina & Ventura 13.4+ Addr::Lib::Create patch");
     }
 
     if (NRed::singleton().getAttributes().isCatalina()) {
-        const LookupPatchPlus patch {&kextRadeonX5000, kCreateAccelChannelsOriginal, kCreateAccelChannelsPatched, 2};
+        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX5000, kCreateAccelChannelsOriginal,
+            kCreateAccelChannelsPatched, 2};
         PANIC_COND(!patch.apply(patcher, slide, size), "X5000", "Failed to patch createAccelChannels");
 
         if (NRed::singleton().getAttributes().isRenoir()) {
@@ -208,7 +212,7 @@ void iVega::X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_addres
             UInt32 replBpp64 = Dcn2NonBpp64SwModeMask1015 ^ Dcn2Bpp64SwModeMask1015;
             UInt32 findBpp64Pt2 = Dcn1Bpp64SwModeMask1015;
             UInt32 replBpp64Pt2 = Dcn2Bpp64SwModeMask1015;
-            const LookupPatchPlus patches[] = {
+            const PatcherPlus::MaskedLookupPatch patches[] = {
                 {&kextRadeonX5000, reinterpret_cast<const UInt8 *>(&findNonBpp64),
                     reinterpret_cast<const UInt8 *>(&replNonBpp64), sizeof(UInt32), 2},
                 {&kextRadeonX5000, reinterpret_cast<const UInt8 *>(&findBpp64),
@@ -216,7 +220,7 @@ void iVega::X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_addres
                 {&kextRadeonX5000, reinterpret_cast<const UInt8 *>(&findBpp64Pt2),
                     reinterpret_cast<const UInt8 *>(&replBpp64Pt2), sizeof(UInt32), 1},
             };
-            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X5000",
+            PANIC_COND(!PatcherPlus::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "X5000",
                 "Failed to patch swizzle mode");
         }
 
@@ -226,7 +230,7 @@ void iVega::X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_addres
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("X5000", "Applied SDMA1 patches");
     } else {
-        const LookupPatchPlus patch {&kextRadeonX5000, kStartHWEnginesOriginal, kStartHWEnginesMask,
+        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX5000, kStartHWEnginesOriginal, kStartHWEnginesMask,
             kStartHWEnginesPatched, kStartHWEnginesMask,
             NRed::singleton().getAttributes().isVenturaAndLater() ? 2U : 1};
         PANIC_COND(!patch.apply(patcher, startHWEngines, PAGE_SIZE), "X5000", "Failed to patch startHWEngines");
@@ -234,7 +238,7 @@ void iVega::X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_addres
         if (NRed::singleton().getAttributes().isRenoir()) {
             UInt32 findBpp64 = Dcn1Bpp64SwModeMask, replBpp64 = Dcn2Bpp64SwModeMask;
             UInt32 findNonBpp64 = Dcn1NonBpp64SwModeMask, replNonBpp64 = Dcn2NonBpp64SwModeMask;
-            const LookupPatchPlus patches[] = {
+            const PatcherPlus::MaskedLookupPatch patches[] = {
                 {&kextRadeonX5000, reinterpret_cast<const UInt8 *>(&findBpp64),
                     reinterpret_cast<const UInt8 *>(&replBpp64), sizeof(UInt32),
                     NRed::singleton().getAttributes().isVentura1304AndLater() ? 2U : 4},
@@ -242,7 +246,7 @@ void iVega::X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_addres
                     reinterpret_cast<const UInt8 *>(&replNonBpp64), sizeof(UInt32),
                     NRed::singleton().getAttributes().isVentura1304AndLater() ? 2U : 4},
             };
-            PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X5000",
+            PANIC_COND(!PatcherPlus::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "X5000",
                 "Failed to patch swizzle mode");
         }
 
@@ -310,8 +314,8 @@ static const char *hwEngineToString(AMDHWEngineType ty) {
 #endif
 
 void *iVega::X5000::wrapGetHWChannel(void *that, AMDHWEngineType engineType, UInt32 ringId) {
-    DBGLOG("X5000", "getHWChannel << (that: %p, engineType: %s, ringId: 0x%X)", that, hwEngineToString(engineType),
-        ringId);
+    // DBGLOG("X5000", "getHWChannel << (that: %p, engineType: %s, ringId: 0x%X)", that, hwEngineToString(engineType),
+    //     ringId);
     if (engineType == kAMDHWEngineTypeSDMA1) { engineType = kAMDHWEngineTypeSDMA0; }
     return FunctionCast(wrapGetHWChannel, singleton().orgGetHWChannel)(that, engineType, ringId);
 }
@@ -376,7 +380,7 @@ void *iVega::X5000::wrapObtainAccelChannelGroup1304(void *that, UInt32 priority,
 UInt32 iVega::X5000::wrapHwlConvertChipFamily(void *that, UInt32 family, UInt32 revision) {
     DBGLOG("X5000", "HwlConvertChipFamily >> (that: %p family: 0x%X revision: 0x%X)", that, family, revision);
     if (family == AMD_FAMILY_RAVEN) {
-        auto &settings = singleton().chipSettingsField.getRef(that);
+        auto &settings = singleton().chipSettingsField.get(that);
         settings.isArcticIsland = 1;
         settings.isRaven = 1;
         if (NRed::singleton().getAttributes().isRenoir()) {

@@ -1,4 +1,4 @@
-// Copyright © 2022-2024 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
+// Copyright © 2022-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
 #pragma once
@@ -6,6 +6,7 @@
 
 struct FWMetadata {
     const UInt8 *data;
+    const void *extra;
     const UInt32 length;
 };
 

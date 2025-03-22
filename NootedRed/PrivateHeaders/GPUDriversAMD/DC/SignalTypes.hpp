@@ -1,4 +1,4 @@
-// Copyright © 2024 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
+// Copyright © 2024-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
 #pragma once
@@ -15,4 +15,3 @@ enum SignalType {
     SIGNAL_TYPE_EDP = (1U << 7),
     SIGNAL_TYPE_VIRTUAL = (1U << 9),
 };
-static_assert(sizeof(SignalType) == 0x4);

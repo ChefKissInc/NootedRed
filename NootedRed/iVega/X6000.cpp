@@ -1,4 +1,4 @@
-// Copyright © 2022-2024 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
+// Copyright © 2022-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
 #include <Headers/kern_api.hpp>
@@ -284,7 +284,7 @@ void iVega::X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_addres
 
     void *orgFillUBMSurface, *orgConfigureDisplay, *orgGetDisplayInfo, *orgAllocateScanoutFB;
 
-    SolveRequestPlus solveRequests[] = {
+    PatcherPlus::PatternSolveRequest solveRequests[] = {
         {"__ZN31AMDRadeonX6000_AMDGFX10Hardware20allocateAMDHWDisplayEv", this->orgAllocateAMDHWDisplay},
         {"__ZN35AMDRadeonX6000_AMDAccelVideoContext10gMetaClassE", NRed::singleton().metaClassMap[0][1]},
         {"__ZN37AMDRadeonX6000_AMDAccelDisplayMachine10gMetaClassE", NRed::singleton().metaClassMap[1][1]},
@@ -296,44 +296,44 @@ void iVega::X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_addres
             orgConfigureDisplay},
         {"__ZN27AMDRadeonX6000_AMDHWDisplay14getDisplayInfoEjbbPvP17_FRAMEBUFFER_INFO", orgGetDisplayInfo},
     };
-    PANIC_COND(!SolveRequestPlus::solveAll(patcher, id, solveRequests, slide, size), "X6000",
+    PANIC_COND(!PatcherPlus::PatternSolveRequest::solveAll(patcher, id, solveRequests, slide, size), "X6000",
         "Failed to resolve symbols");
 
     if (NRed::singleton().getAttributes().isVenturaAndLater()) {
         orgAllocateScanoutFB = nullptr;
     } else {
-        SolveRequestPlus request {"__ZN27AMDRadeonX6000_AMDHWDisplay17allocateScanoutFBEjP16IOAccelResource2S1_Py",
-            orgAllocateScanoutFB};
+        PatcherPlus::PatternSolveRequest request {
+            "__ZN27AMDRadeonX6000_AMDHWDisplay17allocateScanoutFBEjP16IOAccelResource2S1_Py", orgAllocateScanoutFB};
         PANIC_COND(!request.solve(patcher, id, slide, size), "X6000", "Failed to resolve allocateScanout");
     }
 
-    RouteRequestPlus accelStartRequest = {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator5startEP9IOService",
-        wrapAccelStartX6000};
+    PatcherPlus::PatternRouteRequest accelStartRequest = {
+        "__ZN37AMDRadeonX6000_AMDGraphicsAccelerator5startEP9IOService", wrapAccelStartX6000};
     PANIC_COND(!accelStartRequest.route(patcher, id, slide, size), "X6000",
         "Failed to route AMDGraphicsAccelerator::start");
 
     if (NRed::singleton().getAttributes().isRaven()) {
-        RouteRequestPlus request = {"__ZN30AMDRadeonX6000_AMDGFX10Display23initDCNRegistersOffsetsEv",
+        PatcherPlus::PatternRouteRequest request = {"__ZN30AMDRadeonX6000_AMDGFX10Display23initDCNRegistersOffsetsEv",
             wrapInitDCNRegistersOffsets, this->orgInitDCNRegistersOffsets};
         PANIC_COND(!request.route(patcher, id, slide, size), "X6000", "Failed to route initDCNRegistersOffsets");
     }
 
     if (NRed::singleton().getAttributes().isCatalina()) {
-        const LookupPatchPlus patches[] = {
+        const PatcherPlus::MaskedLookupPatch patches[] = {
             {&kextRadeonX6000, kHWChannelSubmitCommandBufferOriginal1015, kHWChannelSubmitCommandBufferPatched1015, 1},
             {&kextRadeonX6000, kDummyWPTRUpdateDiagCallOriginal, kDummyWPTRUpdateDiagCallPatched, 1},
         };
-        SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size, true), "X6000",
+        SYSLOG_COND(!PatcherPlus::MaskedLookupPatch::applyAll(patcher, patches, slide, size, true), "X6000",
             "Failed to apply patches");
         patcher.clearError();
     } else {
-        const LookupPatchPlus patch {&kextRadeonX6000, kHWChannelSubmitCommandBufferOriginal,
+        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX6000, kHWChannelSubmitCommandBufferOriginal,
             kHWChannelSubmitCommandBufferPatched, 1};
         SYSLOG_COND(!patch.apply(patcher, slide, size), "X6000", "Failed to apply submitCommandBuffer patch");
         patcher.clearError();
     }
 
-    const LookupPatchPlus patches[] = {
+    const PatcherPlus::MaskedLookupPatch patches[] = {
         {&kextRadeonX6000, kIsDeviceValidCallOriginal, kIsDeviceValidCallPatched,
             NRed::singleton().getAttributes().isCatalina()        ? 20U :
             NRed::singleton().getAttributes().isVenturaAndLater() ? 23 :
@@ -344,11 +344,12 @@ void iVega::X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_addres
             NRed::singleton().getAttributes().isVenturaAndLater() ? 3 :
                                                                     1},
     };
-    SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size, true), "X6000", "Failed to apply patches");
+    SYSLOG_COND(!PatcherPlus::MaskedLookupPatch::applyAll(patcher, patches, slide, size, true), "X6000",
+        "Failed to apply patches");
     patcher.clearError();
 
     if (NRed::singleton().getAttributes().isCatalina()) {
-        const LookupPatchPlus patches[] = {
+        const PatcherPlus::MaskedLookupPatch patches[] = {
             {&kextRadeonX6000, kWriteWaitForRenderingPipeCallOriginal, kWriteWaitForRenderingPipeCallPatched, 1},
             {&kextRadeonX6000, kGetTtlInterfaceCallOriginal, kGetTtlInterfaceCallOriginalMask,
                 kGetTtlInterfaceCallPatched, kGetTtlInterfaceCallPatchedMask, 38},
@@ -382,24 +383,25 @@ void iVega::X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_addres
             {&kextRadeonX6000, kDumpASICHangStateCallOriginal, kDumpASICHangStateCallPatched, 2},
             {&kextRadeonX6000, kGetSchedulerCallOriginal1015, kGetSchedulerCallPatched1015, 22},
         };
-        SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size, true), "X6000",
+        SYSLOG_COND(!PatcherPlus::MaskedLookupPatch::applyAll(patcher, patches, slide, size, true), "X6000",
             "Failed to apply patches");
         patcher.clearError();
     }
 
     if (NRed::singleton().getAttributes().isVenturaAndLater()) {
-        const LookupPatchPlus patch {&kextRadeonX6000, kGetSchedulerCallOriginal13, kGetSchedulerCallPatched13, 24};
+        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX6000, kGetSchedulerCallOriginal13,
+            kGetSchedulerCallPatched13, 24};
         SYSLOG_COND(!patch.apply(patcher, slide, size), "X6000", "Failed to apply getScheduler patch");
         patcher.clearError();
     } else if (!NRed::singleton().getAttributes().isCatalina()) {
-        const LookupPatchPlus patch {&kextRadeonX6000, kGetSchedulerCallOriginal, kGetSchedulerCallPatched,
-            NRed::singleton().getAttributes().isMonterey() ? 21U : 22};
+        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX6000, kGetSchedulerCallOriginal,
+            kGetSchedulerCallPatched, NRed::singleton().getAttributes().isMonterey() ? 21U : 22};
         SYSLOG_COND(!patch.apply(patcher, slide, size), "X6000", "Failed to apply getScheduler patch");
         patcher.clearError();
     }
 
     if (NRed::singleton().getAttributes().isCatalina()) {
-        const LookupPatchPlus patches[] = {
+        const PatcherPlus::MaskedLookupPatch patches[] = {
             {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal1015, kGetGpuDebugPolicyCallPatched1015, 27},
             {&kextRadeonX6000, kUpdateUtilizationStatisticsCounterCallOriginal,
                 kUpdateUtilizationStatisticsCounterCallPatched, 2},
@@ -409,11 +411,12 @@ void iVega::X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_addres
             {&kextRadeonX6000, kGetUbmSwizzleModeCallOriginal, kGetUbmSwizzleModeCallPatched, 1},
             {&kextRadeonX6000, kGetUbmTileModeCallOriginal, kGetUbmTileModeCallPatched, 1},
         };
-        SYSLOG_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size, true), "X6000",
+        SYSLOG_COND(!PatcherPlus::MaskedLookupPatch::applyAll(patcher, patches, slide, size, true), "X6000",
             "Failed to apply patches");
         patcher.clearError();
     } else {
-        const LookupPatchPlus patch {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal, kGetGpuDebugPolicyCallPatched,
+        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX6000, kGetGpuDebugPolicyCallOriginal,
+            kGetGpuDebugPolicyCallPatched,
             NRed::singleton().getAttributes().isVentura1304Based() ? 38U :
             NRed::singleton().getAttributes().isVenturaAndLater()  ? 37 :
                                                                      28};

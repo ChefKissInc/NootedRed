@@ -1,4 +1,4 @@
-// Copyright © 2022-2024 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
+// Copyright © 2022-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
 #include <Headers/kern_api.hpp>
@@ -34,7 +34,7 @@ void NRed::init() {
     PANIC_COND(this->initialised, "NRed", "Attempted to initialise module twice!");
     this->initialised = true;
 
-    SYSLOG("NRed", "Copyright 2022-2024 ChefKiss. If you've paid for this, you've been scammed.");
+    SYSLOG("NRed", "Copyright 2022-2025 ChefKiss. If you've paid for this, you've been scammed.");
 
     switch (getKernelVersion()) {
         case KernelVersion::Catalina:
@@ -267,7 +267,7 @@ void NRed::writeReg32(UInt32 reg, UInt32 val) const {
 UInt32 NRed::smuWaitForResponse() const {
     UInt32 ret = AMDSMUFWResponse::kSMUFWResponseNoResponse;
     for (UInt32 i = 0; i < AMD_MAX_USEC_TIMEOUT; i++) {
-        ret = this->readReg32(MP_BASE + mmMP1_SMN_C2PMSG_90);
+        ret = this->readReg32(MP0_BASE_0 + mmMP1_SMN_C2PMSG_90);
         if (ret != AMDSMUFWResponse::kSMUFWResponseNoResponse) { break; }
 
         IOSleep(1);
@@ -279,13 +279,13 @@ UInt32 NRed::smuWaitForResponse() const {
 CAILResult NRed::sendMsgToSmc(UInt32 msg, UInt32 param, UInt32 *outParam) const {
     this->smuWaitForResponse();
 
-    this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_82, param);
-    this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_90, 0);
-    this->writeReg32(MP_BASE + mmMP1_SMN_C2PMSG_66, msg);
+    this->writeReg32(MP0_BASE_0 + mmMP1_SMN_C2PMSG_82, param);
+    this->writeReg32(MP0_BASE_0 + mmMP1_SMN_C2PMSG_90, 0);
+    this->writeReg32(MP0_BASE_0 + mmMP1_SMN_C2PMSG_66, msg);
 
     const auto resp = this->smuWaitForResponse();
 
-    if (outParam != nullptr) { *outParam = this->readReg32(MP_BASE + mmMP1_SMN_C2PMSG_82); }
+    if (outParam != nullptr) { *outParam = this->readReg32(MP0_BASE_0 + mmMP1_SMN_C2PMSG_82); }
 
     return processSMUFWResponse(resp);
 }

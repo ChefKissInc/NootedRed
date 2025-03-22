@@ -1,4 +1,4 @@
-// Copyright © 2024 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
+// Copyright © 2024-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
 #include <Headers/kern_api.hpp>
@@ -68,37 +68,37 @@ void Hotfixes::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_a
 
     if (checkKernelArgument("-NRedDPDelay")) {
         if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
-            RouteRequestPlus request {"_dp_receiver_power_ctrl", wrapDpReceiverPowerCtrl, this->orgDpReceiverPowerCtrl,
-                kDpReceiverPowerCtrlPattern1404};
+            PatcherPlus::PatternRouteRequest request {"_dp_receiver_power_ctrl", wrapDpReceiverPowerCtrl,
+                this->orgDpReceiverPowerCtrl, kDpReceiverPowerCtrlPattern1404};
             PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
                 "Failed to route dp_receiver_power_ctrl (14.4+)");
         } else {
-            RouteRequestPlus request {"_dp_receiver_power_ctrl", wrapDpReceiverPowerCtrl, this->orgDpReceiverPowerCtrl,
-                kDpReceiverPowerCtrlPattern};
+            PatcherPlus::PatternRouteRequest request {"_dp_receiver_power_ctrl", wrapDpReceiverPowerCtrl,
+                this->orgDpReceiverPowerCtrl, kDpReceiverPowerCtrlPattern};
             PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route dp_receiver_power_ctrl");
         }
     }
 
     if (NRed::singleton().getAttributes().isVenturaAndLater()) {
-        SolveRequestPlus solveRequest {
+        PatcherPlus::PatternSolveRequest solveRequest {
             "__ZNK34AMDRadeonX6000_AmdRadeonController18messageAcceleratorE25_eAMDAccelIOFBRequestTypePvS1_S1_",
             this->orgMessageAccelerator};
         PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "X6000FB", "Failed to resolve messageAccelerator");
     }
 
     if (NRed::singleton().getAttributes().isVenturaAndLater()) {
-        RouteRequestPlus request {"__ZN34AMDRadeonX6000_AmdRadeonController7powerUpEv", wrapControllerPowerUp,
-            this->orgControllerPowerUp};
+        PatcherPlus::PatternRouteRequest request {"__ZN34AMDRadeonX6000_AmdRadeonController7powerUpEv",
+            wrapControllerPowerUp, this->orgControllerPowerUp};
         PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route powerUp");
     }
 
     if (NRed::singleton().getAttributes().isVenturaAndLater()) {
-        const LookupPatchPlus patches[] = {
+        const PatcherPlus::MaskedLookupPatch patches[] = {
             {&kextRadeonX6000Framebuffer, kControllerPowerUpOriginal, kControllerPowerUpOriginalMask,
                 kControllerPowerUpReplace, kControllerPowerUpReplaceMask, 1},
             {&kextRadeonX6000Framebuffer, kValidateDetailedTimingOriginal, kValidateDetailedTimingPatched, 1},
         };
-        PANIC_COND(!LookupPatchPlus::applyAll(patcher, patches, slide, size), "X6000FB",
+        PANIC_COND(!PatcherPlus::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "X6000FB",
             "Failed to apply logic revert patches");
     }
 }

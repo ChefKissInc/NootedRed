@@ -1,4 +1,4 @@
-// Copyright © 2022-2024 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
+// Copyright © 2022-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
 #pragma once
@@ -14,18 +14,18 @@ namespace iVega {
         friend class X6000;
 
         bool initialised {false};
-        ObjectField<void *> pm4EngineField {};
-        ObjectField<void *> sdma0EngineField {};
-        ObjectField<UInt32> displayPipeCountField {};
-        ObjectField<UInt32> seCountField {};
-        ObjectField<UInt32> shPerSEField {};
-        ObjectField<UInt32> cuPerSHField {};
-        ObjectField<bool> hasUVD0Field {};
-        ObjectField<bool> hasVCEField {};
-        ObjectField<bool> hasVCN0Field {};
-        ObjectField<bool> hasSDMAPagingQueueField {};
-        ObjectField<UInt32> familyTypeField {};
-        ObjectField<Gfx9ChipSettings> chipSettingsField {};
+        ObjectField<void *> pm4EngineField {"PM4 Engine"};
+        ObjectField<void *> sdma0EngineField {"SDMA0 Engine"};
+        ObjectField<UInt32> displayPipeCountField {"Display Pipe Count"};
+        ObjectField<UInt32> seCountField {"Shader Engine Count"};
+        ObjectField<UInt32> shPerSEField {"Shader Array per Shader Engine"};
+        ObjectField<UInt32> cuPerSHField {"Compute Units per Shader Array"};
+        ObjectField<bool> hasUVD0Field {"Has UVD0"};
+        ObjectField<bool> hasVCEField {"Has VCE"};
+        ObjectField<bool> hasVCN0Field {"Has VCN0"};
+        ObjectField<bool> hasSDMAPagingQueueField {"Has SDMA Paging Queue"};
+        ObjectField<UInt32> familyTypeField {"Family Type"};
+        ObjectField<Gfx9ChipSettings> chipSettingsField {"AddrLib Chip Settings"};
         t_GenericConstructor orgGFX9PM4EngineConstructor {nullptr};
         t_GenericConstructor orgGFX9SDMAEngineConstructor {nullptr};
         mach_vm_address_t orgSetupAndInitializeHWCapabilities {0};

@@ -1,7 +1,8 @@
-// Copyright © 2024 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
+// Copyright © 2024-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
 #pragma once
+#include <Headers/kern_util.hpp>
 #include <IOKit/IOTypes.h>
 #include <PrivateHeaders/GPUDriversAMD/SMU.hpp>
 
@@ -14,7 +15,6 @@ enum CAILResult {
     kCAILResultUninitialised,
     kCAILResultUnsupported,
 };
-static_assert(sizeof(CAILResult) == 0x4);
 
 inline CAILResult processSMUFWResponse(const UInt32 value) {
     switch (value) {

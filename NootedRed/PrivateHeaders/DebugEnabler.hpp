@@ -1,4 +1,4 @@
-// Copyright © 2024 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
+// Copyright © 2024-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
 #include <Headers/kern_patcher.hpp>
@@ -24,5 +24,9 @@ class DebugEnabler {
     static bool wrapInitWithPciInfo(void *that, void *pciDevice);
     static void wrapDoGPUPanic(void *that, char const *fmt, ...);
     static void wrapDmLoggerWrite(void *logger, const UInt32 logType, const char *fmt, ...);
+    static void ipAssertion(void *instance, UInt32 cond, const char *func, const char *file, UInt32 line,
+        const char *msg);
+    static void gcDebugPrint(void *instance, const char *fmt, ...);
+    static void pspDebugPrint(void *instance, const char *fmt, ...);
     static bool wrapGetNumericProperty(void *that, const char *name, UInt32 *value);
 };

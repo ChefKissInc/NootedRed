@@ -20,6 +20,7 @@
 		405460892CDBDF6A007865E5 /* AGDP.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 405460882CDBDF58007865E5 /* AGDP.hpp */; };
 		4054608C2CDBDF8C007865E5 /* AGDP.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4054608B2CDBDF89007865E5 /* AGDP.cpp */; };
 		405460912CDBF221007865E5 /* NRedAttributes.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 405460902CDBF215007865E5 /* NRedAttributes.hpp */; };
+		4065564F2D6A0D8200EE1AA3 /* IPVersion.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4065564E2D6A0D8200EE1AA3 /* IPVersion.hpp */; };
 		4068898B2A229BF600028D22 /* PatcherPlus.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 406889892A229BF600028D22 /* PatcherPlus.cpp */; };
 		4068898C2A229BF600028D22 /* PatcherPlus.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4068898A2A229BF600028D22 /* PatcherPlus.hpp */; };
 		4069F00F29C3A241005293B4 /* ATOMBIOS.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FCE29BF942900367F9D /* ATOMBIOS.hpp */; };
@@ -53,7 +54,10 @@
 		409127742CE2F7B0004DBDB5 /* SMU.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127732CE2F7B0004DBDB5 /* SMU.hpp */; };
 		409127762CE2F7EA004DBDB5 /* Linux.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127752CE2F7EA004DBDB5 /* Linux.hpp */; };
 		409127792CE2F866004DBDB5 /* HWEngine.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127782CE2F866004DBDB5 /* HWEngine.hpp */; };
+		409D25652D6E577C009B7B68 /* SDMA.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409D25642D6E577C009B7B68 /* SDMA.hpp */; };
+		40D6E5922D672BE0003E110C /* GC.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40D6E5912D672BE0003E110C /* GC.hpp */; };
 		40E812F42CF5A1FB004FDCC7 /* AmdDeviceMemoryManager.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40E812F32CF5A1FB004FDCC7 /* AmdDeviceMemoryManager.hpp */; };
+		40E8726B2D6BE0480031D919 /* DMCU.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40E8726A2D6BE0480031D919 /* DMCU.hpp */; };
 		40F39FDC2CDD609E007AE975 /* Backlight.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40F39FDB2CDD6087007AE975 /* Backlight.hpp */; };
 		40F39FDE2CDD60A4007AE975 /* Backlight.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40F39FDD2CDD60A3007AE975 /* Backlight.cpp */; };
 		40F39FE02CDE842B007AE975 /* X6000FB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40F39FDF2CDE8424007AE975 /* X6000FB.cpp */; };
@@ -103,6 +107,7 @@
 		405460882CDBDF58007865E5 /* AGDP.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AGDP.hpp; sourceTree = "<group>"; };
 		4054608B2CDBDF89007865E5 /* AGDP.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AGDP.cpp; sourceTree = "<group>"; };
 		405460902CDBF215007865E5 /* NRedAttributes.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = NRedAttributes.hpp; sourceTree = "<group>"; };
+		4065564E2D6A0D8200EE1AA3 /* IPVersion.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = IPVersion.hpp; sourceTree = "<group>"; };
 		406889892A229BF600028D22 /* PatcherPlus.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = PatcherPlus.cpp; sourceTree = "<group>"; };
 		4068898A2A229BF600028D22 /* PatcherPlus.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PatcherPlus.hpp; sourceTree = "<group>"; };
 		407905662CF6F323000900FA /* VendorInfo.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = VendorInfo.hpp; sourceTree = "<group>"; };
@@ -137,7 +142,10 @@
 		409127732CE2F7B0004DBDB5 /* SMU.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SMU.hpp; sourceTree = "<group>"; };
 		409127752CE2F7EA004DBDB5 /* Linux.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Linux.hpp; sourceTree = "<group>"; };
 		409127782CE2F866004DBDB5 /* HWEngine.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HWEngine.hpp; sourceTree = "<group>"; };
+		409D25642D6E577C009B7B68 /* SDMA.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SDMA.hpp; sourceTree = "<group>"; };
+		40D6E5912D672BE0003E110C /* GC.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = GC.hpp; sourceTree = "<group>"; };
 		40E812F32CF5A1FB004FDCC7 /* AmdDeviceMemoryManager.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AmdDeviceMemoryManager.hpp; sourceTree = "<group>"; };
+		40E8726A2D6BE0480031D919 /* DMCU.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DMCU.hpp; sourceTree = "<group>"; };
 		40F39FDB2CDD6087007AE975 /* Backlight.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Backlight.hpp; sourceTree = "<group>"; };
 		40F39FDD2CDD60A3007AE975 /* Backlight.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Backlight.cpp; sourceTree = "<group>"; };
 		40F39FDF2CDE8424007AE975 /* X6000FB.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = X6000FB.cpp; sourceTree = "<group>"; };
@@ -311,6 +319,7 @@
 		408B3DEA2CDFB7CE00CAE5D2 /* CAIL */ = {
 			isa = PBXGroup;
 			children = (
+				40E872692D6BE01D0031D919 /* SWIP */,
 				408B3DEF2CDFB91800CAE5D2 /* DevCaps.hpp */,
 				408B3DED2CDFB80000CAE5D2 /* GoldenSettings.hpp */,
 				408B3DEB2CDFB7DA00CAE5D2 /* HWBlock.hpp */,
@@ -367,6 +376,17 @@
 			path = FB;
 			sourceTree = "<group>";
 		};
+		40E872692D6BE01D0031D919 /* SWIP */ = {
+			isa = PBXGroup;
+			children = (
+				40E8726A2D6BE0480031D919 /* DMCU.hpp */,
+				40D6E5912D672BE0003E110C /* GC.hpp */,
+				4065564E2D6A0D8200EE1AA3 /* IPVersion.hpp */,
+				409D25642D6E577C009B7B68 /* SDMA.hpp */,
+			);
+			path = SWIP;
+			sourceTree = "<group>";
+		};
 		CE405EC51E49DD7100AA0B3D /* Library */ = {
 			isa = PBXGroup;
 			children = (
@@ -409,6 +429,7 @@
 				40364DB629B79DFD0070A2B4 /* Model.hpp in Headers */,
 				4014D9722C74AA7000FDE986 /* ObjectField.hpp in Headers */,
 				4091276D2CE2F681004DBDB5 /* SignalTypes.hpp in Headers */,
+				40D6E5922D672BE0003E110C /* GC.hpp in Headers */,
 				CEA03B5F20EE825A00BA842F /* NRed.hpp in Headers */,
 				409127662CE2F2F4004DBDB5 /* PowerPlay.hpp in Headers */,
 				408B3DE52CDFA77800CAE5D2 /* SMUIO.hpp in Headers */,
@@ -429,12 +450,15 @@
 				408B3DEC2CDFB7DE00CAE5D2 /* HWBlock.hpp in Headers */,
 				401B4A022CF43589002B75A6 /* DebugEnabler.hpp in Headers */,
 				6C1B36672A407C6200B184DD /* AppleGFXHDA.hpp in Headers */,
+				40E8726B2D6BE0480031D919 /* DMCU.hpp in Headers */,
 				409127612CE2EDC6004DBDB5 /* DeviceType.hpp in Headers */,
 				408B3DDA2CDFA42E00CAE5D2 /* SDMA0.hpp in Headers */,
 				408B3DF02CDFB91F00CAE5D2 /* DevCaps.hpp in Headers */,
 				409127792CE2F866004DBDB5 /* HWEngine.hpp in Headers */,
 				409127592CE2EBCD004DBDB5 /* VidMemType.hpp in Headers */,
 				408B3DE72CDFA7AC00CAE5D2 /* RavenPPSMC.hpp in Headers */,
+				409D25652D6E577C009B7B68 /* SDMA.hpp in Headers */,
+				4065564F2D6A0D8200EE1AA3 /* IPVersion.hpp in Headers */,
 				409127562CE2CC01004DBDB5 /* ASICCaps.hpp in Headers */,
 				408B3DE02CDFA60E00CAE5D2 /* SMU.hpp in Headers */,
 				408B3DDE2CDFA46B00CAE5D2 /* NBIO.hpp in Headers */,

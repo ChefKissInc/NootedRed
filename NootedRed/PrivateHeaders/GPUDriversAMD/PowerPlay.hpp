@@ -1,4 +1,4 @@
-// Copyright © 2024 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
+// Copyright © 2024-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
 #pragma once
@@ -34,4 +34,3 @@ enum PPResult {
     PPResultClientNotFound,
     PPResultTimeOut
 };
-static_assert(sizeof(PPResult) == 0x4);
