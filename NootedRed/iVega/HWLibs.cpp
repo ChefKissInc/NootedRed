@@ -391,14 +391,12 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_
 
     NRed::singleton().hwLateInit();
 
-    CAILAsicCapsEntry *orgCapsTable;
-    CAILAsicCapsInitEntry *orgCapsInitTable;
-    AMDDeviceTypeEntry *orgDeviceTypeTable;
-    AMDDeviceCapabilities *orgDevCapTable;
+    CAILAsicCapsEntry *orgCapsTable = nullptr;
+    CAILAsicCapsInitEntry *orgCapsInitTable = nullptr;
+    AMDDeviceTypeEntry *orgDeviceTypeTable = nullptr;
+    AMDDeviceCapabilities *orgDevCapTable = nullptr;
 
-    if (NRed::singleton().getAttributes().isCatalina()) {
-        orgDeviceTypeTable = nullptr;
-    } else {
+    if (!NRed::singleton().getAttributes().isCatalina()) {
         PatcherPlus::PatternSolveRequest solveRequests[] = {
             {"__ZL15deviceTypeTable", orgDeviceTypeTable, kDeviceTypeTablePattern},
             {"__ZN11AMDFirmware14createFirmwareEPhjjPKc", this->orgCreateFirmware, kCreateFirmwarePattern,

@@ -282,7 +282,8 @@ void iVega::X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_addres
 
     NRed::singleton().hwLateInit();
 
-    void *orgFillUBMSurface, *orgConfigureDisplay, *orgGetDisplayInfo, *orgAllocateScanoutFB;
+    void *orgFillUBMSurface = nullptr, *orgConfigureDisplay = nullptr, *orgGetDisplayInfo = nullptr,
+         *orgAllocateScanoutFB = nullptr;
 
     PatcherPlus::PatternSolveRequest solveRequests[] = {
         {"__ZN31AMDRadeonX6000_AMDGFX10Hardware20allocateAMDHWDisplayEv", this->orgAllocateAMDHWDisplay},
@@ -299,9 +300,7 @@ void iVega::X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_addres
     PANIC_COND(!PatcherPlus::PatternSolveRequest::solveAll(patcher, id, solveRequests, slide, size), "X6000",
         "Failed to resolve symbols");
 
-    if (NRed::singleton().getAttributes().isVenturaAndLater()) {
-        orgAllocateScanoutFB = nullptr;
-    } else {
+    if (!NRed::singleton().getAttributes().isVenturaAndLater()) {
         PatcherPlus::PatternSolveRequest request {
             "__ZN27AMDRadeonX6000_AMDHWDisplay17allocateScanoutFBEjP16IOAccelResource2S1_Py", orgAllocateScanoutFB};
         PANIC_COND(!request.solve(patcher, id, slide, size), "X6000", "Failed to resolve allocateScanout");

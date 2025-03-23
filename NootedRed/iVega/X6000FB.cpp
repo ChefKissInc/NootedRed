@@ -218,7 +218,7 @@ void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_addr
 
     NRed::singleton().hwLateInit();
 
-    CAILAsicCapsEntry *orgAsicCapsTable;
+    CAILAsicCapsEntry *orgAsicCapsTable = nullptr;
     PatcherPlus::PatternSolveRequest cailAsicCapsSolveRequest {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable,
         kCailAsicCapsTablePattern};
     PANIC_COND(!cailAsicCapsSolveRequest.solve(patcher, id, slide, size), "X6000FB",

@@ -134,8 +134,8 @@ void iVega::X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_addres
 
     NRed::singleton().hwLateInit();
 
-    UInt32 *orgChannelTypes;
-    mach_vm_address_t startHWEngines;
+    UInt32 *orgChannelTypes = nullptr;
+    mach_vm_address_t startHWEngines = 0;
 
     PatcherPlus::PatternSolveRequest solveRequests[] = {
         {NRed::singleton().getAttributes().isCatalina() ?
