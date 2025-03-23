@@ -42,6 +42,7 @@ namespace iVega {
         t_createFirmware orgCreateFirmware {nullptr};
         t_putFirmware orgPutFirmware {nullptr};
         mach_vm_address_t orgPspCmdKmSubmit {0};
+        mach_vm_address_t orgSmuInitFunctionPointerList {0};
         mach_vm_address_t orgGcSetFwEntryInfo {0};
         mach_vm_address_t orgSdmaInitFunctionPointerList {0};
 
@@ -72,7 +73,7 @@ namespace iVega {
         static CAILResult smu10NotifyEvent(void *instance, void *data);
         static CAILResult smu12NotifyEvent(void *instance, void *data);
         static CAILResult smuFullScreenEvent(void *instance, UInt32 event);
-        static CAILResult wrapSmu901CreateFunctionPointerList(void *instance);
+        static CAILResult wrapSmuInitFunctionPointerList(void *instance, SWIPIPVersion ipVer);
         static void gc91GetFwConstants(void *instance, GCFirmwareInfo *fwData);
         static void gc92GetFwConstants(void *instance, GCFirmwareInfo *fwData);
         static void gc93GetFwConstants(void *instance, GCFirmwareInfo *fwData);

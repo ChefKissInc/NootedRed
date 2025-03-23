@@ -118,42 +118,17 @@ static const UInt8 kPspSecurityFeatureCapsSet31Pattern[] = {0x55, 0x48, 0x89, 0x
 static const UInt8 kPspSecurityFeatureCapsSet31Pattern13[] = {0x55, 0x48, 0x89, 0xE5, 0x8B, 0x87, 0x18, 0x39, 0x00,
     0x00};
 
-static const UInt8 kSmu901CreateFunctionPointerListPattern[] = {0x55, 0x48, 0x89, 0xE5, 0x48, 0x8D, 0x05, 0x00, 0x00,
-    0x00, 0x00, 0x48, 0x89, 0x87, 0x08, 0x00, 0x00, 0x00, 0x48, 0x8D, 0x05, 0x00, 0x00, 0x00, 0x00, 0x48, 0x89, 0x87,
-    0x00, 0x00, 0x00, 0x00, 0x48, 0x8D, 0x05, 0x00, 0x00, 0x00, 0x00, 0x48, 0x89, 0x87, 0x08, 0x00, 0x00, 0x00, 0x48,
-    0x8D, 0x05, 0x00, 0x00, 0x00, 0x00, 0x48, 0x89, 0x87, 0x00, 0x00, 0x00, 0x00, 0x48, 0x8D, 0x05, 0x00, 0x00, 0x00,
-    0x00, 0x48, 0x89, 0x87, 0x08, 0x00, 0x00, 0x00, 0x48, 0x8D, 0x05, 0x00, 0x00, 0x00, 0x00, 0x48, 0x89, 0x87, 0x00,
-    0x00, 0x00, 0x00, 0x48, 0x8D, 0x05, 0x00, 0x00, 0x00, 0x00, 0x48, 0x89, 0x87, 0x00, 0x00, 0x00, 0x00, 0x48, 0x8D,
-    0x05, 0x00, 0x00, 0x00, 0x00, 0x48, 0x89, 0x87, 0x00, 0x00, 0x00, 0x00};
-static const UInt8 kSmu901CreateFunctionPointerListPatternMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00,
-    0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0x0F, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF,
-    0xFF, 0x0F, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0x0F, 0x00, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0x0F, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00,
-    0x00, 0x00, 0xFF, 0xFF, 0xFF, 0x0F, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF,
-    0x0F, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0x0F, 0x00, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0x0F, 0x00, 0xFF, 0xFF};
-static const UInt8 kSmu901CreateFunctionPointerListPattern13[] = {0x55, 0x48, 0x89, 0xE5, 0x48, 0x8D, 0x05, 0x00, 0x00,
-    0x00, 0x00, 0x48, 0x89, 0x87, 0x00, 0x00, 0x00, 0x00, 0x48, 0x8D, 0x05, 0x00, 0x00, 0x00, 0x00, 0x48, 0x89, 0x87,
-    0x08, 0x00, 0x00, 0x00, 0x48, 0x8D, 0x05, 0x00, 0x00, 0x00, 0x00, 0x48, 0x89, 0x87, 0x00, 0x00, 0x00, 0x00, 0x48,
-    0x8D, 0x05, 0x00, 0x00, 0x00, 0x00, 0x48, 0x89, 0x87, 0x08, 0x00, 0x00, 0x00, 0x48, 0x8D, 0x05, 0x00, 0x00, 0x00,
-    0x00, 0x48, 0x89, 0x87, 0x00, 0x00, 0x00, 0x00, 0x48, 0x8D, 0x05, 0x00, 0x00, 0x00, 0x00, 0x48, 0x89, 0x87, 0x08,
-    0x00, 0x00, 0x00, 0x48, 0x8D, 0x05, 0x00, 0x00, 0x00, 0x00, 0x48, 0x89, 0x87, 0x08, 0x00, 0x00, 0x00, 0x48, 0x8D,
-    0x05, 0x00, 0x00, 0x00, 0x00, 0x48, 0x89, 0x87, 0x08, 0x00, 0x00, 0x00};
-
-// Find call to `_gc_set_fw_entry_info`.
 static const UInt8 kGcSetFwEntryInfoCallPattern[] = {0x14, 0x4C, 0x89, 0xF1, 0xE8, 0x00, 0x00, 0x00, 0x00, 0x80, 0xC0};
 static const UInt8 kGcSetFwEntryInfoCallPatternMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xF0,
     0xF0};
 static constexpr size_t kGcSetFwEntryInfoCallPatternJumpInstOff = 0x4;
 
-// Find call to `_sdma_init_function_pointer_list`.
 static const UInt8 kSdmaInitFuncPtrListCallPattern[] = {0x44, 0x89, 0x00, 0x44, 0x89, 0x00, 0xE8, 0x00, 0x00, 0x00,
     0x00, 0x48, 0x8B, 0x00, 0x00, 0x85};
 static const UInt8 kSdmaInitFuncPtrListCallPatternMask[] = {0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00,
     0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF};
 static constexpr size_t kSdmaInitFuncPtrListCallPatternJumpInstOff = 0x6;
 
-// Find branch that will eventually call `_dmcu_get_dcn1_fw_constants`.
 static const UInt8 kDmcuBackdoorLoadFwBranchPattern[] = {0x8D, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x83, 0xF8, 0x02, 0x0F,
     0x82, 0x00, 0x00, 0x00, 0x00};
 static const UInt8 kDmcuBackdoorLoadFwBranchPatternMask[] = {0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -161,6 +136,12 @@ static const UInt8 kDmcuBackdoorLoadFwBranchPatternMask[] = {0xFF, 0x00, 0xFF, 0
 static constexpr size_t kDmcuBackdoorLoadFwDcn1ConstantsBranchOff = 0x9;
 static constexpr size_t kDmcuGetDcn1FwConstantsCallOff = 0x22;
 static constexpr size_t kDmcuGetDcn21FwConstantsCallOff = 0x4A;
+
+static const UInt8 kSmuInitFunctionPointerListCallPattern[] = {0x49, 0x8B, 0x00, 0x0C, 0x40, 0x8B, 0x00, 0x14, 0xE8,
+    0x00, 0x00, 0x00, 0x00};
+static const UInt8 kSmuInitFunctionPointerListCallPatternMask[] = {0xFF, 0xFF, 0x00, 0xFF, 0xF0, 0xFF, 0x00, 0xFF, 0xFF,
+    0x00, 0x00, 0x00, 0x00};
+static constexpr size_t kSmuInitFunctionPointerListCallPatternJumpInstOff = 0x8;
 
 //------ Patches ------//
 
@@ -205,26 +186,6 @@ static const UInt8 kPspSwInit2OriginalMask1015[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF
     0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00};
 static const UInt8 kPspSwInit2Patched1015[] = {0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90,
     0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90};
-
-// Replace call to `_smu_get_hw_version` with constant (0x1).
-static const UInt8 kSmuInitFunctionPointerListOriginal[] = {0xE8, 0x00, 0x00, 0x00, 0x00, 0x89, 0xC3, 0x41, 0x89, 0x87,
-    0x00, 0x00, 0x00, 0x00};
-static const UInt8 kSmuInitFunctionPointerListOriginalMask[] = {0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0x00, 0x00, 0x00, 0x00};
-static const UInt8 kSmuInitFunctionPointerListPatched[] = {0xB8, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00};
-static const UInt8 kSmuInitFunctionPointerListPatchedMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00};
-
-// Ditto. macOS 14.4+
-static const UInt8 kSmuInitFunctionPointerListOriginal1404[] = {0xE8, 0x00, 0x00, 0x00, 0x00, 0x41, 0x89, 0xC7, 0x89,
-    0x83, 0xC8, 0x02, 0x00, 0x00};
-static const UInt8 kSmuInitFunctionPointerListOriginalMask1404[] = {0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-static const UInt8 kSmuInitFunctionPointerListPatched1404[] = {0xB8, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00};
-static const UInt8 kSmuInitFunctionPointerListPatchedMask1404[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00};
 
 // Use "correct" PowerTuneServices by changing the switch statement case `0x8D` to `0x8E`.
 static const UInt8 kCreatePowerTuneServices1Original[] = {0x41, 0x8B, 0x47, 0x18, 0x83, 0xC0, 0x88, 0x83, 0xF8, 0x17};
@@ -512,13 +473,10 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_
     PANIC_COND(!patcher.routeMultipleLong(id, dmcuFwRequests, slide, size), "HWLibs",
         "Failed to route DMCU FW-related functions: %d", patcher.getError());
 
-    PatcherPlus::PatternRouteRequest request = {"_smu_9_0_1_create_function_pointer_list",
-        wrapSmu901CreateFunctionPointerList,
-        NRed::singleton().getAttributes().isVenturaAndLater() ? kSmu901CreateFunctionPointerListPattern13 :
-                                                                kSmu901CreateFunctionPointerListPattern,
-        kSmu901CreateFunctionPointerListPatternMask};
-    PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs",
-        "Failed to route smu_9_0_1_create_function_pointer_list");
+    PatcherPlus::JumpPatternRouteRequest smuRequest {"_smu_init_function_pointer_list", wrapSmuInitFunctionPointerList,
+        this->orgSmuInitFunctionPointerList, kSmuInitFunctionPointerListCallPattern,
+        kSmuInitFunctionPointerListCallPatternMask, kSmuInitFunctionPointerListCallPatternJumpInstOff};
+    PANIC_COND(!smuRequest.route(patcher, id, slide, size), "HWLibs", "Failed to route smu_init_function_pointer_list");
 
     PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "HWLibs",
         "Failed to enable kernel writing");
@@ -614,32 +572,19 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_
     }
 
     if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
-        const PatcherPlus::MaskedLookupPatch patches[] = {
-            {&kextRadeonX5000HWLibs, kSmuInitFunctionPointerListOriginal1404,
-                kSmuInitFunctionPointerListOriginalMask1404, kSmuInitFunctionPointerListPatched1404,
-                kSmuInitFunctionPointerListPatchedMask1404, 1},
-            {&kextRadeonX5000HWLibs, kCreatePowerTuneServices2Original1404, kCreatePowerTuneServices2Mask1404,
-                kCreatePowerTuneServices2Patched1404, 1},
-        };
-        PANIC_COND(!PatcherPlus::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "HWLibs",
-            "Failed to apply patches (>=14.4)");
+        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServices2Original1404,
+            kCreatePowerTuneServices2Mask1404, kCreatePowerTuneServices2Patched1404, 1};
+        PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTune patch (>=14.4)");
     } else {
-        const PatcherPlus::MaskedLookupPatch patches[] = {
-            {&kextRadeonX5000HWLibs, kSmuInitFunctionPointerListOriginal, kSmuInitFunctionPointerListOriginalMask,
-                kSmuInitFunctionPointerListPatched, kSmuInitFunctionPointerListPatchedMask, 1},
-            {&kextRadeonX5000HWLibs, kCreatePowerTuneServices2Original, kCreatePowerTuneServices2Mask,
-                kCreatePowerTuneServices2Patched, 1},
-        };
-        PANIC_COND(!PatcherPlus::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "HWLibs",
-            "Failed to apply patches (<14.4)");
+        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServices2Original,
+            kCreatePowerTuneServices2Mask, kCreatePowerTuneServices2Patched, 1};
+        PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTune patch (<14.4)");
     }
 
     if (NRed::singleton().getAttributes().isVenturaAndLater()) {
-        const PatcherPlus::MaskedLookupPatch patches[] = {
-            {&kextRadeonX5000HWLibs, kCailQueryAdapterInfoOriginal, kCailQueryAdapterInfoPatched, 1},
-        };
-        PANIC_COND(!PatcherPlus::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "HWLibs",
-            "Failed to apply macOS 13.0+ patches");
+        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX5000HWLibs, kCailQueryAdapterInfoOriginal,
+            kCailQueryAdapterInfoPatched, 1};
+        PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply CailQueryAdapterInfo patch");
     }
 }
 
@@ -896,8 +841,23 @@ CAILResult iVega::X5000HWLibs::smuFullScreenEvent(void *, UInt32 event) {
     }
 }
 
-// TODO: Not override the original logic.
-CAILResult iVega::X5000HWLibs::wrapSmu901CreateFunctionPointerList(void *instance) {
+CAILResult iVega::X5000HWLibs::wrapSmuInitFunctionPointerList(void *instance, SWIPIPVersion ipVer) {
+    auto ret = FunctionCast(wrapSmuInitFunctionPointerList, singleton().orgSmuInitFunctionPointerList)(instance, ipVer);
+    if (ret == kCAILResultSuccess) { return ret; }
+
+    switch (ipVer.major) {
+        case 10:
+            singleton().smuInternalHWInitField.set(instance, reinterpret_cast<void *>(smu10InternalHwInit));
+            singleton().smuNotifyEventField.set(instance, reinterpret_cast<void *>(smu10NotifyEvent));
+            break;
+        case 12:
+            singleton().smuInternalHWInitField.set(instance, reinterpret_cast<void *>(smu12InternalHwInit));
+            singleton().smuNotifyEventField.set(instance, reinterpret_cast<void *>(smu12NotifyEvent));
+            break;
+        default:
+            return ret;
+    }
+
     if (NRed::singleton().getAttributes().isCatalina()) {
         singleton().smuInternalSWInitField.set(instance, reinterpret_cast<void *>(cailNoop));
     } else {
@@ -905,16 +865,10 @@ CAILResult iVega::X5000HWLibs::wrapSmu901CreateFunctionPointerList(void *instanc
         singleton().smuGetUCodeConstsField.set(instance, reinterpret_cast<void *>(cailNoop));
     }
     singleton().smuFullscreenEventField.set(instance, reinterpret_cast<void *>(smuFullScreenEvent));
-    if (NRed::singleton().getAttributes().isRenoir()) {
-        singleton().smuInternalHWInitField.set(instance, reinterpret_cast<void *>(smu12InternalHwInit));
-        singleton().smuNotifyEventField.set(instance, reinterpret_cast<void *>(smu12NotifyEvent));
-    } else {
-        singleton().smuInternalHWInitField.set(instance, reinterpret_cast<void *>(smu10InternalHwInit));
-        singleton().smuNotifyEventField.set(instance, reinterpret_cast<void *>(smu10NotifyEvent));
-    }
     singleton().smuInternalSWExitField.set(instance, reinterpret_cast<void *>(cailNoop));
     singleton().smuInternalHWExitField.set(instance, reinterpret_cast<void *>(smuInternalHwExit));
     singleton().smuFullAsicResetField.set(instance, reinterpret_cast<void *>(smuFullAsicReset));
+
     return kCAILResultSuccess;
 }
 
