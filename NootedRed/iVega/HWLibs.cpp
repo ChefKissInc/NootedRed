@@ -483,10 +483,8 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_
         {nullptr, wrapGetDcn21FwConstants},
     };
 
-    dmcuFwRequests[0].from = patcher.solveSymbol(id, "_dmcu_get_dcn1_fw_constants", slide, size);
-    dmcuFwRequests[1].from = patcher.solveSymbol(id, "_dmcu_get_dcn21_fw_constants", slide, size);
-
-    if (dmcuFwRequests[0].from == 0 || dmcuFwRequests[1].from == 0) {
+    if ((dmcuFwRequests[0].from = patcher.solveSymbol(id, "_dmcu_get_dcn1_fw_constants", slide, size)) == 0 ||
+        (dmcuFwRequests[1].from = patcher.solveSymbol(id, "_dmcu_get_dcn21_fw_constants", slide, size)) == 0) {
         auto trySolveCall = [](KernelPatcher::RouteRequest &req, mach_vm_address_t addr) {
             for (size_t off = 0; off < 6; off += 1) {
                 // call ...
@@ -503,16 +501,14 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_
         size_t offset;
         PANIC_COND(!KernelPatcher::findPattern(kDmcuBackdoorLoadFwBranchPattern, kDmcuBackdoorLoadFwBranchPatternMask,
                        arrsize(kDmcuBackdoorLoadFwBranchPattern), reinterpret_cast<const void *>(slide), size, &offset),
-            "HWLibs", "Failed to find dmcu_backdoor_load_fw pattern");
+            "HWLibs", "Failed to find `dmcu_backdoor_load_fw` branch pattern");
         auto branch = PatcherPlus::jumpInstDestination(slide + offset + kDmcuBackdoorLoadFwDcn1ConstantsBranchOff);
-        PANIC_COND(branch == 0, "HWLibs", "Failed to find dmcu_get_dcn1_fw_constants branch via pattern");
+        PANIC_COND(branch == 0, "HWLibs", "Failed to get `dmcu_backdoor_load_fw` branch destination");
 
-        PANIC_COND(dmcuFwRequests[0].from == 0 &&
-                       !trySolveCall(dmcuFwRequests[0], branch + kDmcuGetDcn1FwConstantsCallOff),
-            "HWLibs", "Failed to find dmcu_get_dcn1_fw_constants via pattern");
-        PANIC_COND(dmcuFwRequests[1].from == 0 &&
-                       !trySolveCall(dmcuFwRequests[1], slide + offset + kDmcuGetDcn21FwConstantsCallOff),
-            "HWLibs", "Failed to find dmcu_get_dcn21_fw_constants via pattern");
+        PANIC_COND(!trySolveCall(dmcuFwRequests[0], branch + kDmcuGetDcn1FwConstantsCallOff), "HWLibs",
+            "Failed to solve `dmcu_get_dcn1_fw_constants` via call pattern");
+        PANIC_COND(!trySolveCall(dmcuFwRequests[1], slide + offset + kDmcuGetDcn21FwConstantsCallOff), "HWLibs",
+            "Failed to solve `dmcu_get_dcn21_fw_constants` via call pattern");
     }
 
     PANIC_COND(!patcher.routeMultipleLong(id, dmcuFwRequests, slide, size), "HWLibs",
