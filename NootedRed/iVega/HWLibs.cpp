@@ -869,7 +869,7 @@ CAILResult iVega::X5000HWLibs::wrapSmuInitFunctionPointerList(void *instance, SW
     singleton().smuInternalHWExitField.set(instance, reinterpret_cast<void *>(smuInternalHwExit));
     singleton().smuFullAsicResetField.set(instance, reinterpret_cast<void *>(smuFullAsicReset));
 
-    if (ADDPR(debugEnabled)) { SYSLOG("HWLibs", "Ignore error about unsupported SMU HW version."); }
+    SYSLOG_COND(ADDPR(debugEnabled), "HWLibs", "Ignore error about unsupported SMU HW version.");
 
     return kCAILResultSuccess;
 }
@@ -882,18 +882,16 @@ static bool isAsicA0() {
                    (NRed::singleton().getPciRevision() >= 0xD8 && NRed::singleton().getPciRevision() <= 0xDD)));
 }
 
-// Actual code creates an IOMemoryDescriptor and does nothing with it.
-// I got issues trying to create one, so I just instead gave it a dummy OSObject it can call ->release(); on.
-// LMFAO
-static inline void *createFWMemHandle() { return OSBoolean::withBoolean(false); }
+// Actual code creates an `IOMemoryDescriptor` and does nothing with it.
+// I ran into issues so I just gave it a random OSObject it can call `release` on.
+static inline void *allocMemHandle() { return OSBoolean::withBoolean(false); }
 
 static void setGCFWData(void *instance, GCFirmwareInfo *fwData, GCFirmwareType i, const char *filename) {
     DBGLOG("HWLibs", "Inserting GC firmware `%s` into index %d", filename, i);
     const auto &fwMeta = getFWByName(filename);
     PANIC_COND(fwMeta.extra == nullptr, "HWLibs", "Extra info for firmware `%s` is missing.", filename);
     fwData->entry[i] = static_cast<const GCFirmwareConstant *>(fwMeta.extra);
-    // From `AmdTtlServices::cosAllocMemoryHandle`.
-    fwData->handle[i] = createFWMemHandle();
+    fwData->handle[i] = allocMemHandle();
     PANIC_COND(fwData->handle[i] == nullptr, "HWLibs", "Failed to create memory handle!");
     getMember<void *[]>(instance, 0x18)[i] = fwData->handle[i];
     fwData->count += 1;
@@ -963,7 +961,7 @@ static inline UInt32 charToInt(const char *str, size_t len) {
     return ret;
 }
 
-static inline UInt32 gcGetHWVersion(SWIPIPVersion ipVersion) {
+static inline constexpr UInt32 gcGetHWVersion(SWIPIPVersion ipVersion) {
     return (ipVersion.major << 16) | (ipVersion.minor << 8) | ipVersion.patch;
 }
 
@@ -996,13 +994,13 @@ CAILResult iVega::X5000HWLibs::wrapGcSetFwEntryInfo(void *instance, SWIPIPVersio
     auto *fwInfo = &singleton().gcSwFirmwareField.get(instance);
     fwInfo->count = 0;
     switch (hwVersion) {
-        case 0x090100:
+        case gcGetHWVersion({9, 1, 0}):
             gc91GetFwConstants(instance, fwInfo);
             break;
-        case 0x090200:
+        case gcGetHWVersion({9, 2, 0}):
             gc92GetFwConstants(instance, fwInfo);
             break;
-        case 0x090300:
+        case gcGetHWVersion({9, 3, 0}):
             gc93GetFwConstants(instance, fwInfo);
             break;
         default:
@@ -1022,11 +1020,10 @@ static void setDMCUFWData(void *instance, DMCUFirmwareInfo *fwData, DMCUFirmware
 
     const auto *fwEntry = static_cast<const DMCUFirmwareConstant *>(fwMeta.extra);
 
-    // From `AmdTtlServices::cosAllocMemoryHandle`.
     fwData->entry[i].loadAddress = fwEntry->loadAddress;
     fwData->entry[i].romSize = fwEntry->romSize;
     fwData->entry[i].rom = fwEntry->rom;
-    fwData->entry[i].handle = createFWMemHandle();
+    fwData->entry[i].handle = allocMemHandle();
     PANIC_COND(fwData->entry[i].handle == nullptr, "HWLibs", "Failed to create memory handle!");
     getMember<void *[]>(instance, 0x18)[i] = fwData->entry[i].handle;
 
@@ -1101,8 +1098,6 @@ bool iVega::X5000HWLibs::wrapGetDcn21FwConstants(void *instance, DMCUFirmwareInf
     return true;
 }
 
-static inline UInt32 sdmaGetHWVersion(UInt32 major, UInt32 minor) { return minor | (major << 16); }
-
 static bool sdma41GetFWConstants(void *, const SDMAFWConstant **out) {
     const auto &fw = getFWByName("sdma_4_1_ucode.bin");
     PANIC_COND(fw.extra == nullptr, "HWLibs", "SDMA 4.1 entry is missing extra metadata!");
@@ -1117,11 +1112,12 @@ static bool sdma412StartEngine(void *) {
     return true;
 }
 
+static inline constexpr UInt32 sdmaGetHWVersion(UInt32 major, UInt32 minor) { return minor | (major << 16); }
+
 CAILResult iVega::X5000HWLibs::wrapSdmaInitFunctionPointerList(void *instance, UInt32 verMajor, UInt32 verMinor,
     UInt32 verPatch) {
-    auto hwVer = sdmaGetHWVersion(verMajor, verMinor);
-    switch (hwVer) {
-        case 0x040001:
+    switch (sdmaGetHWVersion(verMajor, verMinor)) {
+        case sdmaGetHWVersion(4, 1):
             singleton().sdmaGetFwConstantsField.set(instance, sdma41GetFWConstants);
             if (verPatch == 2) { singleton().sdmaStartEngineField.set(instance, sdma412StartEngine); }
             break;
