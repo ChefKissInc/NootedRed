@@ -869,7 +869,7 @@ CAILResult iVega::X5000HWLibs::wrapSmuInitFunctionPointerList(void *instance, SW
     singleton().smuInternalHWExitField.set(instance, reinterpret_cast<void *>(smuInternalHwExit));
     singleton().smuFullAsicResetField.set(instance, reinterpret_cast<void *>(smuFullAsicReset));
 
-    SYSLOG("HWLibs", "Ignore error about unsupported SMU HW version.");
+    if (ADDPR(debugEnabled)) { SYSLOG("HWLibs", "Ignore error about unsupported SMU HW version."); }
 
     return kCAILResultSuccess;
 }
