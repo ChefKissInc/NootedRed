@@ -321,49 +321,12 @@ static bool checkAtomBios(const UInt8 *bios, size_t size) {
     return false;
 }
 
-bool NRed::getVBIOSFromExpansionROM() {
-    auto expansionROMBase = this->iGPU->extendedConfigRead32(kIOPCIConfigExpansionROMBase);
-    if (expansionROMBase == 0) {
-        DBGLOG("NRed", "No PCI Expansion ROM available");
-        return false;
-    }
-
-    auto *expansionROM =
-        this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigExpansionROMBase, kIOMapInhibitCache | kIOMapAnywhere);
-    if (expansionROM == nullptr) { return false; }
-    auto expansionROMLength = min(expansionROM->getLength(), ATOMBIOS_IMAGE_SIZE);
-    if (expansionROMLength == 0) {
-        DBGLOG("NRed", "PCI Expansion ROM is empty");
-        expansionROM->release();
-        return false;
-    }
-
-    // Enable reading the expansion ROMs
-    this->iGPU->extendedConfigWrite32(kIOPCIConfigExpansionROMBase, expansionROMBase | 1);
-
-    this->vbiosData = OSData::withBytes(reinterpret_cast<const void *>(expansionROM->getVirtualAddress()),
-        static_cast<UInt32>(expansionROMLength));
-    PANIC_COND(this->vbiosData == nullptr, "NRed", "PCI Expansion ROM OSData::withBytes failed");
-    OSSafeReleaseNULL(expansionROM);
-
-    // Disable reading the expansion ROMs
-    this->iGPU->extendedConfigWrite32(kIOPCIConfigExpansionROMBase, expansionROMBase);
-
-    if (checkAtomBios(static_cast<const UInt8 *>(this->vbiosData->getBytesNoCopy()), expansionROMLength)) {
-        return true;
-    } else {
-        DBGLOG("NRed", "PCI Expansion ROM VBIOS is not an ATOMBIOS");
-        OSSafeReleaseNULL(this->vbiosData);
-        return false;
-    }
-}
-
 // Hack
 class AppleACPIPlatformExpert : IOACPIPlatformExpert {
     friend class NRed;
 };
 
-bool NRed::getVBIOSFromVFCT() {
+bool NRed::getVBIOSFromVFCT(bool strict) {
     DBGLOG("NRed", "Fetching VBIOS from VFCT table");
     auto *expert = reinterpret_cast<AppleACPIPlatformExpert *>(this->iGPU->getPlatform());
     PANIC_COND(expert == nullptr, "NRed", "Failed to get AppleACPIPlatformExpert");
@@ -404,8 +367,9 @@ bool NRed::getVBIOSFromVFCT() {
 
         offset += sizeof(GOPVideoBIOSHeader) + vHdr->imageLength;
 
-        if (vHdr->imageLength != 0 && vHdr->pciBus == busNum && vHdr->pciDevice == devNum &&
-            vHdr->pciFunction == devFunc && vHdr->vendorID == vendor && vHdr->deviceID == this->deviceID) {
+        if (vHdr->imageLength != 0 &&
+            (!strict || (vHdr->pciBus == busNum && vHdr->pciDevice == devNum && vHdr->pciFunction == devFunc)) &&
+            vHdr->vendorID == vendor && vHdr->deviceID == this->deviceID) {
             if (checkAtomBios(vContent, vHdr->imageLength)) {
                 this->vbiosData = OSData::withBytes(vContent, vHdr->imageLength);
                 PANIC_COND(this->vbiosData == nullptr, "NRed", "VFCT OSData::withBytes failed");
@@ -447,6 +411,43 @@ bool NRed::getVBIOSFromVRAM() {
     return true;
 }
 
+bool NRed::getVBIOSFromExpansionROM() {
+    auto expansionROMBase = this->iGPU->extendedConfigRead32(kIOPCIConfigExpansionROMBase);
+    if (expansionROMBase == 0) {
+        DBGLOG("NRed", "No PCI Expansion ROM available");
+        return false;
+    }
+
+    auto *expansionROM =
+        this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigExpansionROMBase, kIOMapInhibitCache | kIOMapAnywhere);
+    if (expansionROM == nullptr) { return false; }
+    auto expansionROMLength = min(expansionROM->getLength(), ATOMBIOS_IMAGE_SIZE);
+    if (expansionROMLength == 0) {
+        DBGLOG("NRed", "PCI Expansion ROM is empty");
+        expansionROM->release();
+        return false;
+    }
+
+    // Enable reading the expansion ROMs
+    this->iGPU->extendedConfigWrite32(kIOPCIConfigExpansionROMBase, expansionROMBase | 1);
+
+    this->vbiosData = OSData::withBytes(reinterpret_cast<const void *>(expansionROM->getVirtualAddress()),
+        static_cast<UInt32>(expansionROMLength));
+    PANIC_COND(this->vbiosData == nullptr, "NRed", "PCI Expansion ROM OSData::withBytes failed");
+    expansionROM->release();
+
+    // Disable reading the expansion ROMs
+    this->iGPU->extendedConfigWrite32(kIOPCIConfigExpansionROMBase, expansionROMBase);
+
+    if (checkAtomBios(static_cast<const UInt8 *>(this->vbiosData->getBytesNoCopy()), expansionROMLength)) {
+        return true;
+    } else {
+        DBGLOG("NRed", "PCI Expansion ROM VBIOS is not an ATOMBIOS");
+        OSSafeReleaseNULL(this->vbiosData);
+        return false;
+    }
+}
+
 bool NRed::getVBIOS() {
     auto *biosImageProp = OSDynamicCast(OSData, this->iGPU->getProperty("ATY,bin_image"));
     if (biosImageProp != nullptr) {
@@ -458,19 +459,25 @@ bool NRed::getVBIOS() {
             SYSLOG("NRed", "Error: VBIOS override is invalid.");
         }
     }
-    if (this->getVBIOSFromVFCT()) {
+    if (this->getVBIOSFromVFCT(true)) {
         DBGLOG("NRed", "Got VBIOS from VFCT.");
     } else {
-        SYSLOG("NRed", "Error: Failed to get VBIOS from VFCT, trying to get it from VRAM.");
+        SYSLOG("NRed", "Failed to get VBIOS from VFCT, trying to get it from VRAM.");
         if (this->getVBIOSFromVRAM()) {
             DBGLOG("NRed", "Got VBIOS from VRAM.");
         } else {
-            SYSLOG("NRed", "Error: Failed to get VBIOS from VRAM, trying to get it from PCI Expansion ROM!");
+            SYSLOG("NRed", "Failed to get VBIOS from VRAM, trying to get it from PCI Expansion ROM.");
             if (this->getVBIOSFromExpansionROM()) {
                 DBGLOG("NRed", "Got VBIOS from PCI Expansion ROM.");
             } else {
-                SYSLOG("NRed", "Error: Failed to get VBIOS from PCI Expansion ROM!");
-                return false;
+                SYSLOG("NRed",
+                    "Failed to get VBIOS from PCI Expansion ROM, trying to get it from VFCT (relaxed matches mode).");
+                if (this->getVBIOSFromVFCT(false)) {
+                    DBGLOG("NRed", "Got VBIOS from VFCT (relaxed matches mode).");
+                } else {
+                    SYSLOG("NRed", "Failed to get VBIOS from VFCT (relaxed matches mode).");
+                    return false;
+                }
             }
         }
     }

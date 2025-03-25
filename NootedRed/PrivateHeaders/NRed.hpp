@@ -58,9 +58,9 @@ class NRed {
     OSMetaClass *metaClassMap[5][2] = {{nullptr}};
 
     private:
-    bool getVBIOSFromExpansionROM();
-    bool getVBIOSFromVFCT();
+    bool getVBIOSFromVFCT(bool strict);
     bool getVBIOSFromVRAM();
+    bool getVBIOSFromExpansionROM();
     bool getVBIOS();
 
     static bool wrapAddDrivers(void *that, OSArray *array, bool doNubMatching);
