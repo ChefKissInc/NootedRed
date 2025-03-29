@@ -890,11 +890,11 @@ static inline void setGCFWData(void *instance, GCFirmwareInfo *fwData, GCFirmwar
     DBGLOG("HWLibs", "Inserting GC firmware `%s` into index %d", filename, i);
 
     const auto &fwMeta = getFWByName(filename);
-    assert(fwMeta.extra != nullptr, "HWLibs", "Extra info for firmware `%s` is missing.", filename);
+    assertf(fwMeta.extra != nullptr, "Extra info for firmware `%s` is missing.", filename);
 
     fwData->entry[i] = static_cast<const GCFirmwareConstant *>(fwMeta.extra);
     fwData->handle[i] = allocMemHandle();
-    assert(fwData->handle[i] != nullptr, "HWLibs", "Failed to create memory handle!");
+    assertf(fwData->handle[i] != nullptr, "Failed to create memory handle!");
 
     getMember<void *[]>(instance, 0x18)[i] = fwData->handle[i];
     fwData->count += 1;
@@ -1019,7 +1019,7 @@ static inline void setDMCUFWData(void *instance, DMCUFirmwareInfo *fwData, DMCUF
     DBGLOG("HWLibs", "Inserting DMCU firmware `%s` into index %d", filename, i);
 
     const auto &fwMeta = getFWByName(filename);
-    assert(fwMeta.extra != nullptr, "HWLibs", "Extra info for firmware `%s` is missing.", filename);
+    assertf(fwMeta.extra != nullptr, "Extra info for firmware `%s` is missing.", filename);
 
     const auto *fwEntry = static_cast<const DMCUFirmwareConstant *>(fwMeta.extra);
 
@@ -1027,7 +1027,7 @@ static inline void setDMCUFWData(void *instance, DMCUFirmwareInfo *fwData, DMCUF
     fwData->entry[i].romSize = fwEntry->romSize;
     fwData->entry[i].rom = fwEntry->rom;
     fwData->entry[i].handle = allocMemHandle();
-    assert(fwData->entry[i].handle != nullptr, "HWLibs", "Failed to create memory handle!");
+    assertf(fwData->entry[i].handle != nullptr, "Failed to create memory handle!");
     getMember<void *[]>(instance, 0x18)[i] = fwData->entry[i].handle;
 
     fwData->count += 1;
@@ -1103,7 +1103,7 @@ bool iVega::X5000HWLibs::wrapGetDcn21FwConstants(void *instance, DMCUFirmwareInf
 
 static bool sdma41GetFWConstants(void *, const SDMAFWConstant **out) {
     const auto &fw = getFWByName("sdma_4_1_ucode.bin");
-    assert(fw.extra != nullptr, "HWLibs", "SDMA 4.1 entry is missing extra metadata!");
+    assertf(fw.extra != nullptr, "SDMA 4.1 entry is missing extra metadata!");
     *out = static_cast<const SDMAFWConstant *>(fw.extra);
     return true;
 }
