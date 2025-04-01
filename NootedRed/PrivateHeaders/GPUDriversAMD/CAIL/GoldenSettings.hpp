@@ -17,10 +17,9 @@ struct CAILGoldenRegister {
 };
 static_assert(sizeof(CAILGoldenRegister) == 0x10);
 
-#define GOLDEN_REGISTER(reg, and, or) \
-    { .regOffset = reg, .segment = reg##_BASE_IDX, .andMask = and, .orMask = or }
+#define GOLDEN_REGISTER(reg, and, or) {.regOffset = reg, .segment = reg##_BASE_IDX, .andMask = and, .orMask = or }
 #define GOLDEN_REGISTER_TERMINATOR \
-    { .regOffset = 0xFFFFFFFF, .segment = 0xFFFFFFFF, .andMask = 0xFFFFFFFF, .orMask = 0xFFFFFFFF }
+    {.regOffset = 0xFFFFFFFF, .segment = 0xFFFFFFFF, .andMask = 0xFFFFFFFF, .orMask = 0xFFFFFFFF}
 
 struct CAILIPGoldenRegisters {
     const CAILHWBlock hwBlock;
@@ -28,11 +27,9 @@ struct CAILIPGoldenRegisters {
 };
 static_assert(sizeof(CAILIPGoldenRegisters) == 0x10);
 
-#define GOLDEN_REGISTERS(block, ents) \
-    { .hwBlock = kCAILHWBlock##block, .entries = ents }
+#define GOLDEN_REGISTERS(block, ents) {.hwBlock = kCAILHWBlock##block, .entries = ents}
 
-#define GOLDEN_REGISTERS_TERMINATOR \
-    { .hwBlock = kCAILHWBlockUnknown, .entries = nullptr }
+#define GOLDEN_REGISTERS_TERMINATOR {.hwBlock = kCAILHWBlockUnknown, .entries = nullptr}
 
 struct CAILASICGoldenSettings {
     // Golden settings for GPUs emulated using the Cadence Palladium Emulation platform. We don't care.

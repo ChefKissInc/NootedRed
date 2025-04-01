@@ -25,12 +25,13 @@ namespace iVega {
 
         private:
         void processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
-        static UInt16 wrapGetEnumeratedRevision();
-        static IOReturn wrapPopulateVramInfo(void *that, void *fwInfo);
+
+        static UInt16 getEnumeratedRevision();
+        static IOReturn populateVramInfo(void *that, void *fwInfo);
         static UInt32 wrapGetNumberOfConnectors(void *that);
         static bool wrapIH40IVRingInitHardware(void *ctx, void *param2);
         static void wrapIRQMGRWriteRegister(void *ctx, UInt64 index, UInt32 value);
         static void *wrapCreateRegisterAccess(void *initData);
-        static IOReturn wrapIntializeReservedVram(void *that);    // AMD made this typo, not me
+        static IOReturn intializeReservedVram(void *that);    // AMD made this typo, not me
     };
 };    // namespace iVega

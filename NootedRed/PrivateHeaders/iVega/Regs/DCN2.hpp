@@ -4,8 +4,8 @@
 #pragma once
 #include <IOKit/IOTypes.h>
 
-constexpr UInt32 mmIH_CLK_CTRL = 0x117B;
-constexpr UInt32 mmIH_IH_BUFFER_MEM_CLK_SOFT_OVERRIDE_SHIFT = 0x1A;
-constexpr UInt32 mmIH_DBUS_MUX_CLK_SOFT_OVERRIDE_SHIFT = 0x1B;
-constexpr UInt32 mmIH_CHICKEN = 0x122C;
-constexpr UInt32 mmIH_MC_SPACE_GPA_ENABLE = 0x10;
+constexpr UInt32 IH_CLK_CTRL = 0x117B;
+constexpr UInt32 IH_IH_BUFFER_MEM_CLK_SOFT_OVERRIDE_SHIFT = 0x1A;
+constexpr UInt32 IH_DBUS_MUX_CLK_SOFT_OVERRIDE_SHIFT = 0x1B;
+constexpr UInt32 IH_CHICKEN = 0x122C;
+constexpr UInt32 IH_MC_SPACE_GPA_ENABLE = 0x10;

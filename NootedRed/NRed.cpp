@@ -123,10 +123,9 @@ void NRed::hwLateInit() {
     PANIC_COND(this->rmmio == nullptr || this->rmmio->getLength() == 0, "NRed", "Failed to map RMMIO");
     this->rmmioPtr = reinterpret_cast<UInt32 *>(this->rmmio->getVirtualAddress());
 
-    this->fbOffset = static_cast<UInt64>(this->readReg32(GC_BASE_0 + mmMC_VM_FB_OFFSET)) << 24;
-    this->devRevision =
-        (this->readReg32(NBIO_BASE_2 + mmRCC_DEV0_EPF0_STRAP0) & RCC_DEV0_EPF0_STRAP0_ATI_REV_ID_MASK) >>
-        RCC_DEV0_EPF0_STRAP0_ATI_REV_ID_SHIFT;
+    this->fbOffset = static_cast<UInt64>(this->readReg32(GC_BASE_0 + MC_VM_FB_OFFSET)) << 24;
+    this->devRevision = (this->readReg32(NBIO_BASE_2 + RCC_DEV0_EPF0_STRAP0) & RCC_DEV0_EPF0_STRAP0_ATI_REV_ID_MASK) >>
+                        RCC_DEV0_EPF0_STRAP0_ATI_REV_ID_SHIFT;
 
     if (this->attributes.isRaven()) {
         if (this->devRevision >= 0x8) {
@@ -250,8 +249,8 @@ UInt32 NRed::readReg32(UInt32 reg) const {
     if ((reg * sizeof(UInt32)) < this->rmmio->getLength()) {
         return this->rmmioPtr[reg];
     } else {
-        this->rmmioPtr[mmPCIE_INDEX2] = reg;
-        return this->rmmioPtr[mmPCIE_DATA2];
+        this->rmmioPtr[PCIE_INDEX2] = reg;
+        return this->rmmioPtr[PCIE_DATA2];
     }
 }
 
@@ -259,15 +258,15 @@ void NRed::writeReg32(UInt32 reg, UInt32 val) const {
     if ((reg * sizeof(UInt32)) < this->rmmio->getLength()) {
         this->rmmioPtr[reg] = val;
     } else {
-        this->rmmioPtr[mmPCIE_INDEX2] = reg;
-        this->rmmioPtr[mmPCIE_DATA2] = val;
+        this->rmmioPtr[PCIE_INDEX2] = reg;
+        this->rmmioPtr[PCIE_DATA2] = val;
     }
 }
 
 UInt32 NRed::smuWaitForResponse() const {
     UInt32 ret = AMDSMUFWResponse::kSMUFWResponseNoResponse;
     for (UInt32 i = 0; i < AMD_MAX_USEC_TIMEOUT; i++) {
-        ret = this->readReg32(MP0_BASE_0 + mmMP1_SMN_C2PMSG_90);
+        ret = this->readReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_90);
         if (ret != AMDSMUFWResponse::kSMUFWResponseNoResponse) { break; }
 
         IOSleep(1);
@@ -279,13 +278,13 @@ UInt32 NRed::smuWaitForResponse() const {
 CAILResult NRed::sendMsgToSmc(UInt32 msg, UInt32 param, UInt32 *outParam) const {
     this->smuWaitForResponse();
 
-    this->writeReg32(MP0_BASE_0 + mmMP1_SMN_C2PMSG_82, param);
-    this->writeReg32(MP0_BASE_0 + mmMP1_SMN_C2PMSG_90, 0);
-    this->writeReg32(MP0_BASE_0 + mmMP1_SMN_C2PMSG_66, msg);
+    this->writeReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_82, param);
+    this->writeReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_90, 0);
+    this->writeReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_66, msg);
 
     const auto resp = this->smuWaitForResponse();
 
-    if (outParam != nullptr) { *outParam = this->readReg32(MP0_BASE_0 + mmMP1_SMN_C2PMSG_82); }
+    if (outParam != nullptr) { *outParam = this->readReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_82); }
 
     return processSMUFWResponse(resp);
 }
@@ -491,7 +490,7 @@ static const char *getDriverXMLForBundle(const char *bundleIdentifier, size_t *l
     memcpy(filename, bundleIdentifier, identifierLen);
     strlcat(filename, ".xml", totalLen);
 
-    const auto &driversXML = getFWByName(filename);
+    const auto &driversXML = getFirmwareNamed(filename);
     delete[] filename;
 
     *len = driversXML.length;
@@ -544,7 +543,7 @@ bool NRed::wrapAddDrivers(void *that, OSArray *array, bool doNubMatching) {
                 array->ensureCapacity(driverCount + injectedDriverCount);
 
                 for (UInt32 injectedDriverIndex = 0; injectedDriverIndex < injectedDriverCount;
-                     injectedDriverIndex += 1) {
+                    injectedDriverIndex += 1) {
                     array->setObject(driverIndex, drivers->getObject(injectedDriverIndex));
                     driverIndex += 1;
                     driverCount += 1;

@@ -382,6 +382,7 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_
             this->orgGetIpFw};
         PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route getIpFw");
     } else {
+        // TODO: Not override the PSP 9 code.
         PatcherPlus::PatternRouteRequest requests[] = {
             {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory,
                 this->orgGetIpFw},
@@ -438,12 +439,13 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_
         "Failed to route FW-related functions");
 
     KernelPatcher::RouteRequest dmcuFwRequests[] = {
-        {nullptr, wrapGetDcn1FwConstants},
-        {nullptr, wrapGetDcn21FwConstants},
+        {nullptr, getDcn1FwConstants},
+        {nullptr, getDcn21FwConstants},
     };
 
-    if ((dmcuFwRequests[0].from = patcher.solveSymbol(id, "_dmcu_get_dcn1_fw_constants", slide, size)) == 0 ||
-        (dmcuFwRequests[1].from = patcher.solveSymbol(id, "_dmcu_get_dcn21_fw_constants", slide, size)) == 0) {
+    dmcuFwRequests[0].from = patcher.solveSymbol(id, "_dmcu_get_dcn1_fw_constants", slide, size);
+    dmcuFwRequests[1].from = patcher.solveSymbol(id, "_dmcu_get_dcn21_fw_constants", slide, size);
+    if (dmcuFwRequests[0].from == 0 || dmcuFwRequests[1].from == 0) {
         auto trySolveCall = [](KernelPatcher::RouteRequest &req, mach_vm_address_t addr) {
             for (size_t off = 0; off < 6; off += 1) {
                 // call ...
@@ -471,12 +473,13 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_
     }
 
     PANIC_COND(!patcher.routeMultipleLong(id, dmcuFwRequests, slide, size), "HWLibs",
-        "Failed to route DMCU FW-related functions: %d", patcher.getError());
+        "Failed to route DMCU FW-related functions");
 
     PatcherPlus::JumpPatternRouteRequest smuRequest {"_smu_init_function_pointer_list", wrapSmuInitFunctionPointerList,
         this->orgSmuInitFunctionPointerList, kSmuInitFunctionPointerListCallPattern,
         kSmuInitFunctionPointerListCallPatternMask, kSmuInitFunctionPointerListCallPatternJumpInstOff};
-    PANIC_COND(!smuRequest.route(patcher, id, slide, size), "HWLibs", "Failed to route smu_init_function_pointer_list");
+    PANIC_COND(!smuRequest.route(patcher, id, slide, size), "HWLibs",
+        "Failed to route `smu_init_function_pointer_list`");
 
     PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "HWLibs",
         "Failed to enable kernel writing");
@@ -528,7 +531,18 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_
     MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
     DBGLOG("HWLibs", "Applied DDI Caps patches");
 
-    if (!NRed::singleton().getAttributes().isCatalina()) {
+    // TODO: Replace this hack with a simple hook.
+    if (NRed::singleton().getAttributes().isCatalina()) {
+        if (NRed::singleton().getAttributes().isRenoir()) {
+            const PatcherPlus::MaskedLookupPatch patches[] = {
+                {&kextRadeonX5000HWLibs, kPspSwInit1Original1015, kPspSwInit1Patched1015, 1},
+                {&kextRadeonX5000HWLibs, kPspSwInit2Original1015, kPspSwInit2OriginalMask1015, kPspSwInit2Patched1015,
+                    1},
+            };
+            PANIC_COND(!PatcherPlus::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "HWLibs",
+                "Failed to apply spoof patches");
+        }
+    } else {
         const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX5000HWLibs, kGcSwInitOriginal, kGcSwInitOriginalMask,
             kGcSwInitPatched, kGcSwInitPatchedMask, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply gc_sw_init spoof patch");
@@ -548,34 +562,27 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_
             PANIC_COND(!PatcherPlus::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "HWLibs",
                 "Failed to apply spoof patches (<14.4)");
         }
-    } else if (NRed::singleton().getAttributes().isRenoir()) {
+    }
+
+    // TODO: Replace this hack with a simple hook.
+    if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
         const PatcherPlus::MaskedLookupPatch patches[] = {
-            {&kextRadeonX5000HWLibs, kPspSwInit1Original1015, kPspSwInit1Patched1015, 1},
-            {&kextRadeonX5000HWLibs, kPspSwInit2Original1015, kPspSwInit2OriginalMask1015, kPspSwInit2Patched1015, 1},
+            {&kextRadeonX5000HWLibs, kCreatePowerTuneServices1Original1404, kCreatePowerTuneServices1Patched1404, 1},
+            {&kextRadeonX5000HWLibs, kCreatePowerTuneServices2Original1404, kCreatePowerTuneServices2Mask1404,
+                kCreatePowerTuneServices2Patched1404, 1},
         };
         PANIC_COND(!PatcherPlus::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "HWLibs",
-            "Failed to apply spoof patches");
-    }
-
-    if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
-        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServices1Original1404,
-            kCreatePowerTuneServices1Patched1404, 1};
-        PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTuneServices patch (>=14.4)");
-    } else if (NRed::singleton().getAttributes().isMontereyAndLater()) {
-        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServices1Original12,
-            kCreatePowerTuneServices1Patched12, 1};
-        PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTuneServices patch (<14.4)");
+            "Failed to apply PowerTuneServices patches (>=14.4)");
     } else {
-        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServices1Original,
-            kCreatePowerTuneServices1Patched, 1};
-        PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTuneServices patch (<12.0)");
-    }
-
-    if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
-        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServices2Original1404,
-            kCreatePowerTuneServices2Mask1404, kCreatePowerTuneServices2Patched1404, 1};
-        PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTune patch (>=14.4)");
-    } else {
+        if (NRed::singleton().getAttributes().isMontereyAndLater()) {
+            const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServices1Original12,
+                kCreatePowerTuneServices1Patched12, 1};
+            PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTuneServices patch (<14.4)");
+        } else {
+            const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServices1Original,
+                kCreatePowerTuneServices1Patched, 1};
+            PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTuneServices patch (<12.0)");
+        }
         const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServices2Original,
             kCreatePowerTuneServices2Mask, kCreatePowerTuneServices2Patched, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTune patch (<14.4)");
@@ -588,42 +595,39 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_
     }
 }
 
-// I use the Navi 10 device type as it's not used in the X5000HWLibs kext,
-// so there's no firmware, as such I can safely put entries for your beloved Vega iGPUs.
+// Taking advantage of the fact device type "Navi 10" is not used in the original function.
 void iVega::X5000HWLibs::wrapPopulateFirmwareDirectory(void *that) {
     FunctionCast(wrapPopulateFirmwareDirectory, singleton().orgGetIpFw)(that);
+
     auto *fwDir = singleton().fwDirField.get(that);
+    assert(fwDir != nullptr);
 
-    const auto &ravenFwData = getFWByName("ativvaxy_rv.dat");
+    const auto &ravenFwData = getFirmwareNamed("ativvaxy_rv.dat");
     auto *ravenFw = singleton().orgCreateFirmware(ravenFwData.data, ravenFwData.length, 0x0100, "ativvaxy_rv.dat");
-    PANIC_COND(ravenFw == nullptr, "HWLibs", "Failed to create VCN 1.0 firmware");
+    assertf(ravenFw != nullptr, "Failed to create VCN 1.0 firmware");
+    singleton().orgPutFirmware(fwDir, kAMDDeviceTypeNavi10, ravenFw);
 
-    PANIC_COND(!singleton().orgPutFirmware(fwDir, kAMDDeviceTypeNavi10, ravenFw), "HWLibs",
-        "Failed to insert Raven firmware");
-
-    const auto &renoirFwData = getFWByName("ativvaxy_nv.dat");
+    const auto &renoirFwData = getFirmwareNamed("ativvaxy_nv.dat");
     auto *renoirFw = singleton().orgCreateFirmware(renoirFwData.data, renoirFwData.length, 0x0202, "ativvaxy_nv.dat");
-    PANIC_COND(renoirFw == nullptr, "HWLibs", "Failed to create VCN 2.2 firmware");
-    PANIC_COND(!singleton().orgPutFirmware(fwDir, kAMDDeviceTypeNavi10, renoirFw), "HWLibs",
-        "Failed to insert Renoir firmware");
+    assertf(renoirFw != nullptr, "Failed to create VCN 2.2 firmware");
+    singleton().orgPutFirmware(fwDir, kAMDDeviceTypeNavi10, renoirFw);
 
-    const auto &dmcubFwData = getFWByName("atidmcub_rn.dat");
+    const auto &dmcubFwData = getFirmwareNamed("atidmcub_rn.dat");
     auto *dmcubFw = singleton().orgCreateFirmware(dmcubFwData.data, dmcubFwData.length, 0x0201, "atidmcub_0.dat");
-    PANIC_COND(dmcubFw == nullptr, "HWLibs", "Failed to create DMCUB firmware");
-    PANIC_COND(!singleton().orgPutFirmware(fwDir, kAMDDeviceTypeNavi10, dmcubFw), "HWLibs",
-        "Failed to insert DMCUB firmware");
+    assertf(dmcubFw != nullptr, "Failed to create DMCUB firmware");
+    singleton().orgPutFirmware(fwDir, kAMDDeviceTypeNavi10, dmcubFw);
 }
 
 bool iVega::X5000HWLibs::wrapGetIpFw(void *that, UInt32 ipVersion, const char *name, void *out) {
     if (strncmp(name, "ativvaxy_rv.dat", 16) == 0 || strncmp(name, "ativvaxy_nv.dat", 16) == 0) {
-        const auto &fwDesc = getFWByName(name);
+        const auto &fwDesc = getFirmwareNamed(name);
         getMember<const void *>(out, 0x0) = fwDesc.data;
         getMember<UInt32>(out, 0x8) = fwDesc.length;
         return true;
     }
     // This is fine because there won't be any other DCN ASICs in X5000HWLibs
     if (strncmp(name, "atidmcub_0.dat", 15) == 0) {
-        const auto &fwDesc = getFWByName("atidmcub_rn.dat");
+        const auto &fwDesc = getFirmwareNamed("atidmcub_rn.dat");
         getMember<const void *>(out, 0x0) = fwDesc.data;
         getMember<UInt32>(out, 0x8) = fwDesc.length;
         return true;
@@ -635,21 +639,19 @@ CAILResult iVega::X5000HWLibs::cailGeneralFailure() { return kCAILResultFailed; 
 CAILResult iVega::X5000HWLibs::cailUnsupported() { return kCAILResultUnsupported; }
 CAILResult iVega::X5000HWLibs::cailNoop() { return kCAILResultSuccess; }
 
-// TODO: Not override the original function.
 CAILResult iVega::X5000HWLibs::pspBootloaderLoadSos10(void *instance) {
-    singleton().pspSOSField.set(instance, NRed::singleton().readReg32(MP0_BASE_0 + mmMP0_SMN_C2PMSG_59));
-    (singleton().pspSOSField + 0x4).set(instance, NRed::singleton().readReg32(MP0_BASE_0 + mmMP0_SMN_C2PMSG_58));
-    (singleton().pspSOSField + 0x8).set(instance, NRed::singleton().readReg32(MP0_BASE_0 + mmMP0_SMN_C2PMSG_58));
+    singleton().pspSOSField.set(instance, NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_59));
+    (singleton().pspSOSField + 0x4).set(instance, NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_58));
+    (singleton().pspSOSField + 0x8).set(instance, NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_58));
     return kCAILResultSuccess;
 }
 
-// TODO: Not override the original function.
 CAILResult iVega::X5000HWLibs::pspSecurityFeatureCapsSet10(void *instance) {
     auto &securityCaps = singleton().pspSecurityCapsField.get(instance);
     securityCaps &= ~static_cast<UInt8>(1);
     auto tOSVer = singleton().pspTOSVerField.get(instance);
     if ((tOSVer & 0xFFFF0000) == 0x80000 && (tOSVer & 0xFF) > 0x50) {
-        auto policyVer = NRed::singleton().readReg32(MP0_BASE_0 + mmMP0_SMN_C2PMSG_91);
+        auto policyVer = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_91);
         SYSLOG_COND((policyVer & 0xFF000000) != 0xA000000, "HWLibs", "Invalid security policy version: 0x%X",
             policyVer);
         if (policyVer == 0xA02031A || ((policyVer & 0xFFFFFF00) == 0xA020400 && (policyVer & 0xFC) > 0x23) ||
@@ -661,13 +663,12 @@ CAILResult iVega::X5000HWLibs::pspSecurityFeatureCapsSet10(void *instance) {
     return kCAILResultSuccess;
 }
 
-// TODO: Not override the original function.
 CAILResult iVega::X5000HWLibs::pspSecurityFeatureCapsSet12(void *instance) {
     auto &securityCaps = singleton().pspSecurityCapsField.get(instance);
     securityCaps &= ~static_cast<UInt8>(1);
     auto tOSVer = singleton().pspTOSVerField.get(instance);
     if ((tOSVer & 0xFFFF0000) == 0x110000 && (tOSVer & 0xFF) > 0x2A) {
-        auto policyVer = NRed::singleton().readReg32(MP0_BASE_0 + mmMP0_SMN_C2PMSG_91);
+        auto policyVer = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_91);
         SYSLOG_COND((policyVer & 0xFF000000) != 0xB000000, "HWLibs", "Invalid security policy version: 0x%X",
             policyVer);
         if ((policyVer & 0xFFFF0000) == 0xB090000 && (policyVer & 0xFE) > 0x35) { securityCaps |= 1; }
@@ -711,7 +712,7 @@ CAILResult iVega::X5000HWLibs::wrapPspCmdKmSubmit(void *instance, void *cmd, voi
             return FunctionCast(wrapPspCmdKmSubmit, singleton().orgPspCmdKmSubmit)(instance, cmd, outData, outResponse);
     }
 
-    const auto &fw = getFWByName(filename);
+    const auto &fw = getFirmwareNamed(filename);
     memcpy(data, fw.data, fw.length);
     getMember<UInt32>(cmd, 0xC) = fw.length;
 
@@ -756,8 +757,7 @@ CAILResult iVega::X5000HWLibs::smu10InternalHwInit(void *) {
 CAILResult iVega::X5000HWLibs::smu12InternalHwInit(void *) {
     UInt32 i = 0;
     for (; i < AMD_MAX_USEC_TIMEOUT; i++) {
-        if (NRed::singleton().readReg32(MP1_PUBLIC | smnMP1_FIRMWARE_FLAGS) &
-            smnMP1_FIRMWARE_FLAGS_INTERRUPTS_ENABLED) {
+        if (NRed::singleton().readReg32(MP1_PUBLIC | MP1_FIRMWARE_FLAGS) & MP1_FIRMWARE_FLAGS_INTERRUPTS_ENABLED) {
             break;
         }
         IOSleep(1);
@@ -805,7 +805,8 @@ CAILResult iVega::X5000HWLibs::smu10NotifyEvent(void *, void *data) {
 }
 
 CAILResult iVega::X5000HWLibs::smu12NotifyEvent(void *, void *data) {
-    switch (getMember<UInt32>(data, 4)) {
+    auto event = getMember<UInt32>(data, 4);
+    switch (event) {
         case 0:
         case 4:
         case 8:
@@ -821,7 +822,7 @@ CAILResult iVega::X5000HWLibs::smu12NotifyEvent(void *, void *data) {
         case 11:    // Collect debug info
             return kCAILResultSuccess;
         default:
-            SYSLOG("HWLibs", "Invalid input event to SMU notify event");
+            SYSLOG("HWLibs", "Invalid input event to SMU notify event: %d", event);
             return kCAILResultFailed;
     }
 }
@@ -829,23 +830,27 @@ CAILResult iVega::X5000HWLibs::smu12NotifyEvent(void *, void *data) {
 CAILResult iVega::X5000HWLibs::smuFullScreenEvent(void *, UInt32 event) {
     switch (event) {
         case 1:
-            NRed::singleton().writeReg32(MP0_BASE_0 + mmMP1_SMN_FPS_CNT,
-                NRed::singleton().readReg32(MP0_BASE_0 + mmMP1_SMN_FPS_CNT) + 1);
+            NRed::singleton().writeReg32(MP0_BASE_0 + MP1_SMN_FPS_CNT,
+                NRed::singleton().readReg32(MP0_BASE_0 + MP1_SMN_FPS_CNT) + 1);
             return kCAILResultSuccess;
         case 2:
-            NRed::singleton().writeReg32(MP0_BASE_0 + mmMP1_SMN_FPS_CNT, 0);
+            NRed::singleton().writeReg32(MP0_BASE_0 + MP1_SMN_FPS_CNT, 0);
             return kCAILResultSuccess;
         default:
-            SYSLOG("HWLibs", "Invalid input event to SMU full screen event");
+            SYSLOG("HWLibs", "Invalid input event to SMU full screen event: %d", event);
             return kCAILResultFailed;
     }
 }
 
-CAILResult iVega::X5000HWLibs::wrapSmuInitFunctionPointerList(void *instance, SWIPIPVersion ipVer) {
-    auto ret = FunctionCast(wrapSmuInitFunctionPointerList, singleton().orgSmuInitFunctionPointerList)(instance, ipVer);
+CAILResult iVega::X5000HWLibs::wrapSmuInitFunctionPointerList(void *instance, SWIPIPVersion ipVersion) {
+    DBGLOG("HWLibs", "Entered `smu_init_function_pointer_list` wrap (ipVersion: {%d,%d,%d}).", ipVersion.major,
+        ipVersion.minor, ipVersion.patch);
+
+    auto ret =
+        FunctionCast(wrapSmuInitFunctionPointerList, singleton().orgSmuInitFunctionPointerList)(instance, ipVersion);
     if (ret == kCAILResultSuccess) { return ret; }
 
-    switch (ipVer.major) {
+    switch (ipVersion.major) {
         case 10:
             singleton().smuInternalHWInitField.set(instance, reinterpret_cast<void *>(smu10InternalHwInit));
             singleton().smuNotifyEventField.set(instance, reinterpret_cast<void *>(smu10NotifyEvent));
@@ -855,6 +860,7 @@ CAILResult iVega::X5000HWLibs::wrapSmuInitFunctionPointerList(void *instance, SW
             singleton().smuNotifyEventField.set(instance, reinterpret_cast<void *>(smu12NotifyEvent));
             break;
         default:
+            DBGLOG("HWLibs", "Early exiting `smu_init_function_pointer_list` wrap with result %d.", ret);
             return ret;
     }
 
@@ -871,9 +877,11 @@ CAILResult iVega::X5000HWLibs::wrapSmuInitFunctionPointerList(void *instance, SW
 
     SYSLOG_COND(ADDPR(debugEnabled), "HWLibs", "Ignore error about unsupported SMU HW version.");
 
+    DBGLOG("HWLibs", "Exiting `smu_init_function_pointer_list` wrap.");
     return kCAILResultSuccess;
 }
 
+// TODO: Triple check if this is actually correct.
 static bool isAsicA0() {
     return (!NRed::singleton().getAttributes().isPicasso() && !NRed::singleton().getAttributes().isRaven2() &&
                NRed::singleton().getAttributes().isRaven()) ||
@@ -889,7 +897,7 @@ static inline void *allocMemHandle() { return OSBoolean::withBoolean(false); }
 static inline void setGCFWData(void *instance, GCFirmwareInfo *fwData, GCFirmwareType i, const char *filename) {
     DBGLOG("HWLibs", "Inserting GC firmware `%s` into index %d", filename, i);
 
-    const auto &fwMeta = getFWByName(filename);
+    const auto &fwMeta = getFirmwareNamed(filename);
     assertf(fwMeta.extra != nullptr, "Extra info for firmware `%s` is missing.", filename);
 
     fwData->entry[i] = static_cast<const GCFirmwareConstant *>(fwMeta.extra);
@@ -993,7 +1001,7 @@ void iVega::X5000HWLibs::processGCFWEntries(void *instance, void *initData) {
 
 CAILResult iVega::X5000HWLibs::wrapGcSetFwEntryInfo(void *instance, SWIPIPVersion ipVersion, void *initData) {
     auto hwVersion = gcGetHWVersion(ipVersion);
-    DBGLOG("HWLibs", "Entered gc_set_fw_entry_info (hwVersion: 0x%X).", hwVersion);
+    DBGLOG("HWLibs", "Entered `gc_set_fw_entry_info` (hwVersion: 0x%X).", hwVersion);
     auto *fwInfo = &singleton().gcSwFirmwareField.get(instance);
     fwInfo->count = 0;
     switch (hwVersion) {
@@ -1007,18 +1015,18 @@ CAILResult iVega::X5000HWLibs::wrapGcSetFwEntryInfo(void *instance, SWIPIPVersio
             gc93GetFwConstants(instance, fwInfo);
             break;
         default:
-            DBGLOG("HWLibs", "Exiting gc_set_fw_entry_info wrap to original logic.");
+            DBGLOG("HWLibs", "Exiting `gc_set_fw_entry_info` wrap to original logic.");
             return FunctionCast(wrapGcSetFwEntryInfo, singleton().orgGcSetFwEntryInfo)(instance, ipVersion, initData);
     }
     processGCFWEntries(instance, initData);
-    DBGLOG("HWLibs", "Exiting gc_set_fw_entry_info wrap.");
+    DBGLOG("HWLibs", "Exiting `gc_set_fw_entry_info` wrap.");
     return kCAILResultSuccess;
 }
 
 static inline void setDMCUFWData(void *instance, DMCUFirmwareInfo *fwData, DMCUFirmwareType i, const char *filename) {
     DBGLOG("HWLibs", "Inserting DMCU firmware `%s` into index %d", filename, i);
 
-    const auto &fwMeta = getFWByName(filename);
+    const auto &fwMeta = getFirmwareNamed(filename);
     assertf(fwMeta.extra != nullptr, "Extra info for firmware `%s` is missing.", filename);
 
     const auto *fwEntry = static_cast<const DMCUFirmwareConstant *>(fwMeta.extra);
@@ -1033,8 +1041,8 @@ static inline void setDMCUFWData(void *instance, DMCUFirmwareInfo *fwData, DMCUF
     fwData->count += 1;
 }
 
-bool iVega::X5000HWLibs::wrapGetDcn1FwConstants(void *instance, DMCUFirmwareInfo *fwData) {
-    DBGLOG("HWLibs", "Entered get_dcn1_fw_constants wrap.");
+bool iVega::X5000HWLibs::getDcn1FwConstants(void *instance, DMCUFirmwareInfo *fwData) {
+    DBGLOG("HWLibs", "Entered `get_dcn1_fw_constants` wrap.");
     auto enablePSPFWLoad = singleton().dmcuEnablePSPFWLoadField.get(instance);
     DBGLOG("HWLibs", "EnablePSPFWLoad = 0x%X", enablePSPFWLoad);
     if (enablePSPFWLoad == 2) { return true; }
@@ -1061,12 +1069,12 @@ bool iVega::X5000HWLibs::wrapGetDcn1FwConstants(void *instance, DMCUFirmwareInfo
             return false;
     }
 
-    DBGLOG("HWLibs", "Exiting get_dcn1_fw_constants wrap.");
+    DBGLOG("HWLibs", "Exiting `get_dcn1_fw_constants` wrap.");
     return true;
 }
 
-bool iVega::X5000HWLibs::wrapGetDcn21FwConstants(void *instance, DMCUFirmwareInfo *fwData) {
-    DBGLOG("HWLibs", "Entered get_dcn21_fw_constants wrap.");
+bool iVega::X5000HWLibs::getDcn21FwConstants(void *instance, DMCUFirmwareInfo *fwData) {
+    DBGLOG("HWLibs", "Entered `get_dcn21_fw_constants` wrap.");
     auto enablePSPFWLoad = singleton().dmcuEnablePSPFWLoadField.get(instance);
     DBGLOG("HWLibs", "EnablePSPFWLoad = 0x%X", enablePSPFWLoad);
     if (enablePSPFWLoad == 2) { return true; }
@@ -1097,12 +1105,12 @@ bool iVega::X5000HWLibs::wrapGetDcn21FwConstants(void *instance, DMCUFirmwareInf
             return false;
     }
 
-    DBGLOG("HWLibs", "Exiting get_dcn21_fw_constants wrap.");
+    DBGLOG("HWLibs", "Exiting `get_dcn21_fw_constants` wrap.");
     return true;
 }
 
 static bool sdma41GetFWConstants(void *, const SDMAFWConstant **out) {
-    const auto &fw = getFWByName("sdma_4_1_ucode.bin");
+    const auto &fw = getFirmwareNamed("sdma_4_1_ucode.bin");
     assertf(fw.extra != nullptr, "SDMA 4.1 entry is missing extra metadata!");
     *out = static_cast<const SDMAFWConstant *>(fw.extra);
     return true;
@@ -1110,8 +1118,8 @@ static bool sdma41GetFWConstants(void *, const SDMAFWConstant **out) {
 
 // TODO: Use driver WReg/RReg instead.
 static bool sdma412StartEngine(void *) {
-    NRed::singleton().writeReg32(SDMA0_BASE_0 + mmSDMA0_F32_CNTL,
-        NRed::singleton().readReg32(SDMA0_BASE_0 + mmSDMA0_F32_CNTL) & ~SDMA0_F32_CNTL_HALT);
+    NRed::singleton().writeReg32(SDMA0_BASE_0 + SDMA0_F32_CNTL,
+        NRed::singleton().readReg32(SDMA0_BASE_0 + SDMA0_F32_CNTL) & ~SDMA0_F32_CNTL_HALT);
     return true;
 }
 

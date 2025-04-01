@@ -18,7 +18,7 @@ struct FWDescriptor {
 extern const struct FWDescriptor firmware[];
 extern const size_t firmwareCount;
 
-inline const FWMetadata &getFWByName(const char *name) {
+inline const FWMetadata &getFirmwareNamed(const char *name) {
     for (size_t i = 0; i < firmwareCount; i++) {
         if (strcmp(firmware[i].name, name)) { continue; }
 

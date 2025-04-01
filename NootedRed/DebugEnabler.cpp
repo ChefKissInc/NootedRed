@@ -137,8 +137,8 @@ void DebugEnabler::processX6000FB(KernelPatcher &patcher, size_t id, mach_vm_add
     PatcherPlus::PatternRouteRequest requests[] = {
         {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo,
             this->orgInitWithPciInfo},
-        {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", wrapDoGPUPanic},
-        {"_dm_logger_write", wrapDmLoggerWrite, kDmLoggerWritePattern},
+        {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", doGPUPanic},
+        {"_dm_logger_write", dmLoggerWrite, kDmLoggerWritePattern},
     };
     PANIC_COND(!PatcherPlus::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "DebugEnabler",
         "Failed to route X6000FB debug symbols");
@@ -233,7 +233,7 @@ bool DebugEnabler::wrapInitWithPciInfo(void *that, void *pciDevice) {
     return ret;
 }
 
-void DebugEnabler::wrapDoGPUPanic(void *, char const *fmt, ...) {
+void DebugEnabler::doGPUPanic(void *, char const *fmt, ...) {
     va_list va;
     va_start(va, fmt);
     auto *buf = static_cast<char *>(IOMalloc(1000));
@@ -252,7 +252,7 @@ static const char *LogTypes[] = {"Error", "Warning", "Debug", "DC_Interface", "D
     "Underflow", "InterfaceTrace", "PerfTrace", "DisplayStats"};
 
 // Needed to prevent stack overflow
-void DebugEnabler::wrapDmLoggerWrite(void *, const UInt32 logType, const char *fmt, ...) {
+void DebugEnabler::dmLoggerWrite(void *, const UInt32 logType, const char *fmt, ...) {
     va_list va;
     va_start(va, fmt);
     auto *message = static_cast<char *>(IOMalloc(0x1000));

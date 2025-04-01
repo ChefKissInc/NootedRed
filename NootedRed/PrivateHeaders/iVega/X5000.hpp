@@ -14,18 +14,18 @@ namespace iVega {
         friend class X6000;
 
         bool initialised {false};
-        ObjectField<void *> pm4EngineField {"PM4 Engine"};
-        ObjectField<void *> sdma0EngineField {"SDMA0 Engine"};
-        ObjectField<UInt32> displayPipeCountField {"Display Pipe Count"};
-        ObjectField<UInt32> seCountField {"Shader Engine Count"};
-        ObjectField<UInt32> shPerSEField {"Shader Array per Shader Engine"};
-        ObjectField<UInt32> cuPerSHField {"Compute Units per Shader Array"};
-        ObjectField<bool> hasUVD0Field {"Has UVD0"};
-        ObjectField<bool> hasVCEField {"Has VCE"};
-        ObjectField<bool> hasVCN0Field {"Has VCN0"};
-        ObjectField<bool> hasSDMAPagingQueueField {"Has SDMA Paging Queue"};
-        ObjectField<UInt32> familyTypeField {"Family Type"};
-        ObjectField<Gfx9ChipSettings> chipSettingsField {"AddrLib Chip Settings"};
+        ObjectField<void *> pm4EngineField {};
+        ObjectField<void *> sdma0EngineField {};
+        ObjectField<UInt32> displayPipeCountField {};
+        ObjectField<UInt32> seCountField {};
+        ObjectField<UInt32> shPerSEField {};
+        ObjectField<UInt32> cuPerSHField {};
+        ObjectField<bool> hasUVD0Field {};
+        ObjectField<bool> hasVCEField {};
+        ObjectField<bool> hasVCN0Field {};
+        ObjectField<bool> hasSDMAPagingQueueField {};
+        ObjectField<UInt32> familyTypeField {};
+        ObjectField<Gfx9ChipSettings> chipSettingsField {};
         t_GenericConstructor orgGFX9PM4EngineConstructor {nullptr};
         t_GenericConstructor orgGFX9SDMAEngineConstructor {nullptr};
         mach_vm_address_t orgSetupAndInitializeHWCapabilities {0};
@@ -43,16 +43,16 @@ namespace iVega {
 
         private:
         void processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
-        static bool wrapAllocateHWEngines(void *that);
+        static bool allocateHWEngines(void *that);
         static void wrapSetupAndInitializeHWCapabilities(void *that);
         static void wrapGFX9SetupAndInitializeHWCapabilities(void *that);
         static void *wrapGetHWChannel(void *that, AMDHWEngineType engineType, UInt32 ringId);
-        static void wrapInitializeFamilyType(void *that);
-        static void *wrapAllocateAMDHWDisplay(void *that);
+        static void initializeFamilyType(void *that);
+        static void *allocateAMDHWDisplay(void *that);
         static UInt64 wrapAdjustVRAMAddress(void *that, UInt64 addr);
         static void *wrapAllocateAMDHWAlignManager(void *that);
-        static UInt32 wrapGetDeviceType();
-        static UInt32 wrapReturnZero();
+        static UInt32 getDeviceType();
+        static UInt32 returnZero();
         static void *wrapObtainAccelChannelGroup(void *that, UInt32 priority);
         static void *wrapObtainAccelChannelGroup1304(void *that, UInt32 priority, void *task);
         static UInt32 wrapHwlConvertChipFamily(void *that, UInt32 family, UInt32 revision);

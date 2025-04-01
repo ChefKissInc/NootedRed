@@ -307,7 +307,7 @@ void iVega::X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_addres
     }
 
     PatcherPlus::PatternRouteRequest accelStartRequest = {
-        "__ZN37AMDRadeonX6000_AMDGraphicsAccelerator5startEP9IOService", wrapAccelStartX6000};
+        "__ZN37AMDRadeonX6000_AMDGraphicsAccelerator5startEP9IOService", accelStartX6000};
     PANIC_COND(!accelStartRequest.route(patcher, id, slide, size), "X6000",
         "Failed to route AMDGraphicsAccelerator::start");
 
@@ -434,69 +434,69 @@ void iVega::X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_addres
  * We don't want the `AMDRadeonX6000` personality defined in the `Info.plist` to do anything.
  * We only use it to force-load `AMDRadeonX6000` and snatch the VCN/DCN symbols.
  */
-bool iVega::X6000::wrapAccelStartX6000() { return false; }
+bool iVega::X6000::accelStartX6000() { return false; }
 
 void iVega::X6000::wrapInitDCNRegistersOffsets(void *that) {
     FunctionCast(wrapInitDCNRegistersOffsets, singleton().orgInitDCNRegistersOffsets)(that);
     auto base = singleton().regBaseField.get(that);
-    (singleton().regBaseField + 0x10).set(that, base + mmHUBPREQ0_DCSURF_PRIMARY_SURFACE_ADDRESS);
-    (singleton().regBaseField + 0x48).set(that, base + mmHUBPREQ1_DCSURF_PRIMARY_SURFACE_ADDRESS);
-    (singleton().regBaseField + 0x80).set(that, base + mmHUBPREQ2_DCSURF_PRIMARY_SURFACE_ADDRESS);
-    (singleton().regBaseField + 0xB8).set(that, base + mmHUBPREQ3_DCSURF_PRIMARY_SURFACE_ADDRESS);
-    (singleton().regBaseField + 0x14).set(that, base + mmHUBPREQ0_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH);
-    (singleton().regBaseField + 0x4C).set(that, base + mmHUBPREQ1_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH);
-    (singleton().regBaseField + 0x84).set(that, base + mmHUBPREQ2_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH);
-    (singleton().regBaseField + 0xBC).set(that, base + mmHUBPREQ3_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH);
-    (singleton().regBaseField + 0x18).set(that, base + mmHUBP0_DCSURF_SURFACE_CONFIG);
-    (singleton().regBaseField + 0x50).set(that, base + mmHUBP1_DCSURF_SURFACE_CONFIG);
-    (singleton().regBaseField + 0x88).set(that, base + mmHUBP2_DCSURF_SURFACE_CONFIG);
-    (singleton().regBaseField + 0xC0).set(that, base + mmHUBP3_DCSURF_SURFACE_CONFIG);
-    (singleton().regBaseField + 0x1C).set(that, base + mmHUBPREQ0_DCSURF_SURFACE_PITCH);
-    (singleton().regBaseField + 0x54).set(that, base + mmHUBPREQ1_DCSURF_SURFACE_PITCH);
-    (singleton().regBaseField + 0x8C).set(that, base + mmHUBPREQ2_DCSURF_SURFACE_PITCH);
-    (singleton().regBaseField + 0xC4).set(that, base + mmHUBPREQ3_DCSURF_SURFACE_PITCH);
-    (singleton().regBaseField + 0x20).set(that, base + mmHUBP0_DCSURF_ADDR_CONFIG);
-    (singleton().regBaseField + 0x58).set(that, base + mmHUBP1_DCSURF_ADDR_CONFIG);
-    (singleton().regBaseField + 0x90).set(that, base + mmHUBP2_DCSURF_ADDR_CONFIG);
-    (singleton().regBaseField + 0xC8).set(that, base + mmHUBP3_DCSURF_ADDR_CONFIG);
-    (singleton().regBaseField + 0x24).set(that, base + mmHUBP0_DCSURF_TILING_CONFIG);
-    (singleton().regBaseField + 0x5C).set(that, base + mmHUBP1_DCSURF_TILING_CONFIG);
-    (singleton().regBaseField + 0x94).set(that, base + mmHUBP2_DCSURF_TILING_CONFIG);
-    (singleton().regBaseField + 0xCC).set(that, base + mmHUBP3_DCSURF_TILING_CONFIG);
-    (singleton().regBaseField + 0x28).set(that, base + mmHUBP0_DCSURF_PRI_VIEWPORT_START);
-    (singleton().regBaseField + 0x60).set(that, base + mmHUBP1_DCSURF_PRI_VIEWPORT_START);
-    (singleton().regBaseField + 0x98).set(that, base + mmHUBP2_DCSURF_PRI_VIEWPORT_START);
-    (singleton().regBaseField + 0xD0).set(that, base + mmHUBP3_DCSURF_PRI_VIEWPORT_START);
-    (singleton().regBaseField + 0x2C).set(that, base + mmHUBP0_DCSURF_PRI_VIEWPORT_DIMENSION);
-    (singleton().regBaseField + 0x64).set(that, base + mmHUBP1_DCSURF_PRI_VIEWPORT_DIMENSION);
-    (singleton().regBaseField + 0x9C).set(that, base + mmHUBP2_DCSURF_PRI_VIEWPORT_DIMENSION);
-    (singleton().regBaseField + 0xD4).set(that, base + mmHUBP3_DCSURF_PRI_VIEWPORT_DIMENSION);
-    (singleton().regBaseField + 0x30).set(that, base + mmOTG0_OTG_CONTROL);
-    (singleton().regBaseField + 0x68).set(that, base + mmOTG1_OTG_CONTROL);
-    (singleton().regBaseField + 0xA0).set(that, base + mmOTG2_OTG_CONTROL);
-    (singleton().regBaseField + 0xD8).set(that, base + mmOTG3_OTG_CONTROL);
-    (singleton().regBaseField + 0x110).set(that, base + mmOTG4_OTG_CONTROL);
-    (singleton().regBaseField + 0x148).set(that, base + mmOTG5_OTG_CONTROL);
-    (singleton().regBaseField + 0x34).set(that, base + mmOTG0_OTG_INTERLACE_CONTROL);
-    (singleton().regBaseField + 0x6C).set(that, base + mmOTG1_OTG_INTERLACE_CONTROL);
-    (singleton().regBaseField + 0xA4).set(that, base + mmOTG2_OTG_INTERLACE_CONTROL);
-    (singleton().regBaseField + 0xDC).set(that, base + mmOTG3_OTG_INTERLACE_CONTROL);
-    (singleton().regBaseField + 0x114).set(that, base + mmOTG4_OTG_INTERLACE_CONTROL);
-    (singleton().regBaseField + 0x14C).set(that, base + mmOTG5_OTG_INTERLACE_CONTROL);
-    (singleton().regBaseField + 0x38).set(that, base + mmHUBPREQ0_DCSURF_FLIP_CONTROL);
-    (singleton().regBaseField + 0x70).set(that, base + mmHUBPREQ1_DCSURF_FLIP_CONTROL);
-    (singleton().regBaseField + 0xA8).set(that, base + mmHUBPREQ2_DCSURF_FLIP_CONTROL);
-    (singleton().regBaseField + 0xE0).set(that, base + mmHUBPREQ3_DCSURF_FLIP_CONTROL);
-    (singleton().regBaseField + 0x3C).set(that, base + mmHUBPRET0_HUBPRET_CONTROL);
-    (singleton().regBaseField + 0x74).set(that, base + mmHUBPRET1_HUBPRET_CONTROL);
-    (singleton().regBaseField + 0xAC).set(that, base + mmHUBPRET2_HUBPRET_CONTROL);
-    (singleton().regBaseField + 0xE4).set(that, base + mmHUBPRET3_HUBPRET_CONTROL);
-    (singleton().regBaseField + 0x40).set(that, base + mmHUBPREQ0_DCSURF_SURFACE_EARLIEST_INUSE);
-    (singleton().regBaseField + 0x78).set(that, base + mmHUBPREQ1_DCSURF_SURFACE_EARLIEST_INUSE);
-    (singleton().regBaseField + 0xB0).set(that, base + mmHUBPREQ2_DCSURF_SURFACE_EARLIEST_INUSE);
-    (singleton().regBaseField + 0xE8).set(that, base + mmHUBPREQ3_DCSURF_SURFACE_EARLIEST_INUSE);
-    (singleton().regBaseField + 0x44).set(that, base + mmHUBPREQ0_DCSURF_SURFACE_EARLIEST_INUSE_HIGH);
-    (singleton().regBaseField + 0x7C).set(that, base + mmHUBPREQ1_DCSURF_SURFACE_EARLIEST_INUSE_HIGH);
-    (singleton().regBaseField + 0xB4).set(that, base + mmHUBPREQ2_DCSURF_SURFACE_EARLIEST_INUSE_HIGH);
-    (singleton().regBaseField + 0xEC).set(that, base + mmHUBPREQ3_DCSURF_SURFACE_EARLIEST_INUSE_HIGH);
+    (singleton().regBaseField + 0x10).set(that, base + HUBPREQ0_DCSURF_PRIMARY_SURFACE_ADDRESS);
+    (singleton().regBaseField + 0x48).set(that, base + HUBPREQ1_DCSURF_PRIMARY_SURFACE_ADDRESS);
+    (singleton().regBaseField + 0x80).set(that, base + HUBPREQ2_DCSURF_PRIMARY_SURFACE_ADDRESS);
+    (singleton().regBaseField + 0xB8).set(that, base + HUBPREQ3_DCSURF_PRIMARY_SURFACE_ADDRESS);
+    (singleton().regBaseField + 0x14).set(that, base + HUBPREQ0_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH);
+    (singleton().regBaseField + 0x4C).set(that, base + HUBPREQ1_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH);
+    (singleton().regBaseField + 0x84).set(that, base + HUBPREQ2_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH);
+    (singleton().regBaseField + 0xBC).set(that, base + HUBPREQ3_DCSURF_PRIMARY_SURFACE_ADDRESS_HIGH);
+    (singleton().regBaseField + 0x18).set(that, base + HUBP0_DCSURF_SURFACE_CONFIG);
+    (singleton().regBaseField + 0x50).set(that, base + HUBP1_DCSURF_SURFACE_CONFIG);
+    (singleton().regBaseField + 0x88).set(that, base + HUBP2_DCSURF_SURFACE_CONFIG);
+    (singleton().regBaseField + 0xC0).set(that, base + HUBP3_DCSURF_SURFACE_CONFIG);
+    (singleton().regBaseField + 0x1C).set(that, base + HUBPREQ0_DCSURF_SURFACE_PITCH);
+    (singleton().regBaseField + 0x54).set(that, base + HUBPREQ1_DCSURF_SURFACE_PITCH);
+    (singleton().regBaseField + 0x8C).set(that, base + HUBPREQ2_DCSURF_SURFACE_PITCH);
+    (singleton().regBaseField + 0xC4).set(that, base + HUBPREQ3_DCSURF_SURFACE_PITCH);
+    (singleton().regBaseField + 0x20).set(that, base + HUBP0_DCSURF_ADDR_CONFIG);
+    (singleton().regBaseField + 0x58).set(that, base + HUBP1_DCSURF_ADDR_CONFIG);
+    (singleton().regBaseField + 0x90).set(that, base + HUBP2_DCSURF_ADDR_CONFIG);
+    (singleton().regBaseField + 0xC8).set(that, base + HUBP3_DCSURF_ADDR_CONFIG);
+    (singleton().regBaseField + 0x24).set(that, base + HUBP0_DCSURF_TILING_CONFIG);
+    (singleton().regBaseField + 0x5C).set(that, base + HUBP1_DCSURF_TILING_CONFIG);
+    (singleton().regBaseField + 0x94).set(that, base + HUBP2_DCSURF_TILING_CONFIG);
+    (singleton().regBaseField + 0xCC).set(that, base + HUBP3_DCSURF_TILING_CONFIG);
+    (singleton().regBaseField + 0x28).set(that, base + HUBP0_DCSURF_PRI_VIEWPORT_START);
+    (singleton().regBaseField + 0x60).set(that, base + HUBP1_DCSURF_PRI_VIEWPORT_START);
+    (singleton().regBaseField + 0x98).set(that, base + HUBP2_DCSURF_PRI_VIEWPORT_START);
+    (singleton().regBaseField + 0xD0).set(that, base + HUBP3_DCSURF_PRI_VIEWPORT_START);
+    (singleton().regBaseField + 0x2C).set(that, base + HUBP0_DCSURF_PRI_VIEWPORT_DIMENSION);
+    (singleton().regBaseField + 0x64).set(that, base + HUBP1_DCSURF_PRI_VIEWPORT_DIMENSION);
+    (singleton().regBaseField + 0x9C).set(that, base + HUBP2_DCSURF_PRI_VIEWPORT_DIMENSION);
+    (singleton().regBaseField + 0xD4).set(that, base + HUBP3_DCSURF_PRI_VIEWPORT_DIMENSION);
+    (singleton().regBaseField + 0x30).set(that, base + OTG0_OTG_CONTROL);
+    (singleton().regBaseField + 0x68).set(that, base + OTG1_OTG_CONTROL);
+    (singleton().regBaseField + 0xA0).set(that, base + OTG2_OTG_CONTROL);
+    (singleton().regBaseField + 0xD8).set(that, base + OTG3_OTG_CONTROL);
+    (singleton().regBaseField + 0x110).set(that, base + OTG4_OTG_CONTROL);
+    (singleton().regBaseField + 0x148).set(that, base + OTG5_OTG_CONTROL);
+    (singleton().regBaseField + 0x34).set(that, base + OTG0_OTG_INTERLACE_CONTROL);
+    (singleton().regBaseField + 0x6C).set(that, base + OTG1_OTG_INTERLACE_CONTROL);
+    (singleton().regBaseField + 0xA4).set(that, base + OTG2_OTG_INTERLACE_CONTROL);
+    (singleton().regBaseField + 0xDC).set(that, base + OTG3_OTG_INTERLACE_CONTROL);
+    (singleton().regBaseField + 0x114).set(that, base + OTG4_OTG_INTERLACE_CONTROL);
+    (singleton().regBaseField + 0x14C).set(that, base + OTG5_OTG_INTERLACE_CONTROL);
+    (singleton().regBaseField + 0x38).set(that, base + HUBPREQ0_DCSURF_FLIP_CONTROL);
+    (singleton().regBaseField + 0x70).set(that, base + HUBPREQ1_DCSURF_FLIP_CONTROL);
+    (singleton().regBaseField + 0xA8).set(that, base + HUBPREQ2_DCSURF_FLIP_CONTROL);
+    (singleton().regBaseField + 0xE0).set(that, base + HUBPREQ3_DCSURF_FLIP_CONTROL);
+    (singleton().regBaseField + 0x3C).set(that, base + HUBPRET0_HUBPRET_CONTROL);
+    (singleton().regBaseField + 0x74).set(that, base + HUBPRET1_HUBPRET_CONTROL);
+    (singleton().regBaseField + 0xAC).set(that, base + HUBPRET2_HUBPRET_CONTROL);
+    (singleton().regBaseField + 0xE4).set(that, base + HUBPRET3_HUBPRET_CONTROL);
+    (singleton().regBaseField + 0x40).set(that, base + HUBPREQ0_DCSURF_SURFACE_EARLIEST_INUSE);
+    (singleton().regBaseField + 0x78).set(that, base + HUBPREQ1_DCSURF_SURFACE_EARLIEST_INUSE);
+    (singleton().regBaseField + 0xB0).set(that, base + HUBPREQ2_DCSURF_SURFACE_EARLIEST_INUSE);
+    (singleton().regBaseField + 0xE8).set(that, base + HUBPREQ3_DCSURF_SURFACE_EARLIEST_INUSE);
+    (singleton().regBaseField + 0x44).set(that, base + HUBPREQ0_DCSURF_SURFACE_EARLIEST_INUSE_HIGH);
+    (singleton().regBaseField + 0x7C).set(that, base + HUBPREQ1_DCSURF_SURFACE_EARLIEST_INUSE_HIGH);
+    (singleton().regBaseField + 0xB4).set(that, base + HUBPREQ2_DCSURF_SURFACE_EARLIEST_INUSE_HIGH);
+    (singleton().regBaseField + 0xEC).set(that, base + HUBPREQ3_DCSURF_SURFACE_EARLIEST_INUSE_HIGH);
 }

@@ -187,8 +187,8 @@ void Backlight::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t
         patcher.clearError();
     } else if (kextMCCSControl.loadIndex == id) {
         KernelPatcher::RouteRequest requests[] = {
-            {"__ZN25AppleMCCSControlGibraltar5probeEP9IOServicePi", wrapFunctionReturnZero},
-            {"__ZN21AppleMCCSControlCello5probeEP9IOServicePi", wrapFunctionReturnZero},
+            {"__ZN25AppleMCCSControlGibraltar5probeEP9IOServicePi", returnZero},
+            {"__ZN21AppleMCCSControlCello5probeEP9IOServicePi", returnZero},
         };
         patcher.routeMultiple(id, requests, slide, size);
         patcher.clearError();
@@ -360,7 +360,7 @@ static ApplePanelData appleBacklightData[] = {
                      0x0E, 0x07, 0x10}},
 };
 
-size_t Backlight::wrapFunctionReturnZero() { return 0; }
+size_t Backlight::returnZero() { return 0; }
 
 bool Backlight::wrapApplePanelSetDisplay(IOService *that, IODisplay *display) {
     static bool once = false;

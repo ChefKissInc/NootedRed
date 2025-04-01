@@ -22,8 +22,8 @@ class DebugEnabler {
     void processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 
     static bool wrapInitWithPciInfo(void *that, void *pciDevice);
-    static void wrapDoGPUPanic(void *that, char const *fmt, ...);
-    static void wrapDmLoggerWrite(void *logger, const UInt32 logType, const char *fmt, ...);
+    static void doGPUPanic(void *that, char const *fmt, ...);
+    static void dmLoggerWrite(void *logger, const UInt32 logType, const char *fmt, ...);
     static void ipAssertion(void *instance, UInt32 cond, const char *func, const char *file, UInt32 line,
         const char *msg);
     static void gcDebugPrint(void *instance, const char *fmt, ...);

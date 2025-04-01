@@ -15,7 +15,7 @@ class Backlight {
         UInt32 transitionTimeMs);
 
     bool initialised {false};
-    ObjectField<UInt8> dcLinkCapsField {"DC Link Capabilities"};
+    ObjectField<UInt8> dcLinkCapsField {};
     UInt32 curPwmBacklightLvl {0}, maxPwmBacklightLvl {0xFFFF};
     UInt32 maxOLED {1000 * 512};
     IONotifier *dispNotif {nullptr};
@@ -48,6 +48,6 @@ class Backlight {
         uintptr_t value);
     static IOReturn wrapGetAttributeForConnection(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
         uintptr_t *value);
-    static size_t wrapFunctionReturnZero();
+    static size_t returnZero();
     static bool wrapApplePanelSetDisplay(IOService *that, IODisplay *display);
 };

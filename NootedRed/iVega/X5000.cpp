@@ -135,7 +135,7 @@ void iVega::X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_addres
     NRed::singleton().hwLateInit();
 
     UInt32 *orgChannelTypes = nullptr;
-    mach_vm_address_t startHWEngines = 0;
+    mach_vm_address_t orgStartHWEngines = 0;
 
     PatcherPlus::PatternSolveRequest solveRequests[] = {
         {NRed::singleton().getAttributes().isCatalina() ?
@@ -150,26 +150,26 @@ void iVega::X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_addres
         {"__ZN34AMDRadeonX5000_AMDAccelDisplayPipe10gMetaClassE", NRed::singleton().metaClassMap[2][0]},
         {"__ZN30AMDRadeonX5000_AMDAccelChannel10gMetaClassE", NRed::singleton().metaClassMap[3][1]},
         {"__ZN28AMDRadeonX5000_IAMDHWChannel10gMetaClassE", NRed::singleton().metaClassMap[4][0]},
-        {"__ZN26AMDRadeonX5000_AMDHardware14startHWEnginesEv", startHWEngines},
+        {"__ZN26AMDRadeonX5000_AMDHardware14startHWEnginesEv", orgStartHWEngines},
     };
     PANIC_COND(!PatcherPlus::PatternSolveRequest::solveAll(patcher, id, solveRequests, slide, size), "X5000",
         "Failed to resolve symbols");
 
     PatcherPlus::PatternRouteRequest requests[] = {
-        {"__ZN32AMDRadeonX5000_AMDVega10Hardware17allocateHWEnginesEv", wrapAllocateHWEngines},
+        {"__ZN32AMDRadeonX5000_AMDVega10Hardware17allocateHWEnginesEv", allocateHWEngines},
         {"__ZN32AMDRadeonX5000_AMDVega10Hardware32setupAndInitializeHWCapabilitiesEv",
             wrapSetupAndInitializeHWCapabilities, this->orgSetupAndInitializeHWCapabilities},
         {"__ZN30AMDRadeonX5000_AMDGFX9Hardware32setupAndInitializeHWCapabilitiesEv",
             wrapGFX9SetupAndInitializeHWCapabilities, this->orgGFX9SetupAndInitializeHWCapabilities},
         {"__ZN26AMDRadeonX5000_AMDHardware12getHWChannelE20_eAMD_HW_ENGINE_TYPE18_eAMD_HW_RING_TYPE", wrapGetHWChannel,
             this->orgGetHWChannel},
-        {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20initializeFamilyTypeEv", wrapInitializeFamilyType},
-        {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20allocateAMDHWDisplayEv", wrapAllocateAMDHWDisplay},
+        {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20initializeFamilyTypeEv", initializeFamilyType},
+        {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20allocateAMDHWDisplayEv", allocateAMDHWDisplay},
         {"__ZN26AMDRadeonX5000_AMDHWMemory17adjustVRAMAddressEy", wrapAdjustVRAMAddress, this->orgAdjustVRAMAddress},
         {"__ZN30AMDRadeonX5000_AMDGFX9Hardware25allocateAMDHWAlignManagerEv", wrapAllocateAMDHWAlignManager,
             this->orgAllocateAMDHWAlignManager},
-        {"__ZN43AMDRadeonX5000_AMDVega10GraphicsAccelerator13getDeviceTypeEP11IOPCIDevice", wrapGetDeviceType},
-        {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20writeASICHangLogInfoEPPv", wrapReturnZero},
+        {"__ZN43AMDRadeonX5000_AMDVega10GraphicsAccelerator13getDeviceTypeEP11IOPCIDevice", getDeviceType},
+        {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20writeASICHangLogInfoEPPv", returnZero},
         {"__ZN4Addr2V27Gfx9Lib20HwlConvertChipFamilyEjj", wrapHwlConvertChipFamily, this->orgHwlConvertChipFamily,
             kHwlConvertChipFamilyPattern},
     };
@@ -233,7 +233,7 @@ void iVega::X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_addres
         const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX5000, kStartHWEnginesOriginal, kStartHWEnginesMask,
             kStartHWEnginesPatched, kStartHWEnginesMask,
             NRed::singleton().getAttributes().isVenturaAndLater() ? 2U : 1};
-        PANIC_COND(!patch.apply(patcher, startHWEngines, PAGE_SIZE), "X5000", "Failed to patch startHWEngines");
+        PANIC_COND(!patch.apply(patcher, orgStartHWEngines, PAGE_SIZE), "X5000", "Failed to patch startHWEngines");
 
         if (NRed::singleton().getAttributes().isRenoir()) {
             UInt32 findBpp64 = Dcn1Bpp64SwModeMask, replBpp64 = Dcn2Bpp64SwModeMask;
@@ -261,7 +261,7 @@ void iVega::X5000::processKext(KernelPatcher &patcher, size_t id, mach_vm_addres
     }
 }
 
-bool iVega::X5000::wrapAllocateHWEngines(void *that) {
+bool iVega::X5000::allocateHWEngines(void *that) {
     DBGLOG("X5000", "allocateHWEngines << (that: %p)", that);
     auto *pm4 = OSObject::operator new(0x340);
     singleton().orgGFX9PM4EngineConstructor(pm4);
@@ -292,7 +292,7 @@ void iVega::X5000::wrapGFX9SetupAndInitializeHWCapabilities(void *that) {
     char filename[128] = {0};
     snprintf(filename, arrsize(filename), "%s_gpu_info.bin",
         NRed::singleton().getAttributes().isRenoir() ? "renoir" : NRed::singleton().getAttributes().getChipName());
-    const auto &gpuInfoBin = getFWByName(filename);
+    const auto &gpuInfoBin = getFirmwareNamed(filename);
     auto *header = reinterpret_cast<const CommonFirmwareHeader *>(gpuInfoBin.data);
     auto *gpuInfo = reinterpret_cast<const GPUInfoFirmware *>(gpuInfoBin.data + header->ucodeOff);
 
@@ -314,21 +314,21 @@ static const char *hwEngineToString(AMDHWEngineType ty) {
 #endif
 
 void *iVega::X5000::wrapGetHWChannel(void *that, AMDHWEngineType engineType, UInt32 ringId) {
-    // DBGLOG("X5000", "getHWChannel << (that: %p, engineType: %s, ringId: 0x%X)", that, hwEngineToString(engineType),
-    //     ringId);
+    DBGLOG_COND(checkKernelArgument("-CKInternal"), "X5000", "getHWChannel << (that: %p, engineType: %s, ringId: 0x%X)",
+        that, hwEngineToString(engineType), ringId);
     if (engineType == kAMDHWEngineTypeSDMA1) { engineType = kAMDHWEngineTypeSDMA0; }
     return FunctionCast(wrapGetHWChannel, singleton().orgGetHWChannel)(that, engineType, ringId);
 }
 
-void iVega::X5000::wrapInitializeFamilyType(void *that) {
+void iVega::X5000::initializeFamilyType(void *that) {
     DBGLOG("X5000", "initializeFamilyType << (that: %p)", that);
     singleton().familyTypeField.set(that, AMD_FAMILY_RAVEN);
     DBGLOG("X5000", "initializeFamilyType >>");
 }
 
-void *iVega::X5000::wrapAllocateAMDHWDisplay(void *that) {
+void *iVega::X5000::allocateAMDHWDisplay(void *that) {
     DBGLOG("X5000", "allocateAMDHWDisplay << (that: %p)", that);
-    auto *ret = FunctionCast(wrapAllocateAMDHWDisplay, X6000::singleton().orgAllocateAMDHWDisplay)(that);
+    auto *ret = FunctionCast(allocateAMDHWDisplay, X6000::singleton().orgAllocateAMDHWDisplay)(that);
     DBGLOG("X5000", "allocateAMDHWDisplay >> %p", ret);
     return ret;
 }
@@ -352,9 +352,9 @@ void *iVega::X5000::wrapAllocateAMDHWAlignManager(void *that) {
     return hwAlignManager;
 }
 
-UInt32 iVega::X5000::wrapGetDeviceType() { return NRed::singleton().getAttributes().isRenoir() ? 9 : 0; }
+UInt32 iVega::X5000::getDeviceType() { return NRed::singleton().getAttributes().isRenoir() ? 9 : 0; }
 
-UInt32 iVega::X5000::wrapReturnZero() { return 0; }
+UInt32 iVega::X5000::returnZero() { return 0; }
 
 static void fixAccelGroup(void *that) {
     auto *&sdma1 = getMember<void *>(that, 0x18);

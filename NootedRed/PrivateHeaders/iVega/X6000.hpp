@@ -10,7 +10,7 @@ namespace iVega {
         friend class X5000;
 
         bool initialised {false};
-        ObjectField<UInt32> regBaseField {"DCN Register Base"};
+        ObjectField<UInt32> regBaseField {};
         mach_vm_address_t orgAllocateAMDHWDisplay {0};
         mach_vm_address_t orgInitDCNRegistersOffsets {0};
 
@@ -22,7 +22,7 @@ namespace iVega {
         private:
         void processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
 
-        static bool wrapAccelStartX6000();
+        static bool accelStartX6000();
         static void wrapInitDCNRegistersOffsets(void *that);
     };
 };    // namespace iVega
