@@ -8,16 +8,18 @@ template<typename T>
 class ObjectField {
     static constexpr UInt32 InvalidOffset = 0xFFFFFFFF;
 
-    UInt32 offset {InvalidOffset};
+    UInt32 offset;
+
+    constexpr ObjectField(UInt32 offset) : offset {offset} {}
 
     public:
+    constexpr ObjectField() : ObjectField(InvalidOffset) {}
+
     inline void operator=(const UInt32 other) { this->offset = other; }
 
     inline ObjectField<T> operator+(const UInt32 value) {
         PANIC_COND(this->offset == InvalidOffset, "ObjField", "value == InvalidOffset");
-        ObjectField<T> ret {};
-        ret.offset = this->offset + value;
-        return ret;
+        return ObjectField<T> {this->offset + value};
     }
 
     inline T &get(void *that) {
