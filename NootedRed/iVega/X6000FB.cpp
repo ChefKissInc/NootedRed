@@ -235,17 +235,18 @@ void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_addr
         "Failed to route symbols");
 
     if (NRed::singleton().getAttributes().isBigSurAndLater()) {
-        PatcherPlus::PatternRouteRequest request = {
+        KernelPatcher::RouteRequest request = {
             "__ZN32AMDRadeonX6000_AmdRegisterAccess20createRegisterAccessERNS_8InitDataE", wrapCreateRegisterAccess,
             this->orgCreateRegisterAccess};
-        PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route createRegisterAccess");
+        PANIC_COND(!patcher.routeMultiple(id, &request, 1, slide, size), "X6000FB",
+            "Failed to route createRegisterAccess");
     }
 
     if (NRed::singleton().getAttributes().isRenoir()) {
-        PatcherPlus::PatternSolveRequest solveRequest {
-            "__ZN37AMDRadeonX6000_AmdDeviceMemoryManager17mapMemorySubRangeE25AmdReservedMemorySelectoryyj",
-            this->orgMapMemorySubRange};
-        PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "X6000FB", "Failed to solve mapMemorySubRange");
+        this->orgMapMemorySubRange = patcher.solveSymbol<mapMemorySubRange_t>(id,
+            "__ZN37AMDRadeonX6000_AmdDeviceMemoryManager17mapMemorySubRangeE25AmdReservedMemorySelectoryyj", slide,
+            size, true);
+        PANIC_COND(this->orgMapMemorySubRange == nullptr, "X6000FB", "Failed to solve mapMemorySubRange");
         PatcherPlus::PatternRouteRequest requests[] = {
             {"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware, this->orgIH40IVRingInitHardware,
                 kIH40IVRingInitHardwarePattern, kIH40IVRingInitHardwarePatternMask},
