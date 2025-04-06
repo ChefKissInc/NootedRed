@@ -165,18 +165,18 @@ void DebugEnabler::processX6000FB(KernelPatcher &patcher, size_t id, mach_vm_add
 
     // Enable all Display Core logs
     if (NRed::singleton().getAttributes().isCatalina()) {
-        const PatcherPlus::MaskedLookupPatch patch = {&kextX6000FB, kInitPopulateDcInitDataCatalinaOriginal,
+        const PatcherPlus::MaskedLookupPatch patch {&kextX6000FB, kInitPopulateDcInitDataCatalinaOriginal,
             kInitPopulateDcInitDataCatalinaPatched, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "DebugEnabler",
             "Failed to apply populateDcInitData patch (10.15)");
     } else {
-        const PatcherPlus::MaskedLookupPatch patch = {&kextX6000FB, kInitPopulateDcInitDataOriginal,
+        const PatcherPlus::MaskedLookupPatch patch {&kextX6000FB, kInitPopulateDcInitDataOriginal,
             kInitPopulateDcInitDataPatched, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "DebugEnabler", "Failed to apply populateDcInitData patch");
     }
 
     // Enable all bios parser logs
-    const PatcherPlus::MaskedLookupPatch patch = {&kextX6000FB, kBiosParserHelperInitWithDataOriginal,
+    const PatcherPlus::MaskedLookupPatch patch {&kextX6000FB, kBiosParserHelperInitWithDataOriginal,
         kBiosParserHelperInitWithDataPatched, 1};
     PANIC_COND(!patch.apply(patcher, slide, size), "DebugEnabler",
         "Failed to apply AmdBiosParserHelper::initWithData patch");
@@ -201,17 +201,17 @@ void DebugEnabler::processX5000HWLibs(KernelPatcher &patcher, size_t id, mach_vm
             "Failed to route X5000HWLibs debug symbols");
     }
 
-    const PatcherPlus::MaskedLookupPatch atiPpSvcCtrPatch = {&kextX5000HWLibs, kAtiPowerPlayServicesConstructorOriginal,
+    const PatcherPlus::MaskedLookupPatch atiPpSvcCtrPatch {&kextX5000HWLibs, kAtiPowerPlayServicesConstructorOriginal,
         kAtiPowerPlayServicesConstructorPatched, 1};
     PANIC_COND(!atiPpSvcCtrPatch.apply(patcher, slide, size), "DebugEnabler", "Failed to apply MCIL debugLevel patch");
     if (NRed::singleton().getAttributes().isBigSurAndLater()) {
-        const PatcherPlus::MaskedLookupPatch amdLogPspPatch = {&kextX5000HWLibs, kAmdLogPspOriginal,
+        const PatcherPlus::MaskedLookupPatch amdLogPspPatch {&kextX5000HWLibs, kAmdLogPspOriginal,
             kAmdLogPspOriginalMask, kAmdLogPspPatched, 1};
         PANIC_COND(!amdLogPspPatch.apply(patcher, slide, size), "DebugEnabler", "Failed to apply amd_log_psp patch");
     }
 }
 void DebugEnabler::processX5000(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
-    PatcherPlus::PatternRouteRequest request = {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator18getNumericPropertyEPKcPj",
+    PatcherPlus::PatternRouteRequest request {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator18getNumericPropertyEPKcPj",
         wrapGetNumericProperty, this->orgGetNumericProperty};
     PANIC_COND(!request.route(patcher, id, slide, size), "DebugEnabler", "Failed to route getNumericProperty");
 }

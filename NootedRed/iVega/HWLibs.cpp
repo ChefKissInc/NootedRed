@@ -419,11 +419,11 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_
     }
 
     if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
-        PatcherPlus::PatternRouteRequest request = {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit,
+        PatcherPlus::PatternRouteRequest request {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit,
             kPspCmdKmSubmitPattern1404, kPspCmdKmSubmitPatternMask1404};
         PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route psp_cmd_km_submit (14.4+)");
     } else {
-        PatcherPlus::PatternRouteRequest request = {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit,
+        PatcherPlus::PatternRouteRequest request {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit,
             kPspCmdKmSubmitPattern, kPspCmdKmSubmitPatternMask};
         PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route psp_cmd_km_submit");
     }

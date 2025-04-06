@@ -155,12 +155,12 @@ void Backlight::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t
             "Failed to resolve dc_link_set_backlight_level_nits");
         if (NRed::singleton().getAttributes().isBigSurAndLater() && NRed::singleton().getAttributes().isRaven()) {
             if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
-                PatcherPlus::PatternRouteRequest request = {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit,
+                PatcherPlus::PatternRouteRequest request {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit,
                     this->orgDcePanelCntlHwInit, kDcePanelCntlHwInitPattern1404};
                 PANIC_COND(!request.route(patcher, id, slide, size), "Backlight",
                     "Failed to route dce_panel_cntl_hw_init (14.4+)");
             } else {
-                PatcherPlus::PatternRouteRequest request = {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit,
+                PatcherPlus::PatternRouteRequest request {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit,
                     this->orgDcePanelCntlHwInit, kDcePanelCntlHwInitPattern};
                 PANIC_COND(!request.route(patcher, id, slide, size), "Backlight",
                     "Failed to route dce_panel_cntl_hw_init");

@@ -52,7 +52,7 @@ void iVega::AppleGFXHDA::processKext(KernelPatcher &patcher, size_t id, mach_vm_
 
     const UInt32 probeFind = Navi10HDMIID;
     const UInt32 probeRepl = NRed::singleton().getAttributes().isRenoir() ? RenoirHDMIID : RavenHDMIID;
-    const KernelPatcher::LookupPatch patch = {&kextAppleGFXHDA, reinterpret_cast<const UInt8 *>(&probeFind),
+    const KernelPatcher::LookupPatch patch {&kextAppleGFXHDA, reinterpret_cast<const UInt8 *>(&probeFind),
         reinterpret_cast<const UInt8 *>(&probeRepl), sizeof(probeFind), 1};
     patcher.clearError();
     patcher.applyLookupPatch(&patch);

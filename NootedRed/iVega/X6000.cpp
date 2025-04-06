@@ -306,13 +306,13 @@ void iVega::X6000::processKext(KernelPatcher &patcher, size_t id, mach_vm_addres
         PANIC_COND(!request.solve(patcher, id, slide, size), "X6000", "Failed to resolve allocateScanout");
     }
 
-    PatcherPlus::PatternRouteRequest accelStartRequest = {
-        "__ZN37AMDRadeonX6000_AMDGraphicsAccelerator5startEP9IOService", accelStartX6000};
+    PatcherPlus::PatternRouteRequest accelStartRequest {"__ZN37AMDRadeonX6000_AMDGraphicsAccelerator5startEP9IOService",
+        accelStartX6000};
     PANIC_COND(!accelStartRequest.route(patcher, id, slide, size), "X6000",
         "Failed to route AMDGraphicsAccelerator::start");
 
     if (NRed::singleton().getAttributes().isRaven()) {
-        PatcherPlus::PatternRouteRequest request = {"__ZN30AMDRadeonX6000_AMDGFX10Display23initDCNRegistersOffsetsEv",
+        PatcherPlus::PatternRouteRequest request {"__ZN30AMDRadeonX6000_AMDGFX10Display23initDCNRegistersOffsetsEv",
             wrapInitDCNRegistersOffsets, this->orgInitDCNRegistersOffsets};
         PANIC_COND(!request.route(patcher, id, slide, size), "X6000", "Failed to route initDCNRegistersOffsets");
     }

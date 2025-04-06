@@ -235,7 +235,7 @@ void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_addr
         "Failed to route symbols");
 
     if (NRed::singleton().getAttributes().isBigSurAndLater()) {
-        KernelPatcher::RouteRequest request = {
+        KernelPatcher::RouteRequest request {
             "__ZN32AMDRadeonX6000_AmdRegisterAccess20createRegisterAccessERNS_8InitDataE", wrapCreateRegisterAccess,
             this->orgCreateRegisterAccess};
         PANIC_COND(!patcher.routeMultiple(id, &request, 1, slide, size), "X6000FB",
@@ -306,7 +306,7 @@ void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_addr
     }
 
     if (NRed::singleton().getAttributes().isRenoir()) {
-        const PatcherPlus::MaskedLookupPatch patch = {&kextRadeonX6000Framebuffer, kInitializeDmcubServices1Original,
+        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX6000Framebuffer, kInitializeDmcubServices1Original,
             kInitializeDmcubServices1Patched, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
             "Failed to apply initializeDmcubServices family id patch");
@@ -323,13 +323,13 @@ void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_addr
             PANIC_COND(!PatcherPlus::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "X6000FB",
                 "Failed to apply AmdDalDmcubService and AmdDalServices::initialize patches (10.15)");
         } else if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
-            const PatcherPlus::MaskedLookupPatch patch = {&kextRadeonX6000Framebuffer,
+            const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX6000Framebuffer,
                 kInitializeDmcubServices2Original1404, kInitializeDmcubServices2Patched1404, 1};
             PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
                 "Failed to apply initializeDmcubServices ASIC patch (14.4+)");
         } else {
-            const PatcherPlus::MaskedLookupPatch patch = {&kextRadeonX6000Framebuffer,
-                kInitializeDmcubServices2Original, kInitializeDmcubServices2Patched, 1};
+            const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX6000Framebuffer, kInitializeDmcubServices2Original,
+                kInitializeDmcubServices2Patched, 1};
             PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
                 "Failed to apply initializeDmcubServices ASIC patch");
         }
