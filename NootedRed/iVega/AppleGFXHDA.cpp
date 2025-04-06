@@ -71,7 +71,7 @@ void iVega::AppleGFXHDA::processKext(KernelPatcher &patcher, size_t id, mach_vm_
         {"__ZN24AppleGFXHDAWidgetFactory20createAppleHDAWidgetEP11DevIdStruct", wrapCreateAppleHDAWidget,
             this->orgCreateAppleHDAWidget},
     };
-    PANIC_COND(!patcher.routeMultipleLong(id, requests, slide, size), "AGFXHDA", "Failed to route symbols");
+    PANIC_COND(!patcher.routeMultiple(id, requests, slide, size), "AGFXHDA", "Failed to route symbols");
 }
 
 void *iVega::AppleGFXHDA::wrapCreateAppleHDAFunctionGroup(void *devId) {
