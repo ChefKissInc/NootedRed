@@ -52,7 +52,7 @@ special_chars = {
     0xD: "\\r",
 }
 symbols = b" !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
-needs_escape = b'"\\'
+needs_escape = b'"\\?'
 
 
 def byte_to_char(b: int, is_text: bool):
