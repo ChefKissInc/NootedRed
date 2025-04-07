@@ -476,10 +476,8 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, size_t id, mach_vm_
             "HWLibs", "Failed to solve `dmcu_get_dcn21_fw_constants` via call pattern");
     }
 
-    PANIC_COND(patcher.routeFunction(dmcuFwRequests[0].from, dmcuFwRequests[0].to) != 0, "HWLibs",
-        "Failed to route `dmcu_get_dcn1_fw_constants`");
-    PANIC_COND(patcher.routeFunction(dmcuFwRequests[1].from, dmcuFwRequests[1].to) != 0, "HWLibs",
-        "Failed to route `dmcu_get_dcn21_fw_constants`");
+    PANIC_COND(!patcher.routeMultiple(id, dmcuFwRequests, slide, size), "HWLibs",
+        "Failed to route DMCU FW-related functions");
 
     PatcherPlus::JumpPatternRouteRequest smuRequest {"_smu_init_function_pointer_list", wrapSmuInitFunctionPointerList,
         this->orgSmuInitFunctionPointerList, kSmuInitFunctionPointerListCallPattern,

@@ -86,15 +86,10 @@ bool PatcherPlus::PatternRouteRequest::route(KernelPatcher &patcher, const size_
         DBGLOG("Patcher+", "Resolved `%s` at 0x%llX", safeString(this->symbol), this->from);
     }
 
-    auto hasOrg = this->org != nullptr;
-    auto wrapper = patcher.routeFunction(this->from, this->to, hasOrg);
-    if (hasOrg) {
-        if (wrapper == 0) { return false; }
-        *this->org = wrapper;
-        return true;
-    } else {
-        return wrapper == 0;
-    }
+    // Workaround as patcher internals will attempt to resolve
+    // the symbol without checking if the `from` field is 0.
+    this->symbol = nullptr;
+    return patcher.routeMultiple(id, this, 1, start, size);
 }
 
 bool PatcherPlus::PatternRouteRequest::routeAll(KernelPatcher &patcher, const size_t id,
