@@ -25,21 +25,21 @@ class NRedAttributes {
     UInt16 value {0};
 
     public:
-    inline const bool isCatalina() const { return (this->value & IsCatalina) != 0; }
-    inline const bool isBigSurAndLater() const { return (this->value & IsBigSurAndLater) != 0; }
-    inline const bool isMonterey() const { return (this->value & IsMonterey) != 0; }
-    inline const bool isMontereyAndLater() const { return (this->value & IsMontereyAndLater) != 0; }
-    inline const bool isVentura() const { return (this->value & IsVentura) != 0; }
-    inline const bool isVenturaAndLater() const { return (this->value & IsVenturaAndLater) != 0; }
-    inline const bool isVentura1304Based() const { return (this->value & IsVentura1304Based) != 0; }
-    inline const bool isVentura1304AndLater() const { return (this->value & IsVentura1304AndLater) != 0; }
-    inline const bool isSonoma1404AndLater() const { return (this->value & IsSonoma1404AndLater) != 0; }
-    inline const bool isRaven() const { return (this->value & IsRaven) != 0; }
-    inline const bool isPicasso() const { return (this->value & IsPicasso) != 0; }
-    inline const bool isRaven2() const { return (this->value & IsRaven2) != 0; }
-    inline const bool isRenoir() const { return (this->value & IsRenoir) != 0; }
-    inline const bool isRenoirE() const { return (this->value & IsRenoirE) != 0; }
-    inline const bool isGreenSardine() const { return (this->value & IsGreenSardine) != 0; }
+    inline bool isCatalina() const { return (this->value & IsCatalina) != 0; }
+    inline bool isBigSurAndLater() const { return (this->value & IsBigSurAndLater) != 0; }
+    inline bool isMonterey() const { return (this->value & IsMonterey) != 0; }
+    inline bool isMontereyAndLater() const { return (this->value & IsMontereyAndLater) != 0; }
+    inline bool isVentura() const { return (this->value & IsVentura) != 0; }
+    inline bool isVenturaAndLater() const { return (this->value & IsVenturaAndLater) != 0; }
+    inline bool isVentura1304Based() const { return (this->value & IsVentura1304Based) != 0; }
+    inline bool isVentura1304AndLater() const { return (this->value & IsVentura1304AndLater) != 0; }
+    inline bool isSonoma1404AndLater() const { return (this->value & IsSonoma1404AndLater) != 0; }
+    inline bool isRaven() const { return (this->value & IsRaven) != 0; }
+    inline bool isPicasso() const { return (this->value & IsPicasso) != 0; }
+    inline bool isRaven2() const { return (this->value & IsRaven2) != 0; }
+    inline bool isRenoir() const { return (this->value & IsRenoir) != 0; }
+    inline bool isRenoirE() const { return (this->value & IsRenoirE) != 0; }
+    inline bool isGreenSardine() const { return (this->value & IsGreenSardine) != 0; }
 
     inline void setCatalina() { this->value |= IsCatalina; }
     inline void setBigSurAndLater() { this->value |= IsBigSurAndLater; }
