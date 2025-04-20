@@ -639,15 +639,15 @@ bool iVega::X5000HWLibs::wrapGetIpFw(void *that, UInt32 ipVersion, const char *n
     return FunctionCast(wrapGetIpFw, singleton().orgGetIpFw)(that, ipVersion, name, out);
 }
 
-CAILResult iVega::X5000HWLibs::cailGeneralFailure() { return kCAILResultFailed; }
+CAILResult iVega::X5000HWLibs::cailGeneralFailure() { return kCAILResultInvalidParameters; }
 CAILResult iVega::X5000HWLibs::cailUnsupported() { return kCAILResultUnsupported; }
-CAILResult iVega::X5000HWLibs::cailNoop() { return kCAILResultSuccess; }
+CAILResult iVega::X5000HWLibs::cailNoop() { return kCAILResultOK; }
 
 CAILResult iVega::X5000HWLibs::pspBootloaderLoadSos10(void *instance) {
     singleton().pspSOSField.set(instance, NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_59));
     (singleton().pspSOSField + 0x4).set(instance, NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_58));
     (singleton().pspSOSField + 0x8).set(instance, NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_58));
-    return kCAILResultSuccess;
+    return kCAILResultOK;
 }
 
 CAILResult iVega::X5000HWLibs::pspSecurityFeatureCapsSet10(void *instance) {
@@ -664,7 +664,7 @@ CAILResult iVega::X5000HWLibs::pspSecurityFeatureCapsSet10(void *instance) {
         }
     }
 
-    return kCAILResultSuccess;
+    return kCAILResultOK;
 }
 
 CAILResult iVega::X5000HWLibs::pspSecurityFeatureCapsSet12(void *instance) {
@@ -678,7 +678,7 @@ CAILResult iVega::X5000HWLibs::pspSecurityFeatureCapsSet12(void *instance) {
         if ((policyVer & 0xFFFF0000) == 0xB090000 && (policyVer & 0xFE) > 0x35) { securityCaps |= 1; }
     }
 
-    return kCAILResultSuccess;
+    return kCAILResultOK;
 }
 
 CAILResult iVega::X5000HWLibs::wrapPspCmdKmSubmit(void *instance, void *cmd, void *outData, void *outResponse) {
@@ -732,28 +732,28 @@ CAILResult iVega::X5000HWLibs::smuReset() {
 
 CAILResult iVega::X5000HWLibs::smuPowerUp() {
     auto res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_ForceGfxContentSave);
-    if (res != kCAILResultSuccess && res != kCAILResultUnsupported) { return res; }
+    if (res != kCAILResultOK && res != kCAILResultUnsupported) { return res; }
 
     res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerUpSdma);
-    if (res != kCAILResultSuccess) { return res; }
+    if (res != kCAILResultOK) { return res; }
 
     res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerUpGfx);
-    if (res != kCAILResultSuccess) { return res; }
+    if (res != kCAILResultOK) { return res; }
 
     res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerGateMmHub);
-    if (res == kCAILResultUnsupported) { return kCAILResultSuccess; }
+    if (res == kCAILResultUnsupported) { return kCAILResultOK; }
 
     return res;
 }
 
 CAILResult iVega::X5000HWLibs::smuInternalSwInit(void *instance) {
     singleton().smuSwInitialisedFieldBase.set(instance, true);
-    return kCAILResultSuccess;
+    return kCAILResultOK;
 }
 
 CAILResult iVega::X5000HWLibs::smu10InternalHwInit(void *) {
     auto res = smuReset();
-    if (res != kCAILResultSuccess) { return res; }
+    if (res != kCAILResultOK) { return res; }
 
     return smuPowerUp();
 }
@@ -766,16 +766,16 @@ CAILResult iVega::X5000HWLibs::smu12InternalHwInit(void *) {
         }
         IOSleep(1);
     }
-    if (i >= AMD_MAX_USEC_TIMEOUT) { return kCAILResultFailed; }
+    if (i >= AMD_MAX_USEC_TIMEOUT) { return kCAILResultInvalidParameters; }
 
     auto res = smuReset();
-    if (res != kCAILResultSuccess) { return res; }
+    if (res != kCAILResultOK) { return res; }
 
     res = smuPowerUp();
-    if (res != kCAILResultSuccess) { return res; }
+    if (res != kCAILResultOK) { return res; }
 
     res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerGateAtHub);
-    if (res == kCAILResultUnsupported) { return kCAILResultSuccess; }
+    if (res == kCAILResultUnsupported) { return kCAILResultOK; }
 
     return res;
 }
@@ -801,10 +801,10 @@ CAILResult iVega::X5000HWLibs::smu10NotifyEvent(void *, void *data) {
         case 8:
         case 9:     // Reset
         case 11:    // Collect debug info
-            return kCAILResultSuccess;
+            return kCAILResultOK;
         default:
             SYSLOG("HWLibs", "Invalid input event to SMU notify event");
-            return kCAILResultFailed;
+            return kCAILResultInvalidParameters;
     }
 }
 
@@ -824,10 +824,10 @@ CAILResult iVega::X5000HWLibs::smu12NotifyEvent(void *, void *data) {
         case 7:
         case 9:     // Reset
         case 11:    // Collect debug info
-            return kCAILResultSuccess;
+            return kCAILResultOK;
         default:
             SYSLOG("HWLibs", "Invalid input event to SMU notify event: %d", event);
-            return kCAILResultFailed;
+            return kCAILResultInvalidParameters;
     }
 }
 
@@ -836,13 +836,13 @@ CAILResult iVega::X5000HWLibs::smuFullScreenEvent(void *, UInt32 event) {
         case 1:
             NRed::singleton().writeReg32(MP0_BASE_0 + MP1_SMN_FPS_CNT,
                 NRed::singleton().readReg32(MP0_BASE_0 + MP1_SMN_FPS_CNT) + 1);
-            return kCAILResultSuccess;
+            return kCAILResultOK;
         case 2:
             NRed::singleton().writeReg32(MP0_BASE_0 + MP1_SMN_FPS_CNT, 0);
-            return kCAILResultSuccess;
+            return kCAILResultOK;
         default:
             SYSLOG("HWLibs", "Invalid input event to SMU full screen event: %d", event);
-            return kCAILResultFailed;
+            return kCAILResultInvalidParameters;
     }
 }
 
@@ -852,7 +852,7 @@ CAILResult iVega::X5000HWLibs::wrapSmuInitFunctionPointerList(void *instance, SW
 
     auto ret =
         FunctionCast(wrapSmuInitFunctionPointerList, singleton().orgSmuInitFunctionPointerList)(instance, ipVersion);
-    if (ret == kCAILResultSuccess) { return ret; }
+    if (ret == kCAILResultOK) { return ret; }
 
     switch (ipVersion.major) {
         case 10:
@@ -882,7 +882,7 @@ CAILResult iVega::X5000HWLibs::wrapSmuInitFunctionPointerList(void *instance, SW
     SYSLOG_COND(ADDPR(debugEnabled), "HWLibs", "Ignore error about unsupported SMU HW version.");
 
     DBGLOG("HWLibs", "Exiting `smu_init_function_pointer_list` wrap.");
-    return kCAILResultSuccess;
+    return kCAILResultOK;
 }
 
 // TODO: Triple check if this is actually correct.
@@ -1024,7 +1024,7 @@ CAILResult iVega::X5000HWLibs::wrapGcSetFwEntryInfo(void *instance, SWIPIPVersio
     }
     processGCFWEntries(instance, initData);
     DBGLOG("HWLibs", "Exiting `gc_set_fw_entry_info` wrap.");
-    return kCAILResultSuccess;
+    return kCAILResultOK;
 }
 
 static inline void setDMCUFWData(void *instance, DMCUFirmwareInfo *fwData, DMCUFirmwareType i, const char *filename) {
@@ -1140,5 +1140,5 @@ CAILResult iVega::X5000HWLibs::wrapSdmaInitFunctionPointerList(void *instance, U
             return FunctionCast(wrapSdmaInitFunctionPointerList, singleton().orgSdmaInitFunctionPointerList)(instance,
                 verMajor, verMinor, verPatch);
     }
-    return kCAILResultSuccess;
+    return kCAILResultOK;
 }
