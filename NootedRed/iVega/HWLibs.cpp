@@ -313,6 +313,7 @@ void iVega::X5000HWLibs::init() {
             [[fallthrough]];
         case KernelVersion::Sonoma:
         case KernelVersion::Sequoia:
+        case KernelVersion::Tahoe:
             this->fwDirField = 0xB0;
             this->smuSwInitialisedFieldBase = 0x2D0;
             this->pspCommandDataField = 0xB48;

@@ -100,6 +100,7 @@ void iVega::X5000::init() {
         case KernelVersion::Ventura:
         case KernelVersion::Sonoma:
         case KernelVersion::Sequoia:
+        case KernelVersion::Tahoe:
             this->pm4EngineField = 0x3B8;
             this->sdma0EngineField = 0x3C0;
             this->displayPipeCountField = 0x34;

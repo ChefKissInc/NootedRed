@@ -107,6 +107,7 @@ void Backlight::init() {
         case KernelVersion::Ventura:
         case KernelVersion::Sonoma:
         case KernelVersion::Sequoia:
+        case KernelVersion::Tahoe:
             this->dcLinkCapsField = 0x28C;
             break;
         default:

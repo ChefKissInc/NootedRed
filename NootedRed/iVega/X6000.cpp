@@ -261,6 +261,7 @@ void iVega::X6000::init() {
         case KernelVersion::Ventura:
         case KernelVersion::Sonoma:
         case KernelVersion::Sequoia:
+        case KernelVersion::Tahoe:
             this->regBaseField = 0x590;
             break;
         default:

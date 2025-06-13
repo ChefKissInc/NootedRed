@@ -66,6 +66,7 @@ void NRed::init() {
             if (getKernelMinorVersion() >= 4) { this->attributes.setSonoma1404AndLater(); }
             break;
         case KernelVersion::Sequoia:
+        case KernelVersion::Tahoe:
             this->attributes.setBigSurAndLater();
             this->attributes.setMontereyAndLater();
             this->attributes.setVenturaAndLater();

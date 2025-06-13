@@ -18,6 +18,6 @@ PluginConfiguration ADDPR(config) {
     nullptr,
     0,
     KernelVersion::Catalina,
-    KernelVersion::Sequoia,
+    KernelVersion::Tahoe,
     []() { NRed::singleton().init(); },
 };
