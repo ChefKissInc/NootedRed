@@ -27,7 +27,7 @@ jobs:
           name: Artifacts
           path: build/*/*.zip
       - name: Upload build
-        uses: svenstaro/upload-release-action@2.9.0
+        uses: svenstaro/upload-release-action@2.10.0
         if: github.event_name == 'release'
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
