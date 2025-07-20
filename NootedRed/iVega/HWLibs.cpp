@@ -284,8 +284,8 @@ void iVega::X5000HWLibs::init() {
             this->gcSwFirmwareField = 0x2F0;
             this->dmcuEnablePSPFWLoadField = 0x248;
             this->dmcuABMLevelField = 0x24C;
-            this->sdmaGetFwConstantsField = 0x270;
-            this->sdmaStartEngineField = 0x298;
+            this->sdmaGetFwConstantsField = 0x268;
+            this->sdmaStartEngineField = 0x290;
             break;
         case KernelVersion::Ventura:
             if (!NRed::singleton().getAttributes().isVentura1304Based()) {
