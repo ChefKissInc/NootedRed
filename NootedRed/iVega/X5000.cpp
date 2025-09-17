@@ -280,7 +280,7 @@ void iVega::X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
     DBGLOG("X5000", "setupAndInitializeHWCapabilities << (that: %p)", that);
     FunctionCast(wrapSetupAndInitializeHWCapabilities, singleton().orgSetupAndInitializeHWCapabilities)(that);
 
-    singleton().displayPipeCountField.set(that, NRed::singleton().getAttributes().isRenoir() ? 4 : 6);
+    singleton().displayPipeCountField.set(that, NRed::singleton().getAttributes().isRenoir() ? 6 : 4);
     singleton().hasUVD0Field.set(that, false);
     singleton().hasVCEField.set(that, false);
     singleton().hasVCN0Field.set(that, false);
