@@ -307,23 +307,21 @@ void *Backlight::wrapLinkCreate(void *data) {
     switch (signalType) {
         case SIGNAL_TYPE_LVDS: {
             if (singleton().embeddedPanelLink != nullptr) {
-                SYSLOG("Backlight", "EMBEDDED PANEL LINK WAS ALREADY SET AND DISCOVERED NEW ONE!!!!");
-                SYSLOG("Backlight", "REPORT THIS TO THE DEVELOPERS AS SOON AS POSSIBLE!!!!");
+                SYSLOG("Backlight", "Found multiple embedded panel links. This may be a bug. Please report this.");
             }
             singleton().embeddedPanelLink = ret;
             DBGLOG("Backlight", "Will use DMCU for display brightness control.");
-        }
+        } break;
         case SIGNAL_TYPE_EDP: {
             if (singleton().embeddedPanelLink != nullptr) {
-                SYSLOG("Backlight", "EMBEDDED PANEL LINK WAS ALREADY SET AND DISCOVERED NEW ONE!!!!");
-                SYSLOG("Backlight", "REPORT THIS TO THE DEVELOPERS AS SOON AS POSSIBLE!!!!");
+                SYSLOG("Backlight", "Found multiple embedded panel links. This may be a bug. Please report this.");
             }
             singleton().embeddedPanelLink = ret;
             singleton().supportsAUX = (singleton().dcLinkCapsField.get(ret) & DC_DPCD_EXT_CAPS_OLED) != 0;
 
             DBGLOG("Backlight", "Will use %s for display brightness control.",
                 singleton().supportsAUX ? "AUX" : "DMCU");
-        }
+        } break;
         default: {
             break;
         }
