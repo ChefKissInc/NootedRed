@@ -58,28 +58,26 @@ class NRedAttributes {
     inline void setGreenSardine() { this->value |= IsGreenSardine; }
 
     inline const char *getChipName() const {
-        if (this->isRaven2()) {
+        if (this->isRenoir()) {
+            return "renoir";
+        } else if (this->isRaven2()) {
             return "raven2";
         } else if (this->isPicasso()) {
             return "picasso";
         } else if (this->isRaven()) {
             return "raven";
-        } else if (this->isGreenSardine()) {
-            return "green_sardine";
-        } else if (this->isRenoir()) {
-            return "renoir";
         } else {
             PANIC("NRed", "Internal error: Device is unknown");
         }
     }
 
     inline const char *getGCPrefix() const {
-        if (this->isRaven2()) {
+        if (this->isRenoir()) {
+            return "gc_9_3_";
+        } else if (this->isRaven2()) {
             return "gc_9_2_";
         } else if (this->isRaven()) {
             return "gc_9_1_";
-        } else if (this->isRenoir()) {
-            return "gc_9_3_";
         } else {
             PANIC("NRed", "Internal error: Device is unknown");
         }

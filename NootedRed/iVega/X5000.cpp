@@ -291,8 +291,7 @@ void iVega::X5000::wrapSetupAndInitializeHWCapabilities(void *that) {
 void iVega::X5000::wrapGFX9SetupAndInitializeHWCapabilities(void *that) {
     DBGLOG("X5000", "GFX9::setupAndInitializeHWCapabilities << (that: %p)", that);
     char filename[128] = {0};
-    snprintf(filename, arrsize(filename), "%s_gpu_info.bin",
-        NRed::singleton().getAttributes().isRenoir() ? "renoir" : NRed::singleton().getAttributes().getChipName());
+    snprintf(filename, arrsize(filename), "%s_gpu_info.bin", NRed::singleton().getAttributes().getChipName());
     const auto &gpuInfoBin = getFirmwareNamed(filename);
     auto *header = reinterpret_cast<const CommonFirmwareHeader *>(gpuInfoBin.data);
     auto *gpuInfo = reinterpret_cast<const GPUInfoFirmware *>(gpuInfoBin.data + header->ucodeOff);
