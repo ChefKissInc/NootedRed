@@ -70,16 +70,4 @@ class NRedAttributes {
             PANIC("NRed", "Internal error: Device is unknown");
         }
     }
-
-    inline const char *getGCPrefix() const {
-        if (this->isRenoir()) {
-            return "gc_9_3_";
-        } else if (this->isRaven2()) {
-            return "gc_9_2_";
-        } else if (this->isRaven()) {
-            return "gc_9_1_";
-        } else {
-            PANIC("NRed", "Internal error: Device is unknown");
-        }
-    }
 };
