@@ -22,7 +22,7 @@ jobs:
       - run: xcodebuild -configuration Debug -arch x86_64 build
       - run: xcodebuild -configuration Release -arch x86_64 build
       - name: Upload to Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: Artifacts
           path: build/*/*.zip
