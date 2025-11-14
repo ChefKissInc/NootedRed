@@ -39,7 +39,7 @@
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2022-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5. See https://github.com/ChefKissInc/NootedRed/LICENSE for details.</string>
 	<key>OSBundleCompatibleVersion</key>
-	<string>1.0</string>
+	<string>$(MODULE_VERSION)</string>
 	<key>OSBundleLibraries</key>
 	<dict>
 		<key>as.vit9696.Lilu</key>
