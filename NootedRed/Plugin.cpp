@@ -3,7 +3,7 @@
 
 #include <Headers/kern_api.hpp>
 #include <Headers/plugin_start.hpp>
-#include <PrivateHeaders/NRed.hpp>
+#include <NRed.hpp>
 
 static const char *bootargDebug = "-NRedDebug";
 

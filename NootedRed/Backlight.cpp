@@ -1,49 +1,19 @@
+// AMD Display Backlight Code
+//
 // Copyright © 2024-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
+// TODO: Get rid of most shit in there.
+
+#include <Backlight.hpp>
+#include <GPUDriversAMD/DC/DPCD.hpp>
+#include <GPUDriversAMD/DC/SignalTypes.hpp>
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_devinfo.hpp>
-#include <PrivateHeaders/Backlight.hpp>
-#include <PrivateHeaders/GPUDriversAMD/DC/DPCD.hpp>
-#include <PrivateHeaders/GPUDriversAMD/DC/SignalTypes.hpp>
-#include <PrivateHeaders/NRed.hpp>
-#include <PrivateHeaders/PatcherPlus.hpp>
-
-//------ Target Kexts ------//
-
-static const char *pathRadeonX6000Framebuffer =
-    "/System/Library/Extensions/AMDRadeonX6000Framebuffer.kext/Contents/MacOS/AMDRadeonX6000Framebuffer";
-
-static KernelPatcher::KextInfo kextRadeonX6000Framebuffer {
-    "com.apple.kext.AMDRadeonX6000Framebuffer",
-    &pathRadeonX6000Framebuffer,
-    1,
-    {true},
-    {},
-    KernelPatcher::KextInfo::Unloaded,
-};
-
-static const char *pathBacklight = "/System/Library/Extensions/AppleBacklight.kext/Contents/MacOS/AppleBacklight";
-static const char *pathMCCSControl = "/System/Library/Extensions/AppleMCCSControl.kext/Contents/MacOS/AppleMCCSControl";
-
-static KernelPatcher::KextInfo kextBacklight {
-    "com.apple.driver.AppleBacklight",
-    &pathBacklight,
-    1,
-    {true},
-    {},
-    KernelPatcher::KextInfo::Unloaded,
-};
-static KernelPatcher::KextInfo kextMCCSControl {
-    "com.apple.driver.AppleMCCSControl",
-    &pathMCCSControl,
-    1,
-    {true},
-    {},
-    KernelPatcher::KextInfo::Unloaded,
-};
-
-//------ Patterns ------//
+#include <Kexts.hpp>
+#include <NRed.hpp>
+#include <PenguinWizardry/KernelVersion.hpp>
+#include <PenguinWizardry/PatcherPlus.hpp>
 
 static const UInt8 kDcePanelCntlHwInitPattern[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41,
     0x54, 0x53, 0x50, 0x49, 0x89, 0xFD, 0x4C, 0x8D, 0x45, 0xD4, 0x41, 0xC7, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -75,69 +45,58 @@ static const UInt8 kDcLinkSetBacklightLevelNitsPattern[] = {0x55, 0x48, 0x89, 0x
 static const UInt8 kDcLinkSetBacklightLevelNitsPatternMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00};
 
-//------ Module Logic ------//
-
-constexpr UInt32 FbAttributeBacklight = static_cast<UInt32>('bklt');
+static constexpr UInt32 kIOAppleBacklightAttribute = 'bklt';
 
 static Backlight instance {};
 
 Backlight &Backlight::singleton() { return instance; }
 
-void Backlight::init() {
-    PANIC_COND(this->initialised, "Backlight", "Attempted to initialise module twice!");
-    this->initialised = true;
+Backlight::Backlight() {
+    switch (getKernelVersion()) {
+        case KernelVersion::Catalina: {
+            this->dcLinkCapsField = 0x1EA;
+        } break;
+        case KernelVersion::BigSur: {
+            this->dcLinkCapsField = 0x26C;
+        } break;
+        case KernelVersion::Monterey: {
+            this->dcLinkCapsField = 0x284;
+        } break;
+        default: {
+            this->dcLinkCapsField = 0x28C;
+        } break;
+    }
+}
 
-    bool bkltArg = false;
-    if (BaseDeviceInfo::get().modelType != WIOKit::ComputerModel::ComputerLaptop &&
-        (!PE_parse_boot_argn("AMDBacklight", &bkltArg, sizeof(bkltArg)) || !bkltArg)) {
-        SYSLOG("Backlight", "Module disabled.");
+void Backlight::init() {
+    bool bkltArg = BaseDeviceInfo::get().modelType == WIOKit::ComputerModel::ComputerLaptop;
+    PE_parse_boot_argn("AMDBacklight", &bkltArg, sizeof(bkltArg));
+    if (!bkltArg) { return; }
+
+    lilu.onKextLoadForce(&kextAppleBacklight);
+    lilu.onKextLoadForce(&kextAppleMCCSControl);
+
+    auto *matching = IOService::serviceMatching("AppleBacklightDisplay");
+    if (matching == nullptr) {
+        SYSLOG("Backlight", "Failed to create match dictionary");
         return;
     }
 
-    switch (getKernelVersion()) {
-        case KernelVersion::Catalina:
-            this->dcLinkCapsField = 0x1EA;
-            break;
-        case KernelVersion::BigSur:
-            this->dcLinkCapsField = 0x26C;
-            break;
-        case KernelVersion::Monterey:
-            this->dcLinkCapsField = 0x284;
-            break;
-        case KernelVersion::Ventura:
-        case KernelVersion::Sonoma:
-        case KernelVersion::Sequoia:
-        case KernelVersion::Tahoe:
-            this->dcLinkCapsField = 0x28C;
-            break;
-        default:
-            PANIC("Backlight", "Unsupported kernel version %d", getKernelVersion());
-    }
-
-    SYSLOG("Backlight", "Module initialised.");
-
-    lilu.onKextLoadForce(&kextRadeonX6000Framebuffer);
-    lilu.onKextLoadForce(&kextBacklight);
-    lilu.onKextLoadForce(&kextMCCSControl);
-    lilu.onPatcherLoadForce(
-        [](void *user, KernelPatcher &) { static_cast<Backlight *>(user)->registerDispMaxBrightnessNotif(); }, this);
-    lilu.onKextLoadForce(
-        nullptr, 0,
-        [](void *user, KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
-            static_cast<Backlight *>(user)->processKext(patcher, id, slide, size);
-        },
-        this);
+    this->dispNotif =
+        IOService::addMatchingNotification(gIOFirstMatchNotification, matching, OnAppleBacklightDisplayLoad, nullptr);
+    SYSLOG_COND(this->dispNotif == nullptr, "Backlight", "Failed to register notification");
+    OSSafeReleaseNULL(matching);
 }
 
-void Backlight::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
+void Backlight::processKext(KernelPatcher &patcher, const size_t id, const mach_vm_address_t slide, const size_t size) {
     if (kextRadeonX6000Framebuffer.loadIndex == id) {
-        if (NRed::singleton().getAttributes().isBigSurAndLater() && NRed::singleton().getAttributes().isRaven()) {
+        if (currentKernelVersion() >= MACOS_11 && NRed::singleton().getAttributes().isRaven()) {
             PatcherPlus::PatternSolveRequest solveRequest {"_dce_driver_set_backlight", this->orgDceDriverSetBacklight,
                 kDceDriverSetBacklightPattern, kDceDriverSetBacklightPatternMask};
             PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "Backlight",
                 "Failed to resolve dce_driver_set_backlight");
         }
-        if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
+        if (currentKernelVersion() >= MACOS_14_4) {
             PatcherPlus::PatternSolveRequest solveRequest {"_dc_link_set_backlight_level",
                 this->orgDcLinkSetBacklightLevel, kDcLinkSetBacklightLevelPattern1404};
             PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "Backlight",
@@ -154,8 +113,8 @@ void Backlight::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t
             kDcLinkSetBacklightLevelNitsPatternMask};
         PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "Backlight",
             "Failed to resolve dc_link_set_backlight_level_nits");
-        if (NRed::singleton().getAttributes().isBigSurAndLater() && NRed::singleton().getAttributes().isRaven()) {
-            if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
+        if (currentKernelVersion() >= MACOS_11 && NRed::singleton().getAttributes().isRaven()) {
+            if (currentKernelVersion() >= MACOS_14_4) {
                 PatcherPlus::PatternRouteRequest request {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit,
                     this->orgDcePanelCntlHwInit, kDcePanelCntlHwInitPattern1404};
                 PANIC_COND(!request.route(patcher, id, slide, size), "Backlight",
@@ -176,17 +135,17 @@ void Backlight::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t
         };
         PANIC_COND(!PatcherPlus::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "Backlight",
             "Failed to route backlight symbols");
-    } else if (kextBacklight.loadIndex == id) {
+    } else if (kextAppleBacklight.loadIndex == id) {
         KernelPatcher::RouteRequest request {"__ZN15AppleIntelPanel10setDisplayEP9IODisplay", wrapApplePanelSetDisplay,
             orgApplePanelSetDisplay};
-        if (patcher.routeMultiple(kextBacklight.loadIndex, &request, 1, slide, size)) {
+        if (patcher.routeMultiple(kextAppleBacklight.loadIndex, &request, 1, slide, size)) {
             static const UInt8 find[] = "F%uT%04x";
             static const UInt8 replace[] = "F%uTxxxx";
-            const PatcherPlus::MaskedLookupPatch patch {&kextBacklight, find, replace, 1};
+            const PatcherPlus::MaskedLookupPatch patch {&kextAppleBacklight, find, replace, 1};
             SYSLOG_COND(!patch.apply(patcher, slide, size), "Backlight", "Failed to apply backlight patch");
         }
         patcher.clearError();
-    } else if (kextMCCSControl.loadIndex == id) {
+    } else if (kextAppleMCCSControl.loadIndex == id) {
         KernelPatcher::RouteRequest requests[] = {
             {"__ZN25AppleMCCSControlGibraltar5probeEP9IOServicePi", returnZero},
             {"__ZN21AppleMCCSControlCello5probeEP9IOServicePi", returnZero},
@@ -196,86 +155,53 @@ void Backlight::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t
     }
 }
 
-bool Backlight::OnAppleBacklightDisplayLoad(void *, void *, IOService *newService, IONotifier *) {
+bool Backlight::OnAppleBacklightDisplayLoad(void *const, void *const, IOService *const newService, IONotifier *const) {
     OSDictionary *params = OSDynamicCast(OSDictionary, newService->getProperty("IODisplayParameters"));
-    if (params == nullptr) {
-        DBGLOG("Backlight", "%s: No 'IODisplayParameters' property", __FUNCTION__);
-        return false;
-    }
+    if (params == nullptr) { return false; }
 
     OSDictionary *linearBrightness = OSDynamicCast(OSDictionary, params->getObject("linear-brightness"));
-    if (linearBrightness == nullptr) {
-        DBGLOG("Backlight", "%s: No 'linear-brightness' property", __FUNCTION__);
-        return false;
-    }
+    if (linearBrightness == nullptr) { return false; }
 
     OSNumber *maxBrightness = OSDynamicCast(OSNumber, linearBrightness->getObject("max"));
-    if (maxBrightness == nullptr) {
-        DBGLOG("Backlight", "%s: No 'max' property", __FUNCTION__);
-        return false;
-    }
+    if (maxBrightness == nullptr) { return false; }
 
-    if (maxBrightness->unsigned32BitValue() == 0) {
-        DBGLOG("Backlight", "%s: 'max' property is 0", __FUNCTION__);
-        return false;
-    }
+    if (maxBrightness->unsigned32BitValue() == 0) { return false; }
 
-    singleton().maxPwmBacklightLvl = maxBrightness->unsigned32BitValue();
-    DBGLOG("Backlight", "%s: Max brightness: 0x%X", __FUNCTION__, singleton().maxPwmBacklightLvl);
+    singleton().maxBacklightLvl = maxBrightness->unsigned32BitValue();
 
     return true;
 }
 
-void Backlight::registerDispMaxBrightnessNotif() {
-    if (this->dispNotif != nullptr) { return; }
-
-    auto *matching = IOService::serviceMatching("AppleBacklightDisplay");
-    if (matching == nullptr) {
-        SYSLOG("Backlight", "%s: Failed to create match dictionary", __FUNCTION__);
-        return;
-    }
-
-    this->dispNotif =
-        IOService::addMatchingNotification(gIOFirstMatchNotification, matching, OnAppleBacklightDisplayLoad, nullptr);
-    SYSLOG_COND(this->dispNotif == nullptr, "Backlight", "%s: Failed to register notification", __FUNCTION__);
-    OSSafeReleaseNULL(matching);
-}
-
-IOReturn Backlight::wrapSetAttributeForConnection(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
-    uintptr_t value) {
+IOReturn Backlight::wrapSetAttributeForConnection(IOService *const framebuffer, const IOIndex connectIndex,
+    const IOSelect attribute, const uintptr_t value) {
     auto ret = FunctionCast(wrapSetAttributeForConnection, singleton().orgSetAttributeForConnection)(framebuffer,
         connectIndex, attribute, value);
-    if (attribute != FbAttributeBacklight) { return ret; }
+    if (attribute != kIOAppleBacklightAttribute) { return ret; }
 
-    singleton().curPwmBacklightLvl = static_cast<UInt32>(value);
+    singleton().curBacklightLvl = static_cast<UInt32>(value);
 
-    if ((NRed::singleton().getAttributes().isBigSurAndLater() && NRed::singleton().getAttributes().isRaven() &&
+    if ((currentKernelVersion() >= MACOS_11 && NRed::singleton().getAttributes().isRaven() &&
             singleton().panelCntlPtr == nullptr) ||
         singleton().embeddedPanelLink == nullptr) {
         return kIOReturnNoDevice;
     }
 
-    if (singleton().maxPwmBacklightLvl == 0) { return kIOReturnInternalError; }
+    if (singleton().maxBacklightLvl == 0) { return kIOReturnInternalError; }
 
-    UInt32 percentage = singleton().curPwmBacklightLvl * 100 / singleton().maxPwmBacklightLvl;
+    UInt32 percentage = singleton().curBacklightLvl * 100 / singleton().maxBacklightLvl;
 
     if (singleton().supportsAUX) {
         // TODO: Obtain the actual max brightness for the screen
         UInt32 auxValue = (singleton().maxOLED * percentage) / 100;
-        // dc_link_set_backlight_level_nits doesn't print the new backlight level, so we'll do it
-        DBGLOG("Backlight", "%s: New AUX brightness: %d millinits (%d nits)", __FUNCTION__, auxValue,
-            (auxValue / 1000));
         singleton().orgDcLinkSetBacklightLevelNits(singleton().embeddedPanelLink, true, auxValue, 15000);
-    } else if (NRed::singleton().getAttributes().isBigSurAndLater() && NRed::singleton().getAttributes().isRaven()) {
-        // XX: Use the old brightness logic for now on Raven
+    } else if (currentKernelVersion() >= MACOS_11 && NRed::singleton().getAttributes().isRaven()) {
+        // Use the old brightness logic for now on Raven
         // until I can find out the actual problem with DMCU.
         UInt32 pwmValue = percentage >= 100 ? 0x1FF00 : ((percentage * 0xFF) / 100) << 8U;
-        DBGLOG("Backlight", "%s: New PWM brightness: 0x%X", __FUNCTION__, pwmValue);
         singleton().orgDceDriverSetBacklight(singleton().panelCntlPtr, pwmValue);
         return kIOReturnSuccess;
     } else {
         UInt32 pwmValue = (percentage * 0xFFFF) / 100;
-        DBGLOG("Backlight", "%s: New PWM brightness: 0x%X", __FUNCTION__, pwmValue);
         if (singleton().orgDcLinkSetBacklightLevel(singleton().embeddedPanelLink, pwmValue, 0)) {
             return kIOReturnSuccess;
         }
@@ -288,8 +214,8 @@ IOReturn Backlight::wrapGetAttributeForConnection(IOService *framebuffer, IOInde
     uintptr_t *value) {
     auto ret = FunctionCast(wrapGetAttributeForConnection, singleton().orgGetAttributeForConnection)(framebuffer,
         connectIndex, attribute, value);
-    if (attribute != FbAttributeBacklight) { return ret; }
-    *value = singleton().curPwmBacklightLvl;
+    if (attribute != kIOAppleBacklightAttribute) { return ret; }
+    *value = singleton().curBacklightLvl;
     return kIOReturnSuccess;
 }
 
@@ -301,30 +227,27 @@ UInt32 Backlight::wrapDcePanelCntlHwInit(void *panelCntl) {
 void *Backlight::wrapLinkCreate(void *data) {
     void *ret = FunctionCast(wrapLinkCreate, singleton().orgLinkCreate)(data);
 
-    if (ret == nullptr) { return nullptr; }
+    if (ret == nullptr) { return ret; }
 
     auto signalType = getMember<UInt32>(ret, 0x38);
     switch (signalType) {
         case SIGNAL_TYPE_LVDS: {
             if (singleton().embeddedPanelLink != nullptr) {
                 SYSLOG("Backlight", "Found multiple embedded panel links. This may be a bug. Please report this.");
+            } else {
+                singleton().embeddedPanelLink = ret;
             }
-            singleton().embeddedPanelLink = ret;
-            DBGLOG("Backlight", "Will use DMCU for display brightness control.");
         } break;
         case SIGNAL_TYPE_EDP: {
             if (singleton().embeddedPanelLink != nullptr) {
                 SYSLOG("Backlight", "Found multiple embedded panel links. This may be a bug. Please report this.");
+            } else {
+                singleton().embeddedPanelLink = ret;
+                singleton().supportsAUX = (singleton().dcLinkCapsField(ret) & DC_DPCD_EXT_CAPS_OLED) != 0;
             }
-            singleton().embeddedPanelLink = ret;
-            singleton().supportsAUX = (singleton().dcLinkCapsField.get(ret) & DC_DPCD_EXT_CAPS_OLED) != 0;
-
-            DBGLOG("Backlight", "Will use %s for display brightness control.",
-                singleton().supportsAUX ? "AUX" : "DMCU");
         } break;
         default: {
-            break;
-        }
+        } break;
     }
 
     return ret;
@@ -361,11 +284,11 @@ static ApplePanelData appleBacklightData[] = {
 
 size_t Backlight::returnZero() { return 0; }
 
-bool Backlight::wrapApplePanelSetDisplay(IOService *that, IODisplay *display) {
+bool Backlight::wrapApplePanelSetDisplay(IOService *self, IODisplay *display) {
     static bool once = false;
     if (!once) {
         once = true;
-        auto *panels = OSDynamicCast(OSDictionary, that->getProperty("ApplePanels"));
+        auto *panels = OSDynamicCast(OSDictionary, self->getProperty("ApplePanels"));
         if (panels) {
             auto *rawPanels = panels->copyCollection();
             panels = OSDynamicCast(OSDictionary, rawPanels);
@@ -380,7 +303,7 @@ bool Backlight::wrapApplePanelSetDisplay(IOService *that, IODisplay *display) {
                         SYSLOG("Backlight", "setDisplay: Cannot allocate data for %s", entry.deviceName);
                     }
                 }
-                that->setProperty("ApplePanels", panels);
+                self->setProperty("ApplePanels", panels);
             }
 
             OSSafeReleaseNULL(rawPanels);
@@ -389,7 +312,5 @@ bool Backlight::wrapApplePanelSetDisplay(IOService *that, IODisplay *display) {
         }
     }
 
-    bool ret = FunctionCast(wrapApplePanelSetDisplay, singleton().orgApplePanelSetDisplay)(that, display);
-    DBGLOG("Backlight", "setDisplay >> %d", ret);
-    return ret;
+    return FunctionCast(wrapApplePanelSetDisplay, singleton().orgApplePanelSetDisplay)(self, display);
 }

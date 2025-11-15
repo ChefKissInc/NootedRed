@@ -2,9 +2,10 @@
 // See LICENSE for details.
 
 #include <Headers/kern_api.hpp>
-#include <PrivateHeaders/NRed.hpp>
-#include <PrivateHeaders/PatcherPlus.hpp>
-#include <PrivateHeaders/iVega/AppleGFXHDA.hpp>
+#include <Kexts.hpp>
+#include <NRed.hpp>
+#include <PenguinWizardry/PatcherPlus.hpp>
+#include <iVega/AppleGFXHDA.hpp>
 
 constexpr UInt32 AMDVendorID = 0x1002;
 constexpr UInt32 Navi10HDMIDeviceID = 0xAB38;
@@ -14,36 +15,9 @@ constexpr UInt32 RavenHDMIID = (RavenHDMIDeviceID << 16) | AMDVendorID;
 constexpr UInt32 RenoirHDMIDeviceID = 0x1637;
 constexpr UInt32 RenoirHDMIID = (RenoirHDMIDeviceID << 16) | AMDVendorID;
 
-//------ Target Kexts ------//
-
-static const char *pathAppleGFXHDA = "/System/Library/Extensions/AppleGFXHDA.kext/Contents/MacOS/AppleGFXHDA";
-
-static KernelPatcher::KextInfo kextAppleGFXHDA {
-    "com.apple.driver.AppleGFXHDA",
-    &pathAppleGFXHDA,
-    1,
-    {true},
-    {},
-    KernelPatcher::KextInfo::Unloaded,
-};
-
-//------ Module Logic ------//
-
 static iVega::AppleGFXHDA instance {};
 
 iVega::AppleGFXHDA &iVega::AppleGFXHDA::singleton() { return instance; }
-
-void iVega::AppleGFXHDA::init() {
-    PANIC_COND(this->initialised, "AGFXHDA", "Attempted to initialise module twice!");
-    this->initialised = true;
-
-    lilu.onKextLoadForce(
-        &kextAppleGFXHDA, 1,
-        [](void *user, KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
-            static_cast<iVega::AppleGFXHDA *>(user)->processKext(patcher, id, slide, size);
-        },
-        this);
-}
 
 void iVega::AppleGFXHDA::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextAppleGFXHDA.loadIndex != id) { return; }
@@ -63,7 +37,7 @@ void iVega::AppleGFXHDA::processKext(KernelPatcher &patcher, size_t id, mach_vm_
         {"__ZN34AppleGFXHDAFunctionGroupATI_Tahiti10gMetaClassE", this->orgFunctionGroupTahiti},
         {"__ZN26AppleGFXHDAWidget_1002AAA010gMetaClassE", this->orgWidget1002AAA0},
     };
-    PANIC_COND(!patcher.solveMultiple(id, solveRequests, slide, size), "AGFXHDA", "Failed to solve symbols");
+    PANIC_COND(!patcher.solveMultiple(id, solveRequests, slide, size, true), "AGFXHDA", "Failed to solve symbols");
 
     KernelPatcher::RouteRequest requests[] = {
         {"__ZN31AppleGFXHDAFunctionGroupFactory27createAppleHDAFunctionGroupEP11DevIdStruct",

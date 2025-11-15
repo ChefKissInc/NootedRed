@@ -1,106 +1,71 @@
 // Copyright © 2022-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
+#include <Backlight.hpp>
+#include <DebugEnabler.hpp>
+#include <GPUDriversAMD/Driver.hpp>
+#include <GPUDriversAMD/RavenIPOffset.hpp>
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_devinfo.hpp>
 #include <Headers/kern_iokit.hpp>
+#include <Hotfixes/AGDP.hpp>
+#include <Hotfixes/X6000FB.hpp>
 #include <IOKit/acpi/IOACPIPlatformExpert.h>
-#include <PrivateHeaders/Backlight.hpp>
-#include <PrivateHeaders/DebugEnabler.hpp>
-#include <PrivateHeaders/Firmware.hpp>
-#include <PrivateHeaders/GPUDriversAMD/Driver.hpp>
-#include <PrivateHeaders/Hotfixes/AGDP.hpp>
-#include <PrivateHeaders/Hotfixes/X6000FB.hpp>
-#include <PrivateHeaders/Model.hpp>
-#include <PrivateHeaders/NRed.hpp>
-#include <PrivateHeaders/PatcherPlus.hpp>
-#include <PrivateHeaders/iVega/AppleGFXHDA.hpp>
-#include <PrivateHeaders/iVega/HWLibs.hpp>
-#include <PrivateHeaders/iVega/IPOffset.hpp>
-#include <PrivateHeaders/iVega/Regs/GC.hpp>
-#include <PrivateHeaders/iVega/Regs/NBIO.hpp>
-#include <PrivateHeaders/iVega/Regs/SMU.hpp>
-#include <PrivateHeaders/iVega/X5000.hpp>
-#include <PrivateHeaders/iVega/X6000.hpp>
-#include <PrivateHeaders/iVega/X6000FB.hpp>
-
-//------ Module Logic ------//
+#include <Kexts.hpp>
+#include <Model.hpp>
+#include <NRed.hpp>
+#include <PenguinWizardry/PatcherPlus.hpp>
+#include <PenguinWizardry/RuntimeMC.hpp>
+#include <iVega/AppleGFXHDA.hpp>
+#include <iVega/DriverInjector.hpp>
+#include <iVega/HWLibs.hpp>
+#include <iVega/Regs/GC.hpp>
+#include <iVega/Regs/NBIO.hpp>
+#include <iVega/Regs/SMU.hpp>
+#include <iVega/X5000.hpp>
+#include <iVega/X6000FB.hpp>
 
 static NRed instance {};
 
 NRed &NRed::singleton() { return instance; }
 
 void NRed::init() {
-    PANIC_COND(this->initialised, "NRed", "Attempted to initialise module twice!");
-    this->initialised = true;
+    SYSLOG("NRed", "|-----------------------------------------------------------------|");
+    SYSLOG("NRed", "| Copyright 2022-2025 ChefKiss.                                   |");
+    SYSLOG("NRed", "| If you've paid for this, you've been scammed. Ask for a refund! |");
+    SYSLOG("NRed", "| Do not support tonymacx86. Support us, we truly care.           |");
+    SYSLOG("NRed", "| Change the world for the better.                                |");
+    SYSLOG("NRed", "|-----------------------------------------------------------------|");
 
-    SYSLOG("NRed", "Copyright 2022-2025 ChefKiss. If you've paid for this, you've been scammed.");
-
-    switch (getKernelVersion()) {
-        case KernelVersion::Catalina:
-            this->attributes.setCatalina();
-            break;
-        case KernelVersion::BigSur:
-            this->attributes.setBigSurAndLater();
-            break;
-        case KernelVersion::Monterey:
-            this->attributes.setBigSurAndLater();
-            this->attributes.setMonterey();
-            this->attributes.setMontereyAndLater();
-            break;
-        case KernelVersion::Ventura:
-            this->attributes.setBigSurAndLater();
-            this->attributes.setMontereyAndLater();
-            this->attributes.setVentura();
-            this->attributes.setVenturaAndLater();
-            if (getKernelMinorVersion() >= 5) {
-                this->attributes.setVentura1304Based();
-                this->attributes.setVentura1304AndLater();
-            }
-            break;
-        case KernelVersion::Sonoma:
-            this->attributes.setBigSurAndLater();
-            this->attributes.setMontereyAndLater();
-            this->attributes.setVenturaAndLater();
-            this->attributes.setVentura1304AndLater();
-            if (getKernelMinorVersion() >= 4) { this->attributes.setSonoma1404AndLater(); }
-            break;
-        case KernelVersion::Sequoia:
-        case KernelVersion::Tahoe:
-            this->attributes.setBigSurAndLater();
-            this->attributes.setMontereyAndLater();
-            this->attributes.setVenturaAndLater();
-            this->attributes.setVentura1304AndLater();
-            this->attributes.setSonoma1404AndLater();
-            break;
-        default:
-            PANIC("NRed", "Unknown kernel version %d", getKernelVersion());
-    }
-
-    SYSLOG("NRed", "Module initialised.");
-    DBGLOG("NRed", "catalina = %s", this->attributes.isCatalina() ? "yes" : "no");
-    DBGLOG("NRed", "bigSurAndLater = %s", this->attributes.isBigSurAndLater() ? "yes" : "no");
-    DBGLOG("NRed", "monterey = %s", this->attributes.isMonterey() ? "yes" : "no");
-    DBGLOG("NRed", "montereyAndLater = %s", this->attributes.isMontereyAndLater() ? "yes" : "no");
-    DBGLOG("NRed", "ventura = %s", this->attributes.isVentura() ? "yes" : "no");
-    DBGLOG("NRed", "venturaAndLater = %s", this->attributes.isVenturaAndLater() ? "yes" : "no");
-    DBGLOG("NRed", "ventura1304Based = %s", this->attributes.isVentura1304Based() ? "yes" : "no");
-    DBGLOG("NRed", "ventura1304AndLater = %s", this->attributes.isVentura1304AndLater() ? "yes" : "no");
-    DBGLOG("NRed", "sonoma1404AndLater = %s", this->attributes.isSonoma1404AndLater() ? "yes" : "no");
-    DBGLOG("NRed", "If any of the above values look incorrect, please report this to the developers.");
-
-    Hotfixes::AGDP::singleton().init();
-    Hotfixes::X6000FB::singleton().init();
     Backlight::singleton().init();
-    DebugEnabler::singleton().init();
-    iVega::X6000FB::singleton().init();
-    iVega::AppleGFXHDA::singleton().init();
-    iVega::X5000HWLibs::singleton().init();
-    iVega::X6000::singleton().init();
-    iVega::X5000::singleton().init();
+
+    lilu.onKextLoadForce(&kextRadeonX6000Framebuffer);
+    lilu.onKextLoadForce(&kextRadeonX5000HWLibs);
+    lilu.onKextLoadForce(&kextRadeonX5000);
+    lilu.onKextLoadForce(&kextAGDP);
+    lilu.onKextLoadForce(&kextAppleGFXHDA);
 
     lilu.onPatcherLoadForce(
-        [](void *user, KernelPatcher &patcher) { static_cast<NRed *>(user)->processPatcher(patcher); }, this);
+        [](void *const, KernelPatcher &patcher) {
+            singleton().processPatcher();
+            iVega::DriverInjector::singleton().processPatcher(patcher);
+            PenguinWizardry::RuntimeMCManager::singleton().processPatcher(patcher);
+        },
+        nullptr);
+
+    lilu.onKextLoadForce(
+        nullptr, 0,
+        [](void *const, KernelPatcher &patcher, const size_t id, const mach_vm_address_t slide, const size_t size) {
+            Hotfixes::AGDP::singleton().processKext(patcher, id, slide, size);
+            Hotfixes::X6000FB::singleton().processKext(patcher, id, slide, size);
+            Backlight::singleton().processKext(patcher, id, slide, size);
+            DebugEnabler::singleton().processKext(patcher, id, slide, size);
+            iVega::X6000FB::singleton().processKext(patcher, id, slide, size);
+            iVega::AppleGFXHDA::singleton().processKext(patcher, id, slide, size);
+            iVega::X5000HWLibs::singleton().processKext(patcher, id, slide, size);
+            iVega::X5000::singleton().processKext(patcher, id, slide, size);
+        },
+        nullptr);
 }
 
 void NRed::hwLateInit() {
@@ -111,11 +76,7 @@ void NRed::hwLateInit() {
 
     PANIC_COND(!this->getVBIOS(), "NRed", "Failed to get VBIOS!");
 
-    auto len = this->vbiosData->getLength();
-    if (len < ATOMBIOS_IMAGE_SIZE) {
-        DBGLOG("NRed", "Padding VBIOS to %u bytes (was %u).", ATOMBIOS_IMAGE_SIZE, len);
-        this->vbiosData->appendByte(0, ATOMBIOS_IMAGE_SIZE - len);
-    }
+    this->vbiosData->appendByte(0, ATOMBIOS_IMAGE_SIZE - this->vbiosData->getLength());
 
     this->iGPU->setProperty("ATY,bin_image", this->vbiosData);
 
@@ -157,6 +118,7 @@ void NRed::hwLateInit() {
     DBGLOG("NRed", "If any of the above values look incorrect, please report this to the developers.");
 }
 
+// TODO: Remove!
 static void updatePropertiesForDevice(IOPCIDevice *device) {
     UInt8 builtIn[] = {0x00};
     device->setProperty("built-in", builtIn, arrsize(builtIn));
@@ -183,16 +145,16 @@ static void updatePropertiesForDevice(IOPCIDevice *device) {
     device->setProperty("AAPL,slot-name", const_cast<char *>("built-in"), 9);
 }
 
-void NRed::processPatcher(KernelPatcher &patcher) {
+void NRed::processPatcher() {
     auto *devInfo = DeviceInfo::create();
-    PANIC_COND(devInfo == nullptr, "NRed", "Failed to create device info!");
+    assert(devInfo != nullptr);
 
     devInfo->processSwitchOff();
 
-    this->iGPU = OSDynamicCast(IOPCIDevice, devInfo->videoBuiltin);
-    PANIC_COND(this->iGPU == nullptr, "NRed", "videoBuiltin is not IOPCIDevice");
+    PANIC_COND(devInfo->videoBuiltin == nullptr, "NRed", "No iGPU detected by Lilu");
+    this->iGPU = OSRequiredCast(IOPCIDevice, devInfo->videoBuiltin);
     PANIC_COND(WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD, "NRed",
-        "videoBuiltin is not AMD");
+        "iGPU is not an AMD one");
 
     WIOKit::renameDevice(this->iGPU, "IGPU");
     WIOKit::awaitPublishing(this->iGPU);
@@ -200,31 +162,31 @@ void NRed::processPatcher(KernelPatcher &patcher) {
 
     this->deviceID = WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigDeviceID);
     switch (this->deviceID) {
-        case 0x15D8:
+        case 0x15D8: {
             this->attributes.setRaven();
             this->attributes.setPicasso();
-            break;
-        case 0x15DD:
+        } break;
+        case 0x15DD: {
             this->attributes.setRaven();
-            break;
+        } break;
         case 0x164C:
-        case 0x1636:
+        case 0x1636: {
             this->attributes.setRenoir();
             this->enumRevision = 0x91;
-            break;
+        } break;
         case 0x15E7:
-        case 0x1638:
+        case 0x1638: {
             this->attributes.setRenoir();
             this->attributes.setGreenSardine();
             this->enumRevision = 0xA1;
-            break;
-        default:
+        } break;
+        default: {
             PANIC("NRed", "Unknown device ID: 0x%X", this->deviceID);
+        }
     }
     this->pciRevision = WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigRevisionID);
 
     char name[128];
-    bzero(name, sizeof(name));
     for (size_t i = 0, ii = 0; i < devInfo->videoExternal.size(); i++) {
         auto *device = OSDynamicCast(IOPCIDevice, devInfo->videoExternal[i].video);
         if (device == nullptr) { continue; }
@@ -236,17 +198,11 @@ void NRed::processPatcher(KernelPatcher &patcher) {
     }
 
     DeviceInfo::deleter(devInfo);
-
-    KernelPatcher::RouteRequest requests[] = {
-        {"__ZN15OSMetaClassBase12safeMetaCastEPKS_PK11OSMetaClass", wrapSafeMetaCast, this->orgSafeMetaCast},
-        {"__ZN11IOCatalogue10addDriversEP7OSArrayb", wrapAddDrivers, this->orgAddDrivers},
-    };
-    PANIC_COND(!patcher.routeMultipleLong(KernelPatcher::KernelID, requests), "NRed", "Failed to route kernel symbols");
 }
 
-void NRed::setProp32(const char *key, UInt32 value) { this->iGPU->setProperty(key, value, 32); }
+void NRed::setProp32(const char *const key, const UInt32 value) const { this->iGPU->setProperty(key, value, 32); }
 
-UInt32 NRed::readReg32(UInt32 reg) const {
+UInt32 NRed::readReg32(const UInt32 reg) const {
     if ((reg * sizeof(UInt32)) < this->rmmio->getLength()) {
         return this->rmmioPtr[reg];
     } else {
@@ -255,7 +211,7 @@ UInt32 NRed::readReg32(UInt32 reg) const {
     }
 }
 
-void NRed::writeReg32(UInt32 reg, UInt32 val) const {
+void NRed::writeReg32(const UInt32 reg, const UInt32 val) const {
     if ((reg * sizeof(UInt32)) < this->rmmio->getLength()) {
         this->rmmioPtr[reg] = val;
     } else {
@@ -276,7 +232,7 @@ UInt32 NRed::smuWaitForResponse() const {
     return ret;
 }
 
-CAILResult NRed::sendMsgToSmc(UInt32 msg, UInt32 param, UInt32 *outParam) const {
+CAILResult NRed::sendMsgToSmc(const UInt32 msg, const UInt32 param, UInt32 *const outParam) const {
     this->smuWaitForResponse();
 
     this->writeReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_82, param);
@@ -290,7 +246,7 @@ CAILResult NRed::sendMsgToSmc(UInt32 msg, UInt32 param, UInt32 *outParam) const 
     return processSMUFWResponse(resp);
 }
 
-static bool checkAtomBios(const UInt8 *bios, size_t size) {
+static bool checkAtomBios(const UInt8 *const bios, const size_t size) {
     if (size < 0x49) {
         DBGLOG("NRed", "VBIOS size is invalid");
         return false;
@@ -326,10 +282,10 @@ class AppleACPIPlatformExpert : IOACPIPlatformExpert {
     friend class NRed;
 };
 
-bool NRed::getVBIOSFromVFCT(bool strict) {
+bool NRed::getVBIOSFromVFCT(const bool strict) {
     DBGLOG("NRed", "Fetching VBIOS from VFCT table");
     auto *expert = reinterpret_cast<AppleACPIPlatformExpert *>(this->iGPU->getPlatform());
-    PANIC_COND(expert == nullptr, "NRed", "Failed to get AppleACPIPlatformExpert");
+    assert(expert != nullptr);
 
     auto *vfctData = expert->getACPITableData("VFCT", 0);
     if (vfctData == nullptr) {
@@ -338,7 +294,7 @@ bool NRed::getVBIOSFromVFCT(bool strict) {
     }
 
     auto *vfct = static_cast<const VFCT *>(vfctData->getBytesNoCopy());
-    PANIC_COND(vfct == nullptr, "NRed", "VFCT OSData::getBytesNoCopy returned null");
+    assert(vfct != nullptr);
 
     if (sizeof(VFCT) > vfctData->getLength()) {
         DBGLOG("NRed", "VFCT table present but broken (too short).");
@@ -372,7 +328,7 @@ bool NRed::getVBIOSFromVFCT(bool strict) {
             vHdr->vendorID == vendor && vHdr->deviceID == this->deviceID) {
             if (checkAtomBios(vContent, vHdr->imageLength)) {
                 this->vbiosData = OSData::withBytes(vContent, vHdr->imageLength);
-                PANIC_COND(this->vbiosData == nullptr, "NRed", "VFCT OSData::withBytes failed");
+                assert(this->vbiosData != nullptr);
                 return true;
             }
 
@@ -406,13 +362,13 @@ bool NRed::getVBIOSFromVRAM() {
         return false;
     }
     this->vbiosData = OSData::withBytes(fb, size);
-    PANIC_COND(this->vbiosData == nullptr, "NRed", "VRAM OSData::withBytes failed");
+    assert(this->vbiosData != nullptr);
     OSSafeReleaseNULL(bar0);
     return true;
 }
 
 bool NRed::getVBIOSFromExpansionROM() {
-    auto expansionROMBase = this->iGPU->extendedConfigRead32(kIOPCIConfigExpansionROMBase);
+    const auto expansionROMBase = this->iGPU->extendedConfigRead32(kIOPCIConfigExpansionROMBase);
     if (expansionROMBase == 0) {
         DBGLOG("NRed", "No PCI Expansion ROM available");
         return false;
@@ -421,7 +377,7 @@ bool NRed::getVBIOSFromExpansionROM() {
     auto *expansionROM =
         this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigExpansionROMBase, kIOMapInhibitCache | kIOMapAnywhere);
     if (expansionROM == nullptr) { return false; }
-    auto expansionROMLength = min(expansionROM->getLength(), ATOMBIOS_IMAGE_SIZE);
+    const auto expansionROMLength = min(expansionROM->getLength(), ATOMBIOS_IMAGE_SIZE);
     if (expansionROMLength == 0) {
         DBGLOG("NRed", "PCI Expansion ROM is empty");
         expansionROM->release();
@@ -433,7 +389,7 @@ bool NRed::getVBIOSFromExpansionROM() {
 
     this->vbiosData = OSData::withBytes(reinterpret_cast<const void *>(expansionROM->getVirtualAddress()),
         static_cast<UInt32>(expansionROMLength));
-    PANIC_COND(this->vbiosData == nullptr, "NRed", "PCI Expansion ROM OSData::withBytes failed");
+    assert(this->vbiosData != nullptr);
     expansionROM->release();
 
     // Disable reading the expansion ROMs
@@ -449,7 +405,7 @@ bool NRed::getVBIOSFromExpansionROM() {
 }
 
 bool NRed::getVBIOS() {
-    auto *biosImageProp = OSDynamicCast(OSData, this->iGPU->getProperty("ATY,bin_image"));
+    const auto *biosImageProp = OSDynamicCast(OSData, this->iGPU->getProperty("ATY,bin_image"));
     if (biosImageProp != nullptr) {
         if (checkAtomBios(static_cast<const UInt8 *>(biosImageProp->getBytesNoCopy()), biosImageProp->getLength())) {
             this->vbiosData = OSData::withData(biosImageProp);
@@ -482,96 +438,4 @@ bool NRed::getVBIOS() {
         }
     }
     return true;
-}
-
-static const char *getDriverXMLForBundle(const char *bundleIdentifier, size_t *len) {
-    const auto identifierLen = strlen(bundleIdentifier);
-    const auto totalLen = identifierLen + 5;
-    auto *filename = new char[totalLen];
-    memcpy(filename, bundleIdentifier, identifierLen);
-    strlcat(filename, ".xml", totalLen);
-
-    const auto &driversXML = getFirmwareNamed(filename);
-    delete[] filename;
-
-    *len = driversXML.length;
-    return reinterpret_cast<const char *>(driversXML.data);
-}
-
-static const char *DriverBundleIdentifiers[] = {
-    "com.apple.kext.AMDRadeonX5000",
-    "com.apple.kext.AMDRadeonX5000HWServices",
-    "com.apple.kext.AMDRadeonX6000",
-    "com.apple.kext.AMDRadeonX6000Framebuffer",
-    "com.apple.driver.AppleGFXHDA",
-};
-
-static UInt8 matchedDrivers = 0;
-
-bool NRed::wrapAddDrivers(void *that, OSArray *array, bool doNubMatching) {
-    UInt32 driverCount = array->getCount();
-    for (UInt32 driverIndex = 0; driverIndex < driverCount; driverIndex += 1) {
-        OSObject *object = array->getObject(driverIndex);
-        PANIC_COND(object == nullptr, "NRed", "Critical error in addDrivers: Index is out of bounds.");
-        auto *dict = OSDynamicCast(OSDictionary, object);
-        if (dict == nullptr) { continue; }
-        auto *bundleIdentifier = OSDynamicCast(OSString, dict->getObject("CFBundleIdentifier"));
-        if (bundleIdentifier == nullptr || bundleIdentifier->getLength() == 0) { continue; }
-        auto *bundleIdentifierCStr = bundleIdentifier->getCStringNoCopy();
-        if (bundleIdentifierCStr == nullptr) { continue; }
-
-        for (size_t identifierIndex = 0; identifierIndex < arrsize(DriverBundleIdentifiers); identifierIndex += 1) {
-            if ((matchedDrivers & (1U << identifierIndex)) != 0) { continue; }
-
-            if (strcmp(bundleIdentifierCStr, DriverBundleIdentifiers[identifierIndex]) == 0) {
-                matchedDrivers |= (1U << identifierIndex);
-
-                DBGLOG("NRed", "Matched %s, injecting.", bundleIdentifierCStr);
-
-                size_t len;
-                auto *driverXML = getDriverXMLForBundle(bundleIdentifierCStr, &len);
-
-                OSString *errStr = nullptr;
-                auto *dataUnserialized = OSUnserializeXML(driverXML, len, &errStr);
-
-                PANIC_COND(dataUnserialized == nullptr, "NRed", "Failed to unserialize driver XML for %s: %s",
-                    bundleIdentifierCStr, errStr ? errStr->getCStringNoCopy() : "(nil)");
-
-                auto *drivers = OSDynamicCast(OSArray, dataUnserialized);
-                PANIC_COND(drivers == nullptr, "NRed", "Failed to cast %s driver data", bundleIdentifierCStr);
-                UInt32 injectedDriverCount = drivers->getCount();
-
-                array->ensureCapacity(driverCount + injectedDriverCount);
-
-                for (UInt32 injectedDriverIndex = 0; injectedDriverIndex < injectedDriverCount;
-                    injectedDriverIndex += 1) {
-                    array->setObject(driverIndex, drivers->getObject(injectedDriverIndex));
-                    driverIndex += 1;
-                    driverCount += 1;
-                }
-
-                dataUnserialized->release();
-                break;
-            }
-        }
-    }
-
-    return FunctionCast(wrapAddDrivers, singleton().orgAddDrivers)(that, array, doNubMatching);
-}
-
-// TODO: Remove this unholy mess.
-OSMetaClassBase *NRed::wrapSafeMetaCast(const OSMetaClassBase *anObject, const OSMetaClass *toMeta) {
-    auto ret = FunctionCast(wrapSafeMetaCast, singleton().orgSafeMetaCast)(anObject, toMeta);
-
-    if (LIKELY(ret)) { return ret; }
-
-    for (const auto &ent : singleton().metaClassMap) {
-        if (UNLIKELY(ent[0] == toMeta)) {
-            return FunctionCast(wrapSafeMetaCast, singleton().orgSafeMetaCast)(anObject, ent[1]);
-        } else if (UNLIKELY(ent[1] == toMeta)) {
-            return FunctionCast(wrapSafeMetaCast, singleton().orgSafeMetaCast)(anObject, ent[0]);
-        }
-    }
-
-    return nullptr;
 }

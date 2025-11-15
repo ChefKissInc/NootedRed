@@ -1,34 +1,20 @@
 // Copyright © 2022-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
+#include <GPUDriversAMD/ATOMBIOS.hpp>
+#include <GPUDriversAMD/CAIL/ASICCaps.hpp>
+#include <GPUDriversAMD/Family.hpp>
+#include <GPUDriversAMD/RavenIPOffset.hpp>
+#include <GPUDriversAMD/VidMemType.hpp>
 #include <Headers/kern_api.hpp>
-#include <PrivateHeaders/GPUDriversAMD/ATOMBIOS.hpp>
-#include <PrivateHeaders/GPUDriversAMD/CAIL/ASICCaps.hpp>
-#include <PrivateHeaders/GPUDriversAMD/Family.hpp>
-#include <PrivateHeaders/GPUDriversAMD/VidMemType.hpp>
-#include <PrivateHeaders/NRed.hpp>
-#include <PrivateHeaders/PatcherPlus.hpp>
-#include <PrivateHeaders/iVega/ASICCaps.hpp>
-#include <PrivateHeaders/iVega/IPOffset.hpp>
-#include <PrivateHeaders/iVega/Regs/DCN2.hpp>
-#include <PrivateHeaders/iVega/Regs/SMUIO.hpp>
-#include <PrivateHeaders/iVega/X6000FB.hpp>
-
-//------ Target Kexts ------//
-
-static const char *pathRadeonX6000Framebuffer =
-    "/System/Library/Extensions/AMDRadeonX6000Framebuffer.kext/Contents/MacOS/AMDRadeonX6000Framebuffer";
-
-static KernelPatcher::KextInfo kextRadeonX6000Framebuffer {
-    "com.apple.kext.AMDRadeonX6000Framebuffer",
-    &pathRadeonX6000Framebuffer,
-    1,
-    {true},
-    {},
-    KernelPatcher::KextInfo::Unloaded,
-};
-
-//------ Patterns ------//
+#include <Kexts.hpp>
+#include <NRed.hpp>
+#include <PenguinWizardry/KernelVersion.hpp>
+#include <PenguinWizardry/PatcherPlus.hpp>
+#include <iVega/ASICCaps.hpp>
+#include <iVega/Regs/OSSSYS_4.hpp>
+#include <iVega/Regs/SMUIO.hpp>
+#include <iVega/X6000FB.hpp>
 
 static const UInt8 kCailAsicCapsTablePattern[] = {0x6E, 0x00, 0x00, 0x00, 0x98, 0x67, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x01, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00};
@@ -54,8 +40,6 @@ static const UInt8 kIRQMGRWriteRegisterPattern[] = {0x55, 0x48, 0x89, 0xE5, 0x41
 static const UInt8 kIRQMGRWriteRegisterPattern1404[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55,
     0x41, 0x54, 0x53, 0x50, 0x89, 0xD3, 0x49, 0x89, 0xF7, 0x49, 0x89, 0xFE, 0x48, 0x8B, 0x87, 0xB0, 0x00, 0x00, 0x00,
     0x48, 0x85, 0xC0};
-
-//------ Patches ------//
 
 // Fix register read (0xD31 -> 0xD2F) and family ID (0x8F -> 0x8E).
 static const UInt8 kPopulateDeviceInfoOriginal[] {0xBE, 0x31, 0x0D, 0x00, 0x00, 0xFF, 0x90, 0x40, 0x01, 0x00, 0x00,
@@ -193,25 +177,9 @@ static const UInt8 kCreateLinksOriginalMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xF0};
 static const UInt8 kCreateLinksPatched[] = {0x04, 0x00, 0x00, 0x00, 0x00};
 static const UInt8 kCreateLinksPatchedMask[] = {0x0F, 0x00, 0x00, 0x00, 0x00};
 
-//------ Module Logic ------//
-
 static iVega::X6000FB instance {};
 
 iVega::X6000FB &iVega::X6000FB::singleton() { return instance; }
-
-void iVega::X6000FB::init() {
-    PANIC_COND(this->initialised, "X6000FB", "Attempted to initialise module twice!");
-    this->initialised = true;
-
-    SYSLOG("X6000FB", "Module initialised.");
-
-    lilu.onKextLoadForce(
-        &kextRadeonX6000Framebuffer, 1,
-        [](void *user, KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
-            static_cast<iVega::X6000FB *>(user)->processKext(patcher, id, slide, size);
-        },
-        this);
-}
 
 void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
     if (kextRadeonX6000Framebuffer.loadIndex != id) { return; }
@@ -234,7 +202,7 @@ void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_addr
     PANIC_COND(!PatcherPlus::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "X6000FB",
         "Failed to route symbols");
 
-    if (NRed::singleton().getAttributes().isBigSurAndLater()) {
+    if (currentKernelVersion() >= MACOS_11) {
         KernelPatcher::RouteRequest request {
             "__ZN32AMDRadeonX6000_AmdRegisterAccess20createRegisterAccessERNS_8InitDataE", wrapCreateRegisterAccess,
             this->orgCreateRegisterAccess};
@@ -243,18 +211,18 @@ void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_addr
     }
 
     if (NRed::singleton().getAttributes().isRenoir()) {
-        this->orgMapMemorySubRange = patcher.solveSymbol<mapMemorySubRange_t>(id,
+        this->mapMemorySubRange = patcher.solveSymbol<mapMemorySubRange_t>(id,
             "__ZN37AMDRadeonX6000_AmdDeviceMemoryManager17mapMemorySubRangeE25AmdReservedMemorySelectoryyj", slide,
             size, true);
-        PANIC_COND(this->orgMapMemorySubRange == nullptr, "X6000FB", "Failed to solve mapMemorySubRange");
+        PANIC_COND(this->mapMemorySubRange == nullptr, "X6000FB", "Failed to solve mapMemorySubRange");
         PatcherPlus::PatternRouteRequest requests[] = {
             {"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware, this->orgIH40IVRingInitHardware,
                 kIH40IVRingInitHardwarePattern, kIH40IVRingInitHardwarePatternMask},
-            {"__ZN41AMDRadeonX6000_AmdDeviceMemoryManagerNavi21intializeReservedVramEv", intializeReservedVram},
+            {"__ZN41AMDRadeonX6000_AmdDeviceMemoryManagerNavi21intializeReservedVramEv", initialiseReservedVRAM},
         };
         PANIC_COND(!PatcherPlus::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "X6000FB",
             "Failed to route IH_4_0_IVRing_InitHardware and intializeReservedVram");
-        if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
+        if (currentKernelVersion() >= MACOS_14_4) {
             PatcherPlus::PatternRouteRequest request {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister,
                 this->orgIRQMGRWriteRegister, kIRQMGRWriteRegisterPattern1404};
             PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
@@ -270,7 +238,7 @@ void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_addr
         kPopulateDeviceInfoMask, kPopulateDeviceInfoPatched, kPopulateDeviceInfoMask, 1};
     PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply populateDeviceInfo patch");
 
-    if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
+    if (currentKernelVersion() >= MACOS_14_4) {
         const PatcherPlus::MaskedLookupPatch patches[] = {
             {&kextRadeonX6000Framebuffer, kGetFirmwareInfoNullCheckOriginal1404,
                 kGetFirmwareInfoNullCheckOriginalMask1404, kGetFirmwareInfoNullCheckPatched1404,
@@ -291,7 +259,7 @@ void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_addr
             "Failed to apply patches");
     }
 
-    if (NRed::singleton().getAttributes().isCatalina()) {
+    if (currentKernelVersion() == MACOS_10_15) {
         const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckOriginal1015,
             kAmdAtomVramInfoNullCheckOriginalMask1015, kAmdAtomVramInfoNullCheckPatched1015, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply null check patch");
@@ -310,7 +278,7 @@ void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_addr
             kInitializeDmcubServices1Patched, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
             "Failed to apply initializeDmcubServices family id patch");
-        if (NRed::singleton().getAttributes().isCatalina()) {
+        if (currentKernelVersion() == MACOS_10_15) {
             const PatcherPlus::MaskedLookupPatch patches[] = {
                 {&kextRadeonX6000Framebuffer, kInitializeDmcubServices2Original1015,
                     kInitializeDmcubServices2Patched1015, 1},
@@ -322,7 +290,7 @@ void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_addr
             };
             PANIC_COND(!PatcherPlus::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "X6000FB",
                 "Failed to apply AmdDalDmcubService and AmdDalServices::initialize patches (10.15)");
-        } else if (NRed::singleton().getAttributes().isSonoma1404AndLater()) {
+        } else if (currentKernelVersion() >= MACOS_14_4) {
             const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX6000Framebuffer,
                 kInitializeDmcubServices2Original1404, kInitializeDmcubServices2Patched1404, 1};
             PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
@@ -353,18 +321,18 @@ void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_addr
     // We need to patch the kext to create only 4 cursors, links and underflow trackers.
     if (NRed::singleton().getAttributes().isRaven()) {
         auto *const orgCreateControllerServices = patcher.solveSymbol<void *>(id,
-            "__ZN40AMDRadeonX6000_AmdRadeonControllerNavi1024createControllerServicesEv", slide, size);
+            "__ZN40AMDRadeonX6000_AmdRadeonControllerNavi1024createControllerServicesEv", slide, size, true);
         PANIC_COND(orgCreateControllerServices == nullptr, "X6000FB", "Failed to solve createControllerServices");
 
-        auto *const orgSetupCursors =
-            patcher.solveSymbol<void *>(id, "__ZN34AMDRadeonX6000_AmdRadeonController12setupCursorsEv", slide, size);
+        auto *const orgSetupCursors = patcher.solveSymbol<void *>(id,
+            "__ZN34AMDRadeonX6000_AmdRadeonController12setupCursorsEv", slide, size, true);
         PANIC_COND(orgSetupCursors == nullptr, "X6000FB", "Failed to solve setupCursors");
 
-        auto *const orgCreateLinks =
-            patcher.solveSymbol<void *>(id, "__ZN34AMDRadeonX6000_AmdRadeonController11createLinksEv", slide, size);
+        auto *const orgCreateLinks = patcher.solveSymbol<void *>(id,
+            "__ZN34AMDRadeonX6000_AmdRadeonController11createLinksEv", slide, size, true);
         PANIC_COND(orgCreateLinks == nullptr, "X6000FB", "Failed to solve createLinks");
 
-        if (NRed::singleton().getAttributes().isCatalina()) {
+        if (currentKernelVersion() == MACOS_10_15) {
             PANIC_COND(!KernelPatcher::findAndReplaceWithMask(orgCreateControllerServices, PAGE_SIZE,
                            kCreateControllerServicesOriginal1015, kCreateControllerServicesOriginalMask1015,
                            kCreateControllerServicesPatched1015, kCreateControllerServicesPatchedMask1015, 1, 0),
@@ -376,10 +344,10 @@ void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_addr
                 "X6000FB", "Failed to apply createControllerServices patch");
         }
 
-        if (NRed::singleton().getAttributes().isMontereyAndLater()) {
+        if (currentKernelVersion() >= MACOS_12) {
             PANIC_COND(!KernelPatcher::findAndReplaceWithMask(orgSetupCursors, PAGE_SIZE, kSetupCursorsOriginal12,
                            kSetupCursorsOriginalMask12, kSetupCursorsPatched12, kSetupCursorsPatchedMask12, 1, 0),
-                "X6000FB", "Failed to apply setupCursors patch (12.0)");
+                "X6000FB", "Failed to apply setupCursors patch (12.0+)");
         } else {
             PANIC_COND(!KernelPatcher::findAndReplaceWithMask(orgSetupCursors, PAGE_SIZE, kSetupCursorsOriginal,
                            kSetupCursorsOriginalMask, kSetupCursorsPatched, kSetupCursorsPatchedMask, 1, 0),
@@ -394,155 +362,121 @@ void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_addr
 
 UInt16 iVega::X6000FB::getEnumeratedRevision() { return NRed::singleton().getEnumRevision(); }
 
-IOReturn iVega::X6000FB::populateVramInfo(void *, void *fwInfo) {
+IOReturn iVega::X6000FB::populateVramInfo(void *const, void *const fwInfo) {
     UInt32 channelCount = 1;
-    auto *table = NRed::singleton().getVBIOSDataTable<IGPSystemInfo>(0x1E);
+    auto *const table = NRed::singleton().getVBIOSDataTable<const IGPSystemInfo>(0x1E);
     UInt8 memoryType = 0;
-    if (table) {
-        DBGLOG("X6000FB", "Fetching VRAM info from iGPU System Info");
-        switch (table->header.formatRev) {
-            case 1:
-                switch (table->header.contentRev) {
-                    case 11:
-                    case 12:
-                        if (table->infoV11.umaChannelCount) { channelCount = table->infoV11.umaChannelCount; }
-                        memoryType = table->infoV11.memoryType;
-                        break;
-                    default:
-                        DBGLOG("X6000FB", "Unsupported contentRev %d", table->header.contentRev);
-                        break;
-                }
-                break;
-            case 2:
-                switch (table->header.contentRev) {
-                    case 1:
-                    case 2:
-                        if (table->infoV2.umaChannelCount) { channelCount = table->infoV2.umaChannelCount; }
-                        memoryType = table->infoV2.memoryType;
-                        break;
-                    default:
-                        DBGLOG("X6000FB", "Unsupported contentRev %d", table->header.contentRev);
-                        break;
-                }
-                break;
-            default:
-                DBGLOG("X6000FB", "Unsupported formatRev %d", table->header.formatRev);
-                break;
-        }
+    if (table == nullptr) {
+        SYSLOG("X6000FB", "No iGPU System Info in Master Data Table");
     } else {
-        DBGLOG("X6000FB", "No iGPU System Info in Master Data Table");
+        DBGLOG("X6000FB", "Fetching VRAM info from iGPU System Info");
+        if (table->header.formatRev == 1 && table->header.contentRev >= 11 && table->header.contentRev <= 12) {
+            if (table->infoV11.umaChannelCount) { channelCount = table->infoV11.umaChannelCount; }
+            memoryType = table->infoV11.memoryType;
+        } else if (table->header.formatRev == 2 && table->header.contentRev >= 1 && table->header.contentRev <= 2) {
+            if (table->infoV2.umaChannelCount) { channelCount = table->infoV2.umaChannelCount; }
+            memoryType = table->infoV2.memoryType;
+        } else {
+            SYSLOG("X6000FB", "Unsupported formatRev, contentRev (%d, %d)", table->header.formatRev,
+                table->header.contentRev);
+        }
     }
-    auto &videoMemoryType = getMember<UInt32>(fwInfo, 0x1C);
+    auto &videoMemoryType = getMember<VideoMemoryType>(fwInfo, 0x1C);
     switch (memoryType) {
         case kDDR2MemType:
         case kDDR2FBDIMMMemType:
-        case kLPDDR2MemType:
-            videoMemoryType = kVideoMemoryTypeDDR2;
-            break;
+        case kLPDDR2MemType: {
+            videoMemoryType = VideoMemoryType::DDR2;
+        } break;
         case kDDR3MemType:
-        case kLPDDR3MemType:
-            videoMemoryType = kVideoMemoryTypeDDR3;
-            break;
+        case kLPDDR3MemType: {
+            videoMemoryType = VideoMemoryType::DDR3;
+        } break;
         case kDDR4MemType:
         case kLPDDR4MemType:
-        case kDDR5MemType:    // AMD's Kexts don't know about DDR5
-        case kLPDDR5MemType:
-            videoMemoryType = kVideoMemoryTypeDDR4;
-            break;
-        default:
+        case kDDR5MemType:    // the kexts don't know about DDR5
+        case kLPDDR5MemType: {
+            videoMemoryType = VideoMemoryType::DDR4;
+        } break;
+        default: {
             DBGLOG("X6000FB", "Unsupported memory type %d. Assuming DDR4", memoryType);
-            videoMemoryType = kVideoMemoryTypeDDR4;
-            break;
+            videoMemoryType = VideoMemoryType::DDR4;
+        } break;
     }
     getMember<UInt32>(fwInfo, 0x20) = channelCount * 64;    // VRAM Width (64-bit channels)
     return kIOReturnSuccess;
 }
 
-UInt32 iVega::X6000FB::wrapGetNumberOfConnectors(void *that) {
+UInt32 iVega::X6000FB::wrapGetNumberOfConnectors(void *const self) {
     if (!singleton().fixedVBIOS) {
         singleton().fixedVBIOS = true;
-        struct DispObjInfoTableV1_4 *objInfo = getMember<DispObjInfoTableV1_4 *>(that, 0x28);
+        struct DispObjInfoTableV1_4 *const objInfo = getMember<DispObjInfoTableV1_4 *>(self, 0x28);
         if (objInfo->formatRev == 1 && (objInfo->contentRev == 4 || objInfo->contentRev == 5)) {
             DBGLOG("X6000FB", "getNumberOfConnectors: Fixing VBIOS connectors");
-            auto n = objInfo->pathCount;
+            const auto n = objInfo->pathCount;
             for (size_t i = 0, j = 0; i < n; i++) {
                 // Skip invalid device tags
-                if (objInfo->paths[i].devTag) {
-                    objInfo->paths[j++] = objInfo->paths[i];
-                } else {
+                if (objInfo->paths[i].devTag == 0) {
                     objInfo->pathCount--;
+                } else {
+                    objInfo->paths[j++] = objInfo->paths[i];
                 }
             }
         }
     }
-    return FunctionCast(wrapGetNumberOfConnectors, singleton().orgGetNumberOfConnectors)(that);
+    return FunctionCast(wrapGetNumberOfConnectors, singleton().orgGetNumberOfConnectors)(self);
 }
 
-bool iVega::X6000FB::wrapIH40IVRingInitHardware(void *ctx, void *param2) {
+bool iVega::X6000FB::wrapIH40IVRingInitHardware(void *const ctx, void *const param2) {
     auto ret = FunctionCast(wrapIH40IVRingInitHardware, singleton().orgIH40IVRingInitHardware)(ctx, param2);
     NRed::singleton().writeReg32(IH_CHICKEN, NRed::singleton().readReg32(IH_CHICKEN) | IH_MC_SPACE_GPA_ENABLE);
     return ret;
 }
 
-void iVega::X6000FB::wrapIRQMGRWriteRegister(void *ctx, UInt64 index, UInt32 value) {
-    if (index == IH_CLK_CTRL) {
-        if ((value & (1U << IH_DBUS_MUX_CLK_SOFT_OVERRIDE_SHIFT)) != 0) {
-            value |= (1U << IH_IH_BUFFER_MEM_CLK_SOFT_OVERRIDE_SHIFT);
+void iVega::X6000FB::wrapIRQMGRWriteRegister(void *const ctx, const UInt64 off, UInt32 value) {
+    if (off == IH_CLK_CTRL) {
+        if ((value & getBit(IH_DBUS_MUX_CLK_SOFT_OVERRIDE_SHIFT)) != 0) {
+            value |= getBit(IH_IH_BUFFER_MEM_CLK_SOFT_OVERRIDE_SHIFT);
         }
     }
-    FunctionCast(wrapIRQMGRWriteRegister, singleton().orgIRQMGRWriteRegister)(ctx, index, value);
+    FunctionCast(wrapIRQMGRWriteRegister, singleton().orgIRQMGRWriteRegister)(ctx, off, value);
 }
 
-void *iVega::X6000FB::wrapCreateRegisterAccess(void *initData) {
+void *iVega::X6000FB::wrapCreateRegisterAccess(void *const initData) {
     getMember<UInt32>(initData, 0x24) = SMUIO_BASE_0 + ROM_INDEX;
     getMember<UInt32>(initData, 0x28) = SMUIO_BASE_0 + ROM_DATA;
     return FunctionCast(wrapCreateRegisterAccess, singleton().orgCreateRegisterAccess)(initData);
 }
 
-IOReturn iVega::X6000FB::intializeReservedVram(void *that) {    // AMD made this typo, not me
-    static constexpr IOOptionBits VramMappingOptions = kIOMapWriteCombineCache | kIOMapAnywhere;
-    auto ret =
-        singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorCursor1_32bpp, 0, 0x40000, VramMappingOptions);
+IOReturn iVega::X6000FB::initialiseReservedVRAM(void *const self) {
+    static constexpr IOOptionBits mapOptions = kIOMapWriteCombineCache | kIOMapAnywhere;
+    auto ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor1_32bpp, 0, 0x40000, mapOptions);
     if (ret != kIOReturnSuccess) { return ret; }
-    ret = singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorCursor1_2bpp, 0x40000, 0x40000,
-        VramMappingOptions);
+    ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor1_2bpp, 0x40000, 0x40000, mapOptions);
     if (ret != kIOReturnSuccess) { return ret; }
-    ret = singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorCursor2_32bpp, 0x80000, 0x40000,
-        VramMappingOptions);
+    ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor2_32bpp, 0x80000, 0x40000, mapOptions);
     if (ret != kIOReturnSuccess) { return ret; }
-    ret = singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorCursor2_2bpp, 0xC0000, 0x40000,
-        VramMappingOptions);
+    ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor2_2bpp, 0xC0000, 0x40000, mapOptions);
     if (ret != kIOReturnSuccess) { return ret; }
-    ret = singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorCursor3_32bpp, 0x100000, 0x40000,
-        VramMappingOptions);
+    ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor3_32bpp, 0x100000, 0x40000, mapOptions);
     if (ret != kIOReturnSuccess) { return ret; }
-    ret = singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorCursor3_2bpp, 0x140000, 0x40000,
-        VramMappingOptions);
+    ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor3_2bpp, 0x140000, 0x40000, mapOptions);
     if (ret != kIOReturnSuccess) { return ret; }
-    ret = singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorCursor4_32bpp, 0x180000, 0x40000,
-        VramMappingOptions);
+    ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor4_32bpp, 0x180000, 0x40000, mapOptions);
     if (ret != kIOReturnSuccess) { return ret; }
-    ret = singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorCursor4_2bpp, 0x1C0000, 0x40000,
-        VramMappingOptions);
+    ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor4_2bpp, 0x1C0000, 0x40000, mapOptions);
     if (ret != kIOReturnSuccess) { return ret; }
-    ret = singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorCursor5_32bpp, 0x200000, 0x40000,
-        VramMappingOptions);
+    ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor5_32bpp, 0x200000, 0x40000, mapOptions);
     if (ret != kIOReturnSuccess) { return ret; }
-    ret = singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorCursor5_2bpp, 0x240000, 0x40000,
-        VramMappingOptions);
+    ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor5_2bpp, 0x240000, 0x40000, mapOptions);
     if (ret != kIOReturnSuccess) { return ret; }
-    ret = singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorCursor6_32bpp, 0x280000, 0x40000,
-        VramMappingOptions);
+    ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor6_32bpp, 0x280000, 0x40000, mapOptions);
     if (ret != kIOReturnSuccess) { return ret; }
-    ret = singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorCursor6_2bpp, 0x2C0000, 0x40000,
-        VramMappingOptions);
+    ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor6_2bpp, 0x2C0000, 0x40000, mapOptions);
     if (ret != kIOReturnSuccess) { return ret; }
-    ret = singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorPPLIBReserved, 0x300000, 0x100000,
-        VramMappingOptions);
+    ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::PPLIBReserved, 0x300000, 0x100000, mapOptions);
     if (ret != kIOReturnSuccess) { return ret; }
-    ret = singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorDMCUBReserved, 0x400000, 0x100000,
-        VramMappingOptions);
+    ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::DMCUBReserved, 0x400000, 0x100000, mapOptions);
     if (ret != kIOReturnSuccess) { return ret; }
-    return singleton().orgMapMemorySubRange(that, kAmdReservedMemorySelectorReserveVRAM, 0, 0x500000,
-        VramMappingOptions);
+    return singleton().mapMemorySubRange(self, AmdReservedMemorySelector::ReserveVRAM, 0, 0x500000, mapOptions);
 }

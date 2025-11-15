@@ -3,7 +3,7 @@
 
 #include <Headers/kern_iokit.hpp>
 #include <Headers/kern_util.hpp>
-#include <PrivateHeaders/Model.hpp>
+#include <Model.hpp>
 
 enum struct MatchType {
     RevOnly,

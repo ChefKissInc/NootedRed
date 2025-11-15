@@ -1,45 +1,12 @@
 // Copyright © 2024-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
+#include <DebugEnabler.hpp>
 #include <Headers/kern_api.hpp>
-#include <PrivateHeaders/DebugEnabler.hpp>
-#include <PrivateHeaders/NRed.hpp>
-#include <PrivateHeaders/PatcherPlus.hpp>
-
-//------ Target Kexts ------//
-
-static const char *pathRadeonX6000Framebuffer =
-    "/System/Library/Extensions/AMDRadeonX6000Framebuffer.kext/Contents/MacOS/AMDRadeonX6000Framebuffer";
-static const char *pathRadeonX5000HWLibs = "/System/Library/Extensions/AMDRadeonX5000HWServices.kext/Contents/PlugIns/"
-                                           "AMDRadeonX5000HWLibs.kext/Contents/MacOS/AMDRadeonX5000HWLibs";
-static const char *pathRadeonX5000 = "/System/Library/Extensions/AMDRadeonX5000.kext/Contents/MacOS/AMDRadeonX5000";
-
-static KernelPatcher::KextInfo kextX6000FB {
-    "com.apple.kext.AMDRadeonX6000Framebuffer",
-    &pathRadeonX6000Framebuffer,
-    1,
-    {true},
-    {},
-    KernelPatcher::KextInfo::Unloaded,
-};
-static KernelPatcher::KextInfo kextX5000HWLibs {
-    "com.apple.kext.AMDRadeonX5000HWLibs",
-    &pathRadeonX5000HWLibs,
-    1,
-    {true},
-    {},
-    KernelPatcher::KextInfo::Unloaded,
-};
-static KernelPatcher::KextInfo kextX5000 {
-    "com.apple.kext.AMDRadeonX5000",
-    &pathRadeonX5000,
-    1,
-    {true},
-    {},
-    KernelPatcher::KextInfo::Unloaded,
-};
-
-//------ Patterns ------//
+#include <Kexts.hpp>
+#include <NRed.hpp>
+#include <PenguinWizardry/KernelVersion.hpp>
+#include <PenguinWizardry/PatcherPlus.hpp>
 
 // X6000FB
 static const UInt8 kDmLoggerWritePattern[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54,
@@ -50,8 +17,6 @@ static const UInt8 kDalDmLoggerShouldLogPartialPattern[] = {0x48, 0x8D, 0x0D, 0x
     0x0F, 0xA3, 0xD0, 0x0F, 0x92, 0xC0};
 static const UInt8 kDalDmLoggerShouldLogPartialPatternMask[] = {0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-
-//------ Patches ------//
 
 // X6000FB: Enable all Display Core logs.
 static const UInt8 kInitPopulateDcInitDataOriginal[] = {0x48, 0xB9, 0xDB, 0x1B, 0xFF, 0x7E, 0x10, 0x00, 0x00, 0x00};
@@ -82,8 +47,6 @@ static const UInt8 kAmdLogPspPatched[] = {0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x
     0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90,
     0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x90};
 
-//------ Module Logic ------//
-
 static DebugEnabler instance {};
 
 DebugEnabler &DebugEnabler::singleton() { return instance; }
@@ -105,27 +68,8 @@ enum GpuDebugPolicy {
     DISABLE_PREEMPTION = 0x80000000,
 };
 
-void DebugEnabler::init() {
-    PANIC_COND(this->initialised, "DebugEnabler", "Attempted to initialise module twice!");
-    this->initialised = true;
-
-    SYSLOG("DebugEnabler", "Module initialised.");
-
-    if (!ADDPR(debugEnabled)) { return; }
-
-    lilu.onKextLoadForce(&kextX6000FB);
-    lilu.onKextLoadForce(&kextX5000HWLibs);
-    lilu.onKextLoadForce(&kextX5000);
-
-    lilu.onKextLoadForce(
-        nullptr, 0,
-        [](void *user, KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
-            static_cast<DebugEnabler *>(user)->processKext(patcher, id, slide, size);
-        },
-        this);
-}
-
-void DebugEnabler::processX6000FB(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
+void DebugEnabler::processX6000FB(KernelPatcher &patcher, const size_t id, const mach_vm_address_t slide,
+    const size_t size) {
     NRed::singleton().setProp32("PP_LogLevel", 0xFFFF);
     NRed::singleton().setProp32("PP_LogSource", 0xFFFFFFFF);
     NRed::singleton().setProp32("PP_LogDestination", 0xFFFFFFFF);
@@ -146,10 +90,10 @@ void DebugEnabler::processX6000FB(KernelPatcher &patcher, size_t id, mach_vm_add
     // Enable all DalDmLogger logs
     // TODO: Maybe replace this with some simpler patches?
     auto *logEnableMaskMinors =
-        patcher.solveSymbol<void *>(id, "__ZN14AmdDalDmLogger19LogEnableMaskMinorsE", slide, size);
+        patcher.solveSymbol<void *>(id, "__ZN14AmdDalDmLogger19LogEnableMaskMinorsE", slide, size, true);
     patcher.clearError();
     if (logEnableMaskMinors == nullptr) {
-        size_t offset = 0;
+        size_t offset;
         PANIC_COND(!KernelPatcher::findPattern(kDalDmLoggerShouldLogPartialPattern,
                        kDalDmLoggerShouldLogPartialPatternMask, arrsize(kDalDmLoggerShouldLogPartialPattern),
                        reinterpret_cast<const void *>(slide), size, &offset),
@@ -164,27 +108,28 @@ void DebugEnabler::processX6000FB(KernelPatcher &patcher, size_t id, mach_vm_add
     MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
     // Enable all Display Core logs
-    if (NRed::singleton().getAttributes().isCatalina()) {
-        const PatcherPlus::MaskedLookupPatch patch {&kextX6000FB, kInitPopulateDcInitDataCatalinaOriginal,
-            kInitPopulateDcInitDataCatalinaPatched, 1};
+    if (currentKernelVersion() == MACOS_10_15) {
+        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX6000Framebuffer,
+            kInitPopulateDcInitDataCatalinaOriginal, kInitPopulateDcInitDataCatalinaPatched, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "DebugEnabler",
             "Failed to apply populateDcInitData patch (10.15)");
     } else {
-        const PatcherPlus::MaskedLookupPatch patch {&kextX6000FB, kInitPopulateDcInitDataOriginal,
+        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX6000Framebuffer, kInitPopulateDcInitDataOriginal,
             kInitPopulateDcInitDataPatched, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "DebugEnabler", "Failed to apply populateDcInitData patch");
     }
 
     // Enable all bios parser logs
-    const PatcherPlus::MaskedLookupPatch patch {&kextX6000FB, kBiosParserHelperInitWithDataOriginal,
+    const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX6000Framebuffer, kBiosParserHelperInitWithDataOriginal,
         kBiosParserHelperInitWithDataPatched, 1};
     PANIC_COND(!patch.apply(patcher, slide, size), "DebugEnabler",
         "Failed to apply AmdBiosParserHelper::initWithData patch");
 }
 
-void DebugEnabler::processX5000HWLibs(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
+void DebugEnabler::processX5000HWLibs(KernelPatcher &patcher, const size_t id, const mach_vm_address_t slide,
+    const size_t size) {
     // TODO: Find the empty functions using a pattern of a call to them for Monterey and newer.
-    if (!NRed::singleton().getAttributes().isMontereyAndLater()) {
+    if (currentKernelVersion() <= MACOS_11) {
         KernelPatcher::RouteRequest requests[] = {
             {"_dmcu_assertion", ipAssertion},
             {"_gc_assertion", ipAssertion},
@@ -201,35 +146,40 @@ void DebugEnabler::processX5000HWLibs(KernelPatcher &patcher, size_t id, mach_vm
             "Failed to route X5000HWLibs debug symbols");
     }
 
-    const PatcherPlus::MaskedLookupPatch atiPpSvcCtrPatch {&kextX5000HWLibs, kAtiPowerPlayServicesConstructorOriginal,
-        kAtiPowerPlayServicesConstructorPatched, 1};
+    const PatcherPlus::MaskedLookupPatch atiPpSvcCtrPatch {&kextRadeonX5000HWLibs,
+        kAtiPowerPlayServicesConstructorOriginal, kAtiPowerPlayServicesConstructorPatched, 1};
     PANIC_COND(!atiPpSvcCtrPatch.apply(patcher, slide, size), "DebugEnabler", "Failed to apply MCIL debugLevel patch");
-    if (NRed::singleton().getAttributes().isBigSurAndLater()) {
-        const PatcherPlus::MaskedLookupPatch amdLogPspPatch {&kextX5000HWLibs, kAmdLogPspOriginal,
+    if (currentKernelVersion() >= MACOS_11) {
+        const PatcherPlus::MaskedLookupPatch amdLogPspPatch {&kextRadeonX5000HWLibs, kAmdLogPspOriginal,
             kAmdLogPspOriginalMask, kAmdLogPspPatched, 1};
         PANIC_COND(!amdLogPspPatch.apply(patcher, slide, size), "DebugEnabler", "Failed to apply amd_log_psp patch");
     }
 }
-void DebugEnabler::processX5000(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
+
+void DebugEnabler::processX5000(KernelPatcher &patcher, const size_t id, const mach_vm_address_t slide,
+    const size_t size) {
     PatcherPlus::PatternRouteRequest request {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator18getNumericPropertyEPKcPj",
         wrapGetNumericProperty, this->orgGetNumericProperty};
     PANIC_COND(!request.route(patcher, id, slide, size), "DebugEnabler", "Failed to route getNumericProperty");
 }
 
-void DebugEnabler::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
-    if (kextX6000FB.loadIndex == id) {
-        this->processX6000FB(patcher, id, slide, size);
-    } else if (kextX5000HWLibs.loadIndex == id) {
-        this->processX5000HWLibs(patcher, id, slide, size);
-    } else if (kextX5000.loadIndex == id) {
-        this->processX5000(patcher, id, slide, size);
+void DebugEnabler::processKext(KernelPatcher &patcher, const size_t id, const mach_vm_address_t slide,
+    const size_t size) {
+    if (!ADDPR(debugEnabled)) { return; }
+
+    if (kextRadeonX6000Framebuffer.loadIndex == id) {
+        DebugEnabler::singleton().processX6000FB(patcher, id, slide, size);
+    } else if (kextRadeonX5000HWLibs.loadIndex == id) {
+        DebugEnabler::singleton().processX5000HWLibs(patcher, id, slide, size);
+    } else if (kextRadeonX5000.loadIndex == id) {
+        DebugEnabler::singleton().processX5000(patcher, id, slide, size);
     }
 }
 
-bool DebugEnabler::wrapInitWithPciInfo(void *that, void *pciDevice) {
-    auto ret = FunctionCast(wrapInitWithPciInfo, singleton().orgInitWithPciInfo)(that, pciDevice);
-    getMember<UInt64>(that, 0x28) = 0xFFFFFFFFFFFFFFFF;    // Enable all log types
-    getMember<UInt32>(that, 0x30) = 0xFF;                  // Enable all log severities
+bool DebugEnabler::wrapInitWithPciInfo(void *self, void *pciDevice) {
+    auto ret = FunctionCast(wrapInitWithPciInfo, singleton().orgInitWithPciInfo)(self, pciDevice);
+    getMember<UInt64>(self, 0x28) = 0xFFFFFFFFFFFFFFFF;    // Enable all log types
+    getMember<UInt32>(self, 0x30) = 0xFF;                  // Enable all log severities
     return ret;
 }
 
@@ -237,11 +187,10 @@ void DebugEnabler::doGPUPanic(void *, char const *fmt, ...) {
     va_list va;
     va_start(va, fmt);
     auto *buf = static_cast<char *>(IOMalloc(1000));
-    bzero(buf, 1000);
     vsnprintf(buf, 1000, fmt, va);
     va_end(va);
 
-    DBGLOG("DebugEnabler", "doGPUPanic: %s", buf);
+    SYSLOG("DebugEnabler", "doGPUPanic: %s", buf);
     IOSleep(10000);
     panic("%s", buf);
 }
@@ -255,7 +204,8 @@ static const char *LogTypes[] = {"Error", "Warning", "Debug", "DC_Interface", "D
 void DebugEnabler::dmLoggerWrite(void *, const UInt32 logType, const char *fmt, ...) {
     va_list va;
     va_start(va, fmt);
-    auto *message = static_cast<char *>(IOMalloc(0x1000));
+    auto *message = IONew(char, 0x1000);
+    bzero(message, 0x1000);
     vsnprintf(message, 0x1000, fmt, va);
     va_end(va);
     auto *epilogue = message[strnlen(message, 0x1000) - 1] == '\n' ? "" : "\n";
@@ -264,7 +214,7 @@ void DebugEnabler::dmLoggerWrite(void *, const UInt32 logType, const char *fmt, 
     } else {
         kprintf("%s%s", message, epilogue);
     }
-    IOFree(message, 0x1000);
+    IODelete(message, char, 0x1000);
 }
 
 // Port of `AmdTtlServices::cosDebugAssert` for empty `_*_assertion` functions
@@ -295,8 +245,8 @@ void DebugEnabler::pspDebugPrint(void *, const char *fmt, ...) {
     va_end(args);
 }
 
-bool DebugEnabler::wrapGetNumericProperty(void *that, const char *name, UInt32 *value) {
-    auto ret = FunctionCast(wrapGetNumericProperty, singleton().orgGetNumericProperty)(that, name, value);
+bool DebugEnabler::wrapGetNumericProperty(void *self, const char *name, UInt32 *value) {
+    auto ret = FunctionCast(wrapGetNumericProperty, singleton().orgGetNumericProperty)(self, name, value);
     if (name == nullptr || strncmp(name, "GpuDebugPolicy", 15) != 0) { return ret; }
     if (value != nullptr) {
         // Enable entry traces
