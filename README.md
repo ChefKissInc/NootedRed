@@ -12,4 +12,4 @@ The NootedRed project is Copyright © 2022-2025 ChefKiss. The NootedRed project 
 > [!WARNING]
 > This project is under active research and development; There will be crashes here and there, but is generally smooth.
 >
-> See repository issues and [our site](https://chefkissinc.github.io/applehax/nootedred) for more information.
+> See repository issues and [our site](https://chefkiss.dev/applehax/nootedred) for more information.
