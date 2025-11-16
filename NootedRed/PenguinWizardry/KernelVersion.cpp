@@ -7,15 +7,14 @@
 #include <PenguinWizardry/KernelVersion.hpp>
 #include <PenguinWizardry/New.hpp>
 
-[[clang::loader_uninitialized]] alignas(
-    PenguinWizardry::KernelVersion) UInt8 currentKernelVersionBuffer[sizeof(PenguinWizardry::KernelVersion)];
+alignas(PenguinWizardry::KernelVersion) static UInt8 _currentKernelVersion[sizeof(PenguinWizardry::KernelVersion)];
 
 [[gnu::constructor(999)]]
 static void _GLOBAL_initCurrentKernelVersion() {
-    new (currentKernelVersionBuffer)
+    new (_currentKernelVersion)
         PenguinWizardry::KernelVersion {static_cast<UInt32>(version_major), static_cast<UInt32>(version_minor)};
 }
 
 const PenguinWizardry::KernelVersion &currentKernelVersion() {
-    return *launder(reinterpret_cast<PenguinWizardry::KernelVersion *>(currentKernelVersionBuffer));
+    return *launder(reinterpret_cast<PenguinWizardry::KernelVersion *>(_currentKernelVersion));
 }
