@@ -1,3 +1,8 @@
+// Version-independent interface to the `AMDRadeonX5000_AMDHWMemory` class
+//
+// Copyright © 2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
+// See LICENSE for details.
+
 #pragma once
 #include <PenguinWizardry/KernelVersion.hpp>
 #include <PenguinWizardry/ObjectField.hpp>

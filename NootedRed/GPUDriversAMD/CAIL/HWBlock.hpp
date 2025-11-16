@@ -1,16 +1,15 @@
+// CAIL HW Block definitions
+//
 // Copyright © 2024-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
 #pragma once
 #include <IOKit/IOTypes.h>
 
-//-------- AMD HW Block Type --------//
-
-// XX: No VPE, LSDMA, XGMI?
-// [insert relevant megamind picture here]
+// No VPE, LSDMA, XGMI?
 enum CAILHWBlock {
     kCAILHWBlockUnknown = 0,
-    // XX: Where is 1, 2, 3? Maybe those are VPE, LSDMA, XGMI? get_hw_block_type doesn't seem to reference them
+    // 1, 2, 3 = ??? Maybe VPE, LSDMA, XGMI? get_hw_block_type doesn't seem to reference them
     kCAILHWBlockMP1 = 4,
     kCAILHWBlockMP2,
     kCAILHWBlockTHM,

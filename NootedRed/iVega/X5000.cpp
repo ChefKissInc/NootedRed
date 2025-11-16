@@ -1,3 +1,5 @@
+// AMDRadeonX5000 patches for Vega iGPUs
+//
 // Copyright © 2022-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
@@ -22,8 +24,8 @@ static const UInt8 kStartHWEnginesOriginal[] = {0x40, 0x83, 0xF0, 0x02};
 static const UInt8 kStartHWEnginesMask[] = {0xF0, 0xFF, 0xF0, 0xFF};
 static const UInt8 kStartHWEnginesPatched[] = {0x40, 0x83, 0xF0, 0x01};
 
-// The check in Addr::Lib::Create on 10.15 & 13.4+ is `familyId == 0x8D` instead of `familyId - 0x8D < 2`.
-// So, change the 0x8D (AI) to 0x8E (RV).
+// The check in `Addr::Lib::Create` on 10.15 and 13.4+ is `familyId == 0x8D` instead of `familyId - 0x8D < 2`.
+// Change the 0x8D (AI) to 0x8E (RV).
 static const UInt8 kAddrLibCreateOriginal[] = {0x41, 0x81, 0x7D, 0x08, 0x8D, 0x00, 0x00, 0x00};
 static const UInt8 kAddrLibCreatePatched[] = {0x41, 0x81, 0x7D, 0x08, 0x8E, 0x00, 0x00, 0x00};
 
