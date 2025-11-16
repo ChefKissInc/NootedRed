@@ -21,31 +21,24 @@ enum CAILResult {
 
 inline CAILResult processSMUFWResponse(const UInt32 value) {
     switch (value) {
-        case kSMUFWResponseNoResponse: {
+        case kSMUFWResponseNoResponse: 
             return kCAILResultNoResponse;
-        }
-        case kSMUFWResponseSuccess: {
+        case kSMUFWResponseSuccess: 
             return kCAILResultOK;
-        }
-        case kSMUFWResponseRejectedBusy: {
-            DBGLOG("CAIL", "SMU FW command rejected; SMU is busy");
+        case kSMUFWResponseRejectedBusy: 
+            SYSTRACE("CAIL", "SMU FW command rejected; SMU is busy");
             return kCAILResultInvalidParameters;
-        }
-        case kSMUFWResponseRejectedPrereq: {
-            DBGLOG("CAIL", "SMU FW command rejected; prequisite was not satisfied");
+        case kSMUFWResponseRejectedPrereq: 
+            SYSTRACE("CAIL", "SMU FW command rejected; prerequisite was not satisfied");
             return kCAILResultInvalidParameters;
-        }
-        case kSMUFWResponseUnknownCommand: {
-            DBGLOG("CAIL", "Unknown SMU FW command");
+        case kSMUFWResponseUnknownCommand: 
+            SYSTRACE("CAIL", "Unknown SMU FW command");
             return kCAILResultUnsupported;
-        }
-        case kSMUFWResponseFailed: {
-            DBGLOG("CAIL", "SMU FW command failed");
+        case kSMUFWResponseFailed: 
+            SYSTRACE("CAIL", "SMU FW command failed");
             return kCAILResultInvalidParameters;
-        }
-        default: {
-            SYSLOG("CAIL", "Unknown SMU FW response %d", value);
+        default: 
+            SYSTRACE("CAIL", "Unknown SMU FW response %d", value);
             return kCAILResultInvalidParameters;
-        }
     }
 }
