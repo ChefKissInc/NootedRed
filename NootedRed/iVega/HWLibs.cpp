@@ -1062,7 +1062,7 @@ CAILResult iVega::X5000HWLibs::wrapSmuInitFunctionPointerList(void *instance, SW
 // TODO: Triple check if this is actually correct.
 static bool isAsicA0() {
     return (!NRed::singleton().getAttributes().isPicasso() && !NRed::singleton().getAttributes().isRaven2() &&
-               NRed::singleton().getAttributes().isRaven()) ||
+               !NRed::singleton().getAttributes().isRenoir()) ||
            (NRed::singleton().getAttributes().isPicasso() &&
                ((NRed::singleton().getPciRevision() >= 0xC8 && NRed::singleton().getPciRevision() <= 0xCC) ||
                    (NRed::singleton().getPciRevision() >= 0xD8 && NRed::singleton().getPciRevision() <= 0xDD)));

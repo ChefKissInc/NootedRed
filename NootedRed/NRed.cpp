@@ -91,7 +91,12 @@ void NRed::hwLateInit() {
     this->devRevision = (this->readReg32(NBIO_BASE_2 + RCC_DEV0_EPF0_STRAP0) & RCC_DEV0_EPF0_STRAP0_ATI_REV_ID_MASK) >>
                         RCC_DEV0_EPF0_STRAP0_ATI_REV_ID_SHIFT;
 
-    if (this->attributes.isRaven()) {
+    if (this->attributes.isRenoir()) {
+        if (!this->attributes.isGreenSardine() && this->devRevision == 0 && this->pciRevision >= 0x80 &&
+            this->pciRevision <= 0x84) {
+            this->attributes.setRenoirE();
+        }
+    } else {
         if (this->devRevision >= 0x8) {
             this->attributes.setRaven2();
             this->enumRevision = 0x79;
@@ -102,16 +107,12 @@ void NRed::hwLateInit() {
         } else {
             this->enumRevision = 0x1;
         }
-    } else if (this->attributes.isRenoir() && !this->attributes.isGreenSardine() && this->devRevision == 0 &&
-               this->pciRevision >= 0x80 && this->pciRevision <= 0x84) {
-        this->attributes.setRenoirE();
     }
 
     DBGLOG("NRed", "deviceID = 0x%X", this->deviceID);
     DBGLOG("NRed", "pciRevision = 0x%X", this->pciRevision);
     DBGLOG("NRed", "fbOffset = 0x%llX", this->fbOffset);
     DBGLOG("NRed", "devRevision = 0x%X", this->devRevision);
-    DBGLOG("NRed", "isRaven = %s", this->attributes.isRaven() ? "yes" : "no");
     DBGLOG("NRed", "isPicasso = %s", this->attributes.isPicasso() ? "yes" : "no");
     DBGLOG("NRed", "isRaven2 = %s", this->attributes.isRaven2() ? "yes" : "no");
     DBGLOG("NRed", "isRenoir = %s", this->attributes.isRenoir() ? "yes" : "no");
@@ -165,11 +166,9 @@ void NRed::processPatcher() {
     this->deviceID = WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigDeviceID);
     switch (this->deviceID) {
         case 0x15D8: {
-            this->attributes.setRaven();
             this->attributes.setPicasso();
         } break;
         case 0x15DD: {
-            this->attributes.setRaven();
         } break;
         case 0x164C:
         case 0x1636: {

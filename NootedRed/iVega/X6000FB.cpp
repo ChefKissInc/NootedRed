@@ -319,7 +319,7 @@ void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_addr
 
     // XX: DCN 2 and newer have 6 display pipes, while DCN 1 (which is what Raven has) has only 4.
     // We need to patch the kext to create only 4 cursors, links and underflow trackers.
-    if (NRed::singleton().getAttributes().isRaven()) {
+    if (!NRed::singleton().getAttributes().isRenoir()) {
         auto *const orgCreateControllerServices = patcher.solveSymbol<void *>(id,
             "__ZN40AMDRadeonX6000_AmdRadeonControllerNavi1024createControllerServicesEv", slide, size, true);
         PANIC_COND(orgCreateControllerServices == nullptr, "X6000FB", "Failed to solve createControllerServices");

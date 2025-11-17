@@ -11,24 +11,21 @@
 
 class NRed {
     class Attributes {    // TODO: Remove!
-        static constexpr UInt16 IsRaven = getBit(0);
-        static constexpr UInt16 IsPicasso = getBit(1);
-        static constexpr UInt16 IsRaven2 = getBit(2);
-        static constexpr UInt16 IsRenoir = getBit(3);
-        static constexpr UInt16 IsRenoirE = getBit(4);
-        static constexpr UInt16 IsGreenSardine = getBit(5);
+        static constexpr UInt8 IsPicasso = getBit(0);
+        static constexpr UInt8 IsRaven2 = getBit(1);
+        static constexpr UInt8 IsRenoir = getBit(2);
+        static constexpr UInt8 IsRenoirE = getBit(3);
+        static constexpr UInt8 IsGreenSardine = getBit(4);
 
         UInt8 value {0};
 
         public:
-        constexpr bool isRaven() const { return (this->value & IsRaven) != 0; }
         constexpr bool isPicasso() const { return (this->value & IsPicasso) != 0; }
         constexpr bool isRaven2() const { return (this->value & IsRaven2) != 0; }
         constexpr bool isRenoir() const { return (this->value & IsRenoir) != 0; }
         constexpr bool isRenoirE() const { return (this->value & IsRenoirE) != 0; }
         constexpr bool isGreenSardine() const { return (this->value & IsGreenSardine) != 0; }
 
-        constexpr void setRaven() { this->value |= IsRaven; }
         constexpr void setPicasso() { this->value |= IsPicasso; }
         constexpr void setRaven2() { this->value |= IsRaven2; }
         constexpr void setRenoir() { this->value |= IsRenoir; }

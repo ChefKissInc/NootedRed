@@ -334,10 +334,10 @@ UInt32 iVega::X5000::wrapHwlConvertChipFamily(void *const self, const UInt32 fam
         if (NRed::singleton().getAttributes().isRenoir()) {
             settings.htileAlignFix = 1;
             settings.applyAliasFix = 1;
-        } else if (NRed::singleton().getAttributes().isRaven()) {
+        } else {
             settings.depthPipeXorDisable = 1;
         }
-        settings.isDcn1 = 1;
+        settings.isDcn1 = 1;    // what to do about this?
         settings.metaBaseAlignFix = 1;
         return ADDR_CHIP_FAMILY_AI;
     }

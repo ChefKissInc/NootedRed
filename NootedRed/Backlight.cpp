@@ -88,7 +88,7 @@ void Backlight::init() {
 
 void Backlight::processKext(KernelPatcher &patcher, const size_t id, const mach_vm_address_t slide, const size_t size) {
     if (kextRadeonX6000Framebuffer.loadIndex == id) {
-        if (currentKernelVersion() >= MACOS_11 && NRed::singleton().getAttributes().isRaven()) {
+        if (currentKernelVersion() >= MACOS_11 && !NRed::singleton().getAttributes().isRenoir()) {
             PatcherPlus::PatternSolveRequest solveRequest {"_dce_driver_set_backlight", this->orgDceDriverSetBacklight,
                 kDceDriverSetBacklightPattern, kDceDriverSetBacklightPatternMask};
             PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "Backlight",
@@ -111,7 +111,7 @@ void Backlight::processKext(KernelPatcher &patcher, const size_t id, const mach_
             kDcLinkSetBacklightLevelNitsPatternMask};
         PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "Backlight",
             "Failed to resolve dc_link_set_backlight_level_nits");
-        if (currentKernelVersion() >= MACOS_11 && NRed::singleton().getAttributes().isRaven()) {
+        if (currentKernelVersion() >= MACOS_11 && !NRed::singleton().getAttributes().isRenoir()) {
             if (currentKernelVersion() >= MACOS_14_4) {
                 PatcherPlus::PatternRouteRequest request {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit,
                     this->orgDcePanelCntlHwInit, kDcePanelCntlHwInitPattern1404};
@@ -178,7 +178,7 @@ IOReturn Backlight::wrapSetAttributeForConnection(IOService *const framebuffer, 
 
     singleton().curBacklightLvl = static_cast<UInt32>(value);
 
-    if ((currentKernelVersion() >= MACOS_11 && NRed::singleton().getAttributes().isRaven() &&
+    if ((currentKernelVersion() >= MACOS_11 && !NRed::singleton().getAttributes().isRenoir() &&
             singleton().panelCntlPtr == nullptr) ||
         singleton().embeddedPanelLink == nullptr) {
         return kIOReturnNoDevice;
@@ -193,7 +193,7 @@ IOReturn Backlight::wrapSetAttributeForConnection(IOService *const framebuffer, 
         if (singleton().orgDcLinkSetBacklightLevelNits(singleton().embeddedPanelLink, true, auxValue, 50)) {
             return kIOReturnSuccess;
         }
-    } else if (currentKernelVersion() >= MACOS_11 && NRed::singleton().getAttributes().isRaven()) {
+    } else if (currentKernelVersion() >= MACOS_11 && !NRed::singleton().getAttributes().isRenoir()) {
         // Use the old brightness logic for now on Raven
         // until I can find out the actual problem with DMCU.
         const auto pwmValue = percentage >= 100 ? 0x1FF00 : ((percentage * 0xFF) / 100) << 8U;
