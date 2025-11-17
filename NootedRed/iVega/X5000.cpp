@@ -104,7 +104,7 @@ void iVega::X5000::processKext(KernelPatcher &patcher, const size_t id, const ma
     UInt32 *orgChannelTypes;
     mach_vm_address_t orgStartHWEngines;
 
-    PatcherPlus::PatternSolveRequest solveRequests[] = {
+    PenguinWizardry::PatternSolveRequest solveRequests[] = {
         {currentKernelVersion() == MACOS_10_15 ?
                 "__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator22getAdditionalQueueListEPPK18_"
                 "AMDQueueSpecifierE27additionalQueueList_Default" :
@@ -114,7 +114,7 @@ void iVega::X5000::processKext(KernelPatcher &patcher, const size_t id, const ma
         {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngineC1Ev", this->sdmaEngineConstructor},
         {"__ZN26AMDRadeonX5000_AMDHardware14startHWEnginesEv", orgStartHWEngines},
     };
-    PANIC_COND(!PatcherPlus::PatternSolveRequest::solveAll(patcher, id, solveRequests, slide, size), "X5000",
+    PANIC_COND(!PenguinWizardry::PatternSolveRequest::solveAll(patcher, id, solveRequests, slide, size), "X5000",
         "Failed to resolve symbols");
 
     AMDRadeonX5000_AMDHWDisplay::resolve(patcher, id, slide, size);
@@ -122,7 +122,7 @@ void iVega::X5000::processKext(KernelPatcher &patcher, const size_t id, const ma
     AMDRadeonX5000_AMDGFX9DCN1Display::resolve(kextRadeonX5000.id);
     AMDRadeonX5000_AMDGFX9DCN2Display::resolve(kextRadeonX5000.id);
 
-    PatcherPlus::PatternRouteRequest requests[] = {
+    PenguinWizardry::PatternRouteRequest requests[] = {
         {"__ZN32AMDRadeonX5000_AMDVega10Hardware17allocateHWEnginesEv", allocateHWEngines},
         {"__ZN32AMDRadeonX5000_AMDVega10Hardware32setupAndInitializeHWCapabilitiesEv",
             wrapSetupAndInitializeHWCapabilities, this->orgSetupAndInitializeHWCapabilities},
@@ -137,34 +137,35 @@ void iVega::X5000::processKext(KernelPatcher &patcher, const size_t id, const ma
         {"__ZN4Addr2V27Gfx9Lib20HwlConvertChipFamilyEjj", wrapHwlConvertChipFamily, this->orgHwlConvertChipFamily,
             kHwlConvertChipFamilyPattern},
     };
-    PANIC_COND(!PatcherPlus::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "X5000",
+    PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "X5000",
         "Failed to route symbols");
 
     if (currentKernelVersion() >= MACOS_13_4) {
-        PatcherPlus::PatternRouteRequest request {
+        PenguinWizardry::PatternRouteRequest request {
             "__ZN37AMDRadeonX5000_AMDGraphicsAccelerator23obtainAccelChannelGroupE11SS_"
             "PRIORITYP27AMDRadeonX5000_AMDAccelTask",
             wrapObtainAccelChannelGroup1304, this->orgObtainAccelChannelGroup};
         PANIC_COND(!request.route(patcher, id, slide, size), "X5000", "Failed to route obtainAccelChannelGroup");
     } else if (currentKernelVersion() >= MACOS_11) {
-        PatcherPlus::PatternRouteRequest request {
+        PenguinWizardry::PatternRouteRequest request {
             "__ZN37AMDRadeonX5000_AMDGraphicsAccelerator23obtainAccelChannelGroupE11SS_PRIORITY",
             wrapObtainAccelChannelGroup, this->orgObtainAccelChannelGroup};
         PANIC_COND(!request.route(patcher, id, slide, size), "X5000", "Failed to route obtainAccelChannelGroup");
     }
 
     if (currentKernelVersion() >= MACOS_14_4) {
-        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX5000, kAddrLibCreateOriginal1404,
+        const PenguinWizardry::MaskedLookupPatch patch {&kextRadeonX5000, kAddrLibCreateOriginal1404,
             kAddrLibCreateOriginalMask1404, kAddrLibCreatePatched1404, kAddrLibCreatePatchedMask1404, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "X5000", "Failed to apply 14.4+ Addr::Lib::Create patch");
     } else if (currentKernelVersion() == MACOS_10_15 || currentKernelVersion() >= MACOS_13_4) {
-        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX5000, kAddrLibCreateOriginal, kAddrLibCreatePatched, 1};
+        const PenguinWizardry::MaskedLookupPatch patch {&kextRadeonX5000, kAddrLibCreateOriginal, kAddrLibCreatePatched,
+            1};
         PANIC_COND(!patch.apply(patcher, slide, size), "X5000",
             "Failed to apply Catalina & Ventura 13.4+ Addr::Lib::Create patch");
     }
 
     if (currentKernelVersion() == MACOS_10_15) {
-        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX5000, kCreateAccelChannelsOriginal,
+        const PenguinWizardry::MaskedLookupPatch patch {&kextRadeonX5000, kCreateAccelChannelsOriginal,
             kCreateAccelChannelsPatched, 2};
         PANIC_COND(!patch.apply(patcher, slide, size), "X5000", "Failed to patch createAccelChannels");
 
@@ -176,7 +177,7 @@ void iVega::X5000::processKext(KernelPatcher &patcher, const size_t id, const ma
             UInt32 replBpp64 = Dcn2NonBpp64SwModeMask1015 ^ Dcn2Bpp64SwModeMask1015;
             UInt32 findBpp64Pt2 = Dcn1Bpp64SwModeMask1015;
             UInt32 replBpp64Pt2 = Dcn2Bpp64SwModeMask1015;
-            const PatcherPlus::MaskedLookupPatch patches[] = {
+            const PenguinWizardry::MaskedLookupPatch patches[] = {
                 {&kextRadeonX5000, reinterpret_cast<const UInt8 *>(&findNonBpp64),
                     reinterpret_cast<const UInt8 *>(&replNonBpp64), sizeof(UInt32), 2},
                 {&kextRadeonX5000, reinterpret_cast<const UInt8 *>(&findBpp64),
@@ -184,7 +185,7 @@ void iVega::X5000::processKext(KernelPatcher &patcher, const size_t id, const ma
                 {&kextRadeonX5000, reinterpret_cast<const UInt8 *>(&findBpp64Pt2),
                     reinterpret_cast<const UInt8 *>(&replBpp64Pt2), sizeof(UInt32), 1},
             };
-            PANIC_COND(!PatcherPlus::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "X5000",
+            PANIC_COND(!PenguinWizardry::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "X5000",
                 "Failed to patch swizzle mode");
         }
 
@@ -194,14 +195,14 @@ void iVega::X5000::processKext(KernelPatcher &patcher, const size_t id, const ma
         MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
         DBGLOG("X5000", "Applied SDMA1 patches");
     } else {
-        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX5000, kStartHWEnginesOriginal, kStartHWEnginesMask,
+        const PenguinWizardry::MaskedLookupPatch patch {&kextRadeonX5000, kStartHWEnginesOriginal, kStartHWEnginesMask,
             kStartHWEnginesPatched, kStartHWEnginesMask, currentKernelVersion() >= MACOS_13 ? 2U : 1};
         PANIC_COND(!patch.apply(patcher, orgStartHWEngines, PAGE_SIZE), "X5000", "Failed to patch startHWEngines");
 
         if (NRed::singleton().getAttributes().isRenoir()) {
             UInt32 findBpp64 = Dcn1Bpp64SwModeMask, replBpp64 = Dcn2Bpp64SwModeMask;
             UInt32 findNonBpp64 = Dcn1NonBpp64SwModeMask, replNonBpp64 = Dcn2NonBpp64SwModeMask;
-            const PatcherPlus::MaskedLookupPatch patches[] = {
+            const PenguinWizardry::MaskedLookupPatch patches[] = {
                 {&kextRadeonX5000, reinterpret_cast<const UInt8 *>(&findBpp64),
                     reinterpret_cast<const UInt8 *>(&replBpp64), sizeof(UInt32),
                     currentKernelVersion() >= MACOS_13_4 ? 2U : 4},
@@ -209,7 +210,7 @@ void iVega::X5000::processKext(KernelPatcher &patcher, const size_t id, const ma
                     reinterpret_cast<const UInt8 *>(&replNonBpp64), sizeof(UInt32),
                     currentKernelVersion() >= MACOS_13_4 ? 2U : 4},
             };
-            PANIC_COND(!PatcherPlus::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "X5000",
+            PANIC_COND(!PenguinWizardry::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "X5000",
                 "Failed to patch swizzle mode");
         }
 

@@ -187,19 +187,19 @@ void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_addr
     NRed::singleton().hwLateInit();
 
     CAILAsicCapsEntry *orgAsicCapsTable = nullptr;
-    PatcherPlus::PatternSolveRequest cailAsicCapsSolveRequest {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable,
+    PenguinWizardry::PatternSolveRequest cailAsicCapsSolveRequest {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable,
         kCailAsicCapsTablePattern};
     PANIC_COND(!cailAsicCapsSolveRequest.solve(patcher, id, slide, size), "X6000FB",
         "Failed to resolve CAIL_ASIC_CAPS_TABLE");
 
-    PatcherPlus::PatternRouteRequest requests[] = {
+    PenguinWizardry::PatternRouteRequest requests[] = {
         {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", populateVramInfo, kPopulateVramInfoPattern,
             kPopulateVramInfoPatternMask},
         {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", getEnumeratedRevision},
         {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
             this->orgGetNumberOfConnectors, kGetNumberOfConnectorsPattern, kGetNumberOfConnectorsPatternMask},
     };
-    PANIC_COND(!PatcherPlus::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "X6000FB",
+    PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "X6000FB",
         "Failed to route symbols");
 
     if (currentKernelVersion() >= MACOS_11) {
@@ -215,71 +215,72 @@ void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_addr
             "__ZN37AMDRadeonX6000_AmdDeviceMemoryManager17mapMemorySubRangeE25AmdReservedMemorySelectoryyj", slide,
             size, true);
         PANIC_COND(this->mapMemorySubRange == nullptr, "X6000FB", "Failed to solve mapMemorySubRange");
-        PatcherPlus::PatternRouteRequest requests[] = {
+        PenguinWizardry::PatternRouteRequest requests[] = {
             {"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware, this->orgIH40IVRingInitHardware,
                 kIH40IVRingInitHardwarePattern, kIH40IVRingInitHardwarePatternMask},
             {"__ZN41AMDRadeonX6000_AmdDeviceMemoryManagerNavi21intializeReservedVramEv", initialiseReservedVRAM},
         };
-        PANIC_COND(!PatcherPlus::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "X6000FB",
+        PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "X6000FB",
             "Failed to route IH_4_0_IVRing_InitHardware and intializeReservedVram");
         if (currentKernelVersion() >= MACOS_14_4) {
-            PatcherPlus::PatternRouteRequest request {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister,
+            PenguinWizardry::PatternRouteRequest request {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister,
                 this->orgIRQMGRWriteRegister, kIRQMGRWriteRegisterPattern1404};
             PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
                 "Failed to route IRQMGR_WriteRegister (14.4+)");
         } else {
-            PatcherPlus::PatternRouteRequest request {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister,
+            PenguinWizardry::PatternRouteRequest request {"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister,
                 this->orgIRQMGRWriteRegister, kIRQMGRWriteRegisterPattern};
             PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route IRQMGR_WriteRegister");
         }
     }
 
-    const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX6000Framebuffer, kPopulateDeviceInfoOriginal,
+    const PenguinWizardry::MaskedLookupPatch patch {&kextRadeonX6000Framebuffer, kPopulateDeviceInfoOriginal,
         kPopulateDeviceInfoMask, kPopulateDeviceInfoPatched, kPopulateDeviceInfoMask, 1};
     PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply populateDeviceInfo patch");
 
     if (currentKernelVersion() >= MACOS_14_4) {
-        const PatcherPlus::MaskedLookupPatch patches[] = {
+        const PenguinWizardry::MaskedLookupPatch patches[] = {
             {&kextRadeonX6000Framebuffer, kGetFirmwareInfoNullCheckOriginal1404,
                 kGetFirmwareInfoNullCheckOriginalMask1404, kGetFirmwareInfoNullCheckPatched1404,
                 kGetFirmwareInfoNullCheckPatchedMask1404, 1},
             {&kextRadeonX6000Framebuffer, kGetVendorInfoOriginal1404, kGetVendorInfoMask1404, kGetVendorInfoPatched1404,
                 kGetVendorInfoPatchedMask1404, 1},
         };
-        PANIC_COND(!PatcherPlus::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "X6000FB",
+        PANIC_COND(!PenguinWizardry::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "X6000FB",
             "Failed to apply patches (14.4)");
     } else {
-        const PatcherPlus::MaskedLookupPatch patches[] = {
+        const PenguinWizardry::MaskedLookupPatch patches[] = {
             {&kextRadeonX6000Framebuffer, kGetFirmwareInfoNullCheckOriginal, kGetFirmwareInfoNullCheckOriginalMask,
                 kGetFirmwareInfoNullCheckPatched, kGetFirmwareInfoNullCheckPatchedMask, 1},
             {&kextRadeonX6000Framebuffer, kGetVendorInfoOriginal, kGetVendorInfoMask, kGetVendorInfoPatched,
                 kGetVendorInfoPatchedMask, 1},
         };
-        PANIC_COND(!PatcherPlus::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "X6000FB",
+        PANIC_COND(!PenguinWizardry::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "X6000FB",
             "Failed to apply patches");
     }
 
     if (currentKernelVersion() == MACOS_10_15) {
-        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckOriginal1015,
-            kAmdAtomVramInfoNullCheckOriginalMask1015, kAmdAtomVramInfoNullCheckPatched1015, 1};
+        const PenguinWizardry::MaskedLookupPatch patch {&kextRadeonX6000Framebuffer,
+            kAmdAtomVramInfoNullCheckOriginal1015, kAmdAtomVramInfoNullCheckOriginalMask1015,
+            kAmdAtomVramInfoNullCheckPatched1015, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply null check patch");
     } else {
-        const PatcherPlus::MaskedLookupPatch patches[] = {
+        const PenguinWizardry::MaskedLookupPatch patches[] = {
             {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckOriginal, kAmdAtomVramInfoNullCheckPatched, 1},
             {&kextRadeonX6000Framebuffer, kAmdAtomPspDirectoryNullCheckOriginal, kAmdAtomPspDirectoryNullCheckPatched,
                 1},
         };
-        PANIC_COND(!PatcherPlus::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "X6000FB",
+        PANIC_COND(!PenguinWizardry::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "X6000FB",
             "Failed to apply null check patches");
     }
 
     if (NRed::singleton().getAttributes().isRenoir()) {
-        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX6000Framebuffer, kInitializeDmcubServices1Original,
+        const PenguinWizardry::MaskedLookupPatch patch {&kextRadeonX6000Framebuffer, kInitializeDmcubServices1Original,
             kInitializeDmcubServices1Patched, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
             "Failed to apply initializeDmcubServices family id patch");
         if (currentKernelVersion() == MACOS_10_15) {
-            const PatcherPlus::MaskedLookupPatch patches[] = {
+            const PenguinWizardry::MaskedLookupPatch patches[] = {
                 {&kextRadeonX6000Framebuffer, kInitializeDmcubServices2Original1015,
                     kInitializeDmcubServices2Patched1015, 1},
                 {&kextRadeonX6000Framebuffer, kInitializeHardware1Original, kInitializeHardware1Patched, 1},
@@ -288,16 +289,16 @@ void iVega::X6000FB::processKext(KernelPatcher &patcher, size_t id, mach_vm_addr
                 {&kextRadeonX6000Framebuffer, kAmdDalServicesInitializeOriginal, kAmdDalServicesInitializeOriginalMask,
                     kAmdDalServicesInitializePatched, kAmdDalServicesInitializePatchedMask, 1},
             };
-            PANIC_COND(!PatcherPlus::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "X6000FB",
+            PANIC_COND(!PenguinWizardry::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "X6000FB",
                 "Failed to apply AmdDalDmcubService and AmdDalServices::initialize patches (10.15)");
         } else if (currentKernelVersion() >= MACOS_14_4) {
-            const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX6000Framebuffer,
+            const PenguinWizardry::MaskedLookupPatch patch {&kextRadeonX6000Framebuffer,
                 kInitializeDmcubServices2Original1404, kInitializeDmcubServices2Patched1404, 1};
             PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
                 "Failed to apply initializeDmcubServices ASIC patch (14.4+)");
         } else {
-            const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX6000Framebuffer, kInitializeDmcubServices2Original,
-                kInitializeDmcubServices2Patched, 1};
+            const PenguinWizardry::MaskedLookupPatch patch {&kextRadeonX6000Framebuffer,
+                kInitializeDmcubServices2Original, kInitializeDmcubServices2Patched, 1};
             PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
                 "Failed to apply initializeDmcubServices ASIC patch");
         }

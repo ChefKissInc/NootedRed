@@ -89,49 +89,49 @@ void Backlight::init() {
 void Backlight::processKext(KernelPatcher &patcher, const size_t id, const mach_vm_address_t slide, const size_t size) {
     if (kextRadeonX6000Framebuffer.loadIndex == id) {
         if (currentKernelVersion() >= MACOS_11 && !NRed::singleton().getAttributes().isRenoir()) {
-            PatcherPlus::PatternSolveRequest solveRequest {"_dce_driver_set_backlight", this->orgDceDriverSetBacklight,
-                kDceDriverSetBacklightPattern, kDceDriverSetBacklightPatternMask};
+            PenguinWizardry::PatternSolveRequest solveRequest {"_dce_driver_set_backlight",
+                this->orgDceDriverSetBacklight, kDceDriverSetBacklightPattern, kDceDriverSetBacklightPatternMask};
             PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "Backlight",
                 "Failed to resolve dce_driver_set_backlight");
         }
         if (currentKernelVersion() >= MACOS_14_4) {
-            PatcherPlus::PatternSolveRequest solveRequest {"_dc_link_set_backlight_level",
+            PenguinWizardry::PatternSolveRequest solveRequest {"_dc_link_set_backlight_level",
                 this->orgDcLinkSetBacklightLevel, kDcLinkSetBacklightLevelPattern1404};
             PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "Backlight",
                 "Failed to resolve dc_link_set_backlight_level");
         } else {
-            PatcherPlus::PatternSolveRequest solveRequest {"_dc_link_set_backlight_level",
+            PenguinWizardry::PatternSolveRequest solveRequest {"_dc_link_set_backlight_level",
                 this->orgDcLinkSetBacklightLevel, kDcLinkSetBacklightLevelPattern};
             PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "Backlight",
                 "Failed to resolve dc_link_set_backlight_level");
         }
 
-        PatcherPlus::PatternSolveRequest solveRequest {"_dc_link_set_backlight_level_nits",
+        PenguinWizardry::PatternSolveRequest solveRequest {"_dc_link_set_backlight_level_nits",
             this->orgDcLinkSetBacklightLevelNits, kDcLinkSetBacklightLevelNitsPattern,
             kDcLinkSetBacklightLevelNitsPatternMask};
         PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "Backlight",
             "Failed to resolve dc_link_set_backlight_level_nits");
         if (currentKernelVersion() >= MACOS_11 && !NRed::singleton().getAttributes().isRenoir()) {
             if (currentKernelVersion() >= MACOS_14_4) {
-                PatcherPlus::PatternRouteRequest request {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit,
+                PenguinWizardry::PatternRouteRequest request {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit,
                     this->orgDcePanelCntlHwInit, kDcePanelCntlHwInitPattern1404};
                 PANIC_COND(!request.route(patcher, id, slide, size), "Backlight",
                     "Failed to route dce_panel_cntl_hw_init (14.4+)");
             } else {
-                PatcherPlus::PatternRouteRequest request {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit,
+                PenguinWizardry::PatternRouteRequest request {"_dce_panel_cntl_hw_init", wrapDcePanelCntlHwInit,
                     this->orgDcePanelCntlHwInit, kDcePanelCntlHwInitPattern};
                 PANIC_COND(!request.route(patcher, id, slide, size), "Backlight",
                     "Failed to route dce_panel_cntl_hw_init");
             }
         }
-        PatcherPlus::PatternRouteRequest requests[] = {
+        PenguinWizardry::PatternRouteRequest requests[] = {
             {"_link_create", wrapLinkCreate, this->orgLinkCreate, kLinkCreatePattern, kLinkCreatePatternMask},
             {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25setAttributeForConnectionEijm", wrapSetAttributeForConnection,
                 this->orgSetAttributeForConnection},
             {"__ZN35AMDRadeonX6000_AmdRadeonFramebuffer25getAttributeForConnectionEijPm", wrapGetAttributeForConnection,
                 this->orgGetAttributeForConnection},
         };
-        PANIC_COND(!PatcherPlus::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "Backlight",
+        PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "Backlight",
             "Failed to route backlight symbols");
     } else if (kextAppleBacklight.loadIndex == id) {
         KernelPatcher::RouteRequest request {"__ZN15AppleIntelPanel10setDisplayEP9IODisplay", wrapApplePanelSetDisplay,
@@ -139,7 +139,7 @@ void Backlight::processKext(KernelPatcher &patcher, const size_t id, const mach_
         if (patcher.routeMultiple(kextAppleBacklight.loadIndex, &request, 1, slide, size)) {
             static const UInt8 find[] = "F%uT%04x";
             static const UInt8 replace[] = "F%uTxxxx";
-            const PatcherPlus::MaskedLookupPatch patch {&kextAppleBacklight, find, replace, 1};
+            const PenguinWizardry::MaskedLookupPatch patch {&kextAppleBacklight, find, replace, 1};
             SYSLOG_COND(!patch.apply(patcher, slide, size), "Backlight", "Failed to apply backlight patch");
         }
         patcher.clearError();

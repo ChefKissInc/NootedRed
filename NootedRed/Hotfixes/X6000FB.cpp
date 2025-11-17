@@ -37,12 +37,12 @@ void Hotfixes::X6000FB::processKext(KernelPatcher &patcher, const size_t id, con
 
     if (checkKernelArgument("-NRedDPDelay")) {
         if (currentKernelVersion() >= MACOS_14_4) {
-            PatcherPlus::PatternRouteRequest request {"_dp_receiver_power_ctrl", wrapDpReceiverPowerCtrl,
+            PenguinWizardry::PatternRouteRequest request {"_dp_receiver_power_ctrl", wrapDpReceiverPowerCtrl,
                 this->orgDpReceiverPowerCtrl, kDpReceiverPowerCtrlPattern1404};
             PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
                 "Failed to route dp_receiver_power_ctrl (14.4+)");
         } else {
-            PatcherPlus::PatternRouteRequest request {"_dp_receiver_power_ctrl", wrapDpReceiverPowerCtrl,
+            PenguinWizardry::PatternRouteRequest request {"_dp_receiver_power_ctrl", wrapDpReceiverPowerCtrl,
                 this->orgDpReceiverPowerCtrl, kDpReceiverPowerCtrlPattern};
             PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route dp_receiver_power_ctrl");
         }
@@ -58,12 +58,12 @@ void Hotfixes::X6000FB::processKext(KernelPatcher &patcher, const size_t id, con
             wrapControllerPowerUp, this->orgControllerPowerUp};
         PANIC_COND(!patcher.routeMultiple(id, &request, 1, slide, size), "X6000FB", "Failed to route powerUp");
 
-        const PatcherPlus::MaskedLookupPatch patches[] = {
+        const PenguinWizardry::MaskedLookupPatch patches[] = {
             {&kextRadeonX6000Framebuffer, kControllerPowerUpOriginal, kControllerPowerUpOriginalMask,
                 kControllerPowerUpReplace, kControllerPowerUpReplaceMask, 1},
             {&kextRadeonX6000Framebuffer, kValidateDetailedTimingOriginal, kValidateDetailedTimingPatched, 1},
         };
-        PANIC_COND(!PatcherPlus::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "X6000FB",
+        PANIC_COND(!PenguinWizardry::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "X6000FB",
             "Failed to apply logic revert patches");
     }
 }

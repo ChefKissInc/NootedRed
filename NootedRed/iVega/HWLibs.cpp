@@ -536,32 +536,32 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, const size_t id, co
     AMDDeviceCapabilities *orgDevCapTable = nullptr;
 
     if (currentKernelVersion() >= MACOS_11) {
-        PatcherPlus::PatternSolveRequest solveRequests[] = {
+        PenguinWizardry::PatternSolveRequest solveRequests[] = {
             {"__ZL15deviceTypeTable", orgDeviceTypeTable, kDeviceTypeTablePattern},
             {"__ZN11AMDFirmware14createFirmwareEPhjjPKc", this->orgCreateFirmware, kCreateFirmwarePattern,
                 kCreateFirmwarePatternMask},
             {"__ZN20AMDFirmwareDirectory11putFirmwareE16_AMD_DEVICE_TYPEP11AMDFirmware", this->orgPutFirmware,
                 kPutFirmwarePattern},
         };
-        PANIC_COND(!PatcherPlus::PatternSolveRequest::solveAll(patcher, id, solveRequests, slide, size), "HWLibs",
+        PANIC_COND(!PenguinWizardry::PatternSolveRequest::solveAll(patcher, id, solveRequests, slide, size), "HWLibs",
             "Failed to resolve symbols");
     }
 
-    PatcherPlus::PatternSolveRequest solveRequests[] = {
+    PenguinWizardry::PatternSolveRequest solveRequests[] = {
         {"__ZL20CAIL_ASIC_CAPS_TABLE", orgCapsTable, kCailAsicCapsTableHWLibsPattern},
         {"_CAILAsicCapsInitTable", orgCapsInitTable, kCAILAsicCapsInitTablePattern},
         {"_DeviceCapabilityTbl", orgDevCapTable, kDeviceCapabilityTblPattern},
     };
-    PANIC_COND(!PatcherPlus::PatternSolveRequest::solveAll(patcher, id, solveRequests, slide, size), "HWLibs",
+    PANIC_COND(!PenguinWizardry::PatternSolveRequest::solveAll(patcher, id, solveRequests, slide, size), "HWLibs",
         "Failed to resolve symbols");
 
     if (currentKernelVersion() == MACOS_10_15) {
-        PatcherPlus::PatternRouteRequest request {"__ZN16AmdTtlFwServices7getIpFwEjPKcP10_TtlFwInfo", wrapGetIpFw,
+        PenguinWizardry::PatternRouteRequest request {"__ZN16AmdTtlFwServices7getIpFwEjPKcP10_TtlFwInfo", wrapGetIpFw,
             this->orgGetIpFw};
         PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route getIpFw");
     } else {
         // TODO: Not override the PSP 9 code.
-        PatcherPlus::PatternRouteRequest requests[] = {
+        PenguinWizardry::PatternRouteRequest requests[] = {
             {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory,
                 this->orgGetIpFw},
             {"_psp_bootloader_is_sos_running_3_1", cailGeneralFailure, kPspBootloaderIsSosRunning31Pattern},
@@ -571,19 +571,19 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, const size_t id, co
                 currentKernelVersion() >= MACOS_13 ? kPspSecurityFeatureCapsSet31Pattern13 :
                                                      kPspSecurityFeatureCapsSet31Pattern},
         };
-        PANIC_COND(!PatcherPlus::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "HWLibs",
+        PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "HWLibs",
             "Failed to route symbols (>10.15)");
         if (currentKernelVersion() >= MACOS_14_4) {
-            PatcherPlus::PatternRouteRequest pspRequests[] = {
+            PenguinWizardry::PatternRouteRequest pspRequests[] = {
                 {"_psp_bootloader_load_sysdrv_3_1", cailNoop, kPspBootloaderLoadSysdrv31Pattern1404},
                 {"_psp_bootloader_set_ecc_mode_3_1", cailNoop, kPspBootloaderSetEccMode31Pattern1404},
                 {"_psp_bootloader_load_sos_3_1", pspBootloaderLoadSos10, kPspBootloaderLoadSos31Pattern1404},
                 {"_psp_reset_3_1", cailUnsupported, kPspReset31Pattern1404},
             };
-            PANIC_COND(!PatcherPlus::PatternRouteRequest::routeAll(patcher, id, pspRequests, slide, size), "HWLibs",
+            PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, pspRequests, slide, size), "HWLibs",
                 "Failed to route symbols (>=14.4)");
         } else {
-            PatcherPlus::PatternRouteRequest pspRequests[] = {
+            PenguinWizardry::PatternRouteRequest pspRequests[] = {
                 {"_psp_bootloader_load_sysdrv_3_1", cailNoop, kPspBootloaderLoadSysdrv31Pattern,
                     kPspBootloaderLoadSysdrv31PatternMask},
                 {"_psp_bootloader_set_ecc_mode_3_1", cailNoop, kPspBootloaderSetEccMode31Pattern},
@@ -591,29 +591,29 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, const size_t id, co
                     kPspBootloaderLoadSos31PatternMask},
                 {"_psp_reset_3_1", cailUnsupported, kPspReset31Pattern},
             };
-            PANIC_COND(!PatcherPlus::PatternRouteRequest::routeAll(patcher, id, pspRequests, slide, size), "HWLibs",
+            PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, pspRequests, slide, size), "HWLibs",
                 "Failed to route symbols (<14.4)");
         }
     }
 
     if (currentKernelVersion() >= MACOS_14_4) {
-        PatcherPlus::PatternRouteRequest request {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit,
+        PenguinWizardry::PatternRouteRequest request {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit,
             kPspCmdKmSubmitPattern1404, kPspCmdKmSubmitPatternMask1404};
         PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route psp_cmd_km_submit (14.4+)");
     } else {
-        PatcherPlus::PatternRouteRequest request {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit,
+        PenguinWizardry::PatternRouteRequest request {"_psp_cmd_km_submit", wrapPspCmdKmSubmit, this->orgPspCmdKmSubmit,
             kPspCmdKmSubmitPattern, kPspCmdKmSubmitPatternMask};
         PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route psp_cmd_km_submit");
     }
 
-    PatcherPlus::JumpPatternRouteRequest fwRequests[] = {
+    PenguinWizardry::JumpPatternRouteRequest fwRequests[] = {
         {"_gc_set_fw_entry_info", wrapGcSetFwEntryInfo, this->orgGcSetFwEntryInfo, kGcSetFwEntryInfoCallPattern,
             kGcSetFwEntryInfoCallPatternMask, kGcSetFwEntryInfoCallPatternJumpInstOff},
         {"_sdma_init_function_pointer_list", wrapSdmaInitFunctionPointerList, this->orgSdmaInitFunctionPointerList,
             kSdmaInitFuncPtrListCallPattern, kSdmaInitFuncPtrListCallPatternMask,
             kSdmaInitFuncPtrListCallPatternJumpInstOff},
     };
-    PANIC_COND(!PatcherPlus::JumpPatternRouteRequest::routeAll(patcher, id, fwRequests, slide, size), "HWLibs",
+    PANIC_COND(!PenguinWizardry::JumpPatternRouteRequest::routeAll(patcher, id, fwRequests, slide, size), "HWLibs",
         "Failed to route FW-related functions");
 
     KernelPatcher::RouteRequest dmcuFwRequests[] = {
@@ -633,7 +633,7 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, const size_t id, co
                 auto *data = reinterpret_cast<const UInt8 *>(addr + off);
                 if (addr + off + 13 > end) { return false; }
                 if (data[0] == 0xE8 && data[5] == 0x84 && data[6] == 0xC0 && data[7] == 0x0F && data[8] == 0x84) {
-                    req.from = PatcherPlus::jumpInstDestination(addr + off, end);
+                    req.from = PenguinWizardry::jumpInstDestination(addr + off, end);
                     return true;
                 }
             }
@@ -644,8 +644,8 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, const size_t id, co
         PANIC_COND(!KernelPatcher::findPattern(kDmcuBackdoorLoadFwBranchPattern, kDmcuBackdoorLoadFwBranchPatternMask,
                        arrsize(kDmcuBackdoorLoadFwBranchPattern), reinterpret_cast<const void *>(slide), size, &offset),
             "HWLibs", "Failed to find `dmcu_backdoor_load_fw` branch pattern");
-        const auto branch =
-            PatcherPlus::jumpInstDestination(slide + offset + kDmcuBackdoorLoadFwDcn1ConstantsBranchOff, slide + size);
+        const auto branch = PenguinWizardry::jumpInstDestination(
+            slide + offset + kDmcuBackdoorLoadFwDcn1ConstantsBranchOff, slide + size);
         PANIC_COND(branch == 0, "HWLibs", "Failed to get `dmcu_backdoor_load_fw` branch destination");
 
         PANIC_COND(!trySolveCall(dmcuFwRequests[0], branch + kDmcuGetDcn1FwConstantsCallOff, slide + size), "HWLibs",
@@ -657,8 +657,8 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, const size_t id, co
     PANIC_COND(!patcher.routeMultiple(id, dmcuFwRequests, slide, size), "HWLibs",
         "Failed to route DMCU FW-related functions");
 
-    PatcherPlus::JumpPatternRouteRequest smuRequest {"_smu_init_function_pointer_list", wrapSmuInitFunctionPointerList,
-        this->orgSmuInitFunctionPointerList, kSmuInitFunctionPointerListCallPattern,
+    PenguinWizardry::JumpPatternRouteRequest smuRequest {"_smu_init_function_pointer_list",
+        wrapSmuInitFunctionPointerList, this->orgSmuInitFunctionPointerList, kSmuInitFunctionPointerListCallPattern,
         kSmuInitFunctionPointerListCallPatternMask, kSmuInitFunctionPointerListCallPatternJumpInstOff};
     PANIC_COND(!smuRequest.route(patcher, id, slide, size), "HWLibs",
         "Failed to route `smu_init_function_pointer_list`");
@@ -716,62 +716,62 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, const size_t id, co
     // TODO: Replace this hack with a simple hook.
     if (currentKernelVersion() == MACOS_10_15) {
         if (NRed::singleton().getAttributes().isRenoir()) {
-            const PatcherPlus::MaskedLookupPatch patches[] = {
+            const PenguinWizardry::MaskedLookupPatch patches[] = {
                 {&kextRadeonX5000HWLibs, kPspSwInit1Original1015, kPspSwInit1Patched1015, 1},
                 {&kextRadeonX5000HWLibs, kPspSwInit2Original1015, kPspSwInit2OriginalMask1015, kPspSwInit2Patched1015,
                     1},
             };
-            PANIC_COND(!PatcherPlus::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "HWLibs",
+            PANIC_COND(!PenguinWizardry::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "HWLibs",
                 "Failed to apply spoof patches");
         }
     } else {
-        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX5000HWLibs, kGcSwInitOriginal, kGcSwInitOriginalMask,
-            kGcSwInitPatched, kGcSwInitPatchedMask, 1};
+        const PenguinWizardry::MaskedLookupPatch patch {&kextRadeonX5000HWLibs, kGcSwInitOriginal,
+            kGcSwInitOriginalMask, kGcSwInitPatched, kGcSwInitPatchedMask, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply gc_sw_init spoof patch");
         if (currentKernelVersion() >= MACOS_14_4) {
-            const PatcherPlus::MaskedLookupPatch patches[] = {
+            const PenguinWizardry::MaskedLookupPatch patches[] = {
                 {&kextRadeonX5000HWLibs, kPspSwInit1Original1404, kPspSwInit1Patched1404, 1},
                 {&kextRadeonX5000HWLibs, kPspSwInit2Original1404, kPspSwInit2OriginalMask1404, kPspSwInit2Patched1404,
                     1},
             };
-            PANIC_COND(!PatcherPlus::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "HWLibs",
+            PANIC_COND(!PenguinWizardry::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "HWLibs",
                 "Failed to apply spoof patches (>=14.4)");
         } else {
-            const PatcherPlus::MaskedLookupPatch patches[] = {
+            const PenguinWizardry::MaskedLookupPatch patches[] = {
                 {&kextRadeonX5000HWLibs, kPspSwInit1Original, kPspSwInit1Patched, 1},
                 {&kextRadeonX5000HWLibs, kPspSwInit2Original, kPspSwInit2OriginalMask, kPspSwInit2Patched, 1},
             };
-            PANIC_COND(!PatcherPlus::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "HWLibs",
+            PANIC_COND(!PenguinWizardry::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "HWLibs",
                 "Failed to apply spoof patches (<14.4)");
         }
     }
 
     // TODO: Replace this hack with a simple hook.
     if (currentKernelVersion() >= MACOS_14_4) {
-        const PatcherPlus::MaskedLookupPatch patches[] = {
+        const PenguinWizardry::MaskedLookupPatch patches[] = {
             {&kextRadeonX5000HWLibs, kCreatePowerTuneServices1Original1404, kCreatePowerTuneServices1Patched1404, 1},
             {&kextRadeonX5000HWLibs, kCreatePowerTuneServices2Original1404, kCreatePowerTuneServices2Mask1404,
                 kCreatePowerTuneServices2Patched1404, 1},
         };
-        PANIC_COND(!PatcherPlus::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "HWLibs",
+        PANIC_COND(!PenguinWizardry::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "HWLibs",
             "Failed to apply PowerTuneServices patches (>=14.4)");
     } else {
         if (currentKernelVersion() >= MACOS_12) {
-            const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServices1Original12,
+            const PenguinWizardry::MaskedLookupPatch patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServices1Original12,
                 kCreatePowerTuneServices1Patched12, 1};
             PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTuneServices patch (<14.4)");
         } else {
-            const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServices1Original,
+            const PenguinWizardry::MaskedLookupPatch patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServices1Original,
                 kCreatePowerTuneServices1Patched, 1};
             PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTuneServices patch (<12.0)");
         }
-        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServices2Original,
+        const PenguinWizardry::MaskedLookupPatch patch {&kextRadeonX5000HWLibs, kCreatePowerTuneServices2Original,
             kCreatePowerTuneServices2Mask, kCreatePowerTuneServices2Patched, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTune patch (<14.4)");
     }
 
     if (currentKernelVersion() >= MACOS_13) {
-        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX5000HWLibs, kCailQueryAdapterInfoOriginal,
+        const PenguinWizardry::MaskedLookupPatch patch {&kextRadeonX5000HWLibs, kCailQueryAdapterInfoOriginal,
             kCailQueryAdapterInfoPatched, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply CailQueryAdapterInfo patch");
     }

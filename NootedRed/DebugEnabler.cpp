@@ -80,13 +80,13 @@ void DebugEnabler::processX6000FB(KernelPatcher &patcher, const size_t id, const
     NRed::singleton().setProp32("PP_DumpSMCTable", TRUE);
     NRed::singleton().setProp32("PP_LogDumpTableBuffers", TRUE);
 
-    PatcherPlus::PatternRouteRequest requests[] = {
+    PenguinWizardry::PatternRouteRequest requests[] = {
         {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo,
             this->orgInitWithPciInfo},
         {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", doGPUPanic},
         {"_dm_logger_write", dmLoggerWrite, kDmLoggerWritePattern},
     };
-    PANIC_COND(!PatcherPlus::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "DebugEnabler",
+    PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "DebugEnabler",
         "Failed to route X6000FB debug symbols");
 
     // Enable all DalDmLogger logs
@@ -111,18 +111,18 @@ void DebugEnabler::processX6000FB(KernelPatcher &patcher, const size_t id, const
 
     // Enable all Display Core logs
     if (currentKernelVersion() == MACOS_10_15) {
-        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX6000Framebuffer,
+        const PenguinWizardry::MaskedLookupPatch patch {&kextRadeonX6000Framebuffer,
             kInitPopulateDcInitDataCatalinaOriginal, kInitPopulateDcInitDataCatalinaPatched, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "DebugEnabler",
             "Failed to apply populateDcInitData patch (10.15)");
     } else {
-        const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX6000Framebuffer, kInitPopulateDcInitDataOriginal,
+        const PenguinWizardry::MaskedLookupPatch patch {&kextRadeonX6000Framebuffer, kInitPopulateDcInitDataOriginal,
             kInitPopulateDcInitDataPatched, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "DebugEnabler", "Failed to apply populateDcInitData patch");
     }
 
     // Enable all bios parser logs
-    const PatcherPlus::MaskedLookupPatch patch {&kextRadeonX6000Framebuffer, kBiosParserHelperInitWithDataOriginal,
+    const PenguinWizardry::MaskedLookupPatch patch {&kextRadeonX6000Framebuffer, kBiosParserHelperInitWithDataOriginal,
         kBiosParserHelperInitWithDataPatched, 1};
     PANIC_COND(!patch.apply(patcher, slide, size), "DebugEnabler",
         "Failed to apply AmdBiosParserHelper::initWithData patch");
@@ -148,11 +148,11 @@ void DebugEnabler::processX5000HWLibs(KernelPatcher &patcher, const size_t id, c
             "Failed to route X5000HWLibs debug symbols");
     }
 
-    const PatcherPlus::MaskedLookupPatch atiPpSvcCtrPatch {&kextRadeonX5000HWLibs,
+    const PenguinWizardry::MaskedLookupPatch atiPpSvcCtrPatch {&kextRadeonX5000HWLibs,
         kAtiPowerPlayServicesConstructorOriginal, kAtiPowerPlayServicesConstructorPatched, 1};
     PANIC_COND(!atiPpSvcCtrPatch.apply(patcher, slide, size), "DebugEnabler", "Failed to apply MCIL debugLevel patch");
     if (currentKernelVersion() >= MACOS_11) {
-        const PatcherPlus::MaskedLookupPatch amdLogPspPatch {&kextRadeonX5000HWLibs, kAmdLogPspOriginal,
+        const PenguinWizardry::MaskedLookupPatch amdLogPspPatch {&kextRadeonX5000HWLibs, kAmdLogPspOriginal,
             kAmdLogPspOriginalMask, kAmdLogPspPatched, 1};
         PANIC_COND(!amdLogPspPatch.apply(patcher, slide, size), "DebugEnabler", "Failed to apply amd_log_psp patch");
     }
@@ -160,8 +160,9 @@ void DebugEnabler::processX5000HWLibs(KernelPatcher &patcher, const size_t id, c
 
 void DebugEnabler::processX5000(KernelPatcher &patcher, const size_t id, const mach_vm_address_t slide,
     const size_t size) {
-    PatcherPlus::PatternRouteRequest request {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator18getNumericPropertyEPKcPj",
-        wrapGetNumericProperty, this->orgGetNumericProperty};
+    PenguinWizardry::PatternRouteRequest request {
+        "__ZN37AMDRadeonX5000_AMDGraphicsAccelerator18getNumericPropertyEPKcPj", wrapGetNumericProperty,
+        this->orgGetNumericProperty};
     PANIC_COND(!request.route(patcher, id, slide, size), "DebugEnabler", "Failed to route getNumericProperty");
 }
 

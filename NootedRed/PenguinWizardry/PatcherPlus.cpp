@@ -3,7 +3,7 @@
 
 #include <PenguinWizardry/PatcherPlus.hpp>
 
-bool PatcherPlus::PatternSolveRequest::solve(KernelPatcher &patcher, const size_t id, const mach_vm_address_t start,
+bool PenguinWizardry::PatternSolveRequest::solve(KernelPatcher &patcher, const size_t id, const mach_vm_address_t start,
     const size_t size) {
     assertf(this->address != nullptr, "for symbol `%s`", safeString(this->symbol));
 
@@ -41,7 +41,7 @@ bool PatcherPlus::PatternSolveRequest::solve(KernelPatcher &patcher, const size_
     return true;
 }
 
-bool PatcherPlus::PatternSolveRequest::solveAll(KernelPatcher &patcher, const size_t id,
+bool PenguinWizardry::PatternSolveRequest::solveAll(KernelPatcher &patcher, const size_t id,
     PatternSolveRequest *const requests, const size_t count, const mach_vm_address_t start, const size_t size) {
     for (size_t i = 0; i < count; i++) {
         if (requests[i].solve(patcher, id, start, size)) {
@@ -54,7 +54,7 @@ bool PatcherPlus::PatternSolveRequest::solveAll(KernelPatcher &patcher, const si
     return true;
 }
 
-bool PatcherPlus::PatternRouteRequest::route(KernelPatcher &patcher, const size_t id, const mach_vm_address_t start,
+bool PenguinWizardry::PatternRouteRequest::route(KernelPatcher &patcher, const size_t id, const mach_vm_address_t start,
     const size_t size) {
     if (this->symbol != nullptr) {
         patcher.clearError();
@@ -91,7 +91,7 @@ bool PatcherPlus::PatternRouteRequest::route(KernelPatcher &patcher, const size_
     return patcher.routeMultiple(id, this, 1, start, size);
 }
 
-bool PatcherPlus::PatternRouteRequest::routeAll(KernelPatcher &patcher, const size_t id,
+bool PenguinWizardry::PatternRouteRequest::routeAll(KernelPatcher &patcher, const size_t id,
     PatternRouteRequest *const requests, const size_t count, const mach_vm_address_t start, const size_t size) {
     for (size_t i = 0; i < count; i++) {
         if (requests[i].route(patcher, id, start, size)) {
@@ -104,7 +104,7 @@ bool PatcherPlus::PatternRouteRequest::routeAll(KernelPatcher &patcher, const si
     return true;
 }
 
-bool PatcherPlus::MaskedLookupPatch::apply(KernelPatcher &patcher, const mach_vm_address_t start,
+bool PenguinWizardry::MaskedLookupPatch::apply(KernelPatcher &patcher, const mach_vm_address_t start,
     const size_t size) const {
     if (this->findMask == nullptr && this->replaceMask == nullptr && this->skip == 0) {
         patcher.clearError();
@@ -118,7 +118,7 @@ bool PatcherPlus::MaskedLookupPatch::apply(KernelPatcher &patcher, const mach_vm
         this->replaceMask ? this->size : 0, this->count, this->skip);
 }
 
-bool PatcherPlus::MaskedLookupPatch::applyAll(KernelPatcher &patcher, const MaskedLookupPatch *const patches,
+bool PenguinWizardry::MaskedLookupPatch::applyAll(KernelPatcher &patcher, const MaskedLookupPatch *const patches,
     const size_t count, const mach_vm_address_t start, const size_t size, const bool force) {
     for (size_t i = 0; i < count; i++) {
         if (patches[i].apply(patcher, start, size)) {
@@ -131,7 +131,7 @@ bool PatcherPlus::MaskedLookupPatch::applyAll(KernelPatcher &patcher, const Mask
     return true;
 }
 
-mach_vm_address_t PatcherPlus::jumpInstDestination(const mach_vm_address_t start, const mach_vm_address_t end) {
+mach_vm_address_t PenguinWizardry::jumpInstDestination(const mach_vm_address_t start, const mach_vm_address_t end) {
     if (start == 0 || end == 0) {
         SYSLOG("Patcher+", "jumpInstDestination start AND/OR end IS 0!!!");
         return 0;
@@ -178,8 +178,8 @@ mach_vm_address_t PatcherPlus::jumpInstDestination(const mach_vm_address_t start
     return result >= end ? 0 : result;
 }
 
-bool PatcherPlus::JumpPatternRouteRequest::route(KernelPatcher &patcher, const size_t id, const mach_vm_address_t start,
-    const size_t size) {
+bool PenguinWizardry::JumpPatternRouteRequest::route(KernelPatcher &patcher, const size_t id,
+    const mach_vm_address_t start, const size_t size) {
     if (this->symbol != nullptr) {
         patcher.clearError();
         if (start == 0 || size == 0) {
@@ -224,7 +224,7 @@ bool PatcherPlus::JumpPatternRouteRequest::route(KernelPatcher &patcher, const s
     }
 }
 
-bool PatcherPlus::JumpPatternRouteRequest::routeAll(KernelPatcher &patcher, const size_t id,
+bool PenguinWizardry::JumpPatternRouteRequest::routeAll(KernelPatcher &patcher, const size_t id,
     JumpPatternRouteRequest *const requests, const size_t count, const mach_vm_address_t start, const size_t size) {
     for (size_t i = 0; i < count; i++) {
         if (requests[i].route(patcher, id, start, size)) {

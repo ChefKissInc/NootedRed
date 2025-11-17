@@ -30,15 +30,17 @@ void Hotfixes::AGDP::processKext(KernelPatcher &patcher, const size_t id, const 
     const size_t size) {
     if (kextAGDP.loadIndex != id) { return; }
 
-    const PatcherPlus::MaskedLookupPatch boardIdPatch {&kextAGDP, kAGDPBoardIDKeyOriginal, kAGDPBoardIDKeyPatched, 1};
+    const PenguinWizardry::MaskedLookupPatch boardIdPatch {&kextAGDP, kAGDPBoardIDKeyOriginal, kAGDPBoardIDKeyPatched,
+        1};
     SYSLOG_COND(!boardIdPatch.apply(patcher, slide, size), "AGDP", "Failed to apply AGDP board-id patch");
 
     if (currentKernelVersion() == MACOS_13) {
-        const PatcherPlus::MaskedLookupPatch patch {&kextAGDP, kAGDPFBCountCheckOriginal13, kAGDPFBCountCheckPatched13,
-            1};
+        const PenguinWizardry::MaskedLookupPatch patch {&kextAGDP, kAGDPFBCountCheckOriginal13,
+            kAGDPFBCountCheckPatched13, 1};
         SYSLOG_COND(!patch.apply(patcher, slide, size), "AGDP", "Failed to apply AGDP FB count check patch");
     } else {
-        const PatcherPlus::MaskedLookupPatch patch {&kextAGDP, kAGDPFBCountCheckOriginal, kAGDPFBCountCheckPatched, 1};
+        const PenguinWizardry::MaskedLookupPatch patch {&kextAGDP, kAGDPFBCountCheckOriginal, kAGDPFBCountCheckPatched,
+            1};
         SYSLOG_COND(!patch.apply(patcher, slide, size), "AGDP", "Failed to apply AGDP FB count check patch");
     }
 }

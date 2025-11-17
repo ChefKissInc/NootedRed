@@ -4,7 +4,7 @@
 #pragma once
 #include <Headers/kern_patcher.hpp>
 
-namespace PatcherPlus {
+namespace PenguinWizardry {
     struct PatternSolveRequest : KernelPatcher::SolveRequest {
         const UInt8 *const pattern {nullptr}, *const mask {nullptr};
         const size_t patternSize {0};
@@ -183,4 +183,4 @@ namespace PatcherPlus {
             return routeAll(patcher, id, requests, N, start, size);
         }
     };
-}    // namespace PatcherPlus
+}    // namespace PenguinWizardry
