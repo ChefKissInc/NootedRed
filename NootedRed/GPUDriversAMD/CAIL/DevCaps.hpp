@@ -3,7 +3,6 @@
 
 #pragma once
 #include <GPUDriversAMD/CAIL/GoldenSettings.hpp>
-#include <IOKit/IOTypes.h>
 
 //-------- AMD Device Capabilities --------//
 
