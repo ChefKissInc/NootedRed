@@ -182,9 +182,8 @@ void NRed::processPatcher() {
             this->attributes.setGreenSardine();
             this->enumRevision = 0xA1;
         } break;
-        default: {
+        default:
             PANIC("NRed", "Unknown device ID: 0x%X", this->deviceID);
-        }
     }
     this->pciRevision = WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigRevisionID);
 

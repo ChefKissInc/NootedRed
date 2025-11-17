@@ -245,8 +245,6 @@ void *Backlight::wrapLinkCreate(void *data) {
                 singleton().supportsAUX = (singleton().dcLinkCapsField(ret) & DC_DPCD_EXT_CAPS_OLED) != 0;
             }
         } break;
-        default: {
-        } break;
     }
 
     return ret;

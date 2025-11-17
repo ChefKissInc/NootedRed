@@ -962,9 +962,8 @@ CAILResult iVega::X5000HWLibs::smu10NotifyEvent(void *, void *data) {
     switch (getMember<UInt32>(data, 4)) {
         case 0:
         case 4:
-        case 10: {    // Reinitialise
+        case 10:    // Reinitialise
             return smuPowerUp();
-        }
         case 1:
         case 2:
         case 3:
@@ -972,14 +971,12 @@ CAILResult iVega::X5000HWLibs::smu10NotifyEvent(void *, void *data) {
         case 6:
         case 7:
         case 8:
-        case 9:       // Reset
-        case 11: {    // Collect debug info
+        case 9:     // Reset
+        case 11:    // Collect debug info
             return kCAILResultOK;
-        }
-        default: {
+        default:
             SYSLOG("HWLibs", "Invalid input event to SMU notify event");
             return kCAILResultInvalidParameters;
-        }
     }
 }
 
@@ -989,23 +986,20 @@ CAILResult iVega::X5000HWLibs::smu12NotifyEvent(void *, void *data) {
         case 0:
         case 4:
         case 8:
-        case 10: {    // Reinitialise
+        case 10:    // Reinitialise
             return NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerUpSdma);
-        }
         case 1:
         case 2:
         case 3:
         case 5:
         case 6:
         case 7:
-        case 9:       // Reset
-        case 11: {    // Collect debug info
+        case 9:     // Reset
+        case 11:    // Collect debug info
             return kCAILResultOK;
-        }
-        default: {
+        default:
             SYSLOG("HWLibs", "Invalid input event to SMU notify event: %d", event);
             return kCAILResultInvalidParameters;
-        }
     }
 }
 
@@ -1020,10 +1014,9 @@ CAILResult iVega::X5000HWLibs::smuFullScreenEvent(void *, UInt32 event) {
             NRed::singleton().writeReg32(MP0_BASE_0 + MP1_SMN_FPS_CNT, 0);
             return kCAILResultOK;
         }
-        default: {
+        default:
             SYSLOG("HWLibs", "Invalid input event to SMU full screen event: %d", event);
             return kCAILResultInvalidParameters;
-        }
     }
 }
 
@@ -1044,10 +1037,9 @@ CAILResult iVega::X5000HWLibs::wrapSmuInitFunctionPointerList(void *instance, SW
             singleton().smuInternalHWInitField(instance) = reinterpret_cast<void *>(smu12InternalHwInit);
             singleton().smuNotifyEventField(instance) = reinterpret_cast<void *>(smu12NotifyEvent);
         } break;
-        default: {
+        default:
             DBGLOG("HWLibs", "Early exiting `smu_init_function_pointer_list` wrap with result %d.", ret);
             return ret;
-        }
     }
 
     if (currentKernelVersion() == MACOS_10_15) {
@@ -1199,10 +1191,9 @@ CAILResult iVega::X5000HWLibs::wrapGcSetFwEntryInfo(void *const instance, const 
         case gcGetHWVersion({9, 3, 0}): {
             gc93GetFwConstants(instance, fwInfo);
         } break;
-        default: {
+        default:
             DBGLOG("HWLibs", "Exiting `gc_set_fw_entry_info` wrap to original logic.");
             return FunctionCast(wrapGcSetFwEntryInfo, singleton().orgGcSetFwEntryInfo)(instance, ipVersion, initData);
-        }
     }
     processGCFWEntries(instance, initData);
     DBGLOG("HWLibs", "Exiting `gc_set_fw_entry_info` wrap.");
@@ -1243,10 +1234,9 @@ bool iVega::X5000HWLibs::getDcn1FwConstants(void *const instance, DMCUFirmwareIn
             setDMCUFWData(instance, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn10_abm_2_3_bin);
             setDMCUFWData(instance, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn10_abm_2_3_bin);
         } break;
-        default: {
+        default:
             SYSLOG("HWLibs", "Invalid ABM Level (0x%X) for DCN 1!", abmLevel);
             return false;
-        }
     }
 
     DBGLOG("HWLibs", "Exiting `get_dcn1_fw_constants` wrap.");
@@ -1280,10 +1270,9 @@ bool iVega::X5000HWLibs::getDcn21FwConstants(void *const instance, DMCUFirmwareI
             setDMCUFWData(instance, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn21_abm_2_4_bin);
             setDMCUFWData(instance, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn21_abm_2_4_bin);
         } break;
-        default: {
+        default:
             SYSLOG("HWLibs", "Invalid ABM Level (0x%X) for DCN 2.1!", abmLevel);
             return false;
-        }
     }
 
     DBGLOG("HWLibs", "Exiting `get_dcn21_fw_constants` wrap.");
@@ -1311,10 +1300,9 @@ CAILResult iVega::X5000HWLibs::wrapSdmaInitFunctionPointerList(void *const insta
             singleton().sdmaGetFwConstantsField(instance) = sdma41GetFWConstants;
             if (verPatch == 2) { singleton().sdmaStartEngineField(instance) = sdma412StartEngine; }
         } break;
-        default: {
+        default:
             return FunctionCast(wrapSdmaInitFunctionPointerList, singleton().orgSdmaInitFunctionPointerList)(instance,
                 verMajor, verMinor, verPatch);
-        }
     }
     return kCAILResultOK;
 }
