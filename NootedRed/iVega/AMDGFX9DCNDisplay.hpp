@@ -8,7 +8,6 @@
 #include <GPUDriversAMD/Accel/HWAlignManager.hpp>
 #include <GPUDriversAMD/Accel/HWDisplay.hpp>
 #include <GPUDriversAMD/FB/FramebufferInfo.hpp>
-#include <PenguinWizardry/ObjectField.hpp>
 #include <PenguinWizardry/RuntimeMC.hpp>
 
 class AMDRadeonX5000_AMDGFX9DCNDisplay : public AMDRadeonX5000_AMDHWDisplay {
