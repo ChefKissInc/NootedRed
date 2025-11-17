@@ -189,9 +189,10 @@ IOReturn Backlight::wrapSetAttributeForConnection(IOService *const framebuffer, 
     const auto percentage = singleton().curBacklightLvl * 100 / singleton().maxBacklightLvl;
 
     if (singleton().supportsAUX) {
-        // TODO: Obtain the actual max brightness for the screen
-        UInt32 auxValue = (singleton().maxOLED * percentage) / 100;
-        singleton().orgDcLinkSetBacklightLevelNits(singleton().embeddedPanelLink, true, auxValue, 15000);
+        const auto auxValue = (singleton().maxBacklightMillinits * percentage) / 100;
+        if (singleton().orgDcLinkSetBacklightLevelNits(singleton().embeddedPanelLink, true, auxValue, 50)) {
+            return kIOReturnSuccess;
+        }
     } else if (currentKernelVersion() >= MACOS_11 && NRed::singleton().getAttributes().isRaven()) {
         // Use the old brightness logic for now on Raven
         // until I can find out the actual problem with DMCU.

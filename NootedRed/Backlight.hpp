@@ -20,7 +20,8 @@ class Backlight {
 
     ObjectField<DPCDSinkExtCaps> dcLinkCapsField {};
     UInt32 curBacklightLvl {0}, maxBacklightLvl {0xFFFF};
-    UInt32 maxOLED {1000 * 512};
+    // TODO: Obtain the actual max brightness for the screen
+    UInt32 maxBacklightMillinits {1000 * 512};
     IONotifier *dispNotif {nullptr};
     void *embeddedPanelLink {nullptr};
     bool supportsAUX {false};
