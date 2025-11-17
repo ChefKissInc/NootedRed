@@ -224,7 +224,7 @@ UInt32 Backlight::wrapDcePanelCntlHwInit(void *panelCntl) {
 }
 
 void *Backlight::wrapLinkCreate(void *data) {
-    void *const ret = FunctionCast(wrapLinkCreate, singleton().orgLinkCreate)(data);
+    auto *const ret = FunctionCast(wrapLinkCreate, singleton().orgLinkCreate)(data);
 
     if (ret == nullptr) { return ret; }
 
@@ -240,11 +240,11 @@ void *Backlight::wrapLinkCreate(void *data) {
         case SIGNAL_TYPE_EDP: {
             if (singleton().embeddedPanelLink == nullptr) {
                 singleton().embeddedPanelLink = ret;
-                auto linkCaps = singleton().dcLinkCapsField(ret);
+                const auto &linkCaps = singleton().dcLinkCapsField(ret);
                 // TODO: PWM should be used for SDR mode on LCD HDR panels,
                 // but AUX for HDR mode. Linux doesn't support HDR properly,
                 // but macOS does, so here's another thing to fix.
-                singleton().supportsAUX = linkCaps.oled;
+                singleton().supportsAUX = linkCaps.oled != 0;
             } else {
                 SYSLOG("Backlight", "Found multiple embedded panel links. This may be a bug. Please report this.");
             }
