@@ -232,6 +232,8 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::fixedSuperGetDisplayInfo(const UInt32 fbI
                 ret = false;
             } break;
         }
+        DBGLOG("GFX9DCNDisplay", "%s hwDepth=%s for bpp %d", __func__, stringifyCRTHWDepth(hwDepth),
+            displayState.pixelInfo.bitsPerPixel);
         hwSpecificInfo.graphDepth = hwDepth;
 
         CRTHWFormat hwFormat;    // bug fix - original code only handled depth 64 and format 10
@@ -250,6 +252,8 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::fixedSuperGetDisplayInfo(const UInt32 fbI
                 ret = false;
             } break;
         }
+        DBGLOG("GFX9DCNDisplay", "%s hwFormat=%s for bpc %d", __func__, stringifyCRTHWFormat(hwFormat),
+            displayState.pixelInfo.bitsPerComponent);
         hwSpecificInfo.graphFormat = hwFormat;
 
         switch (hwDepth) {
@@ -267,7 +271,10 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::fixedSuperGetDisplayInfo(const UInt32 fbI
             } break;
         }
         hwSpecificInfo.pixelMode = getPixelMode(this, hwDepth, hwFormat);
+        DBGLOG("GFX9DCNDisplay", "%s hwSpecificInfo.pixelMode=%s", __func__,
+            stringifyATIPixelMode(hwSpecificInfo.pixelMode));
         hwSpecificInfo.format = getPixelFormat(this, hwSpecificInfo.pixelMode);
+        DBGLOG("GFX9DCNDisplay", "%s hwSpecificInfo.format=%s", __func__, stringifyATIFormat(hwSpecificInfo.format));
         hwSpecificInfo.isInterlaced = isDisplayInterlaceEnabled(this, fbIndex);
         displayState.status.setIsInterlaced(hwSpecificInfo.isInterlaced);
 
@@ -461,6 +468,8 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::init(AMDRadeonX5000_AMDGFX9DCNDisplay *co
 // TODO: maybe handle more of these?
 ATIPixelMode AMDRadeonX5000_AMDGFX9DCNDisplay::getPixelMode(AMDRadeonX5000_AMDGFX9DCNDisplay *const,
     const CRTHWDepth depth, const CRTHWFormat format) {
+    DBGLOG("GFX9DCNDisplay", "%s << (depth: %s format: %s)", __func__, stringifyCRTHWDepth(depth),
+        stringifyCRTHWFormat(format));
     if (depth == CRTHWDepth::DEPTH_8 && format == CRTHWFormat::FORMAT_8) { return ATIPixelMode::C_8; }
     if (depth == CRTHWDepth::DEPTH_16) {
         if (format == CRTHWFormat::FORMAT_8) { return ATIPixelMode::C_1_5_5_5; }
@@ -477,6 +486,7 @@ ATIPixelMode AMDRadeonX5000_AMDGFX9DCNDisplay::getPixelMode(AMDRadeonX5000_AMDGF
 
 ATIFormat AMDRadeonX5000_AMDGFX9DCNDisplay::getPixelFormat(AMDRadeonX5000_AMDGFX9DCNDisplay *const,
     const ATIPixelMode pixelMode) {
+    DBGLOG("GFX9DCNDisplay", "%s << (pixelMode: %s)", __func__, stringifyATIPixelMode(pixelMode));
     switch (pixelMode) {
         case ATIPixelMode::C_8:
             return ATIFormat::BGRA8;

@@ -159,12 +159,36 @@ enum struct CRTHWDepth {
 };
 static_assert(sizeof(CRTHWDepth) == 0x4);
 
+inline const char *stringifyCRTHWDepth(CRTHWDepth v) {
+    switch (v) {
+        case CRTHWDepth::DEPTH_8:
+            return "DEPTH_8";
+        case CRTHWDepth::DEPTH_16:
+            return "DEPTH_1";
+        case CRTHWDepth::DEPTH_32:
+            return "DEPTH_3";
+        case CRTHWDepth::DEPTH_64:
+            return "DEPTH_6";
+    }
+}
+
 enum struct CRTHWFormat {
     FORMAT_8 = 0,
     FORMAT_10 = 1,
     FORMAT_12 = 2,
 };
 static_assert(sizeof(CRTHWFormat) == 0x4);
+
+inline const char *stringifyCRTHWFormat(CRTHWFormat v) {
+    switch (v) {
+        case CRTHWFormat::FORMAT_8:
+            return "FORMAT_8";
+        case CRTHWFormat::FORMAT_10:
+            return "FORMAT_10";
+        case CRTHWFormat::FORMAT_12:
+            return "FORMAT_12";
+    }
+}
 
 struct AMDHWDisplayState {
     class Status {
