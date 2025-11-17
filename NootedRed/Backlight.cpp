@@ -154,13 +154,13 @@ void Backlight::processKext(KernelPatcher &patcher, const size_t id, const mach_
 }
 
 bool Backlight::OnAppleBacklightDisplayLoad(void *const, void *const, IOService *const newService, IONotifier *const) {
-    OSDictionary *params = OSDynamicCast(OSDictionary, newService->getProperty("IODisplayParameters"));
+    auto *const params = OSDynamicCast(OSDictionary, newService->getProperty("IODisplayParameters"));
     if (params == nullptr) { return false; }
 
-    OSDictionary *linearBrightness = OSDynamicCast(OSDictionary, params->getObject("linear-brightness"));
+    auto *const linearBrightness = OSDynamicCast(OSDictionary, params->getObject("linear-brightness"));
     if (linearBrightness == nullptr) { return false; }
 
-    OSNumber *maxBrightness = OSDynamicCast(OSNumber, linearBrightness->getObject("max"));
+    auto *const maxBrightness = OSDynamicCast(OSNumber, linearBrightness->getObject("max"));
     if (maxBrightness == nullptr) { return false; }
 
     if (maxBrightness->unsigned32BitValue() == 0) { return false; }
@@ -172,7 +172,7 @@ bool Backlight::OnAppleBacklightDisplayLoad(void *const, void *const, IOService 
 
 IOReturn Backlight::wrapSetAttributeForConnection(IOService *const framebuffer, const IOIndex connectIndex,
     const IOSelect attribute, const uintptr_t value) {
-    auto ret = FunctionCast(wrapSetAttributeForConnection, singleton().orgSetAttributeForConnection)(framebuffer,
+    const auto ret = FunctionCast(wrapSetAttributeForConnection, singleton().orgSetAttributeForConnection)(framebuffer,
         connectIndex, attribute, value);
     if (attribute != kIOAppleBacklightAttribute) { return ret; }
 
@@ -186,7 +186,7 @@ IOReturn Backlight::wrapSetAttributeForConnection(IOService *const framebuffer, 
 
     if (singleton().maxBacklightLvl == 0) { return kIOReturnInternalError; }
 
-    UInt32 percentage = singleton().curBacklightLvl * 100 / singleton().maxBacklightLvl;
+    const auto percentage = singleton().curBacklightLvl * 100 / singleton().maxBacklightLvl;
 
     if (singleton().supportsAUX) {
         // TODO: Obtain the actual max brightness for the screen
@@ -195,11 +195,11 @@ IOReturn Backlight::wrapSetAttributeForConnection(IOService *const framebuffer, 
     } else if (currentKernelVersion() >= MACOS_11 && NRed::singleton().getAttributes().isRaven()) {
         // Use the old brightness logic for now on Raven
         // until I can find out the actual problem with DMCU.
-        UInt32 pwmValue = percentage >= 100 ? 0x1FF00 : ((percentage * 0xFF) / 100) << 8U;
+        const auto pwmValue = percentage >= 100 ? 0x1FF00 : ((percentage * 0xFF) / 100) << 8U;
         singleton().orgDceDriverSetBacklight(singleton().panelCntlPtr, pwmValue);
         return kIOReturnSuccess;
     } else {
-        UInt32 pwmValue = (percentage * 0xFFFF) / 100;
+        const auto pwmValue = (percentage * 0xFFFF) / 100;
         if (singleton().orgDcLinkSetBacklightLevel(singleton().embeddedPanelLink, pwmValue, 0)) {
             return kIOReturnSuccess;
         }
@@ -210,7 +210,7 @@ IOReturn Backlight::wrapSetAttributeForConnection(IOService *const framebuffer, 
 
 IOReturn Backlight::wrapGetAttributeForConnection(IOService *framebuffer, IOIndex connectIndex, IOSelect attribute,
     uintptr_t *value) {
-    auto ret = FunctionCast(wrapGetAttributeForConnection, singleton().orgGetAttributeForConnection)(framebuffer,
+    const auto ret = FunctionCast(wrapGetAttributeForConnection, singleton().orgGetAttributeForConnection)(framebuffer,
         connectIndex, attribute, value);
     if (attribute != kIOAppleBacklightAttribute) { return ret; }
     *value = singleton().curBacklightLvl;
