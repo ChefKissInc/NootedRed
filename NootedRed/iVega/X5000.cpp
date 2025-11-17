@@ -227,12 +227,12 @@ void iVega::X5000::processKext(KernelPatcher &patcher, const size_t id, const ma
 
 bool iVega::X5000::allocateHWEngines(void *const self) {
     [[clang::suppress]]
-    auto *pm4 = OSObject::operator new(0x340);
+    auto *const pm4 = OSObject::operator new(0x340);
     singleton().pm4EngineConstructor(pm4);
     singleton().pm4EngineField(self) = pm4;
 
     [[clang::suppress]]
-    auto *sdma0 = OSObject::operator new(0x250);
+    auto *const sdma0 = OSObject::operator new(0x250);
     singleton().sdmaEngineConstructor(sdma0);
     singleton().sdma0EngineField(self) = sdma0;
 
