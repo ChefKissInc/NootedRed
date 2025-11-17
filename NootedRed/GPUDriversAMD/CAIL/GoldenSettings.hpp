@@ -1,13 +1,11 @@
+// AMD CAIL HW Block Golden Register Settings
+//
 // Copyright © 2024-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
 #pragma once
 #include <GPUDriversAMD/CAIL/HWBlock.hpp>
 #include <IOKit/IOTypes.h>
-
-//|-------- CAIL HW Block Golden Register Settings --------|//
-//|        Golden Settings are known good defaults         |//
-//|--------------------------------------------------------|//
 
 struct CAILGoldenRegister {
     const UInt32 regOffset;
@@ -32,7 +30,7 @@ static_assert(sizeof(CAILIPGoldenRegisters) == 0x10);
 #define GOLDEN_REGISTERS_TERMINATOR {.hwBlock = kCAILHWBlockUnknown, .entries = nullptr}
 
 struct CAILASICGoldenSettings {
-    // Golden settings for GPUs emulated using the Cadence Palladium Emulation platform. We don't care.
+    // Emulated GPUs through the Cadence Palladium Emulation platform.
     const CAILGoldenRegister *palladiumGoldenSettings;
     const CAILIPGoldenRegisters *goldenSettings;
 };

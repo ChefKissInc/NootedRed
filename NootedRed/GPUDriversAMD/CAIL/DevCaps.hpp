@@ -1,10 +1,10 @@
+// AMD Device Capabilities
+//
 // Copyright © 2024-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
 #pragma once
 #include <GPUDriversAMD/CAIL/GoldenSettings.hpp>
-
-//-------- AMD Device Capabilities --------//
 
 constexpr UInt64 DEVICE_CAP_ENTRY_REV_DONT_CARE = 0xDEADCAFE;
 

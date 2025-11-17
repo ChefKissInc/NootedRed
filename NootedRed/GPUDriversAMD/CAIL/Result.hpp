@@ -1,3 +1,5 @@
+// CAIL Result
+//
 // Copyright © 2024-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
@@ -5,8 +7,6 @@
 #include <GPUDriversAMD/SMU.hpp>
 #include <Headers/kern_util.hpp>
 #include <IOKit/IOTypes.h>
-
-//-------- CAIL Result --------//
 
 enum CAILResult {
     kCAILResultOK = 0,
