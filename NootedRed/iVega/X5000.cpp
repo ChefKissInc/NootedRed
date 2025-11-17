@@ -334,7 +334,7 @@ UInt32 iVega::X5000::wrapHwlConvertChipFamily(void *const self, const UInt32 fam
         if (NRed::singleton().getAttributes().isRenoir()) {
             settings.htileAlignFix = 1;
             settings.applyAliasFix = 1;
-        } else {
+        } else if (!NRed::singleton().getAttributes().isRaven2()) {
             settings.depthPipeXorDisable = 1;
         }
         settings.isDcn1 = 1;    // what to do about this?
