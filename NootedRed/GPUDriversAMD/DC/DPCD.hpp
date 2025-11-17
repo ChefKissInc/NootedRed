@@ -4,4 +4,13 @@
 #pragma once
 #include <IOKit/IOTypes.h>
 
-constexpr UInt8 DC_DPCD_EXT_CAPS_OLED = 0x10;
+union DPCDSinkExtCaps {
+    struct {
+        UInt8 sdrAUXBacklightControl : 1;
+        UInt8 hdrAUXBacklightControl : 1;
+        UInt8 _rsvd : 2;
+        UInt8 oled : 1;
+        UInt8 _rsvd1 : 3;
+    };
+    UInt8 raw;
+};

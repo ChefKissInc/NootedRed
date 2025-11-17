@@ -5,6 +5,7 @@
 // See LICENSE for details.
 
 #pragma once
+#include <GPUDriversAMD/DC/DPCD.hpp>
 #include <Headers/kern_patcher.hpp>
 #include <IOKit/IOService.h>
 #include <IOKit/graphics/IOFramebuffer.h>
@@ -17,7 +18,7 @@ class Backlight {
     using t_DcLinkSetBacklightLevelNits = bool (*)(void *link, bool isHDR, UInt32 backlightMillinits,
         UInt32 transitionTimeMs);
 
-    ObjectField<UInt8> dcLinkCapsField {};
+    ObjectField<DPCDSinkExtCaps> dcLinkCapsField {};
     UInt32 curBacklightLvl {0}, maxBacklightLvl {0xFFFF};
     UInt32 maxOLED {1000 * 512};
     IONotifier *dispNotif {nullptr};

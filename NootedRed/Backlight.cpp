@@ -5,7 +5,6 @@
 // See LICENSE for details.
 
 #include <Backlight.hpp>
-#include <GPUDriversAMD/DC/DPCD.hpp>
 #include <GPUDriversAMD/DC/SignalTypes.hpp>
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_devinfo.hpp>
@@ -224,25 +223,29 @@ UInt32 Backlight::wrapDcePanelCntlHwInit(void *panelCntl) {
 }
 
 void *Backlight::wrapLinkCreate(void *data) {
-    void *ret = FunctionCast(wrapLinkCreate, singleton().orgLinkCreate)(data);
+    void *const ret = FunctionCast(wrapLinkCreate, singleton().orgLinkCreate)(data);
 
     if (ret == nullptr) { return ret; }
 
-    auto signalType = getMember<UInt32>(ret, 0x38);
+    const auto signalType = getMember<UInt32>(ret, 0x38);
     switch (signalType) {
         case SIGNAL_TYPE_LVDS: {
-            if (singleton().embeddedPanelLink != nullptr) {
-                SYSLOG("Backlight", "Found multiple embedded panel links. This may be a bug. Please report this.");
-            } else {
+            if (singleton().embeddedPanelLink == nullptr) {
                 singleton().embeddedPanelLink = ret;
+            } else {
+                SYSLOG("Backlight", "Found multiple embedded panel links. This may be a bug. Please report this.");
             }
         } break;
         case SIGNAL_TYPE_EDP: {
-            if (singleton().embeddedPanelLink != nullptr) {
-                SYSLOG("Backlight", "Found multiple embedded panel links. This may be a bug. Please report this.");
-            } else {
+            if (singleton().embeddedPanelLink == nullptr) {
                 singleton().embeddedPanelLink = ret;
-                singleton().supportsAUX = (singleton().dcLinkCapsField(ret) & DC_DPCD_EXT_CAPS_OLED) != 0;
+                auto linkCaps = singleton().dcLinkCapsField(ret);
+                // TODO: PWM should be used for SDR mode on LCD HDR panels,
+                // but AUX for HDR mode. Linux doesn't support HDR properly,
+                // but macOS does, so here's another thing to fix.
+                singleton().supportsAUX = linkCaps.oled;
+            } else {
+                SYSLOG("Backlight", "Found multiple embedded panel links. This may be a bug. Please report this.");
             }
         } break;
     }
