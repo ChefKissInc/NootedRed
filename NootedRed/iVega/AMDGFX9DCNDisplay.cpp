@@ -4,8 +4,6 @@
 // Copyright © 2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
-#include "IOKit/graphics/IOGraphicsTypes.h"
-#include "mach/vm_param.h"
 #include <GPUDriversAMD/Accel/HWDisplay.hpp>
 #include <GPUDriversAMD/FB/Attributes.hpp>
 #include <GPUDriversAMD/Packet3.hpp>
