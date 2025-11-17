@@ -2,7 +2,6 @@
 // See LICENSE for details.
 
 #pragma once
-#include <IOKit/IOTypes.h>
 
 enum struct VideoMemoryType {
     Unknown = 0,
