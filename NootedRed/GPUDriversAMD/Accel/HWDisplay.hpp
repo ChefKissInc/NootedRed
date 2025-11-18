@@ -164,11 +164,11 @@ inline const char *stringifyCRTHWDepth(CRTHWDepth v) {
         case CRTHWDepth::DEPTH_8:
             return "DEPTH_8";
         case CRTHWDepth::DEPTH_16:
-            return "DEPTH_1";
+            return "DEPTH_16";
         case CRTHWDepth::DEPTH_32:
-            return "DEPTH_3";
+            return "DEPTH_32";
         case CRTHWDepth::DEPTH_64:
-            return "DEPTH_6";
+            return "DEPTH_64";
     }
 }
 
