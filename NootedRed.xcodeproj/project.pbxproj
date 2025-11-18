@@ -296,24 +296,24 @@
 			isa = PBXGroup;
 			children = (
 				407905642CF6F2F5000900FA /* AGDC */,
-				40B9AEC62E991192000F05ED /* GPUDriversAMD */,
-				407068652E966678004E0761 /* Personalities */,
 				4030EB362E37E1D90070E610 /* Firmware */,
+				40B9AEC62E991192000F05ED /* GPUDriversAMD */,
 				4054608A2CDBDF70007865E5 /* Hotfixes */,
 				4035DA602CE3A118002707B3 /* iVega */,
 				4088AFF22E6E097000717265 /* PenguinWizardry */,
+				407068652E966678004E0761 /* Personalities */,
+				40F39FDB2CDD6087007AE975 /* Backlight.hpp */,
 				40F39FDD2CDD60A3007AE975 /* Backlight.cpp */,
+				401B4A012CF43589002B75A6 /* DebugEnabler.hpp */,
 				401B49FE2CF434FC002B75A6 /* DebugEnabler.cpp */,
 				1C748C2E1C21952C0024EED2 /* Info.plist */,
+				407068662E97CD32004E0761 /* Kexts.hpp */,
+				4068B3B92E97D805007B46BB /* Kexts.cpp */,
+				40364DB529B79DFD0070A2B4 /* Model.hpp */,
 				401075922CDA8742002D1CD7 /* Model.cpp */,
+				CEA03B5D20EE825A00BA842F /* NRed.hpp */,
 				CEA03B5C20EE825A00BA842F /* NRed.cpp */,
 				1C748C2C1C21952C0024EED2 /* Plugin.cpp */,
-				4068B3B92E97D805007B46BB /* Kexts.cpp */,
-				40F39FDB2CDD6087007AE975 /* Backlight.hpp */,
-				401B4A012CF43589002B75A6 /* DebugEnabler.hpp */,
-				40364DB529B79DFD0070A2B4 /* Model.hpp */,
-				CEA03B5D20EE825A00BA842F /* NRed.hpp */,
-				407068662E97CD32004E0761 /* Kexts.hpp */,
 			);
 			path = NootedRed;
 			sourceTree = "<group>";
@@ -443,6 +443,8 @@
 				40FD2ACC2E6B6107007C2290 /* EnableIf.hpp */,
 				4068C6782E78A72300E57DE7 /* IsFunction.hpp */,
 				40F327B52E9824DE0030C1BD /* KernelVersion.hpp */,
+				40A02CF72EAE40BD00ECB6DA /* KernelVersion.cpp */,
+				4098C7A92EAE42DA00D9D1E0 /* New.hpp */,
 				4014D9712C74AA5F00FDE986 /* ObjectField.hpp */,
 				4068898A2A229BF600028D22 /* PatcherPlus.hpp */,
 				406889892A229BF600028D22 /* PatcherPlus.cpp */,
@@ -450,8 +452,6 @@
 				4088AFF32E6E099800717265 /* RuntimeMC.cpp */,
 				4091C15D2E3EE39B004577D5 /* RuntimeVFT.hpp */,
 				4039AD352E6CAB2300A693C7 /* TypeName.hpp */,
-				40A02CF72EAE40BD00ECB6DA /* KernelVersion.cpp */,
-				4098C7A92EAE42DA00D9D1E0 /* New.hpp */,
 			);
 			path = PenguinWizardry;
 			sourceTree = "<group>";
@@ -506,14 +506,13 @@
 				40FC5FCE29BF942900367F9D /* ATOMBIOS.hpp */,
 				409127712CE2F76C004DBDB5 /* Driver.hpp */,
 				4091276F2CE2F724004DBDB5 /* Family.hpp */,
+				40FD2ACF2E6B6296007C2290 /* Packet3.hpp */,
 				409127652CE2F2F4004DBDB5 /* PowerPlay.hpp */,
 				409127532CE2CBB2004DBDB5 /* PSP.hpp */,
-				409127732CE2F7B0004DBDB5 /* SMU.hpp */,
-				409127582CE2EBCD004DBDB5 /* VidMemType.hpp */,
-				40FD2ACF2E6B6296007C2290 /* Packet3.hpp */,
+				408B3DDB2CDFA43C00CAE5D2 /* RavenIPOffset.hpp */,
 				408B3DE62CDFA7A200CAE5D2 /* RavenPPSMC.hpp */,
 				408B3DE82CDFA80B00CAE5D2 /* RenoirPPSMC.hpp */,
-				408B3DDB2CDFA43C00CAE5D2 /* RavenIPOffset.hpp */,
+				409127732CE2F7B0004DBDB5 /* SMU.hpp */,
 			);
 			path = GPUDriversAMD;
 			sourceTree = "<group>";
@@ -527,9 +526,9 @@
 				409127782CE2F866004DBDB5 /* HWEngine.hpp */,
 				40B9AEC42E991009000F05ED /* HWInterface.hpp */,
 				40B9AEC82E9911A6000F05ED /* HWInterface.cpp */,
-				40B9AECA2E991298000F05ED /* HWRegisters.hpp */,
 				4009098F2E9932F2006EC1EA /* HWMemory.hpp */,
 				400909912E9938DB006EC1EA /* HWMemory.cpp */,
+				40B9AECA2E991298000F05ED /* HWRegisters.hpp */,
 			);
 			path = Accel;
 			sourceTree = "<group>";
@@ -540,6 +539,7 @@
 				40E812F32CF5A1FB004FDCC7 /* AmdDeviceMemoryManager.hpp */,
 				40B037E02E951D2B0060EAD4 /* Attributes.hpp */,
 				40F059732E6DFEE5009E6D2F /* FramebufferInfo.hpp */,
+				409127582CE2EBCD004DBDB5 /* VidMemType.hpp */,
 			);
 			path = FB;
 			sourceTree = "<group>";
