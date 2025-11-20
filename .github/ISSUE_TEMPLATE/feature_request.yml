@@ -55,15 +55,17 @@ body:
   - type: checkboxes
     attributes:
       label: Issue Submission Terms
-      description: By submitting this feature request, you agree to the following terms
+      description: "By submitting this feature request, I agree to the following terms:"
       options:
-        - label: You have made sure that there are no other requests about this feature.
+        - label: I have made sure that there are no other requests about this feature.
           required: true
-        - label: You do not use configurator software (e.g. OpenCore Auxiliary Tools, OpenCore Configurator).
+        - label: I don't use configurator software (e.g. OpenCore Auxiliary Tools, OpenCore Configurator).
           required: true
-        - label: You have made your own EFI according to the ChefKiss Hackintosh Guide.
+        - label: I've made and using my own EFI according to the ChefKiss Hackintosh Guide.
           required: true
-        - label: You are not using any software that may conflict, including, but not limited to, OpenCore Legacy Patcher, BFixup, WhateverGreen.
+        - label: I'm not using any software that may conflict, including, but not limited to, OpenCore Legacy Patcher, BFixup, WhateverGreen.
           required: true
-        - label: You acknowledge that violation of these terms may result in your issue being closed or your user being blocked from the organisation.
+        - label: I'm not reporting a performance issue whilst using builds of the software that are not marked RELEASE (i.e. DEBUG, RESEARCH_RELEASE).
+          required: true
+        - label: I swear by oath, that I acknowledge that violation of the terms herein will result in my issue being closed or my GitHub user getting blocked from the ChefKiss GitHub organisation for repeated offences, and I shall not thereby bypass any such restriction in any way.
           required: true
