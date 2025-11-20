@@ -1,6 +1,6 @@
 # Change log
 
-## UNRELEASED
+## 0.8.2 (UNRELEASED)
 
 ### Enhancements
 
