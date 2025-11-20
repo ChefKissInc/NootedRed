@@ -7,18 +7,20 @@
 #include <Headers/plugin_start.hpp>
 #include <NRed.hpp>
 
+static const char *bootargOff = "-NRedOff";
 static const char *bootargDebug = "-NRedDebug";
+static const char *bootargBeta = "-NRedBeta";
 
 PluginConfiguration ADDPR(config) {
     xStringify(PRODUCT_NAME),
     parseModuleVersion(xStringify(MODULE_VERSION)),
     LiluAPI::AllowNormal | LiluAPI::AllowInstallerRecovery | LiluAPI::AllowSafeMode,
-    nullptr,
-    0,
+    &bootargOff,
+    1,
     &bootargDebug,
     1,
-    nullptr,
-    0,
+    &bootargBeta,
+    1,
     KernelVersion::Catalina,
     KernelVersion::Tahoe,
     []() { NRed::singleton().init(); },

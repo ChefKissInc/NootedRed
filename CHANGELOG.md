@@ -5,8 +5,9 @@
 ### Enhancements
 
 - Code clean-up.
+- Add back the `-NRedOff`, `-NRedBeta` boot arguments.
 
-### Bug fixes
+### Bug Fixes
 
 - Fix cut off strings in `stringifyCRTHWDepth`.
 
