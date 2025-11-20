@@ -1,6 +1,6 @@
 # Change log
 
-## 0.8.2 (UNRELEASED)
+## v0.8.2 (20/11/2025)
 
 ### Enhancements
 
@@ -13,7 +13,7 @@
 
 **NOTE:** The "Research Release" and "Debug" builds will be way slower and inefficient than the "Release" build. Do not use them if not debugging an issue with the software.
 
-**Full Changelog**: https://github.com/ChefKissInc/NootedRed/compare/v0.8.1...master
+**Full Changelog**: https://github.com/ChefKissInc/NootedRed/compare/v0.8.1...v0.8.2
 
 ## v0.8.1 (17/11/2025)
 
