@@ -899,19 +899,20 @@ CAILResult iVega::X5000HWLibs::smuReset() {
 }
 
 CAILResult iVega::X5000HWLibs::smuPowerUp() {
-    auto res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_ForceGfxContentSave);
-    if (res != kCAILResultOK && res != kCAILResultUnsupported) { return res; }
+    if (const auto res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_ForceGfxContentSave);
+        res != kCAILResultOK && res != kCAILResultUnsupported) {
+        return res;
+    }
+    if (const auto res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerUpSdma); res != kCAILResultOK) { return res; }
+    if (const auto res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerUpGfx); res != kCAILResultOK) { return res; }
 
-    res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerUpSdma);
-    if (res != kCAILResultOK) { return res; }
+    // Should check for driver setting instead, but just commented out instead for now.
+    // if (const auto res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerGateMmHub);
+    //     res != kCAILResultOK && res != kCAILResultUnsupported) {
+    //     return res;
+    // }
 
-    res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerUpGfx);
-    if (res != kCAILResultOK) { return res; }
-
-    res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerGateMmHub);
-    if (res == kCAILResultUnsupported) { return kCAILResultOK; }
-
-    return res;
+    return kCAILResultOK;
 }
 
 CAILResult iVega::X5000HWLibs::smuInternalSwInit(void *instance) {
@@ -920,8 +921,7 @@ CAILResult iVega::X5000HWLibs::smuInternalSwInit(void *instance) {
 }
 
 CAILResult iVega::X5000HWLibs::smu10InternalHwInit(void *) {
-    auto res = smuReset();
-    if (res != kCAILResultOK) { return res; }
+    if (const auto res = smuReset(); res != kCAILResultOK) { return res; }
 
     return smuPowerUp();
 }
@@ -936,16 +936,14 @@ CAILResult iVega::X5000HWLibs::smu12InternalHwInit(void *) {
     }
     if (i >= AMD_MAX_USEC_TIMEOUT) { return kCAILResultInvalidParameters; }
 
-    auto res = smuReset();
-    if (res != kCAILResultOK) { return res; }
+    if (const auto res = smuReset(); res != kCAILResultOK) { return res; }
+    if (const auto res = smuPowerUp(); res != kCAILResultOK) { return res; }
+    if (const auto res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerGateAtHub);
+        res != kCAILResultOK && res != kCAILResultUnsupported) {
+        return res;
+    }
 
-    res = smuPowerUp();
-    if (res != kCAILResultOK) { return res; }
-
-    res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerGateAtHub);
-    if (res == kCAILResultUnsupported) { return kCAILResultOK; }
-
-    return res;
+    return kCAILResultOK;
 }
 
 CAILResult iVega::X5000HWLibs::smuInternalHwExit(void *) { return smuReset(); }
