@@ -926,15 +926,18 @@ CAILResult iVega::X5000HWLibs::smu10InternalHwInit(void *) {
     return smuPowerUp();
 }
 
-CAILResult iVega::X5000HWLibs::smu12InternalHwInit(void *) {
-    UInt32 i = 0;
-    for (; i < AMD_MAX_USEC_TIMEOUT; i++) {
+CAILResult iVega::X5000HWLibs::smu12WaitForFwLoaded() {
+    for (UInt32 i = 0; i < AMD_MAX_USEC_TIMEOUT; i++) {
         if (NRed::singleton().readReg32(MP1_PUBLIC | MP1_FIRMWARE_FLAGS) & MP1_FIRMWARE_FLAGS_INTERRUPTS_ENABLED) {
-            break;
+            return kCAILResultOK;
         }
         IOSleep(1);
     }
-    if (i >= AMD_MAX_USEC_TIMEOUT) { return kCAILResultInvalidParameters; }
+    return kCAILResultInvalidParameters;
+}
+
+CAILResult iVega::X5000HWLibs::smu12InternalHwInit(void *) {
+    if (const auto res = smu12WaitForFwLoaded(); res != kCAILResultOK) { return res; }
 
     if (const auto res = smuReset(); res != kCAILResultOK) { return res; }
     if (const auto res = smuPowerUp(); res != kCAILResultOK) { return res; }

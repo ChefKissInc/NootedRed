@@ -67,6 +67,7 @@ namespace iVega {
         static CAILResult smuPowerUp();
         static CAILResult smuInternalSwInit(void *instance);
         static CAILResult smu10InternalHwInit(void *instance);
+        static CAILResult smu12WaitForFwLoaded();
         static CAILResult smu12InternalHwInit(void *instance);
         static CAILResult smuInternalHwExit(void *instance);
         static CAILResult smuFullAsicReset(void *instance, void *data);
