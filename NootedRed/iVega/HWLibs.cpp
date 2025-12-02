@@ -1021,9 +1021,6 @@ CAILResult iVega::X5000HWLibs::smuFullScreenEvent(void *, UInt32 event) {
 }
 
 CAILResult iVega::X5000HWLibs::wrapSmuInitFunctionPointerList(void *instance, SWIPIPVersion ipVersion) {
-    DBGLOG("HWLibs", "Entered `smu_init_function_pointer_list` wrap (ipVersion: {%d,%d,%d}).", ipVersion.major,
-        ipVersion.minor, ipVersion.patch);
-
     auto ret =
         FunctionCast(wrapSmuInitFunctionPointerList, singleton().orgSmuInitFunctionPointerList)(instance, ipVersion);
     if (ret == kCAILResultOK) { return ret; }
@@ -1038,7 +1035,6 @@ CAILResult iVega::X5000HWLibs::wrapSmuInitFunctionPointerList(void *instance, SW
             singleton().smuNotifyEventField(instance) = reinterpret_cast<void *>(smu12NotifyEvent);
         } break;
         default:
-            DBGLOG("HWLibs", "Early exiting `smu_init_function_pointer_list` wrap with result %d.", ret);
             return ret;
     }
 
@@ -1055,7 +1051,6 @@ CAILResult iVega::X5000HWLibs::wrapSmuInitFunctionPointerList(void *instance, SW
 
     SYSLOG_COND(ADDPR(debugEnabled), "HWLibs", "Ignore error about unsupported SMU HW version.");
 
-    DBGLOG("HWLibs", "Exiting `smu_init_function_pointer_list` wrap.");
     return kCAILResultOK;
 }
 
@@ -1153,7 +1148,6 @@ static constexpr UInt32 gcGetHWVersion(const SWIPIPVersion ipVersion) {
 }
 
 void iVega::X5000HWLibs::processGCFWEntries(void *const instance, void *const initData) {
-    DBGLOG("HWLibs", "Processing GC firmware entries.");
     auto &fwInfo = singleton().gcSwFirmwareField(instance);
     auto &fwEntries = getMember<GCFirmwareEntry[kGCFirmwareTypeCount]>(initData, 0x18);
     for (UInt32 i = 0, swIndex = 0; i < kGCFirmwareTypeCount; i++) {
@@ -1167,8 +1161,6 @@ void iVega::X5000HWLibs::processGCFWEntries(void *const instance, void *const in
         fwEntries[swIndex].payloadOff = (i == kGCFirmwareTypeMEC1 || i == kGCFirmwareTypeMEC2) ? 0x1000 : 0x0;
         fwEntries[swIndex].version = charToInt(fwInfo.entry[i]->version, strlen(fwInfo.entry[i]->version));
         fwEntries[swIndex].field24 = fwInfo.entry[i]->field8;
-        DBGLOG("HWLibs", "Found firmware at %d with ROM size 0x%X, version %d.", i, fwEntries[swIndex].romSize,
-            fwEntries[swIndex].version);
         swIndex += 1;
         if (swIndex == fwInfo.count) { break; }
     }
@@ -1178,7 +1170,6 @@ void iVega::X5000HWLibs::processGCFWEntries(void *const instance, void *const in
 CAILResult iVega::X5000HWLibs::wrapGcSetFwEntryInfo(void *const instance, const SWIPIPVersion ipVersion,
     void *const initData) {
     auto hwVersion = gcGetHWVersion(ipVersion);
-    DBGLOG("HWLibs", "Entered `gc_set_fw_entry_info` (hwVersion: 0x%X).", hwVersion);
     auto *fwInfo = &singleton().gcSwFirmwareField(instance);
     fwInfo->count = 0;
     switch (hwVersion) {
@@ -1192,11 +1183,9 @@ CAILResult iVega::X5000HWLibs::wrapGcSetFwEntryInfo(void *const instance, const 
             gc93GetFwConstants(instance, fwInfo);
         } break;
         default:
-            DBGLOG("HWLibs", "Exiting `gc_set_fw_entry_info` wrap to original logic.");
             return FunctionCast(wrapGcSetFwEntryInfo, singleton().orgGcSetFwEntryInfo)(instance, ipVersion, initData);
     }
     processGCFWEntries(instance, initData);
-    DBGLOG("HWLibs", "Exiting `gc_set_fw_entry_info` wrap.");
     return kCAILResultOK;
 }
 
@@ -1212,15 +1201,12 @@ static void setDMCUFWData(void *const instance, DMCUFirmwareInfo *const fwData, 
 }
 
 bool iVega::X5000HWLibs::getDcn1FwConstants(void *const instance, DMCUFirmwareInfo *const fwData) {
-    DBGLOG("HWLibs", "Entered `get_dcn1_fw_constants` wrap.");
-    auto enablePSPFWLoad = singleton().dmcuEnablePSPFWLoadField(instance);
-    DBGLOG("HWLibs", "EnablePSPFWLoad = 0x%X", enablePSPFWLoad);
+    const auto enablePSPFWLoad = singleton().dmcuEnablePSPFWLoadField(instance);
     if (enablePSPFWLoad == 2) { return true; }
 
     fwData->count = 0;
 
-    auto abmLevel = singleton().dmcuABMLevelField(instance);
-    DBGLOG("HWLibs", "ABM Level = 0x%X", abmLevel);
+    const auto abmLevel = singleton().dmcuABMLevelField(instance);
     switch (abmLevel) {
         case 0: {
             setDMCUFWData(instance, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn10_abm_2_1_bin);
@@ -1239,20 +1225,16 @@ bool iVega::X5000HWLibs::getDcn1FwConstants(void *const instance, DMCUFirmwareIn
             return false;
     }
 
-    DBGLOG("HWLibs", "Exiting `get_dcn1_fw_constants` wrap.");
     return true;
 }
 
 bool iVega::X5000HWLibs::getDcn21FwConstants(void *const instance, DMCUFirmwareInfo *const fwData) {
-    DBGLOG("HWLibs", "Entered `get_dcn21_fw_constants` wrap.");
-    auto enablePSPFWLoad = singleton().dmcuEnablePSPFWLoadField(instance);
-    DBGLOG("HWLibs", "EnablePSPFWLoad = 0x%X", enablePSPFWLoad);
+    const auto enablePSPFWLoad = singleton().dmcuEnablePSPFWLoadField(instance);
     if (enablePSPFWLoad == 2) { return true; }
 
     fwData->count = 0;
 
-    auto abmLevel = singleton().dmcuABMLevelField(instance);
-    DBGLOG("HWLibs", "ABM Level = 0x%X", abmLevel);
+    const auto abmLevel = singleton().dmcuABMLevelField(instance);
     switch (abmLevel) {
         case 0: {
             setDMCUFWData(instance, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn21_abm_2_1_bin);
@@ -1275,7 +1257,6 @@ bool iVega::X5000HWLibs::getDcn21FwConstants(void *const instance, DMCUFirmwareI
             return false;
     }
 
-    DBGLOG("HWLibs", "Exiting `get_dcn21_fw_constants` wrap.");
     return true;
 }
 
