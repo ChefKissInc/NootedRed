@@ -155,7 +155,6 @@
 		4030EB1D2E37E1D90070E610 /* gc_9_2_rlc_srlist_gpm_mem.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_2_rlc_srlist_gpm_mem.bin; sourceTree = "<group>"; };
 		4030EB1E2E37E1D90070E610 /* gc_9_2_rlc_srlist_srm_mem.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_2_rlc_srlist_srm_mem.bin; sourceTree = "<group>"; };
 		4030EB1F2E37E1D90070E610 /* gc_9_2_rlc_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_2_rlc_ucode.bin; sourceTree = "<group>"; };
-		4030EB202E37E1D90070E610 /* gc_9_2_rlc_ucode_a0.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_2_rlc_ucode_a0.bin; sourceTree = "<group>"; };
 		4030EB212E37E1D90070E610 /* gc_9_2_rlcv_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_2_rlcv_ucode.bin; sourceTree = "<group>"; };
 		4030EB222E37E1D90070E610 /* gc_9_3_ce_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_3_ce_ucode.bin; sourceTree = "<group>"; };
 		4030EB232E37E1D90070E610 /* gc_9_3_me_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = gc_9_3_me_ucode.bin; sourceTree = "<group>"; };
@@ -358,7 +357,6 @@
 				4030EB1D2E37E1D90070E610 /* gc_9_2_rlc_srlist_gpm_mem.bin */,
 				4030EB1E2E37E1D90070E610 /* gc_9_2_rlc_srlist_srm_mem.bin */,
 				4030EB1F2E37E1D90070E610 /* gc_9_2_rlc_ucode.bin */,
-				4030EB202E37E1D90070E610 /* gc_9_2_rlc_ucode_a0.bin */,
 				4030EB212E37E1D90070E610 /* gc_9_2_rlcv_ucode.bin */,
 				4030EB222E37E1D90070E610 /* gc_9_3_ce_ucode.bin */,
 				4030EB232E37E1D90070E610 /* gc_9_3_me_ucode.bin */,
