@@ -92,14 +92,16 @@
 		<integer>16908288</integer>
 		<key>SWIP_properties</key>
 		<dict>
-			<key>EnableSwVCNFWLoading</key>
-			<integer>0</integer>
 			<key>EnableVCNDPG</key>
 			<integer>0</integer>
 			<key>EnableswGcFwLoading</key>
 			<integer>0</integer>
 			<key>EnableswSdmaFwLoading</key>
 			<integer>0</integer>
+			<key>EnableSwVCNFWLoading</key>
+			<integer>0</integer>
+			<key>SMU_DisableMmhubPowerGating</key>
+			<integer>1</integer>
 		</dict>
 		<key>cail_properties</key>
 		<dict>
@@ -124,6 +126,8 @@
 			<key>CAIL_DisableRlcSmuPGHandshake</key>
 			<integer>0</integer>
 			<key>CAIL_DisableSAMUPowerGating</key>
+			<integer>0</integer>
+			<key>CAIL_DisableStaticGfxMGPowerGating</key>
 			<integer>0</integer>
 			<key>CAIL_DisableSysClockGating</key>
 			<integer>1</integer>
@@ -226,11 +230,13 @@
 		<dict>
 			<key>EnableSwVCNFWLoading</key>
 			<integer>0</integer>
+			<key>SMU_DisableMmhubPowerGating</key>
+			<integer>1</integer>
 		</dict>
 		<key>cail_properties</key>
 		<dict>
 			<key>CAIL_AsicRevForRlcFw</key>
-			<integer>161</integer>
+			<integer>177</integer>
 			<key>CAIL_DisableGfxCGPowerGating</key>
 			<integer>1</integer>
 		</dict>
@@ -328,14 +334,16 @@
 		<integer>16908288</integer>
 		<key>SWIP_properties</key>
 		<dict>
-			<key>EnableSwVCNFWLoading</key>
-			<integer>0</integer>
 			<key>EnableVCNDPG</key>
 			<integer>1</integer>
 			<key>EnableswGcFwLoading</key>
 			<integer>0</integer>
 			<key>EnableswSdmaFwLoading</key>
 			<integer>0</integer>
+			<key>EnableSwVCNFWLoading</key>
+			<integer>0</integer>
+			<key>SMU_DisableMmhubPowerGating</key>
+			<integer>1</integer>
 		</dict>
 		<key>cail_properties</key>
 		<dict>
@@ -347,6 +355,8 @@
 			<integer>0</integer>
 			<key>CAIL_DisableDynamicGfxMGPowerGating</key>
 			<integer>1</integer>
+			<key>CAIL_DisableGfxCGPowerGating</key>
+			<integer>1</integer>
 			<key>CAIL_DisableGfxClockGating</key>
 			<integer>0</integer>
 			<key>CAIL_DisablePCIConfigAsicReset</key>
@@ -356,6 +366,8 @@
 			<key>CAIL_DisableRlcSmuPGHandshake</key>
 			<integer>0</integer>
 			<key>CAIL_DisableSAMUPowerGating</key>
+			<integer>0</integer>
+			<key>CAIL_DisableStaticGfxMGPowerGating</key>
 			<integer>0</integer>
 			<key>CAIL_DisableSysClockGating</key>
 			<integer>0</integer>

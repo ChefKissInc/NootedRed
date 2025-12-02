@@ -52,14 +52,8 @@
 		</dict>
 		<key>aty_properties</key>
 		<dict>
-			<key>PP_GPUPowerDownEnabled</key>
-			<integer>0</integer>
-			<key>PP_GfxOffControl</key>
+			<key>DalForceSingleDispPipeSplit</key>
 			<integer>1</integer>
-			<key>PP_ToolsLogSpaceSize</key>
-			<integer>524288</integer>
-			<key>PP_WorkLoadPolicyMask</key>
-			<integer>0</integer>
 		</dict>
 	</dict>
 	<dict>
@@ -105,18 +99,14 @@
 			<integer>1</integer>
 			<key>PP_DriverEnableNBDPM</key>
 			<integer>1</integer>
-			<key>PP_GPUPowerDownEnabled</key>
-			<integer>0</integer>
 			<key>PP_GfxOffControl</key>
 			<integer>1</integer>
 			<key>PP_SclkDeepSleepDisable</key>
 			<integer>0</integer>
+			<key>PP_Sumo_DisableGfxPowerGatingInUVD</key>
+			<integer>0</integer>
 			<key>PP_ThermalAutoThrottlingEnable</key>
 			<integer>1</integer>
-			<key>PP_ToolsLogSpaceSize</key>
-			<integer>524288</integer>
-			<key>PP_WorkLoadPolicyMask</key>
-			<integer>0</integer>
 		</dict>
 	</dict>
 	<dict>
@@ -158,14 +148,6 @@
 		<dict>
 			<key>DalForceSingleDispPipeSplit</key>
 			<integer>1</integer>
-			<key>PP_GPUPowerDownEnabled</key>
-			<integer>0</integer>
-			<key>PP_GfxOffControl</key>
-			<integer>1</integer>
-			<key>PP_ToolsLogSpaceSize</key>
-			<integer>524288</integer>
-			<key>PP_WorkLoadPolicyMask</key>
-			<integer>0</integer>
 		</dict>
 	</dict>
 </array>
