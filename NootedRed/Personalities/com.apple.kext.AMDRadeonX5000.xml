@@ -2,8 +2,6 @@
 	<dict>
 		<key>CFBundleIdentifier</key>
 		<string>com.apple.kext.AMDRadeonX5000</string>
-		<key>GPUDCCDisplayable</key>
-		<false/>
 		<key>GPUDebugNullClientMask</key>
 		<integer>0</integer>
 		<key>GpuDebugPolicy</key>
@@ -138,8 +136,6 @@
 	<dict>
 		<key>CFBundleIdentifier</key>
 		<string>com.apple.kext.AMDRadeonX5000</string>
-		<key>GPUDCCDisplayable</key>
-		<false/>
 		<key>GPUDebugNullClientMask</key>
 		<integer>0</integer>
 		<key>GpuDebugPolicy</key>
@@ -244,8 +240,6 @@
 	<dict>
 		<key>CFBundleIdentifier</key>
 		<string>com.apple.kext.AMDRadeonX5000</string>
-		<key>GPUDCCDisplayable</key>
-		<false/>
 		<key>GPUDebugNullClientMask</key>
 		<integer>0</integer>
 		<key>GpuDebugPolicy</key>
