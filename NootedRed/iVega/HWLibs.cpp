@@ -5,12 +5,12 @@
 
 #include <GPUDriversAMD/CAIL/ASICCaps.hpp>
 #include <GPUDriversAMD/CAIL/DevCaps.hpp>
-#include <GPUDriversAMD/CAIL/SWIP/SDMA.hpp>
 #include <GPUDriversAMD/Driver.hpp>
 #include <GPUDriversAMD/Family.hpp>
 #include <GPUDriversAMD/PSP.hpp>
 #include <GPUDriversAMD/RavenIPOffset.hpp>
 #include <GPUDriversAMD/RenoirPPSMC.hpp>
+#include <GPUDriversAMD/TTL/SWIP/SMU.hpp>
 #include <Headers/kern_api.hpp>
 #include <Kexts.hpp>
 #include <NRed.hpp>
@@ -955,62 +955,42 @@ CAILResult iVega::X5000HWLibs::smuFullAsicReset(void *, void *data) {
     return NRed::singleton().sendMsgToSmc(PPSMC_MSG_DeviceDriverReset, getMember<UInt32>(data, 4));
 }
 
-CAILResult iVega::X5000HWLibs::smu10NotifyEvent(void *, void *data) {
-    switch (getMember<UInt32>(data, 4)) {
-        case 0:
-        case 4:
-        case 10:    // Reinitialise
-            return smuPowerUp();
-        case 1:
-        case 2:
-        case 3:
-        case 5:
-        case 6:
-        case 7:
-        case 8:
-        case 9:     // Reset
-        case 11:    // Collect debug info
-            return kCAILResultOK;
-        default:
-            SYSLOG("HWLibs", "Invalid input event to SMU notify event");
-            return kCAILResultInvalidParameters;
+CAILResult iVega::X5000HWLibs::smu10NotifyEvent(void *, TTLEventInput *input) {
+    if (input->arg >= SMU_EVENT_COUNT) {
+        SYSLOG("HWLibs", "Invalid input event to SMU notify event: %d", input->arg);
+        return kCAILResultInvalidParameters;
     }
+
+    if (input->arg == SMU_EVENT_POWER_UP || input->arg == 4 || input->arg == SMU_EVENT_REINITIALISE) {
+        return smuPowerUp();
+    }
+
+    return kCAILResultOK;
 }
 
-CAILResult iVega::X5000HWLibs::smu12NotifyEvent(void *, void *data) {
-    auto event = getMember<UInt32>(data, 4);
-    switch (event) {
-        case 0:
-        case 4:
-        case 8:
-        case 10:    // Reinitialise
-            return NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerUpSdma);
-        case 1:
-        case 2:
-        case 3:
-        case 5:
-        case 6:
-        case 7:
-        case 9:     // Reset
-        case 11:    // Collect debug info
-            return kCAILResultOK;
-        default:
-            SYSLOG("HWLibs", "Invalid input event to SMU notify event: %d", event);
-            return kCAILResultInvalidParameters;
+CAILResult iVega::X5000HWLibs::smu12NotifyEvent(void *, TTLEventInput *input) {
+    if (input->arg >= SMU_EVENT_COUNT) {
+        SYSLOG("HWLibs", "Invalid input event to SMU notify event: %d", input->arg);
+        return kCAILResultInvalidParameters;
     }
+
+    if (input->arg == SMU_EVENT_POWER_UP || input->arg == 4 || input->arg == 8 ||
+        input->arg == SMU_EVENT_REINITIALISE) {
+        return NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerUpSdma);
+    }
+
+    return kCAILResultOK;
 }
 
-CAILResult iVega::X5000HWLibs::smuFullScreenEvent(void *, UInt32 event) {
+CAILResult iVega::X5000HWLibs::smuFullScreenEvent(void *, TTLFullScreenEvent event) {
     switch (event) {
-        case 1: {
+        case TTL_FULLSCREEN_EVENT_INCREASE:
             NRed::singleton().writeReg32(MP0_BASE_0 + MP1_SMN_FPS_CNT,
                 NRed::singleton().readReg32(MP0_BASE_0 + MP1_SMN_FPS_CNT) + 1);
             return kCAILResultOK;
-        }
-        case 2: {
+        case TTL_FULLSCREEN_EVENT_RESET:
             NRed::singleton().writeReg32(MP0_BASE_0 + MP1_SMN_FPS_CNT, 0);
             return kCAILResultOK;
-        }
         default:
             SYSLOG("HWLibs", "Invalid input event to SMU full screen event: %d", event);
             return kCAILResultInvalidParameters;

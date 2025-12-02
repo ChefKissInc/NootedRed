@@ -4,8 +4,6 @@
 // See LICENSE for details.
 
 #pragma once
-#include <GPUDriversAMD/CAIL/COS.hpp>
-#include <GPUDriversAMD/CAIL/Result.hpp>
 #include <Headers/kern_patcher.hpp>
 
 class DebugEnabler {

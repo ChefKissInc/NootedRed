@@ -27,7 +27,6 @@
 		4054608C2CDBDF8C007865E5 /* AGDP.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4054608B2CDBDF89007865E5 /* AGDP.cpp */; };
 		4059A1112E6DEB1200F20858 /* DriverInjector.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4059A1102E6DEB1200F20858 /* DriverInjector.hpp */; };
 		4059A1132E6DECA600F20858 /* DriverInjector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4059A1122E6DECA600F20858 /* DriverInjector.cpp */; };
-		4065564F2D6A0D8200EE1AA3 /* IPVersion.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4065564E2D6A0D8200EE1AA3 /* IPVersion.hpp */; };
 		4068898B2A229BF600028D22 /* PatcherPlus.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 406889892A229BF600028D22 /* PatcherPlus.cpp */; };
 		4068898C2A229BF600028D22 /* PatcherPlus.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4068898A2A229BF600028D22 /* PatcherPlus.hpp */; };
 		4068B3BA2E97D805007B46BB /* Kexts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4068B3B92E97D805007B46BB /* Kexts.cpp */; };
@@ -36,6 +35,13 @@
 		407068672E97CD32004E0761 /* Kexts.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 407068662E97CD32004E0761 /* Kexts.hpp */; };
 		407905672CF6F323000900FA /* VendorInfo.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 407905662CF6F323000900FA /* VendorInfo.hpp */; };
 		4088AFF42E6E099800717265 /* RuntimeMC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4088AFF32E6E099800717265 /* RuntimeMC.cpp */; };
+		408A33AD2EE0C63600DAC6FD /* DMCU.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408A33A42EE0C63600DAC6FD /* DMCU.hpp */; };
+		408A33AE2EE0C63600DAC6FD /* GC.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408A33A52EE0C63600DAC6FD /* GC.hpp */; };
+		408A33AF2EE0C63600DAC6FD /* IPVersion.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408A33A62EE0C63600DAC6FD /* IPVersion.hpp */; };
+		408A33B02EE0C63600DAC6FD /* SDMA.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408A33A72EE0C63600DAC6FD /* SDMA.hpp */; };
+		408A33B12EE0C63600DAC6FD /* SMU.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408A33A82EE0C63600DAC6FD /* SMU.hpp */; };
+		408A33B22EE0C63600DAC6FD /* COS.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408A33AA2EE0C63600DAC6FD /* COS.hpp */; };
+		408A33B32EE0C63600DAC6FD /* Event.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408A33AB2EE0C63600DAC6FD /* Event.hpp */; };
 		408B3DD42CDFA3D200CAE5D2 /* GoldenSettings.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408B3DD32CDFA3CC00CAE5D2 /* GoldenSettings.hpp */; };
 		408B3DD82CDFA42700CAE5D2 /* GC.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408B3DD72CDFA42300CAE5D2 /* GC.hpp */; };
 		408B3DDA2CDFA42E00CAE5D2 /* SDMA0.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408B3DD92CDFA42A00CAE5D2 /* SDMA0.hpp */; };
@@ -53,7 +59,6 @@
 		409127542CE2CBC0004DBDB5 /* PSP.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127532CE2CBB2004DBDB5 /* PSP.hpp */; };
 		409127562CE2CC01004DBDB5 /* ASICCaps.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127552CE2CC01004DBDB5 /* ASICCaps.hpp */; };
 		409127592CE2EBCD004DBDB5 /* VidMemType.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127582CE2EBCD004DBDB5 /* VidMemType.hpp */; };
-		4091275E2CE2ED98004DBDB5 /* COS.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4091275D2CE2ED98004DBDB5 /* COS.hpp */; };
 		409127612CE2EDC6004DBDB5 /* DeviceType.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127602CE2EDC6004DBDB5 /* DeviceType.hpp */; };
 		409127642CE2F2D2004DBDB5 /* ASICCaps.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127632CE2F2D2004DBDB5 /* ASICCaps.hpp */; };
 		409127662CE2F2F4004DBDB5 /* PowerPlay.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127652CE2F2F4004DBDB5 /* PowerPlay.hpp */; };
@@ -69,16 +74,13 @@
 		4091C1642E3FE1C2004577D5 /* HWDisplay.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4091C1632E3FE1BF004577D5 /* HWDisplay.hpp */; };
 		4098C7AA2EAE42DA00D9D1E0 /* New.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4098C7A92EAE42DA00D9D1E0 /* New.hpp */; };
 		409B6F982E8ABB320046F619 /* OSSSYS_4.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409B6F972E8ABB320046F619 /* OSSSYS_4.hpp */; };
-		409D25652D6E577C009B7B68 /* SDMA.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409D25642D6E577C009B7B68 /* SDMA.hpp */; };
 		40A02CF82EAE40BD00ECB6DA /* KernelVersion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40A02CF72EAE40BD00ECB6DA /* KernelVersion.cpp */; };
 		40B037E12E951D2B0060EAD4 /* Attributes.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40B037E02E951D2B0060EAD4 /* Attributes.hpp */; };
 		40B9AEC52E991009000F05ED /* HWInterface.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40B9AEC42E991009000F05ED /* HWInterface.hpp */; };
 		40B9AEC92E9911A6000F05ED /* HWInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40B9AEC82E9911A6000F05ED /* HWInterface.cpp */; };
 		40B9AECC2E991298000F05ED /* HWRegisters.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40B9AECA2E991298000F05ED /* HWRegisters.hpp */; };
 		40B9AECF2E991B1C000F05ED /* HWDisplay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40B9AECE2E991B1C000F05ED /* HWDisplay.cpp */; };
-		40D6E5922D672BE0003E110C /* GC.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40D6E5912D672BE0003E110C /* GC.hpp */; };
 		40E812F42CF5A1FB004FDCC7 /* AmdDeviceMemoryManager.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40E812F32CF5A1FB004FDCC7 /* AmdDeviceMemoryManager.hpp */; };
-		40E8726B2D6BE0480031D919 /* DMCU.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40E8726A2D6BE0480031D919 /* DMCU.hpp */; };
 		40F059742E6DFEE5009E6D2F /* FramebufferInfo.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40F059732E6DFEE5009E6D2F /* FramebufferInfo.hpp */; };
 		40F327B62E9824DE0030C1BD /* KernelVersion.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40F327B52E9824DE0030C1BD /* KernelVersion.hpp */; };
 		40F39FDC2CDD609E007AE975 /* Backlight.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40F39FDB2CDD6087007AE975 /* Backlight.hpp */; };
@@ -183,7 +185,6 @@
 		4054608B2CDBDF89007865E5 /* AGDP.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AGDP.cpp; sourceTree = "<group>"; };
 		4059A1102E6DEB1200F20858 /* DriverInjector.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DriverInjector.hpp; sourceTree = "<group>"; };
 		4059A1122E6DECA600F20858 /* DriverInjector.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DriverInjector.cpp; sourceTree = "<group>"; };
-		4065564E2D6A0D8200EE1AA3 /* IPVersion.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = IPVersion.hpp; sourceTree = "<group>"; };
 		406889892A229BF600028D22 /* PatcherPlus.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = PatcherPlus.cpp; sourceTree = "<group>"; };
 		4068898A2A229BF600028D22 /* PatcherPlus.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PatcherPlus.hpp; sourceTree = "<group>"; };
 		4068B3B92E97D805007B46BB /* Kexts.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Kexts.cpp; sourceTree = "<group>"; };
@@ -191,6 +192,13 @@
 		407068662E97CD32004E0761 /* Kexts.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Kexts.hpp; sourceTree = "<group>"; };
 		407905662CF6F323000900FA /* VendorInfo.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = VendorInfo.hpp; sourceTree = "<group>"; };
 		4088AFF32E6E099800717265 /* RuntimeMC.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = RuntimeMC.cpp; sourceTree = "<group>"; };
+		408A33A42EE0C63600DAC6FD /* DMCU.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DMCU.hpp; sourceTree = "<group>"; };
+		408A33A52EE0C63600DAC6FD /* GC.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = GC.hpp; sourceTree = "<group>"; };
+		408A33A62EE0C63600DAC6FD /* IPVersion.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = IPVersion.hpp; sourceTree = "<group>"; };
+		408A33A72EE0C63600DAC6FD /* SDMA.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SDMA.hpp; sourceTree = "<group>"; };
+		408A33A82EE0C63600DAC6FD /* SMU.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SMU.hpp; sourceTree = "<group>"; };
+		408A33AA2EE0C63600DAC6FD /* COS.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = COS.hpp; sourceTree = "<group>"; };
+		408A33AB2EE0C63600DAC6FD /* Event.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Event.hpp; sourceTree = "<group>"; };
 		408B3DD32CDFA3CC00CAE5D2 /* GoldenSettings.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = GoldenSettings.hpp; sourceTree = "<group>"; };
 		408B3DD72CDFA42300CAE5D2 /* GC.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = GC.hpp; sourceTree = "<group>"; };
 		408B3DD92CDFA42A00CAE5D2 /* SDMA0.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SDMA0.hpp; sourceTree = "<group>"; };
@@ -209,7 +217,6 @@
 		409127532CE2CBB2004DBDB5 /* PSP.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PSP.hpp; sourceTree = "<group>"; };
 		409127552CE2CC01004DBDB5 /* ASICCaps.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ASICCaps.hpp; sourceTree = "<group>"; };
 		409127582CE2EBCD004DBDB5 /* VidMemType.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = VidMemType.hpp; sourceTree = "<group>"; };
-		4091275D2CE2ED98004DBDB5 /* COS.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = COS.hpp; sourceTree = "<group>"; };
 		409127602CE2EDC6004DBDB5 /* DeviceType.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DeviceType.hpp; sourceTree = "<group>"; };
 		409127632CE2F2D2004DBDB5 /* ASICCaps.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ASICCaps.hpp; sourceTree = "<group>"; };
 		409127652CE2F2F4004DBDB5 /* PowerPlay.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PowerPlay.hpp; sourceTree = "<group>"; };
@@ -225,16 +232,13 @@
 		4091C1632E3FE1BF004577D5 /* HWDisplay.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HWDisplay.hpp; sourceTree = "<group>"; };
 		4098C7A92EAE42DA00D9D1E0 /* New.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = New.hpp; sourceTree = "<group>"; };
 		409B6F972E8ABB320046F619 /* OSSSYS_4.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = OSSSYS_4.hpp; sourceTree = "<group>"; };
-		409D25642D6E577C009B7B68 /* SDMA.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SDMA.hpp; sourceTree = "<group>"; };
 		40A02CF72EAE40BD00ECB6DA /* KernelVersion.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = KernelVersion.cpp; sourceTree = "<group>"; };
 		40B037E02E951D2B0060EAD4 /* Attributes.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Attributes.hpp; sourceTree = "<group>"; };
 		40B9AEC42E991009000F05ED /* HWInterface.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HWInterface.hpp; sourceTree = "<group>"; };
 		40B9AEC82E9911A6000F05ED /* HWInterface.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HWInterface.cpp; sourceTree = "<group>"; };
 		40B9AECA2E991298000F05ED /* HWRegisters.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HWRegisters.hpp; sourceTree = "<group>"; };
 		40B9AECE2E991B1C000F05ED /* HWDisplay.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HWDisplay.cpp; sourceTree = "<group>"; };
-		40D6E5912D672BE0003E110C /* GC.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = GC.hpp; sourceTree = "<group>"; };
 		40E812F32CF5A1FB004FDCC7 /* AmdDeviceMemoryManager.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AmdDeviceMemoryManager.hpp; sourceTree = "<group>"; };
-		40E8726A2D6BE0480031D919 /* DMCU.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DMCU.hpp; sourceTree = "<group>"; };
 		40F059732E6DFEE5009E6D2F /* FramebufferInfo.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FramebufferInfo.hpp; sourceTree = "<group>"; };
 		40F327B52E9824DE0030C1BD /* KernelVersion.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = KernelVersion.hpp; sourceTree = "<group>"; };
 		40F39FDB2CDD6087007AE975 /* Backlight.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Backlight.hpp; sourceTree = "<group>"; };
@@ -454,6 +458,28 @@
 			path = PenguinWizardry;
 			sourceTree = "<group>";
 		};
+		408A33A92EE0C63600DAC6FD /* SWIP */ = {
+			isa = PBXGroup;
+			children = (
+				408A33A42EE0C63600DAC6FD /* DMCU.hpp */,
+				408A33A52EE0C63600DAC6FD /* GC.hpp */,
+				408A33A62EE0C63600DAC6FD /* IPVersion.hpp */,
+				408A33A72EE0C63600DAC6FD /* SDMA.hpp */,
+				408A33A82EE0C63600DAC6FD /* SMU.hpp */,
+			);
+			path = SWIP;
+			sourceTree = "<group>";
+		};
+		408A33AC2EE0C63600DAC6FD /* TTL */ = {
+			isa = PBXGroup;
+			children = (
+				408A33A92EE0C63600DAC6FD /* SWIP */,
+				408A33AA2EE0C63600DAC6FD /* COS.hpp */,
+				408A33AB2EE0C63600DAC6FD /* Event.hpp */,
+			);
+			path = TTL;
+			sourceTree = "<group>";
+		};
 		408B3DD62CDFA41A00CAE5D2 /* Regs */ = {
 			isa = PBXGroup;
 			children = (
@@ -472,9 +498,7 @@
 		408B3DEA2CDFB7CE00CAE5D2 /* CAIL */ = {
 			isa = PBXGroup;
 			children = (
-				40E872692D6BE01D0031D919 /* SWIP */,
 				409127552CE2CC01004DBDB5 /* ASICCaps.hpp */,
-				4091275D2CE2ED98004DBDB5 /* COS.hpp */,
 				408B3DEF2CDFB91800CAE5D2 /* DevCaps.hpp */,
 				409127602CE2EDC6004DBDB5 /* DeviceType.hpp */,
 				408B3DED2CDFB80000CAE5D2 /* GoldenSettings.hpp */,
@@ -500,6 +524,7 @@
 				408B3DEA2CDFB7CE00CAE5D2 /* CAIL */,
 				4091276B2CE2F664004DBDB5 /* DC */,
 				40E812F12CF5A1BF004FDCC7 /* FB */,
+				408A33AC2EE0C63600DAC6FD /* TTL */,
 				409127692CE2F5EF004DBDB5 /* AddrLib.hpp */,
 				40FC5FCE29BF942900367F9D /* ATOMBIOS.hpp */,
 				409127712CE2F76C004DBDB5 /* Driver.hpp */,
@@ -542,17 +567,6 @@
 			path = FB;
 			sourceTree = "<group>";
 		};
-		40E872692D6BE01D0031D919 /* SWIP */ = {
-			isa = PBXGroup;
-			children = (
-				40E8726A2D6BE0480031D919 /* DMCU.hpp */,
-				40D6E5912D672BE0003E110C /* GC.hpp */,
-				4065564E2D6A0D8200EE1AA3 /* IPVersion.hpp */,
-				409D25642D6E577C009B7B68 /* SDMA.hpp */,
-			);
-			path = SWIP;
-			sourceTree = "<group>";
-		};
 		CE405EC51E49DD7100AA0B3D /* Library */ = {
 			isa = PBXGroup;
 			children = (
@@ -590,12 +604,10 @@
 				4069F00F29C3A241005293B4 /* ATOMBIOS.hpp in Headers */,
 				409127742CE2F7B0004DBDB5 /* SMU.hpp in Headers */,
 				40FC5FDA29BF995E00367F9D /* X5000.hpp in Headers */,
-				4091275E2CE2ED98004DBDB5 /* COS.hpp in Headers */,
 				409127722CE2F76C004DBDB5 /* Driver.hpp in Headers */,
 				40364DB629B79DFD0070A2B4 /* Model.hpp in Headers */,
 				4014D9722C74AA7000FDE986 /* ObjectField.hpp in Headers */,
 				4091276D2CE2F681004DBDB5 /* SignalTypes.hpp in Headers */,
-				40D6E5922D672BE0003E110C /* GC.hpp in Headers */,
 				CEA03B5F20EE825A00BA842F /* NRed.hpp in Headers */,
 				409127662CE2F2F4004DBDB5 /* PowerPlay.hpp in Headers */,
 				408B3DE52CDFA77800CAE5D2 /* SMUIO.hpp in Headers */,
@@ -630,7 +642,6 @@
 				40B037E12E951D2B0060EAD4 /* Attributes.hpp in Headers */,
 				4068C6792E78A72300E57DE7 /* IsFunction.hpp in Headers */,
 				40F46B1B2E6DF50A00B0E9CE /* AMDGFX9DCN2Display.hpp in Headers */,
-				40E8726B2D6BE0480031D919 /* DMCU.hpp in Headers */,
 				409127612CE2EDC6004DBDB5 /* DeviceType.hpp in Headers */,
 				408B3DDA2CDFA42E00CAE5D2 /* SDMA0.hpp in Headers */,
 				4091C1602E3EE453004577D5 /* RuntimeMC.hpp in Headers */,
@@ -638,8 +649,6 @@
 				409127792CE2F866004DBDB5 /* HWEngine.hpp in Headers */,
 				409127592CE2EBCD004DBDB5 /* VidMemType.hpp in Headers */,
 				408B3DE72CDFA7AC00CAE5D2 /* RavenPPSMC.hpp in Headers */,
-				409D25652D6E577C009B7B68 /* SDMA.hpp in Headers */,
-				4065564F2D6A0D8200EE1AA3 /* IPVersion.hpp in Headers */,
 				409127562CE2CC01004DBDB5 /* ASICCaps.hpp in Headers */,
 				408B3DE02CDFA60E00CAE5D2 /* SMU.hpp in Headers */,
 				408B3DDE2CDFA46B00CAE5D2 /* NBIO.hpp in Headers */,
@@ -655,6 +664,13 @@
 				408B3DD42CDFA3D200CAE5D2 /* GoldenSettings.hpp in Headers */,
 				4035DA622CE3BBBB002707B3 /* DCN2.hpp in Headers */,
 				408B3DF22CDFB98800CAE5D2 /* Result.hpp in Headers */,
+				408A33AD2EE0C63600DAC6FD /* DMCU.hpp in Headers */,
+				408A33AE2EE0C63600DAC6FD /* GC.hpp in Headers */,
+				408A33AF2EE0C63600DAC6FD /* IPVersion.hpp in Headers */,
+				408A33B02EE0C63600DAC6FD /* SDMA.hpp in Headers */,
+				408A33B12EE0C63600DAC6FD /* SMU.hpp in Headers */,
+				408A33B22EE0C63600DAC6FD /* COS.hpp in Headers */,
+				408A33B32EE0C63600DAC6FD /* Event.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
