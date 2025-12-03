@@ -77,8 +77,6 @@
 		<string>IOAccelerator</string>
 		<key>IOPCIMatch</key>
 		<string>0x15DD1002</string>
-		<key>IOPCITunnelCompatible</key>
-		<true/>
 		<key>IOPropertyMatch</key>
 		<dict>
 			<key>LoadAccelerator</key>
@@ -213,8 +211,6 @@
 		<string>IOAccelerator</string>
 		<key>IOPCIMatch</key>
 		<string>0x15D81002</string>
-		<key>IOPCITunnelCompatible</key>
-		<true/>
 		<key>IOPropertyMatch</key>
 		<dict>
 			<key>LoadAccelerator</key>
@@ -319,8 +315,6 @@
 		<string>IOAccelerator</string>
 		<key>IOPCIMatch</key>
 		<string>0x15E71002 0x164C1002 0x16381002 0x16361002</string>
-		<key>IOPCITunnelCompatible</key>
-		<true/>
 		<key>IOPropertyMatch</key>
 		<dict>
 			<key>LoadAccelerator</key>
