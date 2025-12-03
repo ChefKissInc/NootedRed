@@ -31,182 +31,185 @@ static const char ativvaxy_nv_dat[] = {
 static const char atidmcub_rn_dat[] = {
 #embed "../Firmware/atidmcub_rn.dat"
 };
-static const char _dmcu_eram_dcn10_abm_2_1_bin[] = {
+
+static const char _dmcu_eram_dcn10_abm_2_1[] = {
 #embed "../Firmware/dmcu_eram_dcn10_abm_2_1.bin"
 };
-DMCU(0x100, dmcu_eram_dcn10_abm_2_1_bin);
-static const char _dmcu_eram_dcn10_abm_2_2_bin[] = {
+DMCU_FW_CONSTANT(0x100, dmcu_eram_dcn10_abm_2_1);
+static const char _dmcu_eram_dcn10_abm_2_2[] = {
 #embed "../Firmware/dmcu_eram_dcn10_abm_2_2.bin"
 };
-DMCU(0x100, dmcu_eram_dcn10_abm_2_2_bin);
-static const char _dmcu_eram_dcn10_abm_2_3_bin[] = {
+DMCU_FW_CONSTANT(0x100, dmcu_eram_dcn10_abm_2_2);
+static const char _dmcu_eram_dcn10_abm_2_3[] = {
 #embed "../Firmware/dmcu_eram_dcn10_abm_2_3.bin"
 };
-DMCU(0x100, dmcu_eram_dcn10_abm_2_3_bin);
-static const char _dmcu_eram_dcn21_abm_2_1_bin[] = {
+DMCU_FW_CONSTANT(0x100, dmcu_eram_dcn10_abm_2_3);
+static const char _dmcu_eram_dcn21_abm_2_1[] = {
 #embed "../Firmware/dmcu_eram_dcn21_abm_2_1.bin"
 };
-DMCU(0x100, dmcu_eram_dcn21_abm_2_1_bin);
-static const char _dmcu_eram_dcn21_abm_2_2_bin[] = {
+DMCU_FW_CONSTANT(0x100, dmcu_eram_dcn21_abm_2_1);
+static const char _dmcu_eram_dcn21_abm_2_2[] = {
 #embed "../Firmware/dmcu_eram_dcn21_abm_2_2.bin"
 };
-DMCU(0x100, dmcu_eram_dcn21_abm_2_2_bin);
-static const char _dmcu_eram_dcn21_abm_2_3_bin[] = {
+DMCU_FW_CONSTANT(0x100, dmcu_eram_dcn21_abm_2_2);
+static const char _dmcu_eram_dcn21_abm_2_3[] = {
 #embed "../Firmware/dmcu_eram_dcn21_abm_2_3.bin"
 };
-DMCU(0x100, dmcu_eram_dcn21_abm_2_3_bin);
-static const char _dmcu_eram_dcn21_abm_2_4_bin[] = {
+DMCU_FW_CONSTANT(0x100, dmcu_eram_dcn21_abm_2_3);
+static const char _dmcu_eram_dcn21_abm_2_4[] = {
 #embed "../Firmware/dmcu_eram_dcn21_abm_2_4.bin"
 };
-DMCU(0x100, dmcu_eram_dcn21_abm_2_4_bin);
-static const char _dmcu_intvectors_dcn10_abm_2_1_bin[] = {
+DMCU_FW_CONSTANT(0x100, dmcu_eram_dcn21_abm_2_4);
+static const char _dmcu_intvectors_dcn10_abm_2_1[] = {
 #embed "../Firmware/dmcu_intvectors_dcn10_abm_2_1.bin"
 };
-DMCU(0xFFE0, dmcu_intvectors_dcn10_abm_2_1_bin);
-static const char _dmcu_intvectors_dcn10_abm_2_2_bin[] = {
+DMCU_FW_CONSTANT(0xFFE0, dmcu_intvectors_dcn10_abm_2_1);
+static const char _dmcu_intvectors_dcn10_abm_2_2[] = {
 #embed "../Firmware/dmcu_intvectors_dcn10_abm_2_2.bin"
 };
-DMCU(0xFFE0, dmcu_intvectors_dcn10_abm_2_2_bin);
-static const char _dmcu_intvectors_dcn10_abm_2_3_bin[] = {
+DMCU_FW_CONSTANT(0xFFE0, dmcu_intvectors_dcn10_abm_2_2);
+static const char _dmcu_intvectors_dcn10_abm_2_3[] = {
 #embed "../Firmware/dmcu_intvectors_dcn10_abm_2_3.bin"
 };
-DMCU(0xFFE0, dmcu_intvectors_dcn10_abm_2_3_bin);
-static const char _dmcu_intvectors_dcn21_abm_2_1_bin[] = {
+DMCU_FW_CONSTANT(0xFFE0, dmcu_intvectors_dcn10_abm_2_3);
+static const char _dmcu_intvectors_dcn21_abm_2_1[] = {
 #embed "../Firmware/dmcu_intvectors_dcn21_abm_2_1.bin"
 };
-DMCU(0xFFE0, dmcu_intvectors_dcn21_abm_2_1_bin);
-static const char _dmcu_intvectors_dcn21_abm_2_2_bin[] = {
+DMCU_FW_CONSTANT(0xFFE0, dmcu_intvectors_dcn21_abm_2_1);
+static const char _dmcu_intvectors_dcn21_abm_2_2[] = {
 #embed "../Firmware/dmcu_intvectors_dcn21_abm_2_2.bin"
 };
-DMCU(0xFFE0, dmcu_intvectors_dcn21_abm_2_2_bin);
-static const char _dmcu_intvectors_dcn21_abm_2_3_bin[] = {
+DMCU_FW_CONSTANT(0xFFE0, dmcu_intvectors_dcn21_abm_2_2);
+static const char _dmcu_intvectors_dcn21_abm_2_3[] = {
 #embed "../Firmware/dmcu_intvectors_dcn21_abm_2_3.bin"
 };
-DMCU(0xFFE0, dmcu_intvectors_dcn21_abm_2_3_bin);
-static const char _dmcu_intvectors_dcn21_abm_2_4_bin[] = {
+DMCU_FW_CONSTANT(0xFFE0, dmcu_intvectors_dcn21_abm_2_3);
+static const char _dmcu_intvectors_dcn21_abm_2_4[] = {
 #embed "../Firmware/dmcu_intvectors_dcn21_abm_2_4.bin"
 };
-DMCU(0xFFE0, dmcu_intvectors_dcn21_abm_2_4_bin);
-static const char _gc_9_1_ce_ucode_bin[] = {
+DMCU_FW_CONSTANT(0xFFE0, dmcu_intvectors_dcn21_abm_2_4);
+static const char _gc_9_1_ce_ucode[] = {
 #embed "../Firmware/gc_9_1_ce_ucode.bin"
 };
-GC("#80", 0x35, 0x800, 0x60, 0x1, 0x0, gc_9_1_ce_ucode_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_1_me_ucode_bin[] = {
+
+GC_FW_CONSTANT("#80", 0x35, 0x800, 0x60, 0x1, 0x0, gc_9_1_ce_ucode, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_1_me_ucode[] = {
 #embed "../Firmware/gc_9_1_me_ucode.bin"
 };
-GC("#166", 0x35, 0x1000, 0x60, 0x1, 0x0, gc_9_1_me_ucode_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_1_mec_jt_ucode_bin[] = {
+GC_FW_CONSTANT("#166", 0x35, 0x1000, 0x60, 0x1, 0x0, gc_9_1_me_ucode, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_1_mec_jt_ucode[] = {
 #embed "../Firmware/gc_9_1_mec_jt_ucode.bin"
 };
-GC("#469", 0x35, 0x10000, 0x0, 0x1, 0x0, gc_9_1_mec_jt_ucode_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_1_mec_ucode_bin[] = {
+GC_FW_CONSTANT("#469", 0x35, 0x10000, 0x0, 0x1, 0x0, gc_9_1_mec_jt_ucode, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_1_mec_ucode[] = {
 #embed "../Firmware/gc_9_1_mec_ucode.bin"
 };
-GC("#469", 0x35, 0x0, 0x0, 0x0, 0x0, gc_9_1_mec_ucode_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_1_pfp_ucode_bin[] = {
+GC_FW_CONSTANT("#469", 0x35, 0x0, 0x0, 0x0, 0x0, gc_9_1_mec_ucode, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_1_pfp_ucode[] = {
 #embed "../Firmware/gc_9_1_pfp_ucode.bin"
 };
-GC("#194", 0x35, 0x1400, 0x60, 0x1, 0x0, gc_9_1_pfp_ucode_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_1_rlc_srlist_cntl_bin[] = {
+GC_FW_CONSTANT("#194", 0x35, 0x1400, 0x60, 0x1, 0x0, gc_9_1_pfp_ucode, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_1_rlc_srlist_cntl[] = {
 #embed "../Firmware/gc_9_1_rlc_srlist_cntl.bin"
 };
-GC("#1", 0x1, 0x0, 0x0, 0x1, 0x0, gc_9_1_rlc_srlist_cntl_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_1_rlc_srlist_gpm_mem_bin[] = {
+GC_FW_CONSTANT("#1", 0x1, 0x0, 0x0, 0x1, 0x0, gc_9_1_rlc_srlist_cntl, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_1_rlc_srlist_gpm_mem[] = {
 #embed "../Firmware/gc_9_1_rlc_srlist_gpm_mem.bin"
 };
-GC("#1", 0x1, 0x0, 0x0, 0x1, 0x0, gc_9_1_rlc_srlist_gpm_mem_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_1_rlc_srlist_srm_mem_bin[] = {
+GC_FW_CONSTANT("#1", 0x1, 0x0, 0x0, 0x1, 0x0, gc_9_1_rlc_srlist_gpm_mem, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_1_rlc_srlist_srm_mem[] = {
 #embed "../Firmware/gc_9_1_rlc_srlist_srm_mem.bin"
 };
-GC("#1", 0x1, 0x0, 0x0, 0x1, 0x0, gc_9_1_rlc_srlist_srm_mem_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_1_rlc_ucode_bin[] = {
+GC_FW_CONSTANT("#1", 0x1, 0x0, 0x0, 0x1, 0x0, gc_9_1_rlc_srlist_srm_mem, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_1_rlc_ucode[] = {
 #embed "../Firmware/gc_9_1_rlc_ucode.bin"
 };
-GC("#110", 0x1, 0x1000, 0x0, 0x1, 0x0, gc_9_1_rlc_ucode_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_1_rlc_ucode_a0_bin[] = {
+GC_FW_CONSTANT("#110", 0x1, 0x1000, 0x0, 0x1, 0x0, gc_9_1_rlc_ucode, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_1_rlc_ucode_a0[] = {
 #embed "../Firmware/gc_9_1_rlc_ucode_a0.bin"
 };
-GC("#568", 0x1, 0x1000, 0x0, 0x1, 0x0, gc_9_1_rlc_ucode_a0_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_1_rlcv_ucode_bin[] = {
+GC_FW_CONSTANT("#568", 0x1, 0x1000, 0x0, 0x1, 0x0, gc_9_1_rlc_ucode_a0, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_1_rlcv_ucode[] = {
 #embed "../Firmware/gc_9_1_rlcv_ucode.bin"
 };
-GC("#28", 0x1, 0x800, 0x0, 0x1, 0x0, gc_9_1_rlcv_ucode_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_2_ce_ucode_bin[] = {
+GC_FW_CONSTANT("#28", 0x1, 0x800, 0x0, 0x1, 0x0, gc_9_1_rlcv_ucode, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_2_ce_ucode[] = {
 #embed "../Firmware/gc_9_2_ce_ucode.bin"
 };
-GC("#80", 0x35, 0x800, 0x60, 0x1, 0x0, gc_9_2_ce_ucode_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_2_me_ucode_bin[] = {
+GC_FW_CONSTANT("#80", 0x35, 0x800, 0x60, 0x1, 0x0, gc_9_2_ce_ucode, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_2_me_ucode[] = {
 #embed "../Firmware/gc_9_2_me_ucode.bin"
 };
-GC("#166", 0x35, 0x1000, 0x60, 0x1, 0x0, gc_9_2_me_ucode_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_2_mec_jt_ucode_bin[] = {
+GC_FW_CONSTANT("#166", 0x35, 0x1000, 0x60, 0x1, 0x0, gc_9_2_me_ucode, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_2_mec_jt_ucode[] = {
 #embed "../Firmware/gc_9_2_mec_jt_ucode.bin"
 };
-GC("#469", 0x35, 0x0, 0x0, 0x1, 0x0, gc_9_2_mec_jt_ucode_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_2_mec_ucode_bin[] = {
+GC_FW_CONSTANT("#469", 0x35, 0x0, 0x0, 0x1, 0x0, gc_9_2_mec_jt_ucode, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_2_mec_ucode[] = {
 #embed "../Firmware/gc_9_2_mec_ucode.bin"
 };
-GC("#469", 0x35, 0x0, 0x0, 0x0, 0x0, gc_9_2_mec_ucode_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_2_pfp_ucode_bin[] = {
+GC_FW_CONSTANT("#469", 0x35, 0x0, 0x0, 0x0, 0x0, gc_9_2_mec_ucode, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_2_pfp_ucode[] = {
 #embed "../Firmware/gc_9_2_pfp_ucode.bin"
 };
-GC("#194", 0x35, 0x1400, 0x60, 0x1, 0x0, gc_9_2_pfp_ucode_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_2_rlc_srlist_cntl_bin[] = {
+GC_FW_CONSTANT("#194", 0x35, 0x1400, 0x60, 0x1, 0x0, gc_9_2_pfp_ucode, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_2_rlc_srlist_cntl[] = {
 #embed "../Firmware/gc_9_2_rlc_srlist_cntl.bin"
 };
-GC("#1", 0x1, 0x0, 0x0, 0x1, 0x0, gc_9_2_rlc_srlist_cntl_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_2_rlc_srlist_gpm_mem_bin[] = {
+GC_FW_CONSTANT("#1", 0x1, 0x0, 0x0, 0x1, 0x0, gc_9_2_rlc_srlist_cntl, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_2_rlc_srlist_gpm_mem[] = {
 #embed "../Firmware/gc_9_2_rlc_srlist_gpm_mem.bin"
 };
-GC("#1", 0x1, 0x0, 0x0, 0x1, 0x0, gc_9_2_rlc_srlist_gpm_mem_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_2_rlc_srlist_srm_mem_bin[] = {
+GC_FW_CONSTANT("#1", 0x1, 0x0, 0x0, 0x1, 0x0, gc_9_2_rlc_srlist_gpm_mem, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_2_rlc_srlist_srm_mem[] = {
 #embed "../Firmware/gc_9_2_rlc_srlist_srm_mem.bin"
 };
-GC("#1", 0x1, 0x0, 0x0, 0x1, 0x0, gc_9_2_rlc_srlist_srm_mem_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_2_rlc_ucode_bin[] = {
+GC_FW_CONSTANT("#1", 0x1, 0x0, 0x0, 0x1, 0x0, gc_9_2_rlc_srlist_srm_mem, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_2_rlc_ucode[] = {
 #embed "../Firmware/gc_9_2_rlc_ucode.bin"
 };
-GC("#73", 0x1, 0x1000, 0x0, 0x1, 0x0, gc_9_2_rlc_ucode_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_2_rlcv_ucode_bin[] = {
+GC_FW_CONSTANT("#73", 0x1, 0x1000, 0x0, 0x1, 0x0, gc_9_2_rlc_ucode, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_2_rlcv_ucode[] = {
 #embed "../Firmware/gc_9_2_rlcv_ucode.bin"
 };
-GC("#28", 0x1, 0x800, 0x0, 0x1, 0x0, gc_9_2_rlcv_ucode_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_3_ce_ucode_bin[] = {
+GC_FW_CONSTANT("#28", 0x1, 0x800, 0x0, 0x1, 0x0, gc_9_2_rlcv_ucode, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_3_ce_ucode[] = {
 #embed "../Firmware/gc_9_3_ce_ucode.bin"
 };
-GC("#80", 0x35, 0x800, 0x60, 0x1, 0x0, gc_9_3_ce_ucode_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_3_me_ucode_bin[] = {
+GC_FW_CONSTANT("#80", 0x35, 0x800, 0x60, 0x1, 0x0, gc_9_3_ce_ucode, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_3_me_ucode[] = {
 #embed "../Firmware/gc_9_3_me_ucode.bin"
 };
-GC("#166", 0x35, 0x1000, 0x60, 0x1, 0x0, gc_9_3_me_ucode_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_3_mec_jt_ucode_bin[] = {
+GC_FW_CONSTANT("#166", 0x35, 0x1000, 0x60, 0x1, 0x0, gc_9_3_me_ucode, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_3_mec_jt_ucode[] = {
 #embed "../Firmware/gc_9_3_mec_jt_ucode.bin"
 };
-GC("#469", 0x35, 0x10000, 0x0, 0x1, 0x0, gc_9_3_mec_jt_ucode_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_3_mec_ucode_bin[] = {
+GC_FW_CONSTANT("#469", 0x35, 0x10000, 0x0, 0x1, 0x0, gc_9_3_mec_jt_ucode, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_3_mec_ucode[] = {
 #embed "../Firmware/gc_9_3_mec_ucode.bin"
 };
-GC("#469", 0x35, 0x0, 0x0, 0x0, 0x0, gc_9_3_mec_ucode_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_3_pfp_ucode_bin[] = {
+GC_FW_CONSTANT("#469", 0x35, 0x0, 0x0, 0x0, 0x0, gc_9_3_mec_ucode, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_3_pfp_ucode[] = {
 #embed "../Firmware/gc_9_3_pfp_ucode.bin"
 };
-GC("#194", 0x35, 0x1400, 0x60, 0x1, 0x0, gc_9_3_pfp_ucode_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_3_rlc_srlist_cntl_bin[] = {
+GC_FW_CONSTANT("#194", 0x35, 0x1400, 0x60, 0x1, 0x0, gc_9_3_pfp_ucode, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_3_rlc_srlist_cntl[] = {
 #embed "../Firmware/gc_9_3_rlc_srlist_cntl.bin"
 };
-GC("#1", 0x1, 0x0, 0x0, 0x1, 0x0, gc_9_3_rlc_srlist_cntl_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_3_rlc_srlist_gpm_mem_bin[] = {
+GC_FW_CONSTANT("#1", 0x1, 0x0, 0x0, 0x1, 0x0, gc_9_3_rlc_srlist_cntl, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_3_rlc_srlist_gpm_mem[] = {
 #embed "../Firmware/gc_9_3_rlc_srlist_gpm_mem.bin"
 };
-GC("#1", 0x1, 0x0, 0x0, 0x1, 0x0, gc_9_3_rlc_srlist_gpm_mem_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_3_rlc_srlist_srm_mem_bin[] = {
+GC_FW_CONSTANT("#1", 0x1, 0x0, 0x0, 0x1, 0x0, gc_9_3_rlc_srlist_gpm_mem, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_3_rlc_srlist_srm_mem[] = {
 #embed "../Firmware/gc_9_3_rlc_srlist_srm_mem.bin"
 };
-GC("#1", 0x1, 0x0, 0x0, 0x1, 0x0, gc_9_3_rlc_srlist_srm_mem_bin, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_3_rlc_ucode_bin[] = {
+GC_FW_CONSTANT("#1", 0x1, 0x0, 0x0, 0x1, 0x0, gc_9_3_rlc_srlist_srm_mem, 0x0, 0x0, 0x0, 0x0);
+static const char _gc_9_3_rlc_ucode[] = {
 #embed "../Firmware/gc_9_3_rlc_ucode.bin"
 };
-GC("#60", 0x1, 0x1000, 0x0, 0x1, 0x0, gc_9_3_rlc_ucode_bin, 0x0, 0x0, 0x0, 0x0);
+GC_FW_CONSTANT("#60", 0x1, 0x1000, 0x0, 0x1, 0x0, gc_9_3_rlc_ucode, 0x0, 0x0, 0x0, 0x0);
+
 static const char psp_asd_bin[] = {
 #embed "../Firmware/psp_asd.bin"
 };
@@ -222,10 +225,11 @@ static const char psp_fp_bin[] = {
 static const char psp_hdcp_bin[] = {
 #embed "../Firmware/psp_hdcp.bin"
 };
-static const char _sdma_4_1_ucode_bin[] = {
+
+static const char _sdma_4_1_ucode[] = {
 #embed "../Firmware/sdma_4_1_ucode.bin"
 };
-SDMA("40", sdma_4_1_ucode_bin, 0x29, 0x0, 0x0);
+SDMA_FW_CONSTANT("40", sdma_4_1_ucode, 0x29, 0x0, 0x0);
 
 static const UInt8 kDeviceTypeTablePattern[] = {0x60, 0x68, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x61, 0x68, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x62, 0x68, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x63, 0x68, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1044,55 +1048,55 @@ static inline void setGCFWData(void *const instance, GCFirmwareInfo *const fwDat
 }
 
 void iVega::X5000HWLibs::gc91GetFwConstants(void *const instance, GCFirmwareInfo *const fwData) {
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListCntl, &gc_9_1_rlc_srlist_cntl_bin);
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListGPMMem, &gc_9_1_rlc_srlist_gpm_mem_bin);
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListSRMMem, &gc_9_1_rlc_srlist_srm_mem_bin);
+    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListCntl, &gc_9_1_rlc_srlist_cntl);
+    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListGPMMem, &gc_9_1_rlc_srlist_gpm_mem);
+    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListSRMMem, &gc_9_1_rlc_srlist_srm_mem);
     // TODO: Replace this with `gc_read_config_setting_uint32` on `AsicRevForRlcFw`.
     setGCFWData(instance, fwData, kGCFirmwareTypeRLC,
         !NRed::singleton().getAttributes().isPicasso() ||
                 ((NRed::singleton().getPciRevision() >= 0xC8 && NRed::singleton().getPciRevision() <= 0xCC) ||
                     (NRed::singleton().getPciRevision() >= 0xD8 && NRed::singleton().getPciRevision() <= 0xDC)) ?
-            &gc_9_1_rlc_ucode_a0_bin :
-            &gc_9_1_rlc_ucode_bin);
-    setGCFWData(instance, fwData, kGCFirmwareTypeME, &gc_9_1_me_ucode_bin);
-    setGCFWData(instance, fwData, kGCFirmwareTypeCE, &gc_9_1_ce_ucode_bin);
-    setGCFWData(instance, fwData, kGCFirmwareTypePFP, &gc_9_1_pfp_ucode_bin);
-    setGCFWData(instance, fwData, kGCFirmwareTypeMEC1, &gc_9_1_mec_ucode_bin);
-    setGCFWData(instance, fwData, kGCFirmwareTypeMECJT1, &gc_9_1_mec_jt_ucode_bin);
+            &gc_9_1_rlc_ucode_a0 :
+            &gc_9_1_rlc_ucode);
+    setGCFWData(instance, fwData, kGCFirmwareTypeME, &gc_9_1_me_ucode);
+    setGCFWData(instance, fwData, kGCFirmwareTypeCE, &gc_9_1_ce_ucode);
+    setGCFWData(instance, fwData, kGCFirmwareTypePFP, &gc_9_1_pfp_ucode);
+    setGCFWData(instance, fwData, kGCFirmwareTypeMEC1, &gc_9_1_mec_ucode);
+    setGCFWData(instance, fwData, kGCFirmwareTypeMECJT1, &gc_9_1_mec_jt_ucode);
     // AMD: Yes, reuse that shit! Why would we waste a couple of bytes? It's not like we're wasting hundreds of MBs
     // already from the duplicate firmware files.
     fwData->entry[kGCFirmwareTypeMECJT2] = fwData->entry[kGCFirmwareTypeMECJT1];
     fwData->handle[kGCFirmwareTypeMECJT2] = fwData->handle[kGCFirmwareTypeMECJT1];
     fwData->count += 1;
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLCV, &gc_9_1_rlcv_ucode_bin);
+    setGCFWData(instance, fwData, kGCFirmwareTypeRLCV, &gc_9_1_rlcv_ucode);
 }
 
 void iVega::X5000HWLibs::gc92GetFwConstants(void *instance, GCFirmwareInfo *fwData) {
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListCntl, &gc_9_2_rlc_srlist_cntl_bin);
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListGPMMem, &gc_9_2_rlc_srlist_gpm_mem_bin);
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListSRMMem, &gc_9_2_rlc_srlist_srm_mem_bin);
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLC, &gc_9_2_rlc_ucode_bin);
-    setGCFWData(instance, fwData, kGCFirmwareTypeME, &gc_9_2_me_ucode_bin);
-    setGCFWData(instance, fwData, kGCFirmwareTypeCE, &gc_9_2_ce_ucode_bin);
-    setGCFWData(instance, fwData, kGCFirmwareTypePFP, &gc_9_2_pfp_ucode_bin);
-    setGCFWData(instance, fwData, kGCFirmwareTypeMEC1, &gc_9_2_mec_ucode_bin);
-    setGCFWData(instance, fwData, kGCFirmwareTypeMECJT1, &gc_9_2_mec_jt_ucode_bin);
+    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListCntl, &gc_9_2_rlc_srlist_cntl);
+    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListGPMMem, &gc_9_2_rlc_srlist_gpm_mem);
+    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListSRMMem, &gc_9_2_rlc_srlist_srm_mem);
+    setGCFWData(instance, fwData, kGCFirmwareTypeRLC, &gc_9_2_rlc_ucode);
+    setGCFWData(instance, fwData, kGCFirmwareTypeME, &gc_9_2_me_ucode);
+    setGCFWData(instance, fwData, kGCFirmwareTypeCE, &gc_9_2_ce_ucode);
+    setGCFWData(instance, fwData, kGCFirmwareTypePFP, &gc_9_2_pfp_ucode);
+    setGCFWData(instance, fwData, kGCFirmwareTypeMEC1, &gc_9_2_mec_ucode);
+    setGCFWData(instance, fwData, kGCFirmwareTypeMECJT1, &gc_9_2_mec_jt_ucode);
     fwData->entry[kGCFirmwareTypeMECJT2] = fwData->entry[kGCFirmwareTypeMECJT1];
     fwData->handle[kGCFirmwareTypeMECJT2] = fwData->handle[kGCFirmwareTypeMECJT1];
     fwData->count += 1;
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLCV, &gc_9_2_rlcv_ucode_bin);
+    setGCFWData(instance, fwData, kGCFirmwareTypeRLCV, &gc_9_2_rlcv_ucode);
 }
 
 void iVega::X5000HWLibs::gc93GetFwConstants(void *instance, GCFirmwareInfo *fwData) {
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListCntl, &gc_9_3_rlc_srlist_cntl_bin);
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListGPMMem, &gc_9_3_rlc_srlist_gpm_mem_bin);
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListSRMMem, &gc_9_3_rlc_srlist_srm_mem_bin);
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLC, &gc_9_3_rlc_ucode_bin);
-    setGCFWData(instance, fwData, kGCFirmwareTypeME, &gc_9_3_me_ucode_bin);
-    setGCFWData(instance, fwData, kGCFirmwareTypeCE, &gc_9_3_ce_ucode_bin);
-    setGCFWData(instance, fwData, kGCFirmwareTypePFP, &gc_9_3_pfp_ucode_bin);
-    setGCFWData(instance, fwData, kGCFirmwareTypeMEC1, &gc_9_3_mec_ucode_bin);
-    setGCFWData(instance, fwData, kGCFirmwareTypeMECJT1, &gc_9_3_mec_jt_ucode_bin);
+    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListCntl, &gc_9_3_rlc_srlist_cntl);
+    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListGPMMem, &gc_9_3_rlc_srlist_gpm_mem);
+    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListSRMMem, &gc_9_3_rlc_srlist_srm_mem);
+    setGCFWData(instance, fwData, kGCFirmwareTypeRLC, &gc_9_3_rlc_ucode);
+    setGCFWData(instance, fwData, kGCFirmwareTypeME, &gc_9_3_me_ucode);
+    setGCFWData(instance, fwData, kGCFirmwareTypeCE, &gc_9_3_ce_ucode);
+    setGCFWData(instance, fwData, kGCFirmwareTypePFP, &gc_9_3_pfp_ucode);
+    setGCFWData(instance, fwData, kGCFirmwareTypeMEC1, &gc_9_3_mec_ucode);
+    setGCFWData(instance, fwData, kGCFirmwareTypeMECJT1, &gc_9_3_mec_jt_ucode);
 }
 
 // Port of `*_char_to_int` from HWLibs.
@@ -1179,16 +1183,16 @@ bool iVega::X5000HWLibs::getDcn1FwConstants(void *const instance, DMCUFirmwareIn
     const auto abmLevel = singleton().dmcuABMLevelField(instance);
     switch (abmLevel) {
         case 0: {
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn10_abm_2_1_bin);
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn10_abm_2_1_bin);
+            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn10_abm_2_1);
+            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn10_abm_2_1);
         } break;
         case 1: {
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn10_abm_2_2_bin);
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn10_abm_2_2_bin);
+            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn10_abm_2_2);
+            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn10_abm_2_2);
         } break;
         case 2: {
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn10_abm_2_3_bin);
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn10_abm_2_3_bin);
+            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn10_abm_2_3);
+            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn10_abm_2_3);
         } break;
         default:
             SYSLOG("HWLibs", "Invalid ABM Level (0x%X) for DCN 1!", abmLevel);
@@ -1207,20 +1211,20 @@ bool iVega::X5000HWLibs::getDcn21FwConstants(void *const instance, DMCUFirmwareI
     const auto abmLevel = singleton().dmcuABMLevelField(instance);
     switch (abmLevel) {
         case 0: {
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn21_abm_2_1_bin);
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn21_abm_2_1_bin);
+            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn21_abm_2_1);
+            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn21_abm_2_1);
         } break;
         case 1: {
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn21_abm_2_2_bin);
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn21_abm_2_2_bin);
+            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn21_abm_2_2);
+            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn21_abm_2_2);
         } break;
         case 2: {
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn21_abm_2_3_bin);
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn21_abm_2_3_bin);
+            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn21_abm_2_3);
+            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn21_abm_2_3);
         } break;
         case 3: {
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn21_abm_2_4_bin);
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn21_abm_2_4_bin);
+            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn21_abm_2_4);
+            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn21_abm_2_4);
         } break;
         default:
             SYSLOG("HWLibs", "Invalid ABM Level (0x%X) for DCN 2.1!", abmLevel);
@@ -1231,7 +1235,7 @@ bool iVega::X5000HWLibs::getDcn21FwConstants(void *const instance, DMCUFirmwareI
 }
 
 static bool sdma41GetFWConstants(void *, const SDMAFWConstant **const out) {
-    *out = &sdma_4_1_ucode_bin;
+    *out = &sdma_4_1_ucode;
     return true;
 }
 

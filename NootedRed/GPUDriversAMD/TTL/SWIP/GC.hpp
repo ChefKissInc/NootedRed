@@ -46,7 +46,7 @@ struct GCFirmwareConstant {
     UInt32 payloadOffDWords;
 };
 
-#define GC(_V, _F8, _APO, _PSD, _F18, _F1C, _R, _C, _F2C, _F2E, _PO)                                                \
+#define GC_FW_CONSTANT(_V, _F8, _APO, _PSD, _F18, _F1C, _R, _C, _F2C, _F2E, _PO)                                    \
     static const GCFirmwareConstant _R {                                                                            \
         .version = _V, .field8 = _F8, .romSize = sizeof(_##_R), .actualPayloadOffDWords = _APO,                     \
         .payloadSizeDWords = _PSD, .field18 = _F18, .field1C = _F1C, .rom = _##_R, .checksum = _C, .field2C = _F2C, \
