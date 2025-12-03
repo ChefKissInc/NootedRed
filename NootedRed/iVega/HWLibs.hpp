@@ -57,9 +57,9 @@ namespace iVega {
         private:
         static void wrapPopulateFirmwareDirectory(void *self);
         static bool wrapGetIpFw(void *self, UInt32 ipVersion, const char *name, void *out);
-        static CAILResult cailGeneralFailure();
-        static CAILResult cailUnsupported();
-        static CAILResult cailNoop();
+        static CAILResult pspIsSosRunning();
+        static CAILResult retUnsupported();
+        static CAILResult retOK();
         static CAILResult pspBootloaderLoadSos10(void *instance);
         static CAILResult pspSecurityFeatureCapsSet10(void *instance);
         static CAILResult pspSecurityFeatureCapsSet12(void *instance);

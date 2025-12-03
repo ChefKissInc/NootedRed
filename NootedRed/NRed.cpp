@@ -5,18 +5,18 @@
 
 #include <Backlight.hpp>
 #include <DebugEnabler.hpp>
-#include <GPUDriversAMD/Driver.hpp>
+#include <GPUDriversAMD/PowerPlay.hpp>
 #include <GPUDriversAMD/RavenIPOffset.hpp>
+#include <GPUDriversAMD/SMU.hpp>
+#include <GPUDriversAMD/TTL/SWIP/SMU.hpp>
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_devinfo.hpp>
-#include <Headers/kern_iokit.hpp>
 #include <Hotfixes/AGDP.hpp>
 #include <Hotfixes/X6000FB.hpp>
 #include <IOKit/acpi/IOACPIPlatformExpert.h>
 #include <Kexts.hpp>
 #include <Model.hpp>
 #include <NRed.hpp>
-#include <PenguinWizardry/PatcherPlus.hpp>
 #include <PenguinWizardry/RuntimeMC.hpp>
 #include <iVega/AppleGFXHDA.hpp>
 #include <iVega/DriverInjector.hpp>
@@ -113,12 +113,11 @@ void NRed::hwLateInit() {
     DBGLOG("NRed", "pciRevision = 0x%X", this->pciRevision);
     DBGLOG("NRed", "fbOffset = 0x%llX", this->fbOffset);
     DBGLOG("NRed", "devRevision = 0x%X", this->devRevision);
-    DBGLOG("NRed", "isPicasso = %s", this->attributes.isPicasso() ? "yes" : "no");
-    DBGLOG("NRed", "isRaven2 = %s", this->attributes.isRaven2() ? "yes" : "no");
-    DBGLOG("NRed", "isRenoir = %s", this->attributes.isRenoir() ? "yes" : "no");
-    DBGLOG("NRed", "isGreenSardine = %s", this->attributes.isGreenSardine() ? "yes" : "no");
+    DBGLOG("NRed", "isPicasso = %s", this->attributes.isPicasso() ? "true" : "false");
+    DBGLOG("NRed", "isRaven2 = %s", this->attributes.isRaven2() ? "true" : "false");
+    DBGLOG("NRed", "isRenoir = %s", this->attributes.isRenoir() ? "true" : "false");
+    DBGLOG("NRed", "isGreenSardine = %s", this->attributes.isGreenSardine() ? "true" : "false");
     DBGLOG("NRed", "enumRevision = 0x%X", this->enumRevision);
-    DBGLOG("NRed", "If any of the above values look incorrect, please report this to the developers.");
 }
 
 // TODO: Remove!
@@ -135,6 +134,7 @@ static void updatePropertiesForDevice(IOPCIDevice *device) {
         SYSLOG("NRed", "[%X:%X] Warning: No model found.", vendorId, deviceId);
         return;
     }
+
     auto modelLen = static_cast<UInt32>(strlen(model) + 1);
     device->setProperty("model", const_cast<char *>(model), modelLen);
     // Device name is everything after AMD Radeon RX/Pro.
@@ -220,28 +220,53 @@ void NRed::writeReg32(const UInt32 reg, const UInt32 val) const {
     }
 }
 
-UInt32 NRed::smuWaitForResponse() const {
-    UInt32 ret = AMDSMUFWResponse::kSMUFWResponseNoResponse;
-    for (UInt32 i = 0; i < AMD_MAX_USEC_TIMEOUT; i++) {
-        ret = this->readReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_90);
-        if (ret != AMDSMUFWResponse::kSMUFWResponseNoResponse) { break; }
-
-        IOSleep(1);
-    }
-
-    return ret;
+static UInt64 getCurTimeInNS() {
+    UInt64 uptime, uptimeNS;
+    clock_get_uptime(&uptime);
+    absolutetime_to_nanoseconds(uptime, &uptimeNS);
+    return uptimeNS;
 }
 
+CAILResult NRed::waitForFunc(void *handle, bool (*func)(void *handle), const UInt32 timeoutMS) {
+    if (timeoutMS == 0) {
+        while (!func(handle)) {}
+        return kCAILResultOK;
+    }
+
+    const auto startTime = getCurTimeInNS();
+    const UInt64 timeoutNS = timeoutMS * 1000000;
+    do {
+        if (func(handle)) { return kCAILResultOK; }
+    } while (getCurTimeInNS() - startTime <= timeoutNS);
+
+    return kCAILResultNoResponse;
+}
+
+static bool smuWaitForResponseFunc(void *handle) {
+    const auto outResp = static_cast<UInt32 *>(handle);
+
+    const auto fwResp = NRed::singleton().readReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_90);
+    if (fwResp != AMDSMUFWResponse::kSMUFWResponseNoResponse) {
+        if (outResp != nullptr) { *outResp = fwResp; }
+        return true;
+    }
+
+    return false;
+}
+
+CAILResult NRed::smuWaitForResponse(UInt32 *outResp) const { return waitForFunc(outResp, smuWaitForResponseFunc); }
+
 CAILResult NRed::sendMsgToSmc(const UInt32 msg, const UInt32 param, UInt32 *const outParam) const {
-    this->smuWaitForResponse();
+    if (this->smuWaitForResponse(nullptr) != kCAILResultOK) { return kCAILResultInvalidParameters; }
 
     this->writeReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_82, param);
     this->writeReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_90, 0);
     this->writeReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_66, msg);
 
-    const auto resp = this->smuWaitForResponse();
+    UInt32 resp;
+    const auto res = this->smuWaitForResponse(&resp);
 
-    if (outParam != nullptr) { *outParam = this->readReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_82); }
+    if (res == kCAILResultOK && outParam != nullptr) { *outParam = this->readReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_82); }
 
     return processSMUFWResponse(resp);
 }

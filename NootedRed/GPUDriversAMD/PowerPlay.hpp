@@ -4,6 +4,7 @@
 // See LICENSE for details.
 
 #pragma once
+#include <IOKit/IOTypes.h>
 
 enum PPResult {
     PPResultOK = 1,
@@ -35,3 +36,5 @@ enum PPResult {
     PPResultClientNotFound,
     PPResultTimeOut
 };
+
+static constexpr UInt32 PP_WAIT_ON_REGISTER_TIMEOUT_DEFAULT = 2000;

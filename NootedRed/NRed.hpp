@@ -6,6 +6,7 @@
 #pragma once
 #include <GPUDriversAMD/ATOMBIOS.hpp>
 #include <GPUDriversAMD/CAIL/Result.hpp>
+#include <GPUDriversAMD/PowerPlay.hpp>
 #include <Headers/kern_patcher.hpp>
 #include <IOKit/pci/IOPCIDevice.h>
 
@@ -61,7 +62,9 @@ class NRed {
     void setProp32(const char *key, UInt32 value) const;    // TODO: Remove!
     UInt32 readReg32(UInt32 reg) const;                     // TODO: Remove!
     void writeReg32(UInt32 reg, const UInt32 val) const;    // TODO: Remove!
-    UInt32 smuWaitForResponse() const;                      // TODO: Remove!
+    static CAILResult waitForFunc(void *handle, bool (*func)(void *handle),
+        const UInt32 timeoutMS = PP_WAIT_ON_REGISTER_TIMEOUT_DEFAULT);
+    CAILResult smuWaitForResponse(UInt32 *outResp) const;    // TODO: Remove!
     CAILResult sendMsgToSmc(UInt32 msg, UInt32 param = 0,
         UInt32 *outParam = nullptr) const;    // TODO: Remove!
 

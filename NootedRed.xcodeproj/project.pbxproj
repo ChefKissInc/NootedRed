@@ -66,7 +66,6 @@
 		4091276A2CE2F5EF004DBDB5 /* AddrLib.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127692CE2F5EF004DBDB5 /* AddrLib.hpp */; };
 		4091276D2CE2F681004DBDB5 /* SignalTypes.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4091276C2CE2F681004DBDB5 /* SignalTypes.hpp */; };
 		409127702CE2F724004DBDB5 /* Family.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4091276F2CE2F724004DBDB5 /* Family.hpp */; };
-		409127722CE2F76C004DBDB5 /* Driver.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127712CE2F76C004DBDB5 /* Driver.hpp */; };
 		409127742CE2F7B0004DBDB5 /* SMU.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127732CE2F7B0004DBDB5 /* SMU.hpp */; };
 		409127792CE2F866004DBDB5 /* HWEngine.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409127782CE2F866004DBDB5 /* HWEngine.hpp */; };
 		4091C15E2E3EE39B004577D5 /* RuntimeVFT.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4091C15D2E3EE39B004577D5 /* RuntimeVFT.hpp */; };
@@ -224,7 +223,6 @@
 		409127692CE2F5EF004DBDB5 /* AddrLib.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AddrLib.hpp; sourceTree = "<group>"; };
 		4091276C2CE2F681004DBDB5 /* SignalTypes.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SignalTypes.hpp; sourceTree = "<group>"; };
 		4091276F2CE2F724004DBDB5 /* Family.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Family.hpp; sourceTree = "<group>"; };
-		409127712CE2F76C004DBDB5 /* Driver.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Driver.hpp; sourceTree = "<group>"; };
 		409127732CE2F7B0004DBDB5 /* SMU.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SMU.hpp; sourceTree = "<group>"; };
 		409127782CE2F866004DBDB5 /* HWEngine.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HWEngine.hpp; sourceTree = "<group>"; };
 		4091C15D2E3EE39B004577D5 /* RuntimeVFT.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = RuntimeVFT.hpp; sourceTree = "<group>"; };
@@ -527,7 +525,6 @@
 				408A33AC2EE0C63600DAC6FD /* TTL */,
 				409127692CE2F5EF004DBDB5 /* AddrLib.hpp */,
 				40FC5FCE29BF942900367F9D /* ATOMBIOS.hpp */,
-				409127712CE2F76C004DBDB5 /* Driver.hpp */,
 				4091276F2CE2F724004DBDB5 /* Family.hpp */,
 				40FD2ACF2E6B6296007C2290 /* Packet3.hpp */,
 				409127652CE2F2F4004DBDB5 /* PowerPlay.hpp */,
@@ -604,7 +601,6 @@
 				4069F00F29C3A241005293B4 /* ATOMBIOS.hpp in Headers */,
 				409127742CE2F7B0004DBDB5 /* SMU.hpp in Headers */,
 				40FC5FDA29BF995E00367F9D /* X5000.hpp in Headers */,
-				409127722CE2F76C004DBDB5 /* Driver.hpp in Headers */,
 				40364DB629B79DFD0070A2B4 /* Model.hpp in Headers */,
 				4014D9722C74AA7000FDE986 /* ObjectField.hpp in Headers */,
 				4091276D2CE2F681004DBDB5 /* SignalTypes.hpp in Headers */,

@@ -3,12 +3,10 @@
 // Copyright © 2022-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
-#include <GPUDriversAMD/ATOMBIOS.hpp>
 #include <GPUDriversAMD/CAIL/ASICCaps.hpp>
 #include <GPUDriversAMD/FB/VidMemType.hpp>
 #include <GPUDriversAMD/Family.hpp>
 #include <GPUDriversAMD/RavenIPOffset.hpp>
-#include <Headers/kern_api.hpp>
 #include <Kexts.hpp>
 #include <NRed.hpp>
 #include <PenguinWizardry/KernelVersion.hpp>

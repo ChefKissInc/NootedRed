@@ -16,3 +16,8 @@ struct CosReadConfigurationSettingInput {
 struct CosReadConfigurationSettingOutput {
     UInt32 settingLen;
 };
+
+enum COSResult {
+    kCOSResultOK = 0,
+    kCOSResultUnsupported = 2,
+};

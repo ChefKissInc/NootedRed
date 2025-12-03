@@ -5,9 +5,9 @@
 
 #include <GPUDriversAMD/CAIL/ASICCaps.hpp>
 #include <GPUDriversAMD/CAIL/DevCaps.hpp>
-#include <GPUDriversAMD/Driver.hpp>
 #include <GPUDriversAMD/Family.hpp>
 #include <GPUDriversAMD/PSP.hpp>
+#include <GPUDriversAMD/PowerPlay.hpp>
 #include <GPUDriversAMD/RavenIPOffset.hpp>
 #include <GPUDriversAMD/RenoirPPSMC.hpp>
 #include <GPUDriversAMD/TTL/SWIP/SMU.hpp>
@@ -560,7 +560,7 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, const size_t id, co
         PenguinWizardry::PatternRouteRequest requests[] = {
             {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory,
                 this->orgGetIpFw},
-            {"_psp_bootloader_is_sos_running_3_1", cailGeneralFailure, kPspBootloaderIsSosRunning31Pattern},
+            {"_psp_bootloader_is_sos_running_3_1", pspIsSosRunning, kPspBootloaderIsSosRunning31Pattern},
             {"_psp_security_feature_caps_set_3_1",
                 NRed::singleton().getAttributes().isRenoir() ? pspSecurityFeatureCapsSet12 :
                                                                pspSecurityFeatureCapsSet10,
@@ -571,21 +571,21 @@ void iVega::X5000HWLibs::processKext(KernelPatcher &patcher, const size_t id, co
             "Failed to route symbols (>10.15)");
         if (currentKernelVersion() >= MACOS_14_4) {
             PenguinWizardry::PatternRouteRequest pspRequests[] = {
-                {"_psp_bootloader_load_sysdrv_3_1", cailNoop, kPspBootloaderLoadSysdrv31Pattern1404},
-                {"_psp_bootloader_set_ecc_mode_3_1", cailNoop, kPspBootloaderSetEccMode31Pattern1404},
+                {"_psp_bootloader_load_sysdrv_3_1", retOK, kPspBootloaderLoadSysdrv31Pattern1404},
+                {"_psp_bootloader_set_ecc_mode_3_1", retOK, kPspBootloaderSetEccMode31Pattern1404},
                 {"_psp_bootloader_load_sos_3_1", pspBootloaderLoadSos10, kPspBootloaderLoadSos31Pattern1404},
-                {"_psp_reset_3_1", cailUnsupported, kPspReset31Pattern1404},
+                {"_psp_reset_3_1", retUnsupported, kPspReset31Pattern1404},
             };
             PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, pspRequests, slide, size), "HWLibs",
                 "Failed to route symbols (>=14.4)");
         } else {
             PenguinWizardry::PatternRouteRequest pspRequests[] = {
-                {"_psp_bootloader_load_sysdrv_3_1", cailNoop, kPspBootloaderLoadSysdrv31Pattern,
+                {"_psp_bootloader_load_sysdrv_3_1", retOK, kPspBootloaderLoadSysdrv31Pattern,
                     kPspBootloaderLoadSysdrv31PatternMask},
-                {"_psp_bootloader_set_ecc_mode_3_1", cailNoop, kPspBootloaderSetEccMode31Pattern},
+                {"_psp_bootloader_set_ecc_mode_3_1", retOK, kPspBootloaderSetEccMode31Pattern},
                 {"_psp_bootloader_load_sos_3_1", pspBootloaderLoadSos10, kPspBootloaderLoadSos31Pattern,
                     kPspBootloaderLoadSos31PatternMask},
-                {"_psp_reset_3_1", cailUnsupported, kPspReset31Pattern},
+                {"_psp_reset_3_1", retUnsupported, kPspReset31Pattern},
             };
             PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, pspRequests, slide, size), "HWLibs",
                 "Failed to route symbols (<14.4)");
@@ -814,9 +814,9 @@ bool iVega::X5000HWLibs::wrapGetIpFw(void *const self, const UInt32 ipVersion, c
     return FunctionCast(wrapGetIpFw, singleton().orgGetIpFw)(self, ipVersion, name, out);
 }
 
-CAILResult iVega::X5000HWLibs::cailGeneralFailure() { return kCAILResultInvalidParameters; }
-CAILResult iVega::X5000HWLibs::cailUnsupported() { return kCAILResultUnsupported; }
-CAILResult iVega::X5000HWLibs::cailNoop() { return kCAILResultOK; }
+CAILResult iVega::X5000HWLibs::pspIsSosRunning() { return kCAILResultInvalidParameters; }
+CAILResult iVega::X5000HWLibs::retUnsupported() { return kCAILResultUnsupported; }
+CAILResult iVega::X5000HWLibs::retOK() { return kCAILResultOK; }
 
 CAILResult iVega::X5000HWLibs::pspBootloaderLoadSos10(void *const instance) {
     singleton().pspSOSField(instance) = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_59);
@@ -926,15 +926,11 @@ CAILResult iVega::X5000HWLibs::smu10InternalHwInit(void *) {
     return smuPowerUp();
 }
 
-CAILResult iVega::X5000HWLibs::smu12WaitForFwLoaded() {
-    for (UInt32 i = 0; i < AMD_MAX_USEC_TIMEOUT; i++) {
-        if (NRed::singleton().readReg32(MP1_PUBLIC | MP1_FIRMWARE_FLAGS) & MP1_FIRMWARE_FLAGS_INTERRUPTS_ENABLED) {
-            return kCAILResultOK;
-        }
-        IOSleep(1);
-    }
-    return kCAILResultInvalidParameters;
+static bool smu12IsFwLoaded(void *) {
+    return (NRed::singleton().readReg32(MP1_PUBLIC | MP1_FIRMWARE_FLAGS) & MP1_FIRMWARE_FLAGS_INTERRUPTS_ENABLED) != 0;
 }
+
+CAILResult iVega::X5000HWLibs::smu12WaitForFwLoaded() { return NRed::waitForFunc(nullptr, smu12IsFwLoaded); }
 
 CAILResult iVega::X5000HWLibs::smu12InternalHwInit(void *) {
     if (const auto res = smu12WaitForFwLoaded(); res != kCAILResultOK) { return res; }
@@ -1016,13 +1012,13 @@ CAILResult iVega::X5000HWLibs::wrapSmuInitFunctionPointerList(void *instance, SW
     }
 
     if (currentKernelVersion() == MACOS_10_15) {
-        singleton().smuInternalSWInitField(instance) = reinterpret_cast<void *>(cailNoop);
+        singleton().smuInternalSWInitField(instance) = reinterpret_cast<void *>(retOK);
     } else {
         singleton().smuInternalSWInitField(instance) = reinterpret_cast<void *>(smuInternalSwInit);
-        singleton().smuGetUCodeConstsField(instance) = reinterpret_cast<void *>(cailNoop);
+        singleton().smuGetUCodeConstsField(instance) = reinterpret_cast<void *>(retOK);
     }
     singleton().smuFullscreenEventField(instance) = reinterpret_cast<void *>(smuFullScreenEvent);
-    singleton().smuInternalSWExitField(instance) = reinterpret_cast<void *>(cailNoop);
+    singleton().smuInternalSWExitField(instance) = reinterpret_cast<void *>(retOK);
     singleton().smuInternalHWExitField(instance) = reinterpret_cast<void *>(smuInternalHwExit);
     singleton().smuFullAsicResetField(instance) = reinterpret_cast<void *>(smuFullAsicReset);
 
