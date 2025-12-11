@@ -245,8 +245,10 @@ CAILResult NRed::waitForFunc(void *handle, bool (*func)(void *handle), const UIn
 static bool smuWaitForResponseFunc(void *handle) {
     const auto outResp = static_cast<UInt32 *>(handle);
 
+    if (outResp != nullptr) { *outResp = kSMUFWResponseNoResponse; }
+
     const auto fwResp = NRed::singleton().readReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_90);
-    if (fwResp != AMDSMUFWResponse::kSMUFWResponseNoResponse) {
+    if (fwResp != kSMUFWResponseNoResponse) {
         if (outResp != nullptr) { *outResp = fwResp; }
         return true;
     }
