@@ -7,7 +7,7 @@
 - Removed redundant `GPUDCCDisplayable` setting.
 - Removed unnecessary `PP_ToolsLogSpaceSize` setting. This setting is only applicable for SMU 11.
 - Removed redundant `PP_WorkLoadPolicyMask` setting. The value specified was 0, which is already the default.
-- Removed IOPCITunnelCompatible property.
+- Removed `IOPCITunnelCompatible` property.
   iGPUs can't run through Thunderbolt.
 - Moved SMU 12 firmware wait to separate function.
 - Some TTL event handler cleanup.
@@ -20,7 +20,7 @@
 - Removed Raven2 RLC A0 firmware. 
 - Activate A0 RLC firmware only on non-Picasso or Picasso AM4.
 - Disable MMHub PG as per the driver settings.
-- Added missing GPUTaskSingleChannel accelerator setting.
+- Added missing `GPUTaskSingleChannel` accelerator setting.
   Possibly added in Sonoma or something, non-existent in Big Sur, default false, but set to true in the accelerator kexts (Navi and Vega).
 - Corrected "wait for" logic.
   Corrected timeout to PP default of 2s from Linux's 100s and used IODelay instead of IOSleep.
