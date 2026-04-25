@@ -6,23 +6,25 @@
 #pragma once
 #include <IOKit/IOTypes.h>
 
-struct AMDFBRect {
+struct AMDFBRect
+{
     UInt32 width;
     UInt32 height;
 };
 static_assert(sizeof(AMDFBRect) == 0x8);
 
-struct FramebufferInfo {
-    UInt64 crtOffset;
-    UInt32 size;
-    UInt32 crtSize;
-    UInt32 pitch;
+struct FramebufferInfo
+{
+    UInt64    crtOffset;
+    UInt32    size;
+    UInt32    crtSize;
+    UInt32    pitch;
     AMDFBRect rect;
-    bool isMirrored;
-    bool isEnabled;
-    bool isMapped;
-    bool isOnline;
-    UInt64 savedSize;
-    UInt64 pageCount;
+    bool      isMirrored;
+    bool      isEnabled;
+    bool      isMapped;
+    bool      isOnline;
+    UInt64    savedSize;
+    UInt64    pageCount;
 };
 static_assert(sizeof(FramebufferInfo) == 0x30);

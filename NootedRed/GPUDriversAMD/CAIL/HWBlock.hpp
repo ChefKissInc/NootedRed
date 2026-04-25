@@ -7,7 +7,8 @@
 #include <IOKit/IOTypes.h>
 
 // No VPE, LSDMA, XGMI?
-enum CAILHWBlock {
+enum CAILHWBlock
+{
     kCAILHWBlockUnknown = 0,
     // 1, 2, 3 = ??? Maybe VPE, LSDMA, XGMI? get_hw_block_type doesn't seem to reference them
     kCAILHWBlockMP1 = 4,

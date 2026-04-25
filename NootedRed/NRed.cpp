@@ -27,11 +27,12 @@
 #include <iVega/X5000.hpp>
 #include <iVega/X6000FB.hpp>
 
-static NRed instance {};
+static NRed instance{};
 
-NRed &NRed::singleton() { return instance; }
+NRed& NRed::singleton() { return instance; }
 
-void NRed::init() {
+void NRed::init()
+{
     SYSLOG("NRed", "|-----------------------------------------------------------------|");
     SYSLOG("NRed", "| Copyright 2022-2025 ChefKiss.                                   |");
     SYSLOG("NRed", "| If you've paid for this, you've been scammed. Ask for a refund! |");
@@ -48,7 +49,8 @@ void NRed::init() {
     lilu.onKextLoadForce(&kextAppleGFXHDA);
 
     lilu.onPatcherLoadForce(
-        [](void *const, KernelPatcher &patcher) {
+        [](void* const, KernelPatcher& patcher)
+        {
             singleton().processPatcher();
             iVega::DriverInjector::singleton().processPatcher(patcher);
             PenguinWizardry::RuntimeMCManager::singleton().processPatcher(patcher);
@@ -57,7 +59,8 @@ void NRed::init() {
 
     lilu.onKextLoadForce(
         nullptr, 0,
-        [](void *const, KernelPatcher &patcher, const size_t id, const mach_vm_address_t slide, const size_t size) {
+        [](void* const, KernelPatcher& patcher, const size_t id, const mach_vm_address_t slide, const size_t size)
+        {
             Hotfixes::AGDP::singleton().processKext(patcher, id, slide, size);
             Hotfixes::X6000FB::singleton().processKext(patcher, id, slide, size);
             Backlight::singleton().processKext(patcher, id, slide, size);
@@ -70,7 +73,8 @@ void NRed::init() {
         nullptr);
 }
 
-void NRed::hwLateInit() {
+void NRed::hwLateInit()
+{
     if (this->rmmio != nullptr) { return; }
 
     this->iGPU->setMemoryEnable(true);
@@ -85,26 +89,31 @@ void NRed::hwLateInit() {
     this->rmmio =
         this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5, kIOMapInhibitCache | kIOMapAnywhere);
     PANIC_COND(this->rmmio == nullptr || this->rmmio->getLength() == 0, "NRed", "Failed to map RMMIO");
-    this->rmmioPtr = reinterpret_cast<UInt32 *>(this->rmmio->getVirtualAddress());
+    this->rmmioPtr = reinterpret_cast<UInt32*>(this->rmmio->getVirtualAddress());
 
-    this->fbOffset = static_cast<UInt64>(this->readReg32(GC_BASE_0 + MC_VM_FB_OFFSET)) << 24;
-    this->devRevision = (this->readReg32(NBIO_BASE_2 + RCC_DEV0_EPF0_STRAP0) & RCC_DEV0_EPF0_STRAP0_ATI_REV_ID_MASK) >>
-                        RCC_DEV0_EPF0_STRAP0_ATI_REV_ID_SHIFT;
+    this->fbOffset    = static_cast<UInt64>(this->readReg32(GC_BASE_0 + MC_VM_FB_OFFSET)) << 24;
+    this->devRevision = (this->readReg32(NBIO_BASE_2 + RCC_DEV0_EPF0_STRAP0) & RCC_DEV0_EPF0_STRAP0_ATI_REV_ID_MASK)
+                        >> RCC_DEV0_EPF0_STRAP0_ATI_REV_ID_SHIFT;
 
     if (this->attributes.isRenoir()) {
-        if (!this->attributes.isGreenSardine() && this->devRevision == 0 && this->pciRevision >= 0x80 &&
-            this->pciRevision <= 0x84) {
+        if (!this->attributes.isGreenSardine() && this->devRevision == 0 && this->pciRevision >= 0x80
+            && this->pciRevision <= 0x84)
+        {
             this->attributes.setRenoirE();
         }
-    } else {
+    }
+    else {
         if (this->devRevision >= 0x8) {
             this->attributes.setRaven2();
             this->enumRevision = 0x79;
-        } else if (this->attributes.isPicasso()) {
+        }
+        else if (this->attributes.isPicasso()) {
             this->enumRevision = 0x41;
-        } else if (this->devRevision == 1) {
+        }
+        else if (this->devRevision == 1) {
             this->enumRevision = 0x20;
-        } else {
+        }
+        else {
             this->enumRevision = 0x1;
         }
     }
@@ -121,35 +130,38 @@ void NRed::hwLateInit() {
 }
 
 // TODO: Remove!
-static void updatePropertiesForDevice(IOPCIDevice *device) {
+static void updatePropertiesForDevice(IOPCIDevice* device)
+{
     UInt8 builtIn[] = {0x00};
     device->setProperty("built-in", builtIn, arrsize(builtIn));
     auto vendorId = WIOKit::readPCIConfigValue(device, WIOKit::kIOPCIConfigVendorID);
     auto deviceId = WIOKit::readPCIConfigValue(device, WIOKit::kIOPCIConfigDeviceID);
     SYSLOG_COND(device->getProperty("model") != nullptr, "NRed",
-        "[%X:%X] WARNING!!! Overriding the model is no longer supported!", vendorId, deviceId);
+                "[%X:%X] WARNING!!! Overriding the model is no longer supported!", vendorId, deviceId);
 
-    auto *model = getBrandingNameForDev(device);
+    auto* model = getBrandingNameForDev(device);
     if (model == nullptr) {
         SYSLOG("NRed", "[%X:%X] Warning: No model found.", vendorId, deviceId);
         return;
     }
 
     auto modelLen = static_cast<UInt32>(strlen(model) + 1);
-    device->setProperty("model", const_cast<char *>(model), modelLen);
+    device->setProperty("model", const_cast<char*>(model), modelLen);
     // Device name is everything after AMD Radeon RX/Pro.
     if (model[11] == 'P' && model[12] == 'r' && model[13] == 'o' && model[14] == ' ') {
-        device->setProperty("ATY,FamilyName", const_cast<char *>("Radeon Pro"), 11);
-        device->setProperty("ATY,DeviceName", const_cast<char *>(model) + 15, modelLen - 15);
-    } else {
-        device->setProperty("ATY,FamilyName", const_cast<char *>("Radeon RX"), 10);
-        device->setProperty("ATY,DeviceName", const_cast<char *>(model) + 14, modelLen - 14);
+        device->setProperty("ATY,FamilyName", const_cast<char*>("Radeon Pro"), 11);
+        device->setProperty("ATY,DeviceName", const_cast<char*>(model) + 15, modelLen - 15);
     }
-    device->setProperty("AAPL,slot-name", const_cast<char *>("built-in"), 9);
+    else {
+        device->setProperty("ATY,FamilyName", const_cast<char*>("Radeon RX"), 10);
+        device->setProperty("ATY,DeviceName", const_cast<char*>(model) + 14, modelLen - 14);
+    }
+    device->setProperty("AAPL,slot-name", const_cast<char*>("built-in"), 9);
 }
 
-void NRed::processPatcher() {
-    auto *devInfo = DeviceInfo::create();
+void NRed::processPatcher()
+{
+    auto* devInfo = DeviceInfo::create();
     assert(devInfo != nullptr);
 
     devInfo->processSwitchOff();
@@ -157,7 +169,7 @@ void NRed::processPatcher() {
     PANIC_COND(devInfo->videoBuiltin == nullptr, "NRed", "No iGPU detected by Lilu");
     this->iGPU = OSRequiredCast(IOPCIDevice, devInfo->videoBuiltin);
     PANIC_COND(WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD, "NRed",
-        "iGPU is not an AMD one");
+               "iGPU is not an AMD one");
 
     WIOKit::renameDevice(this->iGPU, "IGPU");
     WIOKit::awaitPublishing(this->iGPU);
@@ -181,14 +193,13 @@ void NRed::processPatcher() {
             this->attributes.setGreenSardine();
             this->enumRevision = 0xA1;
         } break;
-        default:
-            PANIC("NRed", "Unknown device ID: 0x%X", this->deviceID);
+        default: PANIC("NRed", "Unknown device ID: 0x%X", this->deviceID);
     }
     this->pciRevision = WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigRevisionID);
 
     char name[128];
     for (size_t i = 0, ii = 0; i < devInfo->videoExternal.size(); i++) {
-        auto *device = OSDynamicCast(IOPCIDevice, devInfo->videoExternal[i].video);
+        auto* device = OSDynamicCast(IOPCIDevice, devInfo->videoExternal[i].video);
         if (device == nullptr) { continue; }
 
         snprintf(name, arrsize(name), "GFX%zu", ii++);
@@ -200,50 +211,54 @@ void NRed::processPatcher() {
     DeviceInfo::deleter(devInfo);
 }
 
-void NRed::setProp32(const char *const key, const UInt32 value) const { this->iGPU->setProperty(key, value, 32); }
+void NRed::setProp32(const char* const key, const UInt32 value) const { this->iGPU->setProperty(key, value, 32); }
 
-UInt32 NRed::readReg32(const UInt32 reg) const {
-    if ((reg * sizeof(UInt32)) < this->rmmio->getLength()) {
-        return this->rmmioPtr[reg];
-    } else {
+UInt32 NRed::readReg32(const UInt32 reg) const
+{
+    if ((reg * sizeof(UInt32)) < this->rmmio->getLength()) { return this->rmmioPtr[reg]; }
+    else {
         this->rmmioPtr[PCIE_INDEX2] = reg;
         return this->rmmioPtr[PCIE_DATA2];
     }
 }
 
-void NRed::writeReg32(const UInt32 reg, const UInt32 val) const {
-    if ((reg * sizeof(UInt32)) < this->rmmio->getLength()) {
-        this->rmmioPtr[reg] = val;
-    } else {
+void NRed::writeReg32(const UInt32 reg, const UInt32 val) const
+{
+    if ((reg * sizeof(UInt32)) < this->rmmio->getLength()) { this->rmmioPtr[reg] = val; }
+    else {
         this->rmmioPtr[PCIE_INDEX2] = reg;
-        this->rmmioPtr[PCIE_DATA2] = val;
+        this->rmmioPtr[PCIE_DATA2]  = val;
     }
 }
 
-static UInt64 getCurTimeInNS() {
+static UInt64 getCurTimeInNS()
+{
     UInt64 uptime, uptimeNS;
     clock_get_uptime(&uptime);
     absolutetime_to_nanoseconds(uptime, &uptimeNS);
     return uptimeNS;
 }
 
-CAILResult NRed::waitForFunc(void *handle, bool (*func)(void *handle), const UInt32 timeoutMS) {
+CAILResult NRed::waitForFunc(void* handle, bool (*func)(void* handle), const UInt32 timeoutMS)
+{
     if (timeoutMS == 0) {
-        while (!func(handle)) {}
+        while (!func(handle)) { }
         return kCAILResultOK;
     }
 
-    const auto startTime = getCurTimeInNS();
+    const auto   startTime = getCurTimeInNS();
     const UInt64 timeoutNS = timeoutMS * 1000000;
     do {
         if (func(handle)) { return kCAILResultOK; }
-    } while (getCurTimeInNS() - startTime <= timeoutNS);
+    }
+    while (getCurTimeInNS() - startTime <= timeoutNS);
 
     return kCAILResultNoResponse;
 }
 
-static bool smuWaitForResponseFunc(void *handle) {
-    const auto outResp = static_cast<UInt32 *>(handle);
+static bool smuWaitForResponseFunc(void* handle)
+{
+    const auto outResp = static_cast<UInt32*>(handle);
 
     if (outResp != nullptr) { *outResp = kSMUFWResponseNoResponse; }
 
@@ -256,16 +271,17 @@ static bool smuWaitForResponseFunc(void *handle) {
     return false;
 }
 
-CAILResult NRed::smuWaitForResponse(UInt32 *outResp) const { return waitForFunc(outResp, smuWaitForResponseFunc); }
+CAILResult NRed::smuWaitForResponse(UInt32* outResp) const { return waitForFunc(outResp, smuWaitForResponseFunc); }
 
-CAILResult NRed::sendMsgToSmc(const UInt32 msg, const UInt32 param, UInt32 *const outParam) const {
+CAILResult NRed::sendMsgToSmc(const UInt32 msg, const UInt32 param, UInt32* const outParam) const
+{
     if (this->smuWaitForResponse(nullptr) != kCAILResultOK) { return kCAILResultInvalidParameters; }
 
     this->writeReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_82, param);
     this->writeReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_90, 0);
     this->writeReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_66, msg);
 
-    UInt32 resp;
+    UInt32     resp;
     const auto res = this->smuWaitForResponse(&resp);
 
     if (res == kCAILResultOK && outParam != nullptr) { *outParam = this->readReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_82); }
@@ -273,7 +289,8 @@ CAILResult NRed::sendMsgToSmc(const UInt32 msg, const UInt32 param, UInt32 *cons
     return processSMUFWResponse(resp);
 }
 
-static bool checkAtomBios(const UInt8 *const bios, const size_t size) {
+static bool checkAtomBios(const UInt8* const bios, const size_t size)
+{
     if (size < 0x49) {
         DBGLOG("NRed", "VBIOS size is invalid");
         return false;
@@ -305,22 +322,24 @@ static bool checkAtomBios(const UInt8 *const bios, const size_t size) {
 }
 
 // Hack
-class AppleACPIPlatformExpert : IOACPIPlatformExpert {
+class AppleACPIPlatformExpert : IOACPIPlatformExpert
+{
     friend class NRed;
 };
 
-bool NRed::getVBIOSFromVFCT(const bool strict) {
+bool NRed::getVBIOSFromVFCT(const bool strict)
+{
     DBGLOG("NRed", "Fetching VBIOS from VFCT table");
-    auto *expert = reinterpret_cast<AppleACPIPlatformExpert *>(this->iGPU->getPlatform());
+    auto* expert = reinterpret_cast<AppleACPIPlatformExpert*>(this->iGPU->getPlatform());
     assert(expert != nullptr);
 
-    auto *vfctData = expert->getACPITableData("VFCT", 0);
+    auto* vfctData = expert->getACPITableData("VFCT", 0);
     if (vfctData == nullptr) {
         DBGLOG("NRed", "No VFCT from AppleACPIPlatformExpert");
         return false;
     }
 
-    auto *vfct = static_cast<const VFCT *>(vfctData->getBytesNoCopy());
+    auto* vfct = static_cast<const VFCT*>(vfctData->getBytesNoCopy());
     assert(vfct != nullptr);
 
     if (sizeof(VFCT) > vfctData->getLength()) {
@@ -328,21 +347,21 @@ bool NRed::getVBIOSFromVFCT(const bool strict) {
         return false;
     }
 
-    auto vendor = WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigVendorID);
-    auto busNum = this->iGPU->getBusNumber();
-    auto devNum = this->iGPU->getDeviceNumber();
+    auto vendor  = WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigVendorID);
+    auto busNum  = this->iGPU->getBusNumber();
+    auto devNum  = this->iGPU->getDeviceNumber();
     auto devFunc = this->iGPU->getFunctionNumber();
 
     for (auto offset = vfct->vbiosImageOffset; offset < vfctData->getLength();) {
-        auto *vHdr =
-            static_cast<const GOPVideoBIOSHeader *>(vfctData->getBytesNoCopy(offset, sizeof(GOPVideoBIOSHeader)));
+        auto* vHdr =
+            static_cast<const GOPVideoBIOSHeader*>(vfctData->getBytesNoCopy(offset, sizeof(GOPVideoBIOSHeader)));
         if (vHdr == nullptr) {
             DBGLOG("NRed", "VFCT header out of bounds");
             return false;
         }
 
-        auto *vContent = static_cast<const UInt8 *>(
-            vfctData->getBytesNoCopy(offset + sizeof(GOPVideoBIOSHeader), vHdr->imageLength));
+        auto* vContent =
+            static_cast<const UInt8*>(vfctData->getBytesNoCopy(offset + sizeof(GOPVideoBIOSHeader), vHdr->imageLength));
         if (vContent == nullptr) {
             DBGLOG("NRed", "VFCT VBIOS image out of bounds");
             return false;
@@ -350,9 +369,10 @@ bool NRed::getVBIOSFromVFCT(const bool strict) {
 
         offset += sizeof(GOPVideoBIOSHeader) + vHdr->imageLength;
 
-        if (vHdr->imageLength != 0 &&
-            (!strict || (vHdr->pciBus == busNum && vHdr->pciDevice == devNum && vHdr->pciFunction == devFunc)) &&
-            vHdr->vendorID == vendor && vHdr->deviceID == this->deviceID) {
+        if (vHdr->imageLength != 0
+            && (!strict || (vHdr->pciBus == busNum && vHdr->pciDevice == devNum && vHdr->pciFunction == devFunc))
+            && vHdr->vendorID == vendor && vHdr->deviceID == this->deviceID)
+        {
             if (checkAtomBios(vContent, vHdr->imageLength)) {
                 this->vbiosData = OSData::withBytes(vContent, vHdr->imageLength);
                 assert(this->vbiosData != nullptr);
@@ -361,11 +381,12 @@ bool NRed::getVBIOSFromVFCT(const bool strict) {
 
             DBGLOG("NRed", "VFCT VBIOS is not an ATOMBIOS");
             return false;
-        } else {
+        }
+        else {
             DBGLOG("NRed",
-                "VFCT image does not match (pciBus: 0x%X pciDevice: 0x%X pciFunction: 0x%X "
-                "vendorID: 0x%X deviceID: 0x%X) or length is 0 (imageLength: 0x%X)",
-                vHdr->pciBus, vHdr->pciDevice, vHdr->pciFunction, vHdr->vendorID, vHdr->deviceID, vHdr->imageLength);
+                   "VFCT image does not match (pciBus: 0x%X pciDevice: 0x%X pciFunction: 0x%X "
+                   "vendorID: 0x%X deviceID: 0x%X) or length is 0 (imageLength: 0x%X)",
+                   vHdr->pciBus, vHdr->pciDevice, vHdr->pciFunction, vHdr->vendorID, vHdr->deviceID, vHdr->imageLength);
         }
     }
 
@@ -373,15 +394,16 @@ bool NRed::getVBIOSFromVFCT(const bool strict) {
     return false;
 }
 
-bool NRed::getVBIOSFromVRAM() {
-    auto *bar0 =
+bool NRed::getVBIOSFromVRAM()
+{
+    auto* bar0 =
         this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress0, kIOMapWriteCombineCache | kIOMapAnywhere);
     if (!bar0 || !bar0->getLength()) {
         DBGLOG("NRed", "FB BAR not enabled");
         OSSafeReleaseNULL(bar0);
         return false;
     }
-    auto *fb = reinterpret_cast<const UInt8 *>(bar0->getVirtualAddress());
+    auto*  fb   = reinterpret_cast<const UInt8*>(bar0->getVirtualAddress());
     UInt32 size = 256 * 1024;    // ???
     if (!checkAtomBios(fb, size)) {
         DBGLOG("NRed", "VRAM VBIOS is not an ATOMBIOS");
@@ -394,14 +416,15 @@ bool NRed::getVBIOSFromVRAM() {
     return true;
 }
 
-bool NRed::getVBIOSFromExpansionROM() {
+bool NRed::getVBIOSFromExpansionROM()
+{
     const auto expansionROMBase = this->iGPU->extendedConfigRead32(kIOPCIConfigExpansionROMBase);
     if (expansionROMBase == 0) {
         DBGLOG("NRed", "No PCI Expansion ROM available");
         return false;
     }
 
-    auto *expansionROM =
+    auto* expansionROM =
         this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigExpansionROMBase, kIOMapInhibitCache | kIOMapAnywhere);
     if (expansionROM == nullptr) { return false; }
     const auto expansionROMLength = min(expansionROM->getLength(), ATOMBIOS_IMAGE_SIZE);
@@ -414,50 +437,50 @@ bool NRed::getVBIOSFromExpansionROM() {
     // Enable reading the expansion ROMs
     this->iGPU->extendedConfigWrite32(kIOPCIConfigExpansionROMBase, expansionROMBase | 1);
 
-    this->vbiosData = OSData::withBytes(reinterpret_cast<const void *>(expansionROM->getVirtualAddress()),
-        static_cast<UInt32>(expansionROMLength));
+    this->vbiosData = OSData::withBytes(reinterpret_cast<const void*>(expansionROM->getVirtualAddress()),
+                                        static_cast<UInt32>(expansionROMLength));
     assert(this->vbiosData != nullptr);
     expansionROM->release();
 
     // Disable reading the expansion ROMs
     this->iGPU->extendedConfigWrite32(kIOPCIConfigExpansionROMBase, expansionROMBase);
 
-    if (checkAtomBios(static_cast<const UInt8 *>(this->vbiosData->getBytesNoCopy()), expansionROMLength)) {
+    if (checkAtomBios(static_cast<const UInt8*>(this->vbiosData->getBytesNoCopy()), expansionROMLength)) {
         return true;
-    } else {
+    }
+    else {
         DBGLOG("NRed", "PCI Expansion ROM VBIOS is not an ATOMBIOS");
         OSSafeReleaseNULL(this->vbiosData);
         return false;
     }
 }
 
-bool NRed::getVBIOS() {
-    const auto *biosImageProp = OSDynamicCast(OSData, this->iGPU->getProperty("ATY,bin_image"));
+bool NRed::getVBIOS()
+{
+    const auto* biosImageProp = OSDynamicCast(OSData, this->iGPU->getProperty("ATY,bin_image"));
     if (biosImageProp != nullptr) {
-        if (checkAtomBios(static_cast<const UInt8 *>(biosImageProp->getBytesNoCopy()), biosImageProp->getLength())) {
+        if (checkAtomBios(static_cast<const UInt8*>(biosImageProp->getBytesNoCopy()), biosImageProp->getLength())) {
             this->vbiosData = OSData::withData(biosImageProp);
             SYSLOG("NRed", "Warning: VBIOS manually overridden, make sure you know what you're doing.");
             return true;
-        } else {
+        }
+        else {
             SYSLOG("NRed", "Error: VBIOS override is invalid.");
         }
     }
-    if (this->getVBIOSFromVFCT(true)) {
-        DBGLOG("NRed", "Got VBIOS from VFCT.");
-    } else {
+    if (this->getVBIOSFromVFCT(true)) { DBGLOG("NRed", "Got VBIOS from VFCT."); }
+    else {
         SYSLOG("NRed", "Failed to get VBIOS from VFCT, trying to get it from VRAM.");
-        if (this->getVBIOSFromVRAM()) {
-            DBGLOG("NRed", "Got VBIOS from VRAM.");
-        } else {
+        if (this->getVBIOSFromVRAM()) { DBGLOG("NRed", "Got VBIOS from VRAM."); }
+        else {
             SYSLOG("NRed", "Failed to get VBIOS from VRAM, trying to get it from PCI Expansion ROM.");
-            if (this->getVBIOSFromExpansionROM()) {
-                DBGLOG("NRed", "Got VBIOS from PCI Expansion ROM.");
-            } else {
-                SYSLOG("NRed",
+            if (this->getVBIOSFromExpansionROM()) { DBGLOG("NRed", "Got VBIOS from PCI Expansion ROM."); }
+            else {
+                SYSLOG(
+                    "NRed",
                     "Failed to get VBIOS from PCI Expansion ROM, trying to get it from VFCT (relaxed matches mode).");
-                if (this->getVBIOSFromVFCT(false)) {
-                    DBGLOG("NRed", "Got VBIOS from VFCT (relaxed matches mode).");
-                } else {
+                if (this->getVBIOSFromVFCT(false)) { DBGLOG("NRed", "Got VBIOS from VFCT (relaxed matches mode)."); }
+                else {
                     SYSLOG("NRed", "Failed to get VBIOS from VFCT (relaxed matches mode).");
                     return false;
                 }

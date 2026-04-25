@@ -6,7 +6,8 @@
 #pragma once
 #include <IOKit/IOTypes.h>
 
-struct SWIPIPVersion {
+struct SWIPIPVersion
+{
     UInt32 major;
     UInt32 minor;
     UInt32 patch;

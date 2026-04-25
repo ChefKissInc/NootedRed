@@ -9,48 +9,50 @@
 #include <PenguinWizardry/PatcherPlus.hpp>
 #include <iVega/AppleGFXHDA.hpp>
 
-constexpr UInt32 AMDVendorID = 0x1002;
+constexpr UInt32 AMDVendorID        = 0x1002;
 constexpr UInt32 Navi10HDMIDeviceID = 0xAB38;
-constexpr UInt32 Navi10HDMIID = (Navi10HDMIDeviceID << 16) | AMDVendorID;
-constexpr UInt32 RavenHDMIDeviceID = 0x15DE;
-constexpr UInt32 RavenHDMIID = (RavenHDMIDeviceID << 16) | AMDVendorID;
+constexpr UInt32 Navi10HDMIID       = (Navi10HDMIDeviceID << 16) | AMDVendorID;
+constexpr UInt32 RavenHDMIDeviceID  = 0x15DE;
+constexpr UInt32 RavenHDMIID        = (RavenHDMIDeviceID << 16) | AMDVendorID;
 constexpr UInt32 RenoirHDMIDeviceID = 0x1637;
-constexpr UInt32 RenoirHDMIID = (RenoirHDMIDeviceID << 16) | AMDVendorID;
+constexpr UInt32 RenoirHDMIID       = (RenoirHDMIDeviceID << 16) | AMDVendorID;
 
-static iVega::AppleGFXHDA instance {};
+static iVega::AppleGFXHDA instance{};
 
-iVega::AppleGFXHDA &iVega::AppleGFXHDA::singleton() { return instance; }
+iVega::AppleGFXHDA& iVega::AppleGFXHDA::singleton() { return instance; }
 
-void iVega::AppleGFXHDA::processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size) {
+void iVega::AppleGFXHDA::processKext(KernelPatcher& patcher, size_t id, mach_vm_address_t slide, size_t size)
+{
     if (kextAppleGFXHDA.loadIndex != id) { return; }
 
     NRed::singleton().hwLateInit();
 
     const UInt32 probeFind = Navi10HDMIID;
     const UInt32 probeRepl = NRed::singleton().getAttributes().isRenoir() ? RenoirHDMIID : RavenHDMIID;
-    const KernelPatcher::LookupPatch patch {&kextAppleGFXHDA, reinterpret_cast<const UInt8 *>(&probeFind),
-        reinterpret_cast<const UInt8 *>(&probeRepl), sizeof(probeFind), 1};
+    const KernelPatcher::LookupPatch patch{&kextAppleGFXHDA, reinterpret_cast<const UInt8*>(&probeFind),
+                                           reinterpret_cast<const UInt8*>(&probeRepl), sizeof(probeFind), 1};
     patcher.clearError();
     patcher.applyLookupPatch(&patch);
     PANIC_COND(patcher.getError() != KernelPatcher::Error::NoError, "AGFXHDA",
-        "Failed to apply patch for HDMI controller probe");
+               "Failed to apply patch for HDMI controller probe");
 
     KernelPatcher::SolveRequest solveRequests[] = {
         {"__ZN34AppleGFXHDAFunctionGroupATI_Tahiti10gMetaClassE", this->orgFunctionGroupTahiti},
-        {"__ZN26AppleGFXHDAWidget_1002AAA010gMetaClassE", this->orgWidget1002AAA0},
+        {        "__ZN26AppleGFXHDAWidget_1002AAA010gMetaClassE",      this->orgWidget1002AAA0},
     };
     PANIC_COND(!patcher.solveMultiple(id, solveRequests, slide, size, true), "AGFXHDA", "Failed to solve symbols");
 
     KernelPatcher::RouteRequest requests[] = {
         {"__ZN31AppleGFXHDAFunctionGroupFactory27createAppleHDAFunctionGroupEP11DevIdStruct",
-            wrapCreateAppleHDAFunctionGroup, this->orgCreateAppleHDAFunctionGroup},
-        {"__ZN24AppleGFXHDAWidgetFactory20createAppleHDAWidgetEP11DevIdStruct", wrapCreateAppleHDAWidget,
-            this->orgCreateAppleHDAWidget},
+         wrapCreateAppleHDAFunctionGroup,this->orgCreateAppleHDAFunctionGroup },
+        {              "__ZN24AppleGFXHDAWidgetFactory20createAppleHDAWidgetEP11DevIdStruct", wrapCreateAppleHDAWidget,
+         this->orgCreateAppleHDAWidget},
     };
     PANIC_COND(!patcher.routeMultiple(id, requests, slide, size), "AGFXHDA", "Failed to route symbols");
 }
 
-void *iVega::AppleGFXHDA::wrapCreateAppleHDAFunctionGroup(void *devId) {
+void* iVega::AppleGFXHDA::wrapCreateAppleHDAFunctionGroup(void* devId)
+{
     auto vendorID = getMember<UInt16>(devId, 0x2);
     auto deviceID = getMember<UInt32>(devId, 0x8);
     if (vendorID == AMDVendorID && (deviceID == RavenHDMIDeviceID || deviceID == RenoirHDMIDeviceID)) {
@@ -59,7 +61,8 @@ void *iVega::AppleGFXHDA::wrapCreateAppleHDAFunctionGroup(void *devId) {
     return FunctionCast(wrapCreateAppleHDAFunctionGroup, singleton().orgCreateAppleHDAFunctionGroup)(devId);
 }
 
-void *iVega::AppleGFXHDA::wrapCreateAppleHDAWidget(void *devId) {
+void* iVega::AppleGFXHDA::wrapCreateAppleHDAWidget(void* devId)
+{
     auto vendorID = getMember<UInt16>(devId, 0x2);
     auto deviceID = getMember<UInt32>(devId, 0x8);
     if (vendorID == AMDVendorID && (deviceID == RavenHDMIDeviceID || deviceID == RenoirHDMIDeviceID)) {

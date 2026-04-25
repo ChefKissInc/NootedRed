@@ -6,8 +6,8 @@
 #pragma once
 #include <IOKit/IOTypes.h>
 
-static constexpr UInt32 ATTRIBUTE_RESERVE_NDRV_SPACE = 'fbrs';
-static constexpr UInt32 ATTRIBUTE_VRR_SUPPORT = 'vrrs';
+static constexpr UInt32 ATTRIBUTE_RESERVE_NDRV_SPACE       = 'fbrs';
+static constexpr UInt32 ATTRIBUTE_VRR_SUPPORT              = 'vrrs';
 static constexpr UInt32 ATTRIBUTE_DISPLAY_PIPE_TRANSACTION = 'amtr';
-static constexpr UInt32 ATTRIBUTE_WSAA = 'wsaa';
-static constexpr UInt32 ATTRIBUTE_FLIP = 'flip';
+static constexpr UInt32 ATTRIBUTE_WSAA                     = 'wsaa';
+static constexpr UInt32 ATTRIBUTE_FLIP                     = 'flip';

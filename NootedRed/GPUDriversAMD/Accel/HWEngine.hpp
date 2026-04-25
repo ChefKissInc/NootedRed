@@ -5,7 +5,8 @@
 
 #pragma once
 
-enum AMDHWEngineType {
+enum AMDHWEngineType
+{
     kAMDHWEngineTypePM4 = 0,
     kAMDHWEngineTypeSDMA0,
     kAMDHWEngineTypeSDMA1,

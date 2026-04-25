@@ -10,11 +10,13 @@
 alignas(PenguinWizardry::KernelVersion) static UInt8 _currentKernelVersion[sizeof(PenguinWizardry::KernelVersion)];
 
 [[gnu::constructor(999)]]
-static void _GLOBAL_initCurrentKernelVersion() {
+static void _GLOBAL_initCurrentKernelVersion()
+{
     new (_currentKernelVersion)
-        PenguinWizardry::KernelVersion {static_cast<UInt32>(version_major), static_cast<UInt32>(version_minor)};
+        PenguinWizardry::KernelVersion{static_cast<UInt32>(version_major), static_cast<UInt32>(version_minor)};
 }
 
-const PenguinWizardry::KernelVersion &currentKernelVersion() {
-    return *launder(reinterpret_cast<PenguinWizardry::KernelVersion *>(_currentKernelVersion));
+const PenguinWizardry::KernelVersion& currentKernelVersion()
+{
+    return *launder(reinterpret_cast<PenguinWizardry::KernelVersion*>(_currentKernelVersion));
 }

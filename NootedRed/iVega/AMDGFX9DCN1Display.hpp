@@ -7,15 +7,16 @@
 #pragma once
 #include <iVega/AMDGFX9DCNDisplay.hpp>
 
-class AMDRadeonX5000_AMDGFX9DCN1Display : public AMDRadeonX5000_AMDGFX9DCNDisplay {
+class AMDRadeonX5000_AMDGFX9DCN1Display : public AMDRadeonX5000_AMDGFX9DCNDisplay
+{
     static RuntimeVFT<vftCount, 1> vft;
 
-    static void Constructor(AMDRadeonX5000_AMDGFX9DCN1Display *self, const OSMetaClass *metaClass);
+    static void Constructor(AMDRadeonX5000_AMDGFX9DCN1Display* self, const OSMetaClass* metaClass);
 
-    static void initDCNRegOffs(AMDRadeonX5000_AMDGFX9DCN1Display *self);
+    static void initDCNRegOffs(AMDRadeonX5000_AMDGFX9DCN1Display* self);
 
-    public:
+public:
     PWDeclareRuntimeMC(AMDRadeonX5000_AMDGFX9DCN1Display, Constructor);
 
-    static void resolve(const char *const kext);
+    static void resolve(const char* const kext);
 };

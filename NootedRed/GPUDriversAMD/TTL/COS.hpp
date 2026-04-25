@@ -6,18 +6,21 @@
 #pragma once
 #include <IOKit/IOTypes.h>
 
-struct CosReadConfigurationSettingInput {
-    const char *settingName;
-    UInt32 settingType;
-    UInt32 outLen;
-    void *outPtr;
+struct CosReadConfigurationSettingInput
+{
+    const char* settingName;
+    UInt32      settingType;
+    UInt32      outLen;
+    void*       outPtr;
 };
 
-struct CosReadConfigurationSettingOutput {
+struct CosReadConfigurationSettingOutput
+{
     UInt32 settingLen;
 };
 
-enum COSResult {
-    kCOSResultOK = 0,
+enum COSResult
+{
+    kCOSResultOK          = 0,
     kCOSResultUnsupported = 2,
 };

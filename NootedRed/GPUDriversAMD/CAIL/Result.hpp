@@ -5,13 +5,14 @@
 
 #pragma once
 
-enum CAILResult {
+enum CAILResult
+{
     kCAILResultOK = 0,
     kCAILResultFailed,
     kCAILResultInvalidParameters,
     kCAILResultNoResponse,
     kCAILResultUnsupported,
     kCAILResultCatastrophic,
-    kCAILResultMCRangeNotMapped = 122,
+    kCAILResultMCRangeNotMapped    = 122,
     kCAILResultPowerControlRefused = 160,
 };

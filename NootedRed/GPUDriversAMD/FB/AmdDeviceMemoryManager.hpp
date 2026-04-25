@@ -5,7 +5,8 @@
 
 #pragma once
 
-enum struct AmdReservedMemorySelector {
+enum struct AmdReservedMemorySelector
+{
     ReserveVRAM,
     Cursor1_32bpp,
     Cursor1_2bpp,

@@ -5,7 +5,8 @@
 
 #pragma once
 
-enum struct VideoMemoryType {
+enum struct VideoMemoryType
+{
     Unknown = 0,
     DDR2,
     GDDR5,

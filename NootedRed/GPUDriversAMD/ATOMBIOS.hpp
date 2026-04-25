@@ -8,72 +8,78 @@
 
 constexpr UInt32 ATOMBIOS_IMAGE_SIZE = 0x10000;
 
-struct VFCT {
-    char signature[4];
+struct VFCT
+{
+    char   signature[4];
     UInt32 length;
-    UInt8 revision, checksum;
-    char oemId[6];
-    char oemTableId[8];
+    UInt8  revision, checksum;
+    char   oemId[6];
+    char   oemTableId[8];
     UInt32 oemRevision;
-    char creatorId[4];
+    char   creatorId[4];
     UInt32 creatorRevision;
-    char tableUUID[16];
+    char   tableUUID[16];
     UInt32 vbiosImageOffset, lib1ImageOffset;
     UInt32 reserved[4];
 };
 
-struct GOPVideoBIOSHeader {
+struct GOPVideoBIOSHeader
+{
     UInt32 pciBus, pciDevice, pciFunction;
     UInt16 vendorID, deviceID;
     UInt16 ssvId, ssId;
     UInt32 revision, imageLength;
 };
 
-struct ATOMCommonTableHeader {
+struct ATOMCommonTableHeader
+{
     UInt16 structureSize;
-    UInt8 formatRev;
-    UInt8 contentRev;
+    UInt8  formatRev;
+    UInt8  contentRev;
 };
 
 constexpr UInt32 ATOM_ROM_TABLE_PTR = 0x48;
-constexpr UInt32 ATOM_ROM_DATA_PTR = 0x20;
+constexpr UInt32 ATOM_ROM_DATA_PTR  = 0x20;
 
-struct AtomFirmwareInfo {
+struct AtomFirmwareInfo
+{
     ATOMCommonTableHeader header;
-    UInt32 firmwareRevision;
-    UInt32 bootupSclkIn10Khz;
-    UInt32 bootupMclkIn10Khz;
-    UInt32 firmwareCapability;
-    UInt32 mainCallParserEntry;
-    UInt32 biosScratchRegStartAddr;
+    UInt32                firmwareRevision;
+    UInt32                bootupSclkIn10Khz;
+    UInt32                bootupMclkIn10Khz;
+    UInt32                firmwareCapability;
+    UInt32                mainCallParserEntry;
+    UInt32                biosScratchRegStartAddr;
 };
 
-struct IGPSystemInfoV11 {
+struct IGPSystemInfoV11
+{
     ATOMCommonTableHeader header;
-    UInt32 vbiosMisc;
-    UInt32 gpuCapInfo;
-    UInt32 systemConfig;
-    UInt32 cpuCapInfo;
-    UInt16 gpuclkSsPercentage;
-    UInt16 gpuclkSsType;
-    UInt16 lvdsSsPercentage;
-    UInt16 lvdsSsRate10hz;
-    UInt16 hdmiSsPercentage;
-    UInt16 hdmiSsRate10hz;
-    UInt16 dviSsPercentage;
-    UInt16 dviSsRate10hz;
-    UInt16 dpPhyOverride;
-    UInt16 lvdsMisc;
-    UInt16 backlightPwmHz;
-    UInt8 memoryType;
-    UInt8 umaChannelCount;
+    UInt32                vbiosMisc;
+    UInt32                gpuCapInfo;
+    UInt32                systemConfig;
+    UInt32                cpuCapInfo;
+    UInt16                gpuclkSsPercentage;
+    UInt16                gpuclkSsType;
+    UInt16                lvdsSsPercentage;
+    UInt16                lvdsSsRate10hz;
+    UInt16                hdmiSsPercentage;
+    UInt16                hdmiSsRate10hz;
+    UInt16                dviSsPercentage;
+    UInt16                dviSsRate10hz;
+    UInt16                dpPhyOverride;
+    UInt16                lvdsMisc;
+    UInt16                backlightPwmHz;
+    UInt8                 memoryType;
+    UInt8                 umaChannelCount;
 };
 
-enum DMIT17MemType : UInt8 {
+enum DMIT17MemType : UInt8
+{
     kDDR2MemType = 0x13,
     kDDR2FBDIMMMemType,
-    kDDR3MemType = 0x18,
-    kDDR4MemType = 0x1A,
+    kDDR3MemType   = 0x18,
+    kDDR4MemType   = 0x1A,
     kLPDDR2MemType = 0x1C,
     kLPDDR3MemType,
     kLPDDR4MemType,
@@ -81,7 +87,8 @@ enum DMIT17MemType : UInt8 {
     kLPDDR5MemType,
 };
 
-struct IGPSystemInfoV2 : public ATOMCommonTableHeader {
+struct IGPSystemInfoV2 : public ATOMCommonTableHeader
+{
     UInt32 vbiosMisc;
     UInt32 gpuCapInfo;
     UInt32 systemConfig;
@@ -89,17 +96,19 @@ struct IGPSystemInfoV2 : public ATOMCommonTableHeader {
     UInt16 gpuclkSsPercentage;
     UInt16 gpuclkSsType;
     UInt16 dpPhyOverride;
-    UInt8 memoryType;
-    UInt8 umaChannelCount;
+    UInt8  memoryType;
+    UInt8  umaChannelCount;
 };
 
-union IGPSystemInfo {
+union IGPSystemInfo
+{
     ATOMCommonTableHeader header;
-    IGPSystemInfoV11 infoV11;
-    IGPSystemInfoV2 infoV2;
+    IGPSystemInfoV11      infoV11;
+    IGPSystemInfoV2       infoV2;
 };
 
-struct ATOMDispObjPathV2 {
+struct ATOMDispObjPathV2
+{
     UInt16 dispObjId;
     UInt16 dispRecordOff;
     UInt16 encoderObjId;
@@ -107,13 +116,14 @@ struct ATOMDispObjPathV2 {
     UInt16 encoderRecordOff;
     UInt16 extEncoderRecordOff;
     UInt16 devTag;
-    UInt8 priorityId;
-    UInt8 _reserved;
+    UInt8  priorityId;
+    UInt8  _reserved;
 };
 
-struct DispObjInfoTableV1_4 : public ATOMCommonTableHeader {
-    UInt16 supportedDevices;
-    UInt8 pathCount;
-    UInt8 _reserved;
+struct DispObjInfoTableV1_4 : public ATOMCommonTableHeader
+{
+    UInt16            supportedDevices;
+    UInt8             pathCount;
+    UInt8             _reserved;
     ATOMDispObjPathV2 paths[];
 };

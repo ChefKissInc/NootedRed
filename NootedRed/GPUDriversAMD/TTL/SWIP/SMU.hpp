@@ -9,31 +9,25 @@
 #include <Headers/kern_util.hpp>
 #include <IOKit/IOTypes.h>
 
-inline CAILResult processSMUFWResponse(const UInt32 value) {
+inline CAILResult processSMUFWResponse(const UInt32 value)
+{
     switch (value) {
-        case kSMUFWResponseNoResponse:
-            return kCAILResultNoResponse;
-        case kSMUFWResponseSuccess:
-            return kCAILResultOK;
+        case kSMUFWResponseNoResponse: return kCAILResultNoResponse;
+        case kSMUFWResponseSuccess   : return kCAILResultOK;
         case kSMUFWResponseRejectedBusy:
             SYSTRACE("CAIL", "SMU FW command rejected; SMU is busy");
             return kCAILResultInvalidParameters;
         case kSMUFWResponseRejectedPrereq:
             SYSTRACE("CAIL", "SMU FW command rejected; prerequisite was not satisfied");
             return kCAILResultInvalidParameters;
-        case kSMUFWResponseUnknownCommand:
-            SYSTRACE("CAIL", "Unknown SMU FW command");
-            return kCAILResultUnsupported;
-        case kSMUFWResponseFailed:
-            SYSTRACE("CAIL", "SMU FW command failed");
-            return kCAILResultInvalidParameters;
-        default:
-            SYSTRACE("CAIL", "Unknown SMU FW response %d", value);
-            return kCAILResultInvalidParameters;
+        case kSMUFWResponseUnknownCommand: SYSTRACE("CAIL", "Unknown SMU FW command"); return kCAILResultUnsupported;
+        case kSMUFWResponseFailed        : SYSTRACE("CAIL", "SMU FW command failed"); return kCAILResultInvalidParameters;
+        default                          : SYSTRACE("CAIL", "Unknown SMU FW response %d", value); return kCAILResultInvalidParameters;
     }
 }
 
-enum AMDSWIPSMUEvent {
+enum AMDSWIPSMUEvent
+{
     SMU_EVENT_POWER_UP = 0,
     SMU_EVENT_POWER_DOWN,
     SMU_EVENT_RESET = 9,

@@ -6,21 +6,25 @@
 #pragma once
 #include <Headers/kern_patcher.hpp>
 
-namespace Hotfixes {
-    class X6000FB {
+namespace Hotfixes
+{
+
+    class X6000FB
+    {
         static constexpr UInt32 IOFBRequestControllerEnabled = 0x1B;
 
-        mach_vm_address_t orgDpReceiverPowerCtrl {0};
-        IOReturn (*orgMessageAccelerator)(void *self, UInt32 requestType, void *arg2, void *arg3, void *arg4) {nullptr};
-        mach_vm_address_t orgControllerPowerUp {0};
+        mach_vm_address_t orgDpReceiverPowerCtrl{0};
+        IOReturn (*orgMessageAccelerator)(void* self, UInt32 requestType, void* arg2, void* arg3, void* arg4){nullptr};
+        mach_vm_address_t orgControllerPowerUp{0};
 
-        public:
-        static X6000FB &singleton();
+    public:
+        static X6000FB& singleton();
 
-        void processKext(KernelPatcher &patcher, size_t id, mach_vm_address_t slide, size_t size);
+        void processKext(KernelPatcher& patcher, size_t id, mach_vm_address_t slide, size_t size);
 
-        private:
-        static void wrapDpReceiverPowerCtrl(void *link, bool power_on);
-        static UInt32 wrapControllerPowerUp(void *self);
+    private:
+        static void   wrapDpReceiverPowerCtrl(void* link, bool power_on);
+        static UInt32 wrapControllerPowerUp(void* self);
     };
+
 };    // namespace Hotfixes

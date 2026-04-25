@@ -6,7 +6,8 @@
 #pragma once
 #include <IOKit/IOTypes.h>
 
-enum PPResult {
+enum PPResult
+{
     PPResultOK = 1,
     PPResultFailed,
     PPResultNotSupported,

@@ -5,13 +5,15 @@
 
 #pragma once
 
-enum AMDPSPCommand {
-    kPSPCommandLoadTA = 1,
-    kPSPCommandLoadASD = 4,
+enum AMDPSPCommand
+{
+    kPSPCommandLoadTA   = 1,
+    kPSPCommandLoadASD  = 4,
     kPSPCommandLoadIPFW = 6,
 };
 
-enum AMDPSPFirmwareID {
+enum AMDPSPFirmwareID
+{
     kPSPFirmwareUnknown,
     kPSPFirmwareSMU,
     kPSPFirmwareCE,

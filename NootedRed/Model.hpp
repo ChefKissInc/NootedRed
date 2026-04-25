@@ -4,4 +4,4 @@
 #pragma once
 #include <IOKit/pci/IOPCIDevice.h>
 
-const char *getBrandingNameForDev(IOPCIDevice *device);
+const char* getBrandingNameForDev(IOPCIDevice* device);

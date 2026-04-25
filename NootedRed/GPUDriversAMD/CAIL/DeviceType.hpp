@@ -6,7 +6,8 @@
 #pragma once
 #include <IOKit/IOTypes.h>
 
-enum AMDDeviceType {
+enum AMDDeviceType
+{
     kAMDDeviceTypeVega10,
     kAMDDeviceTypeVega12,
     kAMDDeviceTypeVega20,
@@ -19,8 +20,9 @@ enum AMDDeviceType {
     kAMDDeviceTypeUnknown,
 };
 
-struct AMDDeviceTypeEntry {
-    UInt32 deviceId;
+struct AMDDeviceTypeEntry
+{
+    UInt32        deviceId;
     AMDDeviceType deviceType;
 };
 static_assert(sizeof(AMDDeviceTypeEntry) == 0x8);

@@ -7,11 +7,11 @@
 #include <Headers/plugin_start.hpp>
 #include <NRed.hpp>
 
-static const char *bootargOff = "-NRedOff";
-static const char *bootargDebug = "-NRedDebug";
-static const char *bootargBeta = "-NRedBeta";
+static const char* bootargOff   = "-NRedOff";
+static const char* bootargDebug = "-NRedDebug";
+static const char* bootargBeta  = "-NRedBeta";
 
-PluginConfiguration ADDPR(config) {
+PluginConfiguration ADDPR(config){
     xStringify(PRODUCT_NAME),
     parseModuleVersion(xStringify(MODULE_VERSION)),
     LiluAPI::AllowNormal | LiluAPI::AllowInstallerRecovery | LiluAPI::AllowSafeMode,

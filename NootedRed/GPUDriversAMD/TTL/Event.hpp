@@ -6,7 +6,8 @@
 #pragma once
 #include <IOKit/IOTypes.h>
 
-enum TTLEvent {
+enum TTLEvent
+{
     TTL_EVENT_POWER_UP = 1,
     TTL_EVENT_POWER_DOWN,
     TTL_EVENT_RESET = 10,
@@ -16,12 +17,14 @@ enum TTLEvent {
     TTL_EVENT_COLLECT_DEBUG_INFO,
 };
 
-struct TTLEventInput {
+struct TTLEventInput
+{
     UInt32 id;
     UInt32 arg;
 };
 
-enum TTLFullScreenEvent {
+enum TTLFullScreenEvent
+{
     TTL_FULLSCREEN_EVENT_INCREASE = 1,
-    TTL_FULLSCREEN_EVENT_RESET = 2,
+    TTL_FULLSCREEN_EVENT_RESET    = 2,
 };

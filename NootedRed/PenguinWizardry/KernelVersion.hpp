@@ -7,25 +7,31 @@
 #pragma once
 #include <Headers/kern_util.hpp>
 
-namespace PenguinWizardry {
-    class KernelVersion {
+namespace PenguinWizardry
+{
+
+    class KernelVersion
+    {
         const UInt64 combined;
 
-        public:
-        constexpr KernelVersion(const UInt32 major, const UInt32 minor)
-            : combined {minor | (static_cast<UInt64>(major) << 32)} {}
+    public:
+        constexpr KernelVersion(const UInt32 major, const UInt32 minor) :
+            combined{minor | (static_cast<UInt64>(major) << 32)}
+        { }
 
-        constexpr bool operator>(const KernelVersion &other) const { return this->combined > other.combined; }
-        constexpr bool operator<(const KernelVersion &other) const { return this->combined < other.combined; }
-        constexpr bool operator>=(const KernelVersion &other) const { return this->combined >= other.combined; }
-        constexpr bool operator<=(const KernelVersion &other) const { return this->combined <= other.combined; }
-        constexpr bool operator==(const KernelVersion &other) const {
+        constexpr bool operator>(const KernelVersion& other) const { return this->combined > other.combined; }
+        constexpr bool operator<(const KernelVersion& other) const { return this->combined < other.combined; }
+        constexpr bool operator>=(const KernelVersion& other) const { return this->combined >= other.combined; }
+        constexpr bool operator<=(const KernelVersion& other) const { return this->combined <= other.combined; }
+        constexpr bool operator==(const KernelVersion& other) const
+        {
             return (this->combined & ~0xFFFFFFFFull) == (other.combined & ~0xFFFFFFFFull);
         }
     };
+
 }    // namespace PenguinWizardry
 
-const PenguinWizardry::KernelVersion &currentKernelVersion();
+const PenguinWizardry::KernelVersion& currentKernelVersion();
 
 static constexpr const PenguinWizardry::KernelVersion MACOS_10_4(8, 0);      // macOS Tiger 10.4
 static constexpr const PenguinWizardry::KernelVersion MACOS_10_5(9, 0);      // macOS Leopard 10.5
