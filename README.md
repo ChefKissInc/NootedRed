@@ -11,13 +11,13 @@
 >
 > ETH: `0x038A25849c23Bc5A736484351a8B6Ad71bC46676`
 
-The AMD Vega iGPU support kext.
+The unsupported AMD GPU support kext.
 
 “NootedRed” is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement.
 
 By using this software, you acknowledge that you are solely responsible for how you use it. The “NootedRed” project team is not responsible for any damage, legal issues, data loss, or other consequences arising from its use.
 
-This project is intended for lawful purposes only. Users are responsible for complying with all applicable laws, licenses, and agreements, including copyright, trademark, and End User License Agreements (EULAs).
+The “NootedRed” project is intended for lawful purposes only. Users are responsible for complying with all applicable laws, licenses, and agreements, including copyright, trademark, and End User License Agreements (EULAs).
 
 The “NootedRed” project team does not condone or support piracy, copyright infringement, or any illegal activity.
 
