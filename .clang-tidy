@@ -1,0 +1,2 @@
+---
+Checks: "misc-include-cleaner, bugprone-*, performance-*, portability=*"
