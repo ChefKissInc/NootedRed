@@ -37,10 +37,8 @@ DerivedData/
 !*.xcodeproj/xcshareddata/
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
-/Lilu.kext
-/NootedRed/Firmware.cpp
 .vscode/
 .cache/
 CompilationDatabase/
 compile_commands.json
-clang_analyze
+clang_analyze/
