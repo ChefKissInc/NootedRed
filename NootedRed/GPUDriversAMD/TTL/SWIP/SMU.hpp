@@ -9,20 +9,26 @@
 #include <Headers/kern_util.hpp>
 #include <IOKit/IOTypes.h>
 
-inline CAILResult processSMUFWResponse(const UInt32 value)
+inline CAILResult processSMUFWResponse(const UInt32 msg, const UInt32 value)
 {
     switch (value) {
         case kSMUFWResponseNoResponse: return kCAILResultNoResponse;
         case kSMUFWResponseSuccess   : return kCAILResultOK;
         case kSMUFWResponseRejectedBusy:
-            SYSTRACE("CAIL", "SMU FW command rejected; SMU is busy");
+            SYSLOG("CAIL", "SMU FW command 0x%X rejected; SMU is busy", msg);
             return kCAILResultInvalidParameters;
         case kSMUFWResponseRejectedPrereq:
-            SYSTRACE("CAIL", "SMU FW command rejected; prerequisite was not satisfied");
+            SYSLOG("CAIL", "SMU FW command 0x%X rejected; prerequisite was not satisfied", msg);
             return kCAILResultInvalidParameters;
-        case kSMUFWResponseUnknownCommand: SYSTRACE("CAIL", "Unknown SMU FW command"); return kCAILResultUnsupported;
-        case kSMUFWResponseFailed        : SYSTRACE("CAIL", "SMU FW command failed"); return kCAILResultInvalidParameters;
-        default                          : SYSTRACE("CAIL", "Unknown SMU FW response %d", value); return kCAILResultInvalidParameters;
+        case kSMUFWResponseUnknownCommand:
+            SYSLOG("CAIL", "Unknown SMU FW command 0x%X", msg);
+            return kCAILResultUnsupported;
+        case kSMUFWResponseFailed:
+            SYSLOG("CAIL", "SMU FW command 0x%X failed", msg);
+            return kCAILResultInvalidParameters;
+        default:
+            SYSLOG("CAIL", "Unknown SMU FW response %d for command 0x%X", value, msg);
+            return kCAILResultInvalidParameters;
     }
 }
 

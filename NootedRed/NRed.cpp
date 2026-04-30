@@ -286,7 +286,7 @@ CAILResult NRed::sendMsgToSmc(const UInt32 msg, const UInt32 param, UInt32* cons
 
     if (res == kCAILResultOK && outParam != nullptr) { *outParam = this->readReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_82); }
 
-    return processSMUFWResponse(resp);
+    return processSMUFWResponse(msg, resp);
 }
 
 static bool checkAtomBios(const UInt8* const bios, const size_t size)
