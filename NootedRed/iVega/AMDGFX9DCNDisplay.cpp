@@ -561,7 +561,7 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::writeFlipParameters(
             newFlipParam.dcn.surfaceFormat = AMDHWSurfacePixelFormat::BGR565;
         } break;
         case ATIFormat::ARGB1555: {
-            newFlipParam.dcn.surfaceFormat = AMDHWSurfacePixelFormat::ABGR1555;
+            newFlipParam.dcn.surfaceFormat = AMDHWSurfacePixelFormat::ARGB1555;
         } break;
         case ATIFormat::ABGR1555: {
             newFlipParam.dcn.surfaceFormat = AMDHWSurfacePixelFormat::ABGR1555;
