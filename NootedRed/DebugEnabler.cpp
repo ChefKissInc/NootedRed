@@ -56,7 +56,7 @@ static DebugEnabler instance{};
 
 DebugEnabler& DebugEnabler::singleton() { return instance; }
 
-enum GpuChannelDebugPolicy
+enum GpuChannelDebugPolicy : UInt32
 {
     CHANNEL_WAIT_FOR_PM4_IDLE            = 0x1,
     CHANNEL_WAIT_FOR_TS_AFTER_SUBMISSION = 0x2,
@@ -64,7 +64,7 @@ enum GpuChannelDebugPolicy
     CHANNEL_DISABLE_PREEMPTION = 0x20,
 };
 
-enum GpuDebugPolicy
+enum GpuDebugPolicy : UInt32
 {
     WAIT_FOR_PM4_IDLE                 = 0x1,
     WAIT_FOR_TS_AFTER_SUBMISSION      = 0x2,
