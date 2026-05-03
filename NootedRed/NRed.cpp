@@ -246,8 +246,8 @@ CAILResult NRed::waitForFunc(void* handle, bool (*func)(void* handle), const UIn
         return kCAILResultOK;
     }
 
-    const auto   startTime = getCurTimeInNS();
-    const UInt64 timeoutNS = timeoutMS * 1000000;
+    const auto startTime = getCurTimeInNS();
+    const auto timeoutNS = static_cast<UInt64>(timeoutMS) * 1000000;
     do {
         if (func(handle)) { return kCAILResultOK; }
     }
