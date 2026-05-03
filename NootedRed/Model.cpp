@@ -5,7 +5,7 @@
 #include <Headers/kern_util.hpp>
 #include <Model.hpp>
 
-enum struct MatchType
+enum struct MatchType : UInt8
 {
     RevOnly,
     RevSubsys,
