@@ -89,7 +89,7 @@ void NRed::hwLateInit()
     this->rmmio =
         this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5, kIOMapInhibitCache | kIOMapAnywhere);
     PANIC_COND(this->rmmio == nullptr || this->rmmio->getLength() == 0, "NRed", "Failed to map RMMIO");
-    this->rmmioPtr = reinterpret_cast<UInt32*>(this->rmmio->getVirtualAddress());
+    this->rmmioPtr = reinterpret_cast<volatile UInt32*>(this->rmmio->getVirtualAddress());
 
     this->fbOffset    = static_cast<UInt64>(this->readReg32(GC_BASE_0 + MC_VM_FB_OFFSET)) << 24;
     this->devRevision = (this->readReg32(NBIO_BASE_2 + RCC_DEV0_EPF0_STRAP0) & RCC_DEV0_EPF0_STRAP0_ATI_REV_ID_MASK)
