@@ -339,7 +339,8 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::fixedSuperGetDisplayInfo(const UInt32 fbI
         if (this->getHWInterface()->getHWAlignManager()->getSurfaceInfo2(&surfInfoInput, &surfInfoOutput)
             == kIOReturnSuccess)
         {
-            fbInfo->savedSize = surfInfoOutput.height * surfInfoOutput.pitch * hwSpecificInfo.bytesPerPixel;
+            fbInfo->savedSize =
+                static_cast<UInt64>(surfInfoOutput.height) * surfInfoOutput.pitch * hwSpecificInfo.bytesPerPixel;
         }
     }
 
