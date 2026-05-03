@@ -273,7 +273,7 @@ void DebugEnabler::pspDebugPrint(void*, const char* fmt, ...)
 bool DebugEnabler::wrapGetNumericProperty(void* self, const char* name, UInt32* value)
 {
     auto ret = FunctionCast(wrapGetNumericProperty, singleton().orgGetNumericProperty)(self, name, value);
-    if (name == nullptr || strncmp(name, "GpuDebugPolicy", 15) != 0) { return ret; }
+    if (name == nullptr || strncmp(name, "GpuDebugPolicy", 14) != 0) { return ret; }
     if (value != nullptr) {
         // Enable entry traces
         if (ret) { *value |= PRINT_FUNC_ENTRY_EXIT; }
