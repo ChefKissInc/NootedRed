@@ -216,27 +216,40 @@ void DebugEnabler::doGPUPanic(void*, const char* fmt, ...)
 }
 
 static const char* LogTypes[] = {
-    "Error",    "Warning",   "Debug",          "DC_Interface", "DTN",         "Surface",   "HW_Hotplug",
-    "HW_LKTN",  "HW_Mode",   "HW_Resume",      "HW_Audio",     "HW_HPDIRQ",   "MST",       "Scaler",
-    "BIOS",     "BWCalcs",   "BWValidation",   "I2C_AUX",      "Sync",        "Backlight", "Override",
-    "Edid",     "DP_Caps",   "Resource",       "DML",          "Mode",        "Detect",    "LKTN",
-    "LinkLoss", "Underflow", "InterfaceTrace", "PerfTrace",    "DisplayStats"};
+    "Error",    "Warning",   "Debug",          "DC_Interface", "DTN",          "Surface",   "HW_Hotplug",
+    "HW_LKTN",  "HW_Mode",   "HW_Resume",      "HW_Audio",     "HW_HPDIRQ",    "MST",       "Scaler",
+    "BIOS",     "BWCalcs",   "BWValidation",   "I2C_AUX",      "Sync",         "Backlight", "Override",
+    "Edid",     "DP_Caps",   "Resource",       "DML",          "Mode",         "Detect",    "LKTN",
+    "LinkLoss", "Underflow", "InterfaceTrace", "PerfTrace",    "DisplayStats",
+};
 
-// Needed to prevent stack overflow
+// Reimplementation to prevent stack overflow
 void DebugEnabler::dmLoggerWrite(void*, const UInt32 logType, const char* fmt, ...)
 {
-    va_list va;
-    va_start(va, fmt);
-    auto* message = IONew(char, 0x1000);
-    bzero(message, 0x1000);
-    vsnprintf(message, 0x1000, fmt, va);
-    va_end(va);
-    auto* epilogue = message[strnlen(message, 0x1000) - 1] == '\n' ? "" : "\n";
-    if (logType < arrsize(LogTypes)) { kprintf("[%s]\t%s%s", LogTypes[logType], message, epilogue); }
-    else {
-        kprintf("%s%s", message, epilogue);
+    va_list args0, args1;
+    va_start(args0, fmt);
+    va_copy(args1, args0);
+    const auto nchars = vsnprintf(nullptr, 0, fmt, args0);
+    va_end(args0);
+    if (nchars < 0) {
+        va_end(args1);
+        kprintf("[Error]\tvsnprintf failed.\n");
+        return;
     }
-    IODelete(message, char, 0x1000);
+    const auto bufferSize = static_cast<size_t>(nchars) + 1;
+    const auto buffer     = IONew(char, bufferSize);
+    if (buffer == nullptr) {
+        va_end(args1);
+        kprintf("[Error]\tFailed to allocate log buffer.\n");
+        return;
+    }
+    vsnprintf(buffer, bufferSize, fmt, args1);
+    va_end(args1);
+    if (logType < arrsize(LogTypes)) { kprintf("[%s]\t%s", LogTypes[logType], buffer); }
+    else {
+        kprintf("%s", buffer);
+    }
+    IODelete(buffer, char, bufferSize);
 }
 
 // Port of `AmdTtlServices::cosDebugAssert` for empty `_*_assertion` functions
