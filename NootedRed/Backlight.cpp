@@ -248,7 +248,6 @@ UInt32 Backlight::wrapDcePanelCntlHwInit(void* panelCntl)
 void* Backlight::wrapLinkCreate(void* data)
 {
     auto* const ret = FunctionCast(wrapLinkCreate, singleton().orgLinkCreate)(data);
-
     if (ret == nullptr) { return ret; }
 
     const auto signalType = getMember<UInt32>(ret, 0x38);
@@ -272,6 +271,7 @@ void* Backlight::wrapLinkCreate(void* data)
                 SYSLOG("Backlight", "Found multiple embedded panel links. This may be a bug. Please report this.");
             }
         } break;
+        default: break;
     }
 
     return ret;
