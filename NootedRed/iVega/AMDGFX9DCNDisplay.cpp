@@ -368,7 +368,7 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::getDisplayInfo(AMDRadeonX5000_AMDGFX9DCND
     auto&       savedState   = expansion.savedState[fbIndex];
     const auto& displayState = self->displayStates()[fbIndex];
 
-    bzero(&savedState.flipParam, sizeof(savedState.flipParam));
+    memset(&savedState.flipParam, 0, sizeof(savedState.flipParam));
 
     AMDHWRotationAngle hwRotation = AMDHWRotationAngle::DEG_0;
     if (!displayState.status.isAccelBacked()) {
@@ -551,7 +551,7 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::writeFlipParameters(
     auto& savedState = expansion.savedState[fbIndex];
 
     AMDFlipParam newFlipParam;
-    bzero(&newFlipParam, sizeof(newFlipParam));
+    memset(&newFlipParam, 0, sizeof(newFlipParam));
 
     switch (atiFormat) {
         case ATIFormat::RGB565: {
