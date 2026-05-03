@@ -65,7 +65,7 @@ namespace PenguinWizardry
         RuntimeMCBase() :
             mc{IONew(OSMetaClass, 1)}
         {
-            bzero(static_cast<void*>(this->mc), sizeof(*this->mc));
+            memset(static_cast<void*>(this->mc), 0, sizeof(*this->mc));
         }
 
         OSMetaClass* getMetaClass() const { return this->mc; }
