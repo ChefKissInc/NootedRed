@@ -28,7 +28,7 @@ public:
         assert(this->sourceCount != 0);
         this->vft = IONew(void*, this->sourceCount + ExpansionCount);
         memcpy(this->vft, srcVft, this->sourceCount * sizeof(*this->vft));
-        bzero(&this->vft[this->sourceCount], ExpansionCount * sizeof(*this->vft));
+        memset(&this->vft[this->sourceCount], 0, ExpansionCount * sizeof(*this->vft));
     }
 
     void resolve(KernelPatcher& patcher, const size_t id, const char* const symbol, const mach_vm_address_t start,
