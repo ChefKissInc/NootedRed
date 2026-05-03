@@ -836,13 +836,13 @@ static bool setIpFwOutForFW(const char (&data)[N], void* const out)
 
 bool iVega::X5000HWLibs::wrapGetIpFw(void* const self, const UInt32 ipVersion, const char* const name, void* const out)
 {
-    if (strncmp(name, "ativvaxy_rv.dat", 16) == 0) {    // VCN 1.0
+    if (strncmp(name, "ativvaxy_rv.dat", 15) == 0) {    // VCN 1.0
         return setIpFwOutForFW(ativvaxy_rv_dat, out);
     }
-    if (strncmp(name, "ativvaxy_nv.dat", 16) == 0) {    // VCN 2.1
+    if (strncmp(name, "ativvaxy_nv.dat", 15) == 0) {    // VCN 2.1
         return setIpFwOutForFW(ativvaxy_nv_dat, out);
     }
-    if (strncmp(name, "atidmcub_0.dat", 15) == 0) {    // DMCU version B
+    if (strncmp(name, "atidmcub_0.dat", 14) == 0) {    // DMCU version B
         return setIpFwOutForFW(atidmcub_rn_dat, out);
     }
     return FunctionCast(wrapGetIpFw, singleton().orgGetIpFw)(self, ipVersion, name, out);
@@ -911,14 +911,14 @@ CAILResult iVega::X5000HWLibs::wrapPspCmdKmSubmit(void* const instance, void* co
     switch (pspCmd) {
         case kPSPCommandLoadTA: {
             const char* name = reinterpret_cast<char*>(data + 0x8DB);
-            if (strncmp(name, "AMD DTM Application", 20) == 0) { dataSize = replacePspCmdDataWith(data, psp_dtm_bin); }
-            else if (strncmp(name, "AMD HDCP Application", 21) == 0) {
+            if (strncmp(name, "AMD DTM Application", 19) == 0) { dataSize = replacePspCmdDataWith(data, psp_dtm_bin); }
+            else if (strncmp(name, "AMD HDCP Application", 20) == 0) {
                 dataSize = replacePspCmdDataWith(data, psp_hdcp_bin);
             }
-            else if (strncmp(name, "AMD AUC Application", 20) == 0) {
+            else if (strncmp(name, "AMD AUC Application", 19) == 0) {
                 dataSize = replacePspCmdDataWith(data, psp_auc_bin);
             }
-            else if (strncmp(name, "AMD FP Application", 19) == 0) {
+            else if (strncmp(name, "AMD FP Application", 18) == 0) {
                 dataSize = replacePspCmdDataWith(data, psp_fp_bin);
             }
         } break;
