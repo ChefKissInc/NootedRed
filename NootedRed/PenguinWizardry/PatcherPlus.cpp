@@ -171,7 +171,7 @@ mach_vm_address_t PenguinWizardry::jumpInstDestination(const mach_vm_address_t s
         instSize = sizeof(UInt8) + sizeof(UInt8);
         if (start + instSize > end) { return 0; }
 
-        off = *reinterpret_cast<const SInt8*>(start + sizeof(UInt8));
+        off = *reinterpret_cast<const SInt8*>(start + sizeof(UInt8));    // NOLINT(bugprone-signed-char-misuse)
     }
     else {
         return 0;
