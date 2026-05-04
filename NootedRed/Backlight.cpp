@@ -51,7 +51,7 @@ static const UInt8 kDcLinkSetBacklightLevelNitsPatternMask[] = {0xFF, 0xFF, 0xFF
 
 static constexpr UInt32 kIOAppleBacklightAttribute = 'bklt';
 
-static Backlight instance{};
+static Backlight instance;
 
 Backlight& Backlight::singleton() { return instance; }
 

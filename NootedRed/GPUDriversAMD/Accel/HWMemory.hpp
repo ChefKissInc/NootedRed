@@ -11,7 +11,7 @@ class AMDRadeonX5000_AMDHWMemory
 {
     struct Constants
     {
-        ObjectField<UInt64 (*)(AMDRadeonX5000_AMDHWMemory*)> vtGetVisibleSize{};
+        ObjectField<UInt64 (*)(AMDRadeonX5000_AMDHWMemory*)> vtGetVisibleSize;
 
         Constants() { this->vtGetVisibleSize = currentKernelVersion() == MACOS_15 ? 0x1F8 : 0x1D8; }
     };

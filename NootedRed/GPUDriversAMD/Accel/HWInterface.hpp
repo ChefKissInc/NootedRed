@@ -13,9 +13,9 @@ class AMDRadeonX5000_AMDHWInterface
 {
     struct Constants
     {
-        ObjectField<void* (*)(AMDRadeonX5000_AMDHWInterface*)>                             vtGetHWInfo{};
-        ObjectField<AMDRadeonX5000_AMDHWAlignManager* (*)(AMDRadeonX5000_AMDHWInterface*)> vtGetHWAlignManager{};
-        ObjectField<UInt32>                                                                hwInfoAddrConfig{};
+        ObjectField<void* (*)(AMDRadeonX5000_AMDHWInterface*)>                             vtGetHWInfo;
+        ObjectField<AMDRadeonX5000_AMDHWAlignManager* (*)(AMDRadeonX5000_AMDHWInterface*)> vtGetHWAlignManager;
+        ObjectField<UInt32>                                                                hwInfoAddrConfig;
 
         Constants()
         {

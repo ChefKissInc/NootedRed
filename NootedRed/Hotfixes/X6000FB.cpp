@@ -30,7 +30,7 @@ static const UInt8 kControllerPowerUpReplaceMask[]  = {0x00, 0x00, 0x00, 0x00, 0
 static const UInt8 kValidateDetailedTimingOriginal[] = {0x66, 0x0F, 0x2E, 0xC1, 0x76, 0x06, 0xF2, 0x0F, 0x5E, 0xC1};
 static const UInt8 kValidateDetailedTimingPatched[]  = {0x66, 0x0F, 0x2E, 0xC1, 0x66, 0x90, 0xF2, 0x0F, 0x5E, 0xC1};
 
-static Hotfixes::X6000FB instance{};
+static Hotfixes::X6000FB instance;
 
 Hotfixes::X6000FB& Hotfixes::X6000FB::singleton() { return instance; }
 

@@ -27,7 +27,7 @@
 #include <iVega/X5000.hpp>
 #include <iVega/X6000FB.hpp>
 
-static NRed instance{};
+static NRed instance;
 
 NRed& NRed::singleton() { return instance; }
 

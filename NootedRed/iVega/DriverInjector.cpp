@@ -7,7 +7,7 @@
 #include <iVega/DriverInjector.hpp>
 #include <libkern/c++/OSString.h>
 
-static iVega::DriverInjector instance{};
+static iVega::DriverInjector instance;
 
 static const char com_apple_kext_AMDRadeonX5000[] = {
 #embed "../Personalities/com.apple.kext.AMDRadeonX5000.xml" suffix(, '\0')

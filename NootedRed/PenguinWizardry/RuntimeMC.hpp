@@ -18,7 +18,7 @@
 #define PWDefineRuntimeMC(_cls, _ctor, ...)                                                    \
     DEFINE_TYPE_NAME(_cls);                                                                    \
                                                                                                \
-    PenguinWizardry::RuntimeMC<_cls, _cls::_ctor, ##__VA_ARGS__> _cls::gRTMetaClass{};         \
+    PenguinWizardry::RuntimeMC<_cls, _cls::_ctor, ##__VA_ARGS__> _cls::gRTMetaClass;           \
                                                                                                \
     OSMetaClass* _cls::getMetaClass(const _cls* const) { return gRTMetaClass.getMetaClass(); }
 
@@ -52,7 +52,7 @@ namespace PenguinWizardry
         static UInt32 vftSize() { return 0x1A; }
 
     protected:
-        RuntimeVFT<vftSize> vft{};
+        RuntimeVFT<vftSize> vft;
         OSMetaClass*        mc{nullptr};    // intentional leak, meta classes don't get deallocated
 
         virtual ~RuntimeMCBase() { }

@@ -427,7 +427,7 @@ static const UInt8 kCreatePowerTuneServices2Patched1404[]  = {0x8B, 0x43, 0x1C, 
 static const UInt8 kCailQueryAdapterInfoOriginal[] = {0x83, 0xC0, 0x92, 0x83, 0xF8, 0x21};
 static const UInt8 kCailQueryAdapterInfoPatched[]  = {0x83, 0xC0, 0x91, 0x83, 0xF8, 0x21};
 
-static iVega::X5000HWLibs moduleInstance{};
+static iVega::X5000HWLibs moduleInstance;
 
 iVega::X5000HWLibs& iVega::X5000HWLibs::singleton() { return moduleInstance; };
 

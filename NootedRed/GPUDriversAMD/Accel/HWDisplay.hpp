@@ -366,10 +366,10 @@ private:
         void**                                          vfuncs{nullptr};
         mach_vm_address_t                               init{0};
         mach_vm_address_t                               constructor{0};
-        ObjectField<UInt32[MAX_SUPPORTED_DISPLAYS]>     scalerFlags{};
-        ObjectField<bool>                               isDCN{};
-        ObjectField<UInt32[MAX_SUPPORTED_DISPLAYS]>     wsaaAttributes{};
-        ObjectField<UInt32 (*)(void*, UInt32, UInt32*)> vftGetMirroredDisplays{};
+        ObjectField<UInt32[MAX_SUPPORTED_DISPLAYS]>     scalerFlags;
+        ObjectField<bool>                               isDCN;
+        ObjectField<UInt32[MAX_SUPPORTED_DISPLAYS]>     wsaaAttributes;
+        ObjectField<UInt32 (*)(void*, UInt32, UInt32*)> vftGetMirroredDisplays;
         UInt32                                          vftCount{0};
 
         Constants()

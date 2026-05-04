@@ -6,7 +6,7 @@
 #include <Headers/kern_api.hpp>
 #include <PenguinWizardry/RuntimeMC.hpp>
 
-static PenguinWizardry::RuntimeMCManager instance{};
+static PenguinWizardry::RuntimeMCManager instance;
 
 PenguinWizardry::RuntimeMCManager& PenguinWizardry::RuntimeMCManager::singleton() { return instance; }
 
@@ -44,7 +44,7 @@ void PenguinWizardry::RuntimeMCManager::registerMC(RuntimeMCBase& rtMC, const ch
 {
     rtMC.vft.init(this->orgMetaClassVFuncs);
     rtMC.populateVFT();
-    auto* pending = new Pending{};
+    auto* pending = new Pending;
     assert(pending != nullptr);
     pending->mc          = &rtMC;
     pending->super       = super;

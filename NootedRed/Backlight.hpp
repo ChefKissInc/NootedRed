@@ -19,7 +19,7 @@ class Backlight
     using t_DcLinkSetBacklightLevelNits = bool (*)(void* link, bool isHDR, UInt32 backlightMillinits,
                                                    UInt32 transitionTimeMs);
 
-    ObjectField<DPCDSinkExtCaps> dcLinkCapsField{};
+    ObjectField<DPCDSinkExtCaps> dcLinkCapsField;
     UInt32                       curBacklightLvl{0}, maxBacklightLvl{0xFFFF};
     // TODO: Obtain the actual max brightness for the screen
     UInt32                        maxBacklightMillinits{1000 * 512};

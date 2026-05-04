@@ -44,7 +44,7 @@ static const UInt8 kAddrLibCreatePatchedMask1404[]  = {0x00, 0x00, 0x00, 0x00, 0
 static const UInt8 kCreateAccelChannelsOriginal[] = {0x8D, 0x44, 0x09, 0x02};
 static const UInt8 kCreateAccelChannelsPatched[]  = {0x8D, 0x44, 0x09, 0x01};
 
-static iVega::X5000 instance{};
+static iVega::X5000 instance;
 
 iVega::X5000& iVega::X5000::singleton() { return instance; }
 

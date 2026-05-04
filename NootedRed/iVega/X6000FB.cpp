@@ -184,7 +184,7 @@ static const UInt8 kCreateLinksOriginalMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xF0};
 static const UInt8 kCreateLinksPatched[]      = {0x04, 0x00, 0x00, 0x00, 0x00};
 static const UInt8 kCreateLinksPatchedMask[]  = {0x0F, 0x00, 0x00, 0x00, 0x00};
 
-static iVega::X6000FB instance{};
+static iVega::X6000FB instance;
 
 iVega::X6000FB& iVega::X6000FB::singleton() { return instance; }
 

@@ -36,7 +36,7 @@ class NRed
         constexpr void setGreenSardine() { this->value |= IsGreenSardine; }
     };
 
-    Attributes       attributes{};          // TODO: Remove!
+    Attributes       attributes;            // TODO: Remove!
     IOPCIDevice*     iGPU{nullptr};         // TODO: Remove!
     IOMemoryMap*     rmmio{nullptr};        // TODO: Remove!
     volatile UInt32* rmmioPtr{nullptr};     // TODO: Remove!

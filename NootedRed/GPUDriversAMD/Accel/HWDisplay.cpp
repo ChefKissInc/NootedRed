@@ -6,9 +6,9 @@
 #include <GPUDriversAMD/Accel/HWDisplay.hpp>
 #include <PenguinWizardry/KernelVersion.hpp>
 
-AMDHWDisplayState::Status::Constants AMDHWDisplayState::Status::constants{};
+AMDHWDisplayState::Status::Constants AMDHWDisplayState::Status::constants;
 
-AMDRadeonX5000_AMDHWDisplay::Constants AMDRadeonX5000_AMDHWDisplay::constants{};
+AMDRadeonX5000_AMDHWDisplay::Constants AMDRadeonX5000_AMDHWDisplay::constants;
 
 void AMDRadeonX5000_AMDHWDisplay::resolve(KernelPatcher& patcher, const size_t id, const mach_vm_address_t slide,
                                           const size_t size)

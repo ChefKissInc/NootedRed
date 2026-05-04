@@ -10,7 +10,7 @@
 
 PWDefineRuntimeMC(AMDRadeonX5000_AMDGFX9DCN2Display, Constructor);
 
-RuntimeVFT<AMDRadeonX5000_AMDHWDisplay::vftCount, 1> AMDRadeonX5000_AMDGFX9DCN2Display::vft{};
+RuntimeVFT<AMDRadeonX5000_AMDHWDisplay::vftCount, 1> AMDRadeonX5000_AMDGFX9DCN2Display::vft;
 
 void AMDRadeonX5000_AMDGFX9DCN2Display::Constructor(AMDRadeonX5000_AMDGFX9DCN2Display* const self,
                                                     const OSMetaClass* const                 metaClass)

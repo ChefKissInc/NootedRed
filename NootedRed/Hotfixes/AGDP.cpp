@@ -22,7 +22,7 @@ static const UInt8 kAGDPFBCountCheckPatched13[]  = {0x41, 0x83, 0xBE, 0x14, 0x02
 static const UInt8 kAGDPBoardIDKeyOriginal[] = "board-id";
 static const UInt8 kAGDPBoardIDKeyPatched[]  = "applehax";
 
-static Hotfixes::AGDP instance{};
+static Hotfixes::AGDP instance;
 
 Hotfixes::AGDP& Hotfixes::AGDP::singleton() { return instance; }
 

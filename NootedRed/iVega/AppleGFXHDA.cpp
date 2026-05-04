@@ -17,7 +17,7 @@ constexpr UInt32 RavenHDMIID        = (RavenHDMIDeviceID << 16) | AMDVendorID;
 constexpr UInt32 RenoirHDMIDeviceID = 0x1637;
 constexpr UInt32 RenoirHDMIID       = (RenoirHDMIDeviceID << 16) | AMDVendorID;
 
-static iVega::AppleGFXHDA instance{};
+static iVega::AppleGFXHDA instance;
 
 iVega::AppleGFXHDA& iVega::AppleGFXHDA::singleton() { return instance; }
 

@@ -52,7 +52,7 @@ void AMDRadeonX5000_AMDGFX9DCNDisplay::initialiseRegisters(AMDRadeonX5000_AMDGFX
 
 void AMDRadeonX5000_AMDGFX9DCNDisplay::restoreRegisters() { }
 
-AMDRadeonX5000_AMDGFX9DCNDisplay::Constants AMDRadeonX5000_AMDGFX9DCNDisplay::constants{};
+AMDRadeonX5000_AMDGFX9DCNDisplay::Constants AMDRadeonX5000_AMDGFX9DCNDisplay::constants;
 
 void AMDRadeonX5000_AMDGFX9DCNDisplay::setVrrTimestampInfoVentura(AMDRadeonX5000_AMDGFX9DCNDisplay& self,
                                                                   const UInt64 vTotalMin, const UInt64 vTotalMax,
@@ -193,7 +193,7 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::fixedSuperGetDisplayInfo(const UInt32 fbI
             fbInfo->rect.height = displayState.pixelInfo.activeHeight;
         }
 
-        IODisplayModeInformation modeInfo{};
+        IODisplayModeInformation modeInfo;
         if (fb->getInformationForDisplayMode(displayMode, &modeInfo) == kIOReturnSuccess
             && (modeInfo.flags & kDisplayModeAcceleratorBackedFlag) != 0)
         {
@@ -201,7 +201,7 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::fixedSuperGetDisplayInfo(const UInt32 fbI
             this->fedsParamInfo()[fbIndex].crtIndex = 1;
         }
 
-        IOTimingInformation timingInfo{};
+        IOTimingInformation timingInfo;
         timingInfo.flags = kIODetailedTimingValid;
         if (fb->getTimingInfoForDisplayMode(displayMode, &timingInfo) == kIOReturnSuccess
             && (timingInfo.flags & kIODetailedTimingValid) != 0)
@@ -293,7 +293,7 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::fixedSuperGetDisplayInfo(const UInt32 fbI
         hwSpecificInfo.isInterlaced = isDisplayInterlaceEnabled(this, fbIndex);
         displayState.status.setIsInterlaced(hwSpecificInfo.isInterlaced);
 
-        ADDR2_COMPUTE_SURFACE_INFO_INPUT surfInfoInput{};
+        ADDR2_COMPUTE_SURFACE_INFO_INPUT surfInfoInput;
         surfInfoInput.width        = fbInfo->rect.width;
         surfInfoInput.height       = fbInfo->rect.height;
         surfInfoInput.bpp          = displayState.pixelInfo.bitsPerPixel;
@@ -318,14 +318,14 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::fixedSuperGetDisplayInfo(const UInt32 fbI
         displayState.status.setIsEnabled(true);
     }
 
-    AMDHWDisplayState::Status combinedStatus{};
+    AMDHWDisplayState::Status combinedStatus;
     for (UInt32 i = 0; i < this->supportedDisplayCount(); i += 1) { combinedStatus |= this->displayStates()[i].status; }
     this->combinedStatus() = combinedStatus;
 
     fbInfo->savedSize = fbInfo->size;
 
     if (this->fedsParamInfo()[fbIndex].crtIndex != 0) {
-        ADDR2_COMPUTE_SURFACE_INFO_INPUT surfInfoInput{};
+        ADDR2_COMPUTE_SURFACE_INFO_INPUT surfInfoInput;
         surfInfoInput.width        = this->fedsParamInfo()[fbIndex].scaledW;
         surfInfoInput.height       = this->fedsParamInfo()[fbIndex].scaledH;
         surfInfoInput.bpp          = displayState.pixelInfo.bitsPerPixel;
@@ -335,7 +335,7 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::fixedSuperGetDisplayInfo(const UInt32 fbI
         surfInfoInput.numSamples = 1;
         surfInfoInput.numSlices  = 1;
         surfInfoInput.flags.display = true;
-        ADDR2_COMPUTE_SURFACE_INFO_OUTPUT surfInfoOutput{};
+        ADDR2_COMPUTE_SURFACE_INFO_OUTPUT surfInfoOutput;
         if (this->getHWInterface()->getHWAlignManager()->getSurfaceInfo2(&surfInfoInput, &surfInfoOutput)
             == kIOReturnSuccess)
         {

@@ -16,18 +16,18 @@ namespace iVega
     {
         using GenericConstructor_t = void (*)(void* self);
 
-        ObjectField<void*>            pm4EngineField{};
-        ObjectField<void*>            sdma0EngineField{};
-        ObjectField<UInt32>           displayPipeCountField{};
-        ObjectField<UInt32>           seCountField{};
-        ObjectField<UInt32>           shPerSEField{};
-        ObjectField<UInt32>           cuPerSHField{};
-        ObjectField<bool>             hasUVD0Field{};
-        ObjectField<bool>             hasVCEField{};
-        ObjectField<bool>             hasVCN0Field{};
-        ObjectField<bool>             hasSDMAPagingQueueField{};
-        ObjectField<UInt32>           familyTypeField{};
-        ObjectField<Gfx9ChipSettings> chipSettingsField{};
+        ObjectField<void*>            pm4EngineField;
+        ObjectField<void*>            sdma0EngineField;
+        ObjectField<UInt32>           displayPipeCountField;
+        ObjectField<UInt32>           seCountField;
+        ObjectField<UInt32>           shPerSEField;
+        ObjectField<UInt32>           cuPerSHField;
+        ObjectField<bool>             hasUVD0Field;
+        ObjectField<bool>             hasVCEField;
+        ObjectField<bool>             hasVCN0Field;
+        ObjectField<bool>             hasSDMAPagingQueueField;
+        ObjectField<UInt32>           familyTypeField;
+        ObjectField<Gfx9ChipSettings> chipSettingsField;
         GenericConstructor_t          pm4EngineConstructor{nullptr};
         GenericConstructor_t          sdmaEngineConstructor{nullptr};
         mach_vm_address_t             orgSetupAndInitializeHWCapabilities{0};

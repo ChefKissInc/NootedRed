@@ -81,9 +81,9 @@ enum AddrResourceType
 struct ADDR2_COMPUTE_SURFACE_INFO_INPUT
 {
     UInt32              size{sizeof(ADDR2_COMPUTE_SURFACE_INFO_INPUT)};
-    ADDR2_SURFACE_FLAGS flags{};
+    ADDR2_SURFACE_FLAGS flags;
     UInt32              swizzleMode{0};
-    AddrResourceType    resourceType{};
+    AddrResourceType    resourceType;
     UInt32              format{0};
     UInt32              bpp{0};
     UInt32              width{0};
