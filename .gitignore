@@ -21,7 +21,6 @@ xcuserdata/
 *.xcscmblueprint
 *.xccheckout
 build/
-DerivedData/
 *.moved-aside
 *.pbxuser
 !default.pbxuser
@@ -37,8 +36,5 @@ DerivedData/
 !*.xcodeproj/xcshareddata/
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
-.vscode/
 .cache/
-CompilationDatabase/
-compile_commands.json
 clang_analyze/
