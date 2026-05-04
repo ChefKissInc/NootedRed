@@ -4,9 +4,16 @@
 // Copyright © 2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
+#include <GPUDriversAMD/Accel/HWDisplay.hpp>
 #include <GPUDriversAMD/RavenIPOffset.hpp>
+#include <Headers/kern_util.hpp>
+#include <PenguinWizardry/RuntimeMC.hpp>
+#include <PenguinWizardry/RuntimeVFT.hpp>
 #include <iVega/AMDGFX9DCN1Display.hpp>
+#include <iVega/AMDGFX9DCNDisplay.hpp>
 #include <iVega/Regs/DCN1.hpp>
+#include <libkern/OSTypes.h>
+#include <libkern/c++/OSMetaClass.h>
 
 PWDefineRuntimeMC(AMDRadeonX5000_AMDGFX9DCN1Display, Constructor);
 

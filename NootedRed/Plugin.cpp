@@ -4,6 +4,7 @@
 // See LICENSE for details.
 
 #include <Headers/kern_api.hpp>
+#include <Headers/kern_util.hpp>
 #include <Headers/plugin_start.hpp>
 #include <NRed.hpp>
 

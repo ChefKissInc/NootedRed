@@ -4,11 +4,20 @@
 // See LICENSE for details.
 
 #include <DebugEnabler.hpp>
-#include <Headers/kern_api.hpp>
+#include <Headers/kern_mach.hpp>
+#include <Headers/kern_patcher.hpp>
+#include <Headers/kern_util.hpp>
+#include <IOKit/IOLib.h>
 #include <Kexts.hpp>
 #include <NRed.hpp>
 #include <PenguinWizardry/KernelVersion.hpp>
 #include <PenguinWizardry/PatcherPlus.hpp>
+#include <kern/debug.h>
+#include <libkern/OSTypes.h>
+#include <mach/boolean.h>
+#include <mach/i386/vm_types.h>
+#include <mach/kern_return.h>
+#include <pexpert/pexpert.h>
 
 // X6000FB
 static const UInt8 kDmLoggerWritePattern[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55,

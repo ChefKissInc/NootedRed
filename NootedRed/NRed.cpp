@@ -5,15 +5,22 @@
 
 #include <Backlight.hpp>
 #include <DebugEnabler.hpp>
-#include <GPUDriversAMD/PowerPlay.hpp>
+#include <GPUDriversAMD/ATOMBIOS.hpp>
+#include <GPUDriversAMD/CAIL/Result.hpp>
 #include <GPUDriversAMD/RavenIPOffset.hpp>
 #include <GPUDriversAMD/SMU.hpp>
 #include <GPUDriversAMD/TTL/SWIP/SMU.hpp>
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_devinfo.hpp>
+#include <Headers/kern_iokit.hpp>
+#include <Headers/kern_patcher.hpp>
+#include <Headers/kern_util.hpp>
 #include <Hotfixes/AGDP.hpp>
 #include <Hotfixes/X6000FB.hpp>
+#include <IOKit/IOLib.h>
+#include <IOKit/IOTypes.h>
 #include <IOKit/acpi/IOACPIPlatformExpert.h>
+#include <IOKit/pci/IOPCIDevice.h>
 #include <Kexts.hpp>
 #include <Model.hpp>
 #include <NRed.hpp>
@@ -26,6 +33,10 @@
 #include <iVega/Regs/SMU.hpp>
 #include <iVega/X5000.hpp>
 #include <iVega/X6000FB.hpp>
+#include <kern/clock.h>
+#include <libkern/OSTypes.h>
+#include <libkern/c++/OSMetaClass.h>
+#include <mach/i386/vm_types.h>
 
 static NRed instance;
 

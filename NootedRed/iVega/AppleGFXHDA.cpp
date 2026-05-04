@@ -3,11 +3,13 @@
 // Copyright © 2022-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
-#include <Headers/kern_api.hpp>
+#include <Headers/kern_patcher.hpp>
+#include <Headers/kern_util.hpp>
 #include <Kexts.hpp>
 #include <NRed.hpp>
-#include <PenguinWizardry/PatcherPlus.hpp>
 #include <iVega/AppleGFXHDA.hpp>
+#include <libkern/OSTypes.h>
+#include <mach/i386/vm_types.h>
 
 constexpr UInt32 AMDVendorID        = 0x1002;
 constexpr UInt32 Navi10HDMIDeviceID = 0xAB38;

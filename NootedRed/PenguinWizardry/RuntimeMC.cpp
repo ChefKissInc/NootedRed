@@ -3,8 +3,14 @@
 // Copyright © 2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
-#include <Headers/kern_api.hpp>
+#include <Headers/kern_patcher.hpp>
+#include <Headers/kern_util.hpp>
 #include <PenguinWizardry/RuntimeMC.hpp>
+#include <libkern/OSReturn.h>
+#include <libkern/c++/OSArray.h>
+#include <libkern/c++/OSCollectionIterator.h>
+#include <libkern/c++/OSMetaClass.h>
+#include <mach/i386/vm_types.h>
 
 static PenguinWizardry::RuntimeMCManager instance;
 

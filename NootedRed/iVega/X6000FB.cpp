@@ -3,10 +3,17 @@
 // Copyright © 2022-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
+#include <GPUDriversAMD/ATOMBIOS.hpp>
 #include <GPUDriversAMD/CAIL/ASICCaps.hpp>
+#include <GPUDriversAMD/FB/AmdDeviceMemoryManager.hpp>
 #include <GPUDriversAMD/FB/VidMemType.hpp>
 #include <GPUDriversAMD/Family.hpp>
 #include <GPUDriversAMD/RavenIPOffset.hpp>
+#include <Headers/kern_mach.hpp>
+#include <Headers/kern_patcher.hpp>
+#include <Headers/kern_util.hpp>
+#include <IOKit/IOReturn.h>
+#include <IOKit/IOTypes.h>
 #include <Kexts.hpp>
 #include <NRed.hpp>
 #include <PenguinWizardry/KernelVersion.hpp>
@@ -15,6 +22,10 @@
 #include <iVega/Regs/OSSSYS_4.hpp>
 #include <iVega/Regs/SMUIO.hpp>
 #include <iVega/X6000FB.hpp>
+#include <libkern/OSTypes.h>
+#include <mach/i386/vm_param.h>
+#include <mach/i386/vm_types.h>
+#include <mach/kern_return.h>
 
 static const UInt8 kCailAsicCapsTablePattern[] = {0x6E, 0x00, 0x00, 0x00, 0x98, 0x67, 0x00, 0x00,
                                                   0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,

@@ -8,10 +8,25 @@
 #include <GPUDriversAMD/DC/SignalTypes.hpp>
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_devinfo.hpp>
+#include <Headers/kern_iokit.hpp>
+#include <Headers/kern_patcher.hpp>
+#include <Headers/kern_util.hpp>
+#include <IOKit/IONotifier.h>
+#include <IOKit/IOReturn.h>
+#include <IOKit/IOService.h>
+#include <IOKit/graphics/IOFramebuffer.h>
+#include <IOKit/graphics/IOGraphicsTypes.h>
 #include <Kexts.hpp>
 #include <NRed.hpp>
 #include <PenguinWizardry/KernelVersion.hpp>
 #include <PenguinWizardry/PatcherPlus.hpp>
+#include <libkern/OSTypes.h>
+#include <libkern/c++/OSData.h>
+#include <libkern/c++/OSDictionary.h>
+#include <libkern/c++/OSMetaClass.h>
+#include <libkern/c++/OSNumber.h>
+#include <mach/i386/vm_types.h>
+#include <pexpert/pexpert.h>
 
 static const UInt8 kDcePanelCntlHwInitPattern[]     = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55,
                                                        0x41, 0x54, 0x53, 0x50, 0x49, 0x89, 0xFD, 0x4C, 0x8D, 0x45,

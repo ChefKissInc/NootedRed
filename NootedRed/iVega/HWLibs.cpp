@@ -5,13 +5,21 @@
 
 #include <GPUDriversAMD/CAIL/ASICCaps.hpp>
 #include <GPUDriversAMD/CAIL/DevCaps.hpp>
+#include <GPUDriversAMD/CAIL/DeviceType.hpp>
+#include <GPUDriversAMD/CAIL/Result.hpp>
 #include <GPUDriversAMD/Family.hpp>
 #include <GPUDriversAMD/PSP.hpp>
-#include <GPUDriversAMD/PowerPlay.hpp>
 #include <GPUDriversAMD/RavenIPOffset.hpp>
 #include <GPUDriversAMD/RenoirPPSMC.hpp>
+#include <GPUDriversAMD/TTL/Event.hpp>
+#include <GPUDriversAMD/TTL/SWIP/DMCU.hpp>
+#include <GPUDriversAMD/TTL/SWIP/GC.hpp>
+#include <GPUDriversAMD/TTL/SWIP/IPVersion.hpp>
+#include <GPUDriversAMD/TTL/SWIP/SDMA.hpp>
 #include <GPUDriversAMD/TTL/SWIP/SMU.hpp>
-#include <Headers/kern_api.hpp>
+#include <Headers/kern_mach.hpp>
+#include <Headers/kern_patcher.hpp>
+#include <Headers/kern_util.hpp>
 #include <Kexts.hpp>
 #include <NRed.hpp>
 #include <PenguinWizardry/KernelVersion.hpp>
@@ -21,6 +29,11 @@
 #include <iVega/HWLibs.hpp>
 #include <iVega/Regs/SDMA0.hpp>
 #include <iVega/Regs/SMU.hpp>
+#include <kern/assert.h>
+#include <libkern/OSTypes.h>
+#include <libkern/c++/OSBoolean.h>
+#include <mach/i386/vm_types.h>
+#include <mach/kern_return.h>
 
 static const char ativvaxy_rv_dat[] = {
 #embed "../Firmware/ativvaxy_rv.dat"

@@ -3,8 +3,14 @@
 // Copyright © 2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
-#include <Headers/kern_api.hpp>
+#include <Headers/kern_patcher.hpp>
+#include <Headers/kern_util.hpp>
 #include <iVega/DriverInjector.hpp>
+#include <libkern/OSTypes.h>
+#include <libkern/c++/OSArray.h>
+#include <libkern/c++/OSDictionary.h>
+#include <libkern/c++/OSMetaClass.h>
+#include <libkern/c++/OSObject.h>
 #include <libkern/c++/OSString.h>
 
 static iVega::DriverInjector instance;

@@ -3,12 +3,14 @@
 // Copyright © 2024-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
-#include <Headers/kern_api.hpp>
+#include <Headers/kern_patcher.hpp>
+#include <Headers/kern_util.hpp>
 #include <Hotfixes/AGDP.hpp>
 #include <Kexts.hpp>
-#include <NRed.hpp>
 #include <PenguinWizardry/KernelVersion.hpp>
 #include <PenguinWizardry/PatcherPlus.hpp>
+#include <libkern/OSTypes.h>
+#include <mach/i386/vm_types.h>
 
 // Change frame-buffer count >= 2 check to >= 1.
 static const UInt8 kAGDPFBCountCheckOriginal[] = {0x02, 0x00, 0x00, 0x83, 0xF8, 0x02};

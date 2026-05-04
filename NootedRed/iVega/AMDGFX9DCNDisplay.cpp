@@ -4,11 +4,27 @@
 // Copyright © 2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
+#include <GPUDriversAMD/Accel/HWAlignManager.hpp>
 #include <GPUDriversAMD/Accel/HWDisplay.hpp>
+#include <GPUDriversAMD/AddrLib.hpp>
 #include <GPUDriversAMD/FB/Attributes.hpp>
+#include <GPUDriversAMD/FB/FramebufferInfo.hpp>
 #include <GPUDriversAMD/Packet3.hpp>
+#include <Headers/kern_patcher.hpp>
+#include <Headers/kern_util.hpp>
+#include <IOKit/IOLib.h>
+#include <IOKit/IOReturn.h>
+#include <IOKit/graphics/IOFramebuffer.h>
+#include <IOKit/graphics/IOGraphicsTypes.h>
 #include <PenguinWizardry/KernelVersion.hpp>
+#include <PenguinWizardry/RuntimeMC.hpp>
+#include <PenguinWizardry/RuntimeVFT.hpp>
 #include <iVega/AMDGFX9DCNDisplay.hpp>
+#include <libkern/OSTypes.h>
+#include <libkern/c++/OSData.h>
+#include <libkern/c++/OSMetaClass.h>
+#include <mach/i386/vm_types.h>
+#include <mach/vm_param.h>
 
 PWDefineAbstractRuntimeMCWithExpansion(AMDRadeonX5000_AMDGFX9DCNDisplay, Expansion);
 

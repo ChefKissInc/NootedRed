@@ -4,7 +4,9 @@
 // See LICENSE for details.
 
 #include <GPUDriversAMD/Accel/HWDisplay.hpp>
-#include <PenguinWizardry/KernelVersion.hpp>
+#include <Headers/kern_patcher.hpp>
+#include <Headers/kern_util.hpp>
+#include <mach/i386/vm_types.h>
 
 AMDHWDisplayState::Status::Constants AMDHWDisplayState::Status::constants;
 

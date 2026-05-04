@@ -3,8 +3,12 @@
 // Copyright © 2022-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
+#include <GPUDriversAMD/Accel/HWDisplay.hpp>
+#include <GPUDriversAMD/Accel/HWEngine.hpp>
+#include <GPUDriversAMD/AddrLib.hpp>
 #include <GPUDriversAMD/Family.hpp>
-#include <Headers/kern_api.hpp>
+#include <Headers/kern_mach.hpp>
+#include <Headers/kern_patcher.hpp>
 #include <Headers/kern_util.hpp>
 #include <Kexts.hpp>
 #include <NRed.hpp>
@@ -12,7 +16,13 @@
 #include <PenguinWizardry/PatcherPlus.hpp>
 #include <iVega/AMDGFX9DCN1Display.hpp>
 #include <iVega/AMDGFX9DCN2Display.hpp>
+#include <iVega/AMDGFX9DCNDisplay.hpp>
 #include <iVega/X5000.hpp>
+#include <libkern/OSTypes.h>
+#include <libkern/c++/OSObject.h>
+#include <mach/i386/vm_param.h>
+#include <mach/i386/vm_types.h>
+#include <mach/kern_return.h>
 
 static const UInt8 kChannelTypesPattern[] = {0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00,
                                              0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00};

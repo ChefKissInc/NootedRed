@@ -2,8 +2,9 @@
 // See LICENSE for details.
 
 #include <Headers/kern_iokit.hpp>
-#include <Headers/kern_util.hpp>
+#include <IOKit/pci/IOPCIDevice.h>
 #include <Model.hpp>
+#include <libkern/OSTypes.h>
 
 enum struct MatchType : UInt8
 {
