@@ -4,7 +4,6 @@
 // Copyright © 2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
-#include <Headers/kern_util.hpp>
 #include <PenguinWizardry/KernelVersion.hpp>
 #include <PenguinWizardry/New.hpp>
 #include <libkern/OSTypes.h>
