@@ -1,2 +1,3 @@
 ---
-Checks: "misc-include-cleaner, bugprone-*, performance-*, portability=*"
+Checks: "clang-analyzer-*, misc-include-cleaner, bugprone-*, performance-*, portability=*"
+UseColor: true
