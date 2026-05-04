@@ -21,8 +21,8 @@ struct DMCUFirmwareConstant
     const void* rom;
 };
 
-#define DMCU_FW_CONSTANT(_LA, _R)                                                                       \
-    static const DMCUFirmwareConstant _R { .loadAddress = _LA, .romSize = sizeof(_##_R), .rom = _##_R }
+#define DMCU_FW_CONSTANT(_LA, _R)                                                                         \
+    static const DMCUFirmwareConstant _R { .loadAddress = (_LA), .romSize = sizeof(_##_R), .rom = _##_R }
 
 struct DMCUFirmwareEntry
 {

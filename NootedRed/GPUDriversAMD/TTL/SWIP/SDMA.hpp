@@ -18,10 +18,10 @@ struct SDMAFWConstant
 
 #define SDMA_FW_CONSTANT(_V, _R, _F18, _POD, _C) \
     static const SDMAFWConstant _R = {           \
-        .version          = _V,                  \
+        .version          = (_V),                \
         .romSize          = sizeof(_##_R),       \
         .rom              = _##_R,               \
-        .field18          = _F18,                \
-        .payloadOffDWords = _POD,                \
-        .checksum         = _C,                  \
+        .field18          = (_F18),              \
+        .payloadOffDWords = (_POD),              \
+        .checksum         = (_C),                \
     }
