@@ -63,11 +63,7 @@ union ADDR2_SURFACE_FLAGS
         UInt32 reserved          : 13;
     };
 
-    UInt32 value;
-
-    constexpr ADDR2_SURFACE_FLAGS() :
-        value{0}
-    { }
+    UInt32 value{0};
 };
 
 enum AddrResourceType
@@ -83,7 +79,7 @@ struct ADDR2_COMPUTE_SURFACE_INFO_INPUT
     UInt32              size{sizeof(ADDR2_COMPUTE_SURFACE_INFO_INPUT)};
     ADDR2_SURFACE_FLAGS flags;
     UInt32              swizzleMode{0};
-    AddrResourceType    resourceType;
+    AddrResourceType    resourceType{ADDR_RSRC_MAX_TYPE};
     UInt32              format{0};
     UInt32              bpp{0};
     UInt32              width{0};
