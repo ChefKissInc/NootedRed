@@ -22,7 +22,6 @@
 #include <IOKit/acpi/IOACPIPlatformExpert.h>
 #include <IOKit/pci/IOPCIDevice.h>
 #include <Kexts.hpp>
-#include <Model.hpp>
 #include <NRed.hpp>
 #include <PenguinWizardry/RuntimeMC.hpp>
 #include <iVega/AppleGFXHDA.hpp>
@@ -140,36 +139,6 @@ void NRed::hwLateInit()
     DBGLOG("NRed", "enumRevision = 0x%X", this->enumRevision);
 }
 
-// TODO: Remove!
-static void updatePropertiesForDevice(IOPCIDevice* device)
-{
-    UInt8 builtIn[] = {0x00};
-    device->setProperty("built-in", builtIn, arrsize(builtIn));
-    auto vendorId = WIOKit::readPCIConfigValue(device, WIOKit::kIOPCIConfigVendorID);
-    auto deviceId = WIOKit::readPCIConfigValue(device, WIOKit::kIOPCIConfigDeviceID);
-    SYSLOG_COND(device->getProperty("model") != nullptr, "NRed",
-                "[%X:%X] WARNING!!! Overriding the model is no longer supported!", vendorId, deviceId);
-
-    auto* model = getBrandingNameForDev(device);
-    if (model == nullptr) {
-        SYSLOG("NRed", "[%X:%X] Warning: No model found.", vendorId, deviceId);
-        return;
-    }
-
-    auto modelLen = static_cast<UInt32>(strlen(model) + 1);
-    device->setProperty("model", const_cast<char*>(model), modelLen);
-    // Device name is everything after AMD Radeon RX/Pro.
-    if (model[11] == 'P' && model[12] == 'r' && model[13] == 'o' && model[14] == ' ') {
-        device->setProperty("ATY,FamilyName", const_cast<char*>("Radeon Pro"), 11);
-        device->setProperty("ATY,DeviceName", const_cast<char*>(model) + 15, modelLen - 15);
-    }
-    else {
-        device->setProperty("ATY,FamilyName", const_cast<char*>("Radeon RX"), 10);
-        device->setProperty("ATY,DeviceName", const_cast<char*>(model) + 14, modelLen - 14);
-    }
-    device->setProperty("AAPL,slot-name", const_cast<char*>("built-in"), 9);
-}
-
 void NRed::processPatcher()
 {
     auto* devInfo = DeviceInfo::create();
@@ -184,7 +153,9 @@ void NRed::processPatcher()
 
     WIOKit::renameDevice(this->iGPU, "IGPU");
     WIOKit::awaitPublishing(this->iGPU);
-    updatePropertiesForDevice(this->iGPU);
+    static UInt8 builtIn[] = {0x00};
+    this->iGPU->setProperty("built-in", builtIn, sizeof(builtIn));
+    this->iGPU->setProperty("AAPL,slot-name", const_cast<char*>("built-in"), 9);
 
     this->deviceID = WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigDeviceID);
     switch (this->deviceID) {
@@ -216,7 +187,6 @@ void NRed::processPatcher()
         snprintf(name, arrsize(name), "GFX%zu", ii++);
         WIOKit::renameDevice(device, name);
         WIOKit::awaitPublishing(device);
-        updatePropertiesForDevice(device);
     }
 
     DeviceInfo::deleter(devInfo);

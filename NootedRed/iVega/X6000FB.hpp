@@ -4,6 +4,7 @@
 // See LICENSE for details.
 
 #pragma once
+#include <GPUDriversAMD/FB/AmdAsicInfo.hpp>
 #include <GPUDriversAMD/FB/AmdDeviceMemoryManager.hpp>
 #include <Headers/kern_patcher.hpp>
 
@@ -28,13 +29,14 @@ namespace iVega
         void processKext(KernelPatcher& patcher, size_t id, mach_vm_address_t slide, size_t size);
 
     private:
-        static UInt16   getEnumeratedRevision();
-        static IOReturn populateVramInfo(void* self, void* fwInfo);
-        static UInt32   wrapGetNumberOfConnectors(void* self);
-        static bool     wrapIH40IVRingInitHardware(void* ctx, void* param2);
-        static void     wrapIRQMGRWriteRegister(void* ctx, UInt64 index, UInt32 value);
-        static void*    wrapCreateRegisterAccess(void* initData);
-        static IOReturn initialiseReservedVRAM(void* self);
+        static UInt16                           getEnumeratedRevision();
+        static IOReturn                         populateVramInfo(void* self, void* fwInfo);
+        static UInt32                           wrapGetNumberOfConnectors(void* self);
+        static bool                             wrapIH40IVRingInitHardware(void* ctx, void* param2);
+        static void                             wrapIRQMGRWriteRegister(void* ctx, UInt64 index, UInt32 value);
+        static void*                            wrapCreateRegisterAccess(void* initData);
+        static IOReturn                         initialiseReservedVRAM(void* self);
+        static const AmdAsicBrandingTableEntry* getGpuBrandingNameList(const void* self);
     };
 
 };    // namespace iVega

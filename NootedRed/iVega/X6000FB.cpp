@@ -5,10 +5,12 @@
 
 #include <GPUDriversAMD/ATOMBIOS.hpp>
 #include <GPUDriversAMD/CAIL/ASICCaps.hpp>
+#include <GPUDriversAMD/FB/AmdAsicInfo.hpp>
 #include <GPUDriversAMD/FB/AmdDeviceMemoryManager.hpp>
 #include <GPUDriversAMD/FB/VidMemType.hpp>
 #include <GPUDriversAMD/Family.hpp>
 #include <GPUDriversAMD/RavenIPOffset.hpp>
+#include <Headers/kern_iokit.hpp>
 #include <Headers/kern_mach.hpp>
 #include <Headers/kern_patcher.hpp>
 #include <Headers/kern_util.hpp>
@@ -223,6 +225,7 @@ void iVega::X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_addr
         {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
          this->orgGetNumberOfConnectors, kGetNumberOfConnectorsPattern, kGetNumberOfConnectorsPatternMask},
         {"__ZN41AMDRadeonX6000_AmdDeviceMemoryManagerNavi21intializeReservedVramEv", initialiseReservedVRAM},
+        {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1022getGpuBrandingNameListEv", getGpuBrandingNameList},
     };
     PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "X6000FB",
                "Failed to route symbols");
@@ -510,4 +513,238 @@ IOReturn iVega::X6000FB::initialiseReservedVRAM(void* const self)
     }
     return singleton().mapMemorySubRange(self, AmdReservedMemorySelector::ReserveVRAM, 0, 0x300000, mapOptions);
 #undef CHECK
+}
+
+struct SubsysVendorBranding
+{
+    const AmdAsicBrandingTableEntry* const entries;
+    const UInt16                           subsystemId;
+
+    constexpr SubsysVendorBranding(const UInt16 subsystemId, const AmdAsicBrandingTableEntry* const entries) :
+        entries(entries),
+        subsystemId(subsystemId)
+    { }
+
+    template<const UInt32 N>
+    constexpr SubsysVendorBranding(const UInt16 subsystemId, const AmdAsicBrandingTableEntry (&entries)[N]) :
+        SubsysVendorBranding(subsystemId, entries)
+    { }
+
+    constexpr SubsysVendorBranding(const AmdAsicBrandingTableEntry* const entries) :
+        SubsysVendorBranding(0, entries)
+    { }
+
+    template<const UInt32 N>
+    constexpr SubsysVendorBranding(const AmdAsicBrandingTableEntry (&entries)[N]) :
+        SubsysVendorBranding(0, entries)
+    { }
+};
+
+struct SubsysVendorBrandingTable
+{
+    const SubsysVendorBranding* const entries;
+    const UInt32                      entryCount;
+    const UInt16                      subsystemVendorId;
+
+    constexpr SubsysVendorBrandingTable(const UInt16 subsystemVendorId, const SubsysVendorBranding* const entries,
+                                        const UInt32 entryCount) :
+        entries(entries),
+        entryCount(entryCount),
+        subsystemVendorId(subsystemVendorId)
+    { }
+
+    template<const UInt32 N>
+    constexpr SubsysVendorBrandingTable(const UInt16 subsystemVendorId, const SubsysVendorBranding (&entries)[N]) :
+        SubsysVendorBrandingTable(subsystemVendorId, entries, N)
+    { }
+};
+
+static const AmdAsicBrandingTableEntry generalBrandingTable[] = {
+    {0x15DD, 0x81, "Radeon RX", "Vega 11"},
+    {0x15DD, 0x82, "Radeon RX", "Vega 8"},
+    {0x15DD, 0x83, "Radeon RX", "Vega 8"},
+    {0x15DD, 0x84, "Radeon RX", "Vega 6"},
+    {0x15DD, 0x85, "Radeon RX", "Vega 3"},
+    {0x15DD, 0x86, "Radeon RX", "Vega 11"},
+    {0x15DD, 0x88, "Radeon RX", "Vega 8"},
+    {0x15DD, 0xC1, "Radeon RX", "Vega 11"},
+    {0x15DD, 0xC2, "Radeon RX", "Vega 8"},
+    {0x15DD, 0xC3, "Radeon RX", "Vega 10"},
+    {0x15DD, 0xC4, "Radeon RX", "Vega 8"},
+    {0x15DD, 0xC5, "Radeon RX", "Vega 3"},
+    {0x15DD, 0xC6, "Radeon RX", "Vega 11"},
+    {0x15DD, 0xC8, "Radeon RX", "Vega 8"},
+    {0x15DD, 0xC9, "Radeon RX", "Vega 11"},
+    {0x15DD, 0xCA, "Radeon RX", "Vega 8"},
+    {0x15DD, 0xCB, "Radeon RX", "Vega 3"},
+    {0x15DD, 0xCC, "Radeon RX", "Vega 6"},
+    {0x15DD, 0xCE, "Radeon RX", "Vega 3"},
+    {0x15DD, 0xCF, "Radeon RX", "Vega 3"},
+    {0x15DD, 0xD0, "Radeon RX", "Vega 10"},
+    {0x15DD, 0xD1, "Radeon RX", "Vega 8"},
+    {0x15DD, 0xD3, "Radeon RX", "Vega 11"},
+    {0x15DD, 0xD5, "Radeon RX", "Vega 8"},
+    {0x15DD, 0xD6, "Radeon RX", "Vega 11"},
+    {0x15DD, 0xD7, "Radeon RX", "Vega 8"},
+    {0x15DD, 0xD8, "Radeon RX", "Vega 3"},
+    {0x15DD, 0xD9, "Radeon RX", "Vega 6"},
+    {0x15DD, 0xE1, "Radeon RX", "Vega 3"},
+    {0x15DD, 0xE2, "Radeon RX", "Vega 3"},
+    {0x15D8, 0x00, "Radeon RX", "Vega 8 WS"},
+    {0x15D8, 0x91, "Radeon RX", "Vega 3"},
+    {0x15D8, 0x92, "Radeon RX", "Vega 3"},
+    {0x15D8, 0x93, "Radeon RX", "Vega 1"},
+    {0x15D8, 0xA1, "Radeon RX", "Vega 10"},
+    {0x15D8, 0xA2, "Radeon RX", "Vega 8"},
+    {0x15D8, 0xA3, "Radeon RX", "Vega 6"},
+    {0x15D8, 0xA4, "Radeon RX", "Vega 3"},
+    {0x15D8, 0xB1, "Radeon RX", "Vega 10"},
+    {0x15D8, 0xB2, "Radeon RX", "Vega 8"},
+    {0x15D8, 0xB3, "Radeon RX", "Vega 6"},
+    {0x15D8, 0xB4, "Radeon RX", "Vega 3"},
+    {0x15D8, 0xC1, "Radeon RX", "Vega 10"},
+    {0x15D8, 0xC2, "Radeon RX", "Vega 8"},
+    {0x15D8, 0xC3, "Radeon RX", "Vega 6"},
+    {0x15D8, 0xC4, "Radeon RX", "Vega 3"},
+    {0x15D8, 0xC5, "Radeon RX", "Vega 3"},
+    {0x15D8, 0xC8, "Radeon RX", "Vega 11"},
+    {0x15D8, 0xC9, "Radeon RX", "Vega 8"},
+    {0x15D8, 0xCA, "Radeon RX", "Vega 11"},
+    {0x15D8, 0xCB, "Radeon RX", "Vega 8"},
+    {0x15D8, 0xCC, "Radeon RX", "Vega 3"},
+    {0x15D8, 0xCE, "Radeon RX", "Vega 3"},
+    {0x15D8, 0xCF, "Radeon RX", "Vega 3"},
+    {0x15D8, 0xD1, "Radeon RX", "Vega 10"},
+    {0x15D8, 0xD2, "Radeon RX", "Vega 8"},
+    {0x15D8, 0xD3, "Radeon RX", "Vega 6"},
+    {0x15D8, 0xD4, "Radeon RX", "Vega 3"},
+    {0x15D8, 0xD8, "Radeon RX", "Vega 11"},
+    {0x15D8, 0xD9, "Radeon RX", "Vega 8"},
+    {0x15D8, 0xDA, "Radeon RX", "Vega 11"},
+    {0x15D8, 0xDB, "Radeon RX", "Vega 8"},
+    {0x15D8, 0xDC, "Radeon RX", "Vega 3"},
+    {0x15D8, 0xDD, "Radeon RX", "Vega 3"},
+    {0x15D8, 0xDE, "Radeon RX", "Vega 3"},
+    {0x15D8, 0xDF, "Radeon RX", "Vega 3"},
+    {0x15D8, 0xE3, "Radeon RX", "Vega 3"},
+    {0x15D8, 0xE4, "Radeon RX", "Vega 3"},
+    {},
+};
+static const SubsysVendorBrandingTable picassoBrandingTables[] = {
+    {0x1414, {{0x0034, {{0x15D8, 0xE1, "Radeon RX", "Vega 11"}, {0x15D8, 0xE2, "Radeon RX", "Vega 9"}, {}}}}},
+};
+static const SubsysVendorBrandingTable renoirBrandingTables[] = {
+    {0x17AA,
+     {{0x381C,
+     {
+     {0x1636, 0xC2, "Radeon RX", "Renoir Graphics C2"},
+     {0x1636, 0xC3, "Radeon RX", "Renoir Graphics C3"},
+     {0x1636, 0xC4, "Radeon RX", "Renoir Graphics C4"},
+     {0x1636, 0xD1, "Radeon RX", "Renoir Graphics D1"},
+     {0x1636, 0xD4, "Radeon RX", "Renoir Graphics D4"},
+     {},
+     }}}                                                                                                           },
+    {0x17AA,
+     {{0x507F,
+     {
+     {0x1636, 0xC2, "Radeon RX", "Renoir Graphics C2"},
+     {0x1636, 0xC4, "Radeon RX", "Renoir Graphics C4"},
+     {0x1636, 0xC3, "Radeon RX", "Renoir Graphics C3"},
+     {0x1636, 0xD1, "Radeon RX", "Renoir Graphics D1"},
+     {0x1636, 0xD4, "Radeon RX", "Renoir Graphics D4"},
+     {},
+     }}}                                                                                                           },
+    {0x17AA,                                    {{0x3813, {{0x1636, 0xD1, "Radeon RX", "Renoir Graphics D1"}, {}}}}},
+    {0x17AA,
+     {{0x381B,
+     {{0x1636, 0xD1, "Radeon RX", "Renoir Graphics D1"}, {0x1636, 0xD4, "Radeon RX", "Renoir Graphics D4"}, {}}}}  },
+    {0x17AA,                                    {{0x3F1A, {{0x1636, 0xD1, "Radeon RX", "Renoir Graphics D1"}, {}}}}},
+    {0x17AA,                                    {{0x5081, {{0x1636, 0xD1, "Radeon RX", "Renoir Graphics D1"}, {}}}}},
+    {0x17AA,                                    {{0x5082, {{0x1636, 0xD1, "Radeon RX", "Renoir Graphics D1"}, {}}}}},
+    {0x17AA,   {{0x5099, {{0x1636, 0xD1, "Radeon Pro", "Graphics"}, {0x1636, 0xD3, "Radeon Pro", "Graphics"}, {}}}}},
+    {0x17AA,                                    {{0x380D, {{0x1636, 0xD4, "Radeon RX", "Renoir Graphics D4"}, {}}}}},
+    {0x1043,
+     {{0x16CF,
+     {{0x1636, 0xD1, "Radeon RX", "Renoir Graphics D1"}, {0x1636, 0xD4, "Radeon RX", "Renoir Graphics D4"}, {}}}}  },
+    {0x1043,
+     {{0x16DF,
+     {{0x1636, 0xD1, "Radeon RX", "Renoir Graphics D1"}, {0x1636, 0xD4, "Radeon RX", "Renoir Graphics D4"}, {}}}}  },
+    {0x1043,
+     {{0x16EF,
+     {{0x1636, 0xD1, "Radeon RX", "Renoir Graphics D1"}, {0x1636, 0xD4, "Radeon RX", "Renoir Graphics D4"}, {}}}}  },
+    {0x1043,
+     {{0x16FF,
+     {{0x1636, 0xD1, "Radeon RX", "Renoir Graphics D1"}, {0x1636, 0xD4, "Radeon RX", "Renoir Graphics D4"}, {}}}}  },
+    {0x1043,
+     {{0x171F,
+     {{0x1636, 0xD1, "Radeon RX", "Renoir Graphics D1"}, {0x1636, 0xD4, "Radeon RX", "Renoir Graphics D4"}, {}}}}  },
+    {0x1043,
+     {{0x172F,
+     {{0x1636, 0xD1, "Radeon RX", "Renoir Graphics D1"}, {0x1636, 0xD4, "Radeon RX", "Renoir Graphics D4"}, {}}}}  },
+    {0x1043,
+     {{0x17DF,
+     {{0x1636, 0xD1, "Radeon RX", "Renoir Graphics D1"}, {0x1636, 0xD4, "Radeon RX", "Renoir Graphics D4"}, {}}}}  },
+    {0x1043,
+     {{0x17EF,
+     {{0x1636, 0xD1, "Radeon RX", "Renoir Graphics D1"}, {0x1636, 0xD4, "Radeon RX", "Renoir Graphics D4"}, {}}}}  },
+    {0x1043,                                    {{0x18BF, {{0x1636, 0xD1, "Radeon RX", "Renoir Graphics D1"}, {}}}}},
+    {0x1043,                                    {{0x18CF, {{0x1636, 0xD1, "Radeon RX", "Renoir Graphics D1"}, {}}}}},
+    {0x1043,
+     {{0x1E11,
+     {{0x1636, 0xD1, "Radeon RX", "Renoir Graphics D1"}, {0x1636, 0xD4, "Radeon RX", "Renoir Graphics D4"}, {}}}}  },
+    {0x1043,
+     {{0x1E21,
+     {{0x1636, 0xD1, "Radeon RX", "Renoir Graphics D1"}, {0x1636, 0xD4, "Radeon RX", "Renoir Graphics D4"}, {}}}}  },
+    {0x1043,
+     {{0x1F11,
+     {{0x1636, 0xD1, "Radeon RX", "Renoir Graphics D1"}, {0x1636, 0xD4, "Radeon RX", "Renoir Graphics D4"}, {}}}}  },
+    {0x103C,
+     {{0x86EE,
+     {{0x1636, 0xD1, "Radeon RX", "Renoir Graphics D1"}, {0x1636, 0xD4, "Radeon RX", "Renoir Graphics D4"}, {}}}}  },
+    {0x103C,
+     {{0x86F1,
+     {{0x1636, 0xD1, "Radeon RX", "Renoir Graphics D1"}, {0x1636, 0xD4, "Radeon RX", "Renoir Graphics D4"}, {}}}}  },
+    {0x103C,
+     {{0x8786,
+     {{0x1636, 0xD1, "Radeon RX", "Renoir Graphics D1"}, {0x1636, 0xD4, "Radeon RX", "Renoir Graphics D4"}, {}}}}  },
+    {0x103C,
+     {{0x8788,
+     {{0x1636, 0xD1, "Radeon RX", "Renoir Graphics D1"}, {0x1636, 0xD4, "Radeon RX", "Renoir Graphics D4"}, {}}}}  },
+};
+
+const AmdAsicBrandingTableEntry* iVega::X6000FB::getGpuBrandingNameList(const void* self)
+{
+    // no getMemberConst
+    const auto pciDevice         = *reinterpret_cast<IOPCIDevice* const*>(static_cast<const uint8_t*>(self) + 0x18);
+    const auto subsystemId       = WIOKit::readPCIConfigValue(pciDevice, WIOKit::kIOPCIConfigSubSystemID);
+    const auto subsystemVendorId = WIOKit::readPCIConfigValue(pciDevice, WIOKit::kIOPCIConfigSubSystemVendorID);
+
+    const auto findBrandingTable = [subsystemId,
+                                    subsystemVendorId](const SubsysVendorBrandingTable* entries,
+                                                       const UInt32 entryCount) -> const AmdAsicBrandingTableEntry*
+    {
+        for (UInt32 i = 0; i < entryCount; ++i) {
+            const auto& entry = entries[i];
+            if (entry.subsystemVendorId == subsystemVendorId) {
+                for (UInt32 subIndex = 0; subIndex < entry.entryCount; ++subIndex) {
+                    const auto& subEntry = entry.entries[subIndex];
+                    if (subEntry.subsystemId == subsystemId) { return subEntry.entries; }
+                }
+            }
+        }
+        return nullptr;
+    };
+
+    if (NRed::singleton().getAttributes().isPicasso()) {
+        if (const auto brandingTable = findBrandingTable(picassoBrandingTables, arrsize(picassoBrandingTables))) {
+            return brandingTable;
+        }
+    }
+    else if (NRed::singleton().getAttributes().isRenoir()) {
+        if (const auto brandingTable = findBrandingTable(renoirBrandingTables, arrsize(renoirBrandingTables))) {
+            return brandingTable;
+        }
+    }
+
+    return generalBrandingTable;
 }

@@ -10,7 +10,6 @@
 		1C748C2D1C21952C0024EED2 /* Plugin.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C748C2C1C21952C0024EED2 /* Plugin.cpp */; };
 		400909902E9932F2006EC1EA /* HWMemory.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4009098F2E9932F2006EC1EA /* HWMemory.hpp */; };
 		400909922E9938DB006EC1EA /* HWMemory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 400909912E9938DB006EC1EA /* HWMemory.cpp */; };
-		401075932CDA8746002D1CD7 /* Model.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 401075922CDA8742002D1CD7 /* Model.cpp */; };
 		4012096C2CE2FD96006E2812 /* DPCD.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4012096B2CE2FD96006E2812 /* DPCD.hpp */; };
 		4014D9722C74AA7000FDE986 /* ObjectField.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4014D9712C74AA5F00FDE986 /* ObjectField.hpp */; };
 		401B49FF2CF43510002B75A6 /* DebugEnabler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 401B49FE2CF434FC002B75A6 /* DebugEnabler.cpp */; };
@@ -18,7 +17,6 @@
 		4030EB382E3818E10070E610 /* AMDGFX9DCNDisplay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4030EB372E3818D90070E610 /* AMDGFX9DCNDisplay.cpp */; };
 		4030EB3C2E3819080070E610 /* AMDGFX9DCNDisplay.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4030EB3B2E3819080070E610 /* AMDGFX9DCNDisplay.hpp */; };
 		4035DA622CE3BBBB002707B3 /* DCN2.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408B3DE32CDFA6F300CAE5D2 /* DCN2.hpp */; };
-		40364DB629B79DFD0070A2B4 /* Model.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40364DB529B79DFD0070A2B4 /* Model.hpp */; };
 		4039AD362E6CAB2300A693C7 /* TypeName.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4039AD352E6CAB2300A693C7 /* TypeName.hpp */; };
 		40424DB32E6DCD2F004F3BB6 /* HWAlignManager.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40424DB22E6DCD2F004F3BB6 /* HWAlignManager.hpp */; };
 		405430992E6DF75B000AEB46 /* AMDGFX9DCN1Display.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 405430982E6DF75B000AEB46 /* AMDGFX9DCN1Display.cpp */; };
@@ -79,6 +77,7 @@
 		40B9AEC92E9911A6000F05ED /* HWInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40B9AEC82E9911A6000F05ED /* HWInterface.cpp */; };
 		40B9AECC2E991298000F05ED /* HWRegisters.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40B9AECA2E991298000F05ED /* HWRegisters.hpp */; };
 		40B9AECF2E991B1C000F05ED /* HWDisplay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40B9AECE2E991B1C000F05ED /* HWDisplay.cpp */; };
+		40D49AD52FAF35AE0088F608 /* AmdAsicInfo.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40D49AD42FAF35A70088F608 /* AmdAsicInfo.hpp */; };
 		40E812F42CF5A1FB004FDCC7 /* AmdDeviceMemoryManager.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40E812F32CF5A1FB004FDCC7 /* AmdDeviceMemoryManager.hpp */; };
 		40F059742E6DFEE5009E6D2F /* FramebufferInfo.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40F059732E6DFEE5009E6D2F /* FramebufferInfo.hpp */; };
 		40F327B62E9824DE0030C1BD /* KernelVersion.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40F327B52E9824DE0030C1BD /* KernelVersion.hpp */; };
@@ -110,7 +109,6 @@
 		1C748C2E1C21952C0024EED2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4009098F2E9932F2006EC1EA /* HWMemory.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HWMemory.hpp; sourceTree = "<group>"; };
 		400909912E9938DB006EC1EA /* HWMemory.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HWMemory.cpp; sourceTree = "<group>"; };
-		401075922CDA8742002D1CD7 /* Model.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Model.cpp; sourceTree = "<group>"; };
 		4012096B2CE2FD96006E2812 /* DPCD.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DPCD.hpp; sourceTree = "<group>"; };
 		4014D9712C74AA5F00FDE986 /* ObjectField.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ObjectField.hpp; sourceTree = "<group>"; };
 		401B49FE2CF434FC002B75A6 /* DebugEnabler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DebugEnabler.cpp; sourceTree = "<group>"; };
@@ -175,7 +173,6 @@
 		4030EB352E37E1D90070E610 /* sdma_4_1_ucode.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = sdma_4_1_ucode.bin; sourceTree = "<group>"; };
 		4030EB372E3818D90070E610 /* AMDGFX9DCNDisplay.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AMDGFX9DCNDisplay.cpp; sourceTree = "<group>"; };
 		4030EB3B2E3819080070E610 /* AMDGFX9DCNDisplay.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AMDGFX9DCNDisplay.hpp; sourceTree = "<group>"; };
-		40364DB529B79DFD0070A2B4 /* Model.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Model.hpp; sourceTree = "<group>"; };
 		4039AD352E6CAB2300A693C7 /* TypeName.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = TypeName.hpp; sourceTree = "<group>"; };
 		40424DB22E6DCD2F004F3BB6 /* HWAlignManager.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HWAlignManager.hpp; sourceTree = "<group>"; };
 		405430982E6DF75B000AEB46 /* AMDGFX9DCN1Display.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AMDGFX9DCN1Display.cpp; sourceTree = "<group>"; };
@@ -236,6 +233,7 @@
 		40B9AEC82E9911A6000F05ED /* HWInterface.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HWInterface.cpp; sourceTree = "<group>"; };
 		40B9AECA2E991298000F05ED /* HWRegisters.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HWRegisters.hpp; sourceTree = "<group>"; };
 		40B9AECE2E991B1C000F05ED /* HWDisplay.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HWDisplay.cpp; sourceTree = "<group>"; };
+		40D49AD42FAF35A70088F608 /* AmdAsicInfo.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AmdAsicInfo.hpp; sourceTree = "<group>"; };
 		40E812F32CF5A1FB004FDCC7 /* AmdDeviceMemoryManager.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AmdDeviceMemoryManager.hpp; sourceTree = "<group>"; };
 		40F059732E6DFEE5009E6D2F /* FramebufferInfo.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FramebufferInfo.hpp; sourceTree = "<group>"; };
 		40F327B52E9824DE0030C1BD /* KernelVersion.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = KernelVersion.hpp; sourceTree = "<group>"; };
@@ -310,8 +308,6 @@
 				1C748C2E1C21952C0024EED2 /* Info.plist */,
 				407068662E97CD32004E0761 /* Kexts.hpp */,
 				4068B3B92E97D805007B46BB /* Kexts.cpp */,
-				40364DB529B79DFD0070A2B4 /* Model.hpp */,
-				401075922CDA8742002D1CD7 /* Model.cpp */,
 				CEA03B5D20EE825A00BA842F /* NRed.hpp */,
 				CEA03B5C20EE825A00BA842F /* NRed.cpp */,
 				1C748C2C1C21952C0024EED2 /* Plugin.cpp */,
@@ -556,6 +552,7 @@
 		40E812F12CF5A1BF004FDCC7 /* FB */ = {
 			isa = PBXGroup;
 			children = (
+				40D49AD42FAF35A70088F608 /* AmdAsicInfo.hpp */,
 				40E812F32CF5A1FB004FDCC7 /* AmdDeviceMemoryManager.hpp */,
 				40B037E02E951D2B0060EAD4 /* Attributes.hpp */,
 				40F059732E6DFEE5009E6D2F /* FramebufferInfo.hpp */,
@@ -601,7 +598,6 @@
 				4069F00F29C3A241005293B4 /* ATOMBIOS.hpp in Headers */,
 				409127742CE2F7B0004DBDB5 /* SMU.hpp in Headers */,
 				40FC5FDA29BF995E00367F9D /* X5000.hpp in Headers */,
-				40364DB629B79DFD0070A2B4 /* Model.hpp in Headers */,
 				4014D9722C74AA7000FDE986 /* ObjectField.hpp in Headers */,
 				4091276D2CE2F681004DBDB5 /* SignalTypes.hpp in Headers */,
 				CEA03B5F20EE825A00BA842F /* NRed.hpp in Headers */,
@@ -622,6 +618,7 @@
 				409B6F982E8ABB320046F619 /* OSSSYS_4.hpp in Headers */,
 				4098C7AA2EAE42DA00D9D1E0 /* New.hpp in Headers */,
 				400909902E9932F2006EC1EA /* HWMemory.hpp in Headers */,
+				40D49AD52FAF35AE0088F608 /* AmdAsicInfo.hpp in Headers */,
 				4068898C2A229BF600028D22 /* PatcherPlus.hpp in Headers */,
 				40B9AECC2E991298000F05ED /* HWRegisters.hpp in Headers */,
 				40424DB32E6DCD2F004F3BB6 /* HWAlignManager.hpp in Headers */,
@@ -755,7 +752,6 @@
 				4068B3BA2E97D805007B46BB /* Kexts.cpp in Sources */,
 				40F39FE02CDE842B007AE975 /* X6000FB.cpp in Sources */,
 				401B49FF2CF43510002B75A6 /* DebugEnabler.cpp in Sources */,
-				401075932CDA8746002D1CD7 /* Model.cpp in Sources */,
 				40F39FDE2CDD60A4007AE975 /* Backlight.cpp in Sources */,
 				4054608C2CDBDF8C007865E5 /* AGDP.cpp in Sources */,
 				40FC5FDD29BF996900367F9D /* HWLibs.cpp in Sources */,
