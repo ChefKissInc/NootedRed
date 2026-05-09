@@ -165,7 +165,7 @@ static const UInt8 kAmdDalServicesInitializePatched[]      = {0x00, 0x00, 0x00, 
 static const UInt8 kAmdDalServicesInitializePatchedMask[]  = {0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00,
                                                               0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-// Raven: Change cursor and underflow tracker count to 4 instead of 6.
+// Change cursor and underflow tracker count to 4 instead of 6.
 static const UInt8 kCreateControllerServicesOriginal[]     = {0x40, 0x00, 0x00, 0x40, 0x83, 0x00, 0x06};
 static const UInt8 kCreateControllerServicesOriginalMask[] = {0xF0, 0x00, 0x00, 0xF0, 0xFF, 0x00, 0xFF};
 static const UInt8 kCreateControllerServicesPatched[]      = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04};
@@ -177,7 +177,7 @@ static const UInt8 kCreateControllerServicesOriginalMask1015[] = {0xFF, 0x00, 0x
 static const UInt8 kCreateControllerServicesPatched1015[]      = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03};
 static const UInt8 kCreateControllerServicesPatchedMask1015[]  = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F};
 
-// Raven: Change cursor count to 4 instead of 6.
+// Change cursor count to 4 instead of 6.
 static const UInt8 kSetupCursorsOriginal[]     = {0x40, 0x83, 0x00, 0x05};
 static const UInt8 kSetupCursorsOriginalMask[] = {0xF0, 0xFF, 0x00, 0xFF};
 static const UInt8 kSetupCursorsPatched[]      = {0x00, 0x00, 0x00, 0x03};
@@ -189,7 +189,7 @@ static const UInt8 kSetupCursorsOriginalMask12[] = {0xF0, 0xFF, 0x00, 0xFF};
 static const UInt8 kSetupCursorsPatched12[]      = {0x00, 0x00, 0x00, 0x04};
 static const UInt8 kSetupCursorsPatchedMask12[]  = {0x00, 0x00, 0x00, 0x0F};
 
-// Raven: Change link count to 4 instead of 6.
+// Change link count to 4 instead of 6.
 static const UInt8 kCreateLinksOriginal[]     = {0x06, 0x00, 0x00, 0x00, 0x40};
 static const UInt8 kCreateLinksOriginalMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xF0};
 static const UInt8 kCreateLinksPatched[]      = {0x04, 0x00, 0x00, 0x00, 0x00};
@@ -344,54 +344,51 @@ void iVega::X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_addr
     MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
     DBGLOG("X6000FB", "Applied DDI Caps patches");
 
-    // XX: DCN 2 and newer have 6 display pipes, while DCN 1 (which is what Raven has) has only 4.
     // We need to patch the kext to create only 4 cursors, links and underflow trackers.
-    if (!NRed::singleton().getAttributes().isRenoir()) {
-        auto* const orgCreateControllerServices = patcher.solveSymbol<void*>(
-            id, "__ZN40AMDRadeonX6000_AmdRadeonControllerNavi1024createControllerServicesEv", slide, size, true);
-        PANIC_COND(orgCreateControllerServices == nullptr, "X6000FB", "Failed to solve createControllerServices");
+    auto* const orgCreateControllerServices = patcher.solveSymbol<void*>(
+        id, "__ZN40AMDRadeonX6000_AmdRadeonControllerNavi1024createControllerServicesEv", slide, size, true);
+    PANIC_COND(orgCreateControllerServices == nullptr, "X6000FB", "Failed to solve createControllerServices");
 
-        auto* const orgSetupCursors = patcher.solveSymbol<void*>(
-            id, "__ZN34AMDRadeonX6000_AmdRadeonController12setupCursorsEv", slide, size, true);
-        PANIC_COND(orgSetupCursors == nullptr, "X6000FB", "Failed to solve setupCursors");
+    auto* const orgSetupCursors =
+        patcher.solveSymbol<void*>(id, "__ZN34AMDRadeonX6000_AmdRadeonController12setupCursorsEv", slide, size, true);
+    PANIC_COND(orgSetupCursors == nullptr, "X6000FB", "Failed to solve setupCursors");
 
-        auto* const orgCreateLinks = patcher.solveSymbol<void*>(
-            id, "__ZN34AMDRadeonX6000_AmdRadeonController11createLinksEv", slide, size, true);
-        PANIC_COND(orgCreateLinks == nullptr, "X6000FB", "Failed to solve createLinks");
+    auto* const orgCreateLinks =
+        patcher.solveSymbol<void*>(id, "__ZN34AMDRadeonX6000_AmdRadeonController11createLinksEv", slide, size, true);
+    PANIC_COND(orgCreateLinks == nullptr, "X6000FB", "Failed to solve createLinks");
 
-        if (currentKernelVersion() == MACOS_10_15) {
-            PANIC_COND(!KernelPatcher::findAndReplaceWithMask(
-                           orgCreateControllerServices, PAGE_SIZE, kCreateControllerServicesOriginal1015,
-                           kCreateControllerServicesOriginalMask1015, kCreateControllerServicesPatched1015,
-                           kCreateControllerServicesPatchedMask1015, 1, 0),
-                       "X6000FB", "Failed to apply createControllerServices patch (10.15)");
-        }
-        else {
-            PANIC_COND(!KernelPatcher::findAndReplaceWithMask(
-                           orgCreateControllerServices, PAGE_SIZE, kCreateControllerServicesOriginal,
-                           kCreateControllerServicesOriginalMask, kCreateControllerServicesPatched,
-                           kCreateControllerServicesPatchedMask, 2, 0),
-                       "X6000FB", "Failed to apply createControllerServices patch");
-        }
-
-        if (currentKernelVersion() >= MACOS_12) {
-            PANIC_COND(!KernelPatcher::findAndReplaceWithMask(orgSetupCursors, PAGE_SIZE, kSetupCursorsOriginal12,
-                                                              kSetupCursorsOriginalMask12, kSetupCursorsPatched12,
-                                                              kSetupCursorsPatchedMask12, 1, 0),
-                       "X6000FB", "Failed to apply setupCursors patch (12.0+)");
-        }
-        else {
-            PANIC_COND(!KernelPatcher::findAndReplaceWithMask(orgSetupCursors, PAGE_SIZE, kSetupCursorsOriginal,
-                                                              kSetupCursorsOriginalMask, kSetupCursorsPatched,
-                                                              kSetupCursorsPatchedMask, 1, 0),
-                       "X6000FB", "Failed to apply setupCursors patch");
-        }
-
-        PANIC_COND(!KernelPatcher::findAndReplaceWithMask(orgCreateLinks, PAGE_SIZE, kCreateLinksOriginal,
-                                                          kCreateLinksOriginalMask, kCreateLinksPatched,
-                                                          kCreateLinksPatchedMask, 1, 0),
-                   "X6000FB", "Failed to apply createLinks patch");
+    if (currentKernelVersion() == MACOS_10_15) {
+        PANIC_COND(!KernelPatcher::findAndReplaceWithMask(
+                       orgCreateControllerServices, PAGE_SIZE, kCreateControllerServicesOriginal1015,
+                       kCreateControllerServicesOriginalMask1015, kCreateControllerServicesPatched1015,
+                       kCreateControllerServicesPatchedMask1015, 1, 0),
+                   "X6000FB", "Failed to apply createControllerServices patch (10.15)");
     }
+    else {
+        PANIC_COND(!KernelPatcher::findAndReplaceWithMask(
+                       orgCreateControllerServices, PAGE_SIZE, kCreateControllerServicesOriginal,
+                       kCreateControllerServicesOriginalMask, kCreateControllerServicesPatched,
+                       kCreateControllerServicesPatchedMask, 2, 0),
+                   "X6000FB", "Failed to apply createControllerServices patch");
+    }
+
+    if (currentKernelVersion() >= MACOS_12) {
+        PANIC_COND(!KernelPatcher::findAndReplaceWithMask(orgSetupCursors, PAGE_SIZE, kSetupCursorsOriginal12,
+                                                          kSetupCursorsOriginalMask12, kSetupCursorsPatched12,
+                                                          kSetupCursorsPatchedMask12, 1, 0),
+                   "X6000FB", "Failed to apply setupCursors patch (12.0+)");
+    }
+    else {
+        PANIC_COND(!KernelPatcher::findAndReplaceWithMask(orgSetupCursors, PAGE_SIZE, kSetupCursorsOriginal,
+                                                          kSetupCursorsOriginalMask, kSetupCursorsPatched,
+                                                          kSetupCursorsPatchedMask, 1, 0),
+                   "X6000FB", "Failed to apply setupCursors patch");
+    }
+
+    PANIC_COND(!KernelPatcher::findAndReplaceWithMask(orgCreateLinks, PAGE_SIZE, kCreateLinksOriginal,
+                                                      kCreateLinksOriginalMask, kCreateLinksPatched,
+                                                      kCreateLinksPatchedMask, 1, 0),
+               "X6000FB", "Failed to apply createLinks patch");
 }
 
 UInt16 iVega::X6000FB::getEnumeratedRevision() { return NRed::singleton().getEnumRevision(); }
@@ -489,34 +486,24 @@ void* iVega::X6000FB::wrapCreateRegisterAccess(void* const initData)
 
 IOReturn iVega::X6000FB::initialiseReservedVRAM(void* const self)
 {
+#define CHECK(_expr)                                                     \
+    if (const auto ret = _expr; ret != kIOReturnSuccess) { return ret; }
     static constexpr IOOptionBits mapOptions = kIOMapWriteCombineCache | kIOMapAnywhere;
-    auto ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor1_32bpp, 0, 0x40000, mapOptions);
-    if (ret != kIOReturnSuccess) { return ret; }
-    ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor1_2bpp, 0x40000, 0x40000, mapOptions);
-    if (ret != kIOReturnSuccess) { return ret; }
-    ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor2_32bpp, 0x80000, 0x40000, mapOptions);
-    if (ret != kIOReturnSuccess) { return ret; }
-    ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor2_2bpp, 0xC0000, 0x40000, mapOptions);
-    if (ret != kIOReturnSuccess) { return ret; }
-    ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor3_32bpp, 0x100000, 0x40000, mapOptions);
-    if (ret != kIOReturnSuccess) { return ret; }
-    ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor3_2bpp, 0x140000, 0x40000, mapOptions);
-    if (ret != kIOReturnSuccess) { return ret; }
-    ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor4_32bpp, 0x180000, 0x40000, mapOptions);
-    if (ret != kIOReturnSuccess) { return ret; }
-    ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor4_2bpp, 0x1C0000, 0x40000, mapOptions);
-    if (ret != kIOReturnSuccess) { return ret; }
-    ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor5_32bpp, 0x200000, 0x40000, mapOptions);
-    if (ret != kIOReturnSuccess) { return ret; }
-    ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor5_2bpp, 0x240000, 0x40000, mapOptions);
-    if (ret != kIOReturnSuccess) { return ret; }
-    ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor6_32bpp, 0x280000, 0x40000, mapOptions);
-    if (ret != kIOReturnSuccess) { return ret; }
-    ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor6_2bpp, 0x2C0000, 0x40000, mapOptions);
-    if (ret != kIOReturnSuccess) { return ret; }
-    ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::PPLIBReserved, 0x300000, 0x100000, mapOptions);
-    if (ret != kIOReturnSuccess) { return ret; }
-    ret = singleton().mapMemorySubRange(self, AmdReservedMemorySelector::DMCUBReserved, 0x400000, 0x100000, mapOptions);
-    if (ret != kIOReturnSuccess) { return ret; }
-    return singleton().mapMemorySubRange(self, AmdReservedMemorySelector::ReserveVRAM, 0, 0x500000, mapOptions);
+    CHECK(singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor1_32bpp, 0, 0x40000, mapOptions));
+    CHECK(singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor1_2bpp, 0x40000, 0x40000, mapOptions));
+    CHECK(singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor2_32bpp, 0x80000, 0x40000, mapOptions));
+    CHECK(singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor2_2bpp, 0xC0000, 0x40000, mapOptions));
+    CHECK(singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor3_32bpp, 0x100000, 0x40000, mapOptions));
+    CHECK(singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor3_2bpp, 0x140000, 0x40000, mapOptions));
+    CHECK(singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor4_32bpp, 0x180000, 0x40000, mapOptions));
+    CHECK(singleton().mapMemorySubRange(self, AmdReservedMemorySelector::Cursor4_2bpp, 0x1C0000, 0x40000, mapOptions));
+    CHECK(
+        singleton().mapMemorySubRange(self, AmdReservedMemorySelector::PPLIBReserved, 0x200000, 0x100000, mapOptions));
+    if (NRed::singleton().getAttributes().isRenoir()) {
+        CHECK(singleton().mapMemorySubRange(self, AmdReservedMemorySelector::DMCUBReserved, 0x300000, 0x100000,
+                                            mapOptions));
+        return singleton().mapMemorySubRange(self, AmdReservedMemorySelector::ReserveVRAM, 0, 0x400000, mapOptions);
+    }
+    return singleton().mapMemorySubRange(self, AmdReservedMemorySelector::ReserveVRAM, 0, 0x300000, mapOptions);
+#undef CHECK
 }

@@ -263,7 +263,7 @@ void iVega::X5000::wrapSetupAndInitializeHWCapabilities(void* const self)
 {
     FunctionCast(wrapSetupAndInitializeHWCapabilities, singleton().orgSetupAndInitializeHWCapabilities)(self);
 
-    singleton().displayPipeCountField(self)   = NRed::singleton().getAttributes().isRenoir() ? 6 : 4;
+    singleton().displayPipeCountField(self)   = 4;
     singleton().hasUVD0Field(self)            = false;
     singleton().hasVCEField(self)             = false;
     singleton().hasVCN0Field(self)            = false;
