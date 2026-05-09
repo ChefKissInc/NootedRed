@@ -211,12 +211,18 @@ void iVega::X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_addr
     PANIC_COND(!cailAsicCapsSolveRequest.solve(patcher, id, slide, size), "X6000FB",
                "Failed to resolve CAIL_ASIC_CAPS_TABLE");
 
+    this->mapMemorySubRange = patcher.solveSymbol<mapMemorySubRange_t>(
+        id, "__ZN37AMDRadeonX6000_AmdDeviceMemoryManager17mapMemorySubRangeE25AmdReservedMemorySelectoryyj", slide,
+        size, true);
+    PANIC_COND(this->mapMemorySubRange == nullptr, "X6000FB", "Failed to solve mapMemorySubRange");
+
     PenguinWizardry::PatternRouteRequest requests[] = {
         {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", populateVramInfo, kPopulateVramInfoPattern,
          kPopulateVramInfoPatternMask},
         {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", getEnumeratedRevision},
         {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
          this->orgGetNumberOfConnectors, kGetNumberOfConnectorsPattern, kGetNumberOfConnectorsPatternMask},
+        {"__ZN41AMDRadeonX6000_AmdDeviceMemoryManagerNavi21intializeReservedVramEv", initialiseReservedVRAM},
     };
     PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "X6000FB",
                "Failed to route symbols");
@@ -230,17 +236,10 @@ void iVega::X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_addr
     }
 
     if (NRed::singleton().getAttributes().isRenoir()) {
-        this->mapMemorySubRange = patcher.solveSymbol<mapMemorySubRange_t>(
-            id, "__ZN37AMDRadeonX6000_AmdDeviceMemoryManager17mapMemorySubRangeE25AmdReservedMemorySelectoryyj", slide,
-            size, true);
-        PANIC_COND(this->mapMemorySubRange == nullptr, "X6000FB", "Failed to solve mapMemorySubRange");
-        PenguinWizardry::PatternRouteRequest requests[] = {
-            {"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware, this->orgIH40IVRingInitHardware,
-             kIH40IVRingInitHardwarePattern, kIH40IVRingInitHardwarePatternMask},
-            {"__ZN41AMDRadeonX6000_AmdDeviceMemoryManagerNavi21intializeReservedVramEv", initialiseReservedVRAM},
-        };
-        PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "X6000FB",
-                   "Failed to route IH_4_0_IVRing_InitHardware and intializeReservedVram");
+        PenguinWizardry::PatternRouteRequest request{"_IH_4_0_IVRing_InitHardware", wrapIH40IVRingInitHardware,
+                                                     this->orgIH40IVRingInitHardware, kIH40IVRingInitHardwarePattern,
+                                                     kIH40IVRingInitHardwarePatternMask};
+        PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route IH_4_0_IVRing_InitHardware");
         if (currentKernelVersion() >= MACOS_14_4) {
             PenguinWizardry::PatternRouteRequest request{"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister,
                                                          this->orgIRQMGRWriteRegister, kIRQMGRWriteRegisterPattern1404};
