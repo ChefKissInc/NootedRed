@@ -4,8 +4,9 @@
 // See LICENSE for details.
 
 #pragma once
+#include <IOKit/IOTypes.h>
 
-enum struct VideoMemoryType
+enum struct VideoMemoryType : UInt32
 {
     Unknown = 0,
     DDR2,
@@ -15,3 +16,4 @@ enum struct VideoMemoryType
     HBM,
     GDDR6,
 };
+static_assert(sizeof(VideoMemoryType) == 0x4);

@@ -4,8 +4,9 @@
 // See LICENSE for details.
 
 #pragma once
+#include <IOKit/IOTypes.h>
 
-enum struct AmdReservedMemorySelector
+enum struct AmdReservedMemorySelector : UInt32
 {
     ReserveVRAM,
     Cursor1_32bpp,

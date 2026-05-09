@@ -426,14 +426,19 @@ IOReturn iVega::X6000FB::populateVramInfo(void* const, void* const fwInfo)
             videoMemoryType = VideoMemoryType::DDR3;
         } break;
         case kDDR4MemType:
-        case kLPDDR4MemType:
-        case kDDR5MemType:    // the kexts don't know about DDR5
-        case kLPDDR5MemType: {
+        case kLPDDR4MemType: {
             videoMemoryType = VideoMemoryType::DDR4;
         } break;
+        case kHBMMemType:
+        case kHBM2MemType: {
+            videoMemoryType = VideoMemoryType::HBM;
+        } break;
+        case kGDDR6MemType: {
+            videoMemoryType = VideoMemoryType::GDDR6;
+        } break;
         default: {
-            DBGLOG("X6000FB", "Unsupported memory type %d. Assuming DDR4", memoryType);
-            videoMemoryType = VideoMemoryType::DDR4;
+            DBGLOG("X6000FB", "Unsupported memory type %d", memoryType);
+            videoMemoryType = VideoMemoryType::Unknown;
         } break;
     }
     getMember<UInt32>(fwInfo, 0x20) = channelCount * 64;    // VRAM Width (64-bit channels)
