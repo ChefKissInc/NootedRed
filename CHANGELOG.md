@@ -1,5 +1,24 @@
 # Change log
 
+## v0.8.4 (UNRELEASED)
+
+### Enhancements
+
+- New code style for improved readability.
+- Some small code cleanup and optimisations.
+  This includes improving and fixing up the dm_logger_write reimplementation that's enabled with `-NRedDebug`.
+- Replaced useless backtrace on SMU/SMC command errors with plain logs including the command ID.
+- Improved the memory type handling inside the X6000FB code.
+
+### Bug Fixes
+
+- Fixed potential out-of-bounds string comparisons throughout the code.
+- Fixed calculation of the waitForFunc timeout in nanoseconds being implicitly truncated.
+- Fixed calculation of the saved framebuffer size of the X5000DCNDisplay implementation being implicitly truncated.
+- Fixed copy paste error on the ARGB1555 surface format case of the X5000DCNDisplay implementation.
+- Fixed the display pipe count on Renoir-based ASICs.
+  Renoir and Raven both have only 4 display pipes. Not sure where I got the previous assumption of 6 for Renoir, maybe accidentally read from DCN 2.0 (Navi) instead of 2.1 (Renoir).
+
 ## v0.8.3 (24/12/2025)
 
 ### Enhancements
