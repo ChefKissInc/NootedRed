@@ -529,15 +529,6 @@ struct SubsysVendorBranding
     constexpr SubsysVendorBranding(const UInt16 subsystemId, const AmdAsicBrandingTableEntry (&entries)[N]) :
         SubsysVendorBranding(subsystemId, entries)
     { }
-
-    constexpr SubsysVendorBranding(const AmdAsicBrandingTableEntry* const entries) :
-        SubsysVendorBranding(0, entries)
-    { }
-
-    template<const UInt32 N>
-    constexpr SubsysVendorBranding(const AmdAsicBrandingTableEntry (&entries)[N]) :
-        SubsysVendorBranding(0, entries)
-    { }
 };
 
 struct SubsysVendorBrandingTable
