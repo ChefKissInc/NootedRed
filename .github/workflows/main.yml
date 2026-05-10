@@ -44,6 +44,6 @@ jobs:
       - uses: actions/checkout@v6
         with:
           submodules: "recursive"
-      - run: xcodebuild analyze -quiet -scheme NootedRed -configuration Debug -arch x86_64 CLANG_ANALYZER_OUTPUT=plist-html CLANG_ANALYZER_OUTPUT_DIR="$(pwd)/clang-analyze" && [ "$(find clang-analyze -name "*.html")" = "" ]
-      - run: xcodebuild analyze -quiet -scheme NootedRed -configuration Research\ Release -arch x86_64 CLANG_ANALYZER_OUTPUT=plist-html CLANG_ANALYZER_OUTPUT_DIR="$(pwd)/clang-analyze" && [ "$(find clang-analyze -name "*.html")" = "" ]
-      - run: xcodebuild analyze -quiet -scheme NootedRed -configuration Release -arch x86_64 CLANG_ANALYZER_OUTPUT=plist-html CLANG_ANALYZER_OUTPUT_DIR="$(pwd)/clang-analyze" && [ "$(find clang-analyze -name "*.html")" = "" ]
+      - run: xcodebuild analyze -quiet -configuration Debug -arch x86_64 CLANG_ANALYZER_OUTPUT=plist-html CLANG_ANALYZER_OUTPUT_DIR="$(pwd)/clang-analyze" && [ "$(find clang-analyze -name "*.html")" = "" ]
+      - run: xcodebuild analyze -quiet -configuration Research\ Release -arch x86_64 CLANG_ANALYZER_OUTPUT=plist-html CLANG_ANALYZER_OUTPUT_DIR="$(pwd)/clang-analyze" && [ "$(find clang-analyze -name "*.html")" = "" ]
+      - run: xcodebuild analyze -quiet -configuration Release -arch x86_64 CLANG_ANALYZER_OUTPUT=plist-html CLANG_ANALYZER_OUTPUT_DIR="$(pwd)/clang-analyze" && [ "$(find clang-analyze -name "*.html")" = "" ]
