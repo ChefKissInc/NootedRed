@@ -22,6 +22,10 @@
 
   Renoir and Raven both have only 4 display pipes. Not sure where I got the previous assumption of 6 for Renoir, maybe accidentally read from DCN 2.0 (Navi) instead of 2.1 (Renoir).
 
+**NOTE:** The "Research Release" and "Debug" builds will be way slower and inefficient than the "Release" build. Do not use them if not debugging an issue with the software.
+
+**Full Changelog**: https://github.com/ChefKissInc/NootedRed/compare/v0.8.3...v0.8.4
+
 ## v0.8.3 (24/12/2025)
 
 ### Enhancements
