@@ -1,6 +1,6 @@
 # Change log
 
-## v0.8.4 (UNRELEASED)
+## v0.8.4 (10/05/2026)
 
 ### Enhancements
 
