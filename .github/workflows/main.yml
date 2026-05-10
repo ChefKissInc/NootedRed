@@ -29,7 +29,9 @@ jobs:
           path: build/*/*.zip
       - name: Upload build
         if: startsWith(github.ref, 'refs/tags/')
-        run: gh release upload ${{ github.ref_name }} build/*/*.zip --clobber
+        run: |
+          awk '/^## ${{ github.ref_name }}/{flag=1; next} /^## v/{flag=0} flag' CHANGELOG.md | sed 's/^### /## /' > release_notes.md
+          gh release create ${{ github.ref_name }} build/*/*.zip --title ${{ github.ref_name }} --notes-file release_notes.md
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
