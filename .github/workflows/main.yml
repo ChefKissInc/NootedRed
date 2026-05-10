@@ -2,10 +2,10 @@ name: CI
 
 on:
   push:
+    tags:
+      - "v*"
   pull_request:
   workflow_dispatch:
-  release:
-    types: [created]
 
 jobs:
   build:
@@ -34,6 +34,7 @@ jobs:
           tag: ${{ github.ref }}
           file_glob: true
           overwrite: true
+          draft: false
 
   analyse-clang:
     name: Analyse Clang
