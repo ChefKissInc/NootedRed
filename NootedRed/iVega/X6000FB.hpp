@@ -36,7 +36,9 @@ namespace iVega
         static void                             wrapIRQMGRWriteRegister(void* ctx, UInt64 index, UInt32 value);
         static void*                            wrapCreateRegisterAccess(void* initData);
         static IOReturn                         initialiseReservedVRAM(void* self);
-        static const AmdAsicBrandingTableEntry* getGpuBrandingNameList(const void* self);
+        static const AmdAsicBrandingTableEntry* getGpuBrandingNameListRaven(const void* self);
+        static const AmdAsicBrandingTableEntry* getGpuBrandingNameListPicasso(const void* self);
+        static const AmdAsicBrandingTableEntry* getGpuBrandingNameListRenoir(const void* self);
     };
 
 };    // namespace iVega
