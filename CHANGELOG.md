@@ -1,5 +1,15 @@
 # Change log
 
+## v0.8.6 (11/05/2026)
+
+### Bug Fixes
+
+- Worked around spurious kernel panic in recovery likely caused by Lilu bug.
+
+**NOTE:** The "Research Release" and "Debug" builds will be way slower and inefficient than the "Release" build. Do not use them if not debugging an issue with the software.
+
+**Full Changelog**: https://github.com/ChefKissInc/NootedRed/compare/v0.8.5...v0.8.6
+
 ## v0.8.5 (11/05/2026)
 
 ### Enhancements

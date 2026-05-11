@@ -206,16 +206,24 @@ void iVega::X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_addr
 
     NRed::singleton().hwLateInit();
 
-    CAILAsicCapsEntry*                   orgAsicCapsTable = nullptr;
-    PenguinWizardry::PatternSolveRequest cailAsicCapsSolveRequest{"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable,
-                                                                  kCailAsicCapsTablePattern};
-    PANIC_COND(!cailAsicCapsSolveRequest.solve(patcher, id, slide, size), "X6000FB",
-               "Failed to resolve CAIL_ASIC_CAPS_TABLE");
+    CAILAsicCapsEntry*                   orgAsicCapsTable       = nullptr;
+    void*                                orgAmdAsicInfoNavi10VT = nullptr;
+    PenguinWizardry::PatternSolveRequest solveRequests[]        = {
+        {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable, kCailAsicCapsTablePattern},
+        {"__ZN37AMDRadeonX6000_AmdDeviceMemoryManager17mapMemorySubRangeE25AmdReservedMemorySelectoryyj",
+         this->mapMemorySubRange},
+        {"__ZTV32AMDRadeonX6000_AmdAsicInfoNavi10", orgAmdAsicInfoNavi10VT},
+    };
+    PANIC_COND(!PenguinWizardry::PatternSolveRequest::solveAll(patcher, id, solveRequests, slide, size), "X6000FB",
+               "Failed to resolve symbols");
 
-    this->mapMemorySubRange = patcher.solveSymbol<mapMemorySubRange_t>(
-        id, "__ZN37AMDRadeonX6000_AmdDeviceMemoryManager17mapMemorySubRangeE25AmdReservedMemorySelectoryyj", slide,
-        size, true);
-    PANIC_COND(this->mapMemorySubRange == nullptr, "X6000FB", "Failed to solve mapMemorySubRange");
+    PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "X6000FB",
+               "Failed to enable kernel writing");
+    getMember<decltype(getGpuBrandingNameListRenoir)*>(orgAmdAsicInfoNavi10VT, 0x228) =
+        NRed::singleton().getAttributes().isRenoir()  ? getGpuBrandingNameListRenoir :
+        NRed::singleton().getAttributes().isPicasso() ? getGpuBrandingNameListPicasso :
+                                                        getGpuBrandingNameListRaven;
+    MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
     PenguinWizardry::PatternRouteRequest requests[] = {
         {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", populateVramInfo, kPopulateVramInfoPattern,
@@ -224,10 +232,6 @@ void iVega::X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_addr
         {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
          this->orgGetNumberOfConnectors, kGetNumberOfConnectorsPattern, kGetNumberOfConnectorsPatternMask},
         {"__ZN41AMDRadeonX6000_AmdDeviceMemoryManagerNavi21intializeReservedVramEv", initialiseReservedVRAM},
-        {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1022getGpuBrandingNameListEv",
-         NRed::singleton().getAttributes().isRenoir()  ? getGpuBrandingNameListRenoir :
-         NRed::singleton().getAttributes().isPicasso() ? getGpuBrandingNameListPicasso :
-                                                         getGpuBrandingNameListRaven},
     };
     PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "X6000FB",
                "Failed to route symbols");
