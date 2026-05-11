@@ -5,6 +5,11 @@
 ### Enhancements
 
 - Cleaned up X6000FB branding code, removing the subsystem cruft and the weird "Renoir Graphics D4" and similar models.
+- Specialise fallback model to "Radeon RX Raven Graphics", "Radeon RX Picasso Graphics", and "Radeon RX Renoir Graphics".
+
+**NOTE:** The "Research Release" and "Debug" builds will be way slower and inefficient than the "Release" build. Do not use them if not debugging an issue with the software.
+
+**Full Changelog**: https://github.com/ChefKissInc/NootedRed/compare/v0.8.4-2...v0.8.5
 
 ## v0.8.4 (10/05/2026)
 
@@ -30,7 +35,7 @@
 
 **NOTE:** The "Research Release" and "Debug" builds will be way slower and inefficient than the "Release" build. Do not use them if not debugging an issue with the software.
 
-**Full Changelog**: https://github.com/ChefKissInc/NootedRed/compare/v0.8.3...v0.8.4
+**Full Changelog**: https://github.com/ChefKissInc/NootedRed/compare/v0.8.3...v0.8.4-2
 
 ## v0.8.3 (24/12/2025)
 

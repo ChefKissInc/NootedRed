@@ -548,7 +548,7 @@ static const AmdAsicBrandingTableEntry ravenBrandingTable[] = {
     {0x15DD, 0xD9, "Radeon RX", "Vega 6"},
     {0x15DD, 0xE1, "Radeon RX", "Vega 3"},
     {0x15DD, 0xE2, "Radeon RX", "Vega 3"},
-    {},
+    {"Radeon RX", "Raven Graphics"},
 };
 
 static const AmdAsicBrandingTableEntry picassoBrandingTable[] = {
@@ -592,13 +592,13 @@ static const AmdAsicBrandingTableEntry picassoBrandingTable[] = {
     {0x15D8, 0xE2, "Radeon RX", "Vega 9"},
     {0x15D8, 0xE3, "Radeon RX", "Vega 3"},
     {0x15D8, 0xE4, "Radeon RX", "Vega 3"},
-    {},
+    {"Radeon RX", "Picasso Graphics"},
 };
 
 static const AmdAsicBrandingTableEntry renoirBrandingTable[] = {
     {0x1636, 0xD1, "Radeon Pro", "Graphics"},
     {0x1636, 0xD3, "Radeon Pro", "Graphics"},
-    {},
+    {"Radeon RX", "Renoir Graphics"},
 };
 
 const AmdAsicBrandingTableEntry* iVega::X6000FB::getGpuBrandingNameListRaven(const void*) { return ravenBrandingTable; }
