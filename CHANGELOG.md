@@ -1,5 +1,11 @@
 # Change log
 
+## v0.8.5 (11/05/2026)
+
+### Enhancements
+
+- Cleaned up X6000FB branding code, removing the subsystem cruft and the weird "Renoir Graphics D4" and similar models.
+
 ## v0.8.4 (10/05/2026)
 
 ### Enhancements
