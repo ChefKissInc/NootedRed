@@ -26,7 +26,7 @@ struct AmdAsicBrandingTableEntry
     { }
 
     constexpr AmdAsicBrandingTableEntry() :
-        AmdAsicBrandingTableEntry(0, 0, "Radeon RX", "Graphics")
+        AmdAsicBrandingTableEntry("Radeon RX", "Graphics")
     { }
 };
 static_assert(sizeof(AmdAsicBrandingTableEntry) == 0x18);
