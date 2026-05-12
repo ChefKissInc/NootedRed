@@ -237,6 +237,14 @@ void iVega::X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_addr
     PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "X6000FB",
                "Failed to route symbols");
 
+    if (currentKernelVersion() <= MACOS_12) {
+        PenguinWizardry::PatternRouteRequest getTriageHardwareDataRequest{
+            "__ZN38AMDRadeonX6000_AmdRadeonControllerNavi21getTriageHardwareDataEjP12_AMD_TRIAGE_",
+            NRed::singleton().getAttributes().isRenoir() ? getTriageHardwareDataRN : getTriageHardwareDataRV};
+        PANIC_COND(!getTriageHardwareDataRequest.route(patcher, id, slide, size), "X6000FB",
+                   "Failed to route getTriageHardwareData");
+    }
+
     if (currentKernelVersion() >= MACOS_11) {
         KernelPatcher::RouteRequest request{
             "__ZN32AMDRadeonX6000_AmdRegisterAccess20createRegisterAccessERNS_8InitDataE", wrapCreateRegisterAccess,
@@ -606,16 +614,65 @@ static const AmdAsicBrandingTableEntry renoirBrandingTable[] = {
     {"Radeon RX", "Renoir Graphics"},
 };
 
-const AmdAsicBrandingTableEntry* iVega::X6000FB::getGpuBrandingNameListRaven(const void*) { return ravenBrandingTable; }
+const AmdAsicBrandingTableEntry* iVega::X6000FB::getGpuBrandingNameListRaven(const void* const)
+{
+    return ravenBrandingTable;
+}
 
-const AmdAsicBrandingTableEntry* iVega::X6000FB::getGpuBrandingNameListPicasso(const void*)
+const AmdAsicBrandingTableEntry* iVega::X6000FB::getGpuBrandingNameListPicasso(const void* const)
 {
     return picassoBrandingTable;
 }
 
-const AmdAsicBrandingTableEntry* iVega::X6000FB::getGpuBrandingNameListRenoir(const void*)
+const AmdAsicBrandingTableEntry* iVega::X6000FB::getGpuBrandingNameListRenoir(const void* const)
 {
     return renoirBrandingTable;
 }
 
 IOReturn iVega::X6000FB::dummyIOReturnSuccess() { return kIOReturnSuccess; }
+
+IOReturn iVega::X6000FB::getTriageHardwareDataRV(void* const, const UInt32 fbIndex, void* const triageData)
+{
+    auto& bufferPointer = getMember<char*>(triageData, 0x0);
+    auto& bufferSize    = getMember<UInt32>(triageData, 0x8);
+
+    if (bufferSize < 2) { return kIOReturnNoResources; }
+    if (fbIndex >= 4) { return kIOReturnSuccess; }
+
+    const auto odmOptcInputGlobalControl = NRed::singleton().readReg32(DCN_BASE_2 + 0x1ACA + (0x10 * fbIndex));
+    const auto otgMasterEn               = NRed::singleton().readReg32(DCN_BASE_2 + 0x1B5F + (0x80 * fbIndex));
+    const auto hubpClkControl            = NRed::singleton().readReg32(DCN_BASE_2 + 0x567 + (0xC4 * fbIndex));
+    const auto digBeEnControl            = NRed::singleton().readReg32(DCN_BASE_2 + 0x20B0 + (0x100 * fbIndex));
+
+    const auto chars = scnprintf(bufferPointer, bufferSize, "%x %x %x %x", odmOptcInputGlobalControl, otgMasterEn,
+                                 hubpClkControl, digBeEnControl);
+    if (chars < 0) { return kIOReturnError; }
+
+    bufferSize    -= static_cast<UInt32>(chars);
+    bufferPointer += static_cast<UInt32>(chars);
+
+    return kIOReturnSuccess;
+}
+
+IOReturn iVega::X6000FB::getTriageHardwareDataRN(void* const, const UInt32 fbIndex, void* const triageData)
+{
+    auto& bufferPointer = getMember<char*>(triageData, 0x0);
+    auto& bufferSize    = getMember<UInt32>(triageData, 0x8);
+
+    if (bufferSize < 2) { return kIOReturnNoResources; }
+    if (fbIndex >= 4) { return kIOReturnSuccess; }
+
+    const auto odmOptcInputGlobalControl = NRed::singleton().readReg32(DCN_BASE_2 + 0x1ACA + (0x10 * fbIndex));
+    const auto otgMasterEn               = NRed::singleton().readReg32(DCN_BASE_2 + 0x1B5C + (0x80 * fbIndex));
+    const auto hubpClkControl            = NRed::singleton().readReg32(DCN_BASE_2 + 0x5F4 + (0xDC * fbIndex));
+    const auto digBeEnControl            = NRed::singleton().readReg32(DCN_BASE_2 + 0x20B0 + (0x100 * fbIndex));
+
+    const auto chars = scnprintf(bufferPointer, bufferSize, "%x %x %x %x", odmOptcInputGlobalControl, otgMasterEn,
+                                 hubpClkControl, digBeEnControl);
+    if (chars < 0) { return kIOReturnError; }
+
+    bufferSize    -= static_cast<UInt32>(chars);
+    bufferPointer += static_cast<UInt32>(chars);
+
+    return kIOReturnSuccess;
+}

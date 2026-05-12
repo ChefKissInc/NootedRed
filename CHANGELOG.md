@@ -7,6 +7,9 @@
 - Neutralised setupBootWatermarks in X6000FB.
 
   This function applies some hardware quirk through the DCN watermarks on specific RDNA 1 dGPUs. On Raven the register offsets are even completely wrong and changing random DCN registers on specific ASIC revisions. So, I just neutralised the function.
+- Added custom implementation for getTriageHardwareData (exists in macOS Monterey and below).
+
+  This function prints a few DCN register values in a GPU diagnosis report, however, the offsets aren't quite matching for Raven and Renoir, along with the max display pipe count being 4.
 
 **NOTE:** The "Research Release" and "Debug" builds will be way slower and inefficient than the "Release" build. Do not use them if not debugging an issue with the software.
 
