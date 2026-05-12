@@ -39,6 +39,7 @@ namespace iVega
         static const AmdAsicBrandingTableEntry* getGpuBrandingNameListRaven(const void* self);
         static const AmdAsicBrandingTableEntry* getGpuBrandingNameListPicasso(const void* self);
         static const AmdAsicBrandingTableEntry* getGpuBrandingNameListRenoir(const void* self);
+        static IOReturn                         dummyIOReturnSuccess();
     };
 
 };    // namespace iVega

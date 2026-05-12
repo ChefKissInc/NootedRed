@@ -1,5 +1,17 @@
 # Change log
 
+## v0.8.7 (12/05/2026)
+
+### Bug Fixes
+
+- Neutralised setupBootWatermarks in X6000FB.
+
+  This function applies some hardware quirk through the DCN watermarks on specific RDNA 1 dGPUs. On Raven the register offsets are even completely wrong and changing random DCN registers on specific ASIC revisions. So, I just neutralised the function.
+
+**NOTE:** The "Research Release" and "Debug" builds will be way slower and inefficient than the "Release" build. Do not use them if not debugging an issue with the software.
+
+**Full Changelog**: https://github.com/ChefKissInc/NootedRed/compare/v0.8.6...v0.8.7
+
 ## v0.8.6 (11/05/2026)
 
 ### Bug Fixes
