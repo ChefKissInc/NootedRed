@@ -1,5 +1,11 @@
 # Change log
 
+## Unreleased
+
+### Enhancements
+
+- Moved X6000FB VBIOS fix code out of iVega, into Hotfixes.
+
 ## v0.8.7 (12/05/2026)
 
 ### Bug Fixes

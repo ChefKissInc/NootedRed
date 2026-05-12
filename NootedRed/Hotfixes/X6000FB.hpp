@@ -16,6 +16,8 @@ namespace Hotfixes
         mach_vm_address_t orgDpReceiverPowerCtrl{0};
         IOReturn (*orgMessageAccelerator)(void* self, UInt32 requestType, void* arg2, void* arg3, void* arg4){nullptr};
         mach_vm_address_t orgControllerPowerUp{0};
+        bool              fixedVBIOS{false};
+        mach_vm_address_t orgGetNumberOfConnectors{0};
 
     public:
         static X6000FB& singleton();
@@ -25,6 +27,7 @@ namespace Hotfixes
     private:
         static void   wrapDpReceiverPowerCtrl(void* link, bool power_on);
         static UInt32 wrapControllerPowerUp(void* self);
+        static UInt32 wrapGetNumberOfConnectors(void* self);
     };
 
 };    // namespace Hotfixes

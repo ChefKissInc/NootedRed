@@ -39,11 +39,6 @@ static const UInt8 kPopulateVramInfoPatternMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xF
                                                      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xF0, 0xFF, 0xF0, 0xF0,
                                                      0xFF, 0xF0, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
-static const UInt8 kGetNumberOfConnectorsPattern[]     = {0x55, 0x48, 0x89, 0xE5, 0x40, 0x8B, 0x40, 0x28, 0x00,
-                                                          0x00, 0x00, 0x00, 0x00, 0x85, 0x00, 0x74, 0x00};
-static const UInt8 kGetNumberOfConnectorsPatternMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xF0, 0xFF, 0xF0, 0xFF, 0x00,
-                                                          0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00};
-
 static const UInt8 kIH40IVRingInitHardwarePattern[]     = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41,
                                                            0x55, 0x41, 0x54, 0x53, 0x50, 0x40, 0x89, 0xF0, 0x49,
                                                            0x89, 0xF0, 0x40, 0x8B, 0x00, 0x00, 0x44, 0x00, 0x00};
@@ -229,8 +224,6 @@ void iVega::X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_addr
         {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", populateVramInfo, kPopulateVramInfoPattern,
          kPopulateVramInfoPatternMask},
         {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", getEnumeratedRevision},
-        {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
-         this->orgGetNumberOfConnectors, kGetNumberOfConnectorsPattern, kGetNumberOfConnectorsPatternMask},
         {"__ZN41AMDRadeonX6000_AmdDeviceMemoryManagerNavi21intializeReservedVramEv", initialiseReservedVRAM},
         {"__ZN38AMDRadeonX6000_AmdRadeonControllerNavi19setupBootWatermarksEv", dummyIOReturnSuccess},
     };
@@ -460,26 +453,6 @@ IOReturn iVega::X6000FB::populateVramInfo(void* const, void* const fwInfo)
     }
     getMember<UInt32>(fwInfo, 0x20) = channelCount * 64;    // VRAM Width (64-bit channels)
     return kIOReturnSuccess;
-}
-
-UInt32 iVega::X6000FB::wrapGetNumberOfConnectors(void* const self)
-{
-    if (!singleton().fixedVBIOS) {
-        singleton().fixedVBIOS                     = true;
-        struct DispObjInfoTableV1_4* const objInfo = getMember<DispObjInfoTableV1_4*>(self, 0x28);
-        if (objInfo->formatRev == 1 && (objInfo->contentRev == 4 || objInfo->contentRev == 5)) {
-            DBGLOG("X6000FB", "getNumberOfConnectors: Fixing VBIOS connectors");
-            const auto n = objInfo->pathCount;
-            for (size_t i = 0, j = 0; i < n; i++) {
-                // Skip invalid device tags
-                if (objInfo->paths[i].devTag == 0) { objInfo->pathCount--; }
-                else {
-                    objInfo->paths[j++] = objInfo->paths[i];
-                }
-            }
-        }
-    }
-    return FunctionCast(wrapGetNumberOfConnectors, singleton().orgGetNumberOfConnectors)(self);
 }
 
 bool iVega::X6000FB::wrapIH40IVRingInitHardware(void* const ctx, void* const param2)

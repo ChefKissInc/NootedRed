@@ -3,6 +3,7 @@
 // Copyright © 2024-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
+#include <GPUDriversAMD/ATOMBIOS.hpp>
 #include <Headers/kern_patcher.hpp>
 #include <Headers/kern_util.hpp>
 #include <Hotfixes/X6000FB.hpp>
@@ -32,6 +33,11 @@ static const UInt8 kControllerPowerUpReplaceMask[]  = {0x00, 0x00, 0x00, 0x00, 0
 // Remove new problematic Ventura pixel clock multiplier calculation which causes timing validation mishaps.
 static const UInt8 kValidateDetailedTimingOriginal[] = {0x66, 0x0F, 0x2E, 0xC1, 0x76, 0x06, 0xF2, 0x0F, 0x5E, 0xC1};
 static const UInt8 kValidateDetailedTimingPatched[]  = {0x66, 0x0F, 0x2E, 0xC1, 0x66, 0x90, 0xF2, 0x0F, 0x5E, 0xC1};
+
+static const UInt8 kGetNumberOfConnectorsPattern[]     = {0x55, 0x48, 0x89, 0xE5, 0x40, 0x8B, 0x40, 0x28, 0x00,
+                                                          0x00, 0x00, 0x00, 0x00, 0x85, 0x00, 0x74, 0x00};
+static const UInt8 kGetNumberOfConnectorsPatternMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xF0, 0xFF, 0xF0, 0xFF, 0x00,
+                                                          0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00};
 
 static Hotfixes::X6000FB instance;
 
@@ -74,6 +80,12 @@ void Hotfixes::X6000FB::processKext(KernelPatcher& patcher, const size_t id, con
         PANIC_COND(!PenguinWizardry::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "X6000FB",
                    "Failed to apply logic revert patches");
     }
+
+    PenguinWizardry::PatternRouteRequest request{"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv",
+                                                 wrapGetNumberOfConnectors, this->orgGetNumberOfConnectors,
+                                                 kGetNumberOfConnectorsPattern, kGetNumberOfConnectorsPatternMask};
+    PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
+               "Failed to route AmdAtomObjectInfo_V1_4::getNumberOfConnectors");
 }
 
 UInt32 Hotfixes::X6000FB::wrapControllerPowerUp(void* self)
@@ -90,4 +102,24 @@ void Hotfixes::X6000FB::wrapDpReceiverPowerCtrl(void* link, bool power_on)
 {
     FunctionCast(wrapDpReceiverPowerCtrl, singleton().orgDpReceiverPowerCtrl)(link, power_on);
     IOSleep(250);
+}
+
+UInt32 Hotfixes::X6000FB::wrapGetNumberOfConnectors(void* const self)
+{
+    if (!singleton().fixedVBIOS) {
+        singleton().fixedVBIOS = true;
+        const auto objInfo     = getMember<DispObjInfoTableV1_4*>(self, 0x28);
+        if (objInfo->formatRev == 1 && (objInfo->contentRev == 4 || objInfo->contentRev == 5)) {
+            DBGLOG("X6000FB", "getNumberOfConnectors: Fixing VBIOS connectors");
+            const auto n = objInfo->pathCount;
+            for (size_t i = 0, j = 0; i < n; i++) {
+                // Skip invalid device tags
+                if (objInfo->paths[i].devTag == 0) { objInfo->pathCount--; }
+                else {
+                    objInfo->paths[j++] = objInfo->paths[i];
+                }
+            }
+        }
+    }
+    return FunctionCast(wrapGetNumberOfConnectors, singleton().orgGetNumberOfConnectors)(self);
 }

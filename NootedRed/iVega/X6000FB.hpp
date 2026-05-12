@@ -16,8 +16,6 @@ namespace iVega
         using mapMemorySubRange_t = IOReturn (*)(void* self, AmdReservedMemorySelector selector, size_t atOffset,
                                                  size_t withSize, IOOptionBits andAttributes);
 
-        bool                fixedVBIOS{false};
-        mach_vm_address_t   orgGetNumberOfConnectors{0};
         mach_vm_address_t   orgIH40IVRingInitHardware{0};
         mach_vm_address_t   orgIRQMGRWriteRegister{0};
         mach_vm_address_t   orgCreateRegisterAccess{0};
@@ -31,7 +29,6 @@ namespace iVega
     private:
         static UInt16                           getEnumeratedRevision();
         static IOReturn                         populateVramInfo(void* self, void* fwInfo);
-        static UInt32                           wrapGetNumberOfConnectors(void* self);
         static bool                             wrapIH40IVRingInitHardware(void* ctx, void* param2);
         static void                             wrapIRQMGRWriteRegister(void* ctx, UInt64 index, UInt32 value);
         static void*                            wrapCreateRegisterAccess(void* initData);
