@@ -230,7 +230,7 @@ void iVega::X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_addr
     PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "X6000FB",
                "Failed to route symbols");
 
-    if (currentKernelVersion() <= MACOS_12) {
+    if (currentKernelVersion() >= MACOS_11 && currentKernelVersion() <= MACOS_12) {
         PenguinWizardry::PatternRouteRequest getTriageHardwareDataRequest{
             "__ZN38AMDRadeonX6000_AmdRadeonControllerNavi21getTriageHardwareDataEjP12_AMD_TRIAGE_",
             NRed::singleton().getAttributes().isRenoir() ? getTriageHardwareDataRN : getTriageHardwareDataRV};
@@ -617,12 +617,13 @@ IOReturn iVega::X6000FB::getTriageHardwareDataRV(void* const, const UInt32 fbInd
     const auto hubpClkControl            = NRed::singleton().readReg32(DCN_BASE_2 + 0x567 + (0xC4 * fbIndex));
     const auto digBeEnControl            = NRed::singleton().readReg32(DCN_BASE_2 + 0x20B0 + (0x100 * fbIndex));
 
-    const auto chars = scnprintf(bufferPointer, bufferSize, "%x %x %x %x", odmOptcInputGlobalControl, otgMasterEn,
-                                 hubpClkControl, digBeEnControl);
+    const auto chars = snprintf(bufferPointer, bufferSize, "%x %x %x %x", odmOptcInputGlobalControl, otgMasterEn,
+                                hubpClkControl, digBeEnControl);
     if (chars < 0) { return kIOReturnError; }
+    const auto realChars = static_cast<UInt32>(chars) > bufferSize ? bufferSize : static_cast<UInt32>(chars);
 
-    bufferSize    -= static_cast<UInt32>(chars);
-    bufferPointer += static_cast<UInt32>(chars);
+    bufferSize    -= realChars;
+    bufferPointer += realChars;
 
     return kIOReturnSuccess;
 }
@@ -640,12 +641,13 @@ IOReturn iVega::X6000FB::getTriageHardwareDataRN(void* const, const UInt32 fbInd
     const auto hubpClkControl            = NRed::singleton().readReg32(DCN_BASE_2 + 0x5F4 + (0xDC * fbIndex));
     const auto digBeEnControl            = NRed::singleton().readReg32(DCN_BASE_2 + 0x20B0 + (0x100 * fbIndex));
 
-    const auto chars = scnprintf(bufferPointer, bufferSize, "%x %x %x %x", odmOptcInputGlobalControl, otgMasterEn,
-                                 hubpClkControl, digBeEnControl);
+    const auto chars = snprintf(bufferPointer, bufferSize, "%x %x %x %x", odmOptcInputGlobalControl, otgMasterEn,
+                                hubpClkControl, digBeEnControl);
     if (chars < 0) { return kIOReturnError; }
+    const auto realChars = static_cast<UInt32>(chars) > bufferSize ? bufferSize : static_cast<UInt32>(chars);
 
-    bufferSize    -= static_cast<UInt32>(chars);
-    bufferPointer += static_cast<UInt32>(chars);
+    bufferSize    -= realChars;
+    bufferPointer += realChars;
 
     return kIOReturnSuccess;
 }

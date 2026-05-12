@@ -1,10 +1,22 @@
 # Change log
 
-## Unreleased
+## v0.8.8 (12/05/2026)
 
 ### Enhancements
 
 - Moved X6000FB VBIOS fix code out of iVega, into Hotfixes.
+
+### Bug Fixes
+
+- Gated `getTriageHardwareData` behind macOS Big Sur and macOS Monterey.
+
+  It doesn't exist on macOS Catalina. Also replaced usage of `scnprintf` with `snprintf` as it may not be available there and cause an `Invalid Parameter` error when loading the kext.
+
+> [!NOTE]
+> Use the `RELEASE` build. `RESEARCH_RELEASE` is `DEBUG` with optimisations.
+> The latter two will be way slower and inefficient than the former build. Use them **only** when debugging an issue with NootedRed.
+
+**Full Changelog**: https://github.com/ChefKissInc/NootedRed/compare/v0.8.7...v0.8.8
 
 ## v0.8.7 (12/05/2026)
 
