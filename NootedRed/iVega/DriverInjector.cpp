@@ -30,10 +30,10 @@ static const char com_apple_driver_AppleGFXHDA[] = {
 
 iVega::DriverInjector::DriverInjector() :
     drivers{
-        Driver("com.apple.kext.AMDRadeonX5000", com_apple_kext_AMDRadeonX5000),
-        Driver("com.apple.kext.AMDRadeonX5000HWServices", com_apple_kext_AMDRadeonX5000HWServices),
         Driver("com.apple.kext.AMDRadeonX6000Framebuffer", com_apple_kext_AMDRadeonX6000Framebuffer),
         Driver("com.apple.driver.AppleGFXHDA", com_apple_driver_AppleGFXHDA),
+        Driver("com.apple.kext.AMDRadeonX5000", com_apple_kext_AMDRadeonX5000),
+        Driver("com.apple.kext.AMDRadeonX5000HWServices", com_apple_kext_AMDRadeonX5000HWServices),
     }
 { }
 
@@ -58,7 +58,8 @@ bool iVega::DriverInjector::wrapAddDrivers(void* const self, OSArray* const arra
         auto* bundleIdentifier = OSDynamicCast(OSString, dict->getObject("CFBundleIdentifier"));
         if (bundleIdentifier == nullptr || bundleIdentifier->getLength() == 0) { continue; }
 
-        for (size_t identifierIndex = 0; identifierIndex < arrsize(singleton().drivers); identifierIndex += 1) {
+        const auto toInjectCount = checkKernelArgument("-NRedNoAccel") ? 2 : arrsize(singleton().drivers);
+        for (size_t identifierIndex = 0; identifierIndex < toInjectCount; identifierIndex += 1) {
             auto& driver = singleton().drivers[identifierIndex];
 
             if ((singleton().matchedDrivers & getBit(identifierIndex)) != 0
