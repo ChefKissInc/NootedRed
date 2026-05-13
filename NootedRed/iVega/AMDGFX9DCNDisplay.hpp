@@ -124,7 +124,7 @@ class AMDRadeonX5000_AMDGFX9DCNDisplay : public AMDRadeonX5000_AMDHWDisplay
 
 private:
     // 10.15
-    static constexpr UInt32 INIT_VT_INDEX_MAC10_15 = 0x50;    // 0x278
+    static constexpr UInt32 INIT_VT_INDEX_MAC10_15 = 0x50;    // 0x280
 
     // 10.15+
     static constexpr UInt32 INITIALIZE_REGISTERS_VT_INDEX                    = 0x23;    // 0x118
