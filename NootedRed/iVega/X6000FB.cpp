@@ -191,9 +191,9 @@ static const UInt8 kCreateLinksOriginalMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xF0};
 static const UInt8 kCreateLinksPatched[]      = {0x04, 0x00, 0x00, 0x00, 0x00};
 static const UInt8 kCreateLinksPatchedMask[]  = {0x0F, 0x00, 0x00, 0x00, 0x00};
 
-static iVega::X6000FB instance;
+static iVega::X6000FB moduleInstance;
 
-iVega::X6000FB& iVega::X6000FB::singleton() { return instance; }
+iVega::X6000FB& iVega::X6000FB::singleton() { return moduleInstance; }
 
 void iVega::X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_address_t slide, size_t size)
 {
@@ -291,7 +291,7 @@ void iVega::X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_addr
                    "Failed to apply patches");
     }
 
-    if (currentKernelVersion() == MACOS_10_15) {
+    if (currentKernelVersion() <= MACOS_10_15) {
         const PenguinWizardry::MaskedLookupPatch patch{
             &kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckOriginal1015,
             kAmdAtomVramInfoNullCheckOriginalMask1015, kAmdAtomVramInfoNullCheckPatched1015, 1};
@@ -312,7 +312,7 @@ void iVega::X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_addr
                                                        kInitializeDmcubServices1Patched, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
                    "Failed to apply initializeDmcubServices family id patch");
-        if (currentKernelVersion() == MACOS_10_15) {
+        if (currentKernelVersion() <= MACOS_10_15) {
             const PenguinWizardry::MaskedLookupPatch patches[] = {
                 {&kextRadeonX6000Framebuffer, kInitializeDmcubServices2Original1015,
                  kInitializeDmcubServices2Patched1015, 1},
@@ -367,7 +367,7 @@ void iVega::X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_addr
         patcher.solveSymbol<void*>(id, "__ZN34AMDRadeonX6000_AmdRadeonController11createLinksEv", slide, size, true);
     PANIC_COND(orgCreateLinks == nullptr, "X6000FB", "Failed to solve createLinks");
 
-    if (currentKernelVersion() == MACOS_10_15) {
+    if (currentKernelVersion() <= MACOS_10_15) {
         PANIC_COND(!KernelPatcher::findAndReplaceWithMask(
                        orgCreateControllerServices, PAGE_SIZE, kCreateControllerServicesOriginal1015,
                        kCreateControllerServicesOriginalMask1015, kCreateControllerServicesPatched1015,
