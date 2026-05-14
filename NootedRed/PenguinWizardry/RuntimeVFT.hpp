@@ -19,7 +19,7 @@ class RuntimeVFT
 
     static void* operator new(size_t) { }              // disallow allocating this
     void         operator delete(void*, size_t) { }    // class in the heap or copying
-    void         operator=(OSMetaClassBase&) { }       // it, that's the wrong usage.
+    void         operator=(RuntimeVFT&) { }            // it, that's the wrong usage.
 
 public:
     void init(void** const srcVft)
