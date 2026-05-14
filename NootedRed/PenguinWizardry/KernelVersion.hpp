@@ -19,14 +19,13 @@ namespace PenguinWizardry
             combined{minor | (static_cast<UInt64>(major) << 32)}
         { }
 
+        constexpr UInt32 major() const { return (this->combined & ~0xFFFFFFFFull) >> 32; }
+
         constexpr bool operator>(const KernelVersion& other) const { return this->combined > other.combined; }
         constexpr bool operator<(const KernelVersion& other) const { return this->combined < other.combined; }
         constexpr bool operator>=(const KernelVersion& other) const { return this->combined >= other.combined; }
         constexpr bool operator<=(const KernelVersion& other) const { return this->combined <= other.combined; }
-        constexpr bool operator==(const KernelVersion& other) const
-        {
-            return (this->combined & ~0xFFFFFFFFull) == (other.combined & ~0xFFFFFFFFull);
-        }
+        constexpr bool operator==(const KernelVersion& other) const { return this->major() == other.major(); }
     };
 
 }    // namespace PenguinWizardry
