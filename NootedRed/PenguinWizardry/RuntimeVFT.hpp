@@ -8,6 +8,9 @@
 #include <Headers/kern_util.hpp>
 #include <PenguinWizardry/IsFunction.hpp>
 
+extern "C" [[noreturn]]
+void __cxa_pure_virtual();    // NOLINT(bugprone-reserved-identifier)
+
 template<UInt32 (*const SourceCount)(), const UInt32 ExpansionCount = 0>
 class RuntimeVFT
 {
@@ -28,7 +31,9 @@ public:
         assert(this->sourceCount != 0);
         this->vft = IONew(void*, this->sourceCount + ExpansionCount);
         memcpy(this->vft, srcVft, this->sourceCount * sizeof(*this->vft));
-        memset(&this->vft[this->sourceCount], 0, ExpansionCount * sizeof(*this->vft));
+        for (UInt32 i = 0; i < ExpansionCount; ++i) {
+            this->vft[this->sourceCount + i] = reinterpret_cast<void*>(&__cxa_pure_virtual);
+        }
     }
 
     void resolve(KernelPatcher& patcher, const size_t id, const char* const symbol, const mach_vm_address_t start,
