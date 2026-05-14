@@ -6,7 +6,6 @@
 #pragma once
 #include <Headers/kern_patcher.hpp>
 #include <Headers/kern_util.hpp>
-#include <NRed.hpp>
 #include <PenguinWizardry/EnableIf.hpp>
 #include <PenguinWizardry/RuntimeVFT.hpp>
 #include <PenguinWizardry/TypeName.hpp>
