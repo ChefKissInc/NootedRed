@@ -159,11 +159,13 @@ private:
     static constexpr UInt32 GET_FLIP_OPTION_VT_INDEX_MAC13                         = 0x4B;    // 0x258
 
 protected:
+    static constexpr UInt32 MAX_SUPPORTED_DISPLAYS_RV = 4;
+
     struct Expansion
     {
-        AMDDCNDisplayRegisterOffsets     regOffs[MAX_SUPPORTED_DISPLAYS];
+        AMDDCNDisplayRegisterOffsets     regOffs[MAX_SUPPORTED_DISPLAYS_RV];
         AMDDCNDisplayRegisterShiftsMasks regShiftsMasks;
-        AMDDCNDisplaySavedState          savedState[MAX_SUPPORTED_DISPLAYS];
+        AMDDCNDisplaySavedState          savedState[MAX_SUPPORTED_DISPLAYS_RV];
         UInt64                           lastSubmitFlipOffset;
     };
 

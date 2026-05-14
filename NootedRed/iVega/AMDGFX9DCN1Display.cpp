@@ -43,7 +43,7 @@ void AMDRadeonX5000_AMDGFX9DCN1Display::resolve(const char* const kext)
 void AMDRadeonX5000_AMDGFX9DCN1Display::initDCNRegOffs(AMDRadeonX5000_AMDGFX9DCN1Display* const self)
 {
     auto& expansion = self->getExpansion();
-    for (UInt32 i = 0; i < 4; i += 1) {
+    for (UInt32 i = 0; i < MAX_SUPPORTED_DISPLAYS_RV; i += 1) {
         const UInt32 hubpRegStride               = HUBP_REG_STRIDE * i;
         const UInt32 otgRegStride                = OTG_REG_STRIDE * i;
         auto&        regOffs                     = expansion.regOffs[i];

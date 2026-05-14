@@ -691,8 +691,9 @@ UInt32 AMDRadeonX5000_AMDGFX9DCNDisplay::writeFlipControlRegisters(AMDRadeonX500
     assert(offsetRight == 0);
 
     UInt32 displays[MAX_SUPPORTED_DISPLAYS];
-    displays[0]                = fbIndex;
-    const auto  displayCount   = self->getMirroredDisplays(fbIndex, &displays[1]) + 1;
+    displays[0]             = fbIndex;
+    const auto displayCount = self->getMirroredDisplays(fbIndex, &displays[1]) + 1;
+    assert(displayCount <= MAX_SUPPORTED_DISPLAYS_RV);
     const auto& expansion      = self->getExpansion();
     const auto  flipControl    = HUBPREQ_FLIP_CONTROL_FLIP_TYPE(swapInterval == AMDSwapInterval::Immediate);
     UInt32      dwordCount     = 0;
