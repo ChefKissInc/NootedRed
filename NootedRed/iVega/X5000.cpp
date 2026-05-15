@@ -60,50 +60,47 @@ iVega::X5000& iVega::X5000::singleton() { return moduleInstance; }
 
 iVega::X5000::X5000()
 {
-    switch (getKernelVersion()) {
-        case KernelVersion::Catalina: {
-            this->pm4EngineField          = 0x348;
-            this->sdma0EngineField        = 0x350;
-            this->displayPipeCountField   = 0x2C;
-            this->seCountField            = 0x58;
-            this->shPerSEField            = 0x5C;
-            this->cuPerSHField            = 0x80;
-            this->hasUVD0Field            = 0x90;
-            this->hasVCEField             = 0x92;
-            this->hasVCN0Field            = 0x93;
-            this->hasSDMAPagingQueueField = 0xA4;
-            this->familyTypeField         = 0x2B4;
-            this->chipSettingsField       = 0x5B18;
-        } break;
-        case KernelVersion::BigSur:
-        case KernelVersion::Monterey: {
-            this->pm4EngineField          = 0x3B8;
-            this->sdma0EngineField        = 0x3C0;
-            this->displayPipeCountField   = 0x2C;
-            this->seCountField            = 0x5C;
-            this->shPerSEField            = 0x64;
-            this->cuPerSHField            = 0x98;
-            this->hasUVD0Field            = 0xAC;
-            this->hasVCEField             = 0xAE;
-            this->hasVCN0Field            = 0xAF;
-            this->hasSDMAPagingQueueField = 0xC0;
-            this->familyTypeField         = 0x308;
-            this->chipSettingsField       = 0x5B10;
-        } break;
-        default: {
-            this->pm4EngineField          = 0x3B8;
-            this->sdma0EngineField        = 0x3C0;
-            this->displayPipeCountField   = 0x34;
-            this->seCountField            = 0x64;
-            this->shPerSEField            = 0x6C;
-            this->cuPerSHField            = 0xA0;
-            this->hasUVD0Field            = 0xB4;
-            this->hasVCEField             = 0xB6;
-            this->hasVCN0Field            = 0xB7;
-            this->hasSDMAPagingQueueField = 0xBF;
-            this->familyTypeField         = 0x308;
-            this->chipSettingsField       = 0x5B10;
-        } break;
+    if (currentKernelVersion() <= MACOS_10_15_X) {
+        this->pm4EngineField          = 0x348;
+        this->sdma0EngineField        = 0x350;
+        this->displayPipeCountField   = 0x2C;
+        this->seCountField            = 0x58;
+        this->shPerSEField            = 0x5C;
+        this->cuPerSHField            = 0x80;
+        this->hasUVD0Field            = 0x90;
+        this->hasVCEField             = 0x92;
+        this->hasVCN0Field            = 0x93;
+        this->hasSDMAPagingQueueField = 0xA4;
+        this->familyTypeField         = 0x2B4;
+        this->chipSettingsField       = 0x5B18;
+    }
+    else if (currentKernelVersion() <= MACOS_12_X) {
+        this->pm4EngineField          = 0x3B8;
+        this->sdma0EngineField        = 0x3C0;
+        this->displayPipeCountField   = 0x2C;
+        this->seCountField            = 0x5C;
+        this->shPerSEField            = 0x64;
+        this->cuPerSHField            = 0x98;
+        this->hasUVD0Field            = 0xAC;
+        this->hasVCEField             = 0xAE;
+        this->hasVCN0Field            = 0xAF;
+        this->hasSDMAPagingQueueField = 0xC0;
+        this->familyTypeField         = 0x308;
+        this->chipSettingsField       = 0x5B10;
+    }
+    else {
+        this->pm4EngineField          = 0x3B8;
+        this->sdma0EngineField        = 0x3C0;
+        this->displayPipeCountField   = 0x34;
+        this->seCountField            = 0x64;
+        this->shPerSEField            = 0x6C;
+        this->cuPerSHField            = 0xA0;
+        this->hasUVD0Field            = 0xB4;
+        this->hasVCEField             = 0xB6;
+        this->hasVCN0Field            = 0xB7;
+        this->hasSDMAPagingQueueField = 0xBF;
+        this->familyTypeField         = 0x308;
+        this->chipSettingsField       = 0x5B10;
     }
 }
 
@@ -118,7 +115,7 @@ void iVega::X5000::processKext(KernelPatcher& patcher, const size_t id, const ma
     mach_vm_address_t orgStartHWEngines;
 
     PenguinWizardry::PatternSolveRequest solveRequests[] = {
-        {currentKernelVersion() == MACOS_10_15 ?
+        {currentKernelVersion().majorMatches(MACOS_10_15) ?
              "__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator22getAdditionalQueueListEPPK18_"
              "AMDQueueSpecifierE27additionalQueueList_Default" :
              "__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator19createAccelChannelsEbE12channelTypes", orgChannelTypes, kChannelTypesPattern},
@@ -172,14 +169,14 @@ void iVega::X5000::processKext(KernelPatcher& patcher, const size_t id, const ma
             kAddrLibCreatePatched1404, kAddrLibCreatePatchedMask1404, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "X5000", "Failed to apply 14.4+ Addr::Lib::Create patch");
     }
-    else if (currentKernelVersion() == MACOS_10_15 || currentKernelVersion() >= MACOS_13_4) {
+    else if (currentKernelVersion().majorMatches(MACOS_10_15) || currentKernelVersion() >= MACOS_13_4) {
         const PenguinWizardry::MaskedLookupPatch patch{&kextRadeonX5000, kAddrLibCreateOriginal, kAddrLibCreatePatched,
                                                        1};
         PANIC_COND(!patch.apply(patcher, slide, size), "X5000",
                    "Failed to apply Catalina & Ventura 13.4+ Addr::Lib::Create patch");
     }
 
-    if (currentKernelVersion() == MACOS_10_15) {
+    if (currentKernelVersion().majorMatches(MACOS_10_15)) {
         const PenguinWizardry::MaskedLookupPatch patch{&kextRadeonX5000, kCreateAccelChannelsOriginal,
                                                        kCreateAccelChannelsPatched, 2};
         PANIC_COND(!patch.apply(patcher, slide, size), "X5000", "Failed to patch createAccelChannels");

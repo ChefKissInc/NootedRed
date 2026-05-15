@@ -37,7 +37,7 @@ void Hotfixes::AGDP::processKext(KernelPatcher& patcher, const size_t id, const 
                                                           1};
     SYSLOG_COND(!boardIdPatch.apply(patcher, slide, size), "AGDP", "Failed to apply AGDP board-id patch");
 
-    if (currentKernelVersion() == MACOS_13) {
+    if (currentKernelVersion().majorMatches(MACOS_13)) {
         const PenguinWizardry::MaskedLookupPatch patch{&kextAGDP, kAGDPFBCountCheckOriginal13,
                                                        kAGDPFBCountCheckPatched13, 1};
         SYSLOG_COND(!patch.apply(patcher, slide, size), "AGDP", "Failed to apply AGDP FB count check patch");

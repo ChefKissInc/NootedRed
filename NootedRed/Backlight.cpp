@@ -72,19 +72,15 @@ Backlight& Backlight::singleton() { return moduleInstance; }
 
 Backlight::Backlight()
 {
-    switch (getKernelVersion()) {
-        case KernelVersion::Catalina: {
-            this->dcLinkCapsField = 0x1EA;
-        } break;
-        case KernelVersion::BigSur: {
-            this->dcLinkCapsField = 0x26C;
-        } break;
-        case KernelVersion::Monterey: {
-            this->dcLinkCapsField = 0x284;
-        } break;
-        default: {
-            this->dcLinkCapsField = 0x28C;
-        } break;
+    if (currentKernelVersion() <= MACOS_10_15_X) { this->dcLinkCapsField = 0x1EA; }
+    else if (currentKernelVersion().majorMatches(MACOS_11)) {
+        this->dcLinkCapsField = 0x26C;
+    }
+    else if (currentKernelVersion().majorMatches(MACOS_12)) {
+        this->dcLinkCapsField = 0x284;
+    }
+    else {
+        this->dcLinkCapsField = 0x28C;
     }
 }
 

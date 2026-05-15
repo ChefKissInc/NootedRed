@@ -127,7 +127,7 @@ void DebugEnabler::processX6000FB(KernelPatcher& patcher, const size_t id, const
     MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
     // Enable all Display Core logs
-    if (currentKernelVersion() <= MACOS_10_15) {
+    if (currentKernelVersion() <= MACOS_10_15_X) {
         const PenguinWizardry::MaskedLookupPatch patch{&kextRadeonX6000Framebuffer,
                                                        kInitPopulateDcInitDataCatalinaOriginal,
                                                        kInitPopulateDcInitDataCatalinaPatched, 1};
@@ -151,7 +151,7 @@ void DebugEnabler::processX5000HWLibs(KernelPatcher& patcher, const size_t id, c
                                       const size_t size)
 {
     // TODO: Find the empty functions using a pattern of a call to them for Monterey and newer.
-    if (currentKernelVersion() <= MACOS_11) {
+    if (currentKernelVersion() <= MACOS_11_X) {
         KernelPatcher::RouteRequest requests[] = {
             { "_dmcu_assertion",   ipAssertion},
             {   "_gc_assertion",   ipAssertion},

@@ -127,7 +127,7 @@ void AMDRadeonX5000_AMDGFX9DCNDisplay::calcAndSetVrrTimestampInfo(AMDRadeonX5000
 void AMDRadeonX5000_AMDGFX9DCNDisplay::calcAndSetVrrTimestampInfoDummy(AMDRadeonX5000_AMDGFX9DCNDisplay&,
                                                                        FramebufferInfo* const, IOTimingInformation&)
 {
-    assert(currentKernelVersion() <= MACOS_10_15);
+    assert(currentKernelVersion() <= MACOS_10_15_X);
 }
 
 bool AMDRadeonX5000_AMDGFX9DCNDisplay::fixedSuperGetDisplayInfo(const UInt32 fbIndex, const bool isCRTEnabled,
@@ -798,7 +798,7 @@ void AMDRadeonX5000_AMDGFX9DCNDisplay::populateVFT(RuntimeVFT<vftCount, 1>& vft)
     vft.get<decltype(isDisplayControlEnabled)>(IS_DISPLAY_CONTROL_ENABLED_VT_INDEX)     = isDisplayControlEnabled;
     vft.get<decltype(isDisplayInterlaceEnabled)>(IS_DISPLAY_INTERLACE_ENABLED_VT_INDEX) = isDisplayInterlaceEnabled;
     vft.get<decltype(isFlipPending)>(IS_FLIP_PENDING_VT_INDEX)                          = isFlipPending;
-    if (currentKernelVersion() == MACOS_10_15) {
+    if (currentKernelVersion().majorMatches(MACOS_10_15)) {
         vft.get<decltype(init)>(INIT_VT_INDEX_MAC10_15) = init;
         return;
     }

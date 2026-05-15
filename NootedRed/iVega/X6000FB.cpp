@@ -230,7 +230,7 @@ void iVega::X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_addr
     PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "X6000FB",
                "Failed to route symbols");
 
-    if (currentKernelVersion() >= MACOS_11 && currentKernelVersion() <= MACOS_12) {
+    if (currentKernelVersion() >= MACOS_11 && currentKernelVersion() <= MACOS_12_X) {
         PenguinWizardry::PatternRouteRequest getTriageHardwareDataRequest{
             "__ZN38AMDRadeonX6000_AmdRadeonControllerNavi21getTriageHardwareDataEjP12_AMD_TRIAGE_",
             NRed::singleton().getAttributes().isRenoir() ? getTriageHardwareDataRN : getTriageHardwareDataRV};
@@ -291,7 +291,7 @@ void iVega::X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_addr
                    "Failed to apply patches");
     }
 
-    if (currentKernelVersion() <= MACOS_10_15) {
+    if (currentKernelVersion() <= MACOS_10_15_X) {
         const PenguinWizardry::MaskedLookupPatch patch{
             &kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckOriginal1015,
             kAmdAtomVramInfoNullCheckOriginalMask1015, kAmdAtomVramInfoNullCheckPatched1015, 1};
@@ -312,7 +312,7 @@ void iVega::X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_addr
                                                        kInitializeDmcubServices1Patched, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB",
                    "Failed to apply initializeDmcubServices family id patch");
-        if (currentKernelVersion() <= MACOS_10_15) {
+        if (currentKernelVersion() <= MACOS_10_15_X) {
             const PenguinWizardry::MaskedLookupPatch patches[] = {
                 {&kextRadeonX6000Framebuffer, kInitializeDmcubServices2Original1015,
                  kInitializeDmcubServices2Patched1015, 1},
@@ -367,7 +367,7 @@ void iVega::X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_addr
         patcher.solveSymbol<void*>(id, "__ZN34AMDRadeonX6000_AmdRadeonController11createLinksEv", slide, size, true);
     PANIC_COND(orgCreateLinks == nullptr, "X6000FB", "Failed to solve createLinks");
 
-    if (currentKernelVersion() <= MACOS_10_15) {
+    if (currentKernelVersion() <= MACOS_10_15_X) {
         PANIC_COND(!KernelPatcher::findAndReplaceWithMask(
                        orgCreateControllerServices, PAGE_SIZE, kCreateControllerServicesOriginal1015,
                        kCreateControllerServicesOriginalMask1015, kCreateControllerServicesPatched1015,

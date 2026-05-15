@@ -446,110 +446,105 @@ iVega::X5000HWLibs& iVega::X5000HWLibs::singleton() { return moduleInstance; };
 
 iVega::X5000HWLibs::X5000HWLibs()
 {
-    switch (getKernelVersion()) {
-        case KernelVersion::Catalina: {
-            this->fwDirField               = 0xB8;
-            this->pspCommandDataField      = 0xB00;
-            this->smuInternalSWInitField   = 0x378;
-            this->smuInternalHWInitField   = 0x380;
-            this->smuInternalHWExitField   = 0x388;
-            this->smuInternalSWExitField   = 0x390;
-            this->smuFullAsicResetField    = 0x3A0;
-            this->smuNotifyEventField      = 0x3A8;
-            this->smuFullscreenEventField  = 0x3B8;
-            this->gcSwFirmwareField        = 0x2E8;
-            this->dmcuEnablePSPFWLoadField = 0x248;
-            this->dmcuABMLevelField        = 0x24C;
-            this->sdmaGetFwConstantsField  = 0x270;
-            this->sdmaStartEngineField     = 0x298;
-        } break;
-        case KernelVersion::BigSur: {
-            this->fwDirField                = 0xB8;
-            this->smuSwInitialisedFieldBase = 0x280;
-            this->smuInternalSWInitField    = 0x638;
-            this->smuInternalHWInitField    = 0x640;
-            this->smuInternalHWExitField    = 0x648;
-            this->smuInternalSWExitField    = 0x650;
-            this->smuFullAsicResetField     = 0x660;
-            this->smuNotifyEventField       = 0x668;
-            this->smuFullscreenEventField   = 0x680;
-            this->smuGetUCodeConstsField    = 0x720;
-            this->pspCommandDataField       = 0xAF8;
-            this->pspSecurityCapsField      = 0x3120;
-            this->pspSOSField               = 0x3124;
-            this->pspTOSVerField            = 0x3128;
-            this->gcSwFirmwareField         = 0x2F0;
-            this->dmcuEnablePSPFWLoadField  = 0x248;
-            this->dmcuABMLevelField         = 0x24C;
-            this->sdmaGetFwConstantsField   = 0x270;
-            this->sdmaStartEngineField      = 0x298;
-        } break;
-        case KernelVersion::Monterey: {
-            this->fwDirField                = 0xB0;
-            this->smuSwInitialisedFieldBase = 0x280;
-            this->smuInternalSWInitField    = 0x648;
-            this->smuInternalHWInitField    = 0x650;
-            this->smuInternalHWExitField    = 0x658;
-            this->smuInternalSWExitField    = 0x660;
-            this->smuFullAsicResetField     = 0x670;
-            this->smuNotifyEventField       = 0x678;
-            this->smuFullscreenEventField   = 0x690;
-            this->smuGetUCodeConstsField    = 0x730;
-            this->pspCommandDataField       = 0xAF8;
-            this->pspSecurityCapsField      = 0x3120;
-            this->pspSOSField               = 0x3124;
-            this->pspTOSVerField            = 0x3128;
-            this->gcSwFirmwareField         = 0x2F0;
-            this->dmcuEnablePSPFWLoadField  = 0x248;
-            this->dmcuABMLevelField         = 0x24C;
-            this->sdmaGetFwConstantsField   = 0x268;
-            this->sdmaStartEngineField      = 0x290;
-        } break;
-        case KernelVersion::Ventura:
-            if (getKernelMinorVersion() < 5) {
-                this->fwDirField                = 0xB0;
-                this->smuSwInitialisedFieldBase = 0x2D0;
-                this->pspCommandDataField       = 0xB48;
-                this->smuInternalSWInitField    = 0x6C0;
-                this->smuInternalHWInitField    = 0x6C8;
-                this->smuInternalHWExitField    = 0x6D0;
-                this->smuInternalSWExitField    = 0x6D8;
-                this->smuFullAsicResetField     = 0x6E8;
-                this->smuNotifyEventField       = 0x6F0;
-                this->smuFullscreenEventField   = 0x708;
-                this->smuGetUCodeConstsField    = 0x7A8;
-                this->pspSecurityCapsField      = 0x3918;
-                this->pspSOSField               = 0x391C;
-                this->pspTOSVerField            = 0x3920;
-                this->gcSwFirmwareField         = 0x340;
-                this->dmcuEnablePSPFWLoadField  = 0x248;
-                this->dmcuABMLevelField         = 0x24C;
-                this->sdmaGetFwConstantsField   = 0x2C8;
-                this->sdmaStartEngineField      = 0x2F0;
-                break;
-            }
-            [[fallthrough]];
-        default: {
-            this->fwDirField                = 0xB0;
-            this->smuSwInitialisedFieldBase = 0x2D0;
-            this->pspCommandDataField       = 0xB48;
-            this->smuInternalSWInitField    = 0x6C0;
-            this->smuInternalHWInitField    = 0x6C8;
-            this->smuInternalHWExitField    = 0x6D0;
-            this->smuInternalSWExitField    = 0x6D8;
-            this->smuFullAsicResetField     = 0x6E8;
-            this->smuNotifyEventField       = 0x6F0;
-            this->smuFullscreenEventField   = 0x708;
-            this->smuGetUCodeConstsField    = 0x7A8;
-            this->pspSecurityCapsField      = 0x3918;
-            this->pspSOSField               = 0x391C;
-            this->pspTOSVerField            = 0x3920;
-            this->gcSwFirmwareField         = 0x340;
-            this->dmcuEnablePSPFWLoadField  = 0x298;
-            this->dmcuABMLevelField         = 0x29C;
-            this->sdmaGetFwConstantsField   = 0x2C8;
-            this->sdmaStartEngineField      = 0x2F0;
-        } break;
+    if (currentKernelVersion() <= MACOS_10_15_X) {
+        this->fwDirField               = 0xB8;
+        this->pspCommandDataField      = 0xB00;
+        this->smuInternalSWInitField   = 0x378;
+        this->smuInternalHWInitField   = 0x380;
+        this->smuInternalHWExitField   = 0x388;
+        this->smuInternalSWExitField   = 0x390;
+        this->smuFullAsicResetField    = 0x3A0;
+        this->smuNotifyEventField      = 0x3A8;
+        this->smuFullscreenEventField  = 0x3B8;
+        this->gcSwFirmwareField        = 0x2E8;
+        this->dmcuEnablePSPFWLoadField = 0x248;
+        this->dmcuABMLevelField        = 0x24C;
+        this->sdmaGetFwConstantsField  = 0x270;
+        this->sdmaStartEngineField     = 0x298;
+    }
+    else if (currentKernelVersion().majorMatches(MACOS_11)) {
+        this->fwDirField                = 0xB8;
+        this->smuSwInitialisedFieldBase = 0x280;
+        this->smuInternalSWInitField    = 0x638;
+        this->smuInternalHWInitField    = 0x640;
+        this->smuInternalHWExitField    = 0x648;
+        this->smuInternalSWExitField    = 0x650;
+        this->smuFullAsicResetField     = 0x660;
+        this->smuNotifyEventField       = 0x668;
+        this->smuFullscreenEventField   = 0x680;
+        this->smuGetUCodeConstsField    = 0x720;
+        this->pspCommandDataField       = 0xAF8;
+        this->pspSecurityCapsField      = 0x3120;
+        this->pspSOSField               = 0x3124;
+        this->pspTOSVerField            = 0x3128;
+        this->gcSwFirmwareField         = 0x2F0;
+        this->dmcuEnablePSPFWLoadField  = 0x248;
+        this->dmcuABMLevelField         = 0x24C;
+        this->sdmaGetFwConstantsField   = 0x270;
+        this->sdmaStartEngineField      = 0x298;
+    }
+    else if (currentKernelVersion().majorMatches(MACOS_12)) {
+        this->fwDirField                = 0xB0;
+        this->smuSwInitialisedFieldBase = 0x280;
+        this->smuInternalSWInitField    = 0x648;
+        this->smuInternalHWInitField    = 0x650;
+        this->smuInternalHWExitField    = 0x658;
+        this->smuInternalSWExitField    = 0x660;
+        this->smuFullAsicResetField     = 0x670;
+        this->smuNotifyEventField       = 0x678;
+        this->smuFullscreenEventField   = 0x690;
+        this->smuGetUCodeConstsField    = 0x730;
+        this->pspCommandDataField       = 0xAF8;
+        this->pspSecurityCapsField      = 0x3120;
+        this->pspSOSField               = 0x3124;
+        this->pspTOSVerField            = 0x3128;
+        this->gcSwFirmwareField         = 0x2F0;
+        this->dmcuEnablePSPFWLoadField  = 0x248;
+        this->dmcuABMLevelField         = 0x24C;
+        this->sdmaGetFwConstantsField   = 0x268;
+        this->sdmaStartEngineField      = 0x290;
+    }
+    else if (currentKernelVersion() <= MACOS_13_4) {
+        this->fwDirField                = 0xB0;
+        this->smuSwInitialisedFieldBase = 0x2D0;
+        this->pspCommandDataField       = 0xB48;
+        this->smuInternalSWInitField    = 0x6C0;
+        this->smuInternalHWInitField    = 0x6C8;
+        this->smuInternalHWExitField    = 0x6D0;
+        this->smuInternalSWExitField    = 0x6D8;
+        this->smuFullAsicResetField     = 0x6E8;
+        this->smuNotifyEventField       = 0x6F0;
+        this->smuFullscreenEventField   = 0x708;
+        this->smuGetUCodeConstsField    = 0x7A8;
+        this->pspSecurityCapsField      = 0x3918;
+        this->pspSOSField               = 0x391C;
+        this->pspTOSVerField            = 0x3920;
+        this->gcSwFirmwareField         = 0x340;
+        this->dmcuEnablePSPFWLoadField  = 0x248;
+        this->dmcuABMLevelField         = 0x24C;
+        this->sdmaGetFwConstantsField   = 0x2C8;
+        this->sdmaStartEngineField      = 0x2F0;
+    }
+    else {
+        this->fwDirField                = 0xB0;
+        this->smuSwInitialisedFieldBase = 0x2D0;
+        this->pspCommandDataField       = 0xB48;
+        this->smuInternalSWInitField    = 0x6C0;
+        this->smuInternalHWInitField    = 0x6C8;
+        this->smuInternalHWExitField    = 0x6D0;
+        this->smuInternalSWExitField    = 0x6D8;
+        this->smuFullAsicResetField     = 0x6E8;
+        this->smuNotifyEventField       = 0x6F0;
+        this->smuFullscreenEventField   = 0x708;
+        this->smuGetUCodeConstsField    = 0x7A8;
+        this->pspSecurityCapsField      = 0x3918;
+        this->pspSOSField               = 0x391C;
+        this->pspTOSVerField            = 0x3920;
+        this->gcSwFirmwareField         = 0x340;
+        this->dmcuEnablePSPFWLoadField  = 0x298;
+        this->dmcuABMLevelField         = 0x29C;
+        this->sdmaGetFwConstantsField   = 0x2C8;
+        this->sdmaStartEngineField      = 0x2F0;
     }
 }
 
@@ -585,7 +580,7 @@ void iVega::X5000HWLibs::processKext(KernelPatcher& patcher, const size_t id, co
     PANIC_COND(!PenguinWizardry::PatternSolveRequest::solveAll(patcher, id, solveRequests, slide, size), "HWLibs",
                "Failed to resolve symbols");
 
-    if (currentKernelVersion() == MACOS_10_15) {
+    if (currentKernelVersion().majorMatches(MACOS_10_15)) {
         PenguinWizardry::PatternRouteRequest request{"__ZN16AmdTtlFwServices7getIpFwEjPKcP10_TtlFwInfo", wrapGetIpFw,
                                                      this->orgGetIpFw};
         PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route getIpFw");
@@ -749,7 +744,7 @@ void iVega::X5000HWLibs::processKext(KernelPatcher& patcher, const size_t id, co
     DBGLOG("HWLibs", "Applied DDI Caps patches");
 
     // TODO: Replace this hack with a simple hook.
-    if (currentKernelVersion() == MACOS_10_15) {
+    if (currentKernelVersion().majorMatches(MACOS_10_15)) {
         if (NRed::singleton().getAttributes().isRenoir()) {
             const PenguinWizardry::MaskedLookupPatch patches[] = {
                 {&kextRadeonX5000HWLibs, kPspSwInit1Original1015, kPspSwInit1Patched1015, 1},
@@ -1077,7 +1072,7 @@ CAILResult iVega::X5000HWLibs::wrapSmuInitFunctionPointerList(void* instance, SW
         default: return ret;
     }
 
-    if (currentKernelVersion() == MACOS_10_15) {
+    if (currentKernelVersion().majorMatches(MACOS_10_15)) {
         singleton().smuInternalSWInitField(instance) = reinterpret_cast<void*>(retOK);
     }
     else {
