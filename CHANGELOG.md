@@ -1,5 +1,21 @@
 # Change log
 
+## v0.8.10 (15/05/2026)
+
+### Enhancements
+
+- Further compatibility work for macOS Mojave.
+
+### Bug Fixes
+
+- Fix conflict of new AppleGFXHDA code with AppleALC's.
+
+> [!NOTE]
+> Use the `RELEASE` build. `RESEARCH_RELEASE` is `DEBUG` with optimisations.
+> The latter two will be way slower and inefficient than the former build. Use them **only** when debugging an issue with NootedRed.
+
+**Full Changelog**: https://github.com/ChefKissInc/NootedRed/compare/v0.8.9...v0.8.10
+
 ## v0.8.9 (15/05/2026)
 
 ### Enhancements
@@ -7,7 +23,6 @@
 - Added the boot argument `-NRedNoAccel` for running FB-only.
 
   Primarily for debug purposes.
-
 - Miscellaneous improvements to the PenguinWizardry SDK.
 - Miscellaneous improvements to the GPUDriversAMD SDK.
 - X6000FB and AppleGFXHDA compatibility with macOS Mojave.
