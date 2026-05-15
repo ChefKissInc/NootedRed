@@ -39,9 +39,9 @@ static const UInt8 kGetNumberOfConnectorsPattern[]     = {0x55, 0x48, 0x89, 0xE5
 static const UInt8 kGetNumberOfConnectorsPatternMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xF0, 0xFF, 0xF0, 0xFF, 0x00,
                                                           0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00};
 
-static Hotfixes::X6000FB instance;
+static Hotfixes::X6000FB moduleInstance;
 
-Hotfixes::X6000FB& Hotfixes::X6000FB::singleton() { return instance; }
+Hotfixes::X6000FB& Hotfixes::X6000FB::singleton() { return moduleInstance; }
 
 void Hotfixes::X6000FB::processKext(KernelPatcher& patcher, const size_t id, const mach_vm_address_t slide,
                                     const size_t size)

@@ -12,9 +12,9 @@
 #include <libkern/c++/OSMetaClass.h>
 #include <mach/i386/vm_types.h>
 
-static PenguinWizardry::RuntimeMCManager instance;
+static PenguinWizardry::RuntimeMCManager moduleInstance;
 
-PenguinWizardry::RuntimeMCManager& PenguinWizardry::RuntimeMCManager::singleton() { return instance; }
+PenguinWizardry::RuntimeMCManager& PenguinWizardry::RuntimeMCManager::singleton() { return moduleInstance; }
 
 void PenguinWizardry::RuntimeMCManager::processPatcher(KernelPatcher& patcher)
 {

@@ -37,9 +37,9 @@
 #include <libkern/c++/OSMetaClass.h>
 #include <mach/i386/vm_types.h>
 
-static NRed instance;
+static NRed moduleInstance;
 
-NRed& NRed::singleton() { return instance; }
+NRed& NRed::singleton() { return moduleInstance; }
 
 void NRed::init()
 {
@@ -147,7 +147,7 @@ void NRed::processPatcher()
     devInfo->processSwitchOff();
 
     PANIC_COND(devInfo->videoBuiltin == nullptr, "NRed", "No iGPU detected by Lilu");
-    this->iGPU = OSRequiredCast(IOPCIDevice, devInfo->videoBuiltin);
+    this->iGPU = OSDynamicCast(IOPCIDevice, devInfo->videoBuiltin);
     PANIC_COND(WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigVendorID) != WIOKit::VendorID::ATIAMD, "NRed",
                "iGPU is not an AMD one");
 

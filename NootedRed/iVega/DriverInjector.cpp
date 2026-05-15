@@ -13,7 +13,7 @@
 #include <libkern/c++/OSObject.h>
 #include <libkern/c++/OSString.h>
 
-static iVega::DriverInjector instance;
+static iVega::DriverInjector moduleInstance;
 
 static const char com_apple_kext_AMDRadeonX5000[] = {
 #embed "../Personalities/com.apple.kext.AMDRadeonX5000.xml" suffix(, '\0')
@@ -37,7 +37,7 @@ iVega::DriverInjector::DriverInjector() :
     }
 { }
 
-iVega::DriverInjector& iVega::DriverInjector::singleton() { return instance; }
+iVega::DriverInjector& iVega::DriverInjector::singleton() { return moduleInstance; }
 
 void iVega::DriverInjector::processPatcher(KernelPatcher& patcher)
 {

@@ -61,9 +61,9 @@ static const UInt8 kAmdLogPspPatched[]      = {0x66, 0x90, 0x66, 0x90, 0x66, 0x9
                                                0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66,
                                                0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x90};
 
-static DebugEnabler instance;
+static DebugEnabler moduleInstance;
 
-DebugEnabler& DebugEnabler::singleton() { return instance; }
+DebugEnabler& DebugEnabler::singleton() { return moduleInstance; }
 
 enum GpuChannelDebugPolicy : UInt32
 {
@@ -127,7 +127,7 @@ void DebugEnabler::processX6000FB(KernelPatcher& patcher, const size_t id, const
     MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
     // Enable all Display Core logs
-    if (currentKernelVersion() == MACOS_10_15) {
+    if (currentKernelVersion() <= MACOS_10_15) {
         const PenguinWizardry::MaskedLookupPatch patch{&kextRadeonX6000Framebuffer,
                                                        kInitPopulateDcInitDataCatalinaOriginal,
                                                        kInitPopulateDcInitDataCatalinaPatched, 1};
