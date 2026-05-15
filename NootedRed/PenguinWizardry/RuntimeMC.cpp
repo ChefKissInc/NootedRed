@@ -56,7 +56,7 @@ void PenguinWizardry::RuntimeMCManager::registerMC(RuntimeMCBase& rtMC, const ch
     pending->super       = super;
     auto* pendingWrapper = OSObjectWrapper::with(pending);
     assert(pendingWrapper != nullptr);
-    auto* array = OSRequiredCast(OSArray, this->pendingMCsForKext->getObject(kext));
+    auto* array = OSDynamicCast(OSArray, this->pendingMCsForKext->getObject(kext));
     if (array == nullptr) {
         array = OSArray::withCapacity(1);
         this->pendingMCsForKext->setObject(kext, array);
@@ -85,11 +85,11 @@ void PenguinWizardry::RuntimeMCManager::registerMC(RuntimeMCBase& rtMC, const ch
 OSReturn PenguinWizardry::RuntimeMCManager::wrapPostModLoad(void* loadHandle)
 {
     const auto* kextIdentifier = getMember<const char*>(loadHandle, 0);
-    auto*       array          = OSRequiredCast(OSArray, singleton().pendingMCsForKext->getObject(kextIdentifier));
+    auto*       array          = OSDynamicCast(OSArray, singleton().pendingMCsForKext->getObject(kextIdentifier));
     if (array != nullptr) {
         auto*            iter = OSCollectionIterator::withCollection(array);
         OSObjectWrapper* obj;
-        while ((obj = OSRequiredCast(OSObjectWrapper, iter->getNextObject()))) {
+        while ((obj = OSDynamicCast(OSObjectWrapper, iter->getNextObject()))) {
             auto* pending = obj->get<Pending>();
             singleton().registerPending(pending);
             delete pending;

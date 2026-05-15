@@ -26,7 +26,8 @@ namespace iVega
                 assertf(dataUnserialized != nullptr, "Failed to unserialise XML for `%s`: `%s`", identifier,
                         errStr == nullptr ? "(null)" : errStr->getCStringNoCopy());
 
-                this->personalities = OSRequiredCast(OSArray, dataUnserialized);
+                this->personalities = OSDynamicCast(OSArray, dataUnserialized);
+                assert(this->personalities != nullptr);
             }
 
             template<const size_t N>
