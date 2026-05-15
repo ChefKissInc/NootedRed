@@ -1,5 +1,34 @@
 # Change log
 
+## v0.8.9 (15/05/2026)
+
+### Enhancements
+
+- Added the boot argument `-NRedNoAccel` for running FB-only.
+
+  Primarily for debug purposes.
+
+- Miscellaneous improvements to the PenguinWizardry SDK.
+- Miscellaneous improvements to the GPUDriversAMD SDK.
+- X6000FB and AppleGFXHDA compatibility with macOS Mojave.
+
+  However, the Mojave-compatible X6000FB kext and instructions will only be released on v0.9.0!
+
+### Bug Fixes
+
+- Added missing call to calcAndSetVrrTimestampInfo in GFX9DCNDisplay implementation.
+
+  This missing piece of code is needed on macOS Big Sur and newer, to tell the accelerator about the display timings.
+- Fixed the max display count for Renoir to 4 also in the GFX9DCNDisplay implementation.
+
+  I missed it in v0.8.4.
+
+> [!NOTE]
+> Use the `RELEASE` build. `RESEARCH_RELEASE` is `DEBUG` with optimisations.
+> The latter two will be way slower and inefficient than the former build. Use them **only** when debugging an issue with NootedRed.
+
+**Full Changelog**: https://github.com/ChefKissInc/NootedRed/compare/v0.8.8...v0.8.9
+
 ## v0.8.8 (12/05/2026)
 
 ### Enhancements
