@@ -981,7 +981,7 @@
 					"$(PROJECT_DIR)/$(PRODUCT_NAME)",
 				);
 				INFOPLIST_FILE = NootedRed/Info.plist;
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				MODULE_NAME = org.ChefKiss.NootedRed;
 				MODULE_START = "$(PRODUCT_NAME)_kern_start";
 				MODULE_STOP = "$(PRODUCT_NAME)_kern_stop";
@@ -1002,7 +1002,7 @@
 					"$(PROJECT_DIR)/$(PRODUCT_NAME)",
 				);
 				INFOPLIST_FILE = NootedRed/Info.plist;
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				MODULE_NAME = org.ChefKiss.NootedRed;
 				MODULE_START = "$(PRODUCT_NAME)_kern_start";
 				MODULE_STOP = "$(PRODUCT_NAME)_kern_stop";
@@ -1125,7 +1125,7 @@
 					"$(PROJECT_DIR)/$(PRODUCT_NAME)",
 				);
 				INFOPLIST_FILE = NootedRed/Info.plist;
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				MODULE_NAME = org.ChefKiss.NootedRed;
 				MODULE_START = "$(PRODUCT_NAME)_kern_start";
 				MODULE_STOP = "$(PRODUCT_NAME)_kern_stop";
@@ -1240,7 +1240,7 @@
 					"$(PROJECT_DIR)/$(PRODUCT_NAME)",
 				);
 				INFOPLIST_FILE = NootedRed/Info.plist;
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				MODULE_NAME = org.ChefKiss.NootedRed;
 				MODULE_START = "$(PRODUCT_NAME)_kern_start";
 				MODULE_STOP = "$(PRODUCT_NAME)_kern_stop";
