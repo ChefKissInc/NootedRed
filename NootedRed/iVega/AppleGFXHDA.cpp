@@ -53,8 +53,6 @@ IOService* iVega::AppleGFXHDA::wrapProbe(IOService* that, IOService* provider, S
         return FunctionCast(wrapProbe, singleton().orgProbe)(that, provider, score);
     }
 
-    WIOKit::renameDevice(dev, "HDAU");
-
     UInt8 bytes[] = {0x00};
     dev->setProperty("built-in", bytes, sizeof(bytes));
 
