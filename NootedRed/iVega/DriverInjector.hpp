@@ -20,14 +20,16 @@ namespace iVega
             Driver(const char* identifier, const char* xml, const size_t xml_size) :
                 identifier{identifier}
             {
-                OSString* errStr           = nullptr;
-                auto*     dataUnserialized = OSUnserializeXML(xml, xml_size, &errStr);
+                OSString*  errStr           = nullptr;
+                const auto dataUnserialized = OSUnserializeXML(xml, xml_size, &errStr);
 
-                assertf(dataUnserialized != nullptr, "Failed to unserialise XML for `%s`: `%s`", identifier,
-                        errStr == nullptr ? "(null)" : errStr->getCStringNoCopy());
+                PANIC_COND(dataUnserialized == nullptr, "DriverInjector",
+                           "BUG: Failed to unserialise XML for `%s`: `%s`", identifier,
+                           errStr == nullptr ? "(null)" : errStr->getCStringNoCopy());
 
                 this->personalities = OSDynamicCast(OSArray, dataUnserialized);
-                assert(this->personalities != nullptr);
+                PANIC_COND(this->personalities == nullptr, "DriverInjector", "BUG: XML for `%s` is not an array!",
+                           identifier);
             }
 
             template<const size_t N>
