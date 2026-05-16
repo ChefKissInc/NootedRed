@@ -504,27 +504,6 @@ iVega::X5000HWLibs::X5000HWLibs()
         this->sdmaGetFwConstantsField   = 0x268;
         this->sdmaStartEngineField      = 0x290;
     }
-    else if (currentKernelVersion() <= MACOS_13_4) {
-        this->fwDirField                = 0xB0;
-        this->smuSwInitialisedFieldBase = 0x2D0;
-        this->pspCommandDataField       = 0xB48;
-        this->smuInternalSWInitField    = 0x6C0;
-        this->smuInternalHWInitField    = 0x6C8;
-        this->smuInternalHWExitField    = 0x6D0;
-        this->smuInternalSWExitField    = 0x6D8;
-        this->smuFullAsicResetField     = 0x6E8;
-        this->smuNotifyEventField       = 0x6F0;
-        this->smuFullscreenEventField   = 0x708;
-        this->smuGetUCodeConstsField    = 0x7A8;
-        this->pspSecurityCapsField      = 0x3918;
-        this->pspSOSField               = 0x391C;
-        this->pspTOSVerField            = 0x3920;
-        this->gcSwFirmwareField         = 0x340;
-        this->dmcuEnablePSPFWLoadField  = 0x248;
-        this->dmcuABMLevelField         = 0x24C;
-        this->sdmaGetFwConstantsField   = 0x2C8;
-        this->sdmaStartEngineField      = 0x2F0;
-    }
     else {
         this->fwDirField                = 0xB0;
         this->smuSwInitialisedFieldBase = 0x2D0;
@@ -541,10 +520,17 @@ iVega::X5000HWLibs::X5000HWLibs()
         this->pspSOSField               = 0x391C;
         this->pspTOSVerField            = 0x3920;
         this->gcSwFirmwareField         = 0x340;
-        this->dmcuEnablePSPFWLoadField  = 0x298;
-        this->dmcuABMLevelField         = 0x29C;
         this->sdmaGetFwConstantsField   = 0x2C8;
         this->sdmaStartEngineField      = 0x2F0;
+
+        if (currentKernelVersion() <= MACOS_13_4) {
+            this->dmcuEnablePSPFWLoadField = 0x248;
+            this->dmcuABMLevelField        = 0x24C;
+        }
+        else {
+            this->dmcuEnablePSPFWLoadField = 0x298;
+            this->dmcuABMLevelField        = 0x29C;
+        }
     }
 }
 
