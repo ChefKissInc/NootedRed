@@ -61,46 +61,45 @@ iVega::X5000& iVega::X5000::singleton() { return moduleInstance; }
 iVega::X5000::X5000()
 {
     if (currentKernelVersion() <= MACOS_10_15_X) {
-        this->pm4EngineField          = 0x348;
-        this->sdma0EngineField        = 0x350;
-        this->displayPipeCountField   = 0x2C;
-        this->seCountField            = 0x58;
-        this->shPerSEField            = 0x5C;
-        this->cuPerSHField            = 0x80;
-        this->hasUVD0Field            = 0x90;
-        this->hasVCEField             = 0x92;
-        this->hasVCN0Field            = 0x93;
-        this->hasSDMAPagingQueueField = 0xA4;
-        this->familyTypeField         = 0x2B4;
-        this->chipSettingsField       = 0x5B18;
-    }
-    else if (currentKernelVersion() <= MACOS_12_X) {
-        this->pm4EngineField          = 0x3B8;
-        this->sdma0EngineField        = 0x3C0;
-        this->displayPipeCountField   = 0x2C;
-        this->seCountField            = 0x5C;
-        this->shPerSEField            = 0x64;
-        this->cuPerSHField            = 0x98;
-        this->hasUVD0Field            = 0xAC;
-        this->hasVCEField             = 0xAE;
-        this->hasVCN0Field            = 0xAF;
-        this->hasSDMAPagingQueueField = 0xC0;
-        this->familyTypeField         = 0x308;
-        this->chipSettingsField       = 0x5B10;
+        this->pm4EngineField             = 0x348;
+        this->sdma0EngineField           = 0x350;
+        this->supportedDisplayCountField = 0x2C;
+        this->seCountField               = 0x58;
+        this->shPerSEField               = 0x5C;
+        this->cuPerSHField               = 0x80;
+        this->hasUVD0Field               = 0x90;
+        this->hasVCEField                = 0x92;
+        this->hasVCN0Field               = 0x93;
+        this->hasSDMAPagingQueueField    = 0xA4;
+        this->familyTypeField            = 0x2B4;
+        this->chipSettingsField          = 0x5B18;
     }
     else {
-        this->pm4EngineField          = 0x3B8;
-        this->sdma0EngineField        = 0x3C0;
-        this->displayPipeCountField   = 0x34;
-        this->seCountField            = 0x64;
-        this->shPerSEField            = 0x6C;
-        this->cuPerSHField            = 0xA0;
-        this->hasUVD0Field            = 0xB4;
-        this->hasVCEField             = 0xB6;
-        this->hasVCN0Field            = 0xB7;
-        this->hasSDMAPagingQueueField = 0xBF;
-        this->familyTypeField         = 0x308;
-        this->chipSettingsField       = 0x5B10;
+        this->pm4EngineField    = 0x3B8;
+        this->sdma0EngineField  = 0x3C0;
+        this->familyTypeField   = 0x308;
+        this->chipSettingsField = 0x5B10;
+
+        if (currentKernelVersion() <= MACOS_12_X) {
+            this->supportedDisplayCountField = 0x2C;
+            this->seCountField               = 0x5C;
+            this->shPerSEField               = 0x64;
+            this->cuPerSHField               = 0x98;
+            this->hasUVD0Field               = 0xAC;
+            this->hasVCEField                = 0xAE;
+            this->hasVCN0Field               = 0xAF;
+            this->hasSDMAPagingQueueField    = 0xC0;
+        }
+        else {
+            this->supportedDisplayCountField = 0x34;
+            this->seCountField               = 0x64;
+            this->shPerSEField               = 0x6C;
+            this->cuPerSHField               = 0xA0;
+            this->hasUVD0Field               = 0xB4;
+            this->hasVCEField                = 0xB6;
+            this->hasVCN0Field               = 0xB7;
+            this->hasSDMAPagingQueueField    = 0xBF;
+        }
     }
 }
 
@@ -260,11 +259,11 @@ void iVega::X5000::wrapSetupAndInitializeHWCapabilities(void* const self)
 {
     FunctionCast(wrapSetupAndInitializeHWCapabilities, singleton().orgSetupAndInitializeHWCapabilities)(self);
 
-    singleton().displayPipeCountField(self)   = 4;
-    singleton().hasUVD0Field(self)            = false;
-    singleton().hasVCEField(self)             = false;
-    singleton().hasVCN0Field(self)            = false;
-    singleton().hasSDMAPagingQueueField(self) = false;
+    singleton().supportedDisplayCountField(self) = 4;
+    singleton().hasUVD0Field(self)               = false;
+    singleton().hasVCEField(self)                = false;
+    singleton().hasVCN0Field(self)               = false;
+    singleton().hasSDMAPagingQueueField(self)    = false;
 }
 
 // TODO: Replace with IP Discovery

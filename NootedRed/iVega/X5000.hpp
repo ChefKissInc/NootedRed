@@ -18,7 +18,7 @@ namespace iVega
 
         ObjectField<void*>            pm4EngineField;
         ObjectField<void*>            sdma0EngineField;
-        ObjectField<UInt32>           displayPipeCountField;
+        ObjectField<UInt32>           supportedDisplayCountField;
         ObjectField<UInt32>           seCountField;
         ObjectField<UInt32>           shPerSEField;
         ObjectField<UInt32>           cuPerSHField;
