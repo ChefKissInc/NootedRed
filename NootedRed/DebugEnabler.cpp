@@ -205,7 +205,7 @@ void DebugEnabler::processKext(KernelPatcher& patcher, const size_t id, const ma
 
 bool DebugEnabler::wrapInitWithPciInfo(void* self, void* pciDevice)
 {
-    auto ret                      = FunctionCast(wrapInitWithPciInfo, singleton().orgInitWithPciInfo)(self, pciDevice);
+    const auto ret                = FunctionCast(wrapInitWithPciInfo, singleton().orgInitWithPciInfo)(self, pciDevice);
     getMember<UInt64>(self, 0x28) = 0xFFFFFFFFFFFFFFFF;    // Enable all log types
     getMember<UInt32>(self, 0x30) = 0xFF;                  // Enable all log severities
     return ret;
@@ -215,7 +215,7 @@ void DebugEnabler::doGPUPanic(void*, const char* fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    auto* buf = static_cast<char*>(IOMalloc(1000));
+    const auto buf = IONew(char, 1000);
     vsnprintf(buf, 1000, fmt, va);
     va_end(va);
 
@@ -261,7 +261,6 @@ void DebugEnabler::dmLoggerWrite(void*, const UInt32 logType, const char* fmt, .
     IODelete(buffer, char, bufferSize);
 }
 
-// Port of `AmdTtlServices::cosDebugAssert` for empty `_*_assertion` functions
 void DebugEnabler::ipAssertion(void*, UInt32 cond, const char* func, const char* file, UInt32 line, const char* msg)
 {
     if (cond != 0) { return; }
