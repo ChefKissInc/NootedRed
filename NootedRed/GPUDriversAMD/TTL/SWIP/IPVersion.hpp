@@ -19,6 +19,4 @@ struct SWIPIPVersion
     { }
 
     constexpr auto toHW() const { return (this->minor << 8) | (this->major << 16) | this->patch; }
-
-    constexpr auto operator==(const SWIPIPVersion& other) const { return this->toHW() == other.toHW(); }
 };
