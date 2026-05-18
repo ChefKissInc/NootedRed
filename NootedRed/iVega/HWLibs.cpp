@@ -447,7 +447,6 @@ iVega::X5000HWLibs& iVega::X5000HWLibs::singleton() { return moduleInstance; };
 iVega::X5000HWLibs::X5000HWLibs()
 {
     if (currentKernelVersion() <= MACOS_10_15_X) {
-        this->fwDirField               = 0xB8;
         this->pspCommandDataField      = 0xB00;
         this->smuInternalSWInitField   = 0x378;
         this->smuInternalHWInitField   = 0x380;
