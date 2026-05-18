@@ -233,8 +233,10 @@ static const char* LogTypes[] = {
 };
 
 // Reimplementation to prevent stack overflow
-void DebugEnabler::dmLoggerWrite(void*, const UInt32 logType, const char* fmt, ...)
+void DebugEnabler::dmLoggerWrite(void* logger, const UInt32 logType, const char* fmt, ...)
 {
+    if (logger == nullptr || (getMember<UInt64>(logger, 0x20) & getBit<UInt64>(logType)) == 0) { return; }
+
     va_list args0, args1;
     va_start(args0, fmt);
     va_copy(args1, args0);
