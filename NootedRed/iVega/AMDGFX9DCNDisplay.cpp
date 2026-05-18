@@ -62,7 +62,7 @@ void AMDRadeonX5000_AMDGFX9DCNDisplay::initialiseRegisters(AMDRadeonX5000_AMDGFX
         auto&       savedState = expansion.savedState[i];
         const auto& regOffs    = expansion.regOffs[i];
         assert(regOffs.isValid);
-        savedState.hubpreqflipControl = self->getHWRegisters()->readReg32(regOffs.hubpreqFlipControl);
+        savedState.hubpreqflipControl = self->getHWRegisters()->read(regOffs.hubpreqFlipControl);
     }
 }
 
@@ -461,8 +461,8 @@ UInt64 AMDRadeonX5000_AMDGFX9DCNDisplay::getCurrentDisplayOffset(AMDRadeonX5000_
     const auto& regOffs   = expansion.regOffs[fbIndex];
     assert(regOffs.isValid);
 
-    return static_cast<UInt64>(self->getHWRegisters()->readReg32(regOffs.hubpreqPrimarySurfaceAddressHigh)) << 32
-           | self->getHWRegisters()->readReg32(regOffs.hubpreqPrimarySurfaceAddress);
+    return static_cast<UInt64>(self->getHWRegisters()->read(regOffs.hubpreqPrimarySurfaceAddressHigh)) << 32
+           | self->getHWRegisters()->read(regOffs.hubpreqPrimarySurfaceAddress);
 }
 
 void AMDRadeonX5000_AMDGFX9DCNDisplay::setCurrentDisplayOffset(AMDRadeonX5000_AMDGFX9DCNDisplay* const self,
@@ -473,9 +473,9 @@ void AMDRadeonX5000_AMDGFX9DCNDisplay::setCurrentDisplayOffset(AMDRadeonX5000_AM
     assert(regOffs.isValid);
     assert(expansion.regShiftsMasks.isValid);
     self->setFlipControlRegister(self, fbIndex, AMDSwapInterval::Immediate);
-    self->getHWRegisters()->writeReg32(regOffs.hubpreqPrimarySurfaceAddressHigh,
-                                       (value >> 32) & expansion.regShiftsMasks.primarySurfaceHi);
-    self->getHWRegisters()->writeReg32(regOffs.hubpreqPrimarySurfaceAddress, value & 0xFFFFFFFF);
+    self->getHWRegisters()->write(regOffs.hubpreqPrimarySurfaceAddressHigh,
+                                  (value >> 32) & expansion.regShiftsMasks.primarySurfaceHi);
+    self->getHWRegisters()->write(regOffs.hubpreqPrimarySurfaceAddress, value & 0xFFFFFFFF);
     expansion.lastSubmitFlipOffset = value;
     while (self->isFlipPending(self, fbIndex)) { IODelay(100); }
 }
@@ -495,7 +495,7 @@ void AMDRadeonX5000_AMDGFX9DCNDisplay::setFlipControlRegister(AMDRadeonX5000_AMD
     assert(regOffs.isValid);
     auto& savedState = expansion.savedState[fbIndex];
     SET_HUBPREQ_FLIP_CONTROL_FLIP_TYPE(savedState.hubpreqflipControl, swapInterval == AMDSwapInterval::Immediate);
-    self->getHWRegisters()->writeReg32(regOffs.hubpreqFlipControl, savedState.hubpreqflipControl);
+    self->getHWRegisters()->write(regOffs.hubpreqFlipControl, savedState.hubpreqflipControl);
 }
 
 bool AMDRadeonX5000_AMDGFX9DCNDisplay::init(AMDRadeonX5000_AMDGFX9DCNDisplay* const self, void* const hwInterface,
@@ -677,12 +677,12 @@ void AMDRadeonX5000_AMDGFX9DCNDisplay::getDisplayModeViewportSpecificInfo(AMDRad
     assert(regShiftsMasks.isValid);
     if (viewportYStart != nullptr) {
         *viewportYStart =
-            (self->getHWRegisters()->readReg32(regOffs.hubpPriViewportStart) & regShiftsMasks.viewportYStartMask)
+            (self->getHWRegisters()->read(regOffs.hubpPriViewportStart) & regShiftsMasks.viewportYStartMask)
             >> regShiftsMasks.viewportYStartShift;
     }
     if (viewportHeight != nullptr) {
         *viewportHeight =
-            (self->getHWRegisters()->readReg32(regOffs.hubpPriViewportDimension) & regShiftsMasks.viewportHeightMask)
+            (self->getHWRegisters()->read(regOffs.hubpPriViewportDimension) & regShiftsMasks.viewportHeightMask)
             >> regShiftsMasks.viewportHeightShift;
     }
 }
@@ -729,7 +729,7 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::isDisplayControlEnabled(AMDRadeonX5000_AM
     const auto& regOffs   = expansion.regOffs[fbIndex];
     assert(regOffs.isValid);
     assert(expansion.regShiftsMasks.isValid);
-    return (self->getHWRegisters()->readReg32(regOffs.otgControl) & expansion.regShiftsMasks.otgEnable) != 0;
+    return (self->getHWRegisters()->read(regOffs.otgControl) & expansion.regShiftsMasks.otgEnable) != 0;
 }
 
 bool AMDRadeonX5000_AMDGFX9DCNDisplay::isDisplayInterlaceEnabled(AMDRadeonX5000_AMDGFX9DCNDisplay* const self,
@@ -740,7 +740,7 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::isDisplayInterlaceEnabled(AMDRadeonX5000_
     const auto& regShiftsMasks = expansion.regShiftsMasks;
     assert(regOffs.isValid);
     assert(regShiftsMasks.isValid);
-    return (self->getHWRegisters()->readReg32(regOffs.otgInterlaceControl) & regShiftsMasks.otgInterlaceEnable) != 0;
+    return (self->getHWRegisters()->read(regOffs.otgInterlaceControl) & regShiftsMasks.otgInterlaceEnable) != 0;
 }
 
 bool AMDRadeonX5000_AMDGFX9DCNDisplay::isFlipPending(AMDRadeonX5000_AMDGFX9DCNDisplay* const self, const UInt32 fbIndex)
@@ -750,8 +750,8 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::isFlipPending(AMDRadeonX5000_AMDGFX9DCNDi
     assert(regOffs.isValid);
 
     const UInt64 earliestInUse =
-        self->getHWRegisters()->readReg32(regOffs.hubpreqSurfaceEarliestInuse)
-        | static_cast<UInt64>(self->getHWRegisters()->readReg32(regOffs.hubpreqSurfaceEarliestInuseHigh)) << 32;
+        self->getHWRegisters()->read(regOffs.hubpreqSurfaceEarliestInuse)
+        | static_cast<UInt64>(self->getHWRegisters()->read(regOffs.hubpreqSurfaceEarliestInuseHigh)) << 32;
 
     return earliestInUse != expansion.lastSubmitFlipOffset;
 }
