@@ -72,15 +72,7 @@ bool iVega::DriverInjector::wrapAddDrivers(void* const self, OSArray* const arra
 
             DBGLOG("DriverInjector", "Matched %s, injecting.", driver.identifier);
 
-            UInt32 injectedDriverCount = driver.personalities->getCount();
-
-            array->ensureCapacity(driverCount + injectedDriverCount);
-
-            for (UInt32 injectedDriverIndex = 0; injectedDriverIndex < injectedDriverCount; injectedDriverIndex += 1) {
-                array->setObject(driverIndex, driver.personalities->getObject(injectedDriverIndex));
-                driverIndex += 1;
-                driverCount += 1;
-            }
+            array->merge(driver.personalities);
 
             break;
         }
