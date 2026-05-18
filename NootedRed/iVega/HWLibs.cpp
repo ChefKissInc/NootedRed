@@ -685,7 +685,7 @@ void iVega::X5000HWLibs::processKext(KernelPatcher& patcher, const size_t id, co
         *orgDeviceTypeTable = {.deviceId = NRed::singleton().getDeviceID(), .deviceType = kAMDDeviceTypeNavi10};
     }
 
-    auto targetDeviceId = NRed::singleton().getAttributes().isRenoir() ? 0x1636 : NRed::singleton().getDeviceID();
+    const auto targetDeviceId = NRed::singleton().getAttributes().isRenoir() ? 0x1636 : NRed::singleton().getDeviceID();
     for (; orgCapsInitTable->deviceId != 0xFFFFFFFF; orgCapsInitTable++) {
         if (orgCapsInitTable->familyId == AMD_FAMILY_RAVEN && orgCapsInitTable->deviceId == targetDeviceId) {
             orgCapsInitTable->deviceId = NRed::singleton().getDeviceID();
@@ -784,12 +784,12 @@ void iVega::X5000HWLibs::processKext(KernelPatcher& patcher, const size_t id, co
         else {
             const PenguinWizardry::MaskedLookupPatch patch{&kextRadeonX5000HWLibs, kCreatePowerTuneServices1Original,
                                                            kCreatePowerTuneServices1Patched, 1};
-            PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTuneServices patch (<12.0)");
+            PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTuneServices patch");
         }
         const PenguinWizardry::MaskedLookupPatch patch{&kextRadeonX5000HWLibs, kCreatePowerTuneServices2Original,
                                                        kCreatePowerTuneServices2Mask, kCreatePowerTuneServices2Patched,
                                                        1};
-        PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTune patch (<14.4)");
+        PANIC_COND(!patch.apply(patcher, slide, size), "HWLibs", "Failed to apply PowerTune patch");
     }
 
     if (currentKernelVersion() >= MACOS_13) {
@@ -804,18 +804,21 @@ void iVega::X5000HWLibs::wrapPopulateFirmwareDirectory(void* const self)
 {
     FunctionCast(wrapPopulateFirmwareDirectory, singleton().orgGetIpFw)(self);
 
-    auto* fwDir = singleton().fwDirField(self);
+    const auto fwDir = singleton().fwDirField(self);
     assert(fwDir != nullptr);
 
-    auto* ravenFw = singleton().orgCreateFirmware(ativvaxy_rv_dat, sizeof(ativvaxy_rv_dat), 0x0100, "ativvaxy_rv.dat");
+    const auto ravenFw =
+        singleton().orgCreateFirmware(ativvaxy_rv_dat, sizeof(ativvaxy_rv_dat), 0x0100, "ativvaxy_rv.dat");
     assert(ravenFw != nullptr);
     singleton().orgPutFirmware(fwDir, kAMDDeviceTypeNavi10, ravenFw);
 
-    auto* renoirFw = singleton().orgCreateFirmware(ativvaxy_nv_dat, sizeof(ativvaxy_nv_dat), 0x0202, "ativvaxy_nv.dat");
+    const auto renoirFw =
+        singleton().orgCreateFirmware(ativvaxy_nv_dat, sizeof(ativvaxy_nv_dat), 0x0202, "ativvaxy_nv.dat");
     assert(renoirFw != nullptr);
     singleton().orgPutFirmware(fwDir, kAMDDeviceTypeNavi10, renoirFw);
 
-    auto* dmcubFw = singleton().orgCreateFirmware(atidmcub_rn_dat, sizeof(atidmcub_rn_dat), 0x0201, "atidmcub_0.dat");
+    const auto dmcubFw =
+        singleton().orgCreateFirmware(atidmcub_rn_dat, sizeof(atidmcub_rn_dat), 0x0201, "atidmcub_0.dat");
     assert(dmcubFw != nullptr);
     singleton().orgPutFirmware(fwDir, kAMDDeviceTypeNavi10, dmcubFw);
 }
@@ -860,7 +863,7 @@ CAILResult iVega::X5000HWLibs::pspSecurityFeatureCapsSet10(void* const instance)
     securityCaps       &= ~static_cast<UInt8>(1);
     const auto tOSVer   = singleton().pspTOSVerField(instance);
     if ((tOSVer & 0xFFFF0000) == 0x80000 && (tOSVer & 0xFF) > 0x50) {
-        auto policyVer = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_91);
+        const auto policyVer = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_91);
         SYSLOG_COND((policyVer & 0xFF000000) != 0xA000000, "HWLibs", "Invalid security policy version: 0x%X",
                     policyVer);
         if (policyVer == 0xA02031A || ((policyVer & 0xFFFFFF00) == 0xA020400 && (policyVer & 0xFC) > 0x23)
@@ -877,9 +880,9 @@ CAILResult iVega::X5000HWLibs::pspSecurityFeatureCapsSet12(void* const instance)
 {
     auto& securityCaps  = singleton().pspSecurityCapsField(instance);
     securityCaps       &= ~static_cast<UInt8>(1);
-    auto tOSVer         = singleton().pspTOSVerField(instance);
+    const auto tOSVer   = singleton().pspTOSVerField(instance);
     if ((tOSVer & 0xFFFF0000) == 0x110000 && (tOSVer & 0xFF) > 0x2A) {
-        auto policyVer = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_91);
+        const auto policyVer = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_91);
         SYSLOG_COND((policyVer & 0xFF000000) != 0xB000000, "HWLibs", "Invalid security policy version: 0x%X",
                     policyVer);
         if ((policyVer & 0xFFFF0000) == 0xB090000 && (policyVer & 0xFE) > 0x35) { securityCaps |= 1; }
@@ -898,9 +901,9 @@ static UInt32 replacePspCmdDataWith(void* const data, const char (&fw)[N])
 CAILResult iVega::X5000HWLibs::wrapPspCmdKmSubmit(void* const instance, void* const cmd, void* const outData,
                                                   void* const outResponse)
 {
-    const auto  pspCmd   = getMember<AMDPSPCommand>(cmd, 0x0);
-    auto&       dataSize = getMember<UInt32>(cmd, 0xC);
-    auto* const data     = singleton().pspCommandDataField(instance);
+    const auto pspCmd   = getMember<AMDPSPCommand>(cmd, 0x0);
+    auto&      dataSize = getMember<UInt32>(cmd, 0xC);
+    const auto data     = singleton().pspCommandDataField(instance);
 
     switch (pspCmd) {
         case kPSPCommandLoadTA: {
@@ -1042,7 +1045,7 @@ CAILResult iVega::X5000HWLibs::smuFullScreenEvent(void*, TTLFullScreenEvent even
 
 CAILResult iVega::X5000HWLibs::wrapSmuInitFunctionPointerList(void* instance, SWIPIPVersion ipVersion)
 {
-    auto ret =
+    const auto ret =
         FunctionCast(wrapSmuInitFunctionPointerList, singleton().orgSmuInitFunctionPointerList)(instance, ipVersion);
     if (ret == kCAILResultOK) { return ret; }
 
@@ -1079,7 +1082,7 @@ CAILResult iVega::X5000HWLibs::wrapSmuInitFunctionPointerList(void* instance, SW
 // I ran into issues so I just gave it a random OSObject it can call `release` on.
 static void* allocMemHandle()
 {
-    auto* v = OSBoolean::withBoolean(false);
+    const auto v = OSBoolean::withBoolean(false);
     assertf(v != nullptr, "Failed to create memory handle!");
     return v;
 }
@@ -1167,15 +1170,10 @@ static constexpr UInt32 charToInt(const char* str, size_t len)
     return ret;
 }
 
-static constexpr UInt32 gcGetHWVersion(const SWIPIPVersion ipVersion)
-{
-    return (ipVersion.major << 16) | (ipVersion.minor << 8) | ipVersion.patch;
-}
-
 void iVega::X5000HWLibs::processGCFWEntries(void* const instance, void* const initData)
 {
-    auto& fwInfo    = singleton().gcSwFirmwareField(instance);
-    auto& fwEntries = getMember<GCFirmwareEntry[kGCFirmwareTypeCount]>(initData, 0x18);
+    const auto& fwInfo    = singleton().gcSwFirmwareField(instance);
+    auto&       fwEntries = getMember<GCFirmwareEntry[kGCFirmwareTypeCount]>(initData, 0x18);
     for (UInt32 i = 0, swIndex = 0; i < kGCFirmwareTypeCount; i++) {
         if (fwInfo.entry[i] == nullptr) { continue; }
 
@@ -1196,17 +1194,16 @@ void iVega::X5000HWLibs::processGCFWEntries(void* const instance, void* const in
 CAILResult iVega::X5000HWLibs::wrapGcSetFwEntryInfo(void* const instance, const SWIPIPVersion ipVersion,
                                                     void* const initData)
 {
-    auto  hwVersion = gcGetHWVersion(ipVersion);
-    auto* fwInfo    = &singleton().gcSwFirmwareField(instance);
-    fwInfo->count   = 0;
-    switch (hwVersion) {
-        case gcGetHWVersion({9, 1, 0}): {
+    auto* fwInfo  = &singleton().gcSwFirmwareField(instance);
+    fwInfo->count = 0;
+    switch (ipVersion.toHW()) {
+        case SWIPIPVersion(9, 1, 0).toHW(): {
             gc91GetFwConstants(instance, fwInfo);
         } break;
-        case gcGetHWVersion({9, 2, 0}): {
+        case SWIPIPVersion(9, 2, 0).toHW(): {
             gc92GetFwConstants(instance, fwInfo);
         } break;
-        case gcGetHWVersion({9, 3, 0}): {
+        case SWIPIPVersion(9, 3, 0).toHW(): {
             gc93GetFwConstants(instance, fwInfo);
         } break;
         default:
