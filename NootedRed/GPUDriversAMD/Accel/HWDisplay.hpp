@@ -207,24 +207,13 @@ struct AMDHWDisplayState
 {
     class Status
     {
-        UInt32 bits;
+        UInt32 bits{0};
 
         static constexpr UInt8 IS_ENABLED_SHIFT    = 0;
         static constexpr UInt8 IS_INTERLACED_SHIFT = 1;
         static constexpr UInt8 IS_BUILT_IN_SHIFT   = 2;
 
-        // 12.0 and older
-        static constexpr UInt8 IS_FULLSCREEN_ENABLED_SHIFT = 5;
-        static constexpr UInt8 IS_ACCEL_BACKED_SHIFT       = 6;
-        static constexpr UInt8 IS_IOFB_FLIP_ENABLED_SHIFT  = 7;
-        static constexpr UInt8 IS_WSAA_SUPPORTED_SHIFT     = 8;
-        static constexpr UInt8 IS_DPT_SUPPORTED_SHIFT      = 9;
-
-        // 13.0 and newer
-        static constexpr UInt8 IS_ACCEL_BACKED_SHIFT_MAC13      = 5;
-        static constexpr UInt8 IS_IOFB_FLIP_ENABLED_SHIFT_MAC13 = 6;
-        static constexpr UInt8 IS_WSAA_SUPPORTED_SHIFT_MAC13    = 7;
-        static constexpr UInt8 IS_DPT_SUPPORTED_SHIFT_MAC13     = 8;
+        static constexpr UInt8 IS_FULLSCREEN_ENABLED_SHIFT = 5;    // Only <=12
 
         struct Constants
         {
@@ -236,16 +225,16 @@ struct AMDHWDisplayState
             Constants()
             {
                 if (currentKernelVersion() >= MACOS_13) {
-                    this->isAccelBackedShift     = IS_ACCEL_BACKED_SHIFT_MAC13;
-                    this->isIOFBFlipEnabledShift = IS_IOFB_FLIP_ENABLED_SHIFT_MAC13;
-                    this->isWSAASupportedShift   = IS_WSAA_SUPPORTED_SHIFT_MAC13;
-                    this->isDPTSupportedShift    = IS_DPT_SUPPORTED_SHIFT_MAC13;
+                    this->isAccelBackedShift     = 5;
+                    this->isIOFBFlipEnabledShift = 6;
+                    this->isWSAASupportedShift   = 7;
+                    this->isDPTSupportedShift    = 8;
                 }
                 else {
-                    this->isAccelBackedShift     = IS_ACCEL_BACKED_SHIFT;
-                    this->isIOFBFlipEnabledShift = IS_IOFB_FLIP_ENABLED_SHIFT;
-                    this->isWSAASupportedShift   = IS_WSAA_SUPPORTED_SHIFT;
-                    this->isDPTSupportedShift    = IS_DPT_SUPPORTED_SHIFT;
+                    this->isAccelBackedShift     = 6;
+                    this->isIOFBFlipEnabledShift = 7;
+                    this->isWSAASupportedShift   = 8;
+                    this->isDPTSupportedShift    = 9;
                 }
             }
         };
@@ -257,9 +246,7 @@ struct AMDHWDisplayState
         { }
 
     public:
-        constexpr Status() :
-            Status(0)
-        { }
+        constexpr Status() { }
 
         constexpr Status operator|(const Status& other) const { return Status(this->bits | other.bits); }
 
