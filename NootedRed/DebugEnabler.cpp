@@ -150,9 +150,9 @@ void DebugEnabler::processX6000FB(KernelPatcher& patcher, const size_t id, const
 void DebugEnabler::processX5000HWLibs(KernelPatcher& patcher, const size_t id, const mach_vm_address_t slide,
                                       const size_t size)
 {
-    // TODO: Find the empty functions using a pattern of a call to them for Monterey and newer.
+    // TODO: Find them using a call pattern.
     if (currentKernelVersion() <= MACOS_11_X) {
-        KernelPatcher::RouteRequest requests[] = {
+        PenguinWizardry::PatternRouteRequest requests[] = {
             { "_dmcu_assertion",   ipAssertion},
             {   "_gc_assertion",   ipAssertion},
             {  "_gvm_assertion",   ipAssertion},
@@ -160,12 +160,18 @@ void DebugEnabler::processX5000HWLibs(KernelPatcher& patcher, const size_t id, c
             {  "_psp_assertion",   ipAssertion},
             { "_sdma_assertion",   ipAssertion},
             {  "_smu_assertion",   ipAssertion},
-            {  "_vcn_assertion",   ipAssertion},
             { "_gc_debug_print",  gcDebugPrint},
             {"_psp_debug_print", pspDebugPrint},
         };
-        SYSLOG_COND(!patcher.routeMultiple(id, requests, slide, size, true, true), "DebugEnabler",
-                    "Failed to route X5000HWLibs debug symbols");
+        PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "DebugEnabler",
+                   "Failed to route HWLibs debug symbols");
+
+        // This function does not exist on macOS Catalina and below
+        if (currentKernelVersion().majorMatches(MACOS_11)) {
+            PenguinWizardry::PatternRouteRequest request{"_vcn_assertion", ipAssertion};
+            PANIC_COND(!request.route(patcher, id, slide, size), "DebugEnabler",
+                       "Failed to route HWLibs vcn_assertion");
+        }
     }
 
     const PenguinWizardry::MaskedLookupPatch atiPpSvcCtrPatch{
