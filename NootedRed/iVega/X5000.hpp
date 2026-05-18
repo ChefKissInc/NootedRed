@@ -14,8 +14,6 @@ namespace iVega
 
     class X5000
     {
-        using GenericConstructor_t = void (*)(void* self);
-
         ObjectField<void*>            pm4EngineField;
         ObjectField<void*>            sdma0EngineField;
         ObjectField<UInt32>           supportedDisplayCountField;
@@ -28,8 +26,8 @@ namespace iVega
         ObjectField<bool>             hasSDMAPagingQueueField;
         ObjectField<UInt32>           familyTypeField;
         ObjectField<Gfx9ChipSettings> chipSettingsField;
-        GenericConstructor_t          pm4EngineConstructor{nullptr};
-        GenericConstructor_t          sdmaEngineConstructor{nullptr};
+        OSMetaClass*                  pm4EngineMC{nullptr};
+        OSMetaClass*                  sdmaEngineMC{nullptr};
         mach_vm_address_t             orgSetupAndInitializeHWCapabilities{0};
         mach_vm_address_t             orgGFX9SetupAndInitializeHWCapabilities{0};
         mach_vm_address_t             orgGetHWChannel{0};

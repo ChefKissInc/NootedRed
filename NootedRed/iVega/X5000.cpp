@@ -118,8 +118,8 @@ void iVega::X5000::processKext(KernelPatcher& patcher, const size_t id, const ma
              "__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator22getAdditionalQueueListEPPK18_"
              "AMDQueueSpecifierE27additionalQueueList_Default" :
              "__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator19createAccelChannelsEbE12channelTypes", orgChannelTypes, kChannelTypesPattern},
-        {"__ZN31AMDRadeonX5000_AMDGFX9PM4EngineC1Ev", this->pm4EngineConstructor},
-        {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngineC1Ev", this->sdmaEngineConstructor},
+        {"__ZN31AMDRadeonX5000_AMDGFX9PM4Engine10gMetaClassE", this->pm4EngineMC},
+        {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngine10gMetaClassE", this->sdmaEngineMC},
         {"__ZN26AMDRadeonX5000_AMDHardware14startHWEnginesEv", orgStartHWEngines},
     };
     PANIC_COND(!PenguinWizardry::PatternSolveRequest::solveAll(patcher, id, solveRequests, slide, size), "X5000",
@@ -240,15 +240,8 @@ void iVega::X5000::processKext(KernelPatcher& patcher, const size_t id, const ma
 
 bool iVega::X5000::allocateHWEngines(void* const self)
 {
-    [[clang::suppress]]
-    auto* const pm4 = OSObject::operator new(0x340);
-    singleton().pm4EngineConstructor(pm4);
-    singleton().pm4EngineField(self) = pm4;
-
-    [[clang::suppress]]
-    auto* const sdma0 = OSObject::operator new(0x250);
-    singleton().sdmaEngineConstructor(sdma0);
-    singleton().sdma0EngineField(self) = sdma0;
+    [[clang::suppress]] singleton().pm4EngineField(self)   = singleton().pm4EngineMC->alloc();
+    [[clang::suppress]] singleton().sdma0EngineField(self) = singleton().sdmaEngineMC->alloc();
 
     // No VCN? :-(
 
