@@ -404,7 +404,7 @@ public:
     auto& isDCN() { return constants.isDCN(this); }
     auto& vrrTimestampInfo()
     {
-        assert(currentKernelVersion() < MACOS_13);
+        assert(currentKernelVersion() < MACOS_13 && currentKernelVersion() >= MACOS_11);
         return getMember<AMDVRRTimestampInfo>(this, 0x47E0);
     }
     auto& vrrTimestampInfoVentura()
