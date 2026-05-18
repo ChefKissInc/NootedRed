@@ -153,15 +153,16 @@ void DebugEnabler::processX5000HWLibs(KernelPatcher& patcher, const size_t id, c
     // TODO: Find them using a call pattern.
     if (currentKernelVersion() <= MACOS_11_X) {
         PenguinWizardry::PatternRouteRequest requests[] = {
-            { "_dmcu_assertion",   ipAssertion},
-            {   "_gc_assertion",   ipAssertion},
-            {  "_gvm_assertion",   ipAssertion},
-            {  "_mes_assertion",   ipAssertion},
-            {  "_psp_assertion",   ipAssertion},
-            { "_sdma_assertion",   ipAssertion},
-            {  "_smu_assertion",   ipAssertion},
-            { "_gc_debug_print",  gcDebugPrint},
-            {"_psp_debug_print", pspDebugPrint},
+            {                                  "_dmcu_assertion",    ipAssertion},
+            {                                    "_gc_assertion",    ipAssertion},
+            {                                   "_gvm_assertion",    ipAssertion},
+            {                                   "_mes_assertion",    ipAssertion},
+            {                                   "_psp_assertion",    ipAssertion},
+            {                                  "_sdma_assertion",    ipAssertion},
+            {                                   "_smu_assertion",    ipAssertion},
+            {                                  "_gc_debug_print",   gcDebugPrint},
+            {                                 "_psp_debug_print",  pspDebugPrint},
+            {"__ZN14AmdTtlServices14cosDebugAssertEPvPKcS2_jS2_", cosDebugAssert},
         };
         PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "DebugEnabler",
                    "Failed to route HWLibs debug symbols");
@@ -276,6 +277,11 @@ void DebugEnabler::ipAssertion(void*, UInt32 cond, const char* func, const char*
 {
     if (cond != 0) { return; }
 
+    cosDebugAssert(nullptr, func, file, line, msg);
+}
+
+void DebugEnabler::cosDebugAssert(void*, const char* func, const char* file, UInt32 line, const char* msg)
+{
     kprintf("AMD TTL COS: \n----------------------------------------------------------------\n");
     kprintf("AMD TTL COS: ASSERT FUNCTION: %s\n", safeString(func));
     kprintf("AMD TTL COS: ASSERT FILE: %s\n", safeString(file));

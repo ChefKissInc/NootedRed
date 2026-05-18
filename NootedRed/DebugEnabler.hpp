@@ -26,6 +26,7 @@ private:
     static void dmLoggerWrite(void* logger, const UInt32 logType, const char* fmt, ...);
     static void ipAssertion(void* instance, UInt32 cond, const char* func, const char* file, UInt32 line,
                             const char* msg);
+    static void cosDebugAssert(void* cosHandle, const char* func, const char* file, UInt32 line, const char* msg);
     static void gcDebugPrint(void* instance, const char* fmt, ...);
     static void pspDebugPrint(void* instance, const char* fmt, ...);
     static bool wrapGetNumericProperty(void* self, const char* name, UInt32* value);
