@@ -325,28 +325,25 @@ UInt64 iVega::X5000::wrapAdjustVRAMAddress(void* const self, const UInt64 addr)
 UInt32 iVega::X5000::returnZero() { return 0; }
 
 // TODO: Investigate why this is needed.
-static void fixAccelGroup(void* const self)
+// Replaces SDMA1 field with SDMA0 because we don't have SDMA1
+static void* fixAccelGroup(void* const group)
 {
-    auto*& sdma1 = getMember<void*>(self, 0x18);
-    // Replace field with SDMA0 because we don't have SDMA1
-    if (sdma1 == nullptr) { sdma1 = getMember<void*>(self, 0x10); }
+    if (group == nullptr) { return nullptr; }
+    auto& sdma1 = getMember<void*>(group, 0x18);
+    if (sdma1 == nullptr) { sdma1 = getMember<void*>(group, 0x10); }
+    return group;
 }
 
 void* iVega::X5000::wrapObtainAccelChannelGroup(void* const self, const UInt32 priority)
 {
-    auto ret = FunctionCast(wrapObtainAccelChannelGroup, singleton().orgObtainAccelChannelGroup)(self, priority);
-    if (ret == nullptr) { return nullptr; }
-    fixAccelGroup(ret);
-    return ret;
+    return fixAccelGroup(
+        FunctionCast(wrapObtainAccelChannelGroup, singleton().orgObtainAccelChannelGroup)(self, priority));
 }
 
 void* iVega::X5000::wrapObtainAccelChannelGroup1304(void* const self, const UInt32 priority, void* const task)
 {
-    auto ret =
-        FunctionCast(wrapObtainAccelChannelGroup1304, singleton().orgObtainAccelChannelGroup)(self, priority, task);
-    if (ret == nullptr) { return nullptr; }
-    fixAccelGroup(ret);
-    return ret;
+    return fixAccelGroup(
+        FunctionCast(wrapObtainAccelChannelGroup1304, singleton().orgObtainAccelChannelGroup)(self, priority, task));
 }
 
 UInt32 iVega::X5000::wrapHwlConvertChipFamily(void* const self, const UInt32 family, const UInt32 revision)
