@@ -44,22 +44,26 @@ static const UInt8 kBiosParserHelperInitWithDataOriginal[] = {0x08, 0xC7, 0x07, 
 static const UInt8 kBiosParserHelperInitWithDataPatched[]  = {0x08, 0xC7, 0x07, 0xFF, 0x00, 0x00, 0x00};
 
 // HWLibs: Enable all MCIL debug prints (debugLevel = 0xFFFFFFFF, mostly for PP_Log).
-static const UInt8 kAtiPowerPlayServicesConstructorOriginal[] = {0x8B, 0x40, 0x60, 0x48, 0x8D};
-static const UInt8 kAtiPowerPlayServicesConstructorPatched[]  = {0x83, 0xC8, 0xFF, 0x48, 0x8D};
+static const UInt8 kAtiPowerPlayServicesConstructorPattern[]     = {0x49, 0x80, 0x00, 0x00, 0x00, 0x00,
+                                                                    0x00, 0x8B, 0x40, 0x60, 0x48, 0x8D};
+static const UInt8 kAtiPowerPlayServicesConstructorPatternMask[] = {0xFF, 0xF0, 0x00, 0x00, 0x00, 0x00,
+                                                                    0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+static const UInt8 kAtiPowerPlayServicesConstructorPatched[]     = {0x66, 0x90, 0x66, 0x90, 0x90, 0xB8,
+                                                                    0xFF, 0x00, 0x00, 0x00, 0x48, 0x8D};
 
 // HWLibs: Enable printing of all PSP event logs.
-static const UInt8 kAmdLogPspOriginal[]     = {0x83, 0x00, 0x02, 0x0F, 0x85, 0x00, 0x00, 0x00, 0x00, 0x41, 0x00,
-                                               0x00, 0x00, 0x00, 0x00, 0x00, 0x83, 0x00, 0x02, 0x72, 0x00, 0x41,
-                                               0x00, 0x00, 0x09, 0x02, 0x18, 0x00, 0x74, 0x00, 0x41, 0x00, 0x00,
-                                               0x01, 0x06, 0x10, 0x00, 0x0f, 0x85, 0x00, 0x00, 0x00, 0x00};
-static const UInt8 kAmdLogPspOriginalMask[] = {0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00,
-                                               0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0xFF, 0xFF, 0x00, 0xFF,
-                                               0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00,
-                                               0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00};
-static const UInt8 kAmdLogPspPatched[]      = {0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66,
-                                               0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90,
-                                               0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66,
-                                               0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x90};
+static const UInt8 kAmdLogPspPattern[] = {0x83, 0x00, 0x02, 0x0F, 0x85, 0x00, 0x00, 0x00, 0x00, 0x41, 0x00,
+                                          0x00, 0x00, 0x00, 0x00, 0x00, 0x83, 0x00, 0x02, 0x72, 0x00, 0x41,
+                                          0x00, 0x00, 0x09, 0x02, 0x18, 0x00, 0x74, 0x00, 0x41, 0x00, 0x00,
+                                          0x01, 0x06, 0x10, 0x00, 0x0f, 0x85, 0x00, 0x00, 0x00, 0x00};
+static const UInt8 kAmdLogPspMask[]    = {0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00,
+                                          0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0xFF, 0xFF, 0x00, 0xFF,
+                                          0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00,
+                                          0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00};
+static const UInt8 kAmdLogPspPatched[] = {0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66,
+                                          0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90,
+                                          0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66,
+                                          0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x90};
 
 static DebugEnabler moduleInstance;
 
@@ -98,46 +102,53 @@ void DebugEnabler::processX6000FB(KernelPatcher& patcher, const size_t id, const
 
     PenguinWizardry::PatternRouteRequest requests[] = {
         {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo,
-         this->orgInitWithPciInfo},
-        {"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz", doGPUPanic},
-        {"_dm_logger_write", dmLoggerWrite, kDmLoggerWritePattern},
+         this->orgInitWithPciInfo                                                                                    },
+        {                                              "_dm_logger_write",       dmLoggerWrite, kDmLoggerWritePattern},
     };
     PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "DebugEnabler",
                "Failed to route X6000FB debug symbols");
 
-    // Enable all DalDmLogger logs
-    // TODO: Maybe replace this with some simpler patches?
-    auto* logEnableMaskMinors =
-        patcher.solveSymbol<void*>(id, "__ZN14AmdDalDmLogger19LogEnableMaskMinorsE", slide, size, true);
-    patcher.clearError();
-    if (logEnableMaskMinors == nullptr) {
-        size_t offset;
-        PANIC_COND(!KernelPatcher::findPattern(kDalDmLoggerShouldLogPartialPattern,
-                                               kDalDmLoggerShouldLogPartialPatternMask,
-                                               arrsize(kDalDmLoggerShouldLogPartialPattern),
-                                               reinterpret_cast<const void*>(slide), size, &offset),
-                   "DebugEnabler", "Failed to solve LogEnableMaskMinors");
-        auto* instAddr = reinterpret_cast<UInt8*>(slide + offset);
-        // inst + instSize + imm32 = addr
-        logEnableMaskMinors = instAddr + 7 + *reinterpret_cast<SInt32*>(instAddr + 3);
+    if (checkKernelArgument("-NRedDelayPanic")) {
+        PenguinWizardry::PatternRouteRequest request{"__ZN34AMDRadeonX6000_AmdRadeonController10doGPUPanicEPKcz",
+                                                     doGPUPanic};
+        PANIC_COND(!request.route(patcher, id, slide, size), "DebugEnabler", "Failed to route doGPUPanic");
     }
-    PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "DebugEnabler",
-               "Failed to enable kernel writing");
-    memset(logEnableMaskMinors, 0xFF, 0x80);
-    MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
-    // Enable all Display Core logs
-    if (currentKernelVersion() <= MACOS_10_15_X) {
-        const PenguinWizardry::MaskedLookupPatch patch{&kextRadeonX6000Framebuffer,
-                                                       kInitPopulateDcInitDataCatalinaOriginal,
-                                                       kInitPopulateDcInitDataCatalinaPatched, 1};
-        PANIC_COND(!patch.apply(patcher, slide, size), "DebugEnabler",
-                   "Failed to apply populateDcInitData patch (10.15)");
-    }
-    else {
-        const PenguinWizardry::MaskedLookupPatch patch{&kextRadeonX6000Framebuffer, kInitPopulateDcInitDataOriginal,
-                                                       kInitPopulateDcInitDataPatched, 1};
-        PANIC_COND(!patch.apply(patcher, slide, size), "DebugEnabler", "Failed to apply populateDcInitData patch");
+    if (checkKernelArgument("-NRedDebugUltra")) {
+        // Enable all DalDmLogger logs
+        // TODO: Maybe replace this with some simpler patches?
+        auto logEnableMaskMinors =
+            patcher.solveSymbol<void*>(id, "__ZN14AmdDalDmLogger19LogEnableMaskMinorsE", slide, size, true);
+        patcher.clearError();
+        if (logEnableMaskMinors == nullptr) {
+            size_t offset;
+            PANIC_COND(!KernelPatcher::findPattern(kDalDmLoggerShouldLogPartialPattern,
+                                                   kDalDmLoggerShouldLogPartialPatternMask,
+                                                   arrsize(kDalDmLoggerShouldLogPartialPattern),
+                                                   reinterpret_cast<const void*>(slide), size, &offset),
+                       "DebugEnabler", "Failed to solve LogEnableMaskMinors");
+            auto* instAddr = reinterpret_cast<UInt8*>(slide + offset);
+            // inst + instSize + imm32 = addr
+            logEnableMaskMinors = instAddr + 7 + *reinterpret_cast<SInt32*>(instAddr + 3);
+        }
+        PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "DebugEnabler",
+                   "Failed to enable kernel writing");
+        memset(logEnableMaskMinors, 0xFF, 0x80);
+        MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
+
+        // Enable all Display Core logs
+        if (currentKernelVersion() <= MACOS_10_15_X) {
+            const PenguinWizardry::MaskedLookupPatch patch{&kextRadeonX6000Framebuffer,
+                                                           kInitPopulateDcInitDataCatalinaOriginal,
+                                                           kInitPopulateDcInitDataCatalinaPatched, 1};
+            PANIC_COND(!patch.apply(patcher, slide, size), "DebugEnabler",
+                       "Failed to apply populateDcInitData patch (10.15)");
+        }
+        else {
+            const PenguinWizardry::MaskedLookupPatch patch{&kextRadeonX6000Framebuffer, kInitPopulateDcInitDataOriginal,
+                                                           kInitPopulateDcInitDataPatched, 1};
+            PANIC_COND(!patch.apply(patcher, slide, size), "DebugEnabler", "Failed to apply populateDcInitData patch");
+        }
     }
 
     // Enable all bios parser logs
@@ -176,11 +187,12 @@ void DebugEnabler::processX5000HWLibs(KernelPatcher& patcher, const size_t id, c
     }
 
     const PenguinWizardry::MaskedLookupPatch atiPpSvcCtrPatch{
-        &kextRadeonX5000HWLibs, kAtiPowerPlayServicesConstructorOriginal, kAtiPowerPlayServicesConstructorPatched, 1};
+        &kextRadeonX5000HWLibs, kAtiPowerPlayServicesConstructorPattern, kAtiPowerPlayServicesConstructorPatternMask,
+        kAtiPowerPlayServicesConstructorPatched, 1};
     PANIC_COND(!atiPpSvcCtrPatch.apply(patcher, slide, size), "DebugEnabler", "Failed to apply MCIL debugLevel patch");
     if (currentKernelVersion() >= MACOS_11) {
-        const PenguinWizardry::MaskedLookupPatch amdLogPspPatch{&kextRadeonX5000HWLibs, kAmdLogPspOriginal,
-                                                                kAmdLogPspOriginalMask, kAmdLogPspPatched, 1};
+        const PenguinWizardry::MaskedLookupPatch amdLogPspPatch{&kextRadeonX5000HWLibs, kAmdLogPspPattern,
+                                                                kAmdLogPspMask, kAmdLogPspPatched, 1};
         PANIC_COND(!amdLogPspPatch.apply(patcher, slide, size), "DebugEnabler", "Failed to apply amd_log_psp patch");
     }
 }
