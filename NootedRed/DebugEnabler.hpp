@@ -29,4 +29,5 @@ private:
     static void gcDebugPrint(void* instance, const char* fmt, ...);
     static void pspDebugPrint(void* instance, const char* fmt, ...);
     static bool wrapGetNumericProperty(void* self, const char* name, UInt32* value);
+    static UInt32 wrapGetNumericProperty1(void* self, const char* name);
 };

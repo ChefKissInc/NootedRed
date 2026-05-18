@@ -181,10 +181,13 @@ void DebugEnabler::processX5000HWLibs(KernelPatcher& patcher, const size_t id, c
 void DebugEnabler::processX5000(KernelPatcher& patcher, const size_t id, const mach_vm_address_t slide,
                                 const size_t size)
 {
-    PenguinWizardry::PatternRouteRequest request{
-        "__ZN37AMDRadeonX5000_AMDGraphicsAccelerator18getNumericPropertyEPKcPj", wrapGetNumericProperty,
-        this->orgGetNumericProperty};
-    PANIC_COND(!request.route(patcher, id, slide, size), "DebugEnabler", "Failed to route getNumericProperty");
+    PenguinWizardry::PatternRouteRequest requests[] = {
+        {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator18getNumericPropertyEPKcPj", wrapGetNumericProperty,
+         this->orgGetNumericProperty},
+        {"__ZN37AMDRadeonX5000_AMDGraphicsAccelerator18getNumericPropertyEPKc", wrapGetNumericProperty1},
+    };
+    PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "DebugEnabler",
+               "Failed to route getNumericProperty");
 }
 
 void DebugEnabler::processKext(KernelPatcher& patcher, const size_t id, const mach_vm_address_t slide,
@@ -305,4 +308,11 @@ bool DebugEnabler::wrapGetNumericProperty(void* self, const char* name, UInt32* 
         }
     }
     return true;
+}
+
+UInt32 DebugEnabler::wrapGetNumericProperty1(void* self, const char* name)
+{
+    UInt32 value = 0;
+    wrapGetNumericProperty(self, name, &value);
+    return value;
 }
