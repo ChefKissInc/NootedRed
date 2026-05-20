@@ -114,28 +114,28 @@ void DebugEnabler::processX6000FB(KernelPatcher& patcher, const size_t id, const
         PANIC_COND(!request.route(patcher, id, slide, size), "DebugEnabler", "Failed to route doGPUPanic");
     }
 
-    if (checkKernelArgument("-NRedDebugUltra")) {
-        // Enable all DalDmLogger logs
-        // TODO: Maybe replace this with some simpler patches?
-        auto logEnableMaskMinors =
-            patcher.solveSymbol<void*>(id, "__ZN14AmdDalDmLogger19LogEnableMaskMinorsE", slide, size, true);
-        patcher.clearError();
-        if (logEnableMaskMinors == nullptr) {
-            size_t offset;
-            PANIC_COND(!KernelPatcher::findPattern(kDalDmLoggerShouldLogPartialPattern,
-                                                   kDalDmLoggerShouldLogPartialPatternMask,
-                                                   arrsize(kDalDmLoggerShouldLogPartialPattern),
-                                                   reinterpret_cast<const void*>(slide), size, &offset),
-                       "DebugEnabler", "Failed to solve LogEnableMaskMinors");
-            auto* instAddr = reinterpret_cast<UInt8*>(slide + offset);
-            // inst + instSize + imm32 = addr
-            logEnableMaskMinors = instAddr + 7 + *reinterpret_cast<SInt32*>(instAddr + 3);
-        }
-        PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "DebugEnabler",
-                   "Failed to enable kernel writing");
-        memset(logEnableMaskMinors, 0xFF, 0x80);
-        MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
+    // Enable all DalDmLogger logs
+    // TODO: Maybe replace this with some simpler patches?
+    auto logEnableMaskMinors =
+        patcher.solveSymbol<void*>(id, "__ZN14AmdDalDmLogger19LogEnableMaskMinorsE", slide, size, true);
+    patcher.clearError();
+    if (logEnableMaskMinors == nullptr) {
+        size_t offset;
+        PANIC_COND(!KernelPatcher::findPattern(kDalDmLoggerShouldLogPartialPattern,
+                                               kDalDmLoggerShouldLogPartialPatternMask,
+                                               arrsize(kDalDmLoggerShouldLogPartialPattern),
+                                               reinterpret_cast<const void*>(slide), size, &offset),
+                   "DebugEnabler", "Failed to solve LogEnableMaskMinors");
+        auto* instAddr = reinterpret_cast<UInt8*>(slide + offset);
+        // inst + instSize + imm32 = addr
+        logEnableMaskMinors = instAddr + 7 + *reinterpret_cast<SInt32*>(instAddr + 3);
+    }
+    PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "DebugEnabler",
+               "Failed to enable kernel writing");
+    memset(logEnableMaskMinors, 0xFF, 0x80);
+    MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
+    if (checkKernelArgument("-NRedDebugUltra")) {
         // Enable all Display Core logs
         if (currentKernelVersion() <= MACOS_10_15_X) {
             const PenguinWizardry::MaskedLookupPatch patch{&kextRadeonX6000Framebuffer,
