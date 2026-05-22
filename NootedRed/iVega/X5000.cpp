@@ -282,9 +282,9 @@ void iVega::X5000::wrapGFX9SetupAndInitializeHWCapabilities(void* const self)
 #ifdef DEBUG
 static const char* hwEngineToString(const AMDHWEngineType ty)
 {
+    static const char* names[kAMDHWEngineTypeMax] = {"PM4",  "SDMA0", "SDMA1", "SDMA2", "SDMA3", "UVD0",
+                                                     "UVD1", "VCE",   "VCN0",  "VCN1",  "SAMU"};
     if (ty >= kAMDHWEngineTypeMax) { return "Unknown"; }
-    static const char* names[11] = {"PM4",  "SDMA0", "SDMA1", "SDMA2", "SDMA3", "UVD0",
-                                    "UVD1", "VCE",   "VCN0",  "VCN1",  "SAMU"};
     return names[ty];
 }
 #endif
@@ -317,13 +317,11 @@ UInt64 iVega::X5000::wrapAdjustVRAMAddress(void* const self, const UInt64 addr)
 
 UInt32 iVega::X5000::returnZero() { return 0; }
 
-// TODO: Investigate why this is needed.
 // Replaces SDMA1 field with SDMA0 because we don't have SDMA1
+// TODO: Investigate why this is needed.
 static void* fixAccelGroup(void* const group)
 {
-    if (group == nullptr) { return nullptr; }
-    auto& sdma1 = getMember<void*>(group, 0x18);
-    if (sdma1 == nullptr) { sdma1 = getMember<void*>(group, 0x10); }
+    if (group != nullptr) { getMember<void*>(group, 0x18) = getMember<void*>(group, 0x10); }
     return group;
 }
 
