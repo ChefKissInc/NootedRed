@@ -71,6 +71,8 @@ iVega::X5000::X5000()
         this->hasVCEField                = 0x92;
         this->hasVCN0Field               = 0x93;
         this->hasSDMAPagingQueueField    = 0xA4;
+        this->hasGetAllClockLimitsField  = 0xA3;
+        this->dccDisplayableSupportField = 0xA5;
         this->familyTypeField            = 0x2B4;
         this->chipSettingsField          = 0x5B18;
     }
@@ -89,6 +91,8 @@ iVega::X5000::X5000()
             this->hasVCEField                = 0xAE;
             this->hasVCN0Field               = 0xAF;
             this->hasSDMAPagingQueueField    = 0xC0;
+            this->hasGetAllClockLimitsField  = 0xBF;
+            this->dccDisplayableSupportField = 0xC1;
         }
         else {
             this->supportedDisplayCountField = 0x34;
@@ -99,6 +103,8 @@ iVega::X5000::X5000()
             this->hasVCEField                = 0xB6;
             this->hasVCN0Field               = 0xB7;
             this->hasSDMAPagingQueueField    = 0xBF;
+            this->hasGetAllClockLimitsField  = 0xBE;
+            this->dccDisplayableSupportField = 0xC0;
         }
     }
 }
@@ -121,6 +127,8 @@ void iVega::X5000::processKext(KernelPatcher& patcher, const size_t id, const ma
         {"__ZN31AMDRadeonX5000_AMDGFX9PM4Engine10gMetaClassE", this->pm4EngineMC},
         {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngine10gMetaClassE", this->sdmaEngineMC},
         {"__ZN26AMDRadeonX5000_AMDHardware14startHWEnginesEv", orgStartHWEngines},
+        {"__ZN30AMDRadeonX5000_AMDGFX9Hardware32setupAndInitializeHWCapabilitiesEv",
+         this->orgGFX9SetupAndInitializeHWCapabilities},
     };
     PANIC_COND(!PenguinWizardry::PatternSolveRequest::solveAll(patcher, id, solveRequests, slide, size), "X5000",
                "Failed to resolve symbols");
@@ -133,9 +141,7 @@ void iVega::X5000::processKext(KernelPatcher& patcher, const size_t id, const ma
     PenguinWizardry::PatternRouteRequest requests[] = {
         {"__ZN32AMDRadeonX5000_AMDVega10Hardware17allocateHWEnginesEv", allocateHWEngines},
         {"__ZN32AMDRadeonX5000_AMDVega10Hardware32setupAndInitializeHWCapabilitiesEv",
-         wrapSetupAndInitializeHWCapabilities, this->orgSetupAndInitializeHWCapabilities},
-        {"__ZN30AMDRadeonX5000_AMDGFX9Hardware32setupAndInitializeHWCapabilitiesEv",
-         wrapGFX9SetupAndInitializeHWCapabilities, this->orgGFX9SetupAndInitializeHWCapabilities},
+         wrapSetupAndInitializeHWCapabilities},
         {"__ZN26AMDRadeonX5000_AMDHardware12getHWChannelE20_eAMD_HW_ENGINE_TYPE18_eAMD_HW_RING_TYPE", wrapGetHWChannel,
          this->orgGetHWChannel},
         {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20initializeFamilyTypeEv", initializeFamilyType},
@@ -248,19 +254,8 @@ bool iVega::X5000::allocateHWEngines(void* const self)
     return true;
 }
 
+// TODO: Replace with IP Discovery?
 void iVega::X5000::wrapSetupAndInitializeHWCapabilities(void* const self)
-{
-    FunctionCast(wrapSetupAndInitializeHWCapabilities, singleton().orgSetupAndInitializeHWCapabilities)(self);
-
-    singleton().supportedDisplayCountField(self) = 4;
-    singleton().hasUVD0Field(self)               = false;
-    singleton().hasVCEField(self)                = false;
-    singleton().hasVCN0Field(self)               = false;
-    singleton().hasSDMAPagingQueueField(self)    = false;
-}
-
-// TODO: Replace with IP Discovery
-void iVega::X5000::wrapGFX9SetupAndInitializeHWCapabilities(void* const self)
 {
     auto& seCount = singleton().seCountField(self);
     auto& shPerSE = singleton().shPerSEField(self);
@@ -276,7 +271,15 @@ void iVega::X5000::wrapGFX9SetupAndInitializeHWCapabilities(void* const self)
         cuPerSH = 11;
     }
 
-    FunctionCast(wrapGFX9SetupAndInitializeHWCapabilities, singleton().orgGFX9SetupAndInitializeHWCapabilities)(self);
+    FunctionCast(wrapSetupAndInitializeHWCapabilities, singleton().orgGFX9SetupAndInitializeHWCapabilities)(self);
+
+    singleton().supportedDisplayCountField(self) = 4;
+    singleton().hasUVD0Field(self)               = false;
+    singleton().hasVCEField(self)                = false;
+    singleton().hasVCN0Field(self)               = false;    // TODO
+    singleton().hasSDMAPagingQueueField(self)    = false;
+    singleton().hasGetAllClockLimitsField(self)  = false;
+    if (currentKernelVersion() >= MACOS_10_15) { singleton().dccDisplayableSupportField(self) = true; }
 }
 
 #ifdef DEBUG

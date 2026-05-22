@@ -2,10 +2,12 @@
 	<dict>
 		<key>CFBundleIdentifier</key>
 		<string>com.apple.kext.AMDRadeonX5000</string>
-		<key>GPUTaskSingleChannel</key>
+		<key>GPUDCCDisplayable</key>
 		<true/>
 		<key>GPUDebugNullClientMask</key>
 		<integer>0</integer>
+		<key>GPUTaskSingleChannel</key>
+		<true/>
 		<key>GpuDebugPolicy</key>
 		<integer>0</integer>
 		<key>IOClass</key>
@@ -90,13 +92,13 @@
 		<integer>16908288</integer>
 		<key>SWIP_properties</key>
 		<dict>
+			<key>EnableSwVCNFWLoading</key>
+			<integer>0</integer>
 			<key>EnableVCNDPG</key>
 			<integer>0</integer>
 			<key>EnableswGcFwLoading</key>
 			<integer>0</integer>
 			<key>EnableswSdmaFwLoading</key>
-			<integer>0</integer>
-			<key>EnableSwVCNFWLoading</key>
 			<integer>0</integer>
 			<key>SMU_DisableMmhubPowerGating</key>
 			<integer>1</integer>
@@ -136,10 +138,12 @@
 	<dict>
 		<key>CFBundleIdentifier</key>
 		<string>com.apple.kext.AMDRadeonX5000</string>
-		<key>GPUTaskSingleChannel</key>
+		<key>GPUDCCDisplayable</key>
 		<true/>
 		<key>GPUDebugNullClientMask</key>
 		<integer>0</integer>
+		<key>GPUTaskSingleChannel</key>
+		<true/>
 		<key>GpuDebugPolicy</key>
 		<integer>0</integer>
 		<key>IOClass</key>
@@ -240,10 +244,12 @@
 	<dict>
 		<key>CFBundleIdentifier</key>
 		<string>com.apple.kext.AMDRadeonX5000</string>
-		<key>GPUTaskSingleChannel</key>
+		<key>GPUDCCDisplayable</key>
 		<true/>
 		<key>GPUDebugNullClientMask</key>
 		<integer>0</integer>
+		<key>GPUTaskSingleChannel</key>
+		<true/>
 		<key>GpuDebugPolicy</key>
 		<integer>0</integer>
 		<key>IOClass</key>
@@ -328,13 +334,13 @@
 		<integer>16908288</integer>
 		<key>SWIP_properties</key>
 		<dict>
+			<key>EnableSwVCNFWLoading</key>
+			<integer>0</integer>
 			<key>EnableVCNDPG</key>
 			<integer>1</integer>
 			<key>EnableswGcFwLoading</key>
 			<integer>0</integer>
 			<key>EnableswSdmaFwLoading</key>
-			<integer>0</integer>
-			<key>EnableSwVCNFWLoading</key>
 			<integer>0</integer>
 			<key>SMU_DisableMmhubPowerGating</key>
 			<integer>1</integer>
