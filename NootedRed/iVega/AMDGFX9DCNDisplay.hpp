@@ -89,25 +89,76 @@ class AMDRadeonX5000_AMDGFX9DCNDisplay : public AMDRadeonX5000_AMDHWDisplay
         AMDFlipParam       flipParam;
     };
 
+    using VFT = RuntimeVFT<vftCount, 1>;
+
+    static constexpr UInt32 INVALID_VT_INDEX = 0xFFFFFFFFU;
+
     struct Constants
     {
         void (*setVrrTimestampInfo)(AMDRadeonX5000_AMDGFX9DCNDisplay& self, const UInt64 vTotalMin,
                                     const UInt64 vTotalMax, const UInt64 horizontalLineTime){nullptr};
         void (*calcAndSetVrrTimestampInfo)(AMDRadeonX5000_AMDGFX9DCNDisplay& self, FramebufferInfo* const fbInfo,
-                                           IOTimingInformation& timingInfo){nullptr};
+                                           IOTimingInformation& timingInfo){
+            AMDRadeonX5000_AMDGFX9DCNDisplay::calcAndSetVrrTimestampInfoDummy};
+
+        // These remain constant, for now
+        static constexpr UInt32 initializeRegistersVTIndex = 0x23;
+        static constexpr UInt32 restoreRegistersVTIndex    = 0x24;
+        static constexpr UInt32 getDisplayInfoVTIndex      = 0x26;
+
+        UInt32 getCurrentDisplayOffsetVTIndex{INVALID_VT_INDEX};
+        UInt32 setCurrentDisplayOffsetVTIndex{INVALID_VT_INDEX};
+        UInt32 writeWaitForVLineVTIndex{INVALID_VT_INDEX};
+        UInt32 setFlipControlRegisterVTIndex{INVALID_VT_INDEX};
+        UInt32 initVTIndex{INVALID_VT_INDEX};
+        UInt32 getPixelModeVTIndex{INVALID_VT_INDEX};
+        UInt32 getPixelFormatVTIndex{INVALID_VT_INDEX};
+        UInt32 writeFlipParametersVTIndex{INVALID_VT_INDEX};
+        UInt32 getDisplayModeViewportSpecificInfoVTIndex{INVALID_VT_INDEX};
+        UInt32 writeFlipControlRegistersVTIndex{INVALID_VT_INDEX};
+        UInt32 isDisplayControlEnabledVTIndex{INVALID_VT_INDEX};
+        UInt32 isDisplayInterlaceEnabledVTIndex{INVALID_VT_INDEX};
+        UInt32 isFlipPendingVTIndex{INVALID_VT_INDEX};
+        UInt32 getFlipOptionVTIndex{INVALID_VT_INDEX};
 
         Constants()
         {
-            // Catalina doesn't have VRR.
-            if (currentKernelVersion() < MACOS_11) {
-                this->calcAndSetVrrTimestampInfo = AMDRadeonX5000_AMDGFX9DCNDisplay::calcAndSetVrrTimestampInfoDummy;
-                return;
+            if (currentKernelVersion() >= MACOS_11) {
+                this->calcAndSetVrrTimestampInfo = AMDRadeonX5000_AMDGFX9DCNDisplay::calcAndSetVrrTimestampInfo;
+                if (currentKernelVersion() >= MACOS_13) {
+                    this->setVrrTimestampInfo        = AMDRadeonX5000_AMDGFX9DCNDisplay::setVrrTimestampInfoVentura;
+                    this->writeWaitForVLineVTIndex   = 0x39;
+                    this->initVTIndex                = 0x3F;
+                    this->getPixelModeVTIndex        = 0x42;
+                    this->getPixelFormatVTIndex      = 0x43;
+                    this->writeFlipParametersVTIndex = 0x46;
+                    this->getDisplayModeViewportSpecificInfoVTIndex = 0x47;
+                    this->isDisplayControlEnabledVTIndex            = 0x49;
+                    this->isDisplayInterlaceEnabledVTIndex          = 0x4A;
+                    this->getFlipOptionVTIndex                      = 0x4B;
+                    return;
+                }
+
+                this->setVrrTimestampInfo  = AMDRadeonX5000_AMDGFX9DCNDisplay::setVrrTimestampInfo;
+                this->initVTIndex          = 0x4F;
+                this->getFlipOptionVTIndex = 0x5D;
+            }
+            else {
+                this->initVTIndex = 0x50;
             }
 
-            this->calcAndSetVrrTimestampInfo = AMDRadeonX5000_AMDGFX9DCNDisplay::calcAndSetVrrTimestampInfo;
-            this->setVrrTimestampInfo        = currentKernelVersion() >= MACOS_13 ?
-                                                   AMDRadeonX5000_AMDGFX9DCNDisplay::setVrrTimestampInfoVentura :
-                                                   AMDRadeonX5000_AMDGFX9DCNDisplay::setVrrTimestampInfo;
+            this->getCurrentDisplayOffsetVTIndex            = 0x42;
+            this->setCurrentDisplayOffsetVTIndex            = 0x43;
+            this->setFlipControlRegisterVTIndex             = 0x49;
+            this->writeWaitForVLineVTIndex                  = 0x48;
+            this->getPixelModeVTIndex                       = 0x52;
+            this->getPixelFormatVTIndex                     = 0x53;
+            this->writeFlipParametersVTIndex                = 0x56;
+            this->getDisplayModeViewportSpecificInfoVTIndex = 0x57;
+            this->writeFlipControlRegistersVTIndex          = 0x58;
+            this->isDisplayControlEnabledVTIndex            = 0x5A;
+            this->isDisplayInterlaceEnabledVTIndex          = 0x5B;
+            this->isFlipPendingVTIndex                      = 0x5C;
         }
     };
 
@@ -122,42 +173,6 @@ class AMDRadeonX5000_AMDGFX9DCNDisplay : public AMDRadeonX5000_AMDHWDisplay
     static void calcAndSetVrrTimestampInfoDummy(AMDRadeonX5000_AMDGFX9DCNDisplay& self, FramebufferInfo* const fbInfo,
                                                 IOTimingInformation& timingInfo);
 
-private:
-    // 10.15
-    static constexpr UInt32 INIT_VT_INDEX_MAC10_15 = 0x50;    // 0x280
-
-    // 10.15+
-    static constexpr UInt32 INITIALIZE_REGISTERS_VT_INDEX                    = 0x23;    // 0x118
-    static constexpr UInt32 RESTORE_REGISTERS_VT_INDEX                       = 0x24;    // 0x120
-    static constexpr UInt32 GET_DISPLAY_INFO_VT_INDEX                        = 0x26;    // 0x130
-    static constexpr UInt32 GET_CURRENT_DISPLAY_OFFSET_VT_INDEX              = 0x42;    // 0x210, <=12.0
-    static constexpr UInt32 SET_CURRENT_DISPLAY_OFFSET_VT_INDEX              = 0x43;    // 0x218, <=12.0
-    static constexpr UInt32 WRITE_WAIT_FOR_VLINE_VT_INDEX                    = 0x48;    // 0x240
-    static constexpr UInt32 SET_FLIP_CONTROL_REGISTER_VT_INDEX               = 0x49;    // 0x248, <=12.0
-    static constexpr UInt32 GET_PIXEL_MODE_VT_INDEX                          = 0x52;    // 0x290
-    static constexpr UInt32 GET_PIXEL_FORMAT_VT_INDEX                        = 0x53;    // 0x298
-    static constexpr UInt32 WRITE_FLIP_PARAMETERS_VT_INDEX                   = 0x56;    // 0x2B0
-    static constexpr UInt32 GET_DISPLAY_MODE_VIEWPORT_SPECIFIC_INFO_VT_INDEX = 0x57;    // 0x2B8
-    static constexpr UInt32 WRITE_FLIP_CONTROL_REGISTERS_VT_INDEX            = 0x58;    // 0x2C0, <=12.0
-    static constexpr UInt32 IS_DISPLAY_CONTROL_ENABLED_VT_INDEX              = 0x5A;    // 0x2D0
-    static constexpr UInt32 IS_DISPLAY_INTERLACE_ENABLED_VT_INDEX            = 0x5B;    // 0x2D8
-    static constexpr UInt32 IS_FLIP_PENDING_VT_INDEX                         = 0x5C;    // 0x2E0, <=12.0
-    static constexpr UInt32 GET_FLIP_OPTION_VT_INDEX                         = 0x5D;    // 0x2E8, >10.15
-
-    // 11.0..=12.0
-    static constexpr UInt32 INIT_VT_INDEX = 0x4F;    // 0x278
-
-    // 13.0
-    static constexpr UInt32 WRITE_WAIT_FOR_VLINE_VT_INDEX_MAC13                    = 0x39;    // 0x1C8
-    static constexpr UInt32 INIT_VT_INDEX_MAC13                                    = 0x3F;    // 0x1F8
-    static constexpr UInt32 GET_PIXEL_MODE_VT_INDEX_MAC13                          = 0x42;    // 0x210
-    static constexpr UInt32 GET_PIXEL_FORMAT_VT_INDEX_MAC13                        = 0x43;    // 0x218
-    static constexpr UInt32 WRITE_FLIP_PARAMETERS_VT_INDEX_MAC13                   = 0x46;    // 0x230
-    static constexpr UInt32 GET_DISPLAY_MODE_VIEWPORT_SPECIFIC_INFO_VT_INDEX_MAC13 = 0x47;    // 0x238
-    static constexpr UInt32 IS_DISPLAY_CONTROL_ENABLED_VT_INDEX_MAC13              = 0x49;    // 0x248
-    static constexpr UInt32 IS_DISPLAY_INTERLACE_ENABLED_VT_INDEX_MAC13            = 0x4A;    // 0x250
-    static constexpr UInt32 GET_FLIP_OPTION_VT_INDEX_MAC13                         = 0x4B;    // 0x258
-
 protected:
     static constexpr UInt32 MAX_SUPPORTED_DISPLAYS_RV = 4;
 
@@ -171,7 +186,7 @@ protected:
 
     PWDeclareAbstractRuntimeMCWithExpansion(AMDRadeonX5000_AMDGFX9DCNDisplay, Expansion);
 
-    static void populateVFT(RuntimeVFT<vftCount, 1>& vft);
+    static void populateVFT(VFT& vft);
 
 public:
     static void registerMC(const char* kext, KernelPatcher& patcher, size_t id, mach_vm_address_t slide, size_t size);

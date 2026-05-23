@@ -70,6 +70,8 @@ void AMDRadeonX5000_AMDGFX9DCNDisplay::restoreRegisters() { }
 
 AMDRadeonX5000_AMDGFX9DCNDisplay::Constants AMDRadeonX5000_AMDGFX9DCNDisplay::constants;
 
+//  -- VRR was introduced on macOS Big Sur. --
+
 void AMDRadeonX5000_AMDGFX9DCNDisplay::setVrrTimestampInfoVentura(AMDRadeonX5000_AMDGFX9DCNDisplay& self,
                                                                   const UInt64 vTotalMin, const UInt64 vTotalMax,
                                                                   const UInt64 horizontalLineTime)
@@ -759,52 +761,41 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::isFlipPending(AMDRadeonX5000_AMDGFX9DCNDi
 // No, no, there's no DCN1 option.
 AMDFlipOption AMDRadeonX5000_AMDGFX9DCNDisplay::getFlipOption() { return AMDFlipOption::DCN2; }
 
-void AMDRadeonX5000_AMDGFX9DCNDisplay::populateVFT(RuntimeVFT<vftCount, 1>& vft)
+#define setVFunc(_vft, _index, _func)                \
+    {                                                \
+        assert((_index) != INVALID_VT_INDEX);        \
+        (_vft).get<decltype(_func)>(_index) = _func; \
+    }
+
+void AMDRadeonX5000_AMDGFX9DCNDisplay::populateVFT(VFT& vft)
 {
     assert(AMDRadeonX5000_AMDHWDisplay::vfuncs() != nullptr);
     vft.init(AMDRadeonX5000_AMDHWDisplay::vfuncs());
 
-    if (currentKernelVersion() >= MACOS_13) {
-        vft.get<decltype(initialiseRegisters)>(INITIALIZE_REGISTERS_VT_INDEX)        = initialiseRegisters;
-        vft.get<decltype(restoreRegisters)>(RESTORE_REGISTERS_VT_INDEX)              = restoreRegisters;
-        vft.get<decltype(getDisplayInfo)>(GET_DISPLAY_INFO_VT_INDEX)                 = getDisplayInfo;
-        vft.get<decltype(writeWaitForVLine)>(WRITE_WAIT_FOR_VLINE_VT_INDEX_MAC13)    = writeWaitForVLine;
-        vft.get<decltype(init)>(INIT_VT_INDEX_MAC13)                                 = init;
-        vft.get<decltype(getPixelMode)>(GET_PIXEL_MODE_VT_INDEX_MAC13)               = getPixelMode;
-        vft.get<decltype(getPixelFormat)>(GET_PIXEL_FORMAT_VT_INDEX_MAC13)           = getPixelFormat;
-        vft.get<decltype(writeFlipParameters)>(WRITE_FLIP_PARAMETERS_VT_INDEX_MAC13) = writeFlipParameters;
-        vft.get<decltype(getDisplayModeViewportSpecificInfo)>(GET_DISPLAY_MODE_VIEWPORT_SPECIFIC_INFO_VT_INDEX_MAC13) =
-            getDisplayModeViewportSpecificInfo;
-        vft.get<decltype(isDisplayControlEnabled)>(IS_DISPLAY_CONTROL_ENABLED_VT_INDEX_MAC13) = isDisplayControlEnabled;
-        vft.get<decltype(isDisplayInterlaceEnabled)>(IS_DISPLAY_INTERLACE_ENABLED_VT_INDEX_MAC13) =
-            isDisplayInterlaceEnabled;
-        vft.get<decltype(getFlipOption)>(GET_FLIP_OPTION_VT_INDEX_MAC13) = getFlipOption;
-        return;
-    }
+    setVFunc(vft, constants.initializeRegistersVTIndex, initialiseRegisters);
+    setVFunc(vft, constants.restoreRegistersVTIndex, restoreRegisters);
+    setVFunc(vft, constants.getDisplayInfoVTIndex, getDisplayInfo);
+    setVFunc(vft, constants.writeWaitForVLineVTIndex, writeWaitForVLine);
+    setVFunc(vft, constants.initVTIndex, init);
+    setVFunc(vft, constants.getPixelModeVTIndex, getPixelMode);
+    setVFunc(vft, constants.getPixelFormatVTIndex, getPixelFormat);
+    setVFunc(vft, constants.writeFlipParametersVTIndex, writeFlipParameters);
+    setVFunc(vft, constants.getDisplayModeViewportSpecificInfoVTIndex, getDisplayModeViewportSpecificInfo);
+    setVFunc(vft, constants.isDisplayControlEnabledVTIndex, isDisplayControlEnabled);
+    setVFunc(vft, constants.isDisplayInterlaceEnabledVTIndex, isDisplayInterlaceEnabled);
 
-    vft.get<decltype(initialiseRegisters)>(INITIALIZE_REGISTERS_VT_INDEX)           = initialiseRegisters;
-    vft.get<decltype(restoreRegisters)>(RESTORE_REGISTERS_VT_INDEX)                 = restoreRegisters;
-    vft.get<decltype(getDisplayInfo)>(GET_DISPLAY_INFO_VT_INDEX)                    = getDisplayInfo;
-    vft.get<decltype(getCurrentDisplayOffset)>(GET_CURRENT_DISPLAY_OFFSET_VT_INDEX) = getCurrentDisplayOffset;
-    vft.get<decltype(setCurrentDisplayOffset)>(SET_CURRENT_DISPLAY_OFFSET_VT_INDEX) = setCurrentDisplayOffset;
-    vft.get<decltype(writeWaitForVLine)>(WRITE_WAIT_FOR_VLINE_VT_INDEX)             = writeWaitForVLine;
-    vft.get<decltype(setFlipControlRegister)>(SET_FLIP_CONTROL_REGISTER_VT_INDEX)   = setFlipControlRegister;
-    vft.get<decltype(getPixelMode)>(GET_PIXEL_MODE_VT_INDEX)                        = getPixelMode;
-    vft.get<decltype(getPixelFormat)>(GET_PIXEL_FORMAT_VT_INDEX)                    = getPixelFormat;
-    vft.get<decltype(writeFlipParameters)>(WRITE_FLIP_PARAMETERS_VT_INDEX)          = writeFlipParameters;
-    vft.get<decltype(getDisplayModeViewportSpecificInfo)>(GET_DISPLAY_MODE_VIEWPORT_SPECIFIC_INFO_VT_INDEX) =
-        getDisplayModeViewportSpecificInfo;
-    vft.get<decltype(writeFlipControlRegisters)>(WRITE_FLIP_CONTROL_REGISTERS_VT_INDEX) = writeFlipControlRegisters;
-    vft.get<decltype(isDisplayControlEnabled)>(IS_DISPLAY_CONTROL_ENABLED_VT_INDEX)     = isDisplayControlEnabled;
-    vft.get<decltype(isDisplayInterlaceEnabled)>(IS_DISPLAY_INTERLACE_ENABLED_VT_INDEX) = isDisplayInterlaceEnabled;
-    vft.get<decltype(isFlipPending)>(IS_FLIP_PENDING_VT_INDEX)                          = isFlipPending;
-    if (currentKernelVersion().majorMatches(MACOS_10_15)) {
-        vft.get<decltype(init)>(INIT_VT_INDEX_MAC10_15) = init;
-        return;
-    }
-    vft.get<decltype(init)>(INIT_VT_INDEX)                     = init;
-    vft.get<decltype(getFlipOption)>(GET_FLIP_OPTION_VT_INDEX) = getFlipOption;
+    if (currentKernelVersion() >= MACOS_11) { setVFunc(vft, constants.getFlipOptionVTIndex, getFlipOption); }
+
+    if (currentKernelVersion() >= MACOS_13) { return; }
+
+    setVFunc(vft, constants.getCurrentDisplayOffsetVTIndex, getCurrentDisplayOffset);
+    setVFunc(vft, constants.setCurrentDisplayOffsetVTIndex, setCurrentDisplayOffset);
+    setVFunc(vft, constants.setFlipControlRegisterVTIndex, setFlipControlRegister);
+    setVFunc(vft, constants.writeFlipControlRegistersVTIndex, writeFlipControlRegisters);
+    setVFunc(vft, constants.isFlipPendingVTIndex, isFlipPending);
 }
+
+#undef setVFunc
 
 void AMDRadeonX5000_AMDGFX9DCNDisplay::registerMC(const char* const kext, KernelPatcher& patcher, const size_t id,
                                                   const mach_vm_address_t slide, const size_t size)
