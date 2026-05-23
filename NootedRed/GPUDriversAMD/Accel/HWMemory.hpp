@@ -13,11 +13,11 @@ class AMDRadeonX5000_AMDHWMemory
     {
         ObjectField<UInt64 (*)(AMDRadeonX5000_AMDHWMemory*)> vtGetVisibleSize;
 
-        Constants() { this->vtGetVisibleSize = currentKernelVersion() <= MACOS_10_15_X ? 0x1F8 : 0x1D8; }
+        Constants() { this->vtGetVisibleSize = currentKernelVersion() >= MACOS_11 ? 0x1D8 : 0x1F8; }
     };
 
     static Constants constants;
 
 public:
-    UInt64 getVisibleSize() { return constants.vtGetVisibleSize(getMember<void*>(this, 0))(this); }
+    auto getVisibleSize() { return constants.vtGetVisibleSize(getMember<void*>(this, 0))(this); }
 };
