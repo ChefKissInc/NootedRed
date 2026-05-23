@@ -226,9 +226,11 @@ void DebugEnabler::processKext(KernelPatcher& patcher, const size_t id, const ma
 
 bool DebugEnabler::wrapInitWithPciInfo(void* self, void* pciDevice)
 {
-    const auto ret                = FunctionCast(wrapInitWithPciInfo, singleton().orgInitWithPciInfo)(self, pciDevice);
-    getMember<UInt64>(self, 0x28) = 0xFFFFFFFFFFFFFFFF;    // Enable all log types
-    getMember<UInt32>(self, 0x30) = 0xFF;                  // Enable all log severities
+    const auto ret      = FunctionCast(wrapInitWithPciInfo, singleton().orgInitWithPciInfo)(self, pciDevice);
+    auto       logTypes = 0xFFFFFFFFFFFFFFFFULL;
+    if (!checkKernelArgument("-NRedCursorDebug")) { logTypes &= ~(1ULL << 10); }
+    getMember<UInt64>(self, 0x28) = logTypes;    // Enable all log types
+    getMember<UInt32>(self, 0x30) = 0xFF;        // Enable all log severities
     return ret;
 }
 
