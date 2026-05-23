@@ -164,11 +164,9 @@ void DebugEnabler::processX5000HWLibs(KernelPatcher& patcher, const size_t id, c
     // TODO: Find them using a call pattern.
     if (currentKernelVersion() <= MACOS_11_X) {
         PenguinWizardry::PatternRouteRequest requests[] = {
-            {"_dmcu_assertion", ipAssertion},    {"_gc_assertion", ipAssertion},
-            {"_gvm_assertion", ipAssertion},     {"_mes_assertion", ipAssertion},
-            {"_psp_assertion", ipAssertion},     {"_sdma_assertion", ipAssertion},
-            {"_smu_assertion", ipAssertion},     {"_gc_debug_print", gcDebugPrint},
-            {"_psp_debug_print", pspDebugPrint}, {"__ZN14AmdTtlServices14cosDebugAssertEPvPKcS2_jS2_", cosDebugAssert},
+            {"_dmcu_assertion", ipAssertion}, {"_gc_assertion", ipAssertion},    {"_gvm_assertion", ipAssertion},
+            {"_mes_assertion", ipAssertion},  {"_psp_assertion", ipAssertion},   {"_sdma_assertion", ipAssertion},
+            {"_smu_assertion", ipAssertion},  {"_gc_debug_print", gcDebugPrint}, {"_psp_debug_print", pspDebugPrint},
         };
         PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "DebugEnabler",
                    "Failed to route HWLibs debug symbols");
@@ -176,8 +174,14 @@ void DebugEnabler::processX5000HWLibs(KernelPatcher& patcher, const size_t id, c
         // This function does not exist on macOS Catalina and below
         if (currentKernelVersion().majorMatches(MACOS_11)) {
             PenguinWizardry::PatternRouteRequest request{"_vcn_assertion", ipAssertion};
-            PANIC_COND(!request.route(patcher, id, slide, size), "DebugEnabler",
-                       "Failed to route HWLibs vcn_assertion");
+            PANIC_COND(!request.route(patcher, id, slide, size), "DebugEnabler", "Failed to route vcn_assertion");
+        }
+
+        // This function was left unimplemented on macOS Catalina and below.
+        if (currentKernelVersion() <= MACOS_10_15_X) {
+            PenguinWizardry::PatternRouteRequest request{"__ZN14AmdTtlServices14cosDebugAssertEPvPKcS2_jS2_",
+                                                         cosDebugAssert};
+            PANIC_COND(!request.route(patcher, id, slide, size), "DebugEnabler", "Failed to route cosDebugAssert");
         }
     }
 
