@@ -214,6 +214,7 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::fixedSuperGetDisplayInfo(const UInt32 fbI
         }
 
         IODisplayModeInformation modeInfo;
+        memset(&modeInfo, 0, sizeof(modeInfo));
         if (fb->getInformationForDisplayMode(displayMode, &modeInfo) == kIOReturnSuccess
             && (modeInfo.flags & kDisplayModeAcceleratorBackedFlag) != 0)
         {
@@ -222,6 +223,7 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::fixedSuperGetDisplayInfo(const UInt32 fbI
         }
 
         IOTimingInformation timingInfo;
+        memset(&timingInfo, 0, sizeof(timingInfo));
         timingInfo.flags = kIODetailedTimingValid;
         if (fb->getTimingInfoForDisplayMode(displayMode, &timingInfo) == kIOReturnSuccess
             && (timingInfo.flags & kIODetailedTimingValid) != 0)
