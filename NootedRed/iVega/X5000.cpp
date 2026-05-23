@@ -283,21 +283,9 @@ void iVega::X5000::wrapSetupAndInitializeHWCapabilities(void* const self)
     if (currentKernelVersion() >= MACOS_10_15) { singleton().dccDisplayableSupportField(self) = true; }
 }
 
-#ifdef DEBUG
-static const char* hwEngineToString(const AMDHWEngineType ty)
-{
-    static const char* names[kAMDHWEngineTypeMax] = {"PM4",  "SDMA0", "SDMA1", "SDMA2", "SDMA3", "UVD0",
-                                                     "UVD1", "VCE",   "VCN0",  "VCN1",  "SAMU"};
-    if (ty >= kAMDHWEngineTypeMax) { return "Unknown"; }
-    return names[ty];
-}
-#endif
-
 // TODO: Investigate why this is needed.
 void* iVega::X5000::wrapGetHWChannel(void* const self, AMDHWEngineType engineType, const UInt32 ringId)
 {
-    DBGLOG_COND(checkKernelArgument("-CKInternal"), "X5000", "getHWChannel << (self: %p, engineType: %s, ringId: 0x%X)",
-                self, hwEngineToString(engineType), ringId);
     if (engineType == kAMDHWEngineTypeSDMA1) { engineType = kAMDHWEngineTypeSDMA0; }
     return FunctionCast(wrapGetHWChannel, singleton().orgGetHWChannel)(self, engineType, ringId);
 }
