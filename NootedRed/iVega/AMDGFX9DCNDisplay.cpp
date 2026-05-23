@@ -323,9 +323,10 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::fixedSuperGetDisplayInfo(const UInt32 fbI
         surfInfoInput.format     = this->getHWInterface()->getHWAlignManager()->getAddrFormat(hwSpecificInfo.pixelMode);
         surfInfoInput.numSamples = 1;
         surfInfoInput.numSlices  = 1;
-        surfInfoInput.flags.display         = true;
-        surfInfoInput.swizzleMode           = surfInfoInput.format;         // TODO:
-        this->savedSwizzleModes()[fbIndex]  = surfInfoInput.swizzleMode;    // Use `Addr2GetPreferredSurfaceSetting`.
+        surfInfoInput.flags.display = true;
+        surfInfoInput.swizzleMode =
+            this->getHWInterface()->getHWAlignManager()->getPreferredSwizzleMode2(&surfInfoInput);
+        this->savedSwizzleModes()[fbIndex]  = surfInfoInput.swizzleMode;
         this->swizzleModes()[fbIndex]       = surfInfoInput.swizzleMode;
         this->savedResourceTypes()[fbIndex] = surfInfoInput.resourceType;
         if (this->getHWInterface()->getHWAlignManager()->getSurfaceInfo2(&surfInfoInput,

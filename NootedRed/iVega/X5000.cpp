@@ -134,6 +134,7 @@ void iVega::X5000::processKext(KernelPatcher& patcher, const size_t id, const ma
     PANIC_COND(!PenguinWizardry::PatternSolveRequest::solveAll(patcher, id, solveRequests, slide, size), "X5000",
                "Failed to resolve symbols");
 
+    AMDRadeonX5000_AMDHWAlignManager::resolve(patcher, id, slide, size);
     AMDRadeonX5000_AMDHWDisplay::resolve(patcher, id, slide, size);
     AMDRadeonX5000_AMDGFX9DCNDisplay::registerMC(kextRadeonX5000.id, patcher, id, slide, size);
     AMDRadeonX5000_AMDGFX9DCN1Display::resolve(kextRadeonX5000.id);

@@ -5,6 +5,7 @@
 
 #pragma once
 #include <GPUDriversAMD/AddrLib.hpp>
+#include <Headers/kern_patcher.hpp>
 #include <Headers/kern_util.hpp>
 
 struct AMDTilingInfo
@@ -393,6 +394,14 @@ inline const char* stringifyATIFormat(ATIFormat v)
 
 class AMDRadeonX5000_AMDHWAlignManager
 {
+    struct Constants
+    {
+        UInt32 (*addr2GetPreferredSurfaceSetting)(void*, ADDR2_GET_PREFERRED_SURF_SETTING_INPUT*,
+                                                  ADDR2_GET_PREFERRED_SURF_SETTING_OUTPUT*){nullptr};
+    };
+
+    static Constants constants;
+
 public:
     auto getAddrFormat(const ATIPixelMode pixelMode)
     {
@@ -400,11 +409,14 @@ public:
         return getMember<UInt32 (*)(AMDRadeonX5000_AMDHWAlignManager*, ATIPixelMode)>(vtable, 0x1C8)(this, pixelMode);
     }
 
-    IOReturn getSurfaceInfo2(ADDR2_COMPUTE_SURFACE_INFO_INPUT* const  input,
-                             ADDR2_COMPUTE_SURFACE_INFO_OUTPUT* const output)
+    auto getSurfaceInfo2(ADDR2_COMPUTE_SURFACE_INFO_INPUT* const input, ADDR2_COMPUTE_SURFACE_INFO_OUTPUT* const output)
     {
         auto vtable = getMember<void*>(this, 0);
         return getMember<IOReturn (*)(AMDRadeonX5000_AMDHWAlignManager*, ADDR2_COMPUTE_SURFACE_INFO_INPUT*,
                                       ADDR2_COMPUTE_SURFACE_INFO_OUTPUT*)>(vtable, 0x130)(this, input, output);
     }
+
+    UInt32 getPreferredSwizzleMode2(ADDR2_COMPUTE_SURFACE_INFO_INPUT* infoInput);
+
+    static void resolve(KernelPatcher& patcher, const size_t id, const mach_vm_address_t start, const size_t size);
 };

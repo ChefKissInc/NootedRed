@@ -31,6 +31,7 @@
 		4068C6792E78A72300E57DE7 /* IsFunction.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4068C6782E78A72300E57DE7 /* IsFunction.hpp */; };
 		4069F00F29C3A241005293B4 /* ATOMBIOS.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40FC5FCE29BF942900367F9D /* ATOMBIOS.hpp */; };
 		407068672E97CD32004E0761 /* Kexts.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 407068662E97CD32004E0761 /* Kexts.hpp */; };
+		407646582FC2531900C80503 /* HWAlignManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 407646572FC2531300C80503 /* HWAlignManager.cpp */; };
 		407905672CF6F323000900FA /* VendorInfo.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 407905662CF6F323000900FA /* VendorInfo.hpp */; };
 		4088AFF42E6E099800717265 /* RuntimeMC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4088AFF32E6E099800717265 /* RuntimeMC.cpp */; };
 		408A33AD2EE0C63600DAC6FD /* DMCU.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 408A33A42EE0C63600DAC6FD /* DMCU.hpp */; };
@@ -186,6 +187,7 @@
 		4068B3B92E97D805007B46BB /* Kexts.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Kexts.cpp; sourceTree = "<group>"; };
 		4068C6782E78A72300E57DE7 /* IsFunction.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = IsFunction.hpp; sourceTree = "<group>"; };
 		407068662E97CD32004E0761 /* Kexts.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Kexts.hpp; sourceTree = "<group>"; };
+		407646572FC2531300C80503 /* HWAlignManager.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HWAlignManager.cpp; sourceTree = "<group>"; };
 		407905662CF6F323000900FA /* VendorInfo.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = VendorInfo.hpp; sourceTree = "<group>"; };
 		4088AFF32E6E099800717265 /* RuntimeMC.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = RuntimeMC.cpp; sourceTree = "<group>"; };
 		408A33A42EE0C63600DAC6FD /* DMCU.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DMCU.hpp; sourceTree = "<group>"; };
@@ -536,6 +538,7 @@
 		40B9AEC72E99119A000F05ED /* Accel */ = {
 			isa = PBXGroup;
 			children = (
+				407646572FC2531300C80503 /* HWAlignManager.cpp */,
 				40424DB22E6DCD2F004F3BB6 /* HWAlignManager.hpp */,
 				4091C1632E3FE1BF004577D5 /* HWDisplay.hpp */,
 				40B9AECE2E991B1C000F05ED /* HWDisplay.cpp */,
@@ -748,6 +751,7 @@
 				4088AFF42E6E099800717265 /* RuntimeMC.cpp in Sources */,
 				400909922E9938DB006EC1EA /* HWMemory.cpp in Sources */,
 				40B9AECF2E991B1C000F05ED /* HWDisplay.cpp in Sources */,
+				407646582FC2531900C80503 /* HWAlignManager.cpp in Sources */,
 				40B9AEC92E9911A6000F05ED /* HWInterface.cpp in Sources */,
 				4068B3BA2E97D805007B46BB /* Kexts.cpp in Sources */,
 				40F39FE02CDE842B007AE975 /* X6000FB.cpp in Sources */,

@@ -122,3 +122,62 @@ struct ADDR2_COMPUTE_SURFACE_INFO_OUTPUT
     UInt32 firstMipIdInTail{0};
 };
 static_assert(sizeof(ADDR2_COMPUTE_SURFACE_INFO_OUTPUT) == 0x80);
+
+union ADDR2_BLOCK_SET
+{
+    struct
+    {
+        UInt32 micro          : 1;
+        UInt32 macroThin4KB   : 1;
+        UInt32 macroThick4KB  : 1;
+        UInt32 macroThin64KB  : 1;
+        UInt32 macroThick64KB : 1;
+        UInt32 var            : 1;
+        UInt32                : 1;
+        UInt32 linear         : 1;
+        UInt32 reserved       : 24;
+    };
+    struct
+    {
+        UInt32            : 5;
+        UInt32 thin256KB  : 1;
+        UInt32 thick256KB : 1;
+        UInt32            : 25;
+    } gfx11;
+    UInt32 value{0};
+};
+
+struct ADDR2_GET_PREFERRED_SURF_SETTING_INPUT
+{
+    UInt32              size{sizeof(ADDR2_GET_PREFERRED_SURF_SETTING_INPUT)};
+    ADDR2_SURFACE_FLAGS flags;
+    UInt32              resourceType{0};
+    UInt32              format{0};
+    UInt32              resourceLoction{0};
+    ADDR2_BLOCK_SET     forbiddenBlock;
+    UInt32              preferredSwSet{0};
+    UInt32              noXor{0};
+    UInt32              bpp{0};
+    UInt32              width{0};
+    UInt32              height{0};
+    UInt32              numSlices{0};
+    UInt32              numMipLevels{0};
+    UInt32              numSamples{0};
+    UInt32              numFrags{0};
+    UInt32              maxAlign{0};
+    UInt32              minSizeAlign{0};
+};
+static_assert(sizeof(ADDR2_GET_PREFERRED_SURF_SETTING_INPUT) == 0x44);
+
+struct ADDR2_GET_PREFERRED_SURF_SETTING_OUTPUT
+{
+    UInt32 size{sizeof(ADDR2_GET_PREFERRED_SURF_SETTING_OUTPUT)};
+    UInt32 swizzleMode{0};
+    UInt32 resourceType{0};
+    UInt32 validBlockSet{0};
+    UInt32 canXor{0};
+    UInt32 validSwTypeSet{0};
+    UInt32 clientPreferredSwSet{0};
+    UInt32 validSwModeSet{0};
+};
+static_assert(sizeof(ADDR2_GET_PREFERRED_SURF_SETTING_OUTPUT) == 0x20);
