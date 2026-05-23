@@ -13,12 +13,12 @@ class ObjectField
 
     UInt32 offset{InvalidOffset};
 
+public:
+    constexpr ObjectField() { }
+
     constexpr ObjectField(const UInt32 offset) :
         offset{offset}
     { }
-
-public:
-    constexpr ObjectField() { }
 
     void operator=(const UInt32 other)
     {
