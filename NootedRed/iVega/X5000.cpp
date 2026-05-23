@@ -123,7 +123,8 @@ void iVega::X5000::processKext(KernelPatcher& patcher, const size_t id, const ma
         {currentKernelVersion().majorMatches(MACOS_10_15) ?
              "__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator22getAdditionalQueueListEPPK18_"
              "AMDQueueSpecifierE27additionalQueueList_Default" :
-             "__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator19createAccelChannelsEbE12channelTypes", orgChannelTypes, kChannelTypesPattern},
+             "__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator19createAccelChannelsEbE12channelTypes",
+         orgChannelTypes, kChannelTypesPattern},
         {"__ZN31AMDRadeonX5000_AMDGFX9PM4Engine10gMetaClassE", this->pm4EngineMC},
         {"__ZN32AMDRadeonX5000_AMDGFX9SDMAEngine10gMetaClassE", this->sdmaEngineMC},
         {"__ZN26AMDRadeonX5000_AMDHardware14startHWEnginesEv", orgStartHWEngines},
@@ -196,11 +197,11 @@ void iVega::X5000::processKext(KernelPatcher& patcher, const size_t id, const ma
             UInt32                                   replBpp64Pt2 = Dcn2Bpp64SwModeMask1015;
             const PenguinWizardry::MaskedLookupPatch patches[]    = {
                 {&kextRadeonX5000, reinterpret_cast<const UInt8*>(&findNonBpp64),
-                 reinterpret_cast<const UInt8*>(&replNonBpp64), sizeof(UInt32), 2},
-                {&kextRadeonX5000,    reinterpret_cast<const UInt8*>(&findBpp64),
-                 reinterpret_cast<const UInt8*>(&replBpp64), sizeof(UInt32), 1   },
+                    reinterpret_cast<const UInt8*>(&replNonBpp64), sizeof(UInt32), 2},
+                {&kextRadeonX5000, reinterpret_cast<const UInt8*>(&findBpp64),
+                    reinterpret_cast<const UInt8*>(&replBpp64), sizeof(UInt32), 1},
                 {&kextRadeonX5000, reinterpret_cast<const UInt8*>(&findBpp64Pt2),
-                 reinterpret_cast<const UInt8*>(&replBpp64Pt2), sizeof(UInt32), 1},
+                    reinterpret_cast<const UInt8*>(&replBpp64Pt2), sizeof(UInt32), 1},
             };
             PANIC_COND(!PenguinWizardry::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "X5000",
                        "Failed to patch swizzle mode");
@@ -222,7 +223,7 @@ void iVega::X5000::processKext(KernelPatcher& patcher, const size_t id, const ma
             UInt32 findBpp64 = Dcn1Bpp64SwModeMask, replBpp64 = Dcn2Bpp64SwModeMask;
             UInt32 findNonBpp64 = Dcn1NonBpp64SwModeMask, replNonBpp64 = Dcn2NonBpp64SwModeMask;
             const PenguinWizardry::MaskedLookupPatch patches[] = {
-                {&kextRadeonX5000,    reinterpret_cast<const UInt8*>(&findBpp64),
+                {&kextRadeonX5000, reinterpret_cast<const UInt8*>(&findBpp64),
                  reinterpret_cast<const UInt8*>(&replBpp64), sizeof(UInt32),
                  currentKernelVersion() >= MACOS_13_4 ? 2U : 4},
                 {&kextRadeonX5000, reinterpret_cast<const UInt8*>(&findNonBpp64),

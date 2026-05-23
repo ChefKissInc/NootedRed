@@ -102,8 +102,8 @@ void DebugEnabler::processX6000FB(KernelPatcher& patcher, const size_t id, const
 
     PenguinWizardry::PatternRouteRequest requests[] = {
         {"__ZN24AMDRadeonX6000_AmdLogger15initWithPciInfoEP11IOPCIDevice", wrapInitWithPciInfo,
-         this->orgInitWithPciInfo                                                                                    },
-        {                                              "_dm_logger_write",       dmLoggerWrite, kDmLoggerWritePattern},
+         this->orgInitWithPciInfo},
+        {"_dm_logger_write", dmLoggerWrite, kDmLoggerWritePattern},
     };
     PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "DebugEnabler",
                "Failed to route X6000FB debug symbols");
@@ -164,16 +164,11 @@ void DebugEnabler::processX5000HWLibs(KernelPatcher& patcher, const size_t id, c
     // TODO: Find them using a call pattern.
     if (currentKernelVersion() <= MACOS_11_X) {
         PenguinWizardry::PatternRouteRequest requests[] = {
-            {                                  "_dmcu_assertion",    ipAssertion},
-            {                                    "_gc_assertion",    ipAssertion},
-            {                                   "_gvm_assertion",    ipAssertion},
-            {                                   "_mes_assertion",    ipAssertion},
-            {                                   "_psp_assertion",    ipAssertion},
-            {                                  "_sdma_assertion",    ipAssertion},
-            {                                   "_smu_assertion",    ipAssertion},
-            {                                  "_gc_debug_print",   gcDebugPrint},
-            {                                 "_psp_debug_print",  pspDebugPrint},
-            {"__ZN14AmdTtlServices14cosDebugAssertEPvPKcS2_jS2_", cosDebugAssert},
+            {"_dmcu_assertion", ipAssertion},    {"_gc_assertion", ipAssertion},
+            {"_gvm_assertion", ipAssertion},     {"_mes_assertion", ipAssertion},
+            {"_psp_assertion", ipAssertion},     {"_sdma_assertion", ipAssertion},
+            {"_smu_assertion", ipAssertion},     {"_gc_debug_print", gcDebugPrint},
+            {"_psp_debug_print", pspDebugPrint}, {"__ZN14AmdTtlServices14cosDebugAssertEPvPKcS2_jS2_", cosDebugAssert},
         };
         PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "DebugEnabler",
                    "Failed to route HWLibs debug symbols");

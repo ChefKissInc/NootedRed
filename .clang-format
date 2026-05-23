@@ -1,4 +1,4 @@
-# ChefKiss Coding Style v2
+# ChefKiss Coding Style v2.1
 ---
 AccessModifierOffset: -4
 AlignAfterOpenBracket: Align
@@ -120,7 +120,6 @@ BreakAdjacentStringLiterals: true
 BreakAfterAttributes: Always
 RemoveEmptyLinesInUnwrappedLines: true
 PackConstructorInitializers: Never
-AlignArrayOfStructures: Right
 SpaceBeforeParensOptions:
   AfterControlStatements: true
   AfterForeachMacros: true

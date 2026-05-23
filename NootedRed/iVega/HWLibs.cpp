@@ -558,9 +558,9 @@ void iVega::X5000HWLibs::processKext(KernelPatcher& patcher, const size_t id, co
     }
 
     PenguinWizardry::PatternSolveRequest solveRequests[] = {
-        {"__ZL20CAIL_ASIC_CAPS_TABLE",     orgCapsTable, kCailAsicCapsTableHWLibsPattern},
-        {    "_CAILAsicCapsInitTable", orgCapsInitTable,   kCAILAsicCapsInitTablePattern},
-        {      "_DeviceCapabilityTbl",   orgDevCapTable,     kDeviceCapabilityTblPattern},
+        {"__ZL20CAIL_ASIC_CAPS_TABLE", orgCapsTable, kCailAsicCapsTableHWLibsPattern},
+        {"_CAILAsicCapsInitTable", orgCapsInitTable, kCAILAsicCapsInitTablePattern},
+        {"_DeviceCapabilityTbl", orgDevCapTable, kDeviceCapabilityTblPattern},
     };
     PANIC_COND(!PenguinWizardry::PatternSolveRequest::solveAll(patcher, id, solveRequests, slide, size), "HWLibs",
                "Failed to resolve symbols");
@@ -573,22 +573,22 @@ void iVega::X5000HWLibs::processKext(KernelPatcher& patcher, const size_t id, co
     else {
         // TODO: Not override the PSP 9 code.
         PenguinWizardry::PatternRouteRequest requests[] = {
-            {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv",wrapPopulateFirmwareDirectory,
-             this->orgGetIpFw                                                                                                                                              },
-            {                                    "_psp_bootloader_is_sos_running_3_1",                pspIsSosRunning,                  kPspBootloaderIsSosRunning31Pattern},
-            {                                    "_psp_security_feature_caps_set_3_1",
+            {"__ZN35AMDRadeonX5000_AMDRadeonHWLibsX500025populateFirmwareDirectoryEv", wrapPopulateFirmwareDirectory,
+             this->orgGetIpFw},
+            {"_psp_bootloader_is_sos_running_3_1", pspIsSosRunning, kPspBootloaderIsSosRunning31Pattern},
+            {"_psp_security_feature_caps_set_3_1",
              NRed::singleton().getAttributes().isRenoir() ? pspSecurityFeatureCapsSet12 : pspSecurityFeatureCapsSet10,
              currentKernelVersion() >= MACOS_13 ? kPspSecurityFeatureCapsSet31Pattern13 :
-             kPspSecurityFeatureCapsSet31Pattern                                                                                                                           },
+                                                  kPspSecurityFeatureCapsSet31Pattern},
         };
         PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "HWLibs",
                    "Failed to route symbols (>10.15)");
         if (currentKernelVersion() >= MACOS_14_4) {
             PenguinWizardry::PatternRouteRequest pspRequests[] = {
-                { "_psp_bootloader_load_sysdrv_3_1",                  retOK, kPspBootloaderLoadSysdrv31Pattern1404},
-                {"_psp_bootloader_set_ecc_mode_3_1",                  retOK, kPspBootloaderSetEccMode31Pattern1404},
-                {    "_psp_bootloader_load_sos_3_1", pspBootloaderLoadSos10,    kPspBootloaderLoadSos31Pattern1404},
-                {                  "_psp_reset_3_1",         retUnsupported,                kPspReset31Pattern1404},
+                {"_psp_bootloader_load_sysdrv_3_1", retOK, kPspBootloaderLoadSysdrv31Pattern1404},
+                {"_psp_bootloader_set_ecc_mode_3_1", retOK, kPspBootloaderSetEccMode31Pattern1404},
+                {"_psp_bootloader_load_sos_3_1", pspBootloaderLoadSos10, kPspBootloaderLoadSos31Pattern1404},
+                {"_psp_reset_3_1", retUnsupported, kPspReset31Pattern1404},
             };
             PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, pspRequests, slide, size), "HWLibs",
                        "Failed to route symbols (>=14.4)");
@@ -619,8 +619,8 @@ void iVega::X5000HWLibs::processKext(KernelPatcher& patcher, const size_t id, co
     }
 
     PenguinWizardry::JumpPatternRouteRequest fwRequests[] = {
-        {           "_gc_set_fw_entry_info",            wrapGcSetFwEntryInfo,            this->orgGcSetFwEntryInfo,kGcSetFwEntryInfoCallPattern,
-         kGcSetFwEntryInfoCallPatternMask,kGcSetFwEntryInfoCallPatternJumpInstOff           },
+        {"_gc_set_fw_entry_info", wrapGcSetFwEntryInfo, this->orgGcSetFwEntryInfo, kGcSetFwEntryInfoCallPattern,
+         kGcSetFwEntryInfoCallPatternMask, kGcSetFwEntryInfoCallPatternJumpInstOff},
         {"_sdma_init_function_pointer_list", wrapSdmaInitFunctionPointerList, this->orgSdmaInitFunctionPointerList,
          kSdmaInitFuncPtrListCallPattern, kSdmaInitFuncPtrListCallPatternMask,
          kSdmaInitFuncPtrListCallPatternJumpInstOff},
@@ -629,7 +629,7 @@ void iVega::X5000HWLibs::processKext(KernelPatcher& patcher, const size_t id, co
                "Failed to route FW-related functions");
 
     KernelPatcher::RouteRequest dmcuFwRequests[] = {
-        {nullptr,  getDcn1FwConstants},
+        {nullptr, getDcn1FwConstants},
         {nullptr, getDcn21FwConstants},
     };
 

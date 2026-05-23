@@ -27,16 +27,16 @@ void iVega::AppleGFXHDA::processKext(KernelPatcher& patcher, size_t id, mach_vm_
 
     KernelPatcher::SolveRequest solveRequests[] = {
         {"__ZN34AppleGFXHDAFunctionGroupATI_Tahiti10gMetaClassE", this->orgFunctionGroupTahiti},
-        {        "__ZN26AppleGFXHDAWidget_1002AAA010gMetaClassE",      this->orgWidget1002AAA0},
+        {"__ZN26AppleGFXHDAWidget_1002AAA010gMetaClassE", this->orgWidget1002AAA0},
     };
     PANIC_COND(!patcher.solveMultiple(id, solveRequests, slide, size, true), "AGFXHDA", "Failed to solve symbols");
 
     KernelPatcher::RouteRequest requests[] = {
-        {                                  "__ZN21AppleGFXHDAController5probeEP9IOServicePi",wrapProbe,this->orgProbe                                         },
+        {"__ZN21AppleGFXHDAController5probeEP9IOServicePi", wrapProbe, this->orgProbe},
         {"__ZN31AppleGFXHDAFunctionGroupFactory27createAppleHDAFunctionGroupEP11DevIdStruct",
          wrapCreateAppleHDAFunctionGroup, this->orgCreateAppleHDAFunctionGroup},
-        {              "__ZN24AppleGFXHDAWidgetFactory20createAppleHDAWidgetEP11DevIdStruct", wrapCreateAppleHDAWidget,
-         this->orgCreateAppleHDAWidget                                        },
+        {"__ZN24AppleGFXHDAWidgetFactory20createAppleHDAWidgetEP11DevIdStruct", wrapCreateAppleHDAWidget,
+         this->orgCreateAppleHDAWidget},
     };
     PANIC_COND(!patcher.routeMultipleLong(id, requests, slide, size), "AGFXHDA", "Failed to route symbols");
 }
