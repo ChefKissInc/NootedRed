@@ -151,12 +151,12 @@ struct ADDR2_GET_PREFERRED_SURF_SETTING_INPUT
 {
     UInt32              size{sizeof(ADDR2_GET_PREFERRED_SURF_SETTING_INPUT)};
     ADDR2_SURFACE_FLAGS flags;
-    UInt32              resourceType{0};
+    AddrResourceType    resourceType{ADDR_RSRC_MAX_TYPE};
     UInt32              format{0};
-    UInt32              resourceLoction{0};
+    UInt32              resourceLocation{0};    // AMD had a typo here
     ADDR2_BLOCK_SET     forbiddenBlock;
     UInt32              preferredSwSet{0};
-    UInt32              noXor{0};
+    boolean_t           noXor{0};
     UInt32              bpp{0};
     UInt32              width{0};
     UInt32              height{0};
@@ -171,13 +171,13 @@ static_assert(sizeof(ADDR2_GET_PREFERRED_SURF_SETTING_INPUT) == 0x44);
 
 struct ADDR2_GET_PREFERRED_SURF_SETTING_OUTPUT
 {
-    UInt32 size{sizeof(ADDR2_GET_PREFERRED_SURF_SETTING_OUTPUT)};
-    UInt32 swizzleMode{0};
-    UInt32 resourceType{0};
-    UInt32 validBlockSet{0};
-    UInt32 canXor{0};
-    UInt32 validSwTypeSet{0};
-    UInt32 clientPreferredSwSet{0};
-    UInt32 validSwModeSet{0};
+    UInt32          size{sizeof(ADDR2_GET_PREFERRED_SURF_SETTING_OUTPUT)};
+    UInt32          swizzleMode{0};
+    UInt32          resourceType{0};
+    ADDR2_BLOCK_SET validBlockSet;
+    boolean_t       canXor{0};
+    UInt32          validSwTypeSet{0};
+    UInt32          clientPreferredSwSet{0};
+    UInt32          validSwModeSet{0};
 };
 static_assert(sizeof(ADDR2_GET_PREFERRED_SURF_SETTING_OUTPUT) == 0x20);
