@@ -378,7 +378,7 @@ private:
                 }
                 else {
                     this->wsaaAttributes = 0x47E8;
-                    this->vftCount       = 0x5D;
+                    this->vftCount       = currentKernelVersion().majorMatches(MACOS_10_15) ? 0x5D : 0x61;
                 }
             }
         }
