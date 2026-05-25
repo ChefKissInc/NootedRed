@@ -764,6 +764,8 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::isFlipPending(AMDRadeonX5000_AMDGFX9DCNDi
 // No, no, there's no DCN1 option.
 AMDFlipOption AMDRadeonX5000_AMDGFX9DCNDisplay::getFlipOption() { return AMDFlipOption::DCN2; }
 
+UInt32 AMDRadeonX5000_AMDGFX9DCNDisplay::getNumberOfSupportedDisplays() { return MAX_SUPPORTED_DISPLAYS_RV; }
+
 #define setVFunc(_vft, _index, _func)                \
     {                                                \
         assert((_index) != INVALID_VT_INDEX);        \
@@ -796,6 +798,9 @@ void AMDRadeonX5000_AMDGFX9DCNDisplay::populateVFT(VFT& vft)
     setVFunc(vft, constants.setFlipControlRegisterVTIndex, setFlipControlRegister);
     setVFunc(vft, constants.writeFlipControlRegistersVTIndex, writeFlipControlRegisters);
     setVFunc(vft, constants.isFlipPendingVTIndex, isFlipPending);
+    if (currentKernelVersion() <= MACOS_10_14_X) {
+        setVFunc(vft, constants.getNumberOfSupportedDisplaysVTIndex, getNumberOfSupportedDisplays);
+    }
 }
 
 #undef setVFunc

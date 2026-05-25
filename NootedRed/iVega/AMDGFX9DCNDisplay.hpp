@@ -46,6 +46,7 @@ class AMDRadeonX5000_AMDGFX9DCNDisplay : public AMDRadeonX5000_AMDHWDisplay
     static bool   isDisplayInterlaceEnabled(AMDRadeonX5000_AMDGFX9DCNDisplay* self, UInt32 fbIndex);
     static bool   isFlipPending(AMDRadeonX5000_AMDGFX9DCNDisplay* self, UInt32 fbIndex);
     static AMDFlipOption getFlipOption();
+    static UInt32        getNumberOfSupportedDisplays();
 
     struct AMDDCNDisplayRegisterOffsets
     {
@@ -120,9 +121,28 @@ class AMDRadeonX5000_AMDGFX9DCNDisplay : public AMDRadeonX5000_AMDHWDisplay
         UInt32 isDisplayInterlaceEnabledVTIndex{INVALID_VT_INDEX};
         UInt32 isFlipPendingVTIndex{INVALID_VT_INDEX};
         UInt32 getFlipOptionVTIndex{INVALID_VT_INDEX};
+        UInt32 getNumberOfSupportedDisplaysVTIndex{INVALID_VT_INDEX};
 
         Constants()
         {
+            if (currentKernelVersion() <= MACOS_10_14_X) {
+                this->getCurrentDisplayOffsetVTIndex            = 0x44;
+                this->setCurrentDisplayOffsetVTIndex            = 0x45;
+                this->writeWaitForVLineVTIndex                  = 0x4A;
+                this->setFlipControlRegisterVTIndex             = 0x4B;
+                this->initVTIndex                               = 0x51;
+                this->getPixelModeVTIndex                       = 0x53;
+                this->getPixelFormatVTIndex                     = 0x54;
+                this->writeFlipParametersVTIndex                = 0x57;
+                this->getDisplayModeViewportSpecificInfoVTIndex = 0x59;
+                this->writeFlipControlRegistersVTIndex          = 0x5A;
+                this->isDisplayControlEnabledVTIndex            = 0x5D;
+                this->isDisplayInterlaceEnabledVTIndex          = 0x5E;
+                this->isFlipPendingVTIndex                      = 0x5F;
+                this->getNumberOfSupportedDisplaysVTIndex       = 0x3F;
+                return;
+            }
+
             if (currentKernelVersion() >= MACOS_11) {
                 this->calcAndSetVrrTimestampInfo = AMDRadeonX5000_AMDGFX9DCNDisplay::calcAndSetVrrTimestampInfo;
                 if (currentKernelVersion() >= MACOS_13) {
