@@ -565,7 +565,7 @@ void iVega::X5000HWLibs::processKext(KernelPatcher& patcher, const size_t id, co
     PANIC_COND(!PenguinWizardry::PatternSolveRequest::solveAll(patcher, id, solveRequests, slide, size), "HWLibs",
                "Failed to resolve symbols");
 
-    if (currentKernelVersion().majorMatches(MACOS_10_15)) {
+    if (currentKernelVersion() <= MACOS_10_15_X) {
         PenguinWizardry::PatternRouteRequest request{"__ZN16AmdTtlFwServices7getIpFwEjPKcP10_TtlFwInfo", wrapGetIpFw,
                                                      this->orgGetIpFw};
         PANIC_COND(!request.route(patcher, id, slide, size), "HWLibs", "Failed to route getIpFw");
@@ -729,7 +729,7 @@ void iVega::X5000HWLibs::processKext(KernelPatcher& patcher, const size_t id, co
     DBGLOG("HWLibs", "Applied DDI Caps patches");
 
     // TODO: Replace this hack with a simple hook.
-    if (currentKernelVersion().majorMatches(MACOS_10_15)) {
+    if (currentKernelVersion() <= MACOS_10_15_X) {
         if (NRed::singleton().getAttributes().isRenoir()) {
             const PenguinWizardry::MaskedLookupPatch patches[] = {
                 {&kextRadeonX5000HWLibs, kPspSwInit1Original1015, kPspSwInit1Patched1015, 1},
@@ -1060,7 +1060,7 @@ CAILResult iVega::X5000HWLibs::wrapSmuInitFunctionPointerList(void* instance, SW
         default: return ret;
     }
 
-    if (currentKernelVersion().majorMatches(MACOS_10_15)) {
+    if (currentKernelVersion() <= MACOS_10_15_X) {
         singleton().smuInternalSWInitField(instance) = reinterpret_cast<void*>(retOK);
     }
     else {
