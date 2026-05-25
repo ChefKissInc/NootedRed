@@ -34,7 +34,7 @@ static const UInt8 kStartHWEnginesOriginal[] = {0x40, 0x83, 0xF0, 0x02};
 static const UInt8 kStartHWEnginesMask[]     = {0xF0, 0xFF, 0xF0, 0xFF};
 static const UInt8 kStartHWEnginesPatched[]  = {0x40, 0x83, 0xF0, 0x01};
 
-// The check in `Addr::Lib::Create` on 10.15 and 13.4+ is `familyId == 0x8D` instead of `familyId - 0x8D < 2`.
+// The check in `Addr::Lib::Create` on <=10.15 and 13.4+ is `familyId == 0x8D` instead of `familyId - 0x8D < 2`.
 // Change the 0x8D (AI) to 0x8E (RV).
 static const UInt8 kAddrLibCreateOriginal[] = {0x41, 0x81, 0x7D, 0x08, 0x8D, 0x00, 0x00, 0x00};
 static const UInt8 kAddrLibCreatePatched[]  = {0x41, 0x81, 0x7D, 0x08, 0x8E, 0x00, 0x00, 0x00};
@@ -54,13 +54,32 @@ static const UInt8 kAddrLibCreatePatchedMask1404[]  = {0x00, 0x00, 0x00, 0x00, 0
 static const UInt8 kCreateAccelChannelsOriginal[] = {0x8D, 0x44, 0x09, 0x02};
 static const UInt8 kCreateAccelChannelsPatched[]  = {0x8D, 0x44, 0x09, 0x01};
 
+// Ditto, Mojave.
+static const UInt8 kCreateAccelChannelsOriginal10_14[] = {0x8D, 0x04, 0x09, 0x8D, 0x4C, 0x09, 0x02};
+static const UInt8 kCreateAccelChannelsPatched10_14[]  = {0x8D, 0x04, 0x09, 0x8D, 0x4C, 0x09, 0x01};
+
 static iVega::X5000 moduleInstance;
 
 iVega::X5000& iVega::X5000::singleton() { return moduleInstance; }
 
 iVega::X5000::X5000()
 {
-    if (currentKernelVersion() <= MACOS_10_15_X) {
+    if (currentKernelVersion() <= MACOS_10_14_X) {
+        this->pm4EngineField             = 0x330;
+        this->sdma0EngineField           = 0x338;
+        this->supportedDisplayCountField = 0x2C;
+        this->seCountField               = 0x58;
+        this->shPerSEField               = 0x5C;
+        this->cuPerSHField               = 0x80;
+        this->hasUVD0Field               = 0x90;
+        this->hasVCEField                = 0x92;
+        this->hasVCN0Field               = 0x93;
+        this->hasSDMAPagingQueueField    = 0xA4;
+        this->hasGetAllClockLimitsField  = 0xA3;
+        this->familyTypeField            = 0x29C;
+        this->chipSettingsField          = 0x5B18;
+    }
+    else if (currentKernelVersion().majorMatches(MACOS_10_15)) {
         this->pm4EngineField             = 0x348;
         this->sdma0EngineField           = 0x350;
         this->supportedDisplayCountField = 0x2C;
@@ -120,7 +139,7 @@ void iVega::X5000::processKext(KernelPatcher& patcher, const size_t id, const ma
     mach_vm_address_t orgStartHWEngines;
 
     PenguinWizardry::PatternSolveRequest solveRequests[] = {
-        {currentKernelVersion().majorMatches(MACOS_10_15) ?
+        {currentKernelVersion() <= MACOS_10_15_X ?
              "__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator22getAdditionalQueueListEPPK18_"
              "AMDQueueSpecifierE27additionalQueueList_Default" :
              "__ZZN37AMDRadeonX5000_AMDGraphicsAccelerator19createAccelChannelsEbE12channelTypes",
@@ -176,17 +195,23 @@ void iVega::X5000::processKext(KernelPatcher& patcher, const size_t id, const ma
             kAddrLibCreatePatched1404, kAddrLibCreatePatchedMask1404, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "X5000", "Failed to apply 14.4+ Addr::Lib::Create patch");
     }
-    else if (currentKernelVersion().majorMatches(MACOS_10_15) || currentKernelVersion() >= MACOS_13_4) {
+    else if (currentKernelVersion() <= MACOS_10_15_X || currentKernelVersion() >= MACOS_13_4) {
         const PenguinWizardry::MaskedLookupPatch patch{&kextRadeonX5000, kAddrLibCreateOriginal, kAddrLibCreatePatched,
                                                        1};
-        PANIC_COND(!patch.apply(patcher, slide, size), "X5000",
-                   "Failed to apply Catalina & Ventura 13.4+ Addr::Lib::Create patch");
+        PANIC_COND(!patch.apply(patcher, slide, size), "X5000", "Failed to apply Addr::Lib::Create patch");
     }
 
-    if (currentKernelVersion().majorMatches(MACOS_10_15)) {
-        const PenguinWizardry::MaskedLookupPatch patch{&kextRadeonX5000, kCreateAccelChannelsOriginal,
-                                                       kCreateAccelChannelsPatched, 2};
-        PANIC_COND(!patch.apply(patcher, slide, size), "X5000", "Failed to patch createAccelChannels");
+    if (currentKernelVersion() <= MACOS_10_15_X) {
+        if (currentKernelVersion().majorMatches(MACOS_10_15)) {
+            const PenguinWizardry::MaskedLookupPatch patch{&kextRadeonX5000, kCreateAccelChannelsOriginal,
+                                                           kCreateAccelChannelsPatched, 2};
+            PANIC_COND(!patch.apply(patcher, slide, size), "X5000", "Failed to patch createAccelChannels");
+        }
+        else {
+            const PenguinWizardry::MaskedLookupPatch patch{&kextRadeonX5000, kCreateAccelChannelsOriginal10_14,
+                                                           kCreateAccelChannelsPatched10_14, 1};
+            PANIC_COND(!patch.apply(patcher, slide, size), "X5000", "Failed to patch createAccelChannels");
+        }
 
         // TODO: wait, what is this doing again?
         if (NRed::singleton().getAttributes().isRenoir()) {
