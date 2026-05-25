@@ -65,6 +65,7 @@ union ADDR2_SURFACE_FLAGS
 
     UInt32 value{0};
 };
+static_assert(sizeof(ADDR2_SURFACE_FLAGS) == 4);
 
 enum AddrResourceType
 {
@@ -73,6 +74,7 @@ enum AddrResourceType
     ADDR_RSRC_TEX_3D   = 2,
     ADDR_RSRC_MAX_TYPE = 3,
 };
+static_assert(sizeof(AddrResourceType) == 4);
 
 struct ADDR2_COMPUTE_SURFACE_INFO_INPUT
 {
@@ -156,7 +158,7 @@ struct ADDR2_GET_PREFERRED_SURF_SETTING_INPUT
     UInt32              resourceLocation{0};    // AMD had a typo here
     ADDR2_BLOCK_SET     forbiddenBlock;
     UInt32              preferredSwSet{0};
-    boolean_t           noXor{0};
+    boolean_t           noXor{FALSE};
     UInt32              bpp{0};
     UInt32              width{0};
     UInt32              height{0};
@@ -175,7 +177,7 @@ struct ADDR2_GET_PREFERRED_SURF_SETTING_OUTPUT
     UInt32          swizzleMode{0};
     UInt32          resourceType{0};
     ADDR2_BLOCK_SET validBlockSet;
-    boolean_t       canXor{0};
+    boolean_t       canXor{FALSE};
     UInt32          validSwTypeSet{0};
     UInt32          clientPreferredSwSet{0};
     UInt32          validSwModeSet{0};
