@@ -41,3 +41,30 @@ enum AMDSWIPSMUEvent
     SMU_EVENT_COLLECT_DEBUG_INFO,
     SMU_EVENT_COUNT,
 };
+static_assert(sizeof(AMDSWIPSMUEvent) == 4);
+
+struct AMDSMUFWConstants
+{
+    bool   valid;
+    UInt32 version;
+    void*  ptr;
+    UInt32 length;
+    void*  memHandle;
+};
+static_assert(sizeof(AMDSMUFWConstants) == 0x20);
+
+struct AMDSMUSWInitOutput
+{
+    UInt32            structSize;
+    void*             context;
+    AMDSMUFWConstants fwConstants;
+};
+static_assert(sizeof(AMDSMUSWInitOutput) == 0x30);
+
+struct AMDSMUUCodeConstants
+{
+    UInt32 version;
+    UInt32 length;
+    void*  ptr;
+};
+static_assert(sizeof(AMDSMUUCodeConstants) == 0x10);

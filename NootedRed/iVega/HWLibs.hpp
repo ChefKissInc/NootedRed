@@ -11,6 +11,7 @@
 #include <GPUDriversAMD/TTL/SWIP/GC.hpp>
 #include <GPUDriversAMD/TTL/SWIP/IPVersion.hpp>
 #include <GPUDriversAMD/TTL/SWIP/SDMA.hpp>
+#include <GPUDriversAMD/TTL/SWIP/SMU.hpp>
 #include <Headers/kern_patcher.hpp>
 #include <Headers/kern_util.hpp>
 #include <PenguinWizardry/ObjectField.hpp>
@@ -67,11 +68,14 @@ namespace iVega
         static CAILResult pspSecurityFeatureCapsSet10(void* instance);
         static CAILResult pspSecurityFeatureCapsSet12(void* instance);
         static CAILResult wrapPspCmdKmSubmit(void* instance, void* cmd, void* outData, void* outResponse);
-        static CAILResult smuReset();
-        static CAILResult smuPowerUp();
-        static CAILResult smuInternalSwInit(void* instance);
+        static CAILResult smuPowerUpConfigCommon();
+        static CAILResult smuInternalSwInit(void* instance, void* input, AMDSMUSWInitOutput* output);
+        static CAILResult smuInternalSwInitOld(void* instance, void* input, AMDSMUSWInitOutput* output);
+        static CAILResult smuGetUCodeConsts(void* instance, AMDSMUUCodeConstants* consts);
+        static CAILResult smu10PowerUpConfig();
         static CAILResult smu10InternalHwInit(void* instance);
         static CAILResult smu12WaitForFwLoaded();
+        static CAILResult smu12PowerUpConfig();
         static CAILResult smu12InternalHwInit(void* instance);
         static CAILResult smuInternalHwExit(void* instance);
         static CAILResult smuFullAsicReset(void* instance, void* data);

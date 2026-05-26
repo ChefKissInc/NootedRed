@@ -100,8 +100,6 @@
 			<integer>0</integer>
 			<key>EnableswSdmaFwLoading</key>
 			<integer>0</integer>
-			<key>SMU_DisableMmhubPowerGating</key>
-			<integer>1</integer>
 		</dict>
 		<key>cail_properties</key>
 		<dict>
@@ -230,8 +228,6 @@
 		<dict>
 			<key>EnableSwVCNFWLoading</key>
 			<integer>0</integer>
-			<key>SMU_DisableMmhubPowerGating</key>
-			<integer>1</integer>
 		</dict>
 		<key>cail_properties</key>
 		<dict>
@@ -342,8 +338,6 @@
 			<integer>0</integer>
 			<key>EnableswSdmaFwLoading</key>
 			<integer>0</integer>
-			<key>SMU_DisableMmhubPowerGating</key>
-			<integer>1</integer>
 		</dict>
 		<key>cail_properties</key>
 		<dict>

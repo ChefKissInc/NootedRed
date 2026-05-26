@@ -6,6 +6,7 @@
 #pragma once
 #include <IOKit/IOTypes.h>
 
+constexpr UInt32 PPSMC_MSG_GetSmuVersion       = 0x2;
 constexpr UInt32 PPSMC_MSG_PowerUpGfx          = 0x6;
 constexpr UInt32 PPSMC_MSG_PowerUpSdma         = 0xE;
 constexpr UInt32 PPSMC_MSG_DeviceDriverReset   = 0x1E;

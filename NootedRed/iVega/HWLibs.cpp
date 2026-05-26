@@ -928,45 +928,47 @@ CAILResult iVega::X5000HWLibs::wrapPspCmdKmSubmit(void* const instance, void* co
     return FunctionCast(wrapPspCmdKmSubmit, singleton().orgPspCmdKmSubmit)(instance, cmd, outData, outResponse);
 }
 
-CAILResult iVega::X5000HWLibs::smuReset()
+CAILResult iVega::X5000HWLibs::smuPowerUpConfigCommon()
 {
-    // Linux has got no information on parameters of SoftReset.
-    // There is no debug information nor is there debug prints in amdkmdag.sys related to this call.
-    // Anyone wants to reverse engineer the SMU firmware and find what it means?
-    return NRed::singleton().sendMsgToSmc(PPSMC_MSG_SoftReset, 0x40);
+    if (const auto res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerUpSdma); res != kCAILResultOK) { return res; }
+    if (const auto res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerUpGfx); res != kCAILResultOK) { return res; }
+    if (const auto res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerGateMmHub);
+        res != kCAILResultOK && res != kCAILResultUnsupported)
+    {
+        return res;
+    }
+
+    return kCAILResultOK;
 }
 
-CAILResult iVega::X5000HWLibs::smuPowerUp()
+CAILResult iVega::X5000HWLibs::smuInternalSwInit(void* const instance, void* const, AMDSMUSWInitOutput* const)
+{
+    singleton().smuSwInitialisedFieldBase(instance) = true;
+    return kCAILResultOK;
+}
+
+CAILResult iVega::X5000HWLibs::smuInternalSwInitOld(void* const, void* const, AMDSMUSWInitOutput* const output)
+{
+    return NRed::singleton().sendMsgToSmc(PPSMC_MSG_GetSmuVersion, 0, &output->fwConstants.version);
+}
+
+CAILResult iVega::X5000HWLibs::smuGetUCodeConsts(void*, AMDSMUUCodeConstants* consts)
+{
+    if (consts == nullptr) { return kCAILResultInvalidParameters; }
+    return NRed::singleton().sendMsgToSmc(PPSMC_MSG_GetSmuVersion, 0, &consts->version);
+}
+
+CAILResult iVega::X5000HWLibs::smu10PowerUpConfig()
 {
     if (const auto res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_ForceGfxContentSave);
         res != kCAILResultOK && res != kCAILResultUnsupported)
     {
         return res;
     }
-    if (const auto res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerUpSdma); res != kCAILResultOK) { return res; }
-    if (const auto res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerUpGfx); res != kCAILResultOK) { return res; }
-
-    // Should check for driver setting instead, but just commented out instead for now.
-    // if (const auto res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerGateMmHub);
-    //     res != kCAILResultOK && res != kCAILResultUnsupported) {
-    //     return res;
-    // }
-
-    return kCAILResultOK;
+    return smuPowerUpConfigCommon();
 }
 
-CAILResult iVega::X5000HWLibs::smuInternalSwInit(void* instance)
-{
-    singleton().smuSwInitialisedFieldBase(instance) = true;
-    return kCAILResultOK;
-}
-
-CAILResult iVega::X5000HWLibs::smu10InternalHwInit(void*)
-{
-    if (const auto res = smuReset(); res != kCAILResultOK) { return res; }
-
-    return smuPowerUp();
-}
+CAILResult iVega::X5000HWLibs::smu10InternalHwInit(void*) { return smu10PowerUpConfig(); }
 
 static bool smu12IsFwLoaded(void*)
 {
@@ -975,12 +977,9 @@ static bool smu12IsFwLoaded(void*)
 
 CAILResult iVega::X5000HWLibs::smu12WaitForFwLoaded() { return NRed::waitForFunc(nullptr, smu12IsFwLoaded); }
 
-CAILResult iVega::X5000HWLibs::smu12InternalHwInit(void*)
+CAILResult iVega::X5000HWLibs::smu12PowerUpConfig()
 {
-    if (const auto res = smu12WaitForFwLoaded(); res != kCAILResultOK) { return res; }
-
-    if (const auto res = smuReset(); res != kCAILResultOK) { return res; }
-    if (const auto res = smuPowerUp(); res != kCAILResultOK) { return res; }
+    if (const auto res = smuPowerUpConfigCommon(); res != kCAILResultOK) { return res; }
     if (const auto res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerGateAtHub);
         res != kCAILResultOK && res != kCAILResultUnsupported)
     {
@@ -990,7 +989,14 @@ CAILResult iVega::X5000HWLibs::smu12InternalHwInit(void*)
     return kCAILResultOK;
 }
 
-CAILResult iVega::X5000HWLibs::smuInternalHwExit(void*) { return smuReset(); }
+CAILResult iVega::X5000HWLibs::smu12InternalHwInit(void*)
+{
+    if (const auto res = smu12WaitForFwLoaded(); res != kCAILResultOK) { return res; }
+
+    return smu12PowerUpConfig();
+}
+
+CAILResult iVega::X5000HWLibs::smuInternalHwExit(void*) { return kCAILResultOK; }
 
 CAILResult iVega::X5000HWLibs::smuFullAsicReset(void*, void* data)
 {
@@ -1004,8 +1010,9 @@ CAILResult iVega::X5000HWLibs::smu10NotifyEvent(void*, TTLEventInput* input)
         return kCAILResultInvalidParameters;
     }
 
-    if (input->arg == SMU_EVENT_POWER_UP || input->arg == 4 || input->arg == SMU_EVENT_REINITIALISE) {
-        return smuPowerUp();
+    if (input->arg == SMU_EVENT_POWER_UP || input->arg == 4 || input->arg == 8 || input->arg == SMU_EVENT_REINITIALISE)
+    {
+        return smu10PowerUpConfig();
     }
 
     return kCAILResultOK;
@@ -1020,7 +1027,7 @@ CAILResult iVega::X5000HWLibs::smu12NotifyEvent(void*, TTLEventInput* input)
 
     if (input->arg == SMU_EVENT_POWER_UP || input->arg == 4 || input->arg == 8 || input->arg == SMU_EVENT_REINITIALISE)
     {
-        return NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerUpSdma);
+        return smu12PowerUpConfig();
     }
 
     return kCAILResultOK;
@@ -1061,11 +1068,11 @@ CAILResult iVega::X5000HWLibs::wrapSmuInitFunctionPointerList(void* instance, SW
     }
 
     if (currentKernelVersion() <= MACOS_10_15_X) {
-        singleton().smuInternalSWInitField(instance) = reinterpret_cast<void*>(retOK);
+        singleton().smuInternalSWInitField(instance) = reinterpret_cast<void*>(smuInternalSwInitOld);
     }
     else {
         singleton().smuInternalSWInitField(instance) = reinterpret_cast<void*>(smuInternalSwInit);
-        singleton().smuGetUCodeConstsField(instance) = reinterpret_cast<void*>(retOK);
+        singleton().smuGetUCodeConstsField(instance) = reinterpret_cast<void*>(smuGetUCodeConsts);
     }
     singleton().smuFullscreenEventField(instance) = reinterpret_cast<void*>(smuFullScreenEvent);
     singleton().smuInternalSWExitField(instance)  = reinterpret_cast<void*>(retOK);
