@@ -35,9 +35,10 @@ UInt32 AMDRadeonX5000_AMDHWAlignManager::getPreferredSwizzleMode2(ADDR2_COMPUTE_
 void AMDRadeonX5000_AMDHWAlignManager::resolve(KernelPatcher& patcher, const size_t id, const mach_vm_address_t start,
                                                const size_t size)
 {
-    PenguinWizardry::PatternSolveRequest request{"_Addr2GetPreferredSurfaceSetting",
-                                                 constants.addr2GetPreferredSurfaceSetting,
-                                                 kAddr2GetPreferredSurfaceSettingPattern};
+    PenguinWizardry::PatternSolveRequest request{
+        "__ZNK4Addr2V23Lib31Addr2GetPreferredSurfaceSettingEPK39_ADDR2_GET_PREFERRED_SURF_SETTING_INPUTP40_ADDR2_GET_"
+        "PREFERRED_SURF_SETTING_OUTPUT",
+        constants.addr2GetPreferredSurfaceSetting, kAddr2GetPreferredSurfaceSettingPattern};
     PANIC_COND(!request.solve(patcher, id, start, size), "X5000HWAlignManager",
-               "Failed to resolve Addr2GetPreferredSurfaceSetting");
+               "Failed to resolve Addr::V2::Lib::Addr2GetPreferredSurfaceSetting");
 }
