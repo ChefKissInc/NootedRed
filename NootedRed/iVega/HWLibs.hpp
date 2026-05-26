@@ -26,7 +26,7 @@ namespace iVega
         ObjectField<void*>                                                fwDirField;
         ObjectField<UInt32>                                               pspSOSField;
         ObjectField<UInt8>                                                pspSecurityCapsField;
-        ObjectField<UInt32>                                               pspSOSVersionField;
+        ObjectField<UInt32>                                               pspTOSVersionField;
         ObjectField<UInt8*>                                               pspCommandDataField;
         ObjectField<bool>                                                 smuSwInitialisedFieldBase;
         ObjectField<void*>                                                smuInternalSWInitField;
