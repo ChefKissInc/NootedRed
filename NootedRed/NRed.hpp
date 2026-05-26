@@ -66,7 +66,7 @@ public:
     void              writeReg32(UInt32 reg, const UInt32 val) const;    // TODO: Remove!
     static CAILResult waitForFunc(void* handle, bool (*func)(void* handle),
                                   const UInt32 timeoutMS = PP_WAIT_ON_REGISTER_TIMEOUT_DEFAULT);
-    CAILResult        smuWaitForResponse(UInt32* outResp) const;    // TODO: Remove!
+    CAILResult        smuWaitForResponse(UInt32* outResp = nullptr) const;    // TODO: Remove!
     CAILResult        sendMsgToSmc(UInt32 msg, UInt32 param = 0,
                                    UInt32* outParam = nullptr) const;    // TODO: Remove!
 

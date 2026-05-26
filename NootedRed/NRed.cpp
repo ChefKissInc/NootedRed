@@ -241,8 +241,6 @@ static bool smuWaitForResponseFunc(void* handle)
 {
     const auto outResp = static_cast<UInt32*>(handle);
 
-    if (outResp != nullptr) { *outResp = kSMUFWResponseNoResponse; }
-
     const auto fwResp = NRed::singleton().readReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_90);
     if (fwResp != kSMUFWResponseNoResponse) {
         if (outResp != nullptr) { *outResp = fwResp; }
@@ -256,14 +254,14 @@ CAILResult NRed::smuWaitForResponse(UInt32* outResp) const { return waitForFunc(
 
 CAILResult NRed::sendMsgToSmc(const UInt32 msg, const UInt32 param, UInt32* const outParam) const
 {
-    if (this->smuWaitForResponse(nullptr) != kCAILResultOK) { return kCAILResultInvalidParameters; }
+    this->smuWaitForResponse();
 
-    this->writeReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_82, param);
     this->writeReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_90, 0);
+    this->writeReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_82, param);
     this->writeReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_66, msg);
 
-    UInt32     resp;
-    const auto res = this->smuWaitForResponse(&resp);
+    UInt32     resp = kSMUFWResponseNoResponse;
+    const auto res  = this->smuWaitForResponse(&resp);
 
     if (res == kCAILResultOK && outParam != nullptr) { *outParam = this->readReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_82); }
 
