@@ -851,7 +851,7 @@ CAILResult iVega::X5000HWLibs::retOK() { return kCAILResultOK; }
 CAILResult iVega::X5000HWLibs::pspBootloaderLoadSos10(void* const instance)
 {
     singleton().pspSOSField(instance)         = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_59);
-    (singleton().pspSOSField + 0x4)(instance) = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_58);
+    singleton().pspTOSVerField(instance) = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_58);
     (singleton().pspSOSField + 0x8)(instance) = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_58);
     return kCAILResultOK;
 }
