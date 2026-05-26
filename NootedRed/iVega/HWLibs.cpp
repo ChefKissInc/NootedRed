@@ -859,7 +859,7 @@ CAILResult iVega::X5000HWLibs::pspBootloaderLoadSos10(void* const instance)
 CAILResult iVega::X5000HWLibs::pspSecurityFeatureCapsSet10(void* const instance)
 {
     auto& securityCaps     = singleton().pspSecurityCapsField(instance);
-    securityCaps          &= ~static_cast<UInt8>(1);
+    securityCaps          &= ~1;
     const auto tOSVersion  = singleton().pspTOSVersionField(instance);
     if ((tOSVersion & 0xFFFF0000) == 0x80000 && (tOSVersion & 0xFF) > 0x50) {
         const auto policyVer = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_91);
@@ -878,7 +878,7 @@ CAILResult iVega::X5000HWLibs::pspSecurityFeatureCapsSet10(void* const instance)
 CAILResult iVega::X5000HWLibs::pspSecurityFeatureCapsSet12(void* const instance)
 {
     auto& securityCaps     = singleton().pspSecurityCapsField(instance);
-    securityCaps          &= ~static_cast<UInt8>(1);
+    securityCaps          &= ~1;
     const auto tOSVersion  = singleton().pspTOSVersionField(instance);
     if ((tOSVersion & 0xFFFF0000) == 0x110000 && (tOSVersion & 0xFF) > 0x2A) {
         const auto policyVer = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_91);
