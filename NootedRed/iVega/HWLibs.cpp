@@ -475,7 +475,7 @@ iVega::X5000HWLibs::X5000HWLibs()
         this->pspCommandDataField       = 0xAF8;
         this->pspSecurityCapsField      = 0x3120;
         this->pspSOSField               = 0x3124;
-        this->pspTOSVerField            = 0x3128;
+        this->pspSOSVersionField        = 0x3128;
         this->gcSwFirmwareField         = 0x2F0;
         this->dmcuEnablePSPFWLoadField  = 0x248;
         this->dmcuABMLevelField         = 0x24C;
@@ -496,7 +496,7 @@ iVega::X5000HWLibs::X5000HWLibs()
         this->pspCommandDataField       = 0xAF8;
         this->pspSecurityCapsField      = 0x3120;
         this->pspSOSField               = 0x3124;
-        this->pspTOSVerField            = 0x3128;
+        this->pspSOSVersionField        = 0x3128;
         this->gcSwFirmwareField         = 0x2F0;
         this->dmcuEnablePSPFWLoadField  = 0x248;
         this->dmcuABMLevelField         = 0x24C;
@@ -517,7 +517,7 @@ iVega::X5000HWLibs::X5000HWLibs()
         this->smuGetUCodeConstsField    = 0x7A8;
         this->pspSecurityCapsField      = 0x3918;
         this->pspSOSField               = 0x391C;
-        this->pspTOSVerField            = 0x3920;
+        this->pspSOSVersionField        = 0x3920;
         this->gcSwFirmwareField         = 0x340;
         this->sdmaGetFwConstantsField   = 0x2C8;
         this->sdmaStartEngineField      = 0x2F0;
@@ -851,7 +851,7 @@ CAILResult iVega::X5000HWLibs::retOK() { return kCAILResultOK; }
 CAILResult iVega::X5000HWLibs::pspBootloaderLoadSos10(void* const instance)
 {
     singleton().pspSOSField(instance)         = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_59);
-    singleton().pspTOSVerField(instance) = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_58);
+    singleton().pspSOSVersionField(instance)  = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_58);
     (singleton().pspSOSField + 0x8)(instance) = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_58);
     return kCAILResultOK;
 }
@@ -860,8 +860,8 @@ CAILResult iVega::X5000HWLibs::pspSecurityFeatureCapsSet10(void* const instance)
 {
     auto& securityCaps  = singleton().pspSecurityCapsField(instance);
     securityCaps       &= ~static_cast<UInt8>(1);
-    const auto tOSVer   = singleton().pspTOSVerField(instance);
-    if ((tOSVer & 0xFFFF0000) == 0x80000 && (tOSVer & 0xFF) > 0x50) {
+    const auto sOSVer   = singleton().pspSOSVersionField(instance);
+    if ((sOSVer & 0xFFFF0000) == 0x80000 && (sOSVer & 0xFF) > 0x50) {
         const auto policyVer = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_91);
         SYSLOG_COND((policyVer & 0xFF000000) != 0xA000000, "HWLibs", "Invalid security policy version: 0x%X",
                     policyVer);
@@ -879,8 +879,8 @@ CAILResult iVega::X5000HWLibs::pspSecurityFeatureCapsSet12(void* const instance)
 {
     auto& securityCaps  = singleton().pspSecurityCapsField(instance);
     securityCaps       &= ~static_cast<UInt8>(1);
-    const auto tOSVer   = singleton().pspTOSVerField(instance);
-    if ((tOSVer & 0xFFFF0000) == 0x110000 && (tOSVer & 0xFF) > 0x2A) {
+    const auto sOSVer   = singleton().pspSOSVersionField(instance);
+    if ((sOSVer & 0xFFFF0000) == 0x110000 && (sOSVer & 0xFF) > 0x2A) {
         const auto policyVer = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_91);
         SYSLOG_COND((policyVer & 0xFF000000) != 0xB000000, "HWLibs", "Invalid security policy version: 0x%X",
                     policyVer);
