@@ -932,11 +932,6 @@ CAILResult iVega::X5000HWLibs::smuPowerUpConfigCommon()
 {
     if (const auto res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerUpSdma); res != kCAILResultOK) { return res; }
     if (const auto res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerUpGfx); res != kCAILResultOK) { return res; }
-    if (const auto res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerGateMmHub);
-        res != kCAILResultOK && res != kCAILResultUnsupported)
-    {
-        return res;
-    }
 
     return kCAILResultOK;
 }
@@ -965,7 +960,13 @@ CAILResult iVega::X5000HWLibs::smu10PowerUpConfig()
     {
         return res;
     }
-    return smuPowerUpConfigCommon();
+    if (const auto res = smuPowerUpConfigCommon(); res != kCAILResultOK) { return res; }
+    if (const auto res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerGateMmHub);
+        res != kCAILResultOK && res != kCAILResultUnsupported)
+    {
+        return res;
+    }
+    return kCAILResultOK;
 }
 
 CAILResult iVega::X5000HWLibs::smu10InternalHwInit(void*) { return smu10PowerUpConfig(); }
