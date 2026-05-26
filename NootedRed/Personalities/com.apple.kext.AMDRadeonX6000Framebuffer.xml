@@ -95,18 +95,6 @@
 		<dict>
 			<key>DalForceSingleDispPipeSplit</key>
 			<integer>1</integer>
-			<key>PP_DisableVoltageIsland</key>
-			<integer>1</integer>
-			<key>PP_DriverEnableNBDPM</key>
-			<integer>1</integer>
-			<key>PP_GfxOffControl</key>
-			<integer>1</integer>
-			<key>PP_SclkDeepSleepDisable</key>
-			<integer>0</integer>
-			<key>PP_Sumo_DisableGfxPowerGatingInUVD</key>
-			<integer>0</integer>
-			<key>PP_ThermalAutoThrottlingEnable</key>
-			<integer>1</integer>
 		</dict>
 	</dict>
 	<dict>
