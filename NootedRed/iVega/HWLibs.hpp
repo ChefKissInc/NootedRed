@@ -24,7 +24,7 @@ namespace iVega
         using t_putFirmware    = bool     (*)(void* self, AMDDeviceType deviceType, void* fw);
 
         ObjectField<void*>                                                fwDirField;
-        ObjectField<UInt32>                                               pspSOSField;
+        ObjectField<UInt32>                                               pspBootloaderVersionField;
         ObjectField<UInt8>                                                pspSecurityCapsField;
         ObjectField<UInt32>                                               pspTOSVersionField;
         ObjectField<UInt8*>                                               pspCommandDataField;

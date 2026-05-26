@@ -474,7 +474,7 @@ iVega::X5000HWLibs::X5000HWLibs()
         this->smuGetUCodeConstsField    = 0x720;
         this->pspCommandDataField       = 0xAF8;
         this->pspSecurityCapsField      = 0x3120;
-        this->pspSOSField               = 0x3124;
+        this->pspBootloaderVersionField = 0x3124;
         this->pspTOSVersionField        = 0x3128;
         this->gcSwFirmwareField         = 0x2F0;
         this->dmcuEnablePSPFWLoadField  = 0x248;
@@ -495,7 +495,7 @@ iVega::X5000HWLibs::X5000HWLibs()
         this->smuGetUCodeConstsField    = 0x730;
         this->pspCommandDataField       = 0xAF8;
         this->pspSecurityCapsField      = 0x3120;
-        this->pspSOSField               = 0x3124;
+        this->pspBootloaderVersionField = 0x3124;
         this->pspTOSVersionField        = 0x3128;
         this->gcSwFirmwareField         = 0x2F0;
         this->dmcuEnablePSPFWLoadField  = 0x248;
@@ -516,7 +516,7 @@ iVega::X5000HWLibs::X5000HWLibs()
         this->smuFullscreenEventField   = 0x708;
         this->smuGetUCodeConstsField    = 0x7A8;
         this->pspSecurityCapsField      = 0x3918;
-        this->pspSOSField               = 0x391C;
+        this->pspBootloaderVersionField = 0x391C;
         this->pspTOSVersionField        = 0x3920;
         this->gcSwFirmwareField         = 0x340;
         this->sdmaGetFwConstantsField   = 0x2C8;
@@ -850,7 +850,7 @@ CAILResult iVega::X5000HWLibs::retOK() { return kCAILResultOK; }
 
 CAILResult iVega::X5000HWLibs::pspBootloaderLoadSos10(void* const instance)
 {
-    singleton().pspSOSField(instance)                = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_59);
+    singleton().pspBootloaderVersionField(instance)  = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_100);
     singleton().pspTOSVersionField(instance)         = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_58);
     (singleton().pspTOSVersionField + 0x4)(instance) = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_58);
     return kCAILResultOK;
