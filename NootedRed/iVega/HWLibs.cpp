@@ -450,8 +450,8 @@ iVega::X5000HWLibs::X5000HWLibs()
         this->pspCommandDataField      = 0xB00;
         this->smuInternalSWInitField   = 0x378;
         this->smuInternalHWInitField   = 0x380;
-        this->smuInternalHWExitField   = 0x388;
-        this->smuInternalSWExitField   = 0x390;
+        this->smuInternalSWExitField   = 0x388;
+        this->smuInternalHWExitField   = 0x390;
         this->smuFullAsicResetField    = 0x3A0;
         this->smuNotifyEventField      = 0x3A8;
         this->smuFullscreenEventField  = 0x3B8;
@@ -466,8 +466,8 @@ iVega::X5000HWLibs::X5000HWLibs()
         this->smuSwInitialisedFieldBase = 0x280;
         this->smuInternalSWInitField    = 0x638;
         this->smuInternalHWInitField    = 0x640;
-        this->smuInternalHWExitField    = 0x648;
-        this->smuInternalSWExitField    = 0x650;
+        this->smuInternalSWExitField    = 0x648;
+        this->smuInternalHWExitField    = 0x650;
         this->smuFullAsicResetField     = 0x660;
         this->smuNotifyEventField       = 0x668;
         this->smuFullscreenEventField   = 0x680;
@@ -487,8 +487,8 @@ iVega::X5000HWLibs::X5000HWLibs()
         this->smuSwInitialisedFieldBase = 0x280;
         this->smuInternalSWInitField    = 0x648;
         this->smuInternalHWInitField    = 0x650;
-        this->smuInternalHWExitField    = 0x658;
-        this->smuInternalSWExitField    = 0x660;
+        this->smuInternalSWExitField    = 0x658;
+        this->smuInternalHWExitField    = 0x660;
         this->smuFullAsicResetField     = 0x670;
         this->smuNotifyEventField       = 0x678;
         this->smuFullscreenEventField   = 0x690;
@@ -509,8 +509,8 @@ iVega::X5000HWLibs::X5000HWLibs()
         this->pspCommandDataField       = 0xB48;
         this->smuInternalSWInitField    = 0x6C0;
         this->smuInternalHWInitField    = 0x6C8;
-        this->smuInternalHWExitField    = 0x6D0;
-        this->smuInternalSWExitField    = 0x6D8;
+        this->smuInternalSWExitField    = 0x6D0;
+        this->smuInternalHWExitField    = 0x6D8;
         this->smuFullAsicResetField     = 0x6E8;
         this->smuNotifyEventField       = 0x6F0;
         this->smuFullscreenEventField   = 0x708;
