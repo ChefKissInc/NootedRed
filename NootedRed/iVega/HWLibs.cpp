@@ -1107,6 +1107,7 @@ static inline void setGCFWData(void* const instance, GCFirmwareInfo* const fwDat
     fwData->count                         += 1;
 }
 
+// TODO: Replace this with `gc_read_config_setting_uint32` on `AsicRevForRlcFw`.
 static bool isA0()
 {
     return !NRed::singleton().getAttributes().isPicasso()
@@ -1119,7 +1120,6 @@ void iVega::X5000HWLibs::gc91GetFwConstants(void* const instance, GCFirmwareInfo
     setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListCntl, &gc_9_1_rlc_srlist_cntl);
     setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListGPMMem, &gc_9_1_rlc_srlist_gpm_mem);
     setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListSRMMem, &gc_9_1_rlc_srlist_srm_mem);
-    // TODO: Replace this with `gc_read_config_setting_uint32` on `AsicRevForRlcFw`.
     setGCFWData(instance, fwData, kGCFirmwareTypeRLC, isA0() ? &gc_9_1_rlc_ucode_a0 : &gc_9_1_rlc_ucode);
     setGCFWData(instance, fwData, kGCFirmwareTypeME, &gc_9_1_me_ucode);
     setGCFWData(instance, fwData, kGCFirmwareTypeCE, &gc_9_1_ce_ucode);
