@@ -171,6 +171,29 @@ struct ADDR2_GET_PREFERRED_SURF_SETTING_INPUT
 };
 static_assert(sizeof(ADDR2_GET_PREFERRED_SURF_SETTING_INPUT) == 0x44);
 
+struct ADDR2_GET_PREFERRED_SURF_SETTING_INPUT_NEW
+{
+    UInt32              size{sizeof(ADDR2_GET_PREFERRED_SURF_SETTING_INPUT)};
+    ADDR2_SURFACE_FLAGS flags;
+    AddrResourceType    resourceType{ADDR_RSRC_MAX_TYPE};
+    UInt32              format{0};
+    UInt32              resourceLocation{0};    // AMD had a typo here
+    ADDR2_BLOCK_SET     forbiddenBlock;
+    UInt32              preferredSwSet{0};
+    boolean_t           noXor{FALSE};
+    UInt32              bpp{0};
+    UInt32              width{0};
+    UInt32              height{0};
+    UInt32              numSlices{0};
+    UInt32              numMipLevels{0};
+    UInt32              numSamples{0};
+    UInt32              numFrags{0};
+    UInt32              maxAlign{0};
+    UInt32              minSizeAlign{0};
+    double              memoryBudget;
+};
+static_assert(sizeof(ADDR2_GET_PREFERRED_SURF_SETTING_INPUT_NEW) == 0x50);
+
 struct ADDR2_GET_PREFERRED_SURF_SETTING_OUTPUT
 {
     UInt32          size{sizeof(ADDR2_GET_PREFERRED_SURF_SETTING_OUTPUT)};

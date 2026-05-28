@@ -398,6 +398,8 @@ class AMDRadeonX5000_AMDHWAlignManager
     {
         UInt32 (*addr2GetPreferredSurfaceSetting)(void*, ADDR2_GET_PREFERRED_SURF_SETTING_INPUT*,
                                                   ADDR2_GET_PREFERRED_SURF_SETTING_OUTPUT*){nullptr};
+        UInt32 (*addr2GetPreferredSurfaceSettingNew)(void*, ADDR2_GET_PREFERRED_SURF_SETTING_INPUT_NEW*,
+                                                     ADDR2_GET_PREFERRED_SURF_SETTING_OUTPUT*){nullptr};
     };
 
     static Constants constants;
