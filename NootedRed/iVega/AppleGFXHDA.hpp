@@ -15,7 +15,7 @@ namespace iVega
 
     struct GFXHDAController
     {
-        ObjectField<IOService*> provider;
+        ObjectField<IOService*> provider{0x98};
         ObjectField<uint32_t>   vendorID;
         ObjectField<uint32_t>   deviceID;
         ObjectField<uint16_t>   integratedCodecAddressMask;
@@ -34,7 +34,6 @@ namespace iVega
 
         GFXHDAController()
         {
-            this->provider = 0x98;
             if (currentKernelVersion() >= MACOS_10_15) {
                 this->vendorID                   = 0xEF0;
                 this->deviceID                   = 0xEF4;
