@@ -178,10 +178,6 @@ static const char _gc_9_2_rlc_srlist_srm_mem[] = {
 #embed "../Firmware/gc_9_2_rlc_srlist_srm_mem.bin"
 };
 GC_FW_CONSTANT("#1", 0x1, 0x0, 0x0, 0x1, 0x0, gc_9_2_rlc_srlist_srm_mem, 0x0, 0x0, 0x0, 0x0);
-static const char _gc_9_2_rlc_ucode_a0[] = {
-#embed "../Firmware/gc_9_2_rlc_ucode_a0.bin"
-};
-GC_FW_CONSTANT("#101", 0x1, 0x1000, 0x0, 0x1, 0x0, gc_9_2_rlc_ucode_a0, 0x0, 0x0, 0x0, 0x0);
 static const char _gc_9_2_rlc_ucode[] = {
 #embed "../Firmware/gc_9_2_rlc_ucode.bin"
 };
@@ -1139,7 +1135,7 @@ void iVega::X5000HWLibs::gc92GetFwConstants(void* instance, GCFirmwareInfo* fwDa
     setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListCntl, &gc_9_2_rlc_srlist_cntl);
     setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListGPMMem, &gc_9_2_rlc_srlist_gpm_mem);
     setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListSRMMem, &gc_9_2_rlc_srlist_srm_mem);
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLC, isA0() ? &gc_9_2_rlc_ucode_a0 : &gc_9_2_rlc_ucode);
+    setGCFWData(instance, fwData, kGCFirmwareTypeRLC, &gc_9_2_rlc_ucode);
     setGCFWData(instance, fwData, kGCFirmwareTypeME, &gc_9_2_me_ucode);
     setGCFWData(instance, fwData, kGCFirmwareTypeCE, &gc_9_2_ce_ucode);
     setGCFWData(instance, fwData, kGCFirmwareTypePFP, &gc_9_2_pfp_ucode);
