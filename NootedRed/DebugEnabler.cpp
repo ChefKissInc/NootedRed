@@ -73,8 +73,9 @@ enum GpuChannelDebugPolicy : UInt32
 {
     CHANNEL_WAIT_FOR_PM4_IDLE            = 0x1,
     CHANNEL_WAIT_FOR_TS_AFTER_SUBMISSION = 0x2,
-    // 0x8, 0x10 = ??, PM4-related
-    CHANNEL_DISABLE_PREEMPTION = 0x20,
+    CHANNEL_DISABLE_EMIT_EVENT_INITIATOR = 0x8,
+    CHANNEL_DISABLE_EMIT_FLUSH           = 0x10,
+    CHANNEL_DISABLE_PREEMPTION           = 0x20,
 };
 
 enum GpuDebugPolicy : UInt32
@@ -85,6 +86,8 @@ enum GpuDebugPolicy : UInt32
     PANIC_ON_POWEROFF_REGISTER_ACCESS = 0x8,
     PRINT_FUNC_ENTRY_EXIT             = 0x40,
     DBX_SLEEP_BEFORE_GPU_RESTART      = 0x200,
+    DISABLE_EMIT_FLUSH                = 0x400,
+    DISABLE_EMIT_EVENT_INITIATOR      = 0x800,
     GPU_TASK_SINGLE_CHANNEL           = 0x80000,
     DISABLE_PREEMPTION                = 0x80000000,
 };
