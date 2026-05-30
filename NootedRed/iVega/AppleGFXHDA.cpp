@@ -53,13 +53,12 @@ IOService* iVega::AppleGFXHDA::wrapProbe(IOService* that, IOService* provider, S
         return FunctionCast(wrapProbe, singleton().orgProbe)(that, provider, score);
     }
 
-    WIOKit::renameDevice(dev, "HDAU");
+    provider->setName("HDAU");
 
     UInt8 bytes[] = {0x00};
     dev->setProperty("built-in", bytes, sizeof(bytes));
 
-    that->setProperty("IsNRedHDA", bytes, sizeof(bytes));
-    dev->setProperty("IsNRedHDA", bytes, sizeof(bytes));
+    that->setProperty("NootedRedGFXHDA", bytes, sizeof(bytes));
 
     singleton().controller.provider(that)                   = provider;
     singleton().controller.vendorID(that)                   = vendorID;
@@ -82,7 +81,7 @@ IOService* iVega::AppleGFXHDA::wrapProbe(IOService* that, IOService* provider, S
     *score = 1;
 
     char hdaGfxBytes[] = "onboard-1";
-    dev->setProperty("hda-gfx",  hdaGfxBytes, sizeof(hdaGfxBytes));
+    dev->setProperty("hda-gfx", hdaGfxBytes, sizeof(hdaGfxBytes));
 
     DBGLOG("GFXHDA", "Initialised Raven or Renoir device.");
 
