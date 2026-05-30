@@ -30,8 +30,22 @@ jobs:
       - name: Upload build
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          awk '/^## ${{ github.ref_name }}/{flag=1; next} /^## v/{flag=0} flag' CHANGELOG.md | sed 's/^### /## /' > release_notes.md
-          gh release create ${{ github.ref_name }} build/*/*.zip --title ${{ github.ref_name }} --notes-file release_notes.md
+          shopt -s nullglob
+          files=(build/*/*.zip)
+          [ ${#files[@]} -gt 0 ] || { echo "No zip files found"; exit 1; }
+          NOTES=$(awk '/^## '"${{ github.ref_name }}"'$/{flag=1; next} /^## v/{flag=0} flag' CHANGELOG.md | sed 's/^### /## /')
+
+          [ -n "$NOTES" ] || {
+            echo "No changelog entry found for ${{ github.ref_name }}"
+            exit 1
+          }
+
+          echo "$NOTES" | gh release create "${{ github.ref_name }}" "${files[@]}" \
+            -t "${{ github.ref_name }}" \
+            --verify-tag \
+            --fail-on-no-commits \
+            --discussion-category Announcements \
+            -F -
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
