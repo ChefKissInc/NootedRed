@@ -90,11 +90,13 @@ void NRed::hwLateInit()
     this->iGPU->setMemoryEnable(true);
     this->iGPU->setBusMasterEnable(true);
 
-    PANIC_COND(!this->getVBIOS(), "NRed", "Failed to get VBIOS!");
-
-    this->vbiosData->appendByte(0, ATOMBIOS_IMAGE_SIZE - this->vbiosData->getLength());
-
-    this->iGPU->setProperty("ATY,bin_image", this->vbiosData);
+    if (this->getVBIOS()) {
+        this->vbiosData->appendByte(0, ATOMBIOS_IMAGE_SIZE - this->vbiosData->getLength());
+        this->iGPU->setProperty("ATY,bin_image", this->vbiosData);
+    }
+    else {
+        SYSLOG("NRed", "Failed to get VBIOS!");
+    }
 
     this->rmmio =
         this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress5, kIOMapInhibitCache | kIOMapAnywhere);
