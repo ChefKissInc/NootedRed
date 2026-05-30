@@ -2,13 +2,6 @@
 	<dict>
 		<key>CFBundleIdentifier</key>
 		<string>com.apple.driver.AppleGFXHDA</string>
-		<key>DPAlwaysDisplayRouting</key>
-		<array>
-			<integer>3</integer>
-			<integer>33</integer>
-			<integer>35</integer>
-			<integer>88</integer>
-		</array>
 		<key>DPAudioDeviceExclusion</key>
 		<array>
 			<dict>
