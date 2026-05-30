@@ -141,7 +141,7 @@ void NRed::hwLateInit()
 
 void NRed::processPatcher()
 {
-    auto* devInfo = DeviceInfo::create();
+    const auto devInfo = DeviceInfo::create();
     assert(devInfo != nullptr);
 
     devInfo->processSwitchOff();
@@ -160,7 +160,7 @@ void NRed::processPatcher()
     char hdaGfxBytes[] = "onboard-1";
     this->iGPU->setProperty("hda-gfx", hdaGfxBytes, sizeof(hdaGfxBytes));
 
-    this->deviceID = WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigDeviceID);
+    this->deviceID = static_cast<UInt16>(WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigDeviceID));
     switch (this->deviceID) {
         case 0x15D8: {
             this->attributes.setPicasso();
@@ -180,11 +180,11 @@ void NRed::processPatcher()
         } break;
         default: PANIC("NRed", "Unknown device ID: 0x%X", this->deviceID);
     }
-    this->pciRevision = WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigRevisionID);
+    this->pciRevision = static_cast<UInt8>(WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigRevisionID));
 
     char name[128];
     for (size_t i = 0, ii = 0; i < devInfo->videoExternal.size(); i++) {
-        auto* device = OSDynamicCast(IOPCIDevice, devInfo->videoExternal[i].video);
+        auto device = OSDynamicCast(IOPCIDevice, devInfo->videoExternal[i].video);
         if (device == nullptr) { continue; }
 
         snprintf(name, arrsize(name), "GFX%zu", ii++);
@@ -312,16 +312,16 @@ class AppleACPIPlatformExpert : IOACPIPlatformExpert
 bool NRed::getVBIOSFromVFCT(const bool strict)
 {
     DBGLOG("NRed", "Fetching VBIOS from VFCT table");
-    auto* expert = reinterpret_cast<AppleACPIPlatformExpert*>(this->iGPU->getPlatform());
+    auto expert = reinterpret_cast<AppleACPIPlatformExpert*>(this->iGPU->getPlatform());
     assert(expert != nullptr);
 
-    auto* vfctData = expert->getACPITableData("VFCT", 0);
+    auto vfctData = expert->getACPITableData("VFCT", 0);
     if (vfctData == nullptr) {
         DBGLOG("NRed", "No VFCT from AppleACPIPlatformExpert");
         return false;
     }
 
-    auto* vfct = static_cast<const VFCT*>(vfctData->getBytesNoCopy());
+    auto vfct = static_cast<const VFCT*>(vfctData->getBytesNoCopy());
     assert(vfct != nullptr);
 
     if (sizeof(VFCT) > vfctData->getLength()) {
@@ -335,14 +335,14 @@ bool NRed::getVBIOSFromVFCT(const bool strict)
     auto devFunc = this->iGPU->getFunctionNumber();
 
     for (auto offset = vfct->vbiosImageOffset; offset < vfctData->getLength();) {
-        auto* vHdr =
+        auto vHdr =
             static_cast<const GOPVideoBIOSHeader*>(vfctData->getBytesNoCopy(offset, sizeof(GOPVideoBIOSHeader)));
         if (vHdr == nullptr) {
             DBGLOG("NRed", "VFCT header out of bounds");
             return false;
         }
 
-        auto* vContent =
+        auto vContent =
             static_cast<const UInt8*>(vfctData->getBytesNoCopy(offset + sizeof(GOPVideoBIOSHeader), vHdr->imageLength));
         if (vContent == nullptr) {
             DBGLOG("NRed", "VFCT VBIOS image out of bounds");
@@ -378,14 +378,14 @@ bool NRed::getVBIOSFromVFCT(const bool strict)
 
 bool NRed::getVBIOSFromVRAM()
 {
-    auto* bar0 =
+    auto bar0 =
         this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress0, kIOMapWriteCombineCache | kIOMapAnywhere);
     if (!bar0 || !bar0->getLength()) {
         DBGLOG("NRed", "FB BAR not enabled");
         OSSafeReleaseNULL(bar0);
         return false;
     }
-    auto*  fb   = reinterpret_cast<const UInt8*>(bar0->getVirtualAddress());
+    auto   fb   = reinterpret_cast<const UInt8*>(bar0->getVirtualAddress());
     UInt32 size = 256 * 1024;    // ???
     if (!checkAtomBios(fb, size)) {
         DBGLOG("NRed", "VRAM VBIOS is not an ATOMBIOS");
@@ -406,7 +406,7 @@ bool NRed::getVBIOSFromExpansionROM()
         return false;
     }
 
-    auto* expansionROM =
+    auto expansionROM =
         this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigExpansionROMBase, kIOMapInhibitCache | kIOMapAnywhere);
     if (expansionROM == nullptr) { return false; }
     const auto expansionROMLength = min(expansionROM->getLength(), ATOMBIOS_IMAGE_SIZE);
@@ -439,7 +439,7 @@ bool NRed::getVBIOSFromExpansionROM()
 
 bool NRed::getVBIOS()
 {
-    const auto* biosImageProp = OSDynamicCast(OSData, this->iGPU->getProperty("ATY,bin_image"));
+    const auto biosImageProp = OSDynamicCast(OSData, this->iGPU->getProperty("ATY,bin_image"));
     if (biosImageProp != nullptr) {
         if (checkAtomBios(static_cast<const UInt8*>(biosImageProp->getBytesNoCopy()), biosImageProp->getLength())) {
             this->vbiosData = OSData::withData(biosImageProp);

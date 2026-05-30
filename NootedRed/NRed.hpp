@@ -41,21 +41,21 @@ class NRed
     IOMemoryMap*     rmmio{nullptr};        // TODO: Remove!
     volatile UInt32* rmmioPtr{nullptr};     // TODO: Remove!
     OSData*          vbiosData{nullptr};    // TODO: Remove!
-    UInt32           deviceID{0};           // TODO: Remove!
-    UInt32           pciRevision{0};        // TODO: Remove!
-    UInt64           fbOffset{0};           // TODO: Remove!
+    UInt16           deviceID{0};           // TODO: Remove!
+    UInt8            pciRevision{0};        // TODO: Remove!
     UInt16           devRevision{0};        // TODO: Remove!
     UInt16           enumRevision{0};       // TODO: Remove!
+    UInt64           fbOffset{0};           // TODO: Remove!
 
 public:
     static NRed& singleton();
 
-    const Attributes& getAttributes() const { return this->attributes; }    // TODO: Remove!
-    UInt32            getDeviceID() const { return deviceID; }              // TODO: Remove!
-    UInt32            getPciRevision() const { return pciRevision; }        // TODO: Remove!
-    UInt64            getFbOffset() const { return fbOffset; }              // TODO: Remove!
-    UInt16            getDevRevision() const { return devRevision; }        // TODO: Remove!
-    UInt16            getEnumRevision() const { return enumRevision; }      // TODO: Remove!
+    auto& getAttributes() const { return this->attributes; }    // TODO: Remove!
+    auto  getDeviceID() const { return deviceID; }              // TODO: Remove!
+    auto  getPciRevision() const { return pciRevision; }        // TODO: Remove!
+    auto  getDevRevision() const { return devRevision; }        // TODO: Remove!
+    auto  getEnumRevision() const { return enumRevision; }      // TODO: Remove!
+    auto  getFbOffset() const { return fbOffset; }              // TODO: Remove!
 
     void init();
     void hwLateInit();        // TODO: Remove!
