@@ -77,6 +77,8 @@ IOService* iVega::AppleGFXHDA::wrapProbe(IOService* that, IOService* provider, S
     singleton().controller.outputEntrySize(that)            = 0x3000;
     singleton().controller.regAccessReady(that)             = true;
 
+    *score = 1;
+
     DBGLOG("GFXHDA", "Initialised Raven or Renoir device.");
 
     return that;
