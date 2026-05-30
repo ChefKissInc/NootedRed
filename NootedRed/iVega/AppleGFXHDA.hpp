@@ -16,20 +16,21 @@ namespace iVega
     struct GFXHDAController
     {
         ObjectField<IOService*> provider{0x98};
-        ObjectField<uint32_t>   vendorID;
-        ObjectField<uint32_t>   deviceID;
-        ObjectField<uint16_t>   integratedCodecAddressMask;
-        ObjectField<uint16_t>   codecAddressMask;
+        ObjectField<UInt32>     vendorID;
+        ObjectField<UInt32>     deviceID;
+        ObjectField<UInt16>     integratedCodecAddressMask;
+        ObjectField<UInt16>     codecAddressMask;
         ObjectField<bool>       useRirb;
-        ObjectField<uint8_t>    intIndex;
-        ObjectField<uint32_t>   inputSampleLatency;
-        ObjectField<uint32_t>   outputSampleLatency;
-        ObjectField<uint32_t>   inputSafetyOffset;
-        ObjectField<uint32_t>   outputSafetyOffset;
-        ObjectField<uint32_t>   inputSafetyOffsetLowPower;
-        ObjectField<uint32_t>   outputSafetyOffsetLowPower;
-        ObjectField<uint32_t>   inputEntrySize;
-        ObjectField<uint32_t>   outputEntrySize;
+        ObjectField<UInt32>     inputSampleLatency;
+        ObjectField<UInt8>      intIndex;
+        ObjectField<UInt32>     timeIntervalFilterOrder;
+        ObjectField<UInt32>     outputSampleLatency;
+        ObjectField<UInt32>     inputSafetyOffset;
+        ObjectField<UInt32>     outputSafetyOffset;
+        ObjectField<UInt32>     inputSafetyOffsetLowPower;
+        ObjectField<UInt32>     outputSafetyOffsetLowPower;
+        ObjectField<UInt32>     inputEntrySize;
+        ObjectField<UInt32>     outputEntrySize;
         ObjectField<bool>       regAccessReady;
 
         GFXHDAController()
@@ -40,6 +41,7 @@ namespace iVega
                 this->integratedCodecAddressMask = 0x2CA;
                 this->codecAddressMask           = 0x2CC;
                 this->useRirb                    = 0x414;
+                this->timeIntervalFilterOrder    = 0x418;
                 this->intIndex                   = 0xE69;
                 this->inputSampleLatency         = 0xE6C;
                 this->outputSampleLatency        = 0xE70;
@@ -57,6 +59,7 @@ namespace iVega
                 this->integratedCodecAddressMask = 0x2BA;
                 this->codecAddressMask           = 0x2BC;
                 this->useRirb                    = 0x404;
+                this->timeIntervalFilterOrder    = 0x408;
                 this->intIndex                   = 0xE59;
                 this->inputSampleLatency         = 0xE5C;
                 this->outputSampleLatency        = 0xE60;
