@@ -81,6 +81,9 @@ IOService* iVega::AppleGFXHDA::wrapProbe(IOService* that, IOService* provider, S
 
     *score = 1;
 
+    char hdaGfxBytes[] = "onboard-1";
+    dev->setProperty("hda-gfx",  hdaGfxBytes, sizeof(hdaGfxBytes));
+
     DBGLOG("GFXHDA", "Initialised Raven or Renoir device.");
 
     return that;

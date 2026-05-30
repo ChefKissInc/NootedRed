@@ -153,9 +153,12 @@ void NRed::processPatcher()
 
     WIOKit::renameDevice(this->iGPU, "IGPU");
     WIOKit::awaitPublishing(this->iGPU);
-    static UInt8 builtIn[] = {0x00};
-    this->iGPU->setProperty("built-in", builtIn, sizeof(builtIn));
-    this->iGPU->setProperty("AAPL,slot-name", const_cast<char*>("built-in"), 9);
+    UInt8 builtInBytes[] = {0x00};
+    this->iGPU->setProperty("built-in", builtInBytes, sizeof(builtInBytes));
+    char slotNameBytes[] = "built-in";
+    this->iGPU->setProperty("AAPL,slot-name", slotNameBytes, sizeof(slotNameBytes));
+    char hdaGfxBytes[] = "onboard-1";
+    this->iGPU->setProperty("hda-gfx", hdaGfxBytes, sizeof(hdaGfxBytes));
 
     this->deviceID = WIOKit::readPCIConfigValue(this->iGPU, WIOKit::kIOPCIConfigDeviceID);
     switch (this->deviceID) {

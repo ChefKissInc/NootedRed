@@ -14,7 +14,7 @@
 		<key>HighFIFOLimitSupport</key>
 		<array/>
 		<key>IOClass</key>
-		<string>AppleGFXHDAEGController</string>
+		<string>AppleGFXHDAController</string>
 		<key>IOPCIMatch</key>
 		<string>0x15DE1002 0x16371002</string>
 		<key>IOPCITunnelCompatible</key>
