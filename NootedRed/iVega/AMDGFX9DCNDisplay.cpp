@@ -554,7 +554,7 @@ ATIFormat AMDRadeonX5000_AMDGFX9DCNDisplay::getPixelFormat(AMDRadeonX5000_AMDGFX
 
 void AMDRadeonX5000_AMDGFX9DCNDisplay::fillFlipTilingParameters(AMDFlipParam* const flipParam, const UInt32 swizzleMode)
 {
-    auto addrConfig                                   = this->getHWInterface()->getAddrConfig();
+    const auto addrConfig                             = this->getHWInterface()->getAddrConfig();
     flipParam->dcn.tilingParams.dcn2.numPipes         = GET_GB_ADDR_CONFIG_NUM_PIPES(addrConfig);
     flipParam->dcn.tilingParams.dcn2.numBanks         = GET_GB_ADDR_CONFIG_NUM_BANKS(addrConfig);
     flipParam->dcn.tilingParams.dcn2.pipeInter        = GET_GB_ADDR_CONFIG_PIPE_INTERLEAVE(addrConfig);
