@@ -684,7 +684,8 @@ void iVega::X5000HWLibs::processKext(KernelPatcher& patcher, const size_t id, co
         *orgDeviceTypeTable = {.deviceId = NRed::singleton().getDeviceID(), .deviceType = kAMDDeviceTypeNavi10};
     }
 
-    const auto targetDeviceId = NRed::singleton().getAttributes().isRenoir() ? 0x1636 : NRed::singleton().getDeviceID();
+    const auto targetDeviceId =
+        NRed::singleton().getAttributes().isRenoir() ? 0x1636U : NRed::singleton().getDeviceID();
     for (; orgCapsInitTable->deviceId != 0xFFFFFFFF; orgCapsInitTable++) {
         if (orgCapsInitTable->familyId == AMD_FAMILY_RAVEN && orgCapsInitTable->deviceId == targetDeviceId) {
             orgCapsInitTable->deviceId = NRed::singleton().getDeviceID();
