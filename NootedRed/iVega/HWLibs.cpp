@@ -704,6 +704,7 @@ void iVega::X5000HWLibs::processKext(KernelPatcher& patcher, const size_t id, co
                     static_cast<UInt32>(NRed::singleton().getEnumRevision()) + NRed::singleton().getDevRevision(),
                                 .pciRevision = NRed::singleton().getPciRevision(),
                                 .ddiCaps     = orgCapsInitTable->ddiCaps,
+                                .skeleton    = orgCapsTable->skeleton,
             };
             break;
         }
