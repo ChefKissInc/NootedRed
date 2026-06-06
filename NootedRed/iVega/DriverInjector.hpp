@@ -20,8 +20,8 @@ namespace iVega
             Driver(const char* identifier, const char* xml, const size_t xml_size) :
                 identifier{identifier}
             {
-                OSString*  errStr           = nullptr;
-                const auto dataUnserialized = OSUnserializeXML(xml, xml_size, &errStr);
+                OSString*   errStr           = nullptr;
+                auto* const dataUnserialized = OSUnserializeXML(xml, xml_size, &errStr);
 
                 PANIC_COND(dataUnserialized == nullptr, "DriverInjector",
                            "BUG: Failed to unserialise XML for `%s`: `%s`", identifier,
@@ -36,6 +36,8 @@ namespace iVega
             Driver(const char* identifier, const char (&xml)[N]) :
                 Driver(identifier, xml, N)
             { }
+
+            ~Driver() { this->personalities->release(); }
         };
 
         mach_vm_address_t orgAddDrivers{0};
