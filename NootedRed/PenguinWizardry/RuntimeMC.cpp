@@ -18,13 +18,6 @@ PenguinWizardry::RuntimeMCManager& PenguinWizardry::RuntimeMCManager::singleton(
 
 void PenguinWizardry::RuntimeMCManager::processPatcher(KernelPatcher& patcher)
 {
-    this->orgMetaClassConstructor = reinterpret_cast<decltype(this->orgMetaClassConstructor)>(
-        patcher.solveSymbol(KernelPatcher::KernelID, "__ZN11OSMetaClassC2EPKcPKS_j"));
-    PANIC_COND(this->orgMetaClassConstructor == nullptr, "RuntimeMC", "Failed to solve `OSMetaClass` constructor");
-    this->orgMetaClassVFuncs = reinterpret_cast<decltype(this->orgMetaClassVFuncs)>(
-        patcher.solveSymbol(KernelPatcher::KernelID, "__ZTV11OSMetaClass"));
-    PANIC_COND(this->orgMetaClassVFuncs == nullptr, "RuntimeMC", "Failed to solve `OSMetaClass` vtable");
-    this->orgMetaClassVFuncs += 2;    // 2 ptrs into VFT is VFuncs
     KernelPatcher::RouteRequest request{"__ZN11OSMetaClass11postModLoadEPv", wrapPostModLoad, this->orgPostModLoad};
     PANIC_COND(!patcher.routeMultiple(KernelPatcher::KernelID, &request, 1), "RuntimeMC",
                "Failed to route `postModLoad`");
@@ -32,7 +25,6 @@ void PenguinWizardry::RuntimeMCManager::processPatcher(KernelPatcher& patcher)
 
 void PenguinWizardry::RuntimeMCManager::registerPending(Pending* pending)
 {
-    assert(this->orgMetaClassConstructor != nullptr);
     assert(pending != nullptr);
     assert(pending->mc != nullptr);
     DBGLOG("RuntimeMC", "Registering `%s` meta class", pending->mc->getClassName());
@@ -40,15 +32,15 @@ void PenguinWizardry::RuntimeMCManager::registerPending(Pending* pending)
     auto* mc = pending->mc->getMetaClass();
     assert(mc != nullptr);
     assert(pending->super != nullptr);
-    this->orgMetaClassConstructor(mc, pending->mc->getClassName(), pending->super,
-                                  pending->super->getClassSize() + pending->mc->getExpansionSize());
+    MetaClassConstructor(mc, pending->mc->getClassName(), pending->super,
+                         pending->super->getClassSize() + pending->mc->getExpansionSize());
     pending->mc->vft.replaceVFT(mc);
 }
 
 void PenguinWizardry::RuntimeMCManager::registerMC(RuntimeMCBase& rtMC, const char* const kext,
                                                    const OSMetaClass* const super)
 {
-    rtMC.vft.init(this->orgMetaClassVFuncs);
+    rtMC.vft.init(MetaClassVT + 2);
     rtMC.populateVFT();
     auto* pending = new Pending;
     assert(pending != nullptr);

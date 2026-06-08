@@ -44,6 +44,11 @@
 namespace PenguinWizardry
 {
 
+    extern void  MetaClassConstructor(OSMetaClass* self, const char* className, const OSMetaClass* superclass,
+                                         UInt32 classSize) __asm__("__ZN11OSMetaClassC2EPKcPKS_j");
+    extern void  MetaClassDestructor(OSMetaClass* self) __asm__("__ZN11OSMetaClassD2Ev");
+    extern void* MetaClassVT[] __asm__("__ZTV11OSMetaClass");
+
     class RuntimeMCBase
     {
         friend class RuntimeMCManager;
@@ -52,9 +57,13 @@ namespace PenguinWizardry
 
     protected:
         RuntimeVFT<vftSize> vft;
-        OSMetaClass*        mc{nullptr};    // intentional leak, meta classes don't get deallocated
+        OSMetaClass*        mc{nullptr};
 
-        virtual ~RuntimeMCBase() { }
+        virtual ~RuntimeMCBase()
+        {
+            MetaClassDestructor(this->mc);
+            // intentional leak, meta classes don't get deallocated
+        }
 
         virtual UInt32      getExpansionSize() const = 0;
         virtual const char* getClassName() const     = 0;
@@ -72,9 +81,6 @@ namespace PenguinWizardry
 
     class RuntimeMCManager
     {
-        void   (*orgMetaClassConstructor)(OSMetaClass* self, const char* className, const OSMetaClass* superclass,
-                                        UInt32 classSize){nullptr};
-        void** orgMetaClassVFuncs{nullptr};
         mach_vm_address_t orgPostModLoad{0};
         OSDictionary*     pendingMCsForKext{OSDictionary::withCapacity(0)};
 
