@@ -18,6 +18,4 @@ static void _GLOBAL_initCurrentKernelVersion()
 }
 
 const PenguinWizardry::KernelVersion& currentKernelVersion()
-{
-    return *launder(reinterpret_cast<PenguinWizardry::KernelVersion*>(_currentKernelVersion));
-}
+{ return *launder(reinterpret_cast<PenguinWizardry::KernelVersion*>(_currentKernelVersion)); }

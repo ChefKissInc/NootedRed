@@ -42,9 +42,7 @@ namespace PenguinWizardry
         template<size_t N>
         static bool solveAll(KernelPatcher& patcher, const size_t id, PatternSolveRequest (&requests)[N],
                              const mach_vm_address_t start, const size_t size)
-        {
-            return solveAll(patcher, id, requests, N, start, size);
-        }
+        { return solveAll(patcher, id, requests, N, start, size); }
     };
 
     struct PatternRouteRequest : KernelPatcher::RouteRequest
@@ -120,9 +118,7 @@ namespace PenguinWizardry
         template<size_t N>
         static bool routeAll(KernelPatcher& patcher, const size_t id, PatternRouteRequest (&requests)[N],
                              const mach_vm_address_t start, const size_t size)
-        {
-            return routeAll(patcher, id, requests, N, start, size);
-        }
+        { return routeAll(patcher, id, requests, N, start, size); }
     };
 
     struct MaskedLookupPatch : KernelPatcher::LookupPatch
@@ -178,9 +174,7 @@ namespace PenguinWizardry
         template<const size_t N>
         static bool applyAll(KernelPatcher& patcher, const MaskedLookupPatch (&patches)[N],
                              const mach_vm_address_t start, const size_t size, const bool force = false)
-        {
-            return applyAll(patcher, patches, N, start, size, force);
-        }
+        { return applyAll(patcher, patches, N, start, size, force); }
     };
 
     mach_vm_address_t jumpInstDestination(const mach_vm_address_t start, const mach_vm_address_t end);
@@ -269,9 +263,7 @@ namespace PenguinWizardry
         template<size_t N>
         static bool routeAll(KernelPatcher& patcher, const size_t id, JumpPatternRouteRequest (&requests)[N],
                              const mach_vm_address_t start, const size_t size)
-        {
-            return routeAll(patcher, id, requests, N, start, size);
-        }
+        { return routeAll(patcher, id, requests, N, start, size); }
     };
 
 }    // namespace PenguinWizardry

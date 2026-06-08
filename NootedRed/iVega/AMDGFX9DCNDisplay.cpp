@@ -128,9 +128,7 @@ void AMDRadeonX5000_AMDGFX9DCNDisplay::calcAndSetVrrTimestampInfo(AMDRadeonX5000
 
 void AMDRadeonX5000_AMDGFX9DCNDisplay::calcAndSetVrrTimestampInfoDummy(AMDRadeonX5000_AMDGFX9DCNDisplay&,
                                                                        FramebufferInfo* const, IOTimingInformation&)
-{
-    assert(currentKernelVersion() <= MACOS_10_15_X);
-}
+{ assert(currentKernelVersion() <= MACOS_10_15_X); }
 
 bool AMDRadeonX5000_AMDGFX9DCNDisplay::fixedSuperGetDisplayInfo(const UInt32 fbIndex, const bool isCRTEnabled,
                                                                 const bool           ignoreCRTOffsetCheck,

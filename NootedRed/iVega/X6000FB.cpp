@@ -206,7 +206,7 @@ void iVega::X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_addr
     PenguinWizardry::PatternSolveRequest solveRequests[]        = {
         {"__ZL20CAIL_ASIC_CAPS_TABLE", orgAsicCapsTable, kCailAsicCapsTablePattern},
         {"__ZN37AMDRadeonX6000_AmdDeviceMemoryManager17mapMemorySubRangeE25AmdReservedMemorySelectoryyj",
-                this->mapMemorySubRange},
+         this->mapMemorySubRange},
         {"__ZTV32AMDRadeonX6000_AmdAsicInfoNavi10", orgAmdAsicInfoNavi10VT},
     };
     PANIC_COND(!PenguinWizardry::PatternSolveRequest::solveAll(patcher, id, solveRequests, slide, size), "X6000FB",
@@ -553,19 +553,13 @@ static const AmdAsicBrandingTableEntry renoirBrandingTable[] = {
 };
 
 const AmdAsicBrandingTableEntry* iVega::X6000FB::getGpuBrandingNameListRaven(const void* const)
-{
-    return ravenBrandingTable;
-}
+{ return ravenBrandingTable; }
 
 const AmdAsicBrandingTableEntry* iVega::X6000FB::getGpuBrandingNameListPicasso(const void* const)
-{
-    return picassoBrandingTable;
-}
+{ return picassoBrandingTable; }
 
 const AmdAsicBrandingTableEntry* iVega::X6000FB::getGpuBrandingNameListRenoir(const void* const)
-{
-    return renoirBrandingTable;
-}
+{ return renoirBrandingTable; }
 
 IOReturn iVega::X6000FB::dummyIOReturnSuccess() { return kIOReturnSuccess; }
 

@@ -7,9 +7,7 @@
 #include <Headers/kern_util.hpp>
 
 static UInt32 packet3Header(const UInt8 op, const UInt16 payloadDWords)
-{
-    return (3U << 30) | ((static_cast<UInt32>(op) & 0xFF) << 8) | ((static_cast<UInt32>(payloadDWords) & 0x3FFF) << 16);
-}
+{ return (3U << 30) | ((static_cast<UInt32>(op) & 0xFF) << 8) | ((static_cast<UInt32>(payloadDWords) & 0x3FFF) << 16); }
 
 constexpr UInt32 PACKET3_WRITE_DATA             = 0x37;
 constexpr UInt32 PACKET3_WRITE_DATA_WR_ONE_ADDR = getBit(16);

@@ -415,9 +415,7 @@ public:
     auto wsaaAttributes() { return constants.wsaaAttributes(this); }
 
     auto getMirroredDisplays(const UInt32 fbIndex, UInt32* const outBuffer)
-    {
-        return constants.vftGetMirroredDisplays(getMember<void*>(this, 0))(this, fbIndex, outBuffer);
-    }
+    { return constants.vftGetMirroredDisplays(getMember<void*>(this, 0))(this, fbIndex, outBuffer); }
 
     static void resolve(KernelPatcher& patcher, size_t id, mach_vm_address_t slide, size_t size);
 

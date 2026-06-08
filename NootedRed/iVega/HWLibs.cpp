@@ -271,10 +271,10 @@ static const UInt8 kPspCmdKmSubmitPatternMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
                                                    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
                                                    0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00};
 
-static const UInt8 kPspCmdKmSubmitPattern1404[]     = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41,
-                                                       0x54, 0x53, 0x48, 0x83, 0xEC, 0x18, 0x49, 0x89, 0xCD, 0x49, 0x89,
-                                                       0xD7, 0x49, 0x89, 0xF4, 0x49, 0x89, 0xFE, 0x48, 0x8D, 0x75, 0xD0,
-                                                       0xC7, 0x06, 0x00, 0x00, 0x00, 0x00, 0xE8, 0x00, 0x00, 0x00, 0x00};
+static const UInt8 kPspCmdKmSubmitPattern1404[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41,
+                                                   0x54, 0x53, 0x48, 0x83, 0xEC, 0x18, 0x49, 0x89, 0xCD, 0x49, 0x89,
+                                                   0xD7, 0x49, 0x89, 0xF4, 0x49, 0x89, 0xFE, 0x48, 0x8D, 0x75, 0xD0,
+                                                   0xC7, 0x06, 0x00, 0x00, 0x00, 0x00, 0xE8, 0x00, 0x00, 0x00, 0x00};
 static const UInt8 kPspCmdKmSubmitPatternMask1404[] = {
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -697,14 +697,14 @@ void iVega::X5000HWLibs::processKext(KernelPatcher& patcher, const size_t id, co
                                             NRed::singleton().getAttributes().isRenoir()  ? ddiCapsRenoir :
                                                                                             ddiCapsRaven;
             *orgCapsTable                 = {
-                                .familyId = AMD_FAMILY_RAVEN,
-                                .deviceId = NRed::singleton().getDeviceID(),
-                                .revision = NRed::singleton().getDevRevision(),
-                                .extRevision =
+                .familyId = AMD_FAMILY_RAVEN,
+                .deviceId = NRed::singleton().getDeviceID(),
+                .revision = NRed::singleton().getDevRevision(),
+                .extRevision =
                     static_cast<UInt32>(NRed::singleton().getEnumRevision()) + NRed::singleton().getDevRevision(),
-                                .pciRevision = NRed::singleton().getPciRevision(),
-                                .ddiCaps     = orgCapsInitTable->ddiCaps,
-                                .skeleton    = orgCapsTable->skeleton,
+                .pciRevision = NRed::singleton().getPciRevision(),
+                .ddiCaps     = orgCapsInitTable->ddiCaps,
+                .skeleton    = orgCapsTable->skeleton,
             };
             break;
         }
@@ -945,9 +945,7 @@ CAILResult iVega::X5000HWLibs::smuInternalSwInit(void* const instance, void* con
 }
 
 CAILResult iVega::X5000HWLibs::smuInternalSwInitOld(void* const, void* const, AMDSMUSWInitOutput* const output)
-{
-    return NRed::singleton().sendMsgToSmc(PPSMC_MSG_GetSmuVersion, 0, &output->fwConstants.version);
-}
+{ return NRed::singleton().sendMsgToSmc(PPSMC_MSG_GetSmuVersion, 0, &output->fwConstants.version); }
 
 CAILResult iVega::X5000HWLibs::smuGetUCodeConsts(void*, AMDSMUUCodeConstants* consts)
 {
@@ -974,9 +972,7 @@ CAILResult iVega::X5000HWLibs::smu10PowerUpConfig()
 CAILResult iVega::X5000HWLibs::smu10InternalHwInit(void*) { return smu10PowerUpConfig(); }
 
 static bool smu12IsFwLoaded(void*)
-{
-    return (NRed::singleton().readReg32(MP1_PUBLIC | MP1_FIRMWARE_FLAGS) & MP1_FIRMWARE_FLAGS_INTERRUPTS_ENABLED) != 0;
-}
+{ return (NRed::singleton().readReg32(MP1_PUBLIC | MP1_FIRMWARE_FLAGS) & MP1_FIRMWARE_FLAGS_INTERRUPTS_ENABLED) != 0; }
 
 CAILResult iVega::X5000HWLibs::smu12WaitForFwLoaded() { return NRed::waitForFunc(nullptr, smu12IsFwLoaded); }
 
@@ -1002,9 +998,7 @@ CAILResult iVega::X5000HWLibs::smu12InternalHwInit(void*)
 CAILResult iVega::X5000HWLibs::smuInternalHwExit(void*) { return kCAILResultOK; }
 
 CAILResult iVega::X5000HWLibs::smuFullAsicReset(void*, void* data)
-{
-    return NRed::singleton().sendMsgToSmc(PPSMC_MSG_DeviceDriverReset, getMember<UInt32>(data, 4));
-}
+{ return NRed::singleton().sendMsgToSmc(PPSMC_MSG_DeviceDriverReset, getMember<UInt32>(data, 4)); }
 
 CAILResult iVega::X5000HWLibs::smu10NotifyEvent(void*, TTLEventInput* input)
 {

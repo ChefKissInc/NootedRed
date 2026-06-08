@@ -14,6 +14,4 @@ inline void  operator delete[](void*, void*) noexcept { }
 template<class T>
 [[nodiscard]]
 constexpr T* launder(T* p) noexcept
-{
-    return __builtin_launder(p);
-}
+{ return __builtin_launder(p); }
