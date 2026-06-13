@@ -657,7 +657,8 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::writeFlipParameters(
     if (savedFlip != nullptr && swapInterval != AMDSwapInterval::VSync) {
         if (savedFlip->flipParam.dcn.surfaceFormat != newFlipParam.dcn.surfaceFormat
             || savedFlip->flipParam.dcn.surfaceRotation != newFlipParam.dcn.surfaceRotation
-            || savedState.flipParam.dcn.tilingParams.dcn2 != newFlipParam.dcn.tilingParams.dcn2)
+            || savedFlip->flipParam.dcn.surfacePitch != newFlipParam.dcn.surfacePitch
+            || savedFlip->flipParam.dcn.tilingParams.dcn2 != newFlipParam.dcn.tilingParams.dcn2)
         {
             return false;
         }
