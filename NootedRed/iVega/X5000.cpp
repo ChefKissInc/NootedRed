@@ -69,8 +69,8 @@ iVega::X5000::X5000()
         this->sdma0EngineField             = 0x338;
         this->supportedDisplayCountField   = 0x2C;
         this->seCountField                 = 0x58;
-        this->shPerSEField                 = 0x5C;
-        this->cuPerSHField                 = 0x80;
+        this->shCountField                 = 0x5C;
+        this->hwMaxCUsField                = 0x80;
         this->hasUVD0Field                 = 0x90;
         this->hasVCEField                  = 0x92;
         this->hasVCN0Field                 = 0x93;
@@ -86,8 +86,8 @@ iVega::X5000::X5000()
         this->sdma0EngineField             = 0x350;
         this->supportedDisplayCountField   = 0x2C;
         this->seCountField                 = 0x58;
-        this->shPerSEField                 = 0x5C;
-        this->cuPerSHField                 = 0x80;
+        this->shCountField                 = 0x5C;
+        this->hwMaxCUsField                = 0x80;
         this->hasUVD0Field                 = 0x90;
         this->hasVCEField                  = 0x92;
         this->hasVCN0Field                 = 0x93;
@@ -108,8 +108,8 @@ iVega::X5000::X5000()
         if (currentKernelVersion() <= MACOS_12_X) {
             this->supportedDisplayCountField   = 0x2C;
             this->seCountField                 = 0x5C;
-            this->shPerSEField                 = 0x64;
-            this->cuPerSHField                 = 0x98;
+            this->shCountField                 = 0x64;
+            this->hwMaxCUsField                = 0x98;
             this->hasUVD0Field                 = 0xAC;
             this->hasVCEField                  = 0xAE;
             this->hasVCN0Field                 = 0xAF;
@@ -122,8 +122,8 @@ iVega::X5000::X5000()
         else {
             this->supportedDisplayCountField = 0x34;
             this->seCountField               = 0x64;
-            this->shPerSEField               = 0x6C;
-            this->cuPerSHField               = 0xA0;
+            this->shCountField               = 0x6C;
+            this->hwMaxCUsField              = 0xA0;
             this->hasUVD0Field               = 0xB4;
             this->hasVCEField                = 0xB6;
             this->hasVCN0Field               = 0xB7;
@@ -307,18 +307,18 @@ bool iVega::X5000::allocateHWEngines(void* const self)
 // TODO: Replace with IP Discovery?
 void iVega::X5000::wrapSetupAndInitializeHWCapabilities(void* const self)
 {
-    auto& seCount = singleton().seCountField(self);
-    auto& shPerSE = singleton().shPerSEField(self);
-    auto& cuPerSH = singleton().cuPerSHField(self);
+    auto& seCount  = singleton().seCountField(self);
+    auto& shCount  = singleton().shCountField(self);
+    auto& hwMaxCUs = singleton().hwMaxCUsField(self);
 
     seCount = 1;
-    shPerSE = 1;
-    if (NRed::singleton().getAttributes().isRenoir()) { cuPerSH = 8; }
+    shCount = 1;
+    if (NRed::singleton().getAttributes().isRenoir()) { hwMaxCUs = 8; }
     else if (NRed::singleton().getAttributes().isRaven2()) {
-        cuPerSH = 3;
+        hwMaxCUs = 3;
     }
     else {
-        cuPerSH = 11;
+        hwMaxCUs = 11;
     }
 
     FunctionCast(wrapSetupAndInitializeHWCapabilities, singleton().orgGFX9SetupAndInitializeHWCapabilities)(self);
