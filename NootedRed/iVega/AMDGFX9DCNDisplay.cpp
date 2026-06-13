@@ -707,10 +707,11 @@ UInt32 AMDRadeonX5000_AMDGFX9DCNDisplay::writeFlipControlRegisters(AMDRadeonX500
     UInt32      dwordCount     = 0;
     const auto& regShiftsMasks = expansion.regShiftsMasks;
     assert(regShiftsMasks.isValid);
-    for (UInt32 i = 0; i < displayCount; i++) {
-        const auto& regOffs = expansion.regOffs[i];
+    for (UInt32 i = 0; i < displayCount; ++i) {
+        const auto  displayIndex = displays[i];
+        const auto& regOffs      = expansion.regOffs[displayIndex];
         assert(regOffs.isValid);
-        const auto& savedState  = expansion.savedState[i];
+        const auto& savedState  = expansion.savedState[displayIndex];
         dwordCount             += write1RegWritePacket(&buffer[dwordCount], regOffs.hubpreqFlipControl, flipControl);
         dwordCount +=
             write1RegWritePacket(&buffer[dwordCount], regOffs.hubpSurfaceConfig, savedState.hubpSurfaceConfig);
