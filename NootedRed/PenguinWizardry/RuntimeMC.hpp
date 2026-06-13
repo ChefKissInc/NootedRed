@@ -45,7 +45,7 @@ namespace PenguinWizardry
 {
 
     extern void  MetaClassConstructor(OSMetaClass* self, const char* className, const OSMetaClass* superclass,
-                                         UInt32 classSize) __asm__("__ZN11OSMetaClassC2EPKcPKS_j");
+                                      UInt32 classSize) __asm__("__ZN11OSMetaClassC2EPKcPKS_j");
     extern void  MetaClassDestructor(OSMetaClass* self) __asm__("__ZN11OSMetaClassD2Ev");
     extern void* MetaClassVT[] __asm__("__ZTV11OSMetaClass");
 
@@ -72,9 +72,7 @@ namespace PenguinWizardry
     public:
         RuntimeMCBase() :
             mc{IONew(OSMetaClass, 1)}
-        {
-            memset(static_cast<void*>(this->mc), 0, sizeof(*this->mc));
-        }
+        { memset(static_cast<void*>(this->mc), 0, sizeof(*this->mc)); }
 
         OSMetaClass* getMetaClass() const { return this->mc; }
     };
@@ -132,9 +130,7 @@ namespace PenguinWizardry
         }
 
         virtual void populateVFT() APPLE_KEXT_OVERRIDE
-        {
-            this->vft.template get<decltype(AllocFunc)>(ALLOC_VFUNC_INDEX) = AllocFunc;
-        }
+        { this->vft.template get<decltype(AllocFunc)>(ALLOC_VFUNC_INDEX) = AllocFunc; }
 
         template<typename E = Expansion>
         enable_if_t<!is_void_v<E>, E&> getExpansion(Class* const obj) const

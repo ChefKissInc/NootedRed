@@ -426,20 +426,20 @@ IOReturn iVega::X6000FB::populateVramInfo(void* const, void* const fwInfo)
     }
     auto& videoMemoryType = getMember<VideoMemoryType>(fwInfo, 0x1C);
     switch (memoryType) {
-        case kDDR2MemType:
+        case kDDR2MemType      :
         case kDDR2FBDIMMMemType:
         case kLPDDR2MemType    : {
             videoMemoryType = VideoMemoryType::DDR2;
         } break;
-        case kDDR3MemType:
+        case kDDR3MemType  :
         case kLPDDR3MemType: {
             videoMemoryType = VideoMemoryType::DDR3;
         } break;
-        case kDDR4MemType:
+        case kDDR4MemType  :
         case kLPDDR4MemType: {
             videoMemoryType = VideoMemoryType::DDR4;
         } break;
-        case kHBMMemType:
+        case kHBMMemType :
         case kHBM2MemType: {
             videoMemoryType = VideoMemoryType::HBM;
         } break;

@@ -307,9 +307,7 @@ static bool checkAtomBios(const UInt8* const bios, const size_t size)
 
 // Hack
 class AppleACPIPlatformExpert : IOACPIPlatformExpert
-{
-    friend class NRed;
-};
+{ friend class NRed; };
 
 bool NRed::getVBIOSFromVFCT(const bool strict)
 {

@@ -616,8 +616,8 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::writeFlipParameters(
     if (hwRotation == nullptr) { newFlipParam.dcn.surfaceRotation = savedState.flipParam.dcn.surfaceRotation; }
     else {
         switch (*hwRotation) {
-            case AMDHWRotationAngle::DEG_0:
-            case AMDHWRotationAngle::DEG_90:
+            case AMDHWRotationAngle::DEG_0  :
+            case AMDHWRotationAngle::DEG_90 :
             case AMDHWRotationAngle::DEG_180:
             case AMDHWRotationAngle::DEG_270: {
                 newFlipParam.dcn.surfaceRotation = *hwRotation;

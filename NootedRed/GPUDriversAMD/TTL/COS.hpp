@@ -15,9 +15,7 @@ struct CosReadConfigurationSettingInput
 };
 
 struct CosReadConfigurationSettingOutput
-{
-    UInt32 settingLen;
-};
+{ UInt32 settingLen; };
 
 enum COSResult
 {
