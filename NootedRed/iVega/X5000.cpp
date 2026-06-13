@@ -164,7 +164,6 @@ void iVega::X5000::processKext(KernelPatcher& patcher, const size_t id, const ma
         {"__ZTV39AMDRadeonX5000_AMDGFX9PM4ComputeChannel", pm4ComputeChannelVT},
         {"__ZN30AMDRadeonX5000_AMDPM4HWChannel19submitCommandBufferEP30AMD_SUBMIT_COMMAND_BUFFER_INFO",
          this->orgPM4SubmitCommandBuffer},
-        {"__ZN30AMDRadeonX5000_AMDGFX9Hardware15notifyGfxAccessEv", this->notifyGfxAccess},
     };
     PANIC_COND(!PenguinWizardry::PatternSolveRequest::solveAll(patcher, id, solveRequests, slide, size), "X5000",
                "Failed to resolve symbols");
@@ -191,12 +190,17 @@ void iVega::X5000::processKext(KernelPatcher& patcher, const size_t id, const ma
     PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "X5000",
                "Failed to route symbols");
 
-    PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "X5000",
-               "Failed to enable kernel writing");
-    this->orgPM4SubmitCommandBuffer = this->hwChannelSubmitCommandBuffer(pm4ComputeChannelVT);
-    this->hwChannelSubmitCommandBuffer(pm4ComputeChannelVT) =
-        reinterpret_cast<mach_vm_address_t>(computeSubmitCommandBuffer);
-    MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
+    if (currentKernelVersion() >= MACOS_11) {
+        PenguinWizardry::PatternSolveRequest solveRequest{"__ZN30AMDRadeonX5000_AMDGFX9Hardware15notifyGfxAccessEv",
+                                                          this->notifyGfxAccess};
+        PANIC_COND(!solveRequest.solve(patcher, id, slide, size), "X5000", "Failed to resolve notifyGfxAccess");
+        PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "X5000",
+                   "Failed to enable kernel writing");
+        this->orgPM4SubmitCommandBuffer = this->hwChannelSubmitCommandBuffer(pm4ComputeChannelVT);
+        this->hwChannelSubmitCommandBuffer(pm4ComputeChannelVT) =
+            reinterpret_cast<mach_vm_address_t>(computeSubmitCommandBuffer);
+        MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
+    }
 
     if (currentKernelVersion() >= MACOS_13_4) {
         PenguinWizardry::PatternRouteRequest request{
