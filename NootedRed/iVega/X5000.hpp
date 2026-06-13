@@ -14,27 +14,31 @@ namespace iVega
 
     class X5000
     {
-        ObjectField<void*>            pm4EngineField;
-        ObjectField<void*>            sdma0EngineField;
-        ObjectField<UInt32>           supportedDisplayCountField;
-        ObjectField<UInt32>           seCountField;
-        ObjectField<UInt32>           shPerSEField;
-        ObjectField<UInt32>           cuPerSHField;
-        ObjectField<bool>             hasUVD0Field;
-        ObjectField<bool>             hasVCEField;
-        ObjectField<bool>             hasVCN0Field;
-        ObjectField<bool>             hasSDMAPagingQueueField;
-        ObjectField<bool>             hasGetAllClockLimitsField;
-        ObjectField<bool>             dccDisplayableSupportField;
-        ObjectField<UInt32>           familyTypeField;
-        ObjectField<Gfx9ChipSettings> chipSettingsField;
-        OSMetaClass*                  pm4EngineMC{nullptr};
-        OSMetaClass*                  sdmaEngineMC{nullptr};
-        mach_vm_address_t             orgGFX9SetupAndInitializeHWCapabilities{0};
-        mach_vm_address_t             orgGetHWChannel{0};
-        mach_vm_address_t             orgAdjustVRAMAddress{0};
-        mach_vm_address_t             orgObtainAccelChannelGroup{0};
-        mach_vm_address_t             orgHwlConvertChipFamily{0};
+        ObjectField<void*>             pm4EngineField;
+        ObjectField<void*>             sdma0EngineField;
+        ObjectField<UInt32>            supportedDisplayCountField;
+        ObjectField<UInt32>            seCountField;
+        ObjectField<UInt32>            shPerSEField;
+        ObjectField<UInt32>            cuPerSHField;
+        ObjectField<bool>              hasUVD0Field;
+        ObjectField<bool>              hasVCEField;
+        ObjectField<bool>              hasVCN0Field;
+        ObjectField<bool>              hasSDMAPagingQueueField;
+        ObjectField<bool>              hasGetAllClockLimitsField;
+        ObjectField<bool>              dccDisplayableSupportField;
+        ObjectField<UInt32>            familyTypeField;
+        ObjectField<Gfx9ChipSettings>  chipSettingsField;
+        ObjectField<void*>             hwChannelHWInterfaceField;
+        ObjectField<mach_vm_address_t> hwChannelSubmitCommandBuffer;
+        OSMetaClass*                   pm4EngineMC{nullptr};
+        OSMetaClass*                   sdmaEngineMC{nullptr};
+        mach_vm_address_t              orgGFX9SetupAndInitializeHWCapabilities{0};
+        mach_vm_address_t              orgGetHWChannel{0};
+        mach_vm_address_t              orgAdjustVRAMAddress{0};
+        mach_vm_address_t              orgObtainAccelChannelGroup{0};
+        mach_vm_address_t              orgHwlConvertChipFamily{0};
+        mach_vm_address_t              orgPM4SubmitCommandBuffer{0};
+        void                           (*notifyGfxAccess)(void*){nullptr};
 
     public:
         static X5000& singleton();
@@ -54,6 +58,7 @@ namespace iVega
         static void*  wrapObtainAccelChannelGroup(void* self, UInt32 priority);
         static void*  wrapObtainAccelChannelGroup1304(void* self, UInt32 priority, void* task);
         static UInt32 wrapHwlConvertChipFamily(void* self, UInt32 family, UInt32 revision);
+        static UInt32 computeSubmitCommandBuffer(void* self, void* info);
     };
 
 };    // namespace iVega

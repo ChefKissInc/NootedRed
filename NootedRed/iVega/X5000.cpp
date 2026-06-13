@@ -65,35 +65,39 @@ iVega::X5000& iVega::X5000::singleton() { return moduleInstance; }
 iVega::X5000::X5000()
 {
     if (currentKernelVersion() <= MACOS_10_14_X) {
-        this->pm4EngineField             = 0x330;
-        this->sdma0EngineField           = 0x338;
-        this->supportedDisplayCountField = 0x2C;
-        this->seCountField               = 0x58;
-        this->shPerSEField               = 0x5C;
-        this->cuPerSHField               = 0x80;
-        this->hasUVD0Field               = 0x90;
-        this->hasVCEField                = 0x92;
-        this->hasVCN0Field               = 0x93;
-        this->hasSDMAPagingQueueField    = 0xA4;
-        this->hasGetAllClockLimitsField  = 0xA3;
-        this->familyTypeField            = 0x29C;
-        this->chipSettingsField          = 0x5B18;
+        this->pm4EngineField               = 0x330;
+        this->sdma0EngineField             = 0x338;
+        this->supportedDisplayCountField   = 0x2C;
+        this->seCountField                 = 0x58;
+        this->shPerSEField                 = 0x5C;
+        this->cuPerSHField                 = 0x80;
+        this->hasUVD0Field                 = 0x90;
+        this->hasVCEField                  = 0x92;
+        this->hasVCN0Field                 = 0x93;
+        this->hasSDMAPagingQueueField      = 0xA4;
+        this->hasGetAllClockLimitsField    = 0xA3;
+        this->familyTypeField              = 0x29C;
+        this->chipSettingsField            = 0x5B18;
+        this->hwChannelHWInterfaceField    = 0x18;
+        this->hwChannelSubmitCommandBuffer = 0x180;
     }
     else if (currentKernelVersion().majorMatches(MACOS_10_15)) {
-        this->pm4EngineField             = 0x348;
-        this->sdma0EngineField           = 0x350;
-        this->supportedDisplayCountField = 0x2C;
-        this->seCountField               = 0x58;
-        this->shPerSEField               = 0x5C;
-        this->cuPerSHField               = 0x80;
-        this->hasUVD0Field               = 0x90;
-        this->hasVCEField                = 0x92;
-        this->hasVCN0Field               = 0x93;
-        this->hasSDMAPagingQueueField    = 0xA4;
-        this->hasGetAllClockLimitsField  = 0xA3;
-        this->dccDisplayableSupportField = 0xA5;
-        this->familyTypeField            = 0x2B4;
-        this->chipSettingsField          = 0x5B18;
+        this->pm4EngineField               = 0x348;
+        this->sdma0EngineField             = 0x350;
+        this->supportedDisplayCountField   = 0x2C;
+        this->seCountField                 = 0x58;
+        this->shPerSEField                 = 0x5C;
+        this->cuPerSHField                 = 0x80;
+        this->hasUVD0Field                 = 0x90;
+        this->hasVCEField                  = 0x92;
+        this->hasVCN0Field                 = 0x93;
+        this->hasSDMAPagingQueueField      = 0xA4;
+        this->hasGetAllClockLimitsField    = 0xA3;
+        this->dccDisplayableSupportField   = 0xA5;
+        this->familyTypeField              = 0x2B4;
+        this->chipSettingsField            = 0x5B18;
+        this->hwChannelHWInterfaceField    = 0x18;
+        this->hwChannelSubmitCommandBuffer = 0x188;
     }
     else {
         this->pm4EngineField    = 0x3B8;
@@ -102,16 +106,18 @@ iVega::X5000::X5000()
         this->chipSettingsField = 0x5B10;
 
         if (currentKernelVersion() <= MACOS_12_X) {
-            this->supportedDisplayCountField = 0x2C;
-            this->seCountField               = 0x5C;
-            this->shPerSEField               = 0x64;
-            this->cuPerSHField               = 0x98;
-            this->hasUVD0Field               = 0xAC;
-            this->hasVCEField                = 0xAE;
-            this->hasVCN0Field               = 0xAF;
-            this->hasSDMAPagingQueueField    = 0xC0;
-            this->hasGetAllClockLimitsField  = 0xBF;
-            this->dccDisplayableSupportField = 0xC1;
+            this->supportedDisplayCountField   = 0x2C;
+            this->seCountField                 = 0x5C;
+            this->shPerSEField                 = 0x64;
+            this->cuPerSHField                 = 0x98;
+            this->hasUVD0Field                 = 0xAC;
+            this->hasVCEField                  = 0xAE;
+            this->hasVCN0Field                 = 0xAF;
+            this->hasSDMAPagingQueueField      = 0xC0;
+            this->hasGetAllClockLimitsField    = 0xBF;
+            this->dccDisplayableSupportField   = 0xC1;
+            this->hwChannelHWInterfaceField    = 0x18;
+            this->hwChannelSubmitCommandBuffer = 0x190;
         }
         else {
             this->supportedDisplayCountField = 0x34;
@@ -124,6 +130,11 @@ iVega::X5000::X5000()
             this->hasSDMAPagingQueueField    = 0xBF;
             this->hasGetAllClockLimitsField  = 0xBE;
             this->dccDisplayableSupportField = 0xC0;
+            this->hwChannelHWInterfaceField  = 0x20;
+            if (currentKernelVersion() >= MACOS_14) { this->hwChannelSubmitCommandBuffer = 0x188; }
+            else {
+                this->hwChannelSubmitCommandBuffer = 0x190;
+            }
         }
     }
 }
@@ -137,6 +148,7 @@ void iVega::X5000::processKext(KernelPatcher& patcher, const size_t id, const ma
 
     UInt32*           orgChannelTypes;
     mach_vm_address_t orgStartHWEngines;
+    void*             pm4ComputeChannelVT;
 
     PenguinWizardry::PatternSolveRequest solveRequests[] = {
         {currentKernelVersion() <= MACOS_10_15_X ?
@@ -149,6 +161,10 @@ void iVega::X5000::processKext(KernelPatcher& patcher, const size_t id, const ma
         {"__ZN26AMDRadeonX5000_AMDHardware14startHWEnginesEv", orgStartHWEngines},
         {"__ZN30AMDRadeonX5000_AMDGFX9Hardware32setupAndInitializeHWCapabilitiesEv",
          this->orgGFX9SetupAndInitializeHWCapabilities},
+        {"__ZTV39AMDRadeonX5000_AMDGFX9PM4ComputeChannel", pm4ComputeChannelVT},
+        {"__ZN30AMDRadeonX5000_AMDPM4HWChannel19submitCommandBufferEP30AMD_SUBMIT_COMMAND_BUFFER_INFO",
+         this->orgPM4SubmitCommandBuffer},
+        {"__ZN30AMDRadeonX5000_AMDGFX9Hardware15notifyGfxAccessEv", this->notifyGfxAccess},
     };
     PANIC_COND(!PenguinWizardry::PatternSolveRequest::solveAll(patcher, id, solveRequests, slide, size), "X5000",
                "Failed to resolve symbols");
@@ -174,6 +190,13 @@ void iVega::X5000::processKext(KernelPatcher& patcher, const size_t id, const ma
     };
     PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "X5000",
                "Failed to route symbols");
+
+    PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "X5000",
+               "Failed to enable kernel writing");
+    this->orgPM4SubmitCommandBuffer = this->hwChannelSubmitCommandBuffer(pm4ComputeChannelVT);
+    this->hwChannelSubmitCommandBuffer(pm4ComputeChannelVT) =
+        reinterpret_cast<mach_vm_address_t>(computeSubmitCommandBuffer);
+    MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
     if (currentKernelVersion() >= MACOS_13_4) {
         PenguinWizardry::PatternRouteRequest request{
@@ -374,4 +397,10 @@ UInt32 iVega::X5000::wrapHwlConvertChipFamily(void* const self, const UInt32 fam
         return ADDR_CHIP_FAMILY_AI;
     }
     return FunctionCast(wrapHwlConvertChipFamily, singleton().orgHwlConvertChipFamily)(self, family, revision);
+}
+
+UInt32 iVega::X5000::computeSubmitCommandBuffer(void* const self, void* const info)
+{
+    singleton().notifyGfxAccess(singleton().hwChannelHWInterfaceField(self));
+    return FunctionCast(computeSubmitCommandBuffer, singleton().orgPM4SubmitCommandBuffer)(self, info);
 }
