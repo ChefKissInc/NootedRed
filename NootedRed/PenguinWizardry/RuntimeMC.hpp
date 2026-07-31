@@ -33,10 +33,10 @@
     PWDeclareAbstractRuntimeMC(_cls, _exp);                          \
                                                                      \
     _exp& getExpansion() { return gRTMetaClass.getExpansion(this); }
-#define PWDefineAbstractRuntimeMC(_cls, ...)                                        \
-    DEFINE_TYPE_NAME(_cls)                                                          \
-                                                                                    \
-    PenguinWizardry::RuntimeMC<_cls, nullptr, ##__VA_ARGS__> _cls::gRTMetaClass { }
+#define PWDefineAbstractRuntimeMC(_cls, ...)                                     \
+    DEFINE_TYPE_NAME(_cls)                                                       \
+                                                                                 \
+    PenguinWizardry::RuntimeMC<_cls, nullptr, ##__VA_ARGS__> _cls::gRTMetaClass;
 #define PWDefineAbstractRuntimeMCWithExpansion(_cls, _exp) PWDefineAbstractRuntimeMC(_cls, _cls::_exp)
 
 #define PWPopulateRuntimeMCGetMetaClassVFTEntry() vft.get<decltype(getMetaClass)>(7) = getMetaClass

@@ -15,7 +15,7 @@
 #include <libkern/OSTypes.h>
 #include <libkern/c++/OSMetaClass.h>
 
-PWDefineRuntimeMC(AMDRadeonX5000_AMDGFX9DCN1Display, Constructor);
+PWDefineRuntimeMC(AMDRadeonX5000_AMDGFX9DCN1Display, Constructor)
 
 RuntimeVFT<AMDRadeonX5000_AMDHWDisplay::vftCount, 1> AMDRadeonX5000_AMDGFX9DCN1Display::vft;
 

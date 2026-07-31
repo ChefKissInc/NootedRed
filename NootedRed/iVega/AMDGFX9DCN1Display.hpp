@@ -16,7 +16,7 @@ class AMDRadeonX5000_AMDGFX9DCN1Display : public AMDRadeonX5000_AMDGFX9DCNDispla
     static void initDCNRegOffs(AMDRadeonX5000_AMDGFX9DCN1Display* self);
 
 public:
-    PWDeclareRuntimeMC(AMDRadeonX5000_AMDGFX9DCN1Display, Constructor);
+    PWDeclareRuntimeMC(AMDRadeonX5000_AMDGFX9DCN1Display, Constructor)
 
     static void resolve(const char* const kext);
 };

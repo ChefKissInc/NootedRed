@@ -26,7 +26,7 @@
 #include <mach/i386/vm_types.h>
 #include <mach/vm_param.h>
 
-PWDefineAbstractRuntimeMCWithExpansion(AMDRadeonX5000_AMDGFX9DCNDisplay, Expansion);
+PWDefineAbstractRuntimeMCWithExpansion(AMDRadeonX5000_AMDGFX9DCNDisplay, Expansion)
 
 #define GET_GB_ADDR_CONFIG_NUM_PIPES(v)            ((v) & 7)
 #define GET_GB_ADDR_CONFIG_PIPE_INTERLEAVE(v)      (((v) >> 3) & 7)

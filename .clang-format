@@ -1,4 +1,4 @@
-# ChefKiss Coding Style v2.1
+# ChefKiss Coding Style v2.1, for kexts
 ---
 AccessModifierOffset: -4
 AlignAfterOpenBracket: Align
@@ -139,3 +139,33 @@ ReferenceAlignment: Pointer
 QualifierAlignment: Left
 InsertBraces: true
 InsertNewlineAtEOF: true
+StatementMacros:
+  - OSDeclareCommonStructors # Apple
+  - OSDeclareDefaultStructors
+  - OSDeclareDefaultStructorsWithDispatch
+  - OSDeclareAbstractStructors
+  - OSDeclareAbstractStructorsWithDispatch
+  - OSDeclareFinalStructors
+  - OSDeclareFinalStructorsWithDispatch
+  - OSDefineAbstractStructors
+  - OSDefineDefaultStructors
+  - OSDefineFinalStructors
+  - OSDefineMetaClassAndStructorsWithInit
+  - OSDefineMetaClassAndAbstractStructorsWithInit
+  - OSDefineMetaClassAndFinalStructorsWithInit
+  - OSDefineMetaClass
+  - OSDefineMetaClassAndStructors
+  - OSDefineMetaClassAndAbstractStructors
+  - OSDefineMetaClassAndFinalStructors
+  - OSMetaClassDeclareReservedUnused
+  - OSMetaClassDeclareReservedUsed
+  - OSMetaClassDefineReservedUnused
+  - OSMetaClassDefineReservedUsed
+  - PWDeclareRuntimeMC # ChefKiss PenguinWizardry
+  - PWDefineRuntimeMC
+  - PWDeclareRuntimeMCWithExpansion
+  - PWDefineRuntimeMCWithExpansion
+  - PWDeclareAbstractRuntimeMC
+  - PWDeclareAbstractRuntimeMCWithExpansion
+  - PWDefineAbstractRuntimeMC
+  - PWDefineAbstractRuntimeMCWithExpansion

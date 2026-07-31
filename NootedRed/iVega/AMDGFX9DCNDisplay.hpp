@@ -204,7 +204,7 @@ protected:
         UInt64                           lastSubmitFlipOffset;
     };
 
-    PWDeclareAbstractRuntimeMCWithExpansion(AMDRadeonX5000_AMDGFX9DCNDisplay, Expansion);
+    PWDeclareAbstractRuntimeMCWithExpansion(AMDRadeonX5000_AMDGFX9DCNDisplay, Expansion)
 
     static void populateVFT(VFT& vft);
 
