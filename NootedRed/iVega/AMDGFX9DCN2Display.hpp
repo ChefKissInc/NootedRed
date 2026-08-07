@@ -18,5 +18,5 @@ class AMDRadeonX5000_AMDGFX9DCN2Display : public AMDRadeonX5000_AMDGFX9DCNDispla
 public:
     PWDeclareRuntimeMC(AMDRadeonX5000_AMDGFX9DCN2Display, Constructor)
 
-    static void resolve(const char* const kext);
+    static void resolve(const char* kext);
 };

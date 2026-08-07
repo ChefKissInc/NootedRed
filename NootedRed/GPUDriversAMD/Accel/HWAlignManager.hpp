@@ -418,5 +418,5 @@ public:
 
     UInt32 getPreferredSwizzleMode2(ADDR2_COMPUTE_SURFACE_INFO_INPUT* infoInput);
 
-    static void resolve(KernelPatcher& patcher, const size_t id, const mach_vm_address_t start, const size_t size);
+    static void resolve(KernelPatcher& patcher, size_t id, mach_vm_address_t start, size_t size);
 };

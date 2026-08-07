@@ -34,10 +34,10 @@ namespace PenguinWizardry
             patternSize{N}
         { }
 
-        bool solve(KernelPatcher& patcher, const size_t id, const mach_vm_address_t start, const size_t size);
+        bool solve(KernelPatcher& patcher, size_t id, mach_vm_address_t start, size_t size);
 
-        static bool solveAll(KernelPatcher& patcher, const size_t id, PatternSolveRequest* const requests,
-                             const size_t count, const mach_vm_address_t start, const size_t size);
+        static bool solveAll(KernelPatcher& patcher, size_t id, PatternSolveRequest* requests, size_t count,
+                             mach_vm_address_t start, size_t size);
 
         template<size_t N>
         static bool solveAll(KernelPatcher& patcher, const size_t id, PatternSolveRequest (&requests)[N],
@@ -110,10 +110,10 @@ namespace PenguinWizardry
             patternSize{N}
         { }
 
-        bool route(KernelPatcher& patcher, const size_t id, const mach_vm_address_t start, const size_t size);
+        bool route(KernelPatcher& patcher, size_t id, mach_vm_address_t start, size_t size);
 
-        static bool routeAll(KernelPatcher& patcher, const size_t id, PatternRouteRequest* const requests, size_t count,
-                             const mach_vm_address_t start, const size_t size);
+        static bool routeAll(KernelPatcher& patcher, size_t id, PatternRouteRequest* requests, size_t count,
+                             mach_vm_address_t start, size_t size);
 
         template<size_t N>
         static bool routeAll(KernelPatcher& patcher, const size_t id, PatternRouteRequest (&requests)[N],
@@ -166,10 +166,10 @@ namespace PenguinWizardry
             MaskedLookupPatch{kext, find, findMask, replace, replaceMask, N, count, skip}
         { }
 
-        bool apply(KernelPatcher& patcher, const mach_vm_address_t start, const size_t size) const;
+        bool apply(KernelPatcher& patcher, mach_vm_address_t start, size_t size) const;
 
-        static bool applyAll(KernelPatcher& patcher, const MaskedLookupPatch* const patches, const size_t count,
-                             const mach_vm_address_t start, const size_t size, const bool force = false);
+        static bool applyAll(KernelPatcher& patcher, const MaskedLookupPatch* patches, size_t count,
+                             mach_vm_address_t start, size_t size, bool force = false);
 
         template<const size_t N>
         static bool applyAll(KernelPatcher& patcher, const MaskedLookupPatch (&patches)[N],
@@ -255,10 +255,10 @@ namespace PenguinWizardry
             jumpInstOff{jumpInstOff}
         { }
 
-        bool route(KernelPatcher& patcher, const size_t id, const mach_vm_address_t start, const size_t size);
+        bool route(KernelPatcher& patcher, size_t id, mach_vm_address_t start, size_t size);
 
-        static bool routeAll(KernelPatcher& patcher, const size_t id, JumpPatternRouteRequest* const requests,
-                             const size_t count, const mach_vm_address_t start, const size_t size);
+        static bool routeAll(KernelPatcher& patcher, size_t id, JumpPatternRouteRequest* requests, size_t count,
+                             mach_vm_address_t start, size_t size);
 
         template<size_t N>
         static bool routeAll(KernelPatcher& patcher, const size_t id, JumpPatternRouteRequest (&requests)[N],

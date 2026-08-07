@@ -37,8 +37,8 @@ namespace iVega
         static const AmdAsicBrandingTableEntry* getGpuBrandingNameListPicasso(const void* self);
         static const AmdAsicBrandingTableEntry* getGpuBrandingNameListRenoir(const void* self);
         static IOReturn                         dummyIOReturnSuccess();
-        static IOReturn getTriageHardwareDataRV(void* const self, const UInt32 fbIndex, void* const triageData);
-        static IOReturn getTriageHardwareDataRN(void* const self, const UInt32 fbIndex, void* const triageData);
+        static IOReturn                         getTriageHardwareDataRV(void* self, UInt32 fbIndex, void* triageData);
+        static IOReturn                         getTriageHardwareDataRN(void* self, UInt32 fbIndex, void* triageData);
     };
 
 }    // namespace iVega

@@ -13,13 +13,13 @@
 #define PWDeclareRuntimeMC(_cls, _ctor, ...)                                    \
     static PenguinWizardry::RuntimeMC<_cls, _ctor, ##__VA_ARGS__> gRTMetaClass; \
                                                                                 \
-    static OSMetaClass* getMetaClass(const _cls* self);
-#define PWDefineRuntimeMC(_cls, _ctor, ...)                                                    \
-    DEFINE_TYPE_NAME(_cls)                                                                     \
-                                                                                               \
-    PenguinWizardry::RuntimeMC<_cls, _cls::_ctor, ##__VA_ARGS__> _cls::gRTMetaClass;           \
-                                                                                               \
-    OSMetaClass* _cls::getMetaClass(const _cls* const) { return gRTMetaClass.getMetaClass(); }
+    static OSMetaClass* getMetaClass(const _cls*);
+#define PWDefineRuntimeMC(_cls, _ctor, ...)                                              \
+    DEFINE_TYPE_NAME(_cls)                                                               \
+                                                                                         \
+    PenguinWizardry::RuntimeMC<_cls, _cls::_ctor, ##__VA_ARGS__> _cls::gRTMetaClass;     \
+                                                                                         \
+    OSMetaClass* _cls::getMetaClass(const _cls*) { return gRTMetaClass.getMetaClass(); }
 
 #define PWDeclareRuntimeMCWithExpansion(_cls, _ctor, _exp)           \
     PWDeclareRuntimeMC(_cls, _ctor, _exp);                           \
@@ -93,8 +93,8 @@ namespace PenguinWizardry
 
         void processPatcher(KernelPatcher& patcher);
 
-        void registerMC(RuntimeMCBase& rtMC, const char* kext, KernelPatcher& patcher, const size_t id,
-                        const char* const symbol, const mach_vm_address_t start, const size_t size);
+        void registerMC(RuntimeMCBase& rtMC, const char* kext, KernelPatcher& patcher, size_t id, const char* symbol,
+                        mach_vm_address_t start, size_t size);
         void registerMC(RuntimeMCBase& rtMC, const char* kext, RuntimeMCBase& rtSuper);
     };
 
