@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1C748C2D1C21952C0024EED2 /* Plugin.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C748C2C1C21952C0024EED2 /* Plugin.cpp */; };
+		4003B5C330265153006F74E8 /* SurfaceInfo.hpp in Sources */ = {isa = PBXBuildFile; fileRef = 4003B5C230265145006F74E8 /* SurfaceInfo.hpp */; };
 		400909902E9932F2006EC1EA /* HWMemory.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4009098F2E9932F2006EC1EA /* HWMemory.hpp */; };
 		400909922E9938DB006EC1EA /* HWMemory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 400909912E9938DB006EC1EA /* HWMemory.cpp */; };
 		4012096C2CE2FD96006E2812 /* DPCD.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4012096B2CE2FD96006E2812 /* DPCD.hpp */; };
@@ -108,6 +109,7 @@
 		1C748C271C21952C0024EED2 /* NootedRed.kext */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NootedRed.kext; sourceTree = BUILT_PRODUCTS_DIR; };
 		1C748C2C1C21952C0024EED2 /* Plugin.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Plugin.cpp; sourceTree = "<group>"; };
 		1C748C2E1C21952C0024EED2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		4003B5C230265145006F74E8 /* SurfaceInfo.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SurfaceInfo.hpp; sourceTree = "<group>"; };
 		4009098F2E9932F2006EC1EA /* HWMemory.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HWMemory.hpp; sourceTree = "<group>"; };
 		400909912E9938DB006EC1EA /* HWMemory.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HWMemory.cpp; sourceTree = "<group>"; };
 		4012096B2CE2FD96006E2812 /* DPCD.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DPCD.hpp; sourceTree = "<group>"; };
@@ -555,6 +557,7 @@
 		40E812F12CF5A1BF004FDCC7 /* FB */ = {
 			isa = PBXGroup;
 			children = (
+				4003B5C230265145006F74E8 /* SurfaceInfo.hpp */,
 				40D49AD42FAF35A70088F608 /* AmdAsicInfo.hpp */,
 				40E812F32CF5A1FB004FDCC7 /* AmdDeviceMemoryManager.hpp */,
 				40B037E02E951D2B0060EAD4 /* Attributes.hpp */,
@@ -748,6 +751,7 @@
 			files = (
 				4068898B2A229BF600028D22 /* PatcherPlus.cpp in Sources */,
 				40A02CF82EAE40BD00ECB6DA /* KernelVersion.cpp in Sources */,
+				4003B5C330265153006F74E8 /* SurfaceInfo.hpp in Sources */,
 				4088AFF42E6E099800717265 /* RuntimeMC.cpp in Sources */,
 				400909922E9938DB006EC1EA /* HWMemory.cpp in Sources */,
 				40B9AECF2E991B1C000F05ED /* HWDisplay.cpp in Sources */,

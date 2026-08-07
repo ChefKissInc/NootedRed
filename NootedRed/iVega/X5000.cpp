@@ -188,6 +188,7 @@ void iVega::X5000::processKext(KernelPatcher& patcher, const size_t id, const ma
         {"__ZN4Addr2V27Gfx9Lib20HwlConvertChipFamilyEjj", wrapHwlConvertChipFamily, this->orgHwlConvertChipFamily,
          kHwlConvertChipFamilyPattern},
         {"__ZN27AMDRadeonX5000_AMDHWDisplay14getDisplayInfoEjbbPvP17_FRAMEBUFFER_INFO", fixedGetDisplayInfo},
+        {"__ZN33AMDRadeonX5000_AMDHWAlignManager214getSurfaceInfoEP24_AMD_SURFACE_INFO_STRUCT", fixedGetSurfaceInfo},
     };
     PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "X5000",
                "Failed to route symbols");
@@ -745,4 +746,32 @@ bool iVega::X5000::fixedGetDisplayInfo(AMDRadeonX5000_AMDHWDisplay* const self, 
     fbInfo->pageCount = alignValue(page_size << shift);
 
     return ret;
+}
+
+void iVega::X5000::fixedGetSurfaceInfo(AMDRadeonX5000_AMDHWAlignManager* const self,
+                                       AMD_SURFACE_INFO_STRUCT* const          pStruct)
+{
+    if (pStruct == nullptr) { return; }
+
+    pStruct->outWidth  = 0;
+    pStruct->outHeight = 0;
+
+    if (pStruct->version != 1 || pStruct->revision != 0 || pStruct->sizeOf != sizeof(*pStruct)) { return; }
+
+    ADDR2_COMPUTE_SURFACE_INFO_INPUT input;
+    input.width         = pStruct->inWidth;
+    input.height        = pStruct->inHeight;
+    input.bpp           = pStruct->bytesPerPixel * 8;
+    input.resourceType  = ADDR_RSRC_TEX_2D;
+    input.numSamples    = 1;
+    input.numSlices     = 1;
+    input.flags.display = 1;
+    input.swizzleMode   = self->getPreferredSwizzleMode2(&input);    // this was hardcoded to 0xa
+
+    ADDR2_COMPUTE_SURFACE_INFO_OUTPUT output;
+    if (self->getSurfaceInfo2(&input, &output) == kIOReturnSuccess) {
+        pStruct->outWidth      = static_cast<UInt16>(output.pitch);
+        pStruct->outHeight     = static_cast<UInt16>(output.height);
+        pStruct->outTilingMode = input.swizzleMode;    // I think AMD forgot this, albeit seemingly unused
+    }
 }

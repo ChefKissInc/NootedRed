@@ -21,6 +21,7 @@ AMDRadeonX5000_AMDHWAlignManager::Constants AMDRadeonX5000_AMDHWAlignManager::co
 // Decompiled from AMDRadeonX6000 combined with info from mesa's AddrLib
 UInt32 AMDRadeonX5000_AMDHWAlignManager::getPreferredSwizzleMode2(ADDR2_COMPUTE_SURFACE_INFO_INPUT* infoInput)
 {
+    const auto                              addrlib = getMember<void*>(this, 0x18);
     ADDR2_GET_PREFERRED_SURF_SETTING_OUTPUT output;
     if (constants.addr2GetPreferredSurfaceSettingNew != nullptr) {
         ADDR2_GET_PREFERRED_SURF_SETTING_INPUT_NEW input;
@@ -33,9 +34,7 @@ UInt32 AMDRadeonX5000_AMDHWAlignManager::getPreferredSwizzleMode2(ADDR2_COMPUTE_
         input.numSlices          = infoInput->numSlices;
         input.flags.display      = infoInput->flags.display;
         input.forbiddenBlock.var = 1;    // No variable swizzle modes
-        if (constants.addr2GetPreferredSurfaceSettingNew(getMember<void*>(this, 0x18), &input, &output) == 0) {
-            return output.swizzleMode;
-        }
+        if (constants.addr2GetPreferredSurfaceSettingNew(addrlib, &input, &output) == 0) { return output.swizzleMode; }
     }
     else {
         ADDR2_GET_PREFERRED_SURF_SETTING_INPUT input;
@@ -48,9 +47,7 @@ UInt32 AMDRadeonX5000_AMDHWAlignManager::getPreferredSwizzleMode2(ADDR2_COMPUTE_
         input.numSlices          = infoInput->numSlices;
         input.flags.display      = infoInput->flags.display;
         input.forbiddenBlock.var = 1;    // No variable swizzle modes
-        if (constants.addr2GetPreferredSurfaceSetting(getMember<void*>(this, 0x18), &input, &output) == 0) {
-            return output.swizzleMode;
-        }
+        if (constants.addr2GetPreferredSurfaceSetting(addrlib, &input, &output) == 0) { return output.swizzleMode; }
     }
     return 0U;
 }
