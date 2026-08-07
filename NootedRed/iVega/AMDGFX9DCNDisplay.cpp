@@ -55,9 +55,10 @@ static void   SET_HUBPREQ_FLIP_CONTROL_FLIP_TYPE(UInt32& target, bool v)
     target |= static_cast<UInt32>(v) << 1;
 }
 
-void AMDRadeonX5000_AMDGFX9DCNDisplay::initialiseRegisters(AMDRadeonX5000_AMDGFX9DCNDisplay* const self)
+void AMDRadeonX5000_AMDGFX9DCNDisplay::initialiseRegisters(AMDRadeonX5000_AMDHWDisplay* const _self)
 {
-    auto& expansion = self->getExpansion();
+    const auto self      = static_cast<AMDRadeonX5000_AMDGFX9DCNDisplay*>(_self);
+    auto&      expansion = self->getExpansion();
     for (size_t i = 0; i < self->supportedDisplayCount(); i++) {
         auto&       savedState = expansion.savedState[i];
         const auto& regOffs    = expansion.regOffs[i];
@@ -66,324 +67,18 @@ void AMDRadeonX5000_AMDGFX9DCNDisplay::initialiseRegisters(AMDRadeonX5000_AMDGFX
     }
 }
 
-void AMDRadeonX5000_AMDGFX9DCNDisplay::restoreRegisters() { }
+void AMDRadeonX5000_AMDGFX9DCNDisplay::restoreRegisters(AMDRadeonX5000_AMDHWDisplay*) { }
 
-AMDRadeonX5000_AMDGFX9DCNDisplay::Constants AMDRadeonX5000_AMDGFX9DCNDisplay::constants;
+static bool (*superGetDisplayInfo)(AMDRadeonX5000_AMDHWDisplay* self, UInt32 fbIndex, bool isCRTEnabled,
+                                   bool ignoreCRTOffsetCheck, IOFramebuffer* fb, FramebufferInfo* fbInfo) = nullptr;
 
-//  -- VRR was introduced on macOS Big Sur. --
-
-void AMDRadeonX5000_AMDGFX9DCNDisplay::setVrrTimestampInfoVentura(AMDRadeonX5000_AMDGFX9DCNDisplay& self,
-                                                                  const UInt64 vTotalMin, const UInt64 vTotalMax,
-                                                                  const UInt64 horizontalLineTime)
+bool AMDRadeonX5000_AMDGFX9DCNDisplay::getDisplayInfo(AMDRadeonX5000_AMDHWDisplay* const _self, const UInt32 fbIndex,
+                                                      const bool isCRTEnabled, const bool ignoreCRTOffsetCheck,
+                                                      IOFramebuffer* const fb, FramebufferInfo* const fbInfo)
 {
-    auto& vrrTimestampInfo                      = self.vrrTimestampInfoVentura();
-    vrrTimestampInfo.lastTransactionTimestamp   = 0;
-    vrrTimestampInfo.currentFrameStartTimestamp = 0;
-    vrrTimestampInfo.lastTransactionStartTime   = 0;
-    vrrTimestampInfo.currentFrameVTotal         = vTotalMin;
-    vrrTimestampInfo.horizontalLineTime         = horizontalLineTime;
-    vrrTimestampInfo.currentFrameTime           = 0;
-    vrrTimestampInfo.vTotalMin                  = vTotalMin;
-    vrrTimestampInfo.vTotalMax                  = vTotalMax;
-    vrrTimestampInfo.transactionOnGlassTime     = 0;
-}
-
-void AMDRadeonX5000_AMDGFX9DCNDisplay::setVrrTimestampInfo(AMDRadeonX5000_AMDGFX9DCNDisplay& self,
-                                                           const UInt64 vTotalMin, const UInt64 vTotalMax,
-                                                           const UInt64 horizontalLineTime)
-{
-    auto& vrrTimestampInfo                      = self.vrrTimestampInfo();
-    vrrTimestampInfo.field0                     = 0;
-    vrrTimestampInfo.lastTransactionTimestamp   = 0;
-    vrrTimestampInfo.currentFrameStartTimestamp = 0;
-    vrrTimestampInfo.lastTransactionStartTime   = 0;
-    vrrTimestampInfo.currentFrameVTotal         = static_cast<UInt32>(vTotalMin);
-    vrrTimestampInfo.horizontalLineTime         = static_cast<UInt32>(horizontalLineTime);
-    vrrTimestampInfo.currentFrameTime           = 0;
-    vrrTimestampInfo.vTotalMin                  = static_cast<UInt32>(vTotalMin);
-    vrrTimestampInfo.vTotalMax                  = static_cast<UInt32>(vTotalMax);
-    vrrTimestampInfo.transactionOnGlassTime     = 0;
-}
-
-void AMDRadeonX5000_AMDGFX9DCNDisplay::calcAndSetVrrTimestampInfo(AMDRadeonX5000_AMDGFX9DCNDisplay& self,
-                                                                  FramebufferInfo* const            fbInfo,
-                                                                  IOTimingInformation&              timingInfo)
-{
-    assert(currentKernelVersion() >= MACOS_11);
-
-    if (!fbInfo->isOnline) { return; }
-
-    const auto vTotalMin  = timingInfo.detailedInfo.v2.verticalBlanking + timingInfo.detailedInfo.v2.verticalActive;
-    const auto vTotalMax  = vTotalMin + timingInfo.detailedInfo.v2.verticalBlankingExtension;
-    const auto pixelClock = timingInfo.detailedInfo.v2.pixelClock;
-    if (pixelClock == 0) { constants.setVrrTimestampInfo(self, vTotalMin, vTotalMax, 0); }
-    else {
-        const auto hTotal = timingInfo.detailedInfo.v2.horizontalBlanking + timingInfo.detailedInfo.v2.horizontalActive;
-        const auto hLineTimeNs = static_cast<UInt64>(hTotal) * 1000000000ULL / pixelClock;
-        UInt64     horizontalLineTime;
-        nanoseconds_to_absolutetime(hLineTimeNs, &horizontalLineTime);
-        constants.setVrrTimestampInfo(self, vTotalMin, vTotalMax, horizontalLineTime);
-    }
-}
-
-void AMDRadeonX5000_AMDGFX9DCNDisplay::calcAndSetVrrTimestampInfoDummy(AMDRadeonX5000_AMDGFX9DCNDisplay&,
-                                                                       FramebufferInfo* const, IOTimingInformation&)
-{ assert(currentKernelVersion() <= MACOS_10_15_X); }
-
-bool AMDRadeonX5000_AMDGFX9DCNDisplay::fixedSuperGetDisplayInfo(const UInt32 fbIndex, const bool isCRTEnabled,
-                                                                const bool           ignoreCRTOffsetCheck,
-                                                                IOFramebuffer* const fb, FramebufferInfo* const fbInfo)
-{
-    if (fb == nullptr || fbIndex >= this->supportedDisplayCount()) { return false; }
-
-    fbInfo->crtOffset   = 0;
-    fbInfo->size        = 0;
-    fbInfo->crtSize     = 0;
-    fbInfo->pitch       = 0;
-    fbInfo->rect.width  = 0;
-    fbInfo->rect.height = 0;
-
-    auto& displayState = this->displayStates()[fbIndex];
-
-    displayState.framebuffer = fb;
-    displayState.status.setIsEnabled(isCRTEnabled);
-    displayState.status.setIsIOFBFlipEnabled(true);
-    displayState.status.setIsAccelBacked(false);
-
-    uintptr_t wsaa = -1ULL;
-    if (fb->getAttribute(ATTRIBUTE_WSAA, &wsaa) == kIOReturnSuccess) {
-        this->wsaaAttributes()[fbIndex] = static_cast<UInt32>(wsaa);
-        displayState.status.setIsWSAASupported(true);
-    }
-    else {
-        displayState.status.setIsWSAASupported(false);
-    }
-
-    uintptr_t  dpt    = 0;
-    const auto dptRet = fb->getAttribute(ATTRIBUTE_DISPLAY_PIPE_TRANSACTION, &dpt);
-    displayState.status.setIsDPTSupported(dptRet == kIOReturnSuccess || dptRet == kIOReturnNotReady);
-
-    const auto crtOffset = OSDynamicCast(OSData, fb->getProperty("ATY,fb_offset"));
-    if (crtOffset != nullptr) {
-        const auto data = crtOffset->getBytesNoCopy();
-        if (data != nullptr) { fbInfo->crtOffset = *static_cast<const UInt64*>(data); }
-    }
-
-    const auto crtSize = OSDynamicCast(OSData, fb->getProperty("ATY,fb_size"));
-    if (crtSize != nullptr) {
-        const auto data = crtSize->getBytesNoCopy();
-        if (data != nullptr) { fbInfo->crtSize = *static_cast<const UInt32*>(data); }
-    }
-
-    auto aperture = fb->getApertureRange(kIOFBSystemAperture);
-    auto vram     = fb->getVRAMRange();
-
-    fbInfo->isMapped = aperture != nullptr && vram != nullptr;
-
-    [[clang::suppress]] OSSafeReleaseNULL(aperture);
-    [[clang::suppress]] OSSafeReleaseNULL(vram);
-
-    getDisplayModeViewportSpecificInfo(this, fbIndex, &this->viewportStartYs()[fbIndex],
-                                       &this->viewportHeights()[fbIndex]);
-
-    uintptr_t isOnline = 0;
-    fbInfo->isOnline =
-        fb->getAttributeForConnection(static_cast<IOIndex>(fbIndex), kConnectionEnable, &isOnline) == kIOReturnSuccess
-        && isOnline != 0;
-
-    this->fedsParamInfo()[fbIndex].crtIndex = 0;
-    this->fedsParamInfo()[fbIndex].scaledW  = 0;
-    this->fedsParamInfo()[fbIndex].scaledH  = 0;
-    this->fedsParamInfo()[fbIndex].srcW     = 0;
-    this->fedsParamInfo()[fbIndex].srcH     = 0;
-
-    this->scalerFlags()[fbIndex] = 0;
-
-    IODisplayModeID displayMode = 0;
-    IOIndex         depth       = 0;
-    if (fb->getCurrentDisplayMode(&displayMode, &depth) == kIOReturnSuccess) {
-        if (fb->getPixelInformation(displayMode, depth, kIOFBSystemAperture, &displayState.pixelInfo)
-            == kIOReturnSuccess)
-        {
-            const auto bytesPerPixel = displayState.pixelInfo.bitsPerPixel / 8;
-            if (bytesPerPixel != 0) { fbInfo->pitch = displayState.pixelInfo.bytesPerRow / bytesPerPixel; }
-            fbInfo->rect.width  = displayState.pixelInfo.activeWidth;
-            fbInfo->rect.height = displayState.pixelInfo.activeHeight;
-        }
-
-        IODisplayModeInformation modeInfo;
-        memset(&modeInfo, 0, sizeof(modeInfo));
-        if (fb->getInformationForDisplayMode(displayMode, &modeInfo) == kIOReturnSuccess
-            && (modeInfo.flags & kDisplayModeAcceleratorBackedFlag) != 0)
-        {
-            displayState.status.setIsAccelBacked(true);
-            this->fedsParamInfo()[fbIndex].crtIndex = 1;
-        }
-
-        IOTimingInformation timingInfo;
-        memset(&timingInfo, 0, sizeof(timingInfo));
-        timingInfo.flags = kIODetailedTimingValid;
-        if (fb->getTimingInfoForDisplayMode(displayMode, &timingInfo) == kIOReturnSuccess
-            && (timingInfo.flags & kIODetailedTimingValid) != 0)
-        {
-            this->scalerFlags()[fbIndex] = timingInfo.detailedInfo.v2.scalerFlags;
-
-            if (this->fedsParamInfo()[fbIndex].crtIndex == 1) {
-                this->fedsParamInfo()[fbIndex].scaledW = timingInfo.detailedInfo.v2.horizontalActive;
-                this->fedsParamInfo()[fbIndex].scaledH = timingInfo.detailedInfo.v2.verticalActive;
-                this->fedsParamInfo()[fbIndex].srcW    = timingInfo.detailedInfo.v2.horizontalScaled;
-                this->fedsParamInfo()[fbIndex].srcH    = timingInfo.detailedInfo.v2.verticalScaled;
-            }
-
-            this->constants.calcAndSetVrrTimestampInfo(*this, fbInfo, timingInfo);
-        }
-    }
-
-    auto& hwSpecificInfo = this->crtHWSpecificInfos()[fbIndex];
-
-    auto ret = true;
-
-    if (!isCRTEnabled
-        || (!ignoreCRTOffsetCheck && fbInfo->crtOffset >= this->getHWInterface()->getHWMemory()->getVisibleSize()))
-    {
-        fbInfo->crtOffset = 0;
-        fbInfo->size      = 0;
-    }
-    else {
-        CRTHWDepth hwDepth;
-        switch (displayState.pixelInfo.bitsPerPixel) {
-            case 8: {
-                hwDepth = CRTHWDepth::DEPTH_8;
-            } break;
-            case 16: {
-                hwDepth = CRTHWDepth::DEPTH_16;
-            } break;
-            case 32: {
-                hwDepth = CRTHWDepth::DEPTH_32;
-            } break;
-            case 64: {
-                hwDepth = CRTHWDepth::DEPTH_64;
-            } break;
-            default: {
-                hwDepth = CRTHWDepth::DEPTH_32;
-                ret     = false;
-            } break;
-        }
-        DBGLOG("GFX9DCNDisplay", "%s hwDepth=%s for bpp %d", __func__, stringifyCRTHWDepth(hwDepth),
-               displayState.pixelInfo.bitsPerPixel);
-        hwSpecificInfo.graphDepth = hwDepth;
-
-        CRTHWFormat hwFormat;    // bug fix - original code only handled depth 64 and format 10
-        switch (displayState.pixelInfo.bitsPerComponent) {
-            case 8: {
-                hwFormat = CRTHWFormat::FORMAT_8;
-            } break;
-            case 10: {
-                hwFormat = CRTHWFormat::FORMAT_10;
-            } break;
-            case 12: {
-                hwFormat = CRTHWFormat::FORMAT_12;
-            } break;
-            default: {
-                hwFormat = CRTHWFormat::FORMAT_8;
-                ret      = false;
-            } break;
-        }
-        DBGLOG("GFX9DCNDisplay", "%s hwFormat=%s for bpc %d", __func__, stringifyCRTHWFormat(hwFormat),
-               displayState.pixelInfo.bitsPerComponent);
-        hwSpecificInfo.graphFormat = hwFormat;
-
-        switch (hwDepth) {
-            case CRTHWDepth::DEPTH_8: {
-                hwSpecificInfo.bytesPerPixel = 1;
-            } break;
-            case CRTHWDepth::DEPTH_16: {
-                hwSpecificInfo.bytesPerPixel = 2;
-            } break;
-            case CRTHWDepth::DEPTH_32: {
-                hwSpecificInfo.bytesPerPixel = 4;
-            } break;
-            case CRTHWDepth::DEPTH_64: {
-                hwSpecificInfo.bytesPerPixel = 8;
-            } break;
-        }
-        hwSpecificInfo.pixelMode = getPixelMode(this, hwDepth, hwFormat);
-        DBGLOG("GFX9DCNDisplay", "%s hwSpecificInfo.pixelMode=%s", __func__,
-               stringifyATIPixelMode(hwSpecificInfo.pixelMode));
-        hwSpecificInfo.format = getPixelFormat(this, hwSpecificInfo.pixelMode);
-        DBGLOG("GFX9DCNDisplay", "%s hwSpecificInfo.format=%s", __func__, stringifyATIFormat(hwSpecificInfo.format));
-        hwSpecificInfo.isInterlaced = isDisplayInterlaceEnabled(this, fbIndex);
-        displayState.status.setIsInterlaced(hwSpecificInfo.isInterlaced);
-
-        ADDR2_COMPUTE_SURFACE_INFO_INPUT surfInfoInput;
-        surfInfoInput.width        = fbInfo->rect.width;
-        surfInfoInput.height       = fbInfo->rect.height;
-        surfInfoInput.bpp          = displayState.pixelInfo.bitsPerPixel;
-        surfInfoInput.resourceType = ADDR_RSRC_TEX_2D;
-        surfInfoInput.format     = this->getHWInterface()->getHWAlignManager()->getAddrFormat(hwSpecificInfo.pixelMode);
-        surfInfoInput.numSamples = 1;
-        surfInfoInput.numSlices  = 1;
-        surfInfoInput.flags.display = true;
-        surfInfoInput.swizzleMode =
-            this->getHWInterface()->getHWAlignManager()->getPreferredSwizzleMode2(&surfInfoInput);
-        this->savedSwizzleModes()[fbIndex]  = surfInfoInput.swizzleMode;
-        this->swizzleModes()[fbIndex]       = surfInfoInput.swizzleMode;
-        this->savedResourceTypes()[fbIndex] = surfInfoInput.resourceType;
-        if (this->getHWInterface()->getHWAlignManager()->getSurfaceInfo2(&surfInfoInput,
-                                                                         &this->surfInfoOutputs()[fbIndex])
-            == kIOReturnSuccess)
-        {
-            fbInfo->size = fbInfo->pitch * this->surfInfoOutputs()[fbIndex].height * hwSpecificInfo.bytesPerPixel;
-        }
-        else {
-            fbInfo->size = 0;
-        }
-        displayState.status.setIsEnabled(true);
-    }
-
-    AMDHWDisplayState::Status combinedStatus;
-    for (UInt32 i = 0; i < this->supportedDisplayCount(); i += 1) { combinedStatus |= this->displayStates()[i].status; }
-    this->combinedStatus() = combinedStatus;
-
-    fbInfo->savedSize = fbInfo->size;
-
-    if (this->fedsParamInfo()[fbIndex].crtIndex != 0) {
-        ADDR2_COMPUTE_SURFACE_INFO_INPUT surfInfoInput;
-        surfInfoInput.width        = this->fedsParamInfo()[fbIndex].scaledW;
-        surfInfoInput.height       = this->fedsParamInfo()[fbIndex].scaledH;
-        surfInfoInput.bpp          = displayState.pixelInfo.bitsPerPixel;
-        surfInfoInput.swizzleMode  = this->savedSwizzleModes()[fbIndex];
-        surfInfoInput.resourceType = this->savedResourceTypes()[fbIndex];
-        surfInfoInput.format     = this->getHWInterface()->getHWAlignManager()->getAddrFormat(hwSpecificInfo.pixelMode);
-        surfInfoInput.numSamples = 1;
-        surfInfoInput.numSlices  = 1;
-        surfInfoInput.flags.display = true;
-        ADDR2_COMPUTE_SURFACE_INFO_OUTPUT surfInfoOutput;
-        if (this->getHWInterface()->getHWAlignManager()->getSurfaceInfo2(&surfInfoInput, &surfInfoOutput)
-            == kIOReturnSuccess)
-        {
-            fbInfo->savedSize =
-                static_cast<UInt64>(surfInfoOutput.height) * surfInfoOutput.pitch * hwSpecificInfo.bytesPerPixel;
-        }
-    }
-
-    UInt64 baseAlign = this->surfInfoOutputs()[fbIndex].baseAlign;
-    UInt8  shift     = 0;
-    while (page_size < baseAlign) {
-        baseAlign >>= 1;
-        shift      += 1;
-    }
-    fbInfo->pageCount = alignValue(page_size << shift);
-
-    return ret;
-}
-
-bool AMDRadeonX5000_AMDGFX9DCNDisplay::getDisplayInfo(AMDRadeonX5000_AMDGFX9DCNDisplay* const self,
-                                                      const UInt32 fbIndex, const bool isCRTEnabled,
-                                                      const bool ignoreCRTOffsetCheck, IOFramebuffer* const fb,
-                                                      FramebufferInfo* const fbInfo)
-{
-    if (!self->fixedSuperGetDisplayInfo(fbIndex, isCRTEnabled, ignoreCRTOffsetCheck, fb, fbInfo)) { return false; }
+    const auto self = static_cast<AMDRadeonX5000_AMDGFX9DCNDisplay*>(_self);
+    assert(superGetDisplayInfo != nullptr);
+    if (!superGetDisplayInfo(self, fbIndex, isCRTEnabled, ignoreCRTOffsetCheck, fb, fbInfo)) { return false; }
 
     if (!isCRTEnabled) { return true; }
 
@@ -457,9 +152,10 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::getDisplayInfo(AMDRadeonX5000_AMDGFX9DCND
     return true;
 }
 
-UInt64 AMDRadeonX5000_AMDGFX9DCNDisplay::getCurrentDisplayOffset(AMDRadeonX5000_AMDGFX9DCNDisplay* const self,
-                                                                 const UInt32                            fbIndex)
+UInt64 AMDRadeonX5000_AMDGFX9DCNDisplay::getCurrentDisplayOffset(AMDRadeonX5000_AMDHWDisplay* const _self,
+                                                                 const UInt32                       fbIndex)
 {
+    const auto  self      = static_cast<AMDRadeonX5000_AMDGFX9DCNDisplay*>(_self);
     auto&       expansion = self->getExpansion();
     const auto& regOffs   = expansion.regOffs[fbIndex];
     assert(regOffs.isValid);
@@ -468,9 +164,10 @@ UInt64 AMDRadeonX5000_AMDGFX9DCNDisplay::getCurrentDisplayOffset(AMDRadeonX5000_
            | self->getHWRegisters()->read(regOffs.hubpreqPrimarySurfaceAddress);
 }
 
-void AMDRadeonX5000_AMDGFX9DCNDisplay::setCurrentDisplayOffset(AMDRadeonX5000_AMDGFX9DCNDisplay* const self,
+void AMDRadeonX5000_AMDGFX9DCNDisplay::setCurrentDisplayOffset(AMDRadeonX5000_AMDHWDisplay* const _self,
                                                                const UInt32 fbIndex, const UInt64 value)
 {
+    const auto  self      = static_cast<AMDRadeonX5000_AMDGFX9DCNDisplay*>(_self);
     auto&       expansion = self->getExpansion();
     const auto& regOffs   = expansion.regOffs[fbIndex];
     assert(regOffs.isValid);
@@ -483,16 +180,14 @@ void AMDRadeonX5000_AMDGFX9DCNDisplay::setCurrentDisplayOffset(AMDRadeonX5000_AM
     while (self->isFlipPending(self, fbIndex)) { IODelay(100); }
 }
 
-UInt32 AMDRadeonX5000_AMDGFX9DCNDisplay::writeWaitForVLine(AMDRadeonX5000_AMDGFX9DCNDisplay*, UInt32* const,
-                                                           const UInt32, SInt32&, SInt32&, const bool, const bool)
-{
-    assert(false);
-    return 0;
-}
+UInt32 AMDRadeonX5000_AMDGFX9DCNDisplay::writeWaitForVLine(AMDRadeonX5000_AMDHWDisplay*, UInt32* const, const UInt32,
+                                                           SInt32&, SInt32&, const bool, const bool)
+{ PANIC("AMDGFX9DCNDisplay", "%s should not be called!", __func__); }
 
-void AMDRadeonX5000_AMDGFX9DCNDisplay::setFlipControlRegister(AMDRadeonX5000_AMDGFX9DCNDisplay* const self,
+void AMDRadeonX5000_AMDGFX9DCNDisplay::setFlipControlRegister(AMDRadeonX5000_AMDHWDisplay* const _self,
                                                               const UInt32 fbIndex, const AMDSwapInterval swapInterval)
 {
+    const auto  self      = static_cast<AMDRadeonX5000_AMDGFX9DCNDisplay*>(_self);
     auto&       expansion = self->getExpansion();
     const auto& regOffs   = expansion.regOffs[fbIndex];
     assert(regOffs.isValid);
@@ -501,11 +196,11 @@ void AMDRadeonX5000_AMDGFX9DCNDisplay::setFlipControlRegister(AMDRadeonX5000_AMD
     self->getHWRegisters()->write(regOffs.hubpreqFlipControl, savedState.hubpreqflipControl);
 }
 
-bool AMDRadeonX5000_AMDGFX9DCNDisplay::init(AMDRadeonX5000_AMDGFX9DCNDisplay* const self, void* const hwInterface,
+bool AMDRadeonX5000_AMDGFX9DCNDisplay::init(AMDRadeonX5000_AMDHWDisplay* const _self, void* const hwInterface,
                                             void* const fbParams)
 {
-    assert(AMDRadeonX5000_AMDHWDisplay::init() != 0);
-    if (!FunctionCast(init, AMDRadeonX5000_AMDHWDisplay::init())(self, hwInterface, fbParams)) { return false; }
+    const auto self = static_cast<AMDRadeonX5000_AMDGFX9DCNDisplay*>(_self);
+    if (!_self->init(hwInterface, fbParams)) { return false; }
 
     self->isDCN() = true;
 
@@ -515,8 +210,8 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::init(AMDRadeonX5000_AMDGFX9DCNDisplay* co
 }
 
 // TODO: maybe handle more of these?
-ATIPixelMode AMDRadeonX5000_AMDGFX9DCNDisplay::getPixelMode(AMDRadeonX5000_AMDGFX9DCNDisplay* const,
-                                                            const CRTHWDepth depth, const CRTHWFormat format)
+ATIPixelMode AMDRadeonX5000_AMDGFX9DCNDisplay::getPixelMode(AMDRadeonX5000_AMDHWDisplay*, const CRTHWDepth depth,
+                                                            const CRTHWFormat format)
 {
     DBGLOG("GFX9DCNDisplay", "%s << (depth: %s format: %s)", __func__, stringifyCRTHWDepth(depth),
            stringifyCRTHWFormat(format));
@@ -534,8 +229,7 @@ ATIPixelMode AMDRadeonX5000_AMDGFX9DCNDisplay::getPixelMode(AMDRadeonX5000_AMDGF
     return ATIPixelMode::HW_DEFINED;
 }
 
-ATIFormat AMDRadeonX5000_AMDGFX9DCNDisplay::getPixelFormat(AMDRadeonX5000_AMDGFX9DCNDisplay* const,
-                                                           const ATIPixelMode pixelMode)
+ATIFormat AMDRadeonX5000_AMDGFX9DCNDisplay::getPixelFormat(AMDRadeonX5000_AMDHWDisplay*, const ATIPixelMode pixelMode)
 {
     DBGLOG("GFX9DCNDisplay", "%s << (pixelMode: %s)", __func__, stringifyATIPixelMode(pixelMode));
     ATIFormat ret;
@@ -564,11 +258,12 @@ void AMDRadeonX5000_AMDGFX9DCNDisplay::fillFlipTilingParameters(AMDFlipParam* co
 }
 
 bool AMDRadeonX5000_AMDGFX9DCNDisplay::writeFlipParameters(
-    AMDRadeonX5000_AMDGFX9DCNDisplay* const self, AMDPipeFlip* const flip, const UInt32 fbIndex,
-    const UInt64 offsetLeft, [[maybe_unused]] const UInt64 offsetRight, const AMDSwapInterval swapInterval,
-    const UInt32 pitch, const AMDTilingInfo* const tileInfo, const ATIFormat atiFormat, const UInt32,
-    AMDHWRotationAngle* const hwRotation, AMDPipeFlip* const savedFlip)
+    AMDRadeonX5000_AMDHWDisplay* const _self, AMDPipeFlip* const flip, const UInt32 fbIndex, const UInt64 offsetLeft,
+    [[maybe_unused]] const UInt64 offsetRight, const AMDSwapInterval swapInterval, const UInt32 pitch,
+    const AMDTilingInfo* const tileInfo, const ATIFormat atiFormat, const UInt32, AMDHWRotationAngle* const hwRotation,
+    AMDPipeFlip* const savedFlip)
 {
+    const auto self = static_cast<AMDRadeonX5000_AMDGFX9DCNDisplay*>(_self);
     assert(offsetRight == 0);
 
     auto& expansion  = self->getExpansion();
@@ -617,8 +312,8 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::writeFlipParameters(
     if (hwRotation == nullptr) { newFlipParam.dcn.surfaceRotation = savedState.flipParam.dcn.surfaceRotation; }
     else {
         switch (*hwRotation) {
-            case AMDHWRotationAngle::DEG_0  :
-            case AMDHWRotationAngle::DEG_90 :
+            case AMDHWRotationAngle::DEG_0:
+            case AMDHWRotationAngle::DEG_90:
             case AMDHWRotationAngle::DEG_180:
             case AMDHWRotationAngle::DEG_270: {
                 newFlipParam.dcn.surfaceRotation = *hwRotation;
@@ -670,11 +365,12 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::writeFlipParameters(
     return true;
 }
 
-void AMDRadeonX5000_AMDGFX9DCNDisplay::getDisplayModeViewportSpecificInfo(AMDRadeonX5000_AMDGFX9DCNDisplay* const self,
-                                                                          const UInt32  fbIndex,
+void AMDRadeonX5000_AMDGFX9DCNDisplay::getDisplayModeViewportSpecificInfo(AMDRadeonX5000_AMDHWDisplay* const _self,
+                                                                          const UInt32                       fbIndex,
                                                                           UInt32* const viewportYStart,
                                                                           UInt32* const viewportHeight)
 {
+    const auto  self           = static_cast<AMDRadeonX5000_AMDGFX9DCNDisplay*>(_self);
     auto&       expansion      = self->getExpansion();
     const auto& regOffs        = expansion.regOffs[fbIndex];
     const auto& regShiftsMasks = expansion.regShiftsMasks;
@@ -692,12 +388,13 @@ void AMDRadeonX5000_AMDGFX9DCNDisplay::getDisplayModeViewportSpecificInfo(AMDRad
     }
 }
 
-UInt32 AMDRadeonX5000_AMDGFX9DCNDisplay::writeFlipControlRegisters(AMDRadeonX5000_AMDGFX9DCNDisplay* const self,
+UInt32 AMDRadeonX5000_AMDGFX9DCNDisplay::writeFlipControlRegisters(AMDRadeonX5000_AMDHWDisplay* const _self,
                                                                    const UInt32 fbIndex, UInt32* const buffer,
                                                                    const AMDSwapInterval         swapInterval,
                                                                    const UInt64                  offsetLeft,
                                                                    [[maybe_unused]] const UInt64 offsetRight)
 {
+    const auto self = static_cast<AMDRadeonX5000_AMDGFX9DCNDisplay*>(_self);
     assert(offsetRight == 0);
 
     UInt32 displays[MAX_SUPPORTED_DISPLAYS];
@@ -729,9 +426,10 @@ UInt32 AMDRadeonX5000_AMDGFX9DCNDisplay::writeFlipControlRegisters(AMDRadeonX500
     return dwordCount;
 }
 
-bool AMDRadeonX5000_AMDGFX9DCNDisplay::isDisplayControlEnabled(AMDRadeonX5000_AMDGFX9DCNDisplay* const self,
-                                                               const UInt32                            fbIndex)
+bool AMDRadeonX5000_AMDGFX9DCNDisplay::isDisplayControlEnabled(AMDRadeonX5000_AMDHWDisplay* const _self,
+                                                               const UInt32                       fbIndex)
 {
+    const auto  self      = static_cast<AMDRadeonX5000_AMDGFX9DCNDisplay*>(_self);
     const auto& expansion = self->getExpansion();
     const auto& regOffs   = expansion.regOffs[fbIndex];
     assert(regOffs.isValid);
@@ -739,9 +437,10 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::isDisplayControlEnabled(AMDRadeonX5000_AM
     return (self->getHWRegisters()->read(regOffs.otgControl) & expansion.regShiftsMasks.otgEnable) != 0;
 }
 
-bool AMDRadeonX5000_AMDGFX9DCNDisplay::isDisplayInterlaceEnabled(AMDRadeonX5000_AMDGFX9DCNDisplay* const self,
-                                                                 const UInt32                            fbIndex)
+bool AMDRadeonX5000_AMDGFX9DCNDisplay::isDisplayInterlaceEnabled(AMDRadeonX5000_AMDHWDisplay* const _self,
+                                                                 const UInt32                       fbIndex)
 {
+    const auto  self           = static_cast<AMDRadeonX5000_AMDGFX9DCNDisplay*>(_self);
     const auto& expansion      = self->getExpansion();
     const auto& regOffs        = expansion.regOffs[fbIndex];
     const auto& regShiftsMasks = expansion.regShiftsMasks;
@@ -750,8 +449,9 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::isDisplayInterlaceEnabled(AMDRadeonX5000_
     return (self->getHWRegisters()->read(regOffs.otgInterlaceControl) & regShiftsMasks.otgInterlaceEnable) != 0;
 }
 
-bool AMDRadeonX5000_AMDGFX9DCNDisplay::isFlipPending(AMDRadeonX5000_AMDGFX9DCNDisplay* const self, const UInt32 fbIndex)
+bool AMDRadeonX5000_AMDGFX9DCNDisplay::isFlipPending(AMDRadeonX5000_AMDHWDisplay* const _self, const UInt32 fbIndex)
 {
+    const auto  self      = static_cast<AMDRadeonX5000_AMDGFX9DCNDisplay*>(_self);
     const auto& expansion = self->getExpansion();
     const auto& regOffs   = expansion.regOffs[fbIndex];
     assert(regOffs.isValid);
@@ -764,48 +464,41 @@ bool AMDRadeonX5000_AMDGFX9DCNDisplay::isFlipPending(AMDRadeonX5000_AMDGFX9DCNDi
 }
 
 // No, no, there's no DCN1 option.
-AMDFlipOption AMDRadeonX5000_AMDGFX9DCNDisplay::getFlipOption() { return AMDFlipOption::DCN2; }
+AMDFlipOption AMDRadeonX5000_AMDGFX9DCNDisplay::getFlipOption(AMDRadeonX5000_AMDHWDisplay*)
+{ return AMDFlipOption::DCN2; }
 
-UInt32 AMDRadeonX5000_AMDGFX9DCNDisplay::getNumberOfSupportedDisplays() { return MAX_SUPPORTED_DISPLAYS_RV; }
-
-#define setVFunc(_vft, _index, _func)                \
-    {                                                \
-        assert((_index) != INVALID_VT_INDEX);        \
-        (_vft).get<decltype(_func)>(_index) = _func; \
-    }
+UInt32 AMDRadeonX5000_AMDGFX9DCNDisplay::getNumberOfSupportedDisplays(AMDRadeonX5000_AMDHWDisplay*)
+{ return MAX_SUPPORTED_DISPLAYS_RV; }
 
 void AMDRadeonX5000_AMDGFX9DCNDisplay::populateVFT(VFT& vft)
 {
-    assert(AMDRadeonX5000_AMDHWDisplay::vfuncs() != nullptr);
     vft.init(AMDRadeonX5000_AMDHWDisplay::vfuncs());
 
-    setVFunc(vft, constants.initializeRegistersVTIndex, initialiseRegisters);
-    setVFunc(vft, constants.restoreRegistersVTIndex, restoreRegisters);
-    setVFunc(vft, constants.getDisplayInfoVTIndex, getDisplayInfo);
-    setVFunc(vft, constants.writeWaitForVLineVTIndex, writeWaitForVLine);
-    setVFunc(vft, constants.initVTIndex, init);
-    setVFunc(vft, constants.getPixelModeVTIndex, getPixelMode);
-    setVFunc(vft, constants.getPixelFormatVTIndex, getPixelFormat);
-    setVFunc(vft, constants.writeFlipParametersVTIndex, writeFlipParameters);
-    setVFunc(vft, constants.getDisplayModeViewportSpecificInfoVTIndex, getDisplayModeViewportSpecificInfo);
-    setVFunc(vft, constants.isDisplayControlEnabledVTIndex, isDisplayControlEnabled);
-    setVFunc(vft, constants.isDisplayInterlaceEnabledVTIndex, isDisplayInterlaceEnabled);
-
-    if (currentKernelVersion() >= MACOS_11) { setVFunc(vft, constants.getFlipOptionVTIndex, getFlipOption); }
+    const auto vftInner                                       = static_cast<void*>(vft.inner());
+    constants.vftInitializeRegisters(vftInner)                = initialiseRegisters;
+    constants.vftRestoreRegisters(vftInner)                   = restoreRegisters;
+    superGetDisplayInfo                                       = constants.vftGetDisplayInfo(vftInner);
+    constants.vftGetDisplayInfo(vftInner)                     = getDisplayInfo;
+    constants.vftWriteWaitForVLine(vftInner)                  = writeWaitForVLine;
+    constants.vftInit(vftInner)                               = init;
+    constants.vftGetPixelMode(vftInner)                       = getPixelMode;
+    constants.vftGetPixelFormat(vftInner)                     = getPixelFormat;
+    constants.vftWriteFlipParameters(vftInner)                = writeFlipParameters;
+    constants.vftGetDisplayModeViewportSpecificInfo(vftInner) = getDisplayModeViewportSpecificInfo;
+    constants.vftIsDisplayControlEnabled(vftInner)            = isDisplayControlEnabled;
+    constants.vftIsDisplayInterlaceEnabled(vftInner)          = isDisplayInterlaceEnabled;
+    if (currentKernelVersion() >= MACOS_11) { constants.vftGetFlipOption(vftInner) = getFlipOption; }
 
     if (currentKernelVersion() >= MACOS_13) { return; }
+    constants.vftGetCurrentDisplayOffset(vftInner)   = getCurrentDisplayOffset;
+    constants.vftSetCurrentDisplayOffset(vftInner)   = setCurrentDisplayOffset;
+    constants.vftSetFlipControlRegister(vftInner)    = setFlipControlRegister;
+    constants.vftWriteFlipControlRegisters(vftInner) = writeFlipControlRegisters;
+    constants.vftIsFlipPending(vftInner)             = isFlipPending;
 
-    setVFunc(vft, constants.getCurrentDisplayOffsetVTIndex, getCurrentDisplayOffset);
-    setVFunc(vft, constants.setCurrentDisplayOffsetVTIndex, setCurrentDisplayOffset);
-    setVFunc(vft, constants.setFlipControlRegisterVTIndex, setFlipControlRegister);
-    setVFunc(vft, constants.writeFlipControlRegistersVTIndex, writeFlipControlRegisters);
-    setVFunc(vft, constants.isFlipPendingVTIndex, isFlipPending);
-    if (currentKernelVersion() <= MACOS_10_14_X) {
-        setVFunc(vft, constants.getNumberOfSupportedDisplaysVTIndex, getNumberOfSupportedDisplays);
-    }
+    if (currentKernelVersion() >= MACOS_10_15) { return; }
+    constants.vftGetNumberOfSupportedDisplays(vftInner) = getNumberOfSupportedDisplays;
 }
-
-#undef setVFunc
 
 void AMDRadeonX5000_AMDGFX9DCNDisplay::registerMC(const char* const kext, KernelPatcher& patcher, const size_t id,
                                                   const mach_vm_address_t slide, const size_t size)

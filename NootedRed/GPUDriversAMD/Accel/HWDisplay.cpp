@@ -20,7 +20,7 @@ void AMDRadeonX5000_AMDHWDisplay::resolve(KernelPatcher& patcher, const size_t i
     PANIC_COND(constants.vfuncs == nullptr, "HWDisplay", "Failed to resolve VTable");
     constants.vfuncs += 2;
 
-    constants.init = patcher.solveSymbol(
+    constants.init = patcher.solveSymbol<decltype(constants.init)>(
         id, "__ZN27AMDRadeonX5000_AMDHWDisplay4initEP30AMDRadeonX5000_IAMDHWInterfaceP14_FB_PARAMETERS", slide, size,
         true);
     PANIC_COND(constants.init == 0, "HWDisplay", "Failed to solve init");

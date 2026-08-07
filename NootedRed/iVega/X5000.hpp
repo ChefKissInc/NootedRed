@@ -4,9 +4,12 @@
 // See LICENSE for details.
 
 #pragma once
+#include <GPUDriversAMD/Accel/HWDisplay.hpp>
 #include <GPUDriversAMD/Accel/HWEngine.hpp>
 #include <GPUDriversAMD/AddrLib.hpp>
+#include <GPUDriversAMD/FB/FramebufferInfo.hpp>
 #include <Headers/kern_patcher.hpp>
+#include <IOKit/graphics/IOFramebuffer.h>
 #include <PenguinWizardry/ObjectField.hpp>
 
 namespace iVega
@@ -59,6 +62,8 @@ namespace iVega
         static void*  wrapObtainAccelChannelGroup1304(void* self, UInt32 priority, void* task);
         static UInt32 wrapHwlConvertChipFamily(void* self, UInt32 family, UInt32 revision);
         static UInt32 computeSubmitCommandBuffer(void* self, void* info);
+        static bool   fixedGetDisplayInfo(AMDRadeonX5000_AMDHWDisplay* self, UInt32 fbIndex, bool isCRTEnabled,
+                                          bool ignoreCRTOffsetCheck, IOFramebuffer* fb, FramebufferInfo* fbInfo);
     };
 
 }    // namespace iVega

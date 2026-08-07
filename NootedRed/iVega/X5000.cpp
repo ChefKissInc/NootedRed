@@ -6,6 +6,7 @@
 #include <GPUDriversAMD/Accel/HWDisplay.hpp>
 #include <GPUDriversAMD/Accel/HWEngine.hpp>
 #include <GPUDriversAMD/AddrLib.hpp>
+#include <GPUDriversAMD/FB/Attributes.hpp>
 #include <GPUDriversAMD/Family.hpp>
 #include <Headers/kern_mach.hpp>
 #include <Headers/kern_patcher.hpp>
@@ -186,6 +187,7 @@ void iVega::X5000::processKext(KernelPatcher& patcher, const size_t id, const ma
         {"__ZN30AMDRadeonX5000_AMDGFX9Hardware20writeASICHangLogInfoEPPv", returnZero},
         {"__ZN4Addr2V27Gfx9Lib20HwlConvertChipFamilyEjj", wrapHwlConvertChipFamily, this->orgHwlConvertChipFamily,
          kHwlConvertChipFamilyPattern},
+        {"__ZN27AMDRadeonX5000_AMDHWDisplay14getDisplayInfoEjbbPvP17_FRAMEBUFFER_INFO", fixedGetDisplayInfo},
     };
     PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "X5000",
                "Failed to route symbols");
@@ -407,4 +409,340 @@ UInt32 iVega::X5000::computeSubmitCommandBuffer(void* const self, void* const in
 {
     singleton().notifyGfxAccess(singleton().hwChannelHWInterfaceField(self));
     return FunctionCast(computeSubmitCommandBuffer, singleton().orgPM4SubmitCommandBuffer)(self, info);
+}
+
+//  -- VRR was introduced on macOS Big Sur. --
+
+namespace
+{
+
+    class Constants
+    {
+        static void _setVrrTimestampInfoVentura(AMDRadeonX5000_AMDHWDisplay* const self, const UInt64 vTotalMin,
+                                                const UInt64 vTotalMax, const UInt64 horizontalLineTime)
+        {
+            auto& vrrTimestampInfo                      = self->vrrTimestampInfoVentura();
+            vrrTimestampInfo.lastTransactionTimestamp   = 0;
+            vrrTimestampInfo.currentFrameStartTimestamp = 0;
+            vrrTimestampInfo.lastTransactionStartTime   = 0;
+            vrrTimestampInfo.currentFrameVTotal         = vTotalMin;
+            vrrTimestampInfo.horizontalLineTime         = horizontalLineTime;
+            vrrTimestampInfo.currentFrameTime           = 0;
+            vrrTimestampInfo.vTotalMin                  = vTotalMin;
+            vrrTimestampInfo.vTotalMax                  = vTotalMax;
+            vrrTimestampInfo.transactionOnGlassTime     = 0;
+        }
+
+        static void _setVrrTimestampInfo(AMDRadeonX5000_AMDHWDisplay* const self, const UInt64 vTotalMin,
+                                         const UInt64 vTotalMax, const UInt64 horizontalLineTime)
+        {
+            auto& vrrTimestampInfo                      = self->vrrTimestampInfo();
+            vrrTimestampInfo.field0                     = 0;
+            vrrTimestampInfo.lastTransactionTimestamp   = 0;
+            vrrTimestampInfo.currentFrameStartTimestamp = 0;
+            vrrTimestampInfo.lastTransactionStartTime   = 0;
+            vrrTimestampInfo.currentFrameVTotal         = static_cast<UInt32>(vTotalMin);
+            vrrTimestampInfo.horizontalLineTime         = static_cast<UInt32>(horizontalLineTime);
+            vrrTimestampInfo.currentFrameTime           = 0;
+            vrrTimestampInfo.vTotalMin                  = static_cast<UInt32>(vTotalMin);
+            vrrTimestampInfo.vTotalMax                  = static_cast<UInt32>(vTotalMax);
+            vrrTimestampInfo.transactionOnGlassTime     = 0;
+        }
+
+        static void _calcAndSetVrrTimestampInfo(AMDRadeonX5000_AMDHWDisplay* const self,
+                                                const FramebufferInfo* const       fbInfo,
+                                                const IOTimingInformation&         timingInfo)
+        {
+            assert(currentKernelVersion() >= MACOS_11);
+
+            if (!fbInfo->isOnline) { return; }
+
+            const auto vTotalMin =
+                timingInfo.detailedInfo.v2.verticalBlanking + timingInfo.detailedInfo.v2.verticalActive;
+            const auto vTotalMax  = vTotalMin + timingInfo.detailedInfo.v2.verticalBlankingExtension;
+            const auto pixelClock = timingInfo.detailedInfo.v2.pixelClock;
+            if (pixelClock == 0) { singleton.setVrrTimestampInfo(self, vTotalMin, vTotalMax, 0); }
+            else {
+                const auto hTotal =
+                    timingInfo.detailedInfo.v2.horizontalBlanking + timingInfo.detailedInfo.v2.horizontalActive;
+                const auto hLineTimeNs = static_cast<UInt64>(hTotal) * 1000000000ULL / pixelClock;
+                UInt64     horizontalLineTime;
+                nanoseconds_to_absolutetime(hLineTimeNs, &horizontalLineTime);
+                singleton.setVrrTimestampInfo(self, vTotalMin, vTotalMax, horizontalLineTime);
+            }
+        }
+
+        static void _calcAndSetVrrTimestampInfoDummy(AMDRadeonX5000_AMDHWDisplay*, const FramebufferInfo*,
+                                                     const IOTimingInformation&)
+        { assert(currentKernelVersion() <= MACOS_10_15_X); }
+
+    public:
+        static const Constants singleton;
+
+        void (*setVrrTimestampInfo)(AMDRadeonX5000_AMDHWDisplay* self, UInt64 vTotalMin, UInt64 vTotalMax,
+                                    const UInt64 horizontalLineTime){nullptr};
+        void (*calcAndSetVrrTimestampInfo)(AMDRadeonX5000_AMDHWDisplay* self, const FramebufferInfo* fbInfo,
+                                           const IOTimingInformation& timingInfo){_calcAndSetVrrTimestampInfoDummy};
+
+        explicit Constants()
+        {
+            if (currentKernelVersion() < MACOS_11) { return; }
+
+            this->calcAndSetVrrTimestampInfo = _calcAndSetVrrTimestampInfo;
+            this->setVrrTimestampInfo =
+                currentKernelVersion() >= MACOS_13 ? _setVrrTimestampInfoVentura : _setVrrTimestampInfo;
+        }
+    };
+
+    const Constants Constants::singleton;
+
+    constexpr inline auto& vrrConstants = Constants::singleton;
+
+}    // namespace
+
+bool iVega::X5000::fixedGetDisplayInfo(AMDRadeonX5000_AMDHWDisplay* const self, const UInt32 fbIndex,
+                                       const bool isCRTEnabled, const bool ignoreCRTOffsetCheck,
+                                       IOFramebuffer* const fb, FramebufferInfo* const fbInfo)
+{
+    if (fb == nullptr || fbIndex >= self->supportedDisplayCount()) { return false; }
+
+    fbInfo->crtOffset   = 0;
+    fbInfo->size        = 0;
+    fbInfo->crtSize     = 0;
+    fbInfo->pitch       = 0;
+    fbInfo->rect.width  = 0;
+    fbInfo->rect.height = 0;
+
+    auto& displayState = self->displayStates()[fbIndex];
+
+    displayState.framebuffer = fb;
+    displayState.status.setIsEnabled(isCRTEnabled);
+    displayState.status.setIsIOFBFlipEnabled(true);
+    displayState.status.setIsAccelBacked(false);
+
+    uintptr_t wsaa = -1ULL;
+    if (fb->getAttribute(ATTRIBUTE_WSAA, &wsaa) == kIOReturnSuccess) {
+        self->wsaaAttributes()[fbIndex] = static_cast<UInt32>(wsaa);
+        displayState.status.setIsWSAASupported(true);
+    }
+    else {
+        displayState.status.setIsWSAASupported(false);
+    }
+
+    uintptr_t  dpt    = 0;
+    const auto dptRet = fb->getAttribute(ATTRIBUTE_DISPLAY_PIPE_TRANSACTION, &dpt);
+    displayState.status.setIsDPTSupported(dptRet == kIOReturnSuccess || dptRet == kIOReturnNotReady);
+
+    const auto crtOffset = OSDynamicCast(OSData, fb->getProperty("ATY,fb_offset"));
+    if (crtOffset != nullptr) {
+        const auto data = crtOffset->getBytesNoCopy();
+        if (data != nullptr) { fbInfo->crtOffset = *static_cast<const UInt64*>(data); }
+    }
+
+    const auto crtSize = OSDynamicCast(OSData, fb->getProperty("ATY,fb_size"));
+    if (crtSize != nullptr) {
+        const auto data = crtSize->getBytesNoCopy();
+        if (data != nullptr) { fbInfo->crtSize = *static_cast<const UInt32*>(data); }
+    }
+
+    auto aperture = fb->getApertureRange(kIOFBSystemAperture);
+    auto vram     = fb->getVRAMRange();
+
+    fbInfo->isMapped = aperture != nullptr && vram != nullptr;
+
+    [[clang::suppress]] OSSafeReleaseNULL(aperture);
+    [[clang::suppress]] OSSafeReleaseNULL(vram);
+
+    self->getDisplayModeViewportSpecificInfo(fbIndex, &self->viewportStartYs()[fbIndex],
+                                             &self->viewportHeights()[fbIndex]);
+
+    uintptr_t isOnline = 0;
+    fbInfo->isOnline =
+        fb->getAttributeForConnection(static_cast<IOIndex>(fbIndex), kConnectionEnable, &isOnline) == kIOReturnSuccess
+        && isOnline != 0;
+
+    self->fedsParamInfo()[fbIndex].crtIndex = 0;
+    self->fedsParamInfo()[fbIndex].scaledW  = 0;
+    self->fedsParamInfo()[fbIndex].scaledH  = 0;
+    self->fedsParamInfo()[fbIndex].srcW     = 0;
+    self->fedsParamInfo()[fbIndex].srcH     = 0;
+
+    self->scalerFlags()[fbIndex] = 0;
+
+    IODisplayModeID displayMode = 0;
+    IOIndex         depth       = 0;
+    if (fb->getCurrentDisplayMode(&displayMode, &depth) == kIOReturnSuccess) {
+        if (fb->getPixelInformation(displayMode, depth, kIOFBSystemAperture, &displayState.pixelInfo)
+            == kIOReturnSuccess)
+        {
+            const auto bytesPerPixel = displayState.pixelInfo.bitsPerPixel / 8;
+            if (bytesPerPixel != 0) { fbInfo->pitch = displayState.pixelInfo.bytesPerRow / bytesPerPixel; }
+            fbInfo->rect.width  = displayState.pixelInfo.activeWidth;
+            fbInfo->rect.height = displayState.pixelInfo.activeHeight;
+        }
+
+        IODisplayModeInformation modeInfo;
+        memset(&modeInfo, 0, sizeof(modeInfo));
+        if (fb->getInformationForDisplayMode(displayMode, &modeInfo) == kIOReturnSuccess
+            && (modeInfo.flags & kDisplayModeAcceleratorBackedFlag) != 0)
+        {
+            displayState.status.setIsAccelBacked(true);
+            self->fedsParamInfo()[fbIndex].crtIndex = 1;
+        }
+
+        IOTimingInformation timingInfo;
+        memset(&timingInfo, 0, sizeof(timingInfo));
+        timingInfo.flags = kIODetailedTimingValid;
+        if (fb->getTimingInfoForDisplayMode(displayMode, &timingInfo) == kIOReturnSuccess
+            && (timingInfo.flags & kIODetailedTimingValid) != 0)
+        {
+            self->scalerFlags()[fbIndex] = timingInfo.detailedInfo.v2.scalerFlags;
+
+            if (self->fedsParamInfo()[fbIndex].crtIndex == 1) {
+                self->fedsParamInfo()[fbIndex].scaledW = timingInfo.detailedInfo.v2.horizontalActive;
+                self->fedsParamInfo()[fbIndex].scaledH = timingInfo.detailedInfo.v2.verticalActive;
+                self->fedsParamInfo()[fbIndex].srcW    = timingInfo.detailedInfo.v2.horizontalScaled;
+                self->fedsParamInfo()[fbIndex].srcH    = timingInfo.detailedInfo.v2.verticalScaled;
+            }
+
+            vrrConstants.calcAndSetVrrTimestampInfo(self, fbInfo, timingInfo);
+        }
+    }
+
+    auto& hwSpecificInfo = self->crtHWSpecificInfos()[fbIndex];
+
+    auto ret = true;
+
+    if (!isCRTEnabled
+        || (!ignoreCRTOffsetCheck && fbInfo->crtOffset >= self->getHWInterface()->getHWMemory()->getVisibleSize()))
+    {
+        fbInfo->crtOffset = 0;
+        fbInfo->size      = 0;
+    }
+    else {
+        CRTHWDepth hwDepth;
+        switch (displayState.pixelInfo.bitsPerPixel) {
+            case 8: {
+                hwDepth = CRTHWDepth::DEPTH_8;
+            } break;
+            case 16: {
+                hwDepth = CRTHWDepth::DEPTH_16;
+            } break;
+            case 32: {
+                hwDepth = CRTHWDepth::DEPTH_32;
+            } break;
+            case 64: {
+                hwDepth = CRTHWDepth::DEPTH_64;
+            } break;
+            default: {
+                hwDepth = CRTHWDepth::DEPTH_32;
+                ret     = false;
+            } break;
+        }
+        DBGLOG("X5000", "%s hwDepth=%s for bpp %d", __func__, stringifyCRTHWDepth(hwDepth),
+               displayState.pixelInfo.bitsPerPixel);
+        hwSpecificInfo.graphDepth = hwDepth;
+
+        CRTHWFormat hwFormat;    // bug fix - original code only handled depth 64 and format 10
+        switch (displayState.pixelInfo.bitsPerComponent) {
+            case 8: {
+                hwFormat = CRTHWFormat::FORMAT_8;
+            } break;
+            case 10: {
+                hwFormat = CRTHWFormat::FORMAT_10;
+            } break;
+            case 12: {
+                hwFormat = CRTHWFormat::FORMAT_12;
+            } break;
+            default: {
+                hwFormat = CRTHWFormat::FORMAT_8;
+                ret      = false;
+            } break;
+        }
+        DBGLOG("X5000", "%s hwFormat=%s for bpc %d", __func__, stringifyCRTHWFormat(hwFormat),
+               displayState.pixelInfo.bitsPerComponent);
+        hwSpecificInfo.graphFormat = hwFormat;
+
+        switch (hwDepth) {
+            case CRTHWDepth::DEPTH_8: {
+                hwSpecificInfo.bytesPerPixel = 1;
+            } break;
+            case CRTHWDepth::DEPTH_16: {
+                hwSpecificInfo.bytesPerPixel = 2;
+            } break;
+            case CRTHWDepth::DEPTH_32: {
+                hwSpecificInfo.bytesPerPixel = 4;
+            } break;
+            case CRTHWDepth::DEPTH_64: {
+                hwSpecificInfo.bytesPerPixel = 8;
+            } break;
+        }
+        hwSpecificInfo.pixelMode = self->getPixelMode(hwDepth, hwFormat);
+        DBGLOG("X5000", "%s hwSpecificInfo.pixelMode=%s", __func__, stringifyATIPixelMode(hwSpecificInfo.pixelMode));
+        hwSpecificInfo.format = self->getPixelFormat(hwSpecificInfo.pixelMode);
+        DBGLOG("X5000", "%s hwSpecificInfo.format=%s", __func__, stringifyATIFormat(hwSpecificInfo.format));
+        hwSpecificInfo.isInterlaced = self->isDisplayInterlaceEnabled(fbIndex);
+        displayState.status.setIsInterlaced(hwSpecificInfo.isInterlaced);
+
+        ADDR2_COMPUTE_SURFACE_INFO_INPUT surfInfoInput;
+        surfInfoInput.width        = fbInfo->rect.width;
+        surfInfoInput.height       = fbInfo->rect.height;
+        surfInfoInput.bpp          = displayState.pixelInfo.bitsPerPixel;
+        surfInfoInput.resourceType = ADDR_RSRC_TEX_2D;
+        surfInfoInput.format     = self->getHWInterface()->getHWAlignManager()->getAddrFormat(hwSpecificInfo.pixelMode);
+        surfInfoInput.numSamples = 1;
+        surfInfoInput.numSlices  = 1;
+        surfInfoInput.flags.display = true;
+        surfInfoInput.swizzleMode =
+            self->getHWInterface()->getHWAlignManager()->getPreferredSwizzleMode2(&surfInfoInput);
+        self->savedSwizzleModes()[fbIndex]  = surfInfoInput.swizzleMode;
+        self->swizzleModes()[fbIndex]       = surfInfoInput.swizzleMode;
+        self->savedResourceTypes()[fbIndex] = surfInfoInput.resourceType;
+        if (self->getHWInterface()->getHWAlignManager()->getSurfaceInfo2(&surfInfoInput,
+                                                                         &self->surfInfoOutputs()[fbIndex])
+            == kIOReturnSuccess)
+        {
+            fbInfo->size = fbInfo->pitch * self->surfInfoOutputs()[fbIndex].height * hwSpecificInfo.bytesPerPixel;
+        }
+        else {
+            fbInfo->size = 0;
+        }
+        displayState.status.setIsEnabled(true);
+    }
+
+    AMDHWDisplayState::Status combinedStatus;
+    for (UInt32 i = 0; i < self->supportedDisplayCount(); i += 1) { combinedStatus |= self->displayStates()[i].status; }
+    self->combinedStatus() = combinedStatus;
+
+    fbInfo->savedSize = fbInfo->size;
+
+    if (self->fedsParamInfo()[fbIndex].crtIndex != 0) {
+        ADDR2_COMPUTE_SURFACE_INFO_INPUT surfInfoInput;
+        surfInfoInput.width        = self->fedsParamInfo()[fbIndex].scaledW;
+        surfInfoInput.height       = self->fedsParamInfo()[fbIndex].scaledH;
+        surfInfoInput.bpp          = displayState.pixelInfo.bitsPerPixel;
+        surfInfoInput.swizzleMode  = self->savedSwizzleModes()[fbIndex];
+        surfInfoInput.resourceType = self->savedResourceTypes()[fbIndex];
+        surfInfoInput.format     = self->getHWInterface()->getHWAlignManager()->getAddrFormat(hwSpecificInfo.pixelMode);
+        surfInfoInput.numSamples = 1;
+        surfInfoInput.numSlices  = 1;
+        surfInfoInput.flags.display = true;
+        ADDR2_COMPUTE_SURFACE_INFO_OUTPUT surfInfoOutput;
+        if (self->getHWInterface()->getHWAlignManager()->getSurfaceInfo2(&surfInfoInput, &surfInfoOutput)
+            == kIOReturnSuccess)
+        {
+            fbInfo->savedSize =
+                static_cast<UInt64>(surfInfoOutput.height) * surfInfoOutput.pitch * hwSpecificInfo.bytesPerPixel;
+        }
+    }
+
+    UInt64 baseAlign = self->surfInfoOutputs()[fbIndex].baseAlign;
+    UInt8  shift     = 0;
+    while (page_size < baseAlign) {
+        baseAlign >>= 1;
+        shift      += 1;
+    }
+    fbInfo->pageCount = alignValue(page_size << shift);
+
+    return ret;
 }
