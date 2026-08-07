@@ -53,6 +53,12 @@ public:
         getMember<decltype(this->vft)>(obj, 0) = this->vft;
     }
 
+    void** inner() const
+    {
+        assert(this->vft != nullptr);
+        return this->vft;
+    }
+
     template<typename T>
     T*& get(const UInt32 i) const
     {
