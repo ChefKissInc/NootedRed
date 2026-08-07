@@ -14,8 +14,8 @@ class AMDRadeonX5000_AMDGFX9DCNDisplay : public AMDRadeonX5000_AMDHWDisplay
 {
     void initDCNRegOffs()
     {
-        auto vtable = getMember<void**>(this, 0);
-        reinterpret_cast<void (*)(const void*)>(vtable[vftCount()])(this);
+        const auto vtable = getMember<void**>(this, 0);
+        reinterpret_cast<void (*)(AMDRadeonX5000_AMDGFX9DCNDisplay*)>(vtable[vftCount()])(this);
     }
 
     static void   initialiseRegisters(AMDRadeonX5000_AMDHWDisplay* _self);
