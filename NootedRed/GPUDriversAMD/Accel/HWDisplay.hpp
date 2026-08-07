@@ -89,7 +89,7 @@ struct AMDHWSurfaceTilingParamsDCN2
     UInt32 numRbPerSe;
     UInt32 maxFrags;
     UInt32 swizzleMode;
-    UInt32 field_1c;    // ???? seemingly unused
+    UInt32 resourceType;    // unused?
     UInt32 shaderEn;
 
     bool operator==(AMDHWSurfaceTilingParamsDCN2& other) const { return memcmp(this, &other, sizeof(*this)) == 0; }
