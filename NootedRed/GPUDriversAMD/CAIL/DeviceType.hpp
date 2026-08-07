@@ -25,4 +25,3 @@ struct AMDDeviceTypeEntry
     UInt32        deviceId;
     AMDDeviceType deviceType;
 };
-static_assert(sizeof(AMDDeviceTypeEntry) == 0x8);

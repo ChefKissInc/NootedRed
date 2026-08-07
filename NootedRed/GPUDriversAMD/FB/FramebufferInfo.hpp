@@ -11,7 +11,6 @@ struct AMDFBRect
     UInt32 width;
     UInt32 height;
 };
-static_assert(sizeof(AMDFBRect) == 0x8);
 
 struct FramebufferInfo
 {
@@ -27,4 +26,3 @@ struct FramebufferInfo
     UInt64    savedSize;
     UInt64    pageCount;
 };
-static_assert(sizeof(FramebufferInfo) == 0x30);

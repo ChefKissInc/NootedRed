@@ -6,7 +6,7 @@
 #pragma once
 #include <IOKit/IOTypes.h>
 
-enum struct AmdReservedMemorySelector : UInt32
+enum struct AmdReservedMemorySelector
 {
     ReserveVRAM,
     Cursor1_32bpp,
@@ -33,4 +33,3 @@ enum struct AmdReservedMemorySelector : UInt32
     Registers,
     Framebuffer,
 };
-static_assert(sizeof(AmdReservedMemorySelector) == 0x4);

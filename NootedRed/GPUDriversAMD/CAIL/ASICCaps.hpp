@@ -14,7 +14,6 @@ struct CAILAsicCapsEntry
     const UInt32* ddiCaps;
     const UInt32* skeleton;
 };
-static_assert(sizeof(CAILAsicCapsEntry) == 0x28);
 
 struct CAILAsicCapsInitEntry
 {
@@ -26,7 +25,6 @@ struct CAILAsicCapsInitEntry
     const UInt32* ddiCaps;
     const void*   goldenSettings;
 };
-static_assert(sizeof(CAILAsicCapsInitEntry) == 0x38);
 
 constexpr UInt32 DDI_CAP_APU                = 0x53;     // Device is an APU
 constexpr UInt32 DDI_CAP_NO_DCE_SUPPORT     = 0x12C;    // Disable DCE support

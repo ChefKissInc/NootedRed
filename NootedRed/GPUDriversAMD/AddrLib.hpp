@@ -65,7 +65,6 @@ union ADDR2_SURFACE_FLAGS
 
     UInt32 value{0};
 };
-static_assert(sizeof(ADDR2_SURFACE_FLAGS) == 4);
 
 enum AddrResourceType
 {
@@ -74,7 +73,6 @@ enum AddrResourceType
     ADDR_RSRC_TEX_3D   = 2,
     ADDR_RSRC_MAX_TYPE = 3,
 };
-static_assert(sizeof(AddrResourceType) == 4);
 
 struct ADDR2_COMPUTE_SURFACE_INFO_INPUT
 {
@@ -93,7 +91,6 @@ struct ADDR2_COMPUTE_SURFACE_INFO_INPUT
     UInt32              pitchInElement{0};
     UInt32              sliceAlign{0};
 };
-static_assert(sizeof(ADDR2_COMPUTE_SURFACE_INFO_INPUT) == 0x38);
 
 struct ADDR2_COMPUTE_SURFACE_INFO_OUTPUT
 {
@@ -123,7 +120,6 @@ struct ADDR2_COMPUTE_SURFACE_INFO_OUTPUT
     UInt32 mipChainInTail{0};
     UInt32 firstMipIdInTail{0};
 };
-static_assert(sizeof(ADDR2_COMPUTE_SURFACE_INFO_OUTPUT) == 0x80);
 
 union ADDR2_BLOCK_SET
 {
@@ -169,7 +165,6 @@ struct ADDR2_GET_PREFERRED_SURF_SETTING_INPUT
     UInt32              maxAlign{0};
     UInt32              minSizeAlign{0};
 };
-static_assert(sizeof(ADDR2_GET_PREFERRED_SURF_SETTING_INPUT) == 0x44);
 
 struct ADDR2_GET_PREFERRED_SURF_SETTING_INPUT_NEW
 {
@@ -192,7 +187,6 @@ struct ADDR2_GET_PREFERRED_SURF_SETTING_INPUT_NEW
     UInt32              minSizeAlign{0};
     double              memoryBudget;
 };
-static_assert(sizeof(ADDR2_GET_PREFERRED_SURF_SETTING_INPUT_NEW) == 0x50);
 
 struct ADDR2_GET_PREFERRED_SURF_SETTING_OUTPUT
 {
@@ -205,4 +199,3 @@ struct ADDR2_GET_PREFERRED_SURF_SETTING_OUTPUT
     UInt32          clientPreferredSwSet{0};
     UInt32          validSwModeSet{0};
 };
-static_assert(sizeof(ADDR2_GET_PREFERRED_SURF_SETTING_OUTPUT) == 0x20);

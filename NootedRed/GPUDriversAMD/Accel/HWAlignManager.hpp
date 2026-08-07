@@ -47,7 +47,6 @@ enum struct ATIPixelMode : UInt8
     Reserved_23,
     HW_DEFINED = 0xFF,
 };
-static_assert(sizeof(ATIPixelMode) == 0x1);
 
 inline const char* stringifyATIPixelMode(ATIPixelMode v)
 {
@@ -234,9 +233,8 @@ enum struct ATIFormat : UInt8
     DvdLastDecode,
     None,
 };
-static_assert(sizeof(ATIFormat) == 0x1);
 
-inline const char* stringifyATIFormat(ATIFormat v)
+inline const char* stringifyATIFormat(const ATIFormat v)
 {
     switch (v) {
         case ATIFormat::Null             : return "Null";

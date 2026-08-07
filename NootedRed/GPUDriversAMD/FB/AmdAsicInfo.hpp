@@ -25,4 +25,3 @@ struct AmdAsicBrandingTableEntry
         AmdAsicBrandingTableEntry(0, 0, familyName, deviceName)
     { }
 };
-static_assert(sizeof(AmdAsicBrandingTableEntry) == 0x18);

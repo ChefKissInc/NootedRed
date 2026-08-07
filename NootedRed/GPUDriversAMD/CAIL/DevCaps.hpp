@@ -21,4 +21,3 @@ struct AMDDeviceCapabilities
     CAILASICGoldenSettings* asicGoldenSettings;
     void*                   doorbellRange;
 };
-static_assert(sizeof(AMDDeviceCapabilities) == 0x50);

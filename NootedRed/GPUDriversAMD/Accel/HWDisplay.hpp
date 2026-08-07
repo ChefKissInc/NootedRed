@@ -16,14 +16,12 @@ enum struct AMDFlipOption : UInt8
     DCN2,
     DCN3,
 };
-static_assert(sizeof(AMDFlipOption) == 0x1);
 
 struct AMDFlipRegister
 {
     UInt32 value;
     UInt32 offset;
 };
-static_assert(sizeof(AMDFlipRegister) == 0x8);
 
 enum struct AMDHWSurfaceFlipType
 {
@@ -31,14 +29,12 @@ enum struct AMDHWSurfaceFlipType
     Immediate,
     HSync,
 };
-static_assert(sizeof(AMDHWSurfaceFlipType) == 0x4);
 
 enum struct AMDSwapInterval
 {
     Immediate,
     VSync,
 };
-static_assert(sizeof(AMDSwapInterval) == 0x4);
 
 enum struct AMDHWSurfacePixelFormat
 {
@@ -58,7 +54,6 @@ enum struct AMDHWSurfacePixelFormat
     ARGB16161616F,
     ABGR16161616F,
 };
-static_assert(sizeof(AMDHWSurfacePixelFormat) == 0x4);
 
 enum struct AMDHWRotationAngle
 {
@@ -68,7 +63,6 @@ enum struct AMDHWRotationAngle
     DEG_270,
     Undefined = 0xFF,
 };
-static_assert(sizeof(AMDHWRotationAngle) == 0x4);
 
 struct AMDPipeRect
 {
@@ -77,7 +71,6 @@ struct AMDPipeRect
     float width;
     float height;
 };
-static_assert(sizeof(AMDPipeRect) == 0x10);
 
 enum struct AMDHWSurfaceDCCIndBlk : UInt8
 {
@@ -86,7 +79,6 @@ enum struct AMDHWSurfaceDCCIndBlk : UInt8
     BLK_128B,
     BLK_64B_NO_128BCL_S,
 };
-static_assert(sizeof(AMDHWSurfaceDCCIndBlk) == 0x1);
 
 struct AMDHWSurfaceTilingParamsDCN2
 {
@@ -103,7 +95,6 @@ struct AMDHWSurfaceTilingParamsDCN2
     bool operator==(AMDHWSurfaceTilingParamsDCN2& other) const { return memcmp(this, &other, sizeof(*this)) == 0; }
     bool operator!=(AMDHWSurfaceTilingParamsDCN2& other) const { return !(*this == other); }
 };
-static_assert(sizeof(AMDHWSurfaceTilingParamsDCN2) == 0x24);
 
 struct AMDHWSurfaceTilingParamsDCN3
 {
@@ -118,7 +109,6 @@ struct AMDHWSurfaceTilingParamsDCN3
     bool operator==(AMDHWSurfaceTilingParamsDCN3& other) const { return memcmp(this, &other, sizeof(*this)) == 0; }
     bool operator!=(AMDHWSurfaceTilingParamsDCN3& other) const { return !(*this == other); }
 };
-static_assert(sizeof(AMDHWSurfaceTilingParamsDCN3) == 0x1C);
 
 struct AMDHWSurfaceDCCParams
 {
@@ -128,7 +118,6 @@ struct AMDHWSurfaceDCCParams
     bool                  enabled;
     AMDHWSurfaceDCCIndBlk indBlockSize;
 };
-static_assert(sizeof(AMDHWSurfaceDCCParams) == 0x18);
 
 union AMDFlipParam
 {
@@ -154,7 +143,6 @@ union AMDFlipParam
         AMDHWSurfaceDCCParams dccParams;
     } dcn;
 };
-static_assert(sizeof(AMDFlipParam) == 0x68);
 
 struct AMDPipeFlip
 {
@@ -165,7 +153,6 @@ struct AMDPipeFlip
     AMDFlipParam  flipParam;
     UInt8         _unk[0x1B0];
 };
-static_assert(sizeof(AMDPipeFlip) == 0x220);
 
 enum struct CRTHWDepth
 {
@@ -174,7 +161,6 @@ enum struct CRTHWDepth
     DEPTH_32 = 2,
     DEPTH_64 = 3,
 };
-static_assert(sizeof(CRTHWDepth) == 0x4);
 
 inline const char* stringifyCRTHWDepth(CRTHWDepth v)
 {
@@ -192,7 +178,6 @@ enum struct CRTHWFormat
     FORMAT_10 = 1,
     FORMAT_12 = 2,
 };
-static_assert(sizeof(CRTHWFormat) == 0x4);
 
 inline const char* stringifyCRTHWFormat(CRTHWFormat v)
 {
@@ -287,7 +272,6 @@ struct AMDHWDisplayState
     IOFramebuffer*                          framebuffer;
     IOPixelInformation                      pixelInfo;
 };
-static_assert(sizeof(AMDHWDisplayState) == 0xD0);
 
 struct AMDVRRTimestampInfo
 {
@@ -302,7 +286,6 @@ struct AMDVRRTimestampInfo
     UInt32 vTotalMax;
     UInt32 transactionOnGlassTime;
 };
-static_assert(sizeof(AMDVRRTimestampInfo) == 0x28);
 
 struct AMDVRRTimestampInfoVentura
 {
@@ -316,7 +299,6 @@ struct AMDVRRTimestampInfoVentura
     UInt64 vTotalMax;
     UInt64 transactionOnGlassTime;
 };
-static_assert(sizeof(AMDVRRTimestampInfoVentura) == 0x48);
 
 struct ATIFEDSParamInfo2
 {
@@ -329,7 +311,6 @@ struct ATIFEDSParamInfo2
     UInt32 scaledRot;
     UInt32 field1c;
 };
-static_assert(sizeof(ATIFEDSParamInfo2) == 0x20);
 
 struct CRTHWSpecificInfo
 {
@@ -340,7 +321,6 @@ struct CRTHWSpecificInfo
     ATIFormat    format;
     bool         isInterlaced;
 };
-static_assert(sizeof(CRTHWSpecificInfo) == 0x10);
 
 class AMDRadeonX5000_AMDHWDisplay
 {

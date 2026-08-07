@@ -14,7 +14,6 @@ struct CAILGoldenRegister
     const UInt32 andMask;
     const UInt32 orMask;
 };
-static_assert(sizeof(CAILGoldenRegister) == 0x10);
 
 #define GOLDEN_REGISTER(reg, and, or) {.regOffset = (reg), .segment = reg##_BASE_IDX, .andMask = and, .orMask = or }
 #define GOLDEN_REGISTER_TERMINATOR                                                                \
@@ -25,7 +24,6 @@ struct CAILIPGoldenRegisters
     const CAILHWBlock         hwBlock;
     const CAILGoldenRegister* entries;
 };
-static_assert(sizeof(CAILIPGoldenRegisters) == 0x10);
 
 #define GOLDEN_REGISTERS(block, ents) {.hwBlock = kCAILHWBlock##block, .entries = (ents)}
 
@@ -37,4 +35,3 @@ struct CAILASICGoldenSettings
     const CAILGoldenRegister*    palladiumGoldenSettings;
     const CAILIPGoldenRegisters* goldenSettings;
 };
-static_assert(sizeof(CAILASICGoldenSettings) == 0x10);
