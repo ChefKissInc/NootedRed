@@ -32,7 +32,7 @@ bool PenguinWizardry::PatternSolveRequest::solve(KernelPatcher& patcher, const s
     }
 
     DBGLOG("Patcher+", "Failed to solve `%s` using symbol: %d. Attempting to use pattern.", safeString(this->symbol),
-           patcher.getError());
+           static_cast<int>(patcher.getError()));
     assertf(start != 0, "for symbol `%s`", safeString(this->symbol));
     assertf(size != 0, "for symbol `%s`", safeString(this->symbol));
 
@@ -82,7 +82,7 @@ bool PenguinWizardry::PatternRouteRequest::route(KernelPatcher& patcher, const s
             return false;
         }
         DBGLOG("Patcher+", "Failed to solve `%s` using symbol: %d. Attempting to use pattern.",
-               safeString(this->symbol), patcher.getError());
+               safeString(this->symbol), static_cast<int>(patcher.getError()));
         assertf(start != 0, "for symbol `%s`", safeString(this->symbol));
         assertf(size != 0, "for symbol `%s`", safeString(this->symbol));
         size_t offset;
@@ -212,11 +212,12 @@ bool PenguinWizardry::JumpPatternRouteRequest::route(KernelPatcher& patcher, con
     if (this->from == 0) {
         if (this->pattern == nullptr || this->patternSize == 0) {
             assert(this->symbol != nullptr);
-            DBGLOG("Patcher+", "Failed to solve `%s` using symbol: %d", safeString(this->symbol), patcher.getError());
+            DBGLOG("Patcher+", "Failed to solve `%s` using symbol: %d", safeString(this->symbol),
+                   static_cast<int>(patcher.getError()));
             return false;
         }
         DBGLOG("Patcher+", "Failed to solve `%s` using symbol: %d. Attempting to use jump pattern.",
-               safeString(this->symbol), patcher.getError());
+               safeString(this->symbol), static_cast<int>(patcher.getError()));
         assertf(start != 0, "for symbol `%s`", safeString(this->symbol));
         assertf(size != 0, "for symbol `%s`", safeString(this->symbol));
         size_t offset;
