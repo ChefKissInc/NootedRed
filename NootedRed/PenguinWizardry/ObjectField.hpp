@@ -26,13 +26,13 @@ public:
         this->offset = other;
     }
 
-    ObjectField<T> operator+(const UInt32 value)
+    ObjectField<T> operator+(const UInt32 value) const
     {
         assert(this->offset != InvalidOffset);
         return ObjectField<T>{this->offset + value};
     }
 
-    T& operator()(void* const obj)
+    T& operator()(void* const obj) const
     {
         assert(obj != nullptr);
         assert(this->offset != InvalidOffset);
