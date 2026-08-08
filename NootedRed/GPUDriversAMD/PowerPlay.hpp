@@ -6,7 +6,16 @@
 #pragma once
 #include <IOKit/IOTypes.h>
 
-enum PPResult
+enum struct PPLogLevel
+{
+    Error = 1,
+    Warning,
+    Info,
+    MoreInfo,
+    Trace,
+};
+
+enum struct PPResult
 {
     PPResultOK = 1,
     PPResultFailed,
@@ -35,7 +44,7 @@ enum PPResult
     PPResultInSurpriseRemoval,
     PPResultTableImmediateExitOK,
     PPResultClientNotFound,
-    PPResultTimeOut
+    PPResultTimeOut,
 };
 
 static constexpr UInt32 PP_WAIT_ON_REGISTER_TIMEOUT_DEFAULT = 2000;
