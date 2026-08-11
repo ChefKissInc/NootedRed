@@ -18,7 +18,7 @@
 #include <GPUDriversAMD/TTL/SWIP/IPVersion.hpp>
 #include <GPUDriversAMD/TTL/SWIP/SDMA.hpp>
 #include <GPUDriversAMD/TTL/SWIP/SMU.hpp>
-#include <GoldenSettings.hpp>
+#include "GoldenSettings.hpp"
 #include <HWLibs.hpp>
 #include <Headers/kern_mach.hpp>
 #include <Headers/kern_patcher.hpp>
