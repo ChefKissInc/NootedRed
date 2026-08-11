@@ -1,4 +1,4 @@
-// AMDRadeonX5000HWLibs patches for Vega iGPUs
+// AMDRadeonX5000HWLibs Patches
 //
 // Copyright © 2022-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
