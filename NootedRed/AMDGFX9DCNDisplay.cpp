@@ -4,6 +4,7 @@
 // Copyright © 2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
+#include <AMDGFX9DCNDisplay.hpp>
 #include <GPUDriversAMD/Accel/HWAlignManager.hpp>
 #include <GPUDriversAMD/Accel/HWDisplay.hpp>
 #include <GPUDriversAMD/AddrLib.hpp>
@@ -19,7 +20,6 @@
 #include <PenguinWizardry/KernelVersion.hpp>
 #include <PenguinWizardry/RuntimeMC.hpp>
 #include <PenguinWizardry/RuntimeVFT.hpp>
-#include <iVega/AMDGFX9DCNDisplay.hpp>
 #include <libkern/OSTypes.h>
 #include <libkern/c++/OSData.h>
 #include <libkern/c++/OSMetaClass.h>

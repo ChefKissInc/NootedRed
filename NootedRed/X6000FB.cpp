@@ -3,6 +3,7 @@
 // Copyright © 2022-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
+#include <ASICCaps.hpp>
 #include <GPUDriversAMD/ATOMBIOS.hpp>
 #include <GPUDriversAMD/CAIL/ASICCaps.hpp>
 #include <GPUDriversAMD/FB/AmdAsicInfo.hpp>
@@ -19,10 +20,9 @@
 #include <NRed.hpp>
 #include <PenguinWizardry/KernelVersion.hpp>
 #include <PenguinWizardry/PatcherPlus.hpp>
-#include <iVega/ASICCaps.hpp>
-#include <iVega/Regs/OSSSYS_4.hpp>
-#include <iVega/Regs/SMUIO.hpp>
-#include <iVega/X6000FB.hpp>
+#include <Regs/OSSSYS_4.hpp>
+#include <Regs/SMUIO.hpp>
+#include <X6000FB.hpp>
 #include <libkern/OSTypes.h>
 #include <mach/i386/vm_param.h>
 #include <mach/i386/vm_types.h>
@@ -52,6 +52,12 @@ static const UInt8 kIRQMGRWriteRegisterPattern[] = {0x55, 0x48, 0x89, 0xE5, 0x41
 static const UInt8 kIRQMGRWriteRegisterPattern1404[] = {
     0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x53, 0x50, 0x89, 0xD3,
     0x49, 0x89, 0xF7, 0x49, 0x89, 0xFE, 0x48, 0x8B, 0x87, 0xB0, 0x00, 0x00, 0x00, 0x48, 0x85, 0xC0};
+
+static const UInt8 kDpReceiverPowerCtrlPattern[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x54, 0x53,
+                                                    0x48, 0x83, 0xEC, 0x10, 0x89, 0xF3, 0xB0, 0x02, 0x28, 0xD8};
+static const UInt8 kDpReceiverPowerCtrlPattern1404[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56,
+                                                        0x41, 0x54, 0x53, 0x48, 0x83, 0xEC, 0x10, 0x41,
+                                                        0x89, 0xF7, 0xB0, 0x02, 0x44, 0x28, 0xF8};
 
 // Fix register read (0xD31 -> 0xD2F) and family ID (0x8F -> 0x8E).
 static const UInt8 kPopulateDeviceInfoOriginal[]{0xBE, 0x31, 0x0D, 0x00, 0x00, 0xFF, 0x90, 0x40, 0x01,
@@ -191,11 +197,30 @@ static const UInt8 kCreateLinksOriginalMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xF0};
 static const UInt8 kCreateLinksPatched[]      = {0x04, 0x00, 0x00, 0x00, 0x00};
 static const UInt8 kCreateLinksPatchedMask[]  = {0x0F, 0x00, 0x00, 0x00, 0x00};
 
-static iVega::X6000FB moduleInstance;
+// Remove new FB count condition so we can restore the original behaviour before Ventura.
+static const UInt8 kControllerPowerUpOriginal[]     = {0x38, 0xC8, 0x0F, 0x42, 0xC8, 0x88, 0x8F,
+                                                       0xBC, 0x00, 0x00, 0x00, 0x72, 0x00};
+static const UInt8 kControllerPowerUpOriginalMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                                                       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00};
+static const UInt8 kControllerPowerUpReplace[]      = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                                       0x00, 0x00, 0x00, 0x00, 0xEB, 0x00};
+static const UInt8 kControllerPowerUpReplaceMask[]  = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                                       0x00, 0x00, 0x00, 0x00, 0xFF, 0x00};
 
-iVega::X6000FB& iVega::X6000FB::singleton() { return moduleInstance; }
+// Remove new problematic Ventura pixel clock multiplier calculation which causes timing validation mishaps.
+static const UInt8 kValidateDetailedTimingOriginal[] = {0x66, 0x0F, 0x2E, 0xC1, 0x76, 0x06, 0xF2, 0x0F, 0x5E, 0xC1};
+static const UInt8 kValidateDetailedTimingPatched[]  = {0x66, 0x0F, 0x2E, 0xC1, 0x66, 0x90, 0xF2, 0x0F, 0x5E, 0xC1};
 
-void iVega::X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_address_t slide, size_t size)
+static const UInt8 kGetNumberOfConnectorsPattern[]     = {0x55, 0x48, 0x89, 0xE5, 0x40, 0x8B, 0x40, 0x28, 0x00,
+                                                          0x00, 0x00, 0x00, 0x00, 0x85, 0x00, 0x74, 0x00};
+static const UInt8 kGetNumberOfConnectorsPatternMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xF0, 0xFF, 0xF0, 0xFF, 0x00,
+                                                          0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00};
+
+static X6000FB moduleInstance;
+
+X6000FB& X6000FB::singleton() { return moduleInstance; }
+
+void X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_address_t slide, size_t size)
 {
     if (kextRadeonX6000Framebuffer.loadIndex != id) { return; }
 
@@ -220,13 +245,47 @@ void iVega::X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_addr
                                                         getGpuBrandingNameListRaven;
     MachInfo::setKernelWriting(false, KernelPatcher::kernelWriteLock);
 
+    if (checkKernelArgument("-NRedDPDelay")) {
+        if (currentKernelVersion() >= MACOS_14_4) {
+            PenguinWizardry::PatternRouteRequest request{"_dp_receiver_power_ctrl", wrapDpReceiverPowerCtrl,
+                                                         this->orgDpReceiverPowerCtrl, kDpReceiverPowerCtrlPattern1404};
+            PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
+                       "Failed to route dp_receiver_power_ctrl (14.4+)");
+        }
+        else {
+            PenguinWizardry::PatternRouteRequest request{"_dp_receiver_power_ctrl", wrapDpReceiverPowerCtrl,
+                                                         this->orgDpReceiverPowerCtrl, kDpReceiverPowerCtrlPattern};
+            PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route dp_receiver_power_ctrl");
+        }
+    }
+
+    if (currentKernelVersion() >= MACOS_13) {
+        this->orgMessageAccelerator = patcher.solveSymbol<decltype(this->orgMessageAccelerator)>(
+            id, "__ZNK34AMDRadeonX6000_AmdRadeonController18messageAcceleratorE25_eAMDAccelIOFBRequestTypePvS1_S1_",
+            slide, size);
+        PANIC_COND(this->orgMessageAccelerator == nullptr, "X6000FB", "Failed to resolve messageAccelerator");
+
+        KernelPatcher::RouteRequest request{"__ZN34AMDRadeonX6000_AmdRadeonController7powerUpEv", wrapControllerPowerUp,
+                                            this->orgControllerPowerUp};
+        PANIC_COND(!patcher.routeMultiple(id, &request, 1, slide, size), "X6000FB", "Failed to route powerUp");
+
+        const PenguinWizardry::MaskedLookupPatch patches[] = {
+            {&kextRadeonX6000Framebuffer, kControllerPowerUpOriginal, kControllerPowerUpOriginalMask,
+             kControllerPowerUpReplace, kControllerPowerUpReplaceMask, 1},
+            {&kextRadeonX6000Framebuffer, kValidateDetailedTimingOriginal, kValidateDetailedTimingPatched, 1},
+        };
+        PANIC_COND(!PenguinWizardry::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "X6000FB",
+                   "Failed to apply logic revert patches");
+    }
+
     PenguinWizardry::PatternRouteRequest requests[] = {
         {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", populateVramInfo, kPopulateVramInfoPattern,
          kPopulateVramInfoPatternMask},
         {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", getEnumeratedRevision},
         {"__ZN41AMDRadeonX6000_AmdDeviceMemoryManagerNavi21intializeReservedVramEv", initialiseReservedVRAM},
         {"__ZN38AMDRadeonX6000_AmdRadeonControllerNavi19setupBootWatermarksEv", dummyIOReturnSuccess},
-    };
+        {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
+         this->orgGetNumberOfConnectors, kGetNumberOfConnectorsPattern, kGetNumberOfConnectorsPatternMask}};
     PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "X6000FB",
                "Failed to route symbols");
 
@@ -401,9 +460,9 @@ void iVega::X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_addr
                "X6000FB", "Failed to apply createLinks patch");
 }
 
-UInt16 iVega::X6000FB::getEnumeratedRevision() { return NRed::singleton().getEnumRevision(); }
+UInt16 X6000FB::getEnumeratedRevision() { return NRed::singleton().getEnumRevision(); }
 
-IOReturn iVega::X6000FB::populateVramInfo(void* const, void* const fwInfo)
+IOReturn X6000FB::populateVramInfo(void* const, void* const fwInfo)
 {
     UInt32      channelCount = 1;
     auto* const table        = NRed::singleton().getVBIOSDataTable<const IGPSystemInfo>(0x1E);
@@ -426,20 +485,20 @@ IOReturn iVega::X6000FB::populateVramInfo(void* const, void* const fwInfo)
     }
     auto& videoMemoryType = getMember<VideoMemoryType>(fwInfo, 0x1C);
     switch (memoryType) {
-        case kDDR2MemType      :
+        case kDDR2MemType:
         case kDDR2FBDIMMMemType:
         case kLPDDR2MemType    : {
             videoMemoryType = VideoMemoryType::DDR2;
         } break;
-        case kDDR3MemType  :
+        case kDDR3MemType:
         case kLPDDR3MemType: {
             videoMemoryType = VideoMemoryType::DDR3;
         } break;
-        case kDDR4MemType  :
+        case kDDR4MemType:
         case kLPDDR4MemType: {
             videoMemoryType = VideoMemoryType::DDR4;
         } break;
-        case kHBMMemType :
+        case kHBMMemType:
         case kHBM2MemType: {
             videoMemoryType = VideoMemoryType::HBM;
         } break;
@@ -455,14 +514,14 @@ IOReturn iVega::X6000FB::populateVramInfo(void* const, void* const fwInfo)
     return kIOReturnSuccess;
 }
 
-bool iVega::X6000FB::wrapIH40IVRingInitHardware(void* const ctx, void* const param2)
+bool X6000FB::wrapIH40IVRingInitHardware(void* const ctx, void* const param2)
 {
     auto ret = FunctionCast(wrapIH40IVRingInitHardware, singleton().orgIH40IVRingInitHardware)(ctx, param2);
     NRed::singleton().writeReg32(IH_CHICKEN, NRed::singleton().readReg32(IH_CHICKEN) | IH_MC_SPACE_GPA_ENABLE);
     return ret;
 }
 
-void iVega::X6000FB::wrapIRQMGRWriteRegister(void* const ctx, const UInt64 off, UInt32 value)
+void X6000FB::wrapIRQMGRWriteRegister(void* const ctx, const UInt64 off, UInt32 value)
 {
     if (off == IH_CLK_CTRL) {
         if ((value & getBit(IH_DBUS_MUX_CLK_SOFT_OVERRIDE_SHIFT)) != 0) {
@@ -472,14 +531,14 @@ void iVega::X6000FB::wrapIRQMGRWriteRegister(void* const ctx, const UInt64 off, 
     FunctionCast(wrapIRQMGRWriteRegister, singleton().orgIRQMGRWriteRegister)(ctx, off, value);
 }
 
-void* iVega::X6000FB::wrapCreateRegisterAccess(void* const initData)
+void* X6000FB::wrapCreateRegisterAccess(void* const initData)
 {
     getMember<UInt32>(initData, 0x24) = SMUIO_BASE_0 + ROM_INDEX;
     getMember<UInt32>(initData, 0x28) = SMUIO_BASE_0 + ROM_DATA;
     return FunctionCast(wrapCreateRegisterAccess, singleton().orgCreateRegisterAccess)(initData);
 }
 
-IOReturn iVega::X6000FB::initialiseReservedVRAM(void* const self)
+IOReturn X6000FB::initialiseReservedVRAM(void* const self)
 {
 #define CHECK(_expr)                                                     \
     if (const auto ret = _expr; ret != kIOReturnSuccess) { return ret; }
@@ -552,18 +611,17 @@ static const AmdAsicBrandingTableEntry renoirBrandingTable[] = {
     {"Radeon RX", "Renoir Graphics"},
 };
 
-const AmdAsicBrandingTableEntry* iVega::X6000FB::getGpuBrandingNameListRaven(const void* const)
-{ return ravenBrandingTable; }
+const AmdAsicBrandingTableEntry* X6000FB::getGpuBrandingNameListRaven(const void* const) { return ravenBrandingTable; }
 
-const AmdAsicBrandingTableEntry* iVega::X6000FB::getGpuBrandingNameListPicasso(const void* const)
+const AmdAsicBrandingTableEntry* X6000FB::getGpuBrandingNameListPicasso(const void* const)
 { return picassoBrandingTable; }
 
-const AmdAsicBrandingTableEntry* iVega::X6000FB::getGpuBrandingNameListRenoir(const void* const)
+const AmdAsicBrandingTableEntry* X6000FB::getGpuBrandingNameListRenoir(const void* const)
 { return renoirBrandingTable; }
 
-IOReturn iVega::X6000FB::dummyIOReturnSuccess() { return kIOReturnSuccess; }
+IOReturn X6000FB::dummyIOReturnSuccess() { return kIOReturnSuccess; }
 
-IOReturn iVega::X6000FB::getTriageHardwareDataRV(void* const, const UInt32 fbIndex, void* const triageData)
+IOReturn X6000FB::getTriageHardwareDataRV(void* const, const UInt32 fbIndex, void* const triageData)
 {
     auto& bufferPointer = getMember<char*>(triageData, 0x0);
     auto& bufferSize    = getMember<UInt32>(triageData, 0x8);
@@ -587,7 +645,7 @@ IOReturn iVega::X6000FB::getTriageHardwareDataRV(void* const, const UInt32 fbInd
     return kIOReturnSuccess;
 }
 
-IOReturn iVega::X6000FB::getTriageHardwareDataRN(void* const, const UInt32 fbIndex, void* const triageData)
+IOReturn X6000FB::getTriageHardwareDataRN(void* const, const UInt32 fbIndex, void* const triageData)
 {
     auto& bufferPointer = getMember<char*>(triageData, 0x0);
     auto& bufferSize    = getMember<UInt32>(triageData, 0x8);
@@ -609,4 +667,40 @@ IOReturn iVega::X6000FB::getTriageHardwareDataRN(void* const, const UInt32 fbInd
     bufferPointer += realChars;
 
     return kIOReturnSuccess;
+}
+
+UInt32 X6000FB::wrapControllerPowerUp(void* self)
+{
+    auto& m_flags  = getMember<UInt8>(self, 0x5F18);
+    auto  send     = (m_flags & 2) == 0;
+    m_flags       |= 4;    // All framebuffers enabled
+    auto ret       = FunctionCast(wrapControllerPowerUp, singleton().orgControllerPowerUp)(self);
+    if (send) { singleton().orgMessageAccelerator(self, IOFBRequestControllerEnabled, nullptr, nullptr, nullptr); }
+    return ret;
+}
+
+void X6000FB::wrapDpReceiverPowerCtrl(void* link, bool power_on)
+{
+    FunctionCast(wrapDpReceiverPowerCtrl, singleton().orgDpReceiverPowerCtrl)(link, power_on);
+    IOSleep(250);
+}
+
+UInt32 X6000FB::wrapGetNumberOfConnectors(void* const self)
+{
+    if (!singleton().fixedVBIOS) {
+        singleton().fixedVBIOS = true;
+        const auto objInfo     = getMember<DispObjInfoTableV1_4*>(self, 0x28);
+        if (objInfo->formatRev == 1 && (objInfo->contentRev == 4 || objInfo->contentRev == 5)) {
+            DBGLOG("X6000FB", "getNumberOfConnectors: Fixing VBIOS connectors");
+            const auto n = objInfo->pathCount;
+            for (size_t i = 0, j = 0; i < n; i++) {
+                // Skip invalid device tags
+                if (objInfo->paths[i].devTag == 0) { objInfo->pathCount--; }
+                else {
+                    objInfo->paths[j++] = objInfo->paths[i];
+                }
+            }
+        }
+    }
+    return FunctionCast(wrapGetNumberOfConnectors, singleton().orgGetNumberOfConnectors)(self);
 }

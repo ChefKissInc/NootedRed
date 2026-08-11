@@ -3,20 +3,22 @@
 // Copyright © 2022-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
+#include <AGDP.hpp>
+#include <AppleGFXHDA.hpp>
 #include <Backlight.hpp>
 #include <DebugEnabler.hpp>
+#include <DriverInjector.hpp>
 #include <GPUDriversAMD/ATOMBIOS.hpp>
 #include <GPUDriversAMD/CAIL/Result.hpp>
 #include <GPUDriversAMD/RavenIPOffset.hpp>
 #include <GPUDriversAMD/SMU.hpp>
 #include <GPUDriversAMD/TTL/SWIP/SMU.hpp>
+#include <HWLibs.hpp>
 #include <Headers/kern_api.hpp>
 #include <Headers/kern_devinfo.hpp>
 #include <Headers/kern_iokit.hpp>
 #include <Headers/kern_patcher.hpp>
 #include <Headers/kern_util.hpp>
-#include <Hotfixes/AGDP.hpp>
-#include <Hotfixes/X6000FB.hpp>
 #include <IOKit/IOLib.h>
 #include <IOKit/IOTypes.h>
 #include <IOKit/acpi/IOACPIPlatformExpert.h>
@@ -24,14 +26,11 @@
 #include <Kexts.hpp>
 #include <NRed.hpp>
 #include <PenguinWizardry/RuntimeMC.hpp>
-#include <iVega/AppleGFXHDA.hpp>
-#include <iVega/DriverInjector.hpp>
-#include <iVega/HWLibs.hpp>
-#include <iVega/Regs/GC.hpp>
-#include <iVega/Regs/NBIO.hpp>
-#include <iVega/Regs/SMU.hpp>
-#include <iVega/X5000.hpp>
-#include <iVega/X6000FB.hpp>
+#include <Regs/GC.hpp>
+#include <Regs/NBIO.hpp>
+#include <Regs/SMU.hpp>
+#include <X5000.hpp>
+#include <X6000FB.hpp>
 #include <kern/clock.h>
 #include <libkern/OSTypes.h>
 #include <libkern/c++/OSMetaClass.h>
@@ -62,7 +61,7 @@ void NRed::init()
         [](void* const, KernelPatcher& patcher)
         {
             singleton().processPatcher();
-            iVega::DriverInjector::singleton().processPatcher(patcher);
+            DriverInjector::singleton().processPatcher(patcher);
             PenguinWizardry::RuntimeMCManager::singleton().processPatcher(patcher);
         },
         nullptr);
@@ -71,14 +70,13 @@ void NRed::init()
         nullptr, 0,
         [](void* const, KernelPatcher& patcher, const size_t id, const mach_vm_address_t slide, const size_t size)
         {
-            Hotfixes::AGDP::singleton().processKext(patcher, id, slide, size);
-            Hotfixes::X6000FB::singleton().processKext(patcher, id, slide, size);
+            AGDP::singleton().processKext(patcher, id, slide, size);
             Backlight::singleton().processKext(patcher, id, slide, size);
             DebugEnabler::singleton().processKext(patcher, id, slide, size);
-            iVega::X6000FB::singleton().processKext(patcher, id, slide, size);
-            iVega::AppleGFXHDA::singleton().processKext(patcher, id, slide, size);
-            iVega::X5000HWLibs::singleton().processKext(patcher, id, slide, size);
-            iVega::X5000::singleton().processKext(patcher, id, slide, size);
+            X6000FB::singleton().processKext(patcher, id, slide, size);
+            AppleGFXHDA::singleton().processKext(patcher, id, slide, size);
+            X5000HWLibs::singleton().processKext(patcher, id, slide, size);
+            X5000::singleton().processKext(patcher, id, slide, size);
         },
         nullptr);
 }

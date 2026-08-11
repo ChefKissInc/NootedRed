@@ -3,9 +3,9 @@
 // Copyright © 2024-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
+#include <AGDP.hpp>
 #include <Headers/kern_patcher.hpp>
 #include <Headers/kern_util.hpp>
-#include <Hotfixes/AGDP.hpp>
 #include <Kexts.hpp>
 #include <PenguinWizardry/KernelVersion.hpp>
 #include <PenguinWizardry/PatcherPlus.hpp>
@@ -24,12 +24,11 @@ static const UInt8 kAGDPFBCountCheckPatched13[]  = {0x41, 0x83, 0xBE, 0x14, 0x02
 static const UInt8 kAGDPBoardIDKeyOriginal[] = "board-id";
 static const UInt8 kAGDPBoardIDKeyPatched[]  = "applehax";
 
-static Hotfixes::AGDP moduleInstance;
+static AGDP moduleInstance;
 
-Hotfixes::AGDP& Hotfixes::AGDP::singleton() { return moduleInstance; }
+AGDP& AGDP::singleton() { return moduleInstance; }
 
-void Hotfixes::AGDP::processKext(KernelPatcher& patcher, const size_t id, const mach_vm_address_t slide,
-                                 const size_t size)
+void AGDP::processKext(KernelPatcher& patcher, const size_t id, const mach_vm_address_t slide, const size_t size)
 {
     if (kextAGDP.loadIndex != id) { return; }
 

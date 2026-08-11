@@ -85,8 +85,6 @@
 		40F327B62E9824DE0030C1BD /* KernelVersion.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40F327B52E9824DE0030C1BD /* KernelVersion.hpp */; };
 		40F39FDC2CDD609E007AE975 /* Backlight.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40F39FDB2CDD6087007AE975 /* Backlight.hpp */; };
 		40F39FDE2CDD60A4007AE975 /* Backlight.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40F39FDD2CDD60A3007AE975 /* Backlight.cpp */; };
-		40F39FE02CDE842B007AE975 /* X6000FB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40F39FDF2CDE8424007AE975 /* X6000FB.cpp */; };
-		40F39FE22CDE864A007AE975 /* X6000FB.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40F39FE12CDE8643007AE975 /* X6000FB.hpp */; };
 		40F46B1B2E6DF50A00B0E9CE /* AMDGFX9DCN2Display.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40F46B1A2E6DF50A00B0E9CE /* AMDGFX9DCN2Display.hpp */; };
 		40F46B1D2E6DF54E00B0E9CE /* AMDGFX9DCN1Display.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40F46B1C2E6DF54E00B0E9CE /* AMDGFX9DCN1Display.hpp */; };
 		40FC5FD529BF995000367F9D /* X6000FB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FC5FD329BF995000367F9D /* X6000FB.cpp */; };
@@ -243,8 +241,6 @@
 		40F327B52E9824DE0030C1BD /* KernelVersion.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = KernelVersion.hpp; sourceTree = "<group>"; };
 		40F39FDB2CDD6087007AE975 /* Backlight.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Backlight.hpp; sourceTree = "<group>"; };
 		40F39FDD2CDD60A3007AE975 /* Backlight.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Backlight.cpp; sourceTree = "<group>"; };
-		40F39FDF2CDE8424007AE975 /* X6000FB.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = X6000FB.cpp; sourceTree = "<group>"; };
-		40F39FE12CDE8643007AE975 /* X6000FB.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = X6000FB.hpp; sourceTree = "<group>"; };
 		40F46B1A2E6DF50A00B0E9CE /* AMDGFX9DCN2Display.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AMDGFX9DCN2Display.hpp; sourceTree = "<group>"; };
 		40F46B1C2E6DF54E00B0E9CE /* AMDGFX9DCN1Display.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AMDGFX9DCN1Display.hpp; sourceTree = "<group>"; };
 		40FC5FCE29BF942900367F9D /* ATOMBIOS.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ATOMBIOS.hpp; sourceTree = "<group>"; };
@@ -301,20 +297,40 @@
 				407905642CF6F2F5000900FA /* AGDC */,
 				4030EB362E37E1D90070E610 /* Firmware */,
 				40B9AEC62E991192000F05ED /* GPUDriversAMD */,
-				4054608A2CDBDF70007865E5 /* Hotfixes */,
-				4035DA602CE3A118002707B3 /* iVega */,
 				4088AFF22E6E097000717265 /* PenguinWizardry */,
 				407068652E966678004E0761 /* Personalities */,
+				408B3DD62CDFA41A00CAE5D2 /* Regs */,
+				405460882CDBDF58007865E5 /* AGDP.hpp */,
+				4054608B2CDBDF89007865E5 /* AGDP.cpp */,
+				40F46B1C2E6DF54E00B0E9CE /* AMDGFX9DCN1Display.hpp */,
+				405430982E6DF75B000AEB46 /* AMDGFX9DCN1Display.cpp */,
+				40F46B1A2E6DF50A00B0E9CE /* AMDGFX9DCN2Display.hpp */,
+				4054309A2E6DF772000AEB46 /* AMDGFX9DCN2Display.cpp */,
+				4030EB3B2E3819080070E610 /* AMDGFX9DCNDisplay.hpp */,
+				4030EB372E3818D90070E610 /* AMDGFX9DCNDisplay.cpp */,
+				6C1B36652A407C6100B184DD /* AppleGFXHDA.hpp */,
+				6C1B36642A407C6100B184DD /* AppleGFXHDA.cpp */,
+				409127632CE2F2D2004DBDB5 /* ASICCaps.hpp */,
 				40F39FDB2CDD6087007AE975 /* Backlight.hpp */,
 				40F39FDD2CDD60A3007AE975 /* Backlight.cpp */,
 				401B4A012CF43589002B75A6 /* DebugEnabler.hpp */,
 				401B49FE2CF434FC002B75A6 /* DebugEnabler.cpp */,
+				409127672CE2F360004DBDB5 /* DevCaps.hpp */,
+				4059A1102E6DEB1200F20858 /* DriverInjector.hpp */,
+				4059A1122E6DECA600F20858 /* DriverInjector.cpp */,
+				408B3DD32CDFA3CC00CAE5D2 /* GoldenSettings.hpp */,
+				40FC5FDC29BF996900367F9D /* HWLibs.hpp */,
+				40FC5FDB29BF996900367F9D /* HWLibs.cpp */,
 				1C748C2E1C21952C0024EED2 /* Info.plist */,
 				407068662E97CD32004E0761 /* Kexts.hpp */,
 				4068B3B92E97D805007B46BB /* Kexts.cpp */,
 				CEA03B5D20EE825A00BA842F /* NRed.hpp */,
 				CEA03B5C20EE825A00BA842F /* NRed.cpp */,
 				1C748C2C1C21952C0024EED2 /* Plugin.cpp */,
+				40FC5FD829BF995E00367F9D /* X5000.hpp */,
+				40FC5FD729BF995E00367F9D /* X5000.cpp */,
+				40FC5FD429BF995000367F9D /* X6000FB.hpp */,
+				40FC5FD329BF995000367F9D /* X6000FB.cpp */,
 			);
 			path = NootedRed;
 			sourceTree = "<group>";
@@ -378,44 +394,6 @@
 				4030EB352E37E1D90070E610 /* sdma_4_1_ucode.bin */,
 			);
 			path = Firmware;
-			sourceTree = "<group>";
-		};
-		4035DA602CE3A118002707B3 /* iVega */ = {
-			isa = PBXGroup;
-			children = (
-				408B3DD62CDFA41A00CAE5D2 /* Regs */,
-				40F46B1C2E6DF54E00B0E9CE /* AMDGFX9DCN1Display.hpp */,
-				405430982E6DF75B000AEB46 /* AMDGFX9DCN1Display.cpp */,
-				40F46B1A2E6DF50A00B0E9CE /* AMDGFX9DCN2Display.hpp */,
-				4054309A2E6DF772000AEB46 /* AMDGFX9DCN2Display.cpp */,
-				4030EB3B2E3819080070E610 /* AMDGFX9DCNDisplay.hpp */,
-				4030EB372E3818D90070E610 /* AMDGFX9DCNDisplay.cpp */,
-				6C1B36652A407C6100B184DD /* AppleGFXHDA.hpp */,
-				6C1B36642A407C6100B184DD /* AppleGFXHDA.cpp */,
-				409127632CE2F2D2004DBDB5 /* ASICCaps.hpp */,
-				409127672CE2F360004DBDB5 /* DevCaps.hpp */,
-				4059A1102E6DEB1200F20858 /* DriverInjector.hpp */,
-				4059A1122E6DECA600F20858 /* DriverInjector.cpp */,
-				408B3DD32CDFA3CC00CAE5D2 /* GoldenSettings.hpp */,
-				40FC5FDC29BF996900367F9D /* HWLibs.hpp */,
-				40FC5FDB29BF996900367F9D /* HWLibs.cpp */,
-				40FC5FD829BF995E00367F9D /* X5000.hpp */,
-				40FC5FD729BF995E00367F9D /* X5000.cpp */,
-				40FC5FD429BF995000367F9D /* X6000FB.hpp */,
-				40FC5FD329BF995000367F9D /* X6000FB.cpp */,
-			);
-			path = iVega;
-			sourceTree = "<group>";
-		};
-		4054608A2CDBDF70007865E5 /* Hotfixes */ = {
-			isa = PBXGroup;
-			children = (
-				405460882CDBDF58007865E5 /* AGDP.hpp */,
-				4054608B2CDBDF89007865E5 /* AGDP.cpp */,
-				40F39FE12CDE8643007AE975 /* X6000FB.hpp */,
-				40F39FDF2CDE8424007AE975 /* X6000FB.cpp */,
-			);
-			path = Hotfixes;
 			sourceTree = "<group>";
 		};
 		407068652E966678004E0761 /* Personalities */ = {
@@ -659,7 +637,6 @@
 				40F39FDC2CDD609E007AE975 /* Backlight.hpp in Headers */,
 				4091C15E2E3EE39B004577D5 /* RuntimeVFT.hpp in Headers */,
 				40F059742E6DFEE5009E6D2F /* FramebufferInfo.hpp in Headers */,
-				40F39FE22CDE864A007AE975 /* X6000FB.hpp in Headers */,
 				408B3DD42CDFA3D200CAE5D2 /* GoldenSettings.hpp in Headers */,
 				4035DA622CE3BBBB002707B3 /* DCN2.hpp in Headers */,
 				408B3DF22CDFB98800CAE5D2 /* Result.hpp in Headers */,
@@ -758,7 +735,6 @@
 				407646582FC2531900C80503 /* HWAlignManager.cpp in Sources */,
 				40B9AEC92E9911A6000F05ED /* HWInterface.cpp in Sources */,
 				4068B3BA2E97D805007B46BB /* Kexts.cpp in Sources */,
-				40F39FE02CDE842B007AE975 /* X6000FB.cpp in Sources */,
 				401B49FF2CF43510002B75A6 /* DebugEnabler.cpp in Sources */,
 				40F39FDE2CDD60A4007AE975 /* Backlight.cpp in Sources */,
 				4054608C2CDBDF8C007865E5 /* AGDP.cpp in Sources */,

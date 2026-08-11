@@ -3,23 +3,23 @@
 // Copyright © 2022-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
+#include <AppleGFXHDA.hpp>
 #include <Headers/kern_iokit.hpp>
 #include <Headers/kern_patcher.hpp>
 #include <Headers/kern_util.hpp>
 #include <Kexts.hpp>
 #include <NRed.hpp>
-#include <iVega/AppleGFXHDA.hpp>
 #include <libkern/OSTypes.h>
 
 static constexpr UInt32 AMDVendorID        = 0x1002;
 static constexpr UInt32 RavenHDMIDeviceID  = 0x15DE;
 static constexpr UInt32 RenoirHDMIDeviceID = 0x1637;
 
-static iVega::AppleGFXHDA moduleInstance;
+static AppleGFXHDA moduleInstance;
 
-iVega::AppleGFXHDA& iVega::AppleGFXHDA::singleton() { return moduleInstance; }
+AppleGFXHDA& AppleGFXHDA::singleton() { return moduleInstance; }
 
-void iVega::AppleGFXHDA::processKext(KernelPatcher& patcher, size_t id, mach_vm_address_t slide, size_t size)
+void AppleGFXHDA::processKext(KernelPatcher& patcher, size_t id, mach_vm_address_t slide, size_t size)
 {
     if (kextAppleGFXHDA.loadIndex != id) { return; }
 
@@ -41,7 +41,7 @@ void iVega::AppleGFXHDA::processKext(KernelPatcher& patcher, size_t id, mach_vm_
     PANIC_COND(!patcher.routeMultipleLong(id, requests, slide, size), "AGFXHDA", "Failed to route symbols");
 }
 
-IOService* iVega::AppleGFXHDA::wrapProbe(IOService* that, IOService* provider, SInt32* score)
+IOService* AppleGFXHDA::wrapProbe(IOService* that, IOService* provider, SInt32* score)
 {
     const auto dev = OSDynamicCast(IOPCIDevice, provider);
     if (dev == nullptr) { return FunctionCast(wrapProbe, singleton().orgProbe)(that, provider, score); }
@@ -88,7 +88,7 @@ IOService* iVega::AppleGFXHDA::wrapProbe(IOService* that, IOService* provider, S
     return that;
 }
 
-void* iVega::AppleGFXHDA::wrapCreateAppleHDAFunctionGroup(void* devId)
+void* AppleGFXHDA::wrapCreateAppleHDAFunctionGroup(void* devId)
 {
     const auto vendorID = getMember<UInt16>(devId, 0x2);
     const auto deviceID = getMember<UInt32>(devId, 0x8);
@@ -98,7 +98,7 @@ void* iVega::AppleGFXHDA::wrapCreateAppleHDAFunctionGroup(void* devId)
     return FunctionCast(wrapCreateAppleHDAFunctionGroup, singleton().orgCreateAppleHDAFunctionGroup)(devId);
 }
 
-void* iVega::AppleGFXHDA::wrapCreateAppleHDAWidget(void* devId)
+void* AppleGFXHDA::wrapCreateAppleHDAWidget(void* devId)
 {
     auto vendorID = getMember<UInt16>(devId, 0x2);
     auto deviceID = getMember<UInt32>(devId, 0x8);

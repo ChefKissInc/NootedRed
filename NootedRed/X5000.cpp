@@ -3,6 +3,9 @@
 // Copyright © 2022-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
+#include <AMDGFX9DCN1Display.hpp>
+#include <AMDGFX9DCN2Display.hpp>
+#include <AMDGFX9DCNDisplay.hpp>
 #include <GPUDriversAMD/Accel/HWDisplay.hpp>
 #include <GPUDriversAMD/Accel/HWEngine.hpp>
 #include <GPUDriversAMD/AddrLib.hpp>
@@ -15,10 +18,7 @@
 #include <NRed.hpp>
 #include <PenguinWizardry/KernelVersion.hpp>
 #include <PenguinWizardry/PatcherPlus.hpp>
-#include <iVega/AMDGFX9DCN1Display.hpp>
-#include <iVega/AMDGFX9DCN2Display.hpp>
-#include <iVega/AMDGFX9DCNDisplay.hpp>
-#include <iVega/X5000.hpp>
+#include <X5000.hpp>
 #include <libkern/OSTypes.h>
 #include <libkern/c++/OSObject.h>
 #include <mach/i386/vm_param.h>
@@ -59,11 +59,11 @@ static const UInt8 kCreateAccelChannelsPatched[]  = {0x8D, 0x44, 0x09, 0x01};
 static const UInt8 kCreateAccelChannelsOriginal10_14[] = {0x8D, 0x04, 0x09, 0x8D, 0x4C, 0x09, 0x02};
 static const UInt8 kCreateAccelChannelsPatched10_14[]  = {0x8D, 0x04, 0x09, 0x8D, 0x4C, 0x09, 0x01};
 
-static iVega::X5000 moduleInstance;
+static X5000 moduleInstance;
 
-iVega::X5000& iVega::X5000::singleton() { return moduleInstance; }
+X5000& X5000::singleton() { return moduleInstance; }
 
-iVega::X5000::X5000()
+X5000::X5000()
 {
     if (currentKernelVersion() <= MACOS_10_14_X) {
         this->pm4EngineField               = 0x330;
@@ -140,8 +140,7 @@ iVega::X5000::X5000()
     }
 }
 
-void iVega::X5000::processKext(KernelPatcher& patcher, const size_t id, const mach_vm_address_t slide,
-                               const size_t size)
+void X5000::processKext(KernelPatcher& patcher, const size_t id, const mach_vm_address_t slide, const size_t size)
 {
     if (kextRadeonX5000.loadIndex != id) { return; }
 
@@ -301,7 +300,7 @@ void iVega::X5000::processKext(KernelPatcher& patcher, const size_t id, const ma
     }
 }
 
-bool iVega::X5000::allocateHWEngines(void* const self)
+bool X5000::allocateHWEngines(void* const self)
 {
     [[clang::suppress]] singleton().pm4EngineField(self)   = singleton().pm4EngineMC->alloc();
     [[clang::suppress]] singleton().sdma0EngineField(self) = singleton().sdmaEngineMC->alloc();
@@ -312,7 +311,7 @@ bool iVega::X5000::allocateHWEngines(void* const self)
 }
 
 // TODO: Replace with IP Discovery?
-void iVega::X5000::wrapSetupAndInitializeHWCapabilities(void* const self)
+void X5000::wrapSetupAndInitializeHWCapabilities(void* const self)
 {
     auto& seCount  = singleton().seCountField(self);
     auto& shCount  = singleton().shCountField(self);
@@ -340,15 +339,15 @@ void iVega::X5000::wrapSetupAndInitializeHWCapabilities(void* const self)
 }
 
 // TODO: Investigate why this is needed.
-void* iVega::X5000::wrapGetHWChannel(void* const self, AMDHWEngineType engineType, const UInt32 ringId)
+void* X5000::wrapGetHWChannel(void* const self, AMDHWEngineType engineType, const UInt32 ringId)
 {
     if (engineType == kAMDHWEngineTypeSDMA1) { engineType = kAMDHWEngineTypeSDMA0; }
     return FunctionCast(wrapGetHWChannel, singleton().orgGetHWChannel)(self, engineType, ringId);
 }
 
-void iVega::X5000::initializeFamilyType(void* const self) { singleton().familyTypeField(self) = AMD_FAMILY_RAVEN; }
+void X5000::initializeFamilyType(void* const self) { singleton().familyTypeField(self) = AMD_FAMILY_RAVEN; }
 
-void* iVega::X5000::allocateAMDHWDisplay(void* const)
+void* X5000::allocateAMDHWDisplay(void* const)
 {
     if (NRed::singleton().getAttributes().isRenoir()) {
         return AMDRadeonX5000_AMDGFX9DCN2Display::gRTMetaClass.alloc();
@@ -356,14 +355,14 @@ void* iVega::X5000::allocateAMDHWDisplay(void* const)
     return AMDRadeonX5000_AMDGFX9DCN1Display::gRTMetaClass.alloc();
 }
 
-UInt64 iVega::X5000::wrapAdjustVRAMAddress(void* const self, const UInt64 addr)
+UInt64 X5000::wrapAdjustVRAMAddress(void* const self, const UInt64 addr)
 {
     auto ret = FunctionCast(wrapAdjustVRAMAddress, singleton().orgAdjustVRAMAddress)(self, addr);
     if (ret != addr) { return ret + NRed::singleton().getFbOffset(); }
     return ret;
 }
 
-UInt32 iVega::X5000::returnZero() { return 0; }
+UInt32 X5000::returnZero() { return 0; }
 
 // Replaces SDMA1 field with SDMA0 because we don't have SDMA1
 // TODO: Investigate why this is needed.
@@ -373,19 +372,19 @@ static void* fixAccelGroup(void* const group)
     return group;
 }
 
-void* iVega::X5000::wrapObtainAccelChannelGroup(void* const self, const UInt32 priority)
+void* X5000::wrapObtainAccelChannelGroup(void* const self, const UInt32 priority)
 {
     return fixAccelGroup(
         FunctionCast(wrapObtainAccelChannelGroup, singleton().orgObtainAccelChannelGroup)(self, priority));
 }
 
-void* iVega::X5000::wrapObtainAccelChannelGroup1304(void* const self, const UInt32 priority, void* const task)
+void* X5000::wrapObtainAccelChannelGroup1304(void* const self, const UInt32 priority, void* const task)
 {
     return fixAccelGroup(
         FunctionCast(wrapObtainAccelChannelGroup1304, singleton().orgObtainAccelChannelGroup)(self, priority, task));
 }
 
-UInt32 iVega::X5000::wrapHwlConvertChipFamily(void* const self, const UInt32 family, const UInt32 revision)
+UInt32 X5000::wrapHwlConvertChipFamily(void* const self, const UInt32 family, const UInt32 revision)
 {
     DBGLOG("X5000", "HwlConvertChipFamily >> (self: %p family: 0x%X revision: 0x%X)", self, family, revision);
     if (family == AMD_FAMILY_RAVEN) {
@@ -406,7 +405,7 @@ UInt32 iVega::X5000::wrapHwlConvertChipFamily(void* const self, const UInt32 fam
     return FunctionCast(wrapHwlConvertChipFamily, singleton().orgHwlConvertChipFamily)(self, family, revision);
 }
 
-UInt32 iVega::X5000::computeSubmitCommandBuffer(void* const self, void* const info)
+UInt32 X5000::computeSubmitCommandBuffer(void* const self, void* const info)
 {
     singleton().notifyGfxAccess(singleton().hwChannelHWInterfaceField(self));
     return FunctionCast(computeSubmitCommandBuffer, singleton().orgPM4SubmitCommandBuffer)(self, info);
@@ -501,9 +500,8 @@ namespace
 
 }    // namespace
 
-bool iVega::X5000::fixedGetDisplayInfo(AMDRadeonX5000_AMDHWDisplay* const self, const UInt32 fbIndex,
-                                       const bool isCRTEnabled, const bool ignoreCRTOffsetCheck,
-                                       IOFramebuffer* const fb, FramebufferInfo* const fbInfo)
+bool X5000::fixedGetDisplayInfo(AMDRadeonX5000_AMDHWDisplay* const self, const UInt32 fbIndex, const bool isCRTEnabled,
+                                const bool ignoreCRTOffsetCheck, IOFramebuffer* const fb, FramebufferInfo* const fbInfo)
 {
     if (fb == nullptr || fbIndex >= self->supportedDisplayCount()) { return false; }
 
@@ -748,8 +746,7 @@ bool iVega::X5000::fixedGetDisplayInfo(AMDRadeonX5000_AMDHWDisplay* const self, 
     return ret;
 }
 
-void iVega::X5000::fixedGetSurfaceInfo(AMDRadeonX5000_AMDHWAlignManager* const self,
-                                       AMD_SURFACE_INFO_STRUCT* const          pStruct)
+void X5000::fixedGetSurfaceInfo(AMDRadeonX5000_AMDHWAlignManager* const self, AMD_SURFACE_INFO_STRUCT* const pStruct)
 {
     if (pStruct == nullptr) { return; }
 

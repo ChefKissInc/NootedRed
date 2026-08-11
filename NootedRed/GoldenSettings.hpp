@@ -4,8 +4,8 @@
 #pragma once
 #include <GPUDriversAMD/CAIL/GoldenSettings.hpp>
 #include <IOKit/IOTypes.h>
-#include <iVega/Regs/GC.hpp>
-#include <iVega/Regs/SDMA0.hpp>
+#include <Regs/GC.hpp>
+#include <Regs/SDMA0.hpp>
 
 static const CAILGoldenRegister gcGoldenSettingsRaven[] = {
     GOLDEN_REGISTER(DB_DEBUG2, 0xF00FFFFF, 0x400),

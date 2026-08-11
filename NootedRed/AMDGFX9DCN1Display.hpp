@@ -5,7 +5,7 @@
 // See LICENSE for details.
 
 #pragma once
-#include <iVega/AMDGFX9DCNDisplay.hpp>
+#include <AMDGFX9DCNDisplay.hpp>
 
 class AMDRadeonX5000_AMDGFX9DCN1Display : public AMDRadeonX5000_AMDGFX9DCNDisplay
 {

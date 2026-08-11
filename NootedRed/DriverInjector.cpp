@@ -3,9 +3,9 @@
 // Copyright © 2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
+#include <DriverInjector.hpp>
 #include <Headers/kern_patcher.hpp>
 #include <Headers/kern_util.hpp>
-#include <iVega/DriverInjector.hpp>
 #include <libkern/OSTypes.h>
 #include <libkern/c++/OSArray.h>
 #include <libkern/c++/OSDictionary.h>
@@ -13,22 +13,22 @@
 #include <libkern/c++/OSObject.h>
 #include <libkern/c++/OSString.h>
 
-static iVega::DriverInjector moduleInstance;
+static DriverInjector moduleInstance;
 
 static const char com_apple_kext_AMDRadeonX5000[] = {
-#embed "../Personalities/com.apple.kext.AMDRadeonX5000.xml" suffix(, '\0')
+#embed "Personalities/com.apple.kext.AMDRadeonX5000.xml" suffix(, '\0')
 };
 static const char com_apple_kext_AMDRadeonX5000HWServices[] = {
-#embed "../Personalities/com.apple.kext.AMDRadeonX5000HWServices.xml" suffix(, '\0')
+#embed "Personalities/com.apple.kext.AMDRadeonX5000HWServices.xml" suffix(, '\0')
 };
 static const char com_apple_kext_AMDRadeonX6000Framebuffer[] = {
-#embed "../Personalities/com.apple.kext.AMDRadeonX6000Framebuffer.xml" suffix(, '\0')
+#embed "Personalities/com.apple.kext.AMDRadeonX6000Framebuffer.xml" suffix(, '\0')
 };
 static const char com_apple_driver_AppleGFXHDA[] = {
-#embed "../Personalities/com.apple.driver.AppleGFXHDA.xml" suffix(, '\0')
+#embed "Personalities/com.apple.driver.AppleGFXHDA.xml" suffix(, '\0')
 };
 
-iVega::DriverInjector::DriverInjector() :
+DriverInjector::DriverInjector() :
     drivers{
         Driver("com.apple.kext.AMDRadeonX6000Framebuffer", com_apple_kext_AMDRadeonX6000Framebuffer),
         Driver("com.apple.driver.AppleGFXHDA", com_apple_driver_AppleGFXHDA),
@@ -37,9 +37,9 @@ iVega::DriverInjector::DriverInjector() :
     }
 { }
 
-iVega::DriverInjector& iVega::DriverInjector::singleton() { return moduleInstance; }
+DriverInjector& DriverInjector::singleton() { return moduleInstance; }
 
-void iVega::DriverInjector::processPatcher(KernelPatcher& patcher)
+void DriverInjector::processPatcher(KernelPatcher& patcher)
 {
     KernelPatcher::RouteRequest request{"__ZN11IOCatalogue10addDriversEP7OSArrayb", wrapAddDrivers,
                                         this->orgAddDrivers};
@@ -47,7 +47,7 @@ void iVega::DriverInjector::processPatcher(KernelPatcher& patcher)
                "Failed to route addDrivers");
 }
 
-bool iVega::DriverInjector::wrapAddDrivers(void* const self, OSArray* const array, const bool doNubMatching)
+bool DriverInjector::wrapAddDrivers(void* const self, OSArray* const array, const bool doNubMatching)
 {
     UInt32 driverCount = array->getCount();
     for (UInt32 driverIndex = 0; driverIndex < driverCount; driverIndex += 1) {
