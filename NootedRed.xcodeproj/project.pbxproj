@@ -72,7 +72,10 @@
 		4091C1602E3EE453004577D5 /* RuntimeMC.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4091C15F2E3EE453004577D5 /* RuntimeMC.hpp */; };
 		4091C1642E3FE1C2004577D5 /* HWDisplay.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4091C1632E3FE1BF004577D5 /* HWDisplay.hpp */; };
 		4098C7AA2EAE42DA00D9D1E0 /* New.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4098C7A92EAE42DA00D9D1E0 /* New.hpp */; };
+		4098F4EC302B9B6F00B475DE /* AmdAtomVramInfoIGP.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4098F4EA302B9B6F00B475DE /* AmdAtomVramInfoIGP.hpp */; };
+		4098F4ED302B9B6F00B475DE /* AmdAtomVramInfoIGP.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4098F4EB302B9B6F00B475DE /* AmdAtomVramInfoIGP.cpp */; };
 		409B6F982E8ABB320046F619 /* OSSSYS_4.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409B6F972E8ABB320046F619 /* OSSSYS_4.hpp */; };
+		40A01705302BBE14007EDA79 /* BiosParser.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40A01704302BBE14007EDA79 /* BiosParser.hpp */; };
 		40A02CF82EAE40BD00ECB6DA /* KernelVersion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40A02CF72EAE40BD00ECB6DA /* KernelVersion.cpp */; };
 		40B037E12E951D2B0060EAD4 /* Attributes.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40B037E02E951D2B0060EAD4 /* Attributes.hpp */; };
 		40B9AEC52E991009000F05ED /* HWInterface.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40B9AEC42E991009000F05ED /* HWInterface.hpp */; };
@@ -85,6 +88,7 @@
 		40F327B62E9824DE0030C1BD /* KernelVersion.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40F327B52E9824DE0030C1BD /* KernelVersion.hpp */; };
 		40F39FDC2CDD609E007AE975 /* Backlight.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40F39FDB2CDD6087007AE975 /* Backlight.hpp */; };
 		40F39FDE2CDD60A4007AE975 /* Backlight.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40F39FDD2CDD60A3007AE975 /* Backlight.cpp */; };
+		40F43C6A302BC94700A7DDE9 /* BiosParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40F43C69302BC94700A7DDE9 /* BiosParser.cpp */; };
 		40F46B1B2E6DF50A00B0E9CE /* AMDGFX9DCN2Display.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40F46B1A2E6DF50A00B0E9CE /* AMDGFX9DCN2Display.hpp */; };
 		40F46B1D2E6DF54E00B0E9CE /* AMDGFX9DCN1Display.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40F46B1C2E6DF54E00B0E9CE /* AMDGFX9DCN1Display.hpp */; };
 		40FC5FD529BF995000367F9D /* X6000FB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40FC5FD329BF995000367F9D /* X6000FB.cpp */; };
@@ -228,7 +232,10 @@
 		4091C15F2E3EE453004577D5 /* RuntimeMC.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = RuntimeMC.hpp; sourceTree = "<group>"; };
 		4091C1632E3FE1BF004577D5 /* HWDisplay.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HWDisplay.hpp; sourceTree = "<group>"; };
 		4098C7A92EAE42DA00D9D1E0 /* New.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = New.hpp; sourceTree = "<group>"; };
+		4098F4EA302B9B6F00B475DE /* AmdAtomVramInfoIGP.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AmdAtomVramInfoIGP.hpp; sourceTree = "<group>"; };
+		4098F4EB302B9B6F00B475DE /* AmdAtomVramInfoIGP.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AmdAtomVramInfoIGP.cpp; sourceTree = "<group>"; };
 		409B6F972E8ABB320046F619 /* OSSSYS_4.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = OSSSYS_4.hpp; sourceTree = "<group>"; };
+		40A01704302BBE14007EDA79 /* BiosParser.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = BiosParser.hpp; sourceTree = "<group>"; };
 		40A02CF72EAE40BD00ECB6DA /* KernelVersion.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = KernelVersion.cpp; sourceTree = "<group>"; };
 		40B037E02E951D2B0060EAD4 /* Attributes.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Attributes.hpp; sourceTree = "<group>"; };
 		40B9AEC42E991009000F05ED /* HWInterface.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HWInterface.hpp; sourceTree = "<group>"; };
@@ -241,6 +248,7 @@
 		40F327B52E9824DE0030C1BD /* KernelVersion.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = KernelVersion.hpp; sourceTree = "<group>"; };
 		40F39FDB2CDD6087007AE975 /* Backlight.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Backlight.hpp; sourceTree = "<group>"; };
 		40F39FDD2CDD60A3007AE975 /* Backlight.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Backlight.cpp; sourceTree = "<group>"; };
+		40F43C69302BC94700A7DDE9 /* BiosParser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = BiosParser.cpp; sourceTree = "<group>"; };
 		40F46B1A2E6DF50A00B0E9CE /* AMDGFX9DCN2Display.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AMDGFX9DCN2Display.hpp; sourceTree = "<group>"; };
 		40F46B1C2E6DF54E00B0E9CE /* AMDGFX9DCN1Display.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AMDGFX9DCN1Display.hpp; sourceTree = "<group>"; };
 		40FC5FCE29BF942900367F9D /* ATOMBIOS.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ATOMBIOS.hpp; sourceTree = "<group>"; };
@@ -331,6 +339,8 @@
 				40FC5FD729BF995E00367F9D /* X5000.cpp */,
 				40FC5FD429BF995000367F9D /* X6000FB.hpp */,
 				40FC5FD329BF995000367F9D /* X6000FB.cpp */,
+				4098F4EA302B9B6F00B475DE /* AmdAtomVramInfoIGP.hpp */,
+				4098F4EB302B9B6F00B475DE /* AmdAtomVramInfoIGP.cpp */,
 			);
 			path = NootedRed;
 			sourceTree = "<group>";
@@ -541,6 +551,8 @@
 				40B037E02E951D2B0060EAD4 /* Attributes.hpp */,
 				40F059732E6DFEE5009E6D2F /* FramebufferInfo.hpp */,
 				409127582CE2EBCD004DBDB5 /* VidMemType.hpp */,
+				40A01704302BBE14007EDA79 /* BiosParser.hpp */,
+				40F43C69302BC94700A7DDE9 /* BiosParser.cpp */,
 			);
 			path = FB;
 			sourceTree = "<group>";
@@ -623,6 +635,7 @@
 				408B3DDA2CDFA42E00CAE5D2 /* SDMA0.hpp in Headers */,
 				4091C1602E3EE453004577D5 /* RuntimeMC.hpp in Headers */,
 				408B3DF02CDFB91F00CAE5D2 /* DevCaps.hpp in Headers */,
+				40A01705302BBE14007EDA79 /* BiosParser.hpp in Headers */,
 				409127792CE2F866004DBDB5 /* HWEngine.hpp in Headers */,
 				409127592CE2EBCD004DBDB5 /* VidMemType.hpp in Headers */,
 				408B3DE72CDFA7AC00CAE5D2 /* RavenPPSMC.hpp in Headers */,
@@ -635,6 +648,7 @@
 				409127542CE2CBC0004DBDB5 /* PSP.hpp in Headers */,
 				409127702CE2F724004DBDB5 /* Family.hpp in Headers */,
 				40F39FDC2CDD609E007AE975 /* Backlight.hpp in Headers */,
+				4098F4EC302B9B6F00B475DE /* AmdAtomVramInfoIGP.hpp in Headers */,
 				4091C15E2E3EE39B004577D5 /* RuntimeVFT.hpp in Headers */,
 				40F059742E6DFEE5009E6D2F /* FramebufferInfo.hpp in Headers */,
 				408B3DD42CDFA3D200CAE5D2 /* GoldenSettings.hpp in Headers */,
@@ -730,6 +744,7 @@
 				40A02CF82EAE40BD00ECB6DA /* KernelVersion.cpp in Sources */,
 				4003B5C330265153006F74E8 /* SurfaceInfo.hpp in Sources */,
 				4088AFF42E6E099800717265 /* RuntimeMC.cpp in Sources */,
+				4098F4ED302B9B6F00B475DE /* AmdAtomVramInfoIGP.cpp in Sources */,
 				400909922E9938DB006EC1EA /* HWMemory.cpp in Sources */,
 				40B9AECF2E991B1C000F05ED /* HWDisplay.cpp in Sources */,
 				407646582FC2531900C80503 /* HWAlignManager.cpp in Sources */,
@@ -737,6 +752,7 @@
 				4068B3BA2E97D805007B46BB /* Kexts.cpp in Sources */,
 				401B49FF2CF43510002B75A6 /* DebugEnabler.cpp in Sources */,
 				40F39FDE2CDD60A4007AE975 /* Backlight.cpp in Sources */,
+				40F43C6A302BC94700A7DDE9 /* BiosParser.cpp in Sources */,
 				4054608C2CDBDF8C007865E5 /* AGDP.cpp in Sources */,
 				40FC5FDD29BF996900367F9D /* HWLibs.cpp in Sources */,
 				6C1B36662A407C6100B184DD /* AppleGFXHDA.cpp in Sources */,

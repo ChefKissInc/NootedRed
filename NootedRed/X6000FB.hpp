@@ -6,6 +6,7 @@
 #pragma once
 #include <GPUDriversAMD/FB/AmdAsicInfo.hpp>
 #include <GPUDriversAMD/FB/AmdDeviceMemoryManager.hpp>
+#include <GPUDriversAMD/FB/BiosParser.hpp>
 #include <Headers/kern_patcher.hpp>
 
 class X6000FB
@@ -24,6 +25,7 @@ class X6000FB
     mach_vm_address_t orgControllerPowerUp{0};
     bool              fixedVBIOS{false};
     mach_vm_address_t orgGetNumberOfConnectors{0};
+    mach_vm_address_t orgCreateVramInfo{0};
 
 public:
     static X6000FB& singleton();
@@ -32,7 +34,7 @@ public:
 
 private:
     static UInt16                           getEnumeratedRevision();
-    static IOReturn                         populateVramInfo(void* self, void* fwInfo);
+    static IOReturn                         wrapPopulateVramInfo(AmdAtomVramInfo* self, AtomFirmwareInfo& fwInfo);
     static bool                             wrapIH40IVRingInitHardware(void* ctx, void* param2);
     static void                             wrapIRQMGRWriteRegister(void* ctx, UInt64 index, UInt32 value);
     static void*                            wrapCreateRegisterAccess(void* initData);
@@ -46,4 +48,5 @@ private:
     static void                             wrapDpReceiverPowerCtrl(void* link, bool power_on);
     static UInt32                           wrapControllerPowerUp(void* self);
     static UInt32                           wrapGetNumberOfConnectors(void* self);
+    static AmdAtomVramInfo*                 wrapCreateVramInfo(AmdAtomFwHelper* biosHelper, UInt32 tableOffset);
 };

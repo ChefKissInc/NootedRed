@@ -6,13 +6,13 @@
 #pragma once
 #include <IOKit/IOTypes.h>
 
-enum struct VideoMemoryType
+enum VideoMemoryType
 {
-    Unknown = 0,
-    DDR2,
-    GDDR5,
-    DDR3,
-    DDR4,
-    HBM,
-    GDDR6,
+    kVideoMemoryTypeUnknown = 0,
+	kVideoMemoryTypeDDR2,
+	kVideoMemoryTypeGDDR5,
+	kVideoMemoryTypeDDR3,
+	kVideoMemoryTypeDDR4,
+	kVideoMemoryTypeHBM,
+	kVideoMemoryTypeGDDR6,
 };

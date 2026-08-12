@@ -36,16 +36,15 @@ class NRed
         constexpr void setGreenSardine() { this->value |= IsGreenSardine; }
     };
 
-    Attributes       attributes;            // TODO: Remove!
-    IOPCIDevice*     iGPU{nullptr};         // TODO: Remove!
-    IOMemoryMap*     rmmio{nullptr};        // TODO: Remove!
-    volatile UInt32* rmmioPtr{nullptr};     // TODO: Remove!
-    OSData*          vbiosData{nullptr};    // TODO: Remove!
-    UInt16           deviceID{0};           // TODO: Remove!
-    UInt8            pciRevision{0};        // TODO: Remove!
-    UInt16           devRevision{0};        // TODO: Remove!
-    UInt16           enumRevision{0};       // TODO: Remove!
-    UInt64           fbOffset{0};           // TODO: Remove!
+    Attributes       attributes;           // TODO: Remove!
+    IOPCIDevice*     iGPU{nullptr};        // TODO: Remove!
+    IOMemoryMap*     rmmio{nullptr};       // TODO: Remove!
+    volatile UInt32* rmmioPtr{nullptr};    // TODO: Remove!
+    UInt16           deviceID{0};          // TODO: Remove!
+    UInt8            pciRevision{0};       // TODO: Remove!
+    UInt16           devRevision{0};       // TODO: Remove!
+    UInt16           enumRevision{0};      // TODO: Remove!
+    UInt64           fbOffset{0};          // TODO: Remove!
 
 public:
     static NRed& singleton();
@@ -70,20 +69,9 @@ public:
     CAILResult        sendMsgToSmc(UInt32 msg, UInt32 param = 0,
                                    UInt32* outParam = nullptr) const;    // TODO: Remove!
 
-    template<typename T>    // TODO: Remove!
-    T* getVBIOSDataTable(const UInt32 index)
-    {
-        auto* const vbios     = static_cast<const UInt8*>(this->vbiosData->getBytesNoCopy());
-        const auto  base      = *reinterpret_cast<const UInt16*>(vbios + ATOM_ROM_TABLE_PTR);
-        const auto  dataTable = *reinterpret_cast<const UInt16*>(vbios + base + ATOM_ROM_DATA_PTR);
-        auto* const mdt       = reinterpret_cast<const UInt16*>(vbios + dataTable + 4);
-        const auto  offset    = mdt[index];
-        return offset ? reinterpret_cast<T*>(const_cast<UInt8*>(vbios) + offset) : nullptr;
-    }
-
 private:
-    bool getVBIOSFromVFCT(bool strict);    // TODO: Remove!
-    bool getVBIOSFromVRAM();               // TODO: Remove!
-    bool getVBIOSFromExpansionROM();       // TODO: Remove!
-    bool getVBIOS();                       // TODO: Remove!
+    OSData* getVBIOSFromVFCT(bool strict);    // TODO: Remove!
+    OSData* getVBIOSFromVRAM();               // TODO: Remove!
+    OSData* getVBIOSFromExpansionROM();       // TODO: Remove!
+    OSData* getVBIOS();                       // TODO: Remove!
 };

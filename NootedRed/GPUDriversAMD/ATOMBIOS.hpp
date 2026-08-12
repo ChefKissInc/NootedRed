@@ -41,18 +41,44 @@ struct ATOMCommonTableHeader
 constexpr UInt32 ATOM_ROM_TABLE_PTR = 0x48;
 constexpr UInt32 ATOM_ROM_DATA_PTR  = 0x20;
 
-struct AtomFirmwareInfo
+enum ATOMDMIT17MemType : UInt8
 {
-    ATOMCommonTableHeader header;
-    UInt32                firmwareRevision;
-    UInt32                bootupSclkIn10Khz;
-    UInt32                bootupMclkIn10Khz;
-    UInt32                firmwareCapability;
-    UInt32                mainCallParserEntry;
-    UInt32                biosScratchRegStartAddr;
+    kATOMDMIT17MemTypeOther = 0x01,
+    kATOMDMIT17MemTypeUnknown,
+    kATOMDMIT17MemTypeDRAM,
+    kATOMDMIT17MemTypeEDRAM,
+    kATOMDMIT17MemTypeVRAM,
+    kATOMDMIT17MemTypeSRAM,
+    kATOMDMIT17MemTypeRAM,
+    kATOMDMIT17MemTypeROM,
+    kATOMDMIT17MemTypeFlash,
+    kATOMDMIT17MemTypeEEPROM,
+    kATOMDMIT17MemTypeFEPROM,
+    kATOMDMIT17MemTypeEPROM,
+    kATOMDMIT17MemTypeCDRAM,
+    kATOMDMIT17MemTypeThreeDRAM,
+    kATOMDMIT17MemTypeSDRAM,
+    kATOMDMIT17MemTypeSGRAM,
+    kATOMDMIT17MemTypeRDRAM,
+    kATOMDMIT17MemTypeDDR,
+    kATOMDMIT17MemTypeDDR2,
+    kATOMDMIT17MemTypeDDR2FBDIMM,
+    kATOMDMIT17MemTypeDDR3 = 0x18,
+    kATOMDMIT17MemTypeFBD2,
+    kATOMDMIT17MemTypeDDR4,
+    kATOMDMIT17MemTypeLPDDR,
+    kATOMDMIT17MemTypeLPDDR2,
+    kATOMDMIT17MemTypeLPDDR3,
+    kATOMDMIT17MemTypeLPDDR4,
+    kATOMDMIT17MemTypeGDDR6,
+    kATOMDMIT17MemTypeHBM,
+    kATOMDMIT17MemTypeHBM2,
+    kATOMDMIT17MemTypeDDR5,
+    kATOMDMIT17MemTypeLPDDR5,
+    kATOMDMIT17MemTypeLPDDR5x,
 };
 
-struct IGPSystemInfoV11
+struct ATOMIGPSystemInfoV1
 {
     ATOMCommonTableHeader header;
     UInt32                vbiosMisc;
@@ -70,65 +96,36 @@ struct IGPSystemInfoV11
     UInt16                dpPhyOverride;
     UInt16                lvdsMisc;
     UInt16                backlightPwmHz;
-    UInt8                 memoryType;
+    ATOMDMIT17MemType     memoryType;
     UInt8                 umaChannelCount;
+    /* rest differ between minor versions, so omitted for brevity */
 };
 
-enum DMIT17MemType : UInt8
+struct ATOMIGPSystemInfoV2 : public ATOMCommonTableHeader
 {
-    kOtherMemType = 0x01,
-    kUnknownMemType,
-    kDRAMMemType,
-    kEDRAMMemType,
-    kVRAMMemType,
-    kSRAMMemType,
-    kRAMMemType,
-    kROMMemType,
-    kFlashMemType,
-    kEEPROMMemType,
-    kFEPROMMemType,
-    kEPROMMemType,
-    kCDRAMMemType,
-    kThreeDRAMMemType,
-    kSDRAMMemType,
-    kSGRAMMemType,
-    kRDRAMMemType,
-    kDDRMemType,
-    kDDR2MemType,
-    kDDR2FBDIMMMemType,
-    kDDR3MemType = 0x18,
-    kFBD2MemType,
-    kDDR4MemType,
-    kLPDDRMemType,
-    kLPDDR2MemType,
-    kLPDDR3MemType,
-    kLPDDR4MemType,
-    kGDDR6MemType,
-    kHBMMemType,
-    kHBM2MemType,
-    kDDR5MemType,
-    kLPDDR5MemType,
-    kLPDDR5xMemType,
+    UInt32            vbiosMisc;
+    UInt32            gpuCapInfo;
+    UInt32            systemConfig;
+    UInt32            cpuCapInfo;
+    UInt16            gpuclkSsPercentage;
+    UInt16            gpuclkSsType;
+    UInt16            dpPhyOverride;
+    ATOMDMIT17MemType memoryType;
+    UInt8             umaChannelCount;
+    /* rest differ between minor versions, so omitted for brevity */
 };
 
-struct IGPSystemInfoV2 : public ATOMCommonTableHeader
+enum ATOMVRAMType : UInt8
 {
-    UInt32 vbiosMisc;
-    UInt32 gpuCapInfo;
-    UInt32 systemConfig;
-    UInt32 cpuCapInfo;
-    UInt16 gpuclkSsPercentage;
-    UInt16 gpuclkSsType;
-    UInt16 dpPhyOverride;
-    UInt8  memoryType;
-    UInt8  umaChannelCount;
-};
-
-union IGPSystemInfo
-{
-    ATOMCommonTableHeader header;
-    IGPSystemInfoV11      infoV11;
-    IGPSystemInfoV2       infoV2;
+    kATOMVRAMTypeUnknown = 0x00,
+    kATOMVRAMTypeGDDR5   = 0x50,    // start of atom_dgpu_vram_type
+    kATOMVRAMTypeHBM2    = 0x60,
+    kATOMVRAMTypeHBM2E   = 0x61,
+    kATOMVRAMTypeGDDR6   = 0x70,
+    kATOMVRAMTypeHBM3    = 0x80,
+    kATOMVRAMTypeHBM3E   = 0x81,
+    kATOMVRAMTypeDDR3    = 0xF0,    // Now extensions for `AmdAtomVramInfoIGP`.
+    kATOMVRAMTypeDDR4    = 0xF1,
 };
 
 struct ATOMDispObjPathV2

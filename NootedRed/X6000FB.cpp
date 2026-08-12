@@ -3,6 +3,7 @@
 // Copyright © 2022-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
+#include "AmdAtomVramInfoIGP.hpp"
 #include <ASICCaps.hpp>
 #include <GPUDriversAMD/ATOMBIOS.hpp>
 #include <GPUDriversAMD/CAIL/ASICCaps.hpp>
@@ -59,6 +60,12 @@ static const UInt8 kDpReceiverPowerCtrlPattern1404[] = {0x55, 0x48, 0x89, 0xE5, 
                                                         0x41, 0x54, 0x53, 0x48, 0x83, 0xEC, 0x10, 0x41,
                                                         0x89, 0xF7, 0xB0, 0x02, 0x44, 0x28, 0xF8};
 
+static const UInt8      kCreateVramInfoPattern[]         = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x43, 0x20, 0x0F,
+                                                            0xB7, 0x70, 0x3C, 0xE8, 0x00, 0x00, 0x00, 0x00};
+static const UInt8      kCreateVramInfoPatternMask[]     = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                                                            0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00};
+static constexpr UInt32 kCreateVramInfoPatternJumpOffset = 12;
+
 // Fix register read (0xD31 -> 0xD2F) and family ID (0x8F -> 0x8E).
 static const UInt8 kPopulateDeviceInfoOriginal[]{0xBE, 0x31, 0x0D, 0x00, 0x00, 0xFF, 0x90, 0x40, 0x01,
                                                  0x00, 0x00, 0xC7, 0x43, 0x00, 0x8F, 0x00, 0x00, 0x00};
@@ -66,21 +73,6 @@ static const UInt8 kPopulateDeviceInfoMask[]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
                                              0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF};
 static const UInt8 kPopulateDeviceInfoPatched[]{0xBE, 0x2F, 0x0D, 0x00, 0x00, 0xFF, 0x90, 0x40, 0x01,
                                                 0x00, 0x00, 0xC7, 0x43, 0x00, 0x8E, 0x00, 0x00, 0x00};
-
-// Neutralise `AmdAtomVramInfo` creation null check.
-// We don't have this entry in our VBIOS.
-static const UInt8 kAmdAtomVramInfoNullCheckOriginal[] = {0x48, 0x89, 0x83, 0x90, 0x00, 0x00, 0x00, 0x48, 0x85, 0xC0,
-                                                          0x0F, 0x84, 0x89, 0x00, 0x00, 0x00, 0x48, 0x8B, 0x7B, 0x18};
-static const UInt8 kAmdAtomVramInfoNullCheckPatched[]  = {0x48, 0x89, 0x83, 0x90, 0x00, 0x00, 0x00, 0x66, 0x90, 0x66,
-                                                          0x90, 0x66, 0x90, 0x66, 0x90, 0x90, 0x48, 0x8B, 0x7B, 0x18};
-
-// Ditto
-static const UInt8 kAmdAtomVramInfoNullCheckOriginal1015[]     = {0x48, 0x89, 0x83, 0x80, 0x00, 0x00,
-                                                                  0x00, 0x48, 0x85, 0xC0, 0x74, 0x00};
-static const UInt8 kAmdAtomVramInfoNullCheckOriginalMask1015[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-                                                                  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00};
-static const UInt8 kAmdAtomVramInfoNullCheckPatched1015[]      = {0x48, 0x89, 0x83, 0x80, 0x00, 0x00,
-                                                                  0x00, 0x66, 0x90, 0x66, 0x90, 0x90};
 
 // Neutralise `AmdAtomPspDirectory` creation null check.
 // We don't have this entry in our VBIOS.
@@ -90,24 +82,6 @@ static const UInt8 kAmdAtomPspDirectoryNullCheckOriginal[] = {0x48, 0x89, 0x83, 
 static const UInt8 kAmdAtomPspDirectoryNullCheckPatched[]  = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00,
                                                               0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66,
                                                               0x90, 0x90, 0x48, 0x8B, 0x7B, 0x18};
-
-// Neutralise `AmdAtomVramInfo` null check.
-static const UInt8 kGetFirmwareInfoNullCheckOriginal[]         = {0x48, 0x83, 0xBB, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                                                  0x0F, 0x84, 0x00, 0x00, 0x00, 0x00, 0x49, 0x89};
-static const UInt8 kGetFirmwareInfoNullCheckOriginalMask[]     = {0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF,
-                                                                  0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF};
-static const UInt8 kGetFirmwareInfoNullCheckPatched[]          = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                                                  0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x00, 0x00};
-static const UInt8 kGetFirmwareInfoNullCheckPatchedMask[]      = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                                                  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00};
-static const UInt8 kGetFirmwareInfoNullCheckOriginal1404[]     = {0x49, 0x83, 0xBC, 0x24, 0x90, 0x00, 0x00, 0x00, 0x00,
-                                                                  0x0F, 0x84, 0x00, 0x00, 0x00, 0x00, 0x49, 0x89};
-static const UInt8 kGetFirmwareInfoNullCheckOriginalMask1404[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-                                                                  0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF};
-static const UInt8 kGetFirmwareInfoNullCheckPatched1404[]      = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                                                  0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x00, 0x00};
-static const UInt8 kGetFirmwareInfoNullCheckPatchedMask1404[]  = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                                                  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00};
 
 // Tell AGDC that we're an iGPU.
 static const UInt8 kGetVendorInfoOriginal[]        = {0x48, 0x00, 0x02, 0x10, 0x00, 0x00, 0x02};
@@ -279,7 +253,7 @@ void X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_address_t s
     }
 
     PenguinWizardry::PatternRouteRequest requests[] = {
-        {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", populateVramInfo, kPopulateVramInfoPattern,
+        {"__ZNK15AmdAtomVramInfo16populateVramInfoER16AtomFirmwareInfo", wrapPopulateVramInfo, kPopulateVramInfoPattern,
          kPopulateVramInfoPatternMask},
         {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", getEnumeratedRevision},
         {"__ZN41AMDRadeonX6000_AmdDeviceMemoryManagerNavi21intializeReservedVramEv", initialiseReservedVRAM},
@@ -289,6 +263,15 @@ void X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_address_t s
     };
     PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "X6000FB",
                "Failed to route symbols");
+
+    PenguinWizardry::JumpPatternRouteRequest createVramInfoRequest{
+        "__ZN15AmdAtomVramInfo14createVramInfoEP15AmdAtomFwHelperj",
+        wrapCreateVramInfo,
+        this->orgCreateVramInfo,
+        kCreateVramInfoPattern,
+        kCreateVramInfoPatternMask,
+        kCreateVramInfoPatternJumpOffset};
+    PANIC_COND(!createVramInfoRequest.route(patcher, id, slide, size), "X6000FB", "Failed to route createVramInfo");
 
     if (currentKernelVersion() >= MACOS_11 && currentKernelVersion() <= MACOS_12_X) {
         PenguinWizardry::PatternRouteRequest getTriageHardwareDataRequest{
@@ -330,41 +313,23 @@ void X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_address_t s
     PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply populateDeviceInfo patch");
 
     if (currentKernelVersion() >= MACOS_14_4) {
-        const PenguinWizardry::MaskedLookupPatch patches[] = {
-            {&kextRadeonX6000Framebuffer, kGetFirmwareInfoNullCheckOriginal1404,
-             kGetFirmwareInfoNullCheckOriginalMask1404, kGetFirmwareInfoNullCheckPatched1404,
-             kGetFirmwareInfoNullCheckPatchedMask1404, 1},
-            {&kextRadeonX6000Framebuffer, kGetVendorInfoOriginal1404, kGetVendorInfoMask1404, kGetVendorInfoPatched1404,
-             kGetVendorInfoPatchedMask1404, 1},
-        };
-        PANIC_COND(!PenguinWizardry::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "X6000FB",
-                   "Failed to apply patches (14.4)");
+        const PenguinWizardry::MaskedLookupPatch patch{&kextRadeonX6000Framebuffer,   kGetVendorInfoOriginal1404,
+                                                       kGetVendorInfoMask1404,        kGetVendorInfoPatched1404,
+                                                       kGetVendorInfoPatchedMask1404, 1};
+        PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply getVendorInfo patch (14.4)");
     }
     else {
-        const PenguinWizardry::MaskedLookupPatch patches[] = {
-            {&kextRadeonX6000Framebuffer, kGetFirmwareInfoNullCheckOriginal, kGetFirmwareInfoNullCheckOriginalMask,
-             kGetFirmwareInfoNullCheckPatched, kGetFirmwareInfoNullCheckPatchedMask, 1},
-            {&kextRadeonX6000Framebuffer, kGetVendorInfoOriginal, kGetVendorInfoMask, kGetVendorInfoPatched,
-             kGetVendorInfoPatchedMask, 1},
-        };
-        PANIC_COND(!PenguinWizardry::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "X6000FB",
-                   "Failed to apply patches");
+        const PenguinWizardry::MaskedLookupPatch patch{&kextRadeonX6000Framebuffer, kGetVendorInfoOriginal,
+                                                       kGetVendorInfoMask,          kGetVendorInfoPatched,
+                                                       kGetVendorInfoPatchedMask,   1};
+        PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply getVendorInfo patch");
     }
 
-    if (currentKernelVersion() <= MACOS_10_15_X) {
-        const PenguinWizardry::MaskedLookupPatch patch{
-            &kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckOriginal1015,
-            kAmdAtomVramInfoNullCheckOriginalMask1015, kAmdAtomVramInfoNullCheckPatched1015, 1};
+    if (currentKernelVersion() >= MACOS_11) {
+        const PenguinWizardry::MaskedLookupPatch patch{&kextRadeonX6000Framebuffer,
+                                                       kAmdAtomPspDirectoryNullCheckOriginal,
+                                                       kAmdAtomPspDirectoryNullCheckPatched, 1};
         PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply null check patch");
-    }
-    else {
-        const PenguinWizardry::MaskedLookupPatch patches[] = {
-            {&kextRadeonX6000Framebuffer, kAmdAtomVramInfoNullCheckOriginal, kAmdAtomVramInfoNullCheckPatched, 1},
-            {&kextRadeonX6000Framebuffer, kAmdAtomPspDirectoryNullCheckOriginal, kAmdAtomPspDirectoryNullCheckPatched,
-             1},
-        };
-        PANIC_COND(!PenguinWizardry::MaskedLookupPatch::applyAll(patcher, patches, slide, size), "X6000FB",
-                   "Failed to apply null check patches");
     }
 
     if (NRed::singleton().getAttributes().isRenoir()) {
@@ -462,58 +427,6 @@ void X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_address_t s
 }
 
 UInt16 X6000FB::getEnumeratedRevision() { return NRed::singleton().getEnumRevision(); }
-
-IOReturn X6000FB::populateVramInfo(void* const, void* const fwInfo)
-{
-    UInt32      channelCount = 1;
-    auto* const table        = NRed::singleton().getVBIOSDataTable<const IGPSystemInfo>(0x1E);
-    UInt8       memoryType   = 0;
-    if (table == nullptr) { SYSLOG("X6000FB", "No iGPU System Info in Master Data Table"); }
-    else {
-        DBGLOG("X6000FB", "Fetching VRAM info from iGPU System Info");
-        if (table->header.formatRev == 1 && table->header.contentRev >= 11 && table->header.contentRev <= 12) {
-            if (table->infoV11.umaChannelCount) { channelCount = table->infoV11.umaChannelCount; }
-            memoryType = table->infoV11.memoryType;
-        }
-        else if (table->header.formatRev == 2 && table->header.contentRev >= 1 && table->header.contentRev <= 2) {
-            if (table->infoV2.umaChannelCount) { channelCount = table->infoV2.umaChannelCount; }
-            memoryType = table->infoV2.memoryType;
-        }
-        else {
-            SYSLOG("X6000FB", "Unsupported formatRev, contentRev (%d, %d)", table->header.formatRev,
-                   table->header.contentRev);
-        }
-    }
-    auto& videoMemoryType = getMember<VideoMemoryType>(fwInfo, 0x1C);
-    switch (memoryType) {
-        case kDDR2MemType:
-        case kDDR2FBDIMMMemType:
-        case kLPDDR2MemType    : {
-            videoMemoryType = VideoMemoryType::DDR2;
-        } break;
-        case kDDR3MemType:
-        case kLPDDR3MemType: {
-            videoMemoryType = VideoMemoryType::DDR3;
-        } break;
-        case kDDR4MemType:
-        case kLPDDR4MemType: {
-            videoMemoryType = VideoMemoryType::DDR4;
-        } break;
-        case kHBMMemType:
-        case kHBM2MemType: {
-            videoMemoryType = VideoMemoryType::HBM;
-        } break;
-        case kGDDR6MemType: {
-            videoMemoryType = VideoMemoryType::GDDR6;
-        } break;
-        default: {
-            DBGLOG("X6000FB", "Unsupported memory type %d", memoryType);
-            videoMemoryType = VideoMemoryType::Unknown;
-        } break;
-    }
-    getMember<UInt32>(fwInfo, 0x20) = channelCount * 64;    // VRAM Width (64-bit channels)
-    return kIOReturnSuccess;
-}
 
 bool X6000FB::wrapIH40IVRingInitHardware(void* const ctx, void* const param2)
 {
@@ -705,3 +618,27 @@ UInt32 X6000FB::wrapGetNumberOfConnectors(void* const self)
     }
     return FunctionCast(wrapGetNumberOfConnectors, singleton().orgGetNumberOfConnectors)(self);
 }
+
+static UInt32 getTableOffset(AmdAtomFwHelper* const biosHelper, const UInt32 index)
+{
+    const auto romTableOffset = static_cast<const UInt16*>(biosHelper->getImage(ATOM_ROM_TABLE_PTR, sizeof(UInt16)));
+    if (romTableOffset == nullptr) { return 0; }
+    const auto mdtOffset =
+        static_cast<const UInt16*>(biosHelper->getImage(*romTableOffset + ATOM_ROM_DATA_PTR, sizeof(UInt32)));
+    if (mdtOffset == nullptr) { return 0; }
+    const auto mdt =
+        static_cast<const UInt8*>(biosHelper->getImage(*mdtOffset, /*sizeof(atom_master_data_table_v2_1)*/ 0x4A));
+    if (mdt == nullptr) { return 0; }
+    return reinterpret_cast<const UInt16*>(mdt + sizeof(ATOMCommonTableHeader))[index];
+}
+
+AmdAtomVramInfo* X6000FB::wrapCreateVramInfo(AmdAtomFwHelper* const biosHelper, const UInt32 tableOffset)
+{
+    if (biosHelper == nullptr || tableOffset != 0) {    // tableOffset is 0 on iGPUs
+        return FunctionCast(wrapCreateVramInfo, singleton().orgCreateVramInfo)(biosHelper, tableOffset);
+    }
+    return AmdAtomVramInfoIGP::createVramInfoIGP(biosHelper, getTableOffset(biosHelper, 0x1E));
+}
+
+IOReturn X6000FB::wrapPopulateVramInfo(AmdAtomVramInfo* self, AtomFirmwareInfo& fwInfo)
+{ return self->populateVramInfo(fwInfo); }
