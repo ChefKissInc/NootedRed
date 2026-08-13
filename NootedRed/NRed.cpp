@@ -88,7 +88,7 @@ void NRed::hwLateInit()
     this->iGPU->setMemoryEnable(true);
     this->iGPU->setBusMasterEnable(true);
 
-    if (const auto vbiosData = this->getVBIOS(); vbiosData != nullptr) {
+    if (const auto vbiosData = this->copyVBIOS(); vbiosData != nullptr) {
         vbiosData->appendByte(0, ATOMBIOS_IMAGE_SIZE - vbiosData->getLength());
         this->iGPU->setProperty("ATY,bin_image", vbiosData);
         vbiosData->release();
@@ -308,7 +308,7 @@ static bool checkAtomBios(const UInt8* const bios, const size_t size)
 class AppleACPIPlatformExpert : IOACPIPlatformExpert
 { friend class NRed; };
 
-OSData* NRed::getVBIOSFromVFCT(const bool strict)
+OSData* NRed::copyVBIOSFromVFCT(const bool strict)
 {
     DBGLOG("NRed", "Fetching VBIOS from VFCT table");
     const auto expert = static_cast<AppleACPIPlatformExpert*>(this->iGPU->getPlatform());
@@ -371,7 +371,7 @@ OSData* NRed::getVBIOSFromVFCT(const bool strict)
     return nullptr;
 }
 
-OSData* NRed::getVBIOSFromVRAM()
+OSData* NRed::copyVBIOSFromVRAM()
 {
     const auto bar0 =
         this->iGPU->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress0, kIOMapWriteCombineCache | kIOMapAnywhere);
@@ -392,7 +392,7 @@ OSData* NRed::getVBIOSFromVRAM()
     return vbiosData;
 }
 
-OSData* NRed::getVBIOSFromExpansionROM()
+OSData* NRed::copyVBIOSFromExpansionROM()
 {
     const auto expansionROMBase = this->iGPU->extendedConfigRead32(kIOPCIConfigExpansionROMBase);
     if (expansionROMBase == 0) {
@@ -428,7 +428,7 @@ OSData* NRed::getVBIOSFromExpansionROM()
     return nullptr;
 }
 
-OSData* NRed::getVBIOS()
+OSData* NRed::copyVBIOS()
 {
     const auto biosImageProp = OSDynamicCast(OSData, this->iGPU->getProperty("ATY,bin_image"));
     if (biosImageProp != nullptr) {
@@ -441,22 +441,22 @@ OSData* NRed::getVBIOS()
         }
     }
 
-    if (const auto vbiosData = this->getVBIOSFromVFCT(true); vbiosData != nullptr) {
+    if (const auto vbiosData = this->copyVBIOSFromVFCT(true); vbiosData != nullptr) {
         DBGLOG("NRed", "Got VBIOS from VFCT.");
         return vbiosData;
     }
     SYSLOG("NRed", "Failed to get VBIOS from VFCT, trying to get it from VRAM.");
-    if (const auto vbiosData = this->getVBIOSFromVRAM(); vbiosData != nullptr) {
+    if (const auto vbiosData = this->copyVBIOSFromVRAM(); vbiosData != nullptr) {
         DBGLOG("NRed", "Got VBIOS from VRAM.");
         return vbiosData;
     }
     SYSLOG("NRed", "Failed to get VBIOS from VRAM, trying to get it from PCI Expansion ROM.");
-    if (const auto vbiosData = this->getVBIOSFromExpansionROM(); vbiosData != nullptr) {
+    if (const auto vbiosData = this->copyVBIOSFromExpansionROM(); vbiosData != nullptr) {
         DBGLOG("NRed", "Got VBIOS from PCI Expansion ROM.");
         return vbiosData;
     }
     SYSLOG("NRed", "Failed to get VBIOS from PCI Expansion ROM, trying to get it from VFCT (relaxed matches mode).");
-    if (const auto vbiosData = this->getVBIOSFromVFCT(false); vbiosData != nullptr) {
+    if (const auto vbiosData = this->copyVBIOSFromVFCT(false); vbiosData != nullptr) {
         DBGLOG("NRed", "Got VBIOS from VFCT (relaxed matches mode).");
         return vbiosData;
     }

@@ -70,8 +70,8 @@ public:
                                    UInt32* outParam = nullptr) const;    // TODO: Remove!
 
 private:
-    OSData* getVBIOSFromVFCT(bool strict);    // TODO: Remove!
-    OSData* getVBIOSFromVRAM();               // TODO: Remove!
-    OSData* getVBIOSFromExpansionROM();       // TODO: Remove!
-    OSData* getVBIOS();                       // TODO: Remove!
+    OSData* copyVBIOSFromVFCT(bool strict);    // TODO: Remove!
+    OSData* copyVBIOSFromVRAM();               // TODO: Remove!
+    OSData* copyVBIOSFromExpansionROM();       // TODO: Remove!
+    OSData* copyVBIOS();                       // TODO: Remove!
 };
