@@ -63,6 +63,64 @@ bool PenguinWizardry::PatternSolveRequest::solveAll(KernelPatcher& patcher, cons
     return true;
 }
 
+bool PenguinWizardry::JumpPatternSolveRequest::solve(KernelPatcher& patcher, const size_t id,
+                                                     const mach_vm_address_t start, const size_t size)
+{
+    assertf(this->address != nullptr, "for symbol `%s`", safeString(this->symbol));
+
+    if (this->symbol != nullptr) {
+        patcher.clearError();
+        if (start == 0 || size == 0) { *this->address = patcher.solveSymbol(id, this->symbol); }
+        else {
+            *this->address = patcher.solveSymbol(id, this->symbol, start, size, true);
+        }
+        if (*this->address != 0) { return true; }
+        SYSLOG("Patcher+", "Failed to solve `%s` using symbol: %d", this->symbol, static_cast<int>(patcher.getError()));
+    }
+
+    if (this->pattern == nullptr || this->patternSize == 0) {
+        assert(this->symbol != nullptr);
+        SYSLOG("Patcher+", "Cannot solve `%s` using pattern", this->symbol);
+        return false;
+    }
+
+    DBGLOG("Patcher+", "Failed to solve `%s` using symbol: %d. Attempting to use pattern.", safeString(this->symbol),
+           static_cast<int>(patcher.getError()));
+    assertf(start != 0, "for symbol `%s`", safeString(this->symbol));
+    assertf(size != 0, "for symbol `%s`", safeString(this->symbol));
+
+    size_t offset;
+    if (!KernelPatcher::findPattern(this->pattern, this->mask, this->patternSize, reinterpret_cast<const void*>(start),
+                                    size, &offset))
+    {
+        SYSLOG("Patcher+", "Failed to solve `%s` using pattern", safeString(this->symbol));
+        return false;
+    }
+
+    *this->address = jumpInstDestination(start + offset + this->jumpInstOff, start + size);
+    if (*this->address == 0) {
+        SYSLOG("Patcher+", "Failed to solve `%s` using jump pattern", safeString(this->symbol));
+        return false;
+    }
+
+    DBGLOG("Patcher+", "Resolved `%s` at 0x%llX", safeString(this->symbol), *this->address);
+    return true;
+}
+
+bool PenguinWizardry::JumpPatternSolveRequest::solveAll(KernelPatcher& patcher, const size_t id,
+                                                        JumpPatternSolveRequest* const requests, const size_t count,
+                                                        const mach_vm_address_t start, const size_t size)
+{
+    for (size_t i = 0; i < count; i++) {
+        if (requests[i].solve(patcher, id, start, size)) { DBGLOG("Patcher+", "Solved pattern request (i: %zu)", i); }
+        else {
+            DBGLOG("Patcher+", "Failed to solve pattern request (i: %zu)", i);
+            return false;
+        }
+    }
+    return true;
+}
+
 bool PenguinWizardry::PatternRouteRequest::route(KernelPatcher& patcher, const size_t id, const mach_vm_address_t start,
                                                  const size_t size)
 {

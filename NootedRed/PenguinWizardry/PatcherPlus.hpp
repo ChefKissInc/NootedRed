@@ -45,6 +45,46 @@ namespace PenguinWizardry
         { return solveAll(patcher, id, requests, N, start, size); }
     };
 
+    struct JumpPatternSolveRequest : KernelPatcher::SolveRequest
+    {
+        const UInt8 *const pattern{nullptr}, *const mask{nullptr};
+        const size_t patternSize{0};
+        const size_t jumpInstOff{0};
+
+        template<typename T>
+        JumpPatternSolveRequest(const char* s, T& addr) :
+            KernelPatcher::SolveRequest{s, addr}
+        { }
+
+        template<typename T, typename P, const size_t N>
+        JumpPatternSolveRequest(const char* s, T& addr, const P (&pattern)[N], const size_t jumpInstOff) :
+            KernelPatcher::SolveRequest{s, addr},
+            pattern{pattern},
+            patternSize{N},
+            jumpInstOff{jumpInstOff}
+        { }
+
+        template<typename T, typename P, const size_t N>
+        JumpPatternSolveRequest(const char* s, T& addr, const P (&pattern)[N], const UInt8 (&mask)[N],
+                                const size_t jumpInstOff) :
+            KernelPatcher::SolveRequest{s, addr},
+            pattern{pattern},
+            mask{mask},
+            patternSize{N},
+            jumpInstOff{jumpInstOff}
+        { }
+
+        bool solve(KernelPatcher& patcher, size_t id, mach_vm_address_t start, size_t size);
+
+        static bool solveAll(KernelPatcher& patcher, size_t id, JumpPatternSolveRequest* requests, size_t count,
+                             mach_vm_address_t start, size_t size);
+
+        template<size_t N>
+        static bool solveAll(KernelPatcher& patcher, const size_t id, JumpPatternSolveRequest (&requests)[N],
+                             const mach_vm_address_t start, const size_t size)
+        { return solveAll(patcher, id, requests, N, start, size); }
+    };
+
     struct PatternRouteRequest : KernelPatcher::RouteRequest
     {
         const UInt8 *const pattern{nullptr}, *const mask{nullptr};

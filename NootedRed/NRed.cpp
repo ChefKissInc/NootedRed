@@ -216,62 +216,6 @@ void NRed::writeReg32(const UInt32 reg, const UInt32 val) const
     }
 }
 
-static UInt64 getCurTimeInNS()
-{
-    UInt64 uptime, uptimeNS;
-    clock_get_uptime(&uptime);
-    absolutetime_to_nanoseconds(uptime, &uptimeNS);
-    return uptimeNS;
-}
-
-CAILResult NRed::waitForFunc(void* handle, bool (*func)(void* handle), const UInt32 timeoutMS)
-{
-    if (timeoutMS == 0) {
-        while (!func(handle)) { }
-        return kCAILResultOK;
-    }
-
-    const auto startTime = getCurTimeInNS();
-    const auto timeoutNS = static_cast<UInt64>(timeoutMS) * 1000000;
-    do {
-        if (func(handle)) { return kCAILResultOK; }
-    }
-    while (getCurTimeInNS() - startTime <= timeoutNS);
-
-    return kCAILResultNoResponse;
-}
-
-static bool smuWaitForResponseFunc(void* handle)
-{
-    const auto outResp = static_cast<UInt32*>(handle);
-
-    const auto fwResp = NRed::singleton().readReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_90);
-    if (fwResp != kSMUFWResponseNoResponse) {
-        if (outResp != nullptr) { *outResp = fwResp; }
-        return true;
-    }
-
-    return false;
-}
-
-CAILResult NRed::smuWaitForResponse(UInt32* outResp) const { return waitForFunc(outResp, smuWaitForResponseFunc); }
-
-CAILResult NRed::sendMsgToSmc(const UInt32 msg, const UInt32 param, UInt32* const outParam) const
-{
-    this->smuWaitForResponse();
-
-    this->writeReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_90, 0);
-    this->writeReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_82, param);
-    this->writeReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_66, msg);
-
-    UInt32     resp = kSMUFWResponseNoResponse;
-    const auto res  = this->smuWaitForResponse(&resp);
-
-    if (res == kCAILResultOK && outParam != nullptr) { *outParam = this->readReg32(MP0_BASE_0 + MP1_SMN_C2PMSG_82); }
-
-    return processSMUFWResponse(msg, resp);
-}
-
 static bool checkAtomBios(const UInt8* const bios, const size_t size)
 {
     if (size < 0x49) {
@@ -306,7 +250,9 @@ static bool checkAtomBios(const UInt8* const bios, const size_t size)
 
 // Hack
 class AppleACPIPlatformExpert : IOACPIPlatformExpert
-{ friend class NRed; };
+{
+    friend class NRed;
+};
 
 OSData* NRed::copyVBIOSFromVFCT(const bool strict)
 {

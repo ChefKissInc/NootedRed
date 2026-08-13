@@ -3,6 +3,7 @@
 // Copyright © 2022-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
+#include "GoldenSettings.hpp"
 #include <ASICCaps.hpp>
 #include <GPUDriversAMD/CAIL/ASICCaps.hpp>
 #include <GPUDriversAMD/CAIL/DevCaps.hpp>
@@ -18,7 +19,6 @@
 #include <GPUDriversAMD/TTL/SWIP/IPVersion.hpp>
 #include <GPUDriversAMD/TTL/SWIP/SDMA.hpp>
 #include <GPUDriversAMD/TTL/SWIP/SMU.hpp>
-#include "GoldenSettings.hpp"
 #include <HWLibs.hpp>
 #include <Headers/kern_mach.hpp>
 #include <Headers/kern_patcher.hpp>
@@ -364,6 +364,28 @@ static const UInt8      kSmuInitFunctionPointerListCallPatternMask[]      = {0xF
                                                                              0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00};
 static constexpr size_t kSmuInitFunctionPointerListCallPatternJumpInstOff = 0x8;
 
+static const UInt8      kSmu90SendMessageWithParameterCallPattern[]          = {0xBE, 0x45, 0x00, 0x00, 0x00, 0x5D,
+                                                                                0xE9, 0x00, 0x00, 0x00, 0x00};
+static const UInt8      kSmu90SendMessageWithParameterCallPatternMask[]      = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                                                                                0xFF, 0x00, 0x00, 0x00, 0x00};
+static constexpr size_t kSmu90SendMessageWithParameterCallPatternJumpInstOff = 6;
+
+static const UInt8      kSmuCosWaitForCallPattern[]          = {0xE8, 0x00, 0x00, 0x00, 0x00, 0x85, 0xC0};
+static const UInt8      kSmuCosWaitForCallPatternMask[]      = {0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF};
+static constexpr size_t kSmuCosWaitForCallPatternJumpInstOff = 0;
+
+static const UInt8      kSmuCgsWriteRegisterCallPattern[]          = {0x41, 0xB8, 0x04, 0x00, 0x00, 0x00, 0x45,
+                                                                      0x31, 0xC9, 0xE8, 0x00, 0x00, 0x00, 0x00};
+static const UInt8      kSmuCgsWriteRegisterCallPatternMask[]      = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                                                                      0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00};
+static constexpr size_t kSmuCgsWriteRegisterCallPatternJumpInstOff = 9;
+
+static const UInt8      kSmuCgsReadRegisterCallPattern[]          = {0xB9, 0x04, 0x00, 0x00, 0x00, 0x45, 0x31,
+                                                                     0xC0, 0xE8, 0x00, 0x00, 0x00, 0x00};
+static const UInt8      kSmuCgsReadRegisterCallPatternMask[]      = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                                                                     0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00};
+static constexpr size_t kSmuCgsReadRegisterCallPatternJumpInstOff = 8;
+
 // Replace call to `_gc_get_hw_version` with constant (0x090001).
 static const UInt8 kGcSwInitOriginal[]     = {0x0C, 0xE8, 0x00, 0x00, 0x00, 0x00, 0x41, 0x89, 0xC7};
 static const UInt8 kGcSwInitOriginalMask[] = {0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF};
@@ -563,6 +585,44 @@ void X5000HWLibs::processKext(KernelPatcher& patcher, const size_t id, const mac
     };
     PANIC_COND(!PenguinWizardry::PatternSolveRequest::solveAll(patcher, id, solveRequests, slide, size), "HWLibs",
                "Failed to resolve symbols");
+
+    PenguinWizardry::JumpPatternSolveRequest smu90SendMessageWithParameterRequest{
+        "_smu_9_0_send_message_with_parameter", this->smu90SendMessageWithParameter,
+        kSmu90SendMessageWithParameterCallPattern, kSmu90SendMessageWithParameterCallPatternMask,
+        kSmu90SendMessageWithParameterCallPatternJumpInstOff};
+    PANIC_COND(!smu90SendMessageWithParameterRequest.solve(patcher, id, slide, size), "HWLibs",
+               "Failed to solve smu_9_0_send_message_with_parameter");
+
+    KernelPatcher::SolveRequest smuRequestsNormal[] = {
+        {"_smu_cos_wait_for", this->smuCosWaitFor},
+        {"_smu_cgs_write_register", this->smuCgsWriteRegister},
+        {"_smu_cgs_read_register", this->smuCgsReadRegister},
+    };
+    patcher.solveMultiple(id, smuRequestsNormal, slide, size, true, true);
+    if (this->smuCosWaitFor == nullptr) {
+        PenguinWizardry::JumpPatternSolveRequest request{nullptr, this->smuCosWaitFor, kSmuCosWaitForCallPattern,
+                                                         kSmuCosWaitForCallPatternMask,
+                                                         kSmuCosWaitForCallPatternJumpInstOff};
+        PANIC_COND(!request.solve(patcher, id, reinterpret_cast<mach_vm_address_t>(this->smu90SendMessageWithParameter),
+                                  PAGE_SIZE),
+                   "HWLibs", "Failed to solve smu_cos_wait_for");
+    }
+    if (this->smuCgsWriteRegister == nullptr) {
+        PenguinWizardry::JumpPatternSolveRequest request{
+            nullptr, this->smuCgsWriteRegister, kSmuCgsWriteRegisterCallPattern, kSmuCgsWriteRegisterCallPatternMask,
+            kSmuCgsWriteRegisterCallPatternJumpInstOff};
+        PANIC_COND(!request.solve(patcher, id, reinterpret_cast<mach_vm_address_t>(this->smu90SendMessageWithParameter),
+                                  PAGE_SIZE),
+                   "HWLibs", "Failed to solve smu_cgs_write_register");
+    }
+    if (this->smuCgsReadRegister == nullptr) {
+        PenguinWizardry::JumpPatternSolveRequest request{
+            nullptr, this->smuCgsReadRegister, kSmuCgsReadRegisterCallPattern, kSmuCgsReadRegisterCallPatternMask,
+            kSmuCgsReadRegisterCallPatternJumpInstOff};
+        PANIC_COND(!request.solve(patcher, id, reinterpret_cast<mach_vm_address_t>(this->smu90SendMessageWithParameter),
+                                  PAGE_SIZE),
+                   "HWLibs", "Failed to solve smu_cgs_read_register");
+    }
 
     if (currentKernelVersion() <= MACOS_10_15_X) {
         PenguinWizardry::PatternRouteRequest request{"__ZN16AmdTtlFwServices7getIpFwEjPKcP10_TtlFwInfo", wrapGetIpFw,
@@ -929,38 +989,50 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void* const instance, void* const cmd
     return FunctionCast(wrapPspCmdKmSubmit, singleton().orgPspCmdKmSubmit)(instance, cmd, outData, outResponse);
 }
 
-CAILResult X5000HWLibs::smuPowerUpConfigCommon()
+CAILResult X5000HWLibs::smuSendMessage(void* const ctx, const UInt32 message, const UInt32 param,
+                                       UInt32* const outParam) const
 {
-    if (const auto res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerUpSdma); res != kCAILResultOK) { return res; }
-    if (const auto res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerUpGfx); res != kCAILResultOK) { return res; }
+    if (const auto res = this->smu90SendMessageWithParameter(ctx, PPSMC_MSG_PowerUpSdma, 0); res != kCAILResultOK) {
+        return res;
+    }
+
+    if (outParam != nullptr) { *outParam = this->smuCgsReadRegister(ctx, MP1_SMN_C2PMSG_82, 0, kCAILHWBlockMP1, 0); }
 
     return kCAILResultOK;
 }
 
-CAILResult X5000HWLibs::smuInternalSwInit(void* const instance, void* const, AMDSMUSWInitOutput* const)
+CAILResult X5000HWLibs::smuPowerUpConfigCommon(void* const ctx)
 {
-    singleton().smuSwInitialisedFieldBase(instance) = true;
+    if (const auto res = singleton().smuSendMessage(ctx, PPSMC_MSG_PowerUpSdma); res != kCAILResultOK) { return res; }
+    if (const auto res = singleton().smuSendMessage(ctx, PPSMC_MSG_PowerUpGfx); res != kCAILResultOK) { return res; }
+
     return kCAILResultOK;
 }
 
-CAILResult X5000HWLibs::smuInternalSwInitOld(void* const, void* const, AMDSMUSWInitOutput* const output)
-{ return NRed::singleton().sendMsgToSmc(PPSMC_MSG_GetSmuVersion, 0, &output->fwConstants.version); }
+CAILResult X5000HWLibs::smuInternalSwInit(void* const ctx, void*, AMDSMUSWInitOutput*)
+{
+    singleton().smuSwInitialisedFieldBase(ctx) = true;
+    return kCAILResultOK;
+}
 
-CAILResult X5000HWLibs::smuGetUCodeConsts(void*, AMDSMUUCodeConstants* consts)
+CAILResult X5000HWLibs::smuInternalSwInitOld(void* const ctx, void*, AMDSMUSWInitOutput* const output)
+{ return singleton().smuSendMessage(ctx, PPSMC_MSG_GetSmuVersion, 0, &output->fwConstants.version); }
+
+CAILResult X5000HWLibs::smuGetUCodeConsts(void* const ctx, AMDSMUUCodeConstants* consts)
 {
     if (consts == nullptr) { return kCAILResultInvalidParameters; }
-    return NRed::singleton().sendMsgToSmc(PPSMC_MSG_GetSmuVersion, 0, &consts->version);
+    return singleton().smuSendMessage(ctx, PPSMC_MSG_GetSmuVersion, 0, &consts->version);
 }
 
-CAILResult X5000HWLibs::smu10PowerUpConfig()
+CAILResult X5000HWLibs::smu10PowerUpConfig(void* const ctx)
 {
-    if (const auto res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_ForceGfxContentSave);
+    if (const auto res = singleton().smuSendMessage(ctx, PPSMC_MSG_ForceGfxContentSave);
         res != kCAILResultOK && res != kCAILResultUnsupported)
     {
         return res;
     }
-    if (const auto res = smuPowerUpConfigCommon(); res != kCAILResultOK) { return res; }
-    if (const auto res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerGateMmHub);
+    if (const auto res = smuPowerUpConfigCommon(ctx); res != kCAILResultOK) { return res; }
+    if (const auto res = singleton().smuSendMessage(ctx, PPSMC_MSG_PowerGateMmHub);
         res != kCAILResultOK && res != kCAILResultUnsupported)
     {
         return res;
@@ -968,17 +1040,25 @@ CAILResult X5000HWLibs::smu10PowerUpConfig()
     return kCAILResultOK;
 }
 
-CAILResult X5000HWLibs::smu10InternalHwInit(void*) { return smu10PowerUpConfig(); }
+CAILResult X5000HWLibs::smu10InternalHwInit(void* const ctx) { return smu10PowerUpConfig(ctx); }
 
-static bool smu12IsFwLoaded(void*)
-{ return (NRed::singleton().readReg32(MP1_PUBLIC | MP1_FIRMWARE_FLAGS) & MP1_FIRMWARE_FLAGS_INTERRUPTS_ENABLED) != 0; }
-
-CAILResult X5000HWLibs::smu12WaitForFwLoaded() { return NRed::waitForFunc(nullptr, smu12IsFwLoaded); }
-
-CAILResult X5000HWLibs::smu12PowerUpConfig()
+bool X5000HWLibs::smu12IsFwLoaded(void* const ctx)
 {
-    if (const auto res = smuPowerUpConfigCommon(); res != kCAILResultOK) { return res; }
-    if (const auto res = NRed::singleton().sendMsgToSmc(PPSMC_MSG_PowerGateAtHub);
+    return (singleton().smuCgsReadRegister(ctx, MP1_FIRMWARE_FLAGS, 0, kCAILHWBlockMP1, MP1_PUBLIC)
+            & MP1_FIRMWARE_FLAGS_INTERRUPTS_ENABLED)
+           != 0;
+}
+
+CAILResult X5000HWLibs::smu12WaitForFwLoaded(void* const ctx)
+{
+    return singleton().smuCosWaitFor(ctx, smu12IsFwLoaded, ctx,
+                                     /*ctx->waitOnRegisterTimeout*/ PP_WAIT_ON_REGISTER_TIMEOUT_DEFAULT);
+}
+
+CAILResult X5000HWLibs::smu12PowerUpConfig(void* const ctx)
+{
+    if (const auto res = smuPowerUpConfigCommon(ctx); res != kCAILResultOK) { return res; }
+    if (const auto res = singleton().smuSendMessage(ctx, PPSMC_MSG_PowerGateAtHub);
         res != kCAILResultOK && res != kCAILResultUnsupported)
     {
         return res;
@@ -987,19 +1067,19 @@ CAILResult X5000HWLibs::smu12PowerUpConfig()
     return kCAILResultOK;
 }
 
-CAILResult X5000HWLibs::smu12InternalHwInit(void*)
+CAILResult X5000HWLibs::smu12InternalHwInit(void* const ctx)
 {
-    if (const auto res = smu12WaitForFwLoaded(); res != kCAILResultOK) { return res; }
+    if (const auto res = smu12WaitForFwLoaded(ctx); res != kCAILResultOK) { return res; }
 
-    return smu12PowerUpConfig();
+    return smu12PowerUpConfig(ctx);
 }
 
 CAILResult X5000HWLibs::smuInternalHwExit(void*) { return kCAILResultOK; }
 
-CAILResult X5000HWLibs::smuFullAsicReset(void*, void* data)
-{ return NRed::singleton().sendMsgToSmc(PPSMC_MSG_DeviceDriverReset, getMember<UInt32>(data, 4)); }
+CAILResult X5000HWLibs::smuFullAsicReset(void* const ctx, void* data)
+{ return singleton().smuSendMessage(ctx, PPSMC_MSG_DeviceDriverReset, getMember<UInt32>(data, 4)); }
 
-CAILResult X5000HWLibs::smu10NotifyEvent(void*, TTLEventInput* input)
+CAILResult X5000HWLibs::smu10NotifyEvent(void* const ctx, TTLEventInput* input)
 {
     if (input->arg >= SMU_EVENT_COUNT) {
         SYSLOG("HWLibs", "Invalid input event to SMU notify event: %d", input->arg);
@@ -1008,13 +1088,13 @@ CAILResult X5000HWLibs::smu10NotifyEvent(void*, TTLEventInput* input)
 
     if (input->arg == SMU_EVENT_POWER_UP || input->arg == 4 || input->arg == 8 || input->arg == SMU_EVENT_REINITIALISE)
     {
-        return smu10PowerUpConfig();
+        return smu10PowerUpConfig(ctx);
     }
 
     return kCAILResultOK;
 }
 
-CAILResult X5000HWLibs::smu12NotifyEvent(void*, TTLEventInput* input)
+CAILResult X5000HWLibs::smu12NotifyEvent(void* const ctx, TTLEventInput* input)
 {
     if (input->arg >= SMU_EVENT_COUNT) {
         SYSLOG("HWLibs", "Invalid input event to SMU notify event: %d", input->arg);
@@ -1023,21 +1103,22 @@ CAILResult X5000HWLibs::smu12NotifyEvent(void*, TTLEventInput* input)
 
     if (input->arg == SMU_EVENT_POWER_UP || input->arg == 4 || input->arg == 8 || input->arg == SMU_EVENT_REINITIALISE)
     {
-        return smu12PowerUpConfig();
+        return smu12PowerUpConfig(ctx);
     }
 
     return kCAILResultOK;
 }
 
-CAILResult X5000HWLibs::smuFullScreenEvent(void*, TTLFullScreenEvent event)
+CAILResult X5000HWLibs::smuFullScreenEvent(void* const ctx, TTLFullScreenEvent event)
 {
     switch (event) {
         case TTL_FULLSCREEN_EVENT_INCREASE:
-            NRed::singleton().writeReg32(MP0_BASE_0 + MP1_SMN_FPS_CNT,
-                                         NRed::singleton().readReg32(MP0_BASE_0 + MP1_SMN_FPS_CNT) + 1);
+            singleton().smuCgsWriteRegister(
+                ctx, MP1_SMN_FPS_CNT, 0,
+                singleton().smuCgsReadRegister(ctx, MP1_SMN_FPS_CNT, 0, kCAILHWBlockMP1, 0) + 1, kCAILHWBlockMP1, 0);
             return kCAILResultOK;
         case TTL_FULLSCREEN_EVENT_RESET:
-            NRed::singleton().writeReg32(MP0_BASE_0 + MP1_SMN_FPS_CNT, 0);
+            singleton().smuCgsWriteRegister(ctx, MP1_SMN_FPS_CNT, 0, 0, kCAILHWBlockMP1, 0);
             return kCAILResultOK;
         default:
             SYSLOG("HWLibs", "Invalid input event to SMU full screen event: %d", event);

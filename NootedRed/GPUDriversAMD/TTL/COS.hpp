@@ -22,3 +22,6 @@ enum COSResult
     kCOSResultOK          = 0,
     kCOSResultUnsupported = 2,
 };
+
+typedef bool CosWaitForFunc(void* handle);
+

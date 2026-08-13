@@ -60,14 +60,9 @@ public:
     void hwLateInit();        // TODO: Remove!
     void processPatcher();    // TODO: Remove!
 
-    void              setProp32(const char* key, UInt32 value) const;    // TODO: Remove!
-    UInt32            readReg32(UInt32 reg) const;                       // TODO: Remove!
-    void              writeReg32(UInt32 reg, const UInt32 val) const;    // TODO: Remove!
-    static CAILResult waitForFunc(void* handle, bool (*func)(void* handle),
-                                  UInt32 timeoutMS = PP_WAIT_ON_REGISTER_TIMEOUT_DEFAULT);
-    CAILResult        smuWaitForResponse(UInt32* outResp = nullptr) const;    // TODO: Remove!
-    CAILResult        sendMsgToSmc(UInt32 msg, UInt32 param = 0,
-                                   UInt32* outParam = nullptr) const;    // TODO: Remove!
+    void   setProp32(const char* key, UInt32 value) const;    // TODO: Remove!
+    UInt32 readReg32(UInt32 reg) const;                       // TODO: Remove!
+    void   writeReg32(UInt32 reg, const UInt32 val) const;    // TODO: Remove!
 
 private:
     OSData* copyVBIOSFromVFCT(bool strict);    // TODO: Remove!

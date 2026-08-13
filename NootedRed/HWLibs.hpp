@@ -5,7 +5,9 @@
 
 #pragma once
 #include <GPUDriversAMD/CAIL/DeviceType.hpp>
+#include <GPUDriversAMD/CAIL/HWBlock.hpp>
 #include <GPUDriversAMD/CAIL/Result.hpp>
+#include <GPUDriversAMD/TTL/COS.hpp>
 #include <GPUDriversAMD/TTL/Event.hpp>
 #include <GPUDriversAMD/TTL/SWIP/DMCU.hpp>
 #include <GPUDriversAMD/TTL/SWIP/GC.hpp>
@@ -47,6 +49,12 @@ class X5000HWLibs
     mach_vm_address_t                                                 orgSmuInitFunctionPointerList{0};
     mach_vm_address_t                                                 orgGcSetFwEntryInfo{0};
     mach_vm_address_t                                                 orgSdmaInitFunctionPointerList{0};
+    CAILResult (*smu90SendMessageWithParameter)(void* ctx, UInt32 message, UInt32 param){nullptr};
+    CAILResult (*smuCosWaitFor)(void* ctx, CosWaitForFunc* func, void* handle, UInt32 duration){nullptr};
+    UInt32     (*smuCgsReadRegister)(void* ctx, UInt32 regOff, UInt32 blockInstance, CAILHWBlock block,
+                                     UInt32 regOffBase){nullptr};
+    void (*smuCgsWriteRegister)(void* ctx, UInt32 regOff, UInt32 blockInstance, UInt32 regValue, CAILHWBlock block,
+                                UInt32 regOffBase){nullptr};
 
 public:
     static X5000HWLibs& singleton();
@@ -65,21 +73,23 @@ private:
     static CAILResult pspSecurityFeatureCapsSet10(void* instance);
     static CAILResult pspSecurityFeatureCapsSet12(void* instance);
     static CAILResult wrapPspCmdKmSubmit(void* instance, void* cmd, void* outData, void* outResponse);
-    static CAILResult smuPowerUpConfigCommon();
-    static CAILResult smuInternalSwInit(void* instance, void* input, AMDSMUSWInitOutput* output);
-    static CAILResult smuInternalSwInitOld(void* instance, void* input, AMDSMUSWInitOutput* output);
-    static CAILResult smuGetUCodeConsts(void* instance, AMDSMUUCodeConstants* consts);
-    static CAILResult smu10PowerUpConfig();
-    static CAILResult smu10InternalHwInit(void* instance);
-    static CAILResult smu12WaitForFwLoaded();
-    static CAILResult smu12PowerUpConfig();
-    static CAILResult smu12InternalHwInit(void* instance);
-    static CAILResult smuInternalHwExit(void* instance);
-    static CAILResult smuFullAsicReset(void* instance, void* data);
-    static CAILResult smu10NotifyEvent(void* instance, TTLEventInput* input);
-    static CAILResult smu12NotifyEvent(void* instance, TTLEventInput* input);
-    static CAILResult smuFullScreenEvent(void* instance, TTLFullScreenEvent event);
-    static CAILResult wrapSmuInitFunctionPointerList(void* instance, SWIPIPVersion ipVersion);
+    CAILResult        smuSendMessage(void* ctx, UInt32 message, UInt32 param = 0, UInt32* outParam = nullptr) const;
+    static CAILResult smuPowerUpConfigCommon(void* ctx);
+    static CAILResult smuInternalSwInit(void* ctx, void* input, AMDSMUSWInitOutput* output);
+    static CAILResult smuInternalSwInitOld(void* ctx, void* input, AMDSMUSWInitOutput* output);
+    static CAILResult smuGetUCodeConsts(void* ctx, AMDSMUUCodeConstants* consts);
+    static CAILResult smu10PowerUpConfig(void* ctx);
+    static CAILResult smu10InternalHwInit(void* ctx);
+    static bool       smu12IsFwLoaded(void* const ctx);
+    static CAILResult smu12WaitForFwLoaded(void* ctx);
+    static CAILResult smu12PowerUpConfig(void* ctx);
+    static CAILResult smu12InternalHwInit(void* ctx);
+    static CAILResult smuInternalHwExit(void* ctx);
+    static CAILResult smuFullAsicReset(void* ctx, void* data);
+    static CAILResult smu10NotifyEvent(void* ctx, TTLEventInput* input);
+    static CAILResult smu12NotifyEvent(void* ctx, TTLEventInput* input);
+    static CAILResult smuFullScreenEvent(void* ctx, TTLFullScreenEvent event);
+    static CAILResult wrapSmuInitFunctionPointerList(void* ctx, SWIPIPVersion ipVersion);
     static void       gc91GetFwConstants(void* instance, GCFirmwareInfo* fwData);
     static void       gc92GetFwConstants(void* instance, GCFirmwareInfo* fwData);
     static void       gc93GetFwConstants(void* instance, GCFirmwareInfo* fwData);
