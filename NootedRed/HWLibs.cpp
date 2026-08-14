@@ -369,6 +369,17 @@ static const UInt8      kSmu90SendMessageWithParameterCallPattern[]          = {
 static const UInt8      kSmu90SendMessageWithParameterCallPatternMask[]      = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
                                                                                 0xFF, 0x00, 0x00, 0x00, 0x00};
 static constexpr size_t kSmu90SendMessageWithParameterCallPatternJumpInstOff = 6;
+static const UInt8      kSdmaCgsReadRegisterCallPattern[]          = {0xBE, 0x80, 0x00, 0x00, 0x00, 0x31, 0xD2, 0x44,
+                                                                      0x89, 0xF0, 0xE8, 0x00, 0x00, 0x00, 0x00};
+static const UInt8      kSdmaCgsReadRegisterCallPatternMask[]      = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                                                                      0xFF, 0xF0, 0xFF, 0x00, 0x00, 0x00, 0x00};
+static constexpr size_t kSdmaCgsReadRegisterCallPatternJumpInstOff = 10;
+
+static const UInt8      kSdmaCgsWriteRegisterCallPattern[]     = {0xBE, 0x80, 0x00, 0x00, 0x00, 0x31, 0xD2, 0x89, 0xC1,
+                                                                  0x45, 0x89, 0xF0, 0xE8, 0x00, 0x00, 0x00, 0x00};
+static const UInt8      kSdmaCgsWriteRegisterCallPatternMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                                                                  0xFF, 0xFF, 0xF0, 0xFF, 0x00, 0x00, 0x00, 0x00};
+static constexpr size_t kSdmaCgsWriteRegisterCallPatternJumpInstOff = 12;
 
 static const UInt8      kSmuCosWaitForCallPattern[]          = {0xE8, 0x00, 0x00, 0x00, 0x00, 0x85, 0xC0};
 static const UInt8      kSmuCosWaitForCallPatternMask[]      = {0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF};
@@ -586,42 +597,36 @@ void X5000HWLibs::processKext(KernelPatcher& patcher, const size_t id, const mac
     PANIC_COND(!PenguinWizardry::PatternSolveRequest::solveAll(patcher, id, solveRequests, slide, size), "HWLibs",
                "Failed to resolve symbols");
 
-    PenguinWizardry::JumpPatternSolveRequest smu90SendMessageWithParameterRequest{
-        "_smu_9_0_send_message_with_parameter", this->smu90SendMessageWithParameter,
-        kSmu90SendMessageWithParameterCallPattern, kSmu90SendMessageWithParameterCallPatternMask,
-        kSmu90SendMessageWithParameterCallPatternJumpInstOff};
-    PANIC_COND(!smu90SendMessageWithParameterRequest.solve(patcher, id, slide, size), "HWLibs",
-               "Failed to solve smu_9_0_send_message_with_parameter");
+    PenguinWizardry::JumpPatternSolveRequest jumpPatternSolveRequests[] = {
+        {"_smu_9_0_send_message_with_parameter", this->smu90SendMessageWithParameter,
+         kSmu90SendMessageWithParameterCallPattern, kSmu90SendMessageWithParameterCallPatternMask,
+         kSmu90SendMessageWithParameterCallPatternJumpInstOff},
+        {"_sdma_cgs_read_register", this->sdmaCgsReadRegister, kSdmaCgsReadRegisterCallPattern,
+         kSdmaCgsReadRegisterCallPatternMask, kSdmaCgsReadRegisterCallPatternJumpInstOff},
+        {"_sdma_cgs_write_register", this->sdmaCgsWriteRegister, kSdmaCgsWriteRegisterCallPattern,
+         kSdmaCgsWriteRegisterCallPatternMask, kSdmaCgsWriteRegisterCallPatternJumpInstOff},
+    };
+    PANIC_COND(!PenguinWizardry::JumpPatternSolveRequest::solveAll(patcher, id, jumpPatternSolveRequests, slide, size),
+               "HWLibs", "Failed to solve symbols via jump pattern");
 
-    KernelPatcher::SolveRequest smuRequestsNormal[] = {
+    KernelPatcher::SolveRequest smuRequests[] = {
         {"_smu_cos_wait_for", this->smuCosWaitFor},
         {"_smu_cgs_write_register", this->smuCgsWriteRegister},
         {"_smu_cgs_read_register", this->smuCgsReadRegister},
     };
-    patcher.solveMultiple(id, smuRequestsNormal, slide, size, true, true);
-    if (this->smuCosWaitFor == nullptr) {
-        PenguinWizardry::JumpPatternSolveRequest request{nullptr, this->smuCosWaitFor, kSmuCosWaitForCallPattern,
-                                                         kSmuCosWaitForCallPatternMask,
-                                                         kSmuCosWaitForCallPatternJumpInstOff};
-        PANIC_COND(!request.solve(patcher, id, reinterpret_cast<mach_vm_address_t>(this->smu90SendMessageWithParameter),
-                                  PAGE_SIZE),
-                   "HWLibs", "Failed to solve smu_cos_wait_for");
-    }
-    if (this->smuCgsWriteRegister == nullptr) {
-        PenguinWizardry::JumpPatternSolveRequest request{
-            nullptr, this->smuCgsWriteRegister, kSmuCgsWriteRegisterCallPattern, kSmuCgsWriteRegisterCallPatternMask,
-            kSmuCgsWriteRegisterCallPatternJumpInstOff};
-        PANIC_COND(!request.solve(patcher, id, reinterpret_cast<mach_vm_address_t>(this->smu90SendMessageWithParameter),
-                                  PAGE_SIZE),
-                   "HWLibs", "Failed to solve smu_cgs_write_register");
-    }
-    if (this->smuCgsReadRegister == nullptr) {
-        PenguinWizardry::JumpPatternSolveRequest request{
-            nullptr, this->smuCgsReadRegister, kSmuCgsReadRegisterCallPattern, kSmuCgsReadRegisterCallPatternMask,
-            kSmuCgsReadRegisterCallPatternJumpInstOff};
-        PANIC_COND(!request.solve(patcher, id, reinterpret_cast<mach_vm_address_t>(this->smu90SendMessageWithParameter),
-                                  PAGE_SIZE),
-                   "HWLibs", "Failed to solve smu_cgs_read_register");
+    if (!patcher.solveMultiple(id, smuRequests, slide, size, true)) {
+        PenguinWizardry::JumpPatternSolveRequest smuPatternRequests[] = {
+            {nullptr, this->smuCosWaitFor, kSmuCosWaitForCallPattern, kSmuCosWaitForCallPatternMask,
+             kSmuCosWaitForCallPatternJumpInstOff},
+            {nullptr, this->smuCgsWriteRegister, kSmuCgsWriteRegisterCallPattern, kSmuCgsWriteRegisterCallPatternMask,
+             kSmuCgsWriteRegisterCallPatternJumpInstOff},
+            {nullptr, this->smuCgsReadRegister, kSmuCgsReadRegisterCallPattern, kSmuCgsReadRegisterCallPatternMask,
+             kSmuCgsReadRegisterCallPatternJumpInstOff},
+        };
+        PANIC_COND(!PenguinWizardry::JumpPatternSolveRequest::solveAll(
+                       patcher, id, smuPatternRequests,
+                       reinterpret_cast<mach_vm_address_t>(this->smu90SendMessageWithParameter), PAGE_SIZE),
+                   "HWLibs", "Failed to solve SMU COS/CGS functions");
     }
 
     if (currentKernelVersion() <= MACOS_10_15_X) {
@@ -683,6 +688,10 @@ void X5000HWLibs::processKext(KernelPatcher& patcher, const size_t id, const mac
         {"_sdma_init_function_pointer_list", wrapSdmaInitFunctionPointerList, this->orgSdmaInitFunctionPointerList,
          kSdmaInitFuncPtrListCallPattern, kSdmaInitFuncPtrListCallPatternMask,
          kSdmaInitFuncPtrListCallPatternJumpInstOff},
+        {"_smu_init_function_pointer_list", wrapSmuInitFunctionPointerList, this->orgSmuInitFunctionPointerList,
+         kSmuInitFunctionPointerListCallPattern, kSmuInitFunctionPointerListCallPatternMask,
+         kSmuInitFunctionPointerListCallPatternJumpInstOff},
+
     };
     PANIC_COND(!PenguinWizardry::JumpPatternRouteRequest::routeAll(patcher, id, fwRequests, slide, size), "HWLibs",
                "Failed to route FW-related functions");
@@ -695,7 +704,7 @@ void X5000HWLibs::processKext(KernelPatcher& patcher, const size_t id, const mac
     dmcuFwRequests[0].from = patcher.solveSymbol(id, "_dmcu_get_dcn1_fw_constants", slide, size, true);
     dmcuFwRequests[1].from = patcher.solveSymbol(id, "_dmcu_get_dcn21_fw_constants", slide, size, true);
     if (dmcuFwRequests[0].from == 0 || dmcuFwRequests[1].from == 0) {
-        const auto trySolveCall =
+        const auto solveCall =
             [](KernelPatcher::RouteRequest& req, const mach_vm_address_t addr, const mach_vm_address_t end)
         {
             for (size_t off = 0; off < 2; off += 1) {
@@ -721,21 +730,14 @@ void X5000HWLibs::processKext(KernelPatcher& patcher, const size_t id, const mac
             slide + offset + kDmcuBackdoorLoadFwDcn1ConstantsBranchOff, slide + size);
         PANIC_COND(branch == 0, "HWLibs", "Failed to get `dmcu_backdoor_load_fw` branch destination");
 
-        PANIC_COND(!trySolveCall(dmcuFwRequests[0], branch + kDmcuGetDcn1FwConstantsCallOff, slide + size), "HWLibs",
+        PANIC_COND(!solveCall(dmcuFwRequests[0], branch + kDmcuGetDcn1FwConstantsCallOff, slide + size), "HWLibs",
                    "Failed to solve `dmcu_get_dcn1_fw_constants` via call pattern");
-        PANIC_COND(!trySolveCall(dmcuFwRequests[1], slide + offset + kDmcuGetDcn21FwConstantsCallOff, slide + size),
+        PANIC_COND(!solveCall(dmcuFwRequests[1], slide + offset + kDmcuGetDcn21FwConstantsCallOff, slide + size),
                    "HWLibs", "Failed to solve `dmcu_get_dcn21_fw_constants` via call pattern");
     }
 
     PANIC_COND(!patcher.routeMultiple(id, dmcuFwRequests, slide, size), "HWLibs",
                "Failed to route DMCU FW-related functions");
-
-    PenguinWizardry::JumpPatternRouteRequest smuRequest{
-        "_smu_init_function_pointer_list",          wrapSmuInitFunctionPointerList,
-        this->orgSmuInitFunctionPointerList,        kSmuInitFunctionPointerListCallPattern,
-        kSmuInitFunctionPointerListCallPatternMask, kSmuInitFunctionPointerListCallPatternJumpInstOff};
-    PANIC_COND(!smuRequest.route(patcher, id, slide, size), "HWLibs",
-               "Failed to route `smu_init_function_pointer_list`");
 
     PANIC_COND(MachInfo::setKernelWriting(true, KernelPatcher::kernelWriteLock) != KERN_SUCCESS, "HWLibs",
                "Failed to enable kernel writing");
@@ -909,19 +911,19 @@ CAILResult X5000HWLibs::pspIsSosRunning() { return kCAILResultInvalidParameters;
 CAILResult X5000HWLibs::retUnsupported() { return kCAILResultUnsupported; }
 CAILResult X5000HWLibs::retOK() { return kCAILResultOK; }
 
-CAILResult X5000HWLibs::pspBootloaderLoadSos10(void* const instance)
+CAILResult X5000HWLibs::pspBootloaderLoadSos10(void* const ctx)
 {
-    singleton().pspBootloaderVersionField(instance)  = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_100);
-    singleton().pspTOSVersionField(instance)         = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_58);
-    (singleton().pspTOSVersionField + 0x4)(instance) = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_58);
+    singleton().pspBootloaderVersionField(ctx)  = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_100);
+    singleton().pspTOSVersionField(ctx)         = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_58);
+    (singleton().pspTOSVersionField + 0x4)(ctx) = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_58);
     return kCAILResultOK;
 }
 
-CAILResult X5000HWLibs::pspSecurityFeatureCapsSet10(void* const instance)
+CAILResult X5000HWLibs::pspSecurityFeatureCapsSet10(void* const ctx)
 {
-    auto& securityCaps     = singleton().pspSecurityCapsField(instance);
+    auto& securityCaps     = singleton().pspSecurityCapsField(ctx);
     securityCaps          &= ~1;
-    const auto tOSVersion  = singleton().pspTOSVersionField(instance);
+    const auto tOSVersion  = singleton().pspTOSVersionField(ctx);
     if ((tOSVersion & 0xFFFF0000) == 0x80000 && (tOSVersion & 0xFF) > 0x50) {
         const auto policyVer = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_91);
         SYSLOG_COND((policyVer & 0xFF000000) != 0xA000000, "HWLibs", "Invalid security policy version: 0x%X",
@@ -936,11 +938,11 @@ CAILResult X5000HWLibs::pspSecurityFeatureCapsSet10(void* const instance)
     return kCAILResultOK;
 }
 
-CAILResult X5000HWLibs::pspSecurityFeatureCapsSet12(void* const instance)
+CAILResult X5000HWLibs::pspSecurityFeatureCapsSet12(void* const ctx)
 {
-    auto& securityCaps     = singleton().pspSecurityCapsField(instance);
+    auto& securityCaps     = singleton().pspSecurityCapsField(ctx);
     securityCaps          &= ~1;
-    const auto tOSVersion  = singleton().pspTOSVersionField(instance);
+    const auto tOSVersion  = singleton().pspTOSVersionField(ctx);
     if ((tOSVersion & 0xFFFF0000) == 0x110000 && (tOSVersion & 0xFF) > 0x2A) {
         const auto policyVer = NRed::singleton().readReg32(MP0_BASE_0 + MP0_SMN_C2PMSG_91);
         SYSLOG_COND((policyVer & 0xFF000000) != 0xB000000, "HWLibs", "Invalid security policy version: 0x%X",
@@ -958,12 +960,12 @@ static UInt32 replacePspCmdDataWith(void* const data, const char (&fw)[N])
     return N;
 }
 
-CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void* const instance, void* const cmd, void* const outData,
+CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void* const ctx, void* const cmd, void* const outData,
                                            void* const outResponse)
 {
     const auto pspCmd   = getMember<AMDPSPCommand>(cmd, 0x0);
     auto&      dataSize = getMember<UInt32>(cmd, 0xC);
-    const auto data     = singleton().pspCommandDataField(instance);
+    const auto data     = singleton().pspCommandDataField(ctx);
 
     switch (pspCmd) {
         case kPSPCommandLoadTA: {
@@ -986,7 +988,7 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void* const instance, void* const cmd
         } break;
     }
 
-    return FunctionCast(wrapPspCmdKmSubmit, singleton().orgPspCmdKmSubmit)(instance, cmd, outData, outResponse);
+    return FunctionCast(wrapPspCmdKmSubmit, singleton().orgPspCmdKmSubmit)(ctx, cmd, outData, outResponse);
 }
 
 CAILResult X5000HWLibs::smuSendMessage(void* const ctx, const UInt32 message, const UInt32 param,
@@ -1077,7 +1079,7 @@ CAILResult X5000HWLibs::smuInternalHwExit(void*) { return kCAILResultOK; }
 CAILResult X5000HWLibs::smuFullAsicReset(void* const ctx, void* data)
 { return singleton().smuSendMessage(ctx, PPSMC_MSG_DeviceDriverReset, getMember<UInt32>(data, 4)); }
 
-CAILResult X5000HWLibs::smu10NotifyEvent(void* const ctx, TTLEventInput* input)
+CAILResult X5000HWLibs::smu10NotifyEvent(void* const ctx, TTLEventInput* const input)
 {
     if (input->arg >= SMU_EVENT_COUNT) {
         SYSLOG("HWLibs", "Invalid input event to SMU notify event: %d", input->arg);
@@ -1092,7 +1094,7 @@ CAILResult X5000HWLibs::smu10NotifyEvent(void* const ctx, TTLEventInput* input)
     return kCAILResultOK;
 }
 
-CAILResult X5000HWLibs::smu12NotifyEvent(void* const ctx, TTLEventInput* input)
+CAILResult X5000HWLibs::smu12NotifyEvent(void* const ctx, TTLEventInput* const input)
 {
     if (input->arg >= SMU_EVENT_COUNT) {
         SYSLOG("HWLibs", "Invalid input event to SMU notify event: %d", input->arg);
@@ -1107,7 +1109,7 @@ CAILResult X5000HWLibs::smu12NotifyEvent(void* const ctx, TTLEventInput* input)
     return kCAILResultOK;
 }
 
-CAILResult X5000HWLibs::smuFullScreenEvent(void* const ctx, TTLFullScreenEvent event)
+CAILResult X5000HWLibs::smuFullScreenEvent(void* const ctx, const TTLFullScreenEvent event)
 {
     switch (event) {
         case TTL_FULLSCREEN_EVENT_INCREASE:
@@ -1124,35 +1126,35 @@ CAILResult X5000HWLibs::smuFullScreenEvent(void* const ctx, TTLFullScreenEvent e
     }
 }
 
-CAILResult X5000HWLibs::wrapSmuInitFunctionPointerList(void* instance, SWIPIPVersion ipVersion)
+CAILResult X5000HWLibs::wrapSmuInitFunctionPointerList(void* const ctx, const SWIPIPVersion ipVersion)
 {
     const auto ret =
-        FunctionCast(wrapSmuInitFunctionPointerList, singleton().orgSmuInitFunctionPointerList)(instance, ipVersion);
+        FunctionCast(wrapSmuInitFunctionPointerList, singleton().orgSmuInitFunctionPointerList)(ctx, ipVersion);
     if (ret == kCAILResultOK) { return ret; }
 
     switch (ipVersion.major) {
         case 10: {
-            singleton().smuInternalHWInitField(instance) = reinterpret_cast<void*>(smu10InternalHwInit);
-            singleton().smuNotifyEventField(instance)    = reinterpret_cast<void*>(smu10NotifyEvent);
+            singleton().smuInternalHWInitField(ctx) = reinterpret_cast<void*>(smu10InternalHwInit);
+            singleton().smuNotifyEventField(ctx)    = reinterpret_cast<void*>(smu10NotifyEvent);
         } break;
         case 12: {
-            singleton().smuInternalHWInitField(instance) = reinterpret_cast<void*>(smu12InternalHwInit);
-            singleton().smuNotifyEventField(instance)    = reinterpret_cast<void*>(smu12NotifyEvent);
+            singleton().smuInternalHWInitField(ctx) = reinterpret_cast<void*>(smu12InternalHwInit);
+            singleton().smuNotifyEventField(ctx)    = reinterpret_cast<void*>(smu12NotifyEvent);
         } break;
         default: return ret;
     }
 
     if (currentKernelVersion() <= MACOS_10_15_X) {
-        singleton().smuInternalSWInitField(instance) = reinterpret_cast<void*>(smuInternalSwInitOld);
+        singleton().smuInternalSWInitField(ctx) = reinterpret_cast<void*>(smuInternalSwInitOld);
     }
     else {
-        singleton().smuInternalSWInitField(instance) = reinterpret_cast<void*>(smuInternalSwInit);
-        singleton().smuGetUCodeConstsField(instance) = reinterpret_cast<void*>(smuGetUCodeConsts);
+        singleton().smuInternalSWInitField(ctx) = reinterpret_cast<void*>(smuInternalSwInit);
+        singleton().smuGetUCodeConstsField(ctx) = reinterpret_cast<void*>(smuGetUCodeConsts);
     }
-    singleton().smuFullscreenEventField(instance) = reinterpret_cast<void*>(smuFullScreenEvent);
-    singleton().smuInternalSWExitField(instance)  = reinterpret_cast<void*>(retOK);
-    singleton().smuInternalHWExitField(instance)  = reinterpret_cast<void*>(smuInternalHwExit);
-    singleton().smuFullAsicResetField(instance)   = reinterpret_cast<void*>(smuFullAsicReset);
+    singleton().smuFullscreenEventField(ctx) = reinterpret_cast<void*>(smuFullScreenEvent);
+    singleton().smuInternalSWExitField(ctx)  = reinterpret_cast<void*>(retOK);
+    singleton().smuInternalHWExitField(ctx)  = reinterpret_cast<void*>(smuInternalHwExit);
+    singleton().smuFullAsicResetField(ctx)   = reinterpret_cast<void*>(smuFullAsicReset);
 
     SYSLOG_COND(ADDPR(debugEnabled), "HWLibs", "Ignore error about unsupported SMU HW version.");
 
@@ -1168,13 +1170,13 @@ static void* allocMemHandle()
     return v;
 }
 
-static inline void setGCFWData(void* const instance, GCFirmwareInfo* const fwData, const GCFirmwareType i,
+static inline void setGCFWData(void* const ctx, GCFirmwareInfo* const fwData, const GCFirmwareType i,
                                const GCFirmwareConstant* const entry)
 {
-    fwData->entry[i]                       = entry;
-    fwData->handle[i]                      = allocMemHandle();
-    getMember<void*[]>(instance, 0x18)[i]  = fwData->handle[i];
-    fwData->count                         += 1;
+    fwData->entry[i]                  = entry;
+    fwData->handle[i]                 = allocMemHandle();
+    getMember<void*[]>(ctx, 0x18)[i]  = fwData->handle[i];
+    fwData->count                    += 1;
 }
 
 // TODO: Replace this with `gc_read_config_setting_uint32` on `AsicRevForRlcFw`.
@@ -1185,53 +1187,53 @@ static bool isA0()
                || (NRed::singleton().getPciRevision() >= 0xD8 && NRed::singleton().getPciRevision() <= 0xDF));
 }
 
-void X5000HWLibs::gc91GetFwConstants(void* const instance, GCFirmwareInfo* const fwData)
+void X5000HWLibs::gc91GetFwConstants(void* const ctx, GCFirmwareInfo* const fwData)
 {
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListCntl, &gc_9_1_rlc_srlist_cntl);
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListGPMMem, &gc_9_1_rlc_srlist_gpm_mem);
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListSRMMem, &gc_9_1_rlc_srlist_srm_mem);
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLC, isA0() ? &gc_9_1_rlc_ucode_a0 : &gc_9_1_rlc_ucode);
-    setGCFWData(instance, fwData, kGCFirmwareTypeME, &gc_9_1_me_ucode);
-    setGCFWData(instance, fwData, kGCFirmwareTypeCE, &gc_9_1_ce_ucode);
-    setGCFWData(instance, fwData, kGCFirmwareTypePFP, &gc_9_1_pfp_ucode);
-    setGCFWData(instance, fwData, kGCFirmwareTypeMEC1, &gc_9_1_mec_ucode);
-    setGCFWData(instance, fwData, kGCFirmwareTypeMECJT1, &gc_9_1_mec_jt_ucode);
+    setGCFWData(ctx, fwData, kGCFirmwareTypeRLCSRListCntl, &gc_9_1_rlc_srlist_cntl);
+    setGCFWData(ctx, fwData, kGCFirmwareTypeRLCSRListGPMMem, &gc_9_1_rlc_srlist_gpm_mem);
+    setGCFWData(ctx, fwData, kGCFirmwareTypeRLCSRListSRMMem, &gc_9_1_rlc_srlist_srm_mem);
+    setGCFWData(ctx, fwData, kGCFirmwareTypeRLC, isA0() ? &gc_9_1_rlc_ucode_a0 : &gc_9_1_rlc_ucode);
+    setGCFWData(ctx, fwData, kGCFirmwareTypeME, &gc_9_1_me_ucode);
+    setGCFWData(ctx, fwData, kGCFirmwareTypeCE, &gc_9_1_ce_ucode);
+    setGCFWData(ctx, fwData, kGCFirmwareTypePFP, &gc_9_1_pfp_ucode);
+    setGCFWData(ctx, fwData, kGCFirmwareTypeMEC1, &gc_9_1_mec_ucode);
+    setGCFWData(ctx, fwData, kGCFirmwareTypeMECJT1, &gc_9_1_mec_jt_ucode);
     // AMD: Yes, reuse that shit! Why would we waste a couple of bytes? It's not like we're wasting hundreds of MBs
     // already from the duplicate firmware files.
     fwData->entry[kGCFirmwareTypeMECJT2]   = fwData->entry[kGCFirmwareTypeMECJT1];
     fwData->handle[kGCFirmwareTypeMECJT2]  = fwData->handle[kGCFirmwareTypeMECJT1];
     fwData->count                         += 1;
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLCV, &gc_9_1_rlcv_ucode);
+    setGCFWData(ctx, fwData, kGCFirmwareTypeRLCV, &gc_9_1_rlcv_ucode);
 }
 
-void X5000HWLibs::gc92GetFwConstants(void* instance, GCFirmwareInfo* fwData)
+void X5000HWLibs::gc92GetFwConstants(void* const ctx, GCFirmwareInfo* const fwData)
 {
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListCntl, &gc_9_2_rlc_srlist_cntl);
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListGPMMem, &gc_9_2_rlc_srlist_gpm_mem);
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListSRMMem, &gc_9_2_rlc_srlist_srm_mem);
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLC, &gc_9_2_rlc_ucode);
-    setGCFWData(instance, fwData, kGCFirmwareTypeME, &gc_9_2_me_ucode);
-    setGCFWData(instance, fwData, kGCFirmwareTypeCE, &gc_9_2_ce_ucode);
-    setGCFWData(instance, fwData, kGCFirmwareTypePFP, &gc_9_2_pfp_ucode);
-    setGCFWData(instance, fwData, kGCFirmwareTypeMEC1, &gc_9_2_mec_ucode);
-    setGCFWData(instance, fwData, kGCFirmwareTypeMECJT1, &gc_9_2_mec_jt_ucode);
+    setGCFWData(ctx, fwData, kGCFirmwareTypeRLCSRListCntl, &gc_9_2_rlc_srlist_cntl);
+    setGCFWData(ctx, fwData, kGCFirmwareTypeRLCSRListGPMMem, &gc_9_2_rlc_srlist_gpm_mem);
+    setGCFWData(ctx, fwData, kGCFirmwareTypeRLCSRListSRMMem, &gc_9_2_rlc_srlist_srm_mem);
+    setGCFWData(ctx, fwData, kGCFirmwareTypeRLC, &gc_9_2_rlc_ucode);
+    setGCFWData(ctx, fwData, kGCFirmwareTypeME, &gc_9_2_me_ucode);
+    setGCFWData(ctx, fwData, kGCFirmwareTypeCE, &gc_9_2_ce_ucode);
+    setGCFWData(ctx, fwData, kGCFirmwareTypePFP, &gc_9_2_pfp_ucode);
+    setGCFWData(ctx, fwData, kGCFirmwareTypeMEC1, &gc_9_2_mec_ucode);
+    setGCFWData(ctx, fwData, kGCFirmwareTypeMECJT1, &gc_9_2_mec_jt_ucode);
     fwData->entry[kGCFirmwareTypeMECJT2]   = fwData->entry[kGCFirmwareTypeMECJT1];
     fwData->handle[kGCFirmwareTypeMECJT2]  = fwData->handle[kGCFirmwareTypeMECJT1];
     fwData->count                         += 1;
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLCV, &gc_9_2_rlcv_ucode);
+    setGCFWData(ctx, fwData, kGCFirmwareTypeRLCV, &gc_9_2_rlcv_ucode);
 }
 
-void X5000HWLibs::gc93GetFwConstants(void* instance, GCFirmwareInfo* fwData)
+void X5000HWLibs::gc93GetFwConstants(void* const ctx, GCFirmwareInfo* const fwData)
 {
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListCntl, &gc_9_3_rlc_srlist_cntl);
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListGPMMem, &gc_9_3_rlc_srlist_gpm_mem);
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLCSRListSRMMem, &gc_9_3_rlc_srlist_srm_mem);
-    setGCFWData(instance, fwData, kGCFirmwareTypeRLC, &gc_9_3_rlc_ucode);
-    setGCFWData(instance, fwData, kGCFirmwareTypeME, &gc_9_3_me_ucode);
-    setGCFWData(instance, fwData, kGCFirmwareTypeCE, &gc_9_3_ce_ucode);
-    setGCFWData(instance, fwData, kGCFirmwareTypePFP, &gc_9_3_pfp_ucode);
-    setGCFWData(instance, fwData, kGCFirmwareTypeMEC1, &gc_9_3_mec_ucode);
-    setGCFWData(instance, fwData, kGCFirmwareTypeMECJT1, &gc_9_3_mec_jt_ucode);
+    setGCFWData(ctx, fwData, kGCFirmwareTypeRLCSRListCntl, &gc_9_3_rlc_srlist_cntl);
+    setGCFWData(ctx, fwData, kGCFirmwareTypeRLCSRListGPMMem, &gc_9_3_rlc_srlist_gpm_mem);
+    setGCFWData(ctx, fwData, kGCFirmwareTypeRLCSRListSRMMem, &gc_9_3_rlc_srlist_srm_mem);
+    setGCFWData(ctx, fwData, kGCFirmwareTypeRLC, &gc_9_3_rlc_ucode);
+    setGCFWData(ctx, fwData, kGCFirmwareTypeME, &gc_9_3_me_ucode);
+    setGCFWData(ctx, fwData, kGCFirmwareTypeCE, &gc_9_3_ce_ucode);
+    setGCFWData(ctx, fwData, kGCFirmwareTypePFP, &gc_9_3_pfp_ucode);
+    setGCFWData(ctx, fwData, kGCFirmwareTypeMEC1, &gc_9_3_mec_ucode);
+    setGCFWData(ctx, fwData, kGCFirmwareTypeMECJT1, &gc_9_3_mec_jt_ucode);
 }
 
 // Port of `*_char_to_int` from HWLibs.
@@ -1252,9 +1254,9 @@ static constexpr UInt32 charToInt(const char* str, size_t len)
     return ret;
 }
 
-void X5000HWLibs::processGCFWEntries(void* const instance, void* const initData)
+void X5000HWLibs::processGCFWEntries(void* const ctx, void* const initData)
 {
-    const auto& fwInfo    = singleton().gcSwFirmwareField(instance);
+    const auto& fwInfo    = singleton().gcSwFirmwareField(ctx);
     auto&       fwEntries = getMember<GCFirmwareEntry[kGCFirmwareTypeCount]>(initData, 0x18);
     for (UInt32 i = 0, swIndex = 0; i < kGCFirmwareTypeCount; i++) {
         if (fwInfo.entry[i] == nullptr) { continue; }
@@ -1273,28 +1275,27 @@ void X5000HWLibs::processGCFWEntries(void* const instance, void* const initData)
     getMember<UInt32>(initData, 0x10) = fwInfo.count;
 }
 
-CAILResult X5000HWLibs::wrapGcSetFwEntryInfo(void* const instance, const SWIPIPVersion ipVersion, void* const initData)
+CAILResult X5000HWLibs::wrapGcSetFwEntryInfo(void* const ctx, const SWIPIPVersion ipVersion, void* const initData)
 {
-    auto* fwInfo  = &singleton().gcSwFirmwareField(instance);
+    auto* fwInfo  = &singleton().gcSwFirmwareField(ctx);
     fwInfo->count = 0;
     switch (ipVersion.toHW()) {
         case SWIPIPVersion(9, 1, 0).toHW(): {
-            gc91GetFwConstants(instance, fwInfo);
+            gc91GetFwConstants(ctx, fwInfo);
         } break;
         case SWIPIPVersion(9, 2, 0).toHW(): {
-            gc92GetFwConstants(instance, fwInfo);
+            gc92GetFwConstants(ctx, fwInfo);
         } break;
         case SWIPIPVersion(9, 3, 0).toHW(): {
-            gc93GetFwConstants(instance, fwInfo);
+            gc93GetFwConstants(ctx, fwInfo);
         } break;
-        default:
-            return FunctionCast(wrapGcSetFwEntryInfo, singleton().orgGcSetFwEntryInfo)(instance, ipVersion, initData);
+        default: return FunctionCast(wrapGcSetFwEntryInfo, singleton().orgGcSetFwEntryInfo)(ctx, ipVersion, initData);
     }
-    processGCFWEntries(instance, initData);
+    processGCFWEntries(ctx, initData);
     return kCAILResultOK;
 }
 
-static void setDMCUFWData(void* const instance, DMCUFirmwareInfo* const fwData, const DMCUFirmwareType i,
+static void setDMCUFWData(void* const ctx, DMCUFirmwareInfo* const fwData, const DMCUFirmwareType i,
                           const DMCUFirmwareConstant* const fwEntry)
 {
     fwData->entry[i].loadAddress = fwEntry->loadAddress;
@@ -1302,30 +1303,30 @@ static void setDMCUFWData(void* const instance, DMCUFirmwareInfo* const fwData, 
     fwData->entry[i].rom         = fwEntry->rom;
     fwData->entry[i].handle      = allocMemHandle();
     assertf(fwData->entry[i].handle != nullptr, "Failed to create memory handle!");
-    getMember<void*[]>(instance, 0x18)[i]  = fwData->entry[i].handle;
-    fwData->count                         += 1;
+    getMember<void*[]>(ctx, 0x18)[i]  = fwData->entry[i].handle;
+    fwData->count                    += 1;
 }
 
-bool X5000HWLibs::getDcn1FwConstants(void* const instance, DMCUFirmwareInfo* const fwData)
+bool X5000HWLibs::getDcn1FwConstants(void* const ctx, DMCUFirmwareInfo* const fwData)
 {
-    const auto enablePSPFWLoad = singleton().dmcuEnablePSPFWLoadField(instance);
+    const auto enablePSPFWLoad = singleton().dmcuEnablePSPFWLoadField(ctx);
     if (enablePSPFWLoad == 2) { return true; }
 
     fwData->count = 0;
 
-    const auto abmLevel = singleton().dmcuABMLevelField(instance);
+    const auto abmLevel = singleton().dmcuABMLevelField(ctx);
     switch (abmLevel) {
         case 0: {
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn10_abm_2_1);
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn10_abm_2_1);
+            setDMCUFWData(ctx, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn10_abm_2_1);
+            setDMCUFWData(ctx, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn10_abm_2_1);
         } break;
         case 1: {
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn10_abm_2_2);
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn10_abm_2_2);
+            setDMCUFWData(ctx, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn10_abm_2_2);
+            setDMCUFWData(ctx, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn10_abm_2_2);
         } break;
         case 2: {
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn10_abm_2_3);
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn10_abm_2_3);
+            setDMCUFWData(ctx, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn10_abm_2_3);
+            setDMCUFWData(ctx, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn10_abm_2_3);
         } break;
         default: SYSLOG("HWLibs", "Invalid ABM Level (0x%X) for DCN 1!", abmLevel); return false;
     }
@@ -1333,30 +1334,30 @@ bool X5000HWLibs::getDcn1FwConstants(void* const instance, DMCUFirmwareInfo* con
     return true;
 }
 
-bool X5000HWLibs::getDcn21FwConstants(void* const instance, DMCUFirmwareInfo* const fwData)
+bool X5000HWLibs::getDcn21FwConstants(void* const ctx, DMCUFirmwareInfo* const fwData)
 {
-    const auto enablePSPFWLoad = singleton().dmcuEnablePSPFWLoadField(instance);
+    const auto enablePSPFWLoad = singleton().dmcuEnablePSPFWLoadField(ctx);
     if (enablePSPFWLoad == 2) { return true; }
 
     fwData->count = 0;
 
-    const auto abmLevel = singleton().dmcuABMLevelField(instance);
+    const auto abmLevel = singleton().dmcuABMLevelField(ctx);
     switch (abmLevel) {
         case 0: {
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn21_abm_2_1);
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn21_abm_2_1);
+            setDMCUFWData(ctx, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn21_abm_2_1);
+            setDMCUFWData(ctx, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn21_abm_2_1);
         } break;
         case 1: {
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn21_abm_2_2);
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn21_abm_2_2);
+            setDMCUFWData(ctx, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn21_abm_2_2);
+            setDMCUFWData(ctx, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn21_abm_2_2);
         } break;
         case 2: {
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn21_abm_2_3);
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn21_abm_2_3);
+            setDMCUFWData(ctx, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn21_abm_2_3);
+            setDMCUFWData(ctx, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn21_abm_2_3);
         } break;
         case 3: {
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn21_abm_2_4);
-            setDMCUFWData(instance, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn21_abm_2_4);
+            setDMCUFWData(ctx, fwData, kDMCUFirmwareTypeERAM, &dmcu_eram_dcn21_abm_2_4);
+            setDMCUFWData(ctx, fwData, kDMCUFirmwareTypeISR, &dmcu_intvectors_dcn21_abm_2_4);
         } break;
         default: SYSLOG("HWLibs", "Invalid ABM Level (0x%X) for DCN 2.1!", abmLevel); return false;
     }
@@ -1370,27 +1371,29 @@ static bool sdma41GetFWConstants(void*, const SDMAFWConstant** const out)
     return true;
 }
 
-// TODO: Use driver WReg/RReg instead.
-static bool sdma412StartEngine(void*)
+bool X5000HWLibs::sdma412StartEngine(void* const ctx)
 {
-    NRed::singleton().writeReg32(SDMA0_BASE_0 + SDMA0_F32_CNTL,
-                                 NRed::singleton().readReg32(SDMA0_BASE_0 + SDMA0_F32_CNTL) & ~SDMA0_F32_CNTL_HALT);
+    singleton().sdmaCgsWriteRegister(
+        ctx, SDMA0_F32_CNTL, 0,
+        singleton().sdmaCgsReadRegister(ctx, SDMA0_F32_CNTL, 0, /*ctx->hwblock.id*/ kCAILHWBlockSDMA0)
+            & ~SDMA0_F32_CNTL_HALT,
+        /*ctx->hwblock.id*/ kCAILHWBlockSDMA0);
     return true;
 }
 
 static constexpr UInt32 sdmaGetHWVersion(const UInt32 major, const UInt32 minor) { return minor | (major << 16); }
 
-CAILResult X5000HWLibs::wrapSdmaInitFunctionPointerList(void* const instance, const UInt32 verMajor,
-                                                        const UInt32 verMinor, const UInt32 verPatch)
+CAILResult X5000HWLibs::wrapSdmaInitFunctionPointerList(void* const ctx, const UInt32 major, const UInt32 minor,
+                                                        const UInt32 patch)
 {
-    switch (sdmaGetHWVersion(verMajor, verMinor)) {
+    switch (sdmaGetHWVersion(major, minor)) {
         case sdmaGetHWVersion(4, 1): {
-            singleton().sdmaGetFwConstantsField(instance) = sdma41GetFWConstants;
-            if (verPatch == 2) { singleton().sdmaStartEngineField(instance) = sdma412StartEngine; }
+            singleton().sdmaGetFwConstantsField(ctx) = sdma41GetFWConstants;
+            if (patch == 2) { singleton().sdmaStartEngineField(ctx) = sdma412StartEngine; }
         } break;
         default:
             return FunctionCast(wrapSdmaInitFunctionPointerList,
-                                singleton().orgSdmaInitFunctionPointerList)(instance, verMajor, verMinor, verPatch);
+                                singleton().orgSdmaInitFunctionPointerList)(ctx, major, minor, patch);
     }
     return kCAILResultOK;
 }
