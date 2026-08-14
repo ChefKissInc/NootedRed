@@ -80,7 +80,7 @@ private:
     static CAILResult smuGetUCodeConsts(void* ctx, AMDSMUUCodeConstants* consts);
     static CAILResult smu10PowerUpConfig(void* ctx);
     static CAILResult smu10InternalHwInit(void* ctx);
-    static bool       smu12IsFwLoaded(void* const ctx);
+    static bool       smu12IsFwLoaded(void* ctx);
     static CAILResult smu12WaitForFwLoaded(void* ctx);
     static CAILResult smu12PowerUpConfig(void* ctx);
     static CAILResult smu12InternalHwInit(void* ctx);

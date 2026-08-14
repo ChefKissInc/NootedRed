@@ -992,9 +992,7 @@ CAILResult X5000HWLibs::wrapPspCmdKmSubmit(void* const instance, void* const cmd
 CAILResult X5000HWLibs::smuSendMessage(void* const ctx, const UInt32 message, const UInt32 param,
                                        UInt32* const outParam) const
 {
-    if (const auto res = this->smu90SendMessageWithParameter(ctx, PPSMC_MSG_PowerUpSdma, 0); res != kCAILResultOK) {
-        return res;
-    }
+    if (const auto res = this->smu90SendMessageWithParameter(ctx, message, param); res != kCAILResultOK) { return res; }
 
     if (outParam != nullptr) { *outParam = this->smuCgsReadRegister(ctx, MP1_SMN_C2PMSG_82, 0, kCAILHWBlockMP1, 0); }
 
