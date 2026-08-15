@@ -750,7 +750,6 @@ IOReturn X6000FB::readAtomBios(void* const self)
                 if (size == 0) [[likely]] {
                     size = readVfctAtomBiosImage(self, biosImage, sizeof(biosImage), false);
                     if (size == 0) [[unlikely]] { return kIOReturnInternalError; }
-                    return kIOReturnInternalError;
                 }
                 else if (!singleton().validateAtomBiosImage(self, biosImage, sizeof(biosImage))) [[unlikely]] {
                     SYSLOG("X6000FB", "BIOS Validation Failed - Reading from PCI Device.");
