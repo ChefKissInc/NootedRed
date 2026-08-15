@@ -88,20 +88,6 @@ static const UInt8 kAmdAtomPspDirectoryNullCheckPatched[]  = {0x48, 0x89, 0x83, 
                                                               0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66,
                                                               0x90, 0x90, 0x48, 0x8B, 0x7B, 0x18};
 
-// Tell AGDC that we're an iGPU.
-static const UInt8 kGetVendorInfoOriginal[]        = {0x48, 0x00, 0x02, 0x10, 0x00, 0x00, 0x02};
-static const UInt8 kGetVendorInfoMask[]            = {0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-static const UInt8 kGetVendorInfoPatched[]         = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
-static const UInt8 kGetVendorInfoPatchedMask[]     = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF};
-static const UInt8 kGetVendorInfoOriginal1404[]    = {0xC7, 0x00, 0x24, 0x02, 0x10, 0x00, 0x00,
-                                                      0xC7, 0x00, 0x28, 0x02, 0x00, 0x00, 0x00};
-static const UInt8 kGetVendorInfoMask1404[]        = {0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-                                                      0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-static const UInt8 kGetVendorInfoPatched1404[]     = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                                      0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00};
-static const UInt8 kGetVendorInfoPatchedMask1404[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                                      0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00};
-
 // Remove check for Navi family
 static const UInt8 kInitializeDmcubServices1Original[] = {0x81, 0x79, 0x2C, 0x8F, 0x00, 0x00, 0x00};
 static const UInt8 kInitializeDmcubServices1Patched[]  = {0x39, 0xC0, 0x66, 0x90, 0x66, 0x90, 0x90};
@@ -265,6 +251,8 @@ void X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_address_t s
         {"__ZN38AMDRadeonX6000_AmdRadeonControllerNavi19setupBootWatermarksEv", dummyIOReturnSuccess},
         {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
          this->orgGetNumberOfConnectors, kGetNumberOfConnectorsPattern, kGetNumberOfConnectorsPatternMask},
+        {"__ZNK30AMDRadeonX6000_AmdAgdcServices13getVendorInfoEP16AGDCVendorInfo_tm", wrapGetVendorInfo,
+         this->orgGetVendorInfo},
     };
     PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "X6000FB",
                "Failed to route symbols");
@@ -318,19 +306,6 @@ void X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_address_t s
                                                    kPopulateDeviceInfoMask,     kPopulateDeviceInfoPatched,
                                                    kPopulateDeviceInfoMask,     1};
     PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply populateDeviceInfo patch");
-
-    if (currentKernelVersion() >= MACOS_14_4) {
-        const PenguinWizardry::MaskedLookupPatch patch{&kextRadeonX6000Framebuffer,   kGetVendorInfoOriginal1404,
-                                                       kGetVendorInfoMask1404,        kGetVendorInfoPatched1404,
-                                                       kGetVendorInfoPatchedMask1404, 1};
-        PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply getVendorInfo patch (14.4)");
-    }
-    else {
-        const PenguinWizardry::MaskedLookupPatch patch{&kextRadeonX6000Framebuffer, kGetVendorInfoOriginal,
-                                                       kGetVendorInfoMask,          kGetVendorInfoPatched,
-                                                       kGetVendorInfoPatchedMask,   1};
-        PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply getVendorInfo patch");
-    }
 
     if (currentKernelVersion() >= MACOS_11) {
         const PenguinWizardry::MaskedLookupPatch patch{&kextRadeonX6000Framebuffer,
@@ -658,3 +633,10 @@ AmdAtomVramInfo* X6000FB::wrapCreateVramInfo(AmdAtomFwHelper* const biosHelper, 
 
 IOReturn X6000FB::wrapPopulateVramInfo(AmdAtomVramInfo* self, AtomFirmwareInfo& fwInfo)
 { return self->populateVramInfo(fwInfo); }
+
+IOReturn X6000FB::wrapGetVendorInfo(const void* self, AGDCVendorInfo_t* vendorInfo, size_t sizeofVendorInfo)
+{
+    const auto ret = FunctionCast(wrapGetVendorInfo, singleton().orgGetVendorInfo)(self, vendorInfo, sizeofVendorInfo);
+    if (ret == kIOReturnSuccess) { vendorInfo->VendorClass = kAGDCVendorClassIntegratedGPU; }
+    return ret;
+}

@@ -4,6 +4,7 @@
 // See LICENSE for details.
 
 #pragma once
+#include <AGDC/VendorInfo.hpp>
 #include <GPUDriversAMD/FB/AmdAsicInfo.hpp>
 #include <GPUDriversAMD/FB/AmdDeviceMemoryManager.hpp>
 #include <GPUDriversAMD/FB/BiosParser.hpp>
@@ -27,6 +28,7 @@ class X6000FB
     bool              fixedVBIOS{false};
     mach_vm_address_t orgGetNumberOfConnectors{0};
     mach_vm_address_t orgCreateVramInfo{0};
+    mach_vm_address_t orgGetVendorInfo{0};
 
 public:
     static X6000FB& singleton();
@@ -50,4 +52,5 @@ private:
     static UInt32                           wrapControllerPowerUp(void* self);
     static UInt32                           wrapGetNumberOfConnectors(void* self);
     static AmdAtomVramInfo*                 wrapCreateVramInfo(AmdAtomFwHelper* biosHelper, UInt32 tableOffset);
+    static IOReturn wrapGetVendorInfo(const void* self, AGDCVendorInfo_t* vendorInfo, size_t sizeofVendorInfo);
 };
