@@ -47,12 +47,11 @@ static const UInt8 kIH40IVRingInitHardwarePatternMask[] = {0xFF, 0xFF, 0xFF, 0xF
                                                            0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xF0, 0xFF, 0xF0, 0xFF,
                                                            0xFF, 0xF0, 0xF0, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF};
 
-static const UInt8 kIRQMGRWriteRegisterPattern[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41,
-                                                    0x54, 0x53, 0x50, 0x41, 0x89, 0xD6, 0x49, 0x89, 0xF7, 0x48, 0x89,
-                                                    0xFB, 0x48, 0x8B, 0x87, 0xB0, 0x00, 0x00, 0x00, 0x48, 0x85, 0xC0};
-static const UInt8 kIRQMGRWriteRegisterPattern1404[] = {
-    0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x53, 0x50, 0x89, 0xD3,
-    0x49, 0x89, 0xF7, 0x49, 0x89, 0xFE, 0x48, 0x8B, 0x87, 0xB0, 0x00, 0x00, 0x00, 0x48, 0x85, 0xC0};
+static const UInt8      kIRQMGRWriteRegisterCallPattern[]          = {0xBE, 0x4F, 0x0E, 0x00, 0x00, 0x4C, 0x89, 0xF7,
+                                                                      0x89, 0xC2, 0xE8, 0x00, 0x00, 0x00, 0x00};
+static const UInt8      kIRQMGRWriteRegisterCallPatternMask[]      = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                                                                      0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00};
+static constexpr size_t kIRQMGRWriteRegisterCallPatternJumpInstOff = 10;
 
 static const UInt8 kDpReceiverPowerCtrlPattern[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x54, 0x53,
                                                     0x48, 0x83, 0xEC, 0x10, 0x89, 0xF3, 0xB0, 0x02, 0x28, 0xD8};
@@ -294,17 +293,14 @@ void X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_address_t s
                                                      this->orgIH40IVRingInitHardware, kIH40IVRingInitHardwarePattern,
                                                      kIH40IVRingInitHardwarePatternMask};
         PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route IH_4_0_IVRing_InitHardware");
-        if (currentKernelVersion() >= MACOS_14_4) {
-            PenguinWizardry::PatternRouteRequest request{"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister,
-                                                         this->orgIRQMGRWriteRegister, kIRQMGRWriteRegisterPattern1404};
-            PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB",
-                       "Failed to route IRQMGR_WriteRegister (14.4+)");
-        }
-        else {
-            PenguinWizardry::PatternRouteRequest request{"_IRQMGR_WriteRegister", wrapIRQMGRWriteRegister,
-                                                         this->orgIRQMGRWriteRegister, kIRQMGRWriteRegisterPattern};
-            PANIC_COND(!request.route(patcher, id, slide, size), "X6000FB", "Failed to route IRQMGR_WriteRegister");
-        }
+        PenguinWizardry::JumpPatternRouteRequest jumpPatternRequest{"_IRQMGR_WriteRegister",
+                                                                    wrapIRQMGRWriteRegister,
+                                                                    this->orgIRQMGRWriteRegister,
+                                                                    kIRQMGRWriteRegisterCallPattern,
+                                                                    kIRQMGRWriteRegisterCallPatternMask,
+                                                                    kIRQMGRWriteRegisterCallPatternJumpInstOff};
+        PANIC_COND(!jumpPatternRequest.route(patcher, id, slide, size), "X6000FB",
+                   "Failed to route IRQMGR_WriteRegister");
     }
 
     const PenguinWizardry::MaskedLookupPatch patch{&kextRadeonX6000Framebuffer, kPopulateDeviceInfoOriginal,
