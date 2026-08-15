@@ -635,7 +635,7 @@ UInt32 X6000FB::wrapGetNumberOfConnectors(void* const self)
     return FunctionCast(wrapGetNumberOfConnectors, singleton().orgGetNumberOfConnectors)(self);
 }
 
-static UInt32 getTableOffset(AmdAtomFwHelper* const biosHelper, const UInt32 index)
+static UInt32 getTableOffset(const AmdAtomFwHelper* const biosHelper, const UInt32 index)
 {
     const auto romTableOffset = static_cast<const UInt16*>(biosHelper->getImage(ATOM_ROM_TABLE_PTR, sizeof(UInt16)));
     if (romTableOffset == nullptr) { return 0; }
