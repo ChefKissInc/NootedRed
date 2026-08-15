@@ -17,6 +17,7 @@
 #include <Headers/kern_util.hpp>
 #include <IOKit/IOReturn.h>
 #include <IOKit/IOTypes.h>
+#include <IOKit/acpi/IOACPIPlatformExpert.h>
 #include <Kexts.hpp>
 #include <NRed.hpp>
 #include <PenguinWizardry/KernelVersion.hpp>
@@ -198,6 +199,9 @@ void X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_address_t s
         {"__ZN37AMDRadeonX6000_AmdDeviceMemoryManager17mapMemorySubRangeE25AmdReservedMemorySelectoryyj",
          this->mapMemorySubRange},
         {"__ZTV32AMDRadeonX6000_AmdAsicInfoNavi10", orgAmdAsicInfoNavi10VT},
+        {"__ZNK34AMDRadeonX6000_AmdBiosParserHelper20readEfiAtomBiosImageEPhm", this->readEfiAtomBiosImage},
+        {"__ZNK34AMDRadeonX6000_AmdBiosParserHelper20readPciAtomBiosImageEPhm", this->readPciAtomBiosImage},
+        {"__ZNK34AMDRadeonX6000_AmdBiosParserHelper21validateAtomBiosImageEPhm", this->validateAtomBiosImage},
     };
     PANIC_COND(!PenguinWizardry::PatternSolveRequest::solveAll(patcher, id, solveRequests, slide, size), "X6000FB",
                "Failed to resolve symbols");
@@ -253,6 +257,7 @@ void X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_address_t s
          this->orgGetNumberOfConnectors, kGetNumberOfConnectorsPattern, kGetNumberOfConnectorsPatternMask},
         {"__ZNK30AMDRadeonX6000_AmdAgdcServices13getVendorInfoEP16AGDCVendorInfo_tm", wrapGetVendorInfo,
          this->orgGetVendorInfo},
+        {"__ZN34AMDRadeonX6000_AmdBiosParserHelper12readAtomBiosEv", readAtomBios},
     };
     PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "X6000FB",
                "Failed to route symbols");
@@ -640,4 +645,120 @@ IOReturn X6000FB::wrapGetVendorInfo(const void* const self, AGDCVendorInfo_t* co
     const auto ret = FunctionCast(wrapGetVendorInfo, singleton().orgGetVendorInfo)(self, vendorInfo, sizeofVendorInfo);
     if (ret == kIOReturnSuccess) [[likely]] { vendorInfo->VendorClass = kAGDCVendorClassIntegratedGPU; }
     return ret;
+}
+
+// Hack
+class AppleACPIPlatformExpert : IOACPIPlatformExpert
+{
+    friend class X6000FB;
+};
+
+size_t X6000FB::readVfctAtomBiosImage(void* const self, uint8_t* const buffer, const size_t bufferSize,
+                                      const bool strict)
+{
+    const auto pciDevice = getMember<IOPCIDevice*>(self, 0x28);
+
+    const auto expert = static_cast<AppleACPIPlatformExpert*>(pciDevice->getPlatform());
+    if (expert == nullptr) [[unlikely]] { return 0; }
+
+    const auto vfctData = expert->getACPITableData("VFCT", 0);
+    if (vfctData == nullptr) [[unlikely]] { return 0; }
+
+    const auto vfct = static_cast<const VFCT*>(vfctData->getBytesNoCopy());
+    if (vfct == nullptr) [[unlikely]] { return 0; }
+
+    if (sizeof(VFCT) > vfctData->getLength()) [[unlikely]] { return 0; }
+
+    const auto deviceID = pciDevice->extendedConfigRead16(kIOPCIConfigDeviceID);
+    const auto vendor   = pciDevice->extendedConfigRead16(kIOPCIConfigVendorID);
+    const auto busNum   = pciDevice->getBusNumber();
+    const auto devNum   = pciDevice->getDeviceNumber();
+    const auto devFunc  = pciDevice->getFunctionNumber();
+
+    for (auto offset = vfct->vbiosImageOffset; offset < vfctData->getLength();) {
+        auto vHdr =
+            static_cast<const GOPVideoBIOSHeader*>(vfctData->getBytesNoCopy(offset, sizeof(GOPVideoBIOSHeader)));
+        if (vHdr == nullptr) [[unlikely]] { return 0; }
+
+        const auto vContent =
+            static_cast<const UInt8*>(vfctData->getBytesNoCopy(offset + sizeof(GOPVideoBIOSHeader), vHdr->imageLength));
+        if (vContent == nullptr) [[unlikely]] { return 0; }
+
+        offset += sizeof(GOPVideoBIOSHeader) + vHdr->imageLength;
+
+        if (vHdr->imageLength != 0 && vHdr->imageLength <= bufferSize
+            && (!strict || (vHdr->pciBus == busNum && vHdr->pciDevice == devNum && vHdr->pciFunction == devFunc))
+            && vHdr->vendorID == vendor && vHdr->deviceID == deviceID) [[likely]]
+        {
+            if (singleton().validateAtomBiosImage(self, const_cast<UInt8*>(vContent), vHdr->imageLength)) [[likely]] {
+                memcpy(buffer, vContent, vHdr->imageLength);
+                return vHdr->imageLength;
+            }
+            else {
+                SYSLOG("X6000FB", "BIOS Validation Failed - Reading from VFCT.");
+            }
+        }
+        else {
+            SYSLOG("NRed",
+                   "VFCT image does not match, is empty or too long (pciBus: 0x%X pciDevice: 0x%X pciFunction: 0x%X "
+                   "vendorID: 0x%X deviceID: 0x%X imageLength: 0x%X).",
+                   vHdr->pciBus, vHdr->pciDevice, vHdr->pciFunction, vHdr->vendorID, vHdr->deviceID, vHdr->imageLength);
+        }
+    }
+
+    SYSLOG("NRed", "VFCT table present but broken.");
+    return 0;
+}
+
+size_t X6000FB::readVramAtomBiosImage(void* const self, uint8_t* const buffer, const size_t bufferSize)
+{
+    const auto pciDevice = getMember<IOPCIDevice*>(self, 0x28);
+
+    const auto bar0 =
+        pciDevice->mapDeviceMemoryWithRegister(kIOPCIConfigBaseAddress0, kIOMapWriteCombineCache | kIOMapAnywhere);
+    if (bar0 == nullptr) [[unlikely]] { return 0; }
+
+    if (bar0->getLength() == 0) [[unlikely]] {
+        bar0->release();
+        return 0;
+    }
+
+    const auto fb = reinterpret_cast<UInt8*>(bar0->getVirtualAddress());
+
+    if (singleton().validateAtomBiosImage(self, fb, bufferSize)) [[likely]] {
+        memcpy(buffer, fb, bufferSize);
+        bar0->release();
+        return bufferSize;
+    }
+
+    SYSLOG("X6000FB", "BIOS Validation Failed - Reading from VRAM.");
+    bar0->release();
+    return 0;
+}
+
+// TODO: See `amdgpu_device_need_post`, `amdgpu_get_bios_dgpu`, `amdgpu_get_bios_apu`.
+IOReturn X6000FB::readAtomBios(void* const self)
+{
+    auto& biosImage = getMember<uint8_t[0x10000]>(self, 0x48);
+    auto  size      = singleton().readEfiAtomBiosImage(self, biosImage, sizeof(biosImage));
+    if (size == 0) [[likely]] {
+        size = readVfctAtomBiosImage(self, biosImage, sizeof(biosImage));
+        if (size == 0) [[unlikely]] {
+            size = readVramAtomBiosImage(self, biosImage, sizeof(biosImage));
+            if (size == 0) [[unlikely]] {
+                size = singleton().readPciAtomBiosImage(self, biosImage, sizeof(biosImage));
+                if (size == 0) [[likely]] {
+                    size = readVfctAtomBiosImage(self, biosImage, sizeof(biosImage), false);
+                    if (size == 0) [[unlikely]] { return kIOReturnInternalError; }
+                    return kIOReturnInternalError;
+                }
+                else if (!singleton().validateAtomBiosImage(self, biosImage, sizeof(biosImage))) [[unlikely]] {
+                    SYSLOG("X6000FB", "BIOS Validation Failed - Reading from PCI Device.");
+                    return kIOReturnInternalError;
+                }
+            }
+        }
+    }
+    getMember<size_t>(self, 0x10048) = size;
+    return kIOReturnSuccess;
 }

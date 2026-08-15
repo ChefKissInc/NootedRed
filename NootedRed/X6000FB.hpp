@@ -17,6 +17,8 @@ class X6000FB
     using mapMemorySubRange_t   = IOReturn(void* self, AmdReservedMemorySelector selector, size_t atOffset,
                                            size_t withSize, IOOptionBits andAttributes);
     using messageAccelerator_t  = IOReturn(void* self, UInt32 requestType, void* arg2, void* arg3, void* arg4);
+    using readBiosImage_t       = size_t(const void* self, uint8_t* buffer, size_t bufferSize);
+    using validateBiosImage_t   = bool(const void* self, uint8_t* buffer, size_t bufferSize);
 
     static constexpr UInt32 IOFBRequestControllerEnabled = 0x1B;
 
@@ -32,6 +34,9 @@ class X6000FB
     mach_vm_address_t      orgGetNumberOfConnectors{0};
     mach_vm_address_t      orgCreateVramInfo{0};
     mach_vm_address_t      orgGetVendorInfo{0};
+    readBiosImage_t*       readEfiAtomBiosImage{nullptr};
+    readBiosImage_t*       readPciAtomBiosImage{nullptr};
+    validateBiosImage_t*   validateAtomBiosImage{nullptr};
 
 public:
     static X6000FB& singleton();
@@ -56,4 +61,7 @@ private:
     static UInt32                           wrapGetNumberOfConnectors(void* self);
     static AmdAtomVramInfo*                 wrapCreateVramInfo(AmdAtomFwHelper* biosHelper, UInt32 tableOffset);
     static IOReturn wrapGetVendorInfo(const void* self, AGDCVendorInfo_t* vendorInfo, size_t sizeofVendorInfo);
+    static size_t   readVfctAtomBiosImage(void* self, uint8_t* buffer, size_t bufferSize, bool strict = true);
+    static size_t   readVramAtomBiosImage(void* self, uint8_t* buffer, size_t bufferSize);
+    static IOReturn readAtomBios(void* self);
 };
