@@ -79,6 +79,12 @@ static const UInt8      kCreatePspDirectoryCallPatternMask[] = {0xFF, 0xFF, 0xFF
                                                                 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00};
 static constexpr UInt32 kCreatePspDirectoryCallPatternJumpInstOff = 12;
 
+static const UInt8      kCreateObjectInfoCallPattern[]          = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x43, 0x20, 0x0F,
+                                                                   0xB7, 0x70, 0x30, 0xE8, 0x00, 0x00, 0x00, 0x00};
+static const UInt8      kCreateObjectInfoCallPatternMask[]      = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                                                                   0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00};
+static constexpr UInt32 kCreateObjectInfoCallPatternJumpInstOff = 12;
+
 // Fix register read (0xD31 -> 0xD2F) and family ID (0x8F -> 0x8E).
 static const UInt8 kPopulateDeviceInfoOriginal[]{0xBE, 0x31, 0x0D, 0x00, 0x00, 0xFF, 0x90, 0x40, 0x01,
                                                  0x00, 0x00, 0xC7, 0x43, 0x00, 0x8F, 0x00, 0x00, 0x00};
@@ -175,11 +181,6 @@ static const UInt8 kControllerPowerUpReplaceMask[]  = {0x00, 0x00, 0x00, 0x00, 0
 static const UInt8 kValidateDetailedTimingOriginal[] = {0x66, 0x0F, 0x2E, 0xC1, 0x76, 0x06, 0xF2, 0x0F, 0x5E, 0xC1};
 static const UInt8 kValidateDetailedTimingPatched[]  = {0x66, 0x0F, 0x2E, 0xC1, 0x66, 0x90, 0xF2, 0x0F, 0x5E, 0xC1};
 
-static const UInt8 kGetNumberOfConnectorsPattern[]     = {0x55, 0x48, 0x89, 0xE5, 0x40, 0x8B, 0x40, 0x28, 0x00,
-                                                          0x00, 0x00, 0x00, 0x00, 0x85, 0x00, 0x74, 0x00};
-static const UInt8 kGetNumberOfConnectorsPatternMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xF0, 0xFF, 0xF0, 0xFF, 0x00,
-                                                          0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00};
-
 static X6000FB moduleInstance;
 
 X6000FB& X6000FB::singleton() { return moduleInstance; }
@@ -251,8 +252,6 @@ void X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_address_t s
         {"__ZNK32AMDRadeonX6000_AmdAsicInfoNavi1027getEnumeratedRevisionNumberEv", getEnumeratedRevision},
         {"__ZN41AMDRadeonX6000_AmdDeviceMemoryManagerNavi21intializeReservedVramEv", initialiseReservedVRAM},
         {"__ZN38AMDRadeonX6000_AmdRadeonControllerNavi19setupBootWatermarksEv", dummyIOReturnSuccess},
-        {"__ZNK22AmdAtomObjectInfo_V1_421getNumberOfConnectorsEv", wrapGetNumberOfConnectors,
-         this->orgGetNumberOfConnectors, kGetNumberOfConnectorsPattern, kGetNumberOfConnectorsPatternMask},
         {"__ZNK30AMDRadeonX6000_AmdAgdcServices13getVendorInfoEP16AGDCVendorInfo_tm", wrapGetVendorInfo,
          this->orgGetVendorInfo},
         {"__ZN34AMDRadeonX6000_AmdBiosParserHelper12readAtomBiosEv", readAtomBios},
@@ -260,14 +259,15 @@ void X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_address_t s
     PANIC_COND(!PenguinWizardry::PatternRouteRequest::routeAll(patcher, id, requests, slide, size), "X6000FB",
                "Failed to route symbols");
 
-    PenguinWizardry::JumpPatternRouteRequest createVramInfoRequest{
-        "__ZN15AmdAtomVramInfo14createVramInfoEP15AmdAtomFwHelperj",
-        wrapCreateVramInfo,
-        this->orgCreateVramInfo,
-        kCreateVramInfoCallPattern,
-        kCreateVramInfoCallPatternMask,
-        kCreateVramInfoCallPatternJumpInstOff};
-    PANIC_COND(!createVramInfoRequest.route(patcher, id, slide, size), "X6000FB", "Failed to route createVramInfo");
+    PenguinWizardry::JumpPatternRouteRequest atombiosRequests[] = {
+        {"__ZN15AmdAtomVramInfo14createVramInfoEP15AmdAtomFwHelperj", wrapCreateVramInfo, this->orgCreateVramInfo,
+         kCreateVramInfoCallPattern, kCreateVramInfoCallPatternMask, kCreateVramInfoCallPatternJumpInstOff},
+        {"__ZN17AmdAtomObjectInfo16createObjectInfoEP15AmdAtomFwHelperj", wrapCreateObjectInfo,
+         this->orgCreateObjectInfo, kCreateObjectInfoCallPattern, kCreateObjectInfoCallPatternMask,
+         kCreateObjectInfoCallPatternJumpInstOff},
+    };
+    PANIC_COND(!PenguinWizardry::JumpPatternRouteRequest::routeAll(patcher, id, atombiosRequests, slide, size),
+               "X6000FB", "Failed to route ATOMBIOS-related functions");
 
     if (currentKernelVersion() >= MACOS_11) {
         PenguinWizardry::JumpPatternRouteRequest createPspDirectoryRequest{
@@ -598,24 +598,22 @@ void X6000FB::wrapDpReceiverPowerCtrl(void* link, bool power_on)
     IOSleep(250);
 }
 
-UInt32 X6000FB::wrapGetNumberOfConnectors(void* const self)
+void* X6000FB::wrapCreateObjectInfo(void* const helper, const UInt32 tableOffset)
 {
-    if (!singleton().fixedVBIOS) {
-        singleton().fixedVBIOS = true;
-        const auto objInfo     = getMember<DispObjInfoTableV1*>(self, 0x28);
-        if (objInfo->formatRev == 1) {
-            DBGLOG("X6000FB", "getNumberOfConnectors: Fixing VBIOS connectors");
-            const auto n = objInfo->pathCount;
-            for (size_t i = 0, j = 0; i < n; i++) {
-                // Skip invalid device tags
-                if (objInfo->paths[i].devTag == 0) { objInfo->pathCount--; }
-                else {
-                    objInfo->paths[j++] = objInfo->paths[i];
-                }
-            }
+    const auto ret = FunctionCast(wrapCreateObjectInfo, singleton().orgCreateObjectInfo)(helper, tableOffset);
+    if (ret == nullptr) { return ret; }
+
+    const auto infoTable = getMember<DispObjInfoTableV1*>(ret, 0x28);
+    const auto n         = infoTable->pathCount;
+    for (UInt8 i = 0, j = 0; i < n; i++) {
+        // Skip invalid device tags
+        if (infoTable->paths[i].devTag == 0) { infoTable->pathCount--; }
+        else {
+            infoTable->paths[j++] = infoTable->paths[i];
         }
     }
-    return FunctionCast(wrapGetNumberOfConnectors, singleton().orgGetNumberOfConnectors)(self);
+
+    return ret;
 }
 
 static UInt32 getTableOffset(const AmdAtomFwHelper* const biosHelper, const UInt32 index)

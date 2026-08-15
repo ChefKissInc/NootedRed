@@ -30,8 +30,7 @@ class X6000FB
     mach_vm_address_t      orgDpReceiverPowerCtrl{0};
     messageAccelerator_t*  orgMessageAccelerator{nullptr};
     mach_vm_address_t      orgControllerPowerUp{0};
-    bool                   fixedVBIOS{false};
-    mach_vm_address_t      orgGetNumberOfConnectors{0};
+    mach_vm_address_t      orgCreateObjectInfo{0};
     mach_vm_address_t      orgCreateVramInfo{0};
     mach_vm_address_t      orgGetVendorInfo{0};
     readBiosImage_t*       readEfiAtomBiosImage{nullptr};
@@ -59,7 +58,7 @@ private:
     static IOReturn                         getTriageHardwareDataRN(void* self, UInt32 fbIndex, void* triageData);
     static void                             wrapDpReceiverPowerCtrl(void* link, bool power_on);
     static UInt32                           wrapControllerPowerUp(void* self);
-    static UInt32                           wrapGetNumberOfConnectors(void* self);
+    static void*                            wrapCreateObjectInfo(void* helper, UInt32 tableOffset);
     static AmdAtomVramInfo*                 wrapCreateVramInfo(AmdAtomFwHelper* biosHelper, UInt32 tableOffset);
     static IOReturn wrapGetVendorInfo(const void* self, AGDCVendorInfo_t* vendorInfo, size_t sizeofVendorInfo);
     static size_t   readVfctAtomBiosImage(void* self, uint8_t* buffer, size_t bufferSize, bool strict = true);
