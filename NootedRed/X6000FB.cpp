@@ -631,12 +631,13 @@ AmdAtomVramInfo* X6000FB::wrapCreateVramInfo(AmdAtomFwHelper* const biosHelper, 
     return AmdAtomVramInfoIGP::createVramInfoIGP(biosHelper, getTableOffset(biosHelper, 0x1E));
 }
 
-IOReturn X6000FB::wrapPopulateVramInfo(AmdAtomVramInfo* self, AtomFirmwareInfo& fwInfo)
+IOReturn X6000FB::wrapPopulateVramInfo(AmdAtomVramInfo* const self, AtomFirmwareInfo& fwInfo)
 { return self->populateVramInfo(fwInfo); }
 
-IOReturn X6000FB::wrapGetVendorInfo(const void* self, AGDCVendorInfo_t* vendorInfo, size_t sizeofVendorInfo)
+IOReturn X6000FB::wrapGetVendorInfo(const void* const self, AGDCVendorInfo_t* const vendorInfo,
+                                    const size_t sizeofVendorInfo)
 {
     const auto ret = FunctionCast(wrapGetVendorInfo, singleton().orgGetVendorInfo)(self, vendorInfo, sizeofVendorInfo);
-    if (ret == kIOReturnSuccess) { vendorInfo->VendorClass = kAGDCVendorClassIntegratedGPU; }
+    if (ret == kIOReturnSuccess) [[likely]] { vendorInfo->VendorClass = kAGDCVendorClassIntegratedGPU; }
     return ret;
 }

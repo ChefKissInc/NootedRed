@@ -12,23 +12,26 @@
 
 class X6000FB
 {
-    using mapMemorySubRange_t = IOReturn (*)(void* self, AmdReservedMemorySelector selector, size_t atOffset,
-                                             size_t withSize, IOOptionBits andAttributes);
+    using IRQMGRWriteRegister_t = void(void* ctx, UInt64 off, UInt32 value);
+    using IRQMGRReadRegister_t  = UInt32(void* ctx, UInt64 off);
+    using mapMemorySubRange_t   = IOReturn(void* self, AmdReservedMemorySelector selector, size_t atOffset,
+                                           size_t withSize, IOOptionBits andAttributes);
+    using messageAccelerator_t  = IOReturn(void* self, UInt32 requestType, void* arg2, void* arg3, void* arg4);
 
     static constexpr UInt32 IOFBRequestControllerEnabled = 0x1B;
 
-    mach_vm_address_t   orgIH40IVRingInitHardware{0};
-    void                (*orgIRQMGRWriteRegister)(void* ctx, UInt64 off, UInt32 value){nullptr};
-    UInt32              (*irqMGRReadRegister)(void* ctx, UInt64 off){nullptr};
-    mach_vm_address_t   orgCreateRegisterAccess{0};
-    mapMemorySubRange_t mapMemorySubRange{nullptr};
-    mach_vm_address_t   orgDpReceiverPowerCtrl{0};
-    IOReturn (*orgMessageAccelerator)(void* self, UInt32 requestType, void* arg2, void* arg3, void* arg4){nullptr};
-    mach_vm_address_t orgControllerPowerUp{0};
-    bool              fixedVBIOS{false};
-    mach_vm_address_t orgGetNumberOfConnectors{0};
-    mach_vm_address_t orgCreateVramInfo{0};
-    mach_vm_address_t orgGetVendorInfo{0};
+    mach_vm_address_t      orgIH40IVRingInitHardware{0};
+    IRQMGRWriteRegister_t* orgIRQMGRWriteRegister{nullptr};
+    IRQMGRReadRegister_t*  irqMGRReadRegister{nullptr};
+    mach_vm_address_t      orgCreateRegisterAccess{0};
+    mapMemorySubRange_t*   mapMemorySubRange{nullptr};
+    mach_vm_address_t      orgDpReceiverPowerCtrl{0};
+    messageAccelerator_t*  orgMessageAccelerator{nullptr};
+    mach_vm_address_t      orgControllerPowerUp{0};
+    bool                   fixedVBIOS{false};
+    mach_vm_address_t      orgGetNumberOfConnectors{0};
+    mach_vm_address_t      orgCreateVramInfo{0};
+    mach_vm_address_t      orgGetVendorInfo{0};
 
 public:
     static X6000FB& singleton();
