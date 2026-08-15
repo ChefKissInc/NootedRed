@@ -45,6 +45,13 @@ AmdAtomTableBaseClass::AmdAtomTableBaseClass(AmdAtomFwHelper* const biosHelper)
 
 AmdAtomTableBaseClass::~AmdAtomTableBaseClass() { }
 
+AmdAtomDataTable::AmdAtomDataTable() :
+    AmdAtomTableBaseClass(nullptr)
+{
+    m_tableOffset = 0;
+    memset(&m_tableRevision, 0, sizeof(m_tableRevision));
+}
+
 AmdAtomDataTable::AmdAtomDataTable(DataTableInitInfo* const initInfo) :
     AmdAtomTableBaseClass(initInfo->biosHelper),
     m_tableOffset(initInfo->tableOffset),
@@ -86,3 +93,7 @@ IOReturn AmdAtomVramInfo::populateVramInfo(AtomFirmwareInfo& fwInfo) const
 
     return kIOReturnSuccess;
 }
+
+AmdAtomPspDirectory::AmdAtomPspDirectory() { }
+
+AmdAtomPspDirectory::~AmdAtomPspDirectory() { }

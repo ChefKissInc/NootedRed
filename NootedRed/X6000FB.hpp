@@ -37,6 +37,7 @@ class X6000FB
     readBiosImage_t*       readEfiAtomBiosImage{nullptr};
     readBiosImage_t*       readPciAtomBiosImage{nullptr};
     validateBiosImage_t*   validateAtomBiosImage{nullptr};
+    mach_vm_address_t      orgCreatePspDirectory{0};
 
 public:
     static X6000FB& singleton();
@@ -64,4 +65,5 @@ private:
     static size_t   readVfctAtomBiosImage(void* self, uint8_t* buffer, size_t bufferSize, bool strict = true);
     static size_t   readVramAtomBiosImage(void* self, uint8_t* buffer, size_t bufferSize);
     static IOReturn readAtomBios(void* self);
+    static AmdAtomPspDirectory* wrapCreatePspDirectory(AmdAtomFwHelper* biosHelper, UInt32 tableOffset);
 };

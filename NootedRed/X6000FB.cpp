@@ -3,6 +3,7 @@
 // Copyright © 2022-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
 // See LICENSE for details.
 
+#include "AmdAtomPspDirectoryDummy.hpp"
 #include "AmdAtomVramInfoIGP.hpp"
 #include <ASICCaps.hpp>
 #include <GPUDriversAMD/ATOMBIOS.hpp>
@@ -66,11 +67,17 @@ static const UInt8 kDpReceiverPowerCtrlPattern1404[] = {0x55, 0x48, 0x89, 0xE5, 
                                                         0x41, 0x54, 0x53, 0x48, 0x83, 0xEC, 0x10, 0x41,
                                                         0x89, 0xF7, 0xB0, 0x02, 0x44, 0x28, 0xF8};
 
-static const UInt8      kCreateVramInfoPattern[]         = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x43, 0x20, 0x0F,
-                                                            0xB7, 0x70, 0x3C, 0xE8, 0x00, 0x00, 0x00, 0x00};
-static const UInt8      kCreateVramInfoPatternMask[]     = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-                                                            0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00};
-static constexpr UInt32 kCreateVramInfoPatternJumpOffset = 12;
+static const UInt8      kCreateVramInfoCallPattern[]          = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x43, 0x20, 0x0F,
+                                                                 0xB7, 0x70, 0x3C, 0xE8, 0x00, 0x00, 0x00, 0x00};
+static const UInt8      kCreateVramInfoCallPatternMask[]      = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                                                                 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00};
+static constexpr UInt32 kCreateVramInfoCallPatternJumpInstOff = 12;
+
+static const UInt8      kCreatePspDirectoryCallPattern[]     = {0x48, 0x8B, 0x7B, 0x18, 0x48, 0x8B, 0x43, 0x20, 0x0F,
+                                                                0xB7, 0x70, 0x16, 0xE8, 0x00, 0x00, 0x00, 0x00};
+static const UInt8      kCreatePspDirectoryCallPatternMask[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                                                                0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00};
+static constexpr UInt32 kCreatePspDirectoryCallPatternJumpInstOff = 12;
 
 // Fix register read (0xD31 -> 0xD2F) and family ID (0x8F -> 0x8E).
 static const UInt8 kPopulateDeviceInfoOriginal[]{0xBE, 0x31, 0x0D, 0x00, 0x00, 0xFF, 0x90, 0x40, 0x01,
@@ -79,15 +86,6 @@ static const UInt8 kPopulateDeviceInfoMask[]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
                                              0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF};
 static const UInt8 kPopulateDeviceInfoPatched[]{0xBE, 0x2F, 0x0D, 0x00, 0x00, 0xFF, 0x90, 0x40, 0x01,
                                                 0x00, 0x00, 0xC7, 0x43, 0x00, 0x8E, 0x00, 0x00, 0x00};
-
-// Neutralise `AmdAtomPspDirectory` creation null check.
-// We don't have this entry in our VBIOS.
-static const UInt8 kAmdAtomPspDirectoryNullCheckOriginal[] = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00,
-                                                              0x48, 0x85, 0xC0, 0x0F, 0x84, 0xA1, 0x00,
-                                                              0x00, 0x00, 0x48, 0x8B, 0x7B, 0x18};
-static const UInt8 kAmdAtomPspDirectoryNullCheckPatched[]  = {0x48, 0x89, 0x83, 0x88, 0x00, 0x00, 0x00,
-                                                              0x66, 0x90, 0x66, 0x90, 0x66, 0x90, 0x66,
-                                                              0x90, 0x90, 0x48, 0x8B, 0x7B, 0x18};
 
 // Remove check for Navi family
 static const UInt8 kInitializeDmcubServices1Original[] = {0x81, 0x79, 0x2C, 0x8F, 0x00, 0x00, 0x00};
@@ -266,10 +264,22 @@ void X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_address_t s
         "__ZN15AmdAtomVramInfo14createVramInfoEP15AmdAtomFwHelperj",
         wrapCreateVramInfo,
         this->orgCreateVramInfo,
-        kCreateVramInfoPattern,
-        kCreateVramInfoPatternMask,
-        kCreateVramInfoPatternJumpOffset};
+        kCreateVramInfoCallPattern,
+        kCreateVramInfoCallPatternMask,
+        kCreateVramInfoCallPatternJumpInstOff};
     PANIC_COND(!createVramInfoRequest.route(patcher, id, slide, size), "X6000FB", "Failed to route createVramInfo");
+
+    if (currentKernelVersion() >= MACOS_11) {
+        PenguinWizardry::JumpPatternRouteRequest createPspDirectoryRequest{
+            "__ZN19AmdAtomPspDirectory18createPspDirectoryEP15AmdAtomFwHelperj",
+            wrapCreatePspDirectory,
+            this->orgCreatePspDirectory,
+            kCreatePspDirectoryCallPattern,
+            kCreatePspDirectoryCallPatternMask,
+            kCreatePspDirectoryCallPatternJumpInstOff};
+        PANIC_COND(!createPspDirectoryRequest.route(patcher, id, slide, size), "X6000FB",
+                   "Failed to route createPspDirectory");
+    }
 
     if (currentKernelVersion() >= MACOS_11 && currentKernelVersion() <= MACOS_12_X) {
         PenguinWizardry::PatternRouteRequest getTriageHardwareDataRequest{
@@ -311,13 +321,6 @@ void X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_address_t s
                                                    kPopulateDeviceInfoMask,     kPopulateDeviceInfoPatched,
                                                    kPopulateDeviceInfoMask,     1};
     PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply populateDeviceInfo patch");
-
-    if (currentKernelVersion() >= MACOS_11) {
-        const PenguinWizardry::MaskedLookupPatch patch{&kextRadeonX6000Framebuffer,
-                                                       kAmdAtomPspDirectoryNullCheckOriginal,
-                                                       kAmdAtomPspDirectoryNullCheckPatched, 1};
-        PANIC_COND(!patch.apply(patcher, slide, size), "X6000FB", "Failed to apply null check patch");
-    }
 
     if (NRed::singleton().getAttributes().isRenoir()) {
         const PenguinWizardry::MaskedLookupPatch patch{&kextRadeonX6000Framebuffer, kInitializeDmcubServices1Original,
@@ -630,7 +633,7 @@ static UInt32 getTableOffset(const AmdAtomFwHelper* const biosHelper, const UInt
 
 AmdAtomVramInfo* X6000FB::wrapCreateVramInfo(AmdAtomFwHelper* const biosHelper, const UInt32 tableOffset)
 {
-    if (biosHelper == nullptr || tableOffset != 0) {    // tableOffset is 0 on iGPUs
+    if (biosHelper == nullptr || tableOffset != 0) {
         return FunctionCast(wrapCreateVramInfo, singleton().orgCreateVramInfo)(biosHelper, tableOffset);
     }
     return AmdAtomVramInfoIGP::createVramInfoIGP(biosHelper, getTableOffset(biosHelper, 0x1E));
@@ -760,4 +763,12 @@ IOReturn X6000FB::readAtomBios(void* const self)
     }
     getMember<size_t>(self, 0x10048) = size;
     return kIOReturnSuccess;
+}
+
+AmdAtomPspDirectory* X6000FB::wrapCreatePspDirectory(AmdAtomFwHelper* const biosHelper, const UInt32 tableOffset)
+{
+    if (biosHelper == nullptr || tableOffset != 0) {
+        return FunctionCast(wrapCreatePspDirectory, singleton().orgCreatePspDirectory)(biosHelper, tableOffset);
+    }
+    return AmdAtomPspDirectoryDummy::create();
 }

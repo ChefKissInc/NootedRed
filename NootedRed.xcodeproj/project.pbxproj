@@ -77,6 +77,8 @@
 		409B6F982E8ABB320046F619 /* OSSSYS_4.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 409B6F972E8ABB320046F619 /* OSSSYS_4.hpp */; };
 		40A01705302BBE14007EDA79 /* BiosParser.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40A01704302BBE14007EDA79 /* BiosParser.hpp */; };
 		40A02CF82EAE40BD00ECB6DA /* KernelVersion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40A02CF72EAE40BD00ECB6DA /* KernelVersion.cpp */; };
+		40AF79773030BCC00005EFAB /* AmdAtomPspDirectoryDummy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40AF79763030BCC00005EFAB /* AmdAtomPspDirectoryDummy.cpp */; };
+		40AF79783030BCC00005EFAB /* AmdAtomPspDirectoryDummy.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40AF79753030BCC00005EFAB /* AmdAtomPspDirectoryDummy.hpp */; };
 		40B037E12E951D2B0060EAD4 /* Attributes.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40B037E02E951D2B0060EAD4 /* Attributes.hpp */; };
 		40B9AEC52E991009000F05ED /* HWInterface.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 40B9AEC42E991009000F05ED /* HWInterface.hpp */; };
 		40B9AEC92E9911A6000F05ED /* HWInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40B9AEC82E9911A6000F05ED /* HWInterface.cpp */; };
@@ -237,6 +239,8 @@
 		409B6F972E8ABB320046F619 /* OSSSYS_4.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = OSSSYS_4.hpp; sourceTree = "<group>"; };
 		40A01704302BBE14007EDA79 /* BiosParser.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = BiosParser.hpp; sourceTree = "<group>"; };
 		40A02CF72EAE40BD00ECB6DA /* KernelVersion.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = KernelVersion.cpp; sourceTree = "<group>"; };
+		40AF79753030BCC00005EFAB /* AmdAtomPspDirectoryDummy.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AmdAtomPspDirectoryDummy.hpp; sourceTree = "<group>"; };
+		40AF79763030BCC00005EFAB /* AmdAtomPspDirectoryDummy.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AmdAtomPspDirectoryDummy.cpp; sourceTree = "<group>"; };
 		40B037E02E951D2B0060EAD4 /* Attributes.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Attributes.hpp; sourceTree = "<group>"; };
 		40B9AEC42E991009000F05ED /* HWInterface.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HWInterface.hpp; sourceTree = "<group>"; };
 		40B9AEC82E9911A6000F05ED /* HWInterface.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HWInterface.cpp; sourceTree = "<group>"; };
@@ -341,6 +345,8 @@
 				40FC5FD329BF995000367F9D /* X6000FB.cpp */,
 				4098F4EA302B9B6F00B475DE /* AmdAtomVramInfoIGP.hpp */,
 				4098F4EB302B9B6F00B475DE /* AmdAtomVramInfoIGP.cpp */,
+				40AF79753030BCC00005EFAB /* AmdAtomPspDirectoryDummy.hpp */,
+				40AF79763030BCC00005EFAB /* AmdAtomPspDirectoryDummy.cpp */,
 			);
 			path = NootedRed;
 			sourceTree = "<group>";
@@ -610,6 +616,7 @@
 				4012096C2CE2FD96006E2812 /* DPCD.hpp in Headers */,
 				408B3DDC2CDFA44100CAE5D2 /* RavenIPOffset.hpp in Headers */,
 				40FC5FDE29BF996900367F9D /* HWLibs.hpp in Headers */,
+				40AF79783030BCC00005EFAB /* AmdAtomPspDirectoryDummy.hpp in Headers */,
 				40FD2AD02E6B6296007C2290 /* Packet3.hpp in Headers */,
 				409B6F982E8ABB320046F619 /* OSSSYS_4.hpp in Headers */,
 				4098C7AA2EAE42DA00D9D1E0 /* New.hpp in Headers */,
@@ -762,6 +769,7 @@
 				4054309B2E6DF772000AEB46 /* AMDGFX9DCN2Display.cpp in Sources */,
 				4059A1132E6DECA600F20858 /* DriverInjector.cpp in Sources */,
 				40FC5FD929BF995E00367F9D /* X5000.cpp in Sources */,
+				40AF79773030BCC00005EFAB /* AmdAtomPspDirectoryDummy.cpp in Sources */,
 				CEA03B5E20EE825A00BA842F /* NRed.cpp in Sources */,
 				1C748C2D1C21952C0024EED2 /* Plugin.cpp in Sources */,
 				CE405ED91E4A080700AA0B3D /* plugin_start.cpp in Sources */,
