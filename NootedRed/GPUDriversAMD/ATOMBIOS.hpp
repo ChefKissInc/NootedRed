@@ -128,7 +128,7 @@ enum ATOMVRAMType : UInt8
     kATOMVRAMTypeDDR4    = 0xF1,
 };
 
-struct ATOMDispObjPathV2
+struct ATOMDispObjPath
 {
     UInt16 dispObjId;
     UInt16 dispRecordOff;
@@ -141,10 +141,10 @@ struct ATOMDispObjPathV2
     UInt8  _reserved;
 };
 
-struct DispObjInfoTableV1_4 : public ATOMCommonTableHeader
+struct DispObjInfoTableV1 : public ATOMCommonTableHeader
 {
     UInt16            supportedDevices;
     UInt8             pathCount;
     UInt8             _reserved;
-    ATOMDispObjPathV2 paths[];
+    ATOMDispObjPath paths[];
 };

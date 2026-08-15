@@ -599,8 +599,8 @@ UInt32 X6000FB::wrapGetNumberOfConnectors(void* const self)
 {
     if (!singleton().fixedVBIOS) {
         singleton().fixedVBIOS = true;
-        const auto objInfo     = getMember<DispObjInfoTableV1_4*>(self, 0x28);
-        if (objInfo->formatRev == 1 && (objInfo->contentRev == 4 || objInfo->contentRev == 5)) {
+        const auto objInfo     = getMember<DispObjInfoTableV1*>(self, 0x28);
+        if (objInfo->formatRev == 1) {
             DBGLOG("X6000FB", "getNumberOfConnectors: Fixing VBIOS connectors");
             const auto n = objInfo->pathCount;
             for (size_t i = 0, j = 0; i < n; i++) {
