@@ -279,17 +279,15 @@ void X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_address_t s
             kCreatePspDirectoryCallPatternJumpInstOff};
         PANIC_COND(!createPspDirectoryRequest.route(patcher, id, slide, size), "X6000FB",
                    "Failed to route createPspDirectory");
-    }
 
-    if (currentKernelVersion() >= MACOS_11 && currentKernelVersion() <= MACOS_12_X) {
-        PenguinWizardry::PatternRouteRequest getTriageHardwareDataRequest{
-            "__ZN38AMDRadeonX6000_AmdRadeonControllerNavi21getTriageHardwareDataEjP12_AMD_TRIAGE_",
-            NRed::singleton().getAttributes().isRenoir() ? getTriageHardwareDataRN : getTriageHardwareDataRV};
-        PANIC_COND(!getTriageHardwareDataRequest.route(patcher, id, slide, size), "X6000FB",
-                   "Failed to route getTriageHardwareData");
-    }
+        if (currentKernelVersion() <= MACOS_12_X) {
+            PenguinWizardry::PatternRouteRequest getTriageHardwareDataRequest{
+                "__ZN38AMDRadeonX6000_AmdRadeonControllerNavi21getTriageHardwareDataEjP12_AMD_TRIAGE_",
+                NRed::singleton().getAttributes().isRenoir() ? getTriageHardwareDataRN : getTriageHardwareDataRV};
+            PANIC_COND(!getTriageHardwareDataRequest.route(patcher, id, slide, size), "X6000FB",
+                       "Failed to route getTriageHardwareData");
+        }
 
-    if (currentKernelVersion() >= MACOS_11) {
         KernelPatcher::RouteRequest request{
             "__ZN32AMDRadeonX6000_AmdRegisterAccess20createRegisterAccessERNS_8InitDataE", wrapCreateRegisterAccess,
             this->orgCreateRegisterAccess};
@@ -524,17 +522,15 @@ static const AmdAsicBrandingTableEntry renoirBrandingTable[] = {
     {"Radeon RX", "Renoir Graphics"},
 };
 
-const AmdAsicBrandingTableEntry* X6000FB::getGpuBrandingNameListRaven(const void* const) { return ravenBrandingTable; }
+const AmdAsicBrandingTableEntry* X6000FB::getGpuBrandingNameListRaven(const void*) { return ravenBrandingTable; }
 
-const AmdAsicBrandingTableEntry* X6000FB::getGpuBrandingNameListPicasso(const void* const)
-{ return picassoBrandingTable; }
+const AmdAsicBrandingTableEntry* X6000FB::getGpuBrandingNameListPicasso(const void*) { return picassoBrandingTable; }
 
-const AmdAsicBrandingTableEntry* X6000FB::getGpuBrandingNameListRenoir(const void* const)
-{ return renoirBrandingTable; }
+const AmdAsicBrandingTableEntry* X6000FB::getGpuBrandingNameListRenoir(const void*) { return renoirBrandingTable; }
 
 IOReturn X6000FB::dummyIOReturnSuccess() { return kIOReturnSuccess; }
 
-IOReturn X6000FB::getTriageHardwareDataRV(void* const, const UInt32 fbIndex, void* const triageData)
+IOReturn X6000FB::getTriageHardwareDataRV(void*, const UInt32 fbIndex, void* const triageData)
 {
     auto& bufferPointer = getMember<char*>(triageData, 0x0);
     auto& bufferSize    = getMember<UInt32>(triageData, 0x8);
@@ -558,7 +554,7 @@ IOReturn X6000FB::getTriageHardwareDataRV(void* const, const UInt32 fbIndex, voi
     return kIOReturnSuccess;
 }
 
-IOReturn X6000FB::getTriageHardwareDataRN(void* const, const UInt32 fbIndex, void* const triageData)
+IOReturn X6000FB::getTriageHardwareDataRN(void*, const UInt32 fbIndex, void* const triageData)
 {
     auto& bufferPointer = getMember<char*>(triageData, 0x0);
     auto& bufferSize    = getMember<UInt32>(triageData, 0x8);
@@ -582,7 +578,7 @@ IOReturn X6000FB::getTriageHardwareDataRN(void* const, const UInt32 fbIndex, voi
     return kIOReturnSuccess;
 }
 
-UInt32 X6000FB::wrapControllerPowerUp(void* self)
+UInt32 X6000FB::wrapControllerPowerUp(void* const self)
 {
     auto& m_flags  = getMember<UInt8>(self, 0x5F18);
     auto  send     = (m_flags & 2) == 0;
@@ -592,9 +588,9 @@ UInt32 X6000FB::wrapControllerPowerUp(void* self)
     return ret;
 }
 
-void X6000FB::wrapDpReceiverPowerCtrl(void* link, bool power_on)
+void X6000FB::wrapDpReceiverPowerCtrl(void* const link, const bool powerOn)
 {
-    FunctionCast(wrapDpReceiverPowerCtrl, singleton().orgDpReceiverPowerCtrl)(link, power_on);
+    FunctionCast(wrapDpReceiverPowerCtrl, singleton().orgDpReceiverPowerCtrl)(link, powerOn);
     IOSleep(250);
 }
 
@@ -654,8 +650,7 @@ class AppleACPIPlatformExpert : IOACPIPlatformExpert
     friend class X6000FB;
 };
 
-size_t X6000FB::readVfctAtomBiosImage(void* const self, uint8_t* const buffer, const size_t bufferSize,
-                                      const bool strict)
+size_t X6000FB::readVfctAtomBiosImage(void* const self, UInt8* const buffer, const size_t bufferSize, const bool strict)
 {
     const auto pciDevice = getMember<IOPCIDevice*>(self, 0x28);
 
@@ -711,7 +706,7 @@ size_t X6000FB::readVfctAtomBiosImage(void* const self, uint8_t* const buffer, c
     return 0;
 }
 
-size_t X6000FB::readVramAtomBiosImage(void* const self, uint8_t* const buffer, const size_t bufferSize)
+size_t X6000FB::readVramAtomBiosImage(void* const self, UInt8* const buffer, const size_t bufferSize)
 {
     const auto pciDevice = getMember<IOPCIDevice*>(self, 0x28);
 
@@ -740,7 +735,7 @@ size_t X6000FB::readVramAtomBiosImage(void* const self, uint8_t* const buffer, c
 // TODO: See `amdgpu_device_need_post`, `amdgpu_get_bios_dgpu`, `amdgpu_get_bios_apu`.
 IOReturn X6000FB::readAtomBios(void* const self)
 {
-    auto& biosImage = getMember<uint8_t[0x10000]>(self, 0x48);
+    auto& biosImage = getMember<UInt8[0x10000]>(self, 0x48);
     auto  size      = singleton().readEfiAtomBiosImage(self, biosImage, sizeof(biosImage));
     if (size == 0) [[likely]] {
         size = readVfctAtomBiosImage(self, biosImage, sizeof(biosImage));

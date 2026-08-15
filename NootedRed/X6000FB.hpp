@@ -17,8 +17,8 @@ class X6000FB
     using mapMemorySubRange_t   = IOReturn(void* self, AmdReservedMemorySelector selector, size_t atOffset,
                                            size_t withSize, IOOptionBits andAttributes);
     using messageAccelerator_t  = IOReturn(void* self, UInt32 requestType, void* arg2, void* arg3, void* arg4);
-    using readBiosImage_t       = size_t(const void* self, uint8_t* buffer, size_t bufferSize);
-    using validateBiosImage_t   = bool(const void* self, uint8_t* buffer, size_t bufferSize);
+    using readBiosImage_t       = size_t(const void* self, UInt8* buffer, size_t bufferSize);
+    using validateBiosImage_t   = bool(const void* self, UInt8* buffer, size_t bufferSize);
 
     static constexpr UInt32 IOFBRequestControllerEnabled = 0x1B;
 
@@ -56,13 +56,13 @@ private:
     static IOReturn                         dummyIOReturnSuccess();
     static IOReturn                         getTriageHardwareDataRV(void* self, UInt32 fbIndex, void* triageData);
     static IOReturn                         getTriageHardwareDataRN(void* self, UInt32 fbIndex, void* triageData);
-    static void                             wrapDpReceiverPowerCtrl(void* link, bool power_on);
+    static void                             wrapDpReceiverPowerCtrl(void* link, bool powerOn);
     static UInt32                           wrapControllerPowerUp(void* self);
     static void*                            wrapCreateObjectInfo(void* helper, UInt32 tableOffset);
     static AmdAtomVramInfo*                 wrapCreateVramInfo(AmdAtomFwHelper* biosHelper, UInt32 tableOffset);
     static IOReturn wrapGetVendorInfo(const void* self, AGDCVendorInfo_t* vendorInfo, size_t sizeofVendorInfo);
-    static size_t   readVfctAtomBiosImage(void* self, uint8_t* buffer, size_t bufferSize, bool strict = true);
-    static size_t   readVramAtomBiosImage(void* self, uint8_t* buffer, size_t bufferSize);
+    static size_t   readVfctAtomBiosImage(void* self, UInt8* buffer, size_t bufferSize, bool strict = true);
+    static size_t   readVramAtomBiosImage(void* self, UInt8* buffer, size_t bufferSize);
     static IOReturn readAtomBios(void* self);
     static AmdAtomPspDirectory* wrapCreatePspDirectory(AmdAtomFwHelper* biosHelper, UInt32 tableOffset);
 };
