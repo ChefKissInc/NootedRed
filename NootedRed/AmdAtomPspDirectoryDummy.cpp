@@ -1,10 +1,7 @@
+// AmdAtomPspDirectory Dummy Implementation
 //
-//  AmdAtomPspDirectoryDummy.cpp
-//  NootedRed
-//
-//  Created by Visual on 15/8/26.
-//  Copyright © 2026 ChefKiss. All rights reserved.
-//
+// Copyright © 2026 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5.
+// See LICENSE for details.
 
 #include "AmdAtomPspDirectoryDummy.hpp"
 
