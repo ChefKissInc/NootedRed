@@ -53,6 +53,12 @@ static const UInt8      kIRQMGRWriteRegisterCallPatternMask[]      = {0xFF, 0xFF
                                                                       0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00};
 static constexpr size_t kIRQMGRWriteRegisterCallPatternJumpInstOff = 10;
 
+static const UInt8      kIRQMGRReadRegisterCallPattern[]          = {0xBE, 0x4F, 0x0E, 0x00, 0x00, 0x4C, 0x89,
+                                                                     0xF7, 0xE8, 0x00, 0x00, 0x00, 0x00};
+static const UInt8      kIRQMGRReadRegisterCallPatternMask[]      = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                                                                     0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00};
+static constexpr size_t kIRQMGRReadRegisterCallPatternJumpInstOff = 8;
+
 static const UInt8 kDpReceiverPowerCtrlPattern[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56, 0x41, 0x54, 0x53,
                                                     0x48, 0x83, 0xEC, 0x10, 0x89, 0xF3, 0xB0, 0x02, 0x28, 0xD8};
 static const UInt8 kDpReceiverPowerCtrlPattern1404[] = {0x55, 0x48, 0x89, 0xE5, 0x41, 0x57, 0x41, 0x56,
@@ -301,6 +307,11 @@ void X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_address_t s
                                                                     kIRQMGRWriteRegisterCallPatternJumpInstOff};
         PANIC_COND(!jumpPatternRequest.route(patcher, id, slide, size), "X6000FB",
                    "Failed to route IRQMGR_WriteRegister");
+        PenguinWizardry::JumpPatternSolveRequest jumpPatternSolveRequest{
+            "_IRQMGR_ReadRegister", this->irqMGRReadRegister, kIRQMGRReadRegisterCallPattern,
+            kIRQMGRReadRegisterCallPatternMask, kIRQMGRReadRegisterCallPatternJumpInstOff};
+        PANIC_COND(!jumpPatternSolveRequest.solve(patcher, id, slide, size), "X6000FB",
+                   "Failed to solve IRQMGR_ReadRegister");
     }
 
     const PenguinWizardry::MaskedLookupPatch patch{&kextRadeonX6000Framebuffer, kPopulateDeviceInfoOriginal,
@@ -424,11 +435,20 @@ void X6000FB::processKext(KernelPatcher& patcher, size_t id, mach_vm_address_t s
 
 UInt16 X6000FB::getEnumeratedRevision() { return NRed::singleton().getEnumRevision(); }
 
-bool X6000FB::wrapIH40IVRingInitHardware(void* const ctx, void* const param2)
+enum IRQMgrIVRingMemoryType
 {
-    auto ret = FunctionCast(wrapIH40IVRingInitHardware, singleton().orgIH40IVRingInitHardware)(ctx, param2);
-    NRed::singleton().writeReg32(IH_CHICKEN, NRed::singleton().readReg32(IH_CHICKEN) | IH_MC_SPACE_GPA_ENABLE);
-    return ret;
+    IRQMgrIVRingMemoryTypeGART        = 0x0,
+    IRQMgrIVRingMemoryTypeSysPhysical = 0x1,
+    IRQMgrIVRingMemoryTypeFB          = 0x2,
+};
+
+bool X6000FB::wrapIH40IVRingInitHardware(void* const ctx, void* const ring)
+{
+    if (getMember<IRQMgrIVRingMemoryType>(ring, 0x24) == IRQMgrIVRingMemoryTypeSysPhysical) {
+        singleton().orgIRQMGRWriteRegister(ctx, IH_CHICKEN,
+                                           singleton().irqMGRReadRegister(ctx, IH_CHICKEN) | IH_MC_SPACE_GPA_ENABLE);
+    }
+    return FunctionCast(wrapIH40IVRingInitHardware, singleton().orgIH40IVRingInitHardware)(ctx, ring);
 }
 
 void X6000FB::wrapIRQMGRWriteRegister(void* const ctx, const UInt64 off, UInt32 value)
@@ -438,7 +458,7 @@ void X6000FB::wrapIRQMGRWriteRegister(void* const ctx, const UInt64 off, UInt32 
             value |= getBit(IH_IH_BUFFER_MEM_CLK_SOFT_OVERRIDE_SHIFT);
         }
     }
-    FunctionCast(wrapIRQMGRWriteRegister, singleton().orgIRQMGRWriteRegister)(ctx, off, value);
+    singleton().orgIRQMGRWriteRegister(ctx, off, value);
 }
 
 void* X6000FB::wrapCreateRegisterAccess(void* const initData)

@@ -17,7 +17,8 @@ class X6000FB
     static constexpr UInt32 IOFBRequestControllerEnabled = 0x1B;
 
     mach_vm_address_t   orgIH40IVRingInitHardware{0};
-    mach_vm_address_t   orgIRQMGRWriteRegister{0};
+    void                (*orgIRQMGRWriteRegister)(void* ctx, UInt64 off, UInt32 value){nullptr};
+    UInt32              (*irqMGRReadRegister)(void* ctx, UInt64 off){nullptr};
     mach_vm_address_t   orgCreateRegisterAccess{0};
     mapMemorySubRange_t mapMemorySubRange{nullptr};
     mach_vm_address_t   orgDpReceiverPowerCtrl{0};
@@ -35,7 +36,7 @@ public:
 private:
     static UInt16                           getEnumeratedRevision();
     static IOReturn                         wrapPopulateVramInfo(AmdAtomVramInfo* self, AtomFirmwareInfo& fwInfo);
-    static bool                             wrapIH40IVRingInitHardware(void* ctx, void* param2);
+    static bool                             wrapIH40IVRingInitHardware(void* ctx, void* ring);
     static void                             wrapIRQMGRWriteRegister(void* ctx, UInt64 index, UInt32 value);
     static void*                            wrapCreateRegisterAccess(void* initData);
     static IOReturn                         initialiseReservedVRAM(void* self);

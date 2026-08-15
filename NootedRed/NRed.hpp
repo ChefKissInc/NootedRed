@@ -62,7 +62,6 @@ public:
 
     void   setProp32(const char* key, UInt32 value) const;    // TODO: Remove!
     UInt32 readReg32(UInt32 reg) const;                       // TODO: Remove!
-    void   writeReg32(UInt32 reg, const UInt32 val) const;    // TODO: Remove!
 
 private:
     OSData* copyVBIOSFromVFCT(bool strict);    // TODO: Remove!

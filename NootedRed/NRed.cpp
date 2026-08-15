@@ -207,15 +207,6 @@ UInt32 NRed::readReg32(const UInt32 reg) const
     }
 }
 
-void NRed::writeReg32(const UInt32 reg, const UInt32 val) const
-{
-    if ((reg * sizeof(UInt32)) < this->rmmio->getLength()) { this->rmmioPtr[reg] = val; }
-    else {
-        this->rmmioPtr[PCIE_INDEX2] = reg;
-        this->rmmioPtr[PCIE_DATA2]  = val;
-    }
-}
-
 static bool checkAtomBios(const UInt8* const bios, const size_t size)
 {
     if (size < 0x49) {
