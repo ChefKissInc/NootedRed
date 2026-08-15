@@ -369,6 +369,7 @@ static const UInt8      kSmu90SendMessageWithParameterCallPattern[]          = {
 static const UInt8      kSmu90SendMessageWithParameterCallPatternMask[]      = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
                                                                                 0xFF, 0x00, 0x00, 0x00, 0x00};
 static constexpr size_t kSmu90SendMessageWithParameterCallPatternJumpInstOff = 6;
+
 static const UInt8      kSdmaCgsReadRegisterCallPattern[]          = {0xBE, 0x80, 0x00, 0x00, 0x00, 0x31, 0xD2, 0x44,
                                                                       0x89, 0xF0, 0xE8, 0x00, 0x00, 0x00, 0x00};
 static const UInt8      kSdmaCgsReadRegisterCallPatternMask[]      = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -691,7 +692,6 @@ void X5000HWLibs::processKext(KernelPatcher& patcher, const size_t id, const mac
         {"_smu_init_function_pointer_list", wrapSmuInitFunctionPointerList, this->orgSmuInitFunctionPointerList,
          kSmuInitFunctionPointerListCallPattern, kSmuInitFunctionPointerListCallPatternMask,
          kSmuInitFunctionPointerListCallPatternJumpInstOff},
-
     };
     PANIC_COND(!PenguinWizardry::JumpPatternRouteRequest::routeAll(patcher, id, fwRequests, slide, size), "HWLibs",
                "Failed to route FW-related functions");
