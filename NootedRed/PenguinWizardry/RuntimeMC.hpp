@@ -53,11 +53,9 @@ namespace PenguinWizardry
     {
         friend class RuntimeMCManager;
 
-        static UInt32 vftSize() { return 0x1A; }
-
     protected:
-        RuntimeVFT<vftSize> vft;
-        OSMetaClass*        mc{nullptr};
+        RuntimeVFT<> vft;
+        OSMetaClass* mc{nullptr};
 
         virtual ~RuntimeMCBase();
         virtual UInt32      getExpansionSize() const = 0;

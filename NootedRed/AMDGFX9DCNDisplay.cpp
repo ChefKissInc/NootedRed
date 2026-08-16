@@ -55,6 +55,9 @@ static void   SET_HUBPREQ_FLIP_CONTROL_FLIP_TYPE(UInt32& target, bool v)
     target |= static_cast<UInt32>(v) << 1;
 }
 
+void AMDRadeonX5000_AMDGFX9DCNDisplay::initDCNRegOffs()
+{ vft().getExpanded<void(AMDRadeonX5000_AMDGFX9DCNDisplay*)>(this, 0)(this); }
+
 void AMDRadeonX5000_AMDGFX9DCNDisplay::initialiseRegisters(AMDRadeonX5000_AMDHWDisplay* const _self)
 {
     const auto self      = static_cast<AMDRadeonX5000_AMDGFX9DCNDisplay*>(_self);
@@ -472,7 +475,7 @@ UInt32 AMDRadeonX5000_AMDGFX9DCNDisplay::getNumberOfSupportedDisplays(AMDRadeonX
 
 void AMDRadeonX5000_AMDGFX9DCNDisplay::populateVFT(VFT& vft)
 {
-    vft.init(AMDRadeonX5000_AMDHWDisplay::vfuncs());
+    vft.init(AMDRadeonX5000_AMDHWDisplay::vft());
 
     const auto vftInner                                       = static_cast<void*>(vft.inner());
     constants.vftInitializeRegisters(vftInner)                = initialiseRegisters;

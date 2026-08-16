@@ -9,7 +9,7 @@
 
 class AMDRadeonX5000_AMDGFX9DCN2Display : public AMDRadeonX5000_AMDGFX9DCNDisplay
 {
-    static RuntimeVFT<vftCount, 1> vft;
+    static VFT vft;
 
     static void Constructor(AMDRadeonX5000_AMDGFX9DCN2Display* self, const OSMetaClass* metaClass);
 

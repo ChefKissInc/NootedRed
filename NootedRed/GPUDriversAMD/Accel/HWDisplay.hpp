@@ -10,6 +10,7 @@
 #include <Headers/kern_patcher.hpp>
 #include <IOKit/graphics/IOFramebuffer.h>
 #include <PenguinWizardry/KernelVersion.hpp>
+#include <PenguinWizardry/RuntimeVFT.hpp>
 
 enum struct AMDFlipOption : UInt8
 {
@@ -331,7 +332,7 @@ public:
 private:
     struct Constants
     {
-        void**                                      vfuncs{nullptr};
+        RuntimeVFTBase                              vft;
         bool                                        (*init)(AMDRadeonX5000_AMDHWDisplay&, void*, void*){nullptr};
         mach_vm_address_t                           constructor{0};
         ObjectField<UInt32[MAX_SUPPORTED_DISPLAYS]> scalerFlags;
@@ -363,7 +364,6 @@ private:
         ObjectField<bool (*)(AMDRadeonX5000_AMDHWDisplay*, UInt32)>  vftIsFlipPending;
         ObjectField<AMDFlipOption (*)(AMDRadeonX5000_AMDHWDisplay*)> vftGetFlipOption;
         ObjectField<UInt32 (*)(AMDRadeonX5000_AMDHWDisplay*)>        vftGetNumberOfSupportedDisplays;
-        UInt32                                                       vftCount{0};
 
         Constants()
         {
@@ -424,25 +424,20 @@ private:
                 this->isDCN                  = 0x518;
                 this->wsaaAttributes         = 0x570;
                 this->vftGetMirroredDisplays = 0x168;
-                this->vftCount               = 0x4C;
             }
             else {
                 this->isDCN                  = 0x47DC;
                 this->scalerFlags            = 0x47C4;
                 this->vftGetMirroredDisplays = 0x198;
-                if (currentKernelVersion() >= MACOS_11) {
-                    this->wsaaAttributes = 0x4810;
-                    this->vftCount       = 0x5E;
-                }
+                if (currentKernelVersion() >= MACOS_11) { this->wsaaAttributes = 0x4810; }
                 else {
                     this->wsaaAttributes = 0x47E8;
-                    this->vftCount       = currentKernelVersion().majorMatches(MACOS_10_15) ? 0x5D : 0x61;
                 }
             }
         }
     };
 
-    auto& vft() { return getMember<void*>(this, 0); }
+    auto& vf() { return getMember<void*>(this, 0); }
 
 protected:
     static Constants constants;
@@ -475,24 +470,23 @@ public:
     }
     auto& wsaaAttributes() { return constants.wsaaAttributes(this); }
     auto  getMirroredDisplays(const UInt32 fbIndex, UInt32* const outBuffer)
-    { return constants.vftGetMirroredDisplays(this->vft())(this, fbIndex, outBuffer); }
+    { return constants.vftGetMirroredDisplays(this->vf())(this, fbIndex, outBuffer); }
     auto getDisplayModeViewportSpecificInfo(const UInt32 fbIndex, UInt32* const viewportYStart,
                                             UInt32* const viewportHeight)
     {
-        return constants.vftGetDisplayModeViewportSpecificInfo(this->vft())(this, fbIndex, viewportYStart,
-                                                                            viewportHeight);
+        return constants.vftGetDisplayModeViewportSpecificInfo(this->vf())(this, fbIndex, viewportYStart,
+                                                                           viewportHeight);
     }
     auto getPixelMode(const CRTHWDepth depth, const CRTHWFormat format)
-    { return constants.vftGetPixelMode(this->vft())(this, depth, format); }
+    { return constants.vftGetPixelMode(this->vf())(this, depth, format); }
     auto getPixelFormat(const ATIPixelMode pixelMode)
-    { return constants.vftGetPixelFormat(this->vft())(this, pixelMode); }
+    { return constants.vftGetPixelFormat(this->vf())(this, pixelMode); }
     auto isDisplayInterlaceEnabled(const UInt32 fbIndex)
-    { return constants.vftIsDisplayInterlaceEnabled(this->vft())(this, fbIndex); }
+    { return constants.vftIsDisplayInterlaceEnabled(this->vf())(this, fbIndex); }
     auto init(void* const hwInterface, void* const fbParams) { return constants.init(*this, hwInterface, fbParams); }
 
     static void resolve(KernelPatcher& patcher, size_t id, mach_vm_address_t slide, size_t size);
 
-    static auto vfuncs() { return constants.vfuncs; }
-    static auto constructor() { return constants.constructor; }
-    static auto vftCount() { return constants.vftCount; }
+    static auto        constructor() { return constants.constructor; }
+    static const auto& vft() { return constants.vft; }
 };

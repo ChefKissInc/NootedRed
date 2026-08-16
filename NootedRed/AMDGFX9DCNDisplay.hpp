@@ -12,11 +12,7 @@
 
 class AMDRadeonX5000_AMDGFX9DCNDisplay : public AMDRadeonX5000_AMDHWDisplay
 {
-    void initDCNRegOffs()
-    {
-        const auto vtable = getMember<void**>(this, 0);
-        reinterpret_cast<void (*)(AMDRadeonX5000_AMDGFX9DCNDisplay*)>(vtable[vftCount()])(this);
-    }
+    void initDCNRegOffs();
 
     static void   initialiseRegisters(AMDRadeonX5000_AMDHWDisplay* _self);
     static void   restoreRegisters(AMDRadeonX5000_AMDHWDisplay* _self);
@@ -87,8 +83,6 @@ class AMDRadeonX5000_AMDGFX9DCNDisplay : public AMDRadeonX5000_AMDHWDisplay
         AMDFlipParam       flipParam;
     };
 
-    using VFT = RuntimeVFT<vftCount, 1>;
-
 protected:
     static constexpr UInt32 MAX_SUPPORTED_DISPLAYS_RV = 4;
 
@@ -101,6 +95,8 @@ protected:
     };
 
     PWDeclareAbstractRuntimeMCWithExpansion(AMDRadeonX5000_AMDGFX9DCNDisplay, Expansion)
+
+    using VFT = RuntimeVFT<1>;
 
     static void populateVFT(VFT& vft);
 

@@ -12,21 +12,20 @@
 #include <libkern/c++/OSMetaClass.h>
 #include <mach/i386/vm_types.h>
 
-PenguinWizardry::RuntimeMCBase::~RuntimeMCBase()
-{
-    MetaClassDestructor(this->mc);
-    // intentional leak, meta classes don't get deallocated
-}
+PenguinWizardry::RuntimeMCBase::~RuntimeMCBase() { MetaClassDestructor(this->mc); }
 
 static PenguinWizardry::RuntimeMCManager moduleInstance;
 
 PenguinWizardry::RuntimeMCManager& PenguinWizardry::RuntimeMCManager::singleton() { return moduleInstance; }
+
+static RuntimeVFTBase mcVft;
 
 void PenguinWizardry::RuntimeMCManager::processPatcher(KernelPatcher& patcher)
 {
     KernelPatcher::RouteRequest request{"__ZN11OSMetaClass11postModLoadEPv", wrapPostModLoad, this->orgPostModLoad};
     PANIC_COND(!patcher.routeMultiple(KernelPatcher::KernelID, &request, 1), "RuntimeMC",
                "Failed to route `postModLoad`");
+    mcVft.init(MetaClassVT + 2);
 }
 
 void PenguinWizardry::RuntimeMCManager::registerPending(Pending* pending)
@@ -46,7 +45,7 @@ void PenguinWizardry::RuntimeMCManager::registerPending(Pending* pending)
 void PenguinWizardry::RuntimeMCManager::registerMC(RuntimeMCBase& rtMC, const char* const kext,
                                                    const OSMetaClass* const super)
 {
-    rtMC.vft.init(MetaClassVT + 2);
+    rtMC.vft.init(mcVft);
     rtMC.populateVFT();
     auto* pending = new Pending;
     assert(pending != nullptr);
