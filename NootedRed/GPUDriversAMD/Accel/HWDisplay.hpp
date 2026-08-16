@@ -19,11 +19,18 @@ enum struct AMDFlipOption : UInt8
     DCN3,
 };
 
-struct AMDFlipRegister
+typedef struct _AMD_SET_REG_ENTRY_
 {
-    UInt32 value;
     UInt32 offset;
-};
+    UInt32 value;
+} AMD_SET_REG_ENTRY;
+
+typedef struct _AMD_SET_REG_
+{
+    UInt32            numEntries;
+    UInt32            field_4;    // ???? seemingly unused
+    AMD_SET_REG_ENTRY entries[11];
+} AMD_SET_REG;
 
 enum struct AMDHWSurfaceFlipType
 {
@@ -123,12 +130,7 @@ struct AMDHWSurfaceDCCParams
 
 union AMDFlipParam
 {
-    struct
-    {
-        UInt32          numFlipRegister;
-        UInt32          field_4;    // ???? seemingly unused
-        AMDFlipRegister flipRegisters[11];
-    } reg;    // AMDFlipOption::REGISTERS
+    AMD_SET_REG reg;    // AMDFlipOption::REGISTERS
     struct
     {
         UInt64                  surfaceAddr;
