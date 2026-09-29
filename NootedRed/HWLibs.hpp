@@ -53,6 +53,7 @@ class X5000HWLibs
     CAILResult (*smuCosWaitFor)(void* ctx, CosWaitForFunc* func, void* handle, UInt32 duration){nullptr};
     UInt32     (*smuCgsReadRegister)(void* ctx, UInt32 regOff, UInt32 blockInstance, CAILHWBlock block,
                                      UInt32 regOffBase){nullptr};
+    UInt32     (*smuCgsReadIndirectRegister)(void* ctx, UInt32 regOff, CAILHWBlock block){nullptr};
     void   (*smuCgsWriteRegister)(void* ctx, UInt32 regOff, UInt32 blockInstance, UInt32 regValue, CAILHWBlock block,
                                   UInt32 regOffBase){nullptr};
     UInt32 (*sdmaCgsReadRegister)(void* ctx, UInt32 regOff, UInt32 blockInstance, CAILHWBlock block){nullptr};

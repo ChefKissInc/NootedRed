@@ -629,6 +629,8 @@ void X5000HWLibs::processKext(KernelPatcher& patcher, const size_t id, const mac
                        reinterpret_cast<mach_vm_address_t>(this->smu90SendMessageWithParameter), PAGE_SIZE),
                    "HWLibs", "Failed to solve SMU COS/CGS functions");
     }
+    this->smuCgsReadIndirectRegister = patcher.solveSymbol<decltype(this->smuCgsReadIndirectRegister)>(
+        id, "_smu_cgs_read_indirect_register", slide, size, true);
 
     if (currentKernelVersion() <= MACOS_10_15_X) {
         PenguinWizardry::PatternRouteRequest request{"__ZN16AmdTtlFwServices7getIpFwEjPKcP10_TtlFwInfo", wrapGetIpFw,
@@ -1044,7 +1046,13 @@ CAILResult X5000HWLibs::smu10InternalHwInit(void* const ctx) { return smu10Power
 
 bool X5000HWLibs::smu12IsFwLoaded(void* const ctx)
 {
-    return (singleton().smuCgsReadRegister(ctx, MP1_FIRMWARE_FLAGS, 0, kCAILHWBlockMP1, MP1_PUBLIC)
+    if (singleton().smuCgsReadIndirectRegister == nullptr) [[likely]] {
+        return (singleton().smuCgsReadRegister(ctx, MP1_FIRMWARE_FLAGS, 0, kCAILHWBlockMP1, MP1_PUBLIC)
+                & MP1_FIRMWARE_FLAGS_INTERRUPTS_ENABLED)
+               != 0;
+    }
+
+    return (singleton().smuCgsReadIndirectRegister(ctx, MP1_PUBLIC | MP1_FIRMWARE_FLAGS, kCAILHWBlockMP1)
             & MP1_FIRMWARE_FLAGS_INTERRUPTS_ENABLED)
            != 0;
 }
