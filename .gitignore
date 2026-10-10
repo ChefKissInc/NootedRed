@@ -1,10 +1,14 @@
+### macOS
+# Finder metadata
 .DS_Store
-.AppleDouble
-.LSOverride
-Icon
 
-
+# Thumbnails
 ._*
+
+# Custom folder icons
+Icon
+
+# Volume root files
 .DocumentRevisions-V100
 .fseventsd
 .Spotlight-V100
@@ -12,29 +16,46 @@ Icon
 .Trashes
 .VolumeIcon.icns
 .com.apple.timemachine.donotpresent
-.AppleDB
-.AppleDesktop
-Network Trash Folder
-Temporary Items
-.apdisk
-xcuserdata/
-*.xcscmblueprint
-*.xccheckout
+
+### Windows
+# Windows thumbnail cache files
+Thumbs.db
+
+# Folder config file
+[Dd]esktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows shortcuts
+*.lnk
+
+### Linux
+# Backup files
+*~
+
+# Temporary files from deleted open files
+.fuse_hidden*
+
+# KDE directory preferences
+.directory
+
+# Linux trash folder
+.Trash-*
+
+# NFS temporary files
+.nfs*
+
+### Xmake
+# Config cache
+.xmake/
+
+# Build folder
 build/
-*.moved-aside
-*.pbxuser
-!default.pbxuser
-*.mode1v3
-!default.mode1v3
-*.mode2v3
-!default.mode2v3
-*.perspectivev3
-!default.perspectivev3
-/*.gcno
-*.xcodeproj/*
-!*.xcodeproj/project.pbxproj
-!*.xcodeproj/xcshareddata/
-!*.xcworkspace/contents.xcworkspacedata
-**/xcshareddata/WorkspaceSettings.xcsettings
+
+# Compile commands for LSP
+compile_commands.json
+
+### clangd
+# Cache
 .cache/
-clang_analyze/

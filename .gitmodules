@@ -1,6 +1,0 @@
-[submodule "MacKernelSDK"]
-	path = MacKernelSDK
-	url = https://github.com/Acidanthera/MacKernelSDK.git
-[submodule "Lilu"]
-	path = Lilu
-	url = https://github.com/acidanthera/Lilu
