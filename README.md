@@ -1,11 +1,6 @@
 # NootedRed ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/ChefKissInc/NootedRed/main.yml?branch=master&logo=github&style=for-the-badge) [![Release Badge](https://img.shields.io/github/v/release/ChefKissInc/NootedRed?include_prereleases&style=for-the-badge&sort=semver&color=blue)](https://github.com/ChefKissInc/NootedRed/releases) [![Downloads Badge](https://img.shields.io/github/downloads/ChefKissInc/NootedRed/total?style=for-the-badge)](https://github.com/ChefKissInc/NootedRed/releases/latest) ![Written by humans, not AI](https://img.shields.io/badge/written_by_humans-not_ai-blue?style=for-the-badge)
 
 > [!CAUTION]
-> Use of Artificial Intelligence / Large Language Models on this repository, its copies or derived works is explicitly forbidden.
->
-> This includes, but is not limited to, training, analysis, or modification.
-
-> [!CAUTION]
 > Please consider donating: donations help me stay alive and pay costs; if the Hackintosh projects don't receive funding, I will (have to) stop working on them.
 >
 > PayPal or credit/debit card: https://ko-fi.com/chefkiss
@@ -18,15 +13,27 @@
 
 The macOS kernel extension for GPU bug fixes, QoL improvements, and extended hardware support.
 
-“NootedRed” is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement.
+```
+Copyright (C) 2022-2026  ChefKiss
 
-By using this software, you acknowledge that you are solely responsible for how you use it. The “NootedRed” project team is not responsible for any damage, legal issues, data loss, or other consequences arising from its use.
+Licensed under the ChefKiss Open Knowledge License version 1.
 
-The “NootedRed” project is intended for lawful purposes only. Users are responsible for complying with all applicable laws, licenses, and agreements, including copyright, trademark, and End User License Agreements (EULAs).
+This work is licensed to you under the terms of the ChefKiss Open Knowledge
+License, either version 1 of the License, or (at your option) any later
+version published by ChefKiss.
 
-The “NootedRed” project team does not condone or support piracy, copyright infringement, or any illegal activity.
+This work may not be used to train or develop artificial intelligence,
+and may not be used with artificial intelligence in any other way. See
+the ChefKiss Open Knowledge License for details.
 
-The “NootedRed” project is Copyright © 2022-2026 ChefKiss. The “NootedRed” project is licensed under the `Thou Shalt Not Profit License version 1.5`. See `LICENSE`.
+This work is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ChefKiss Open Knowledge License for more details.
+
+You should have received a copy of the ChefKiss Open Knowledge License
+along with this work.  If not, see https://git.chefkiss.dev/ChefKiss/OpenKnowledge/raw/branch/master/LICENSE-v1.md.
+```
 
 > [!WARNING]
 > This project is under active research and development; There will be crashes here and there, as the project is glue between the existing buggy AMD drivers.

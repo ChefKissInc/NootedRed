@@ -37,7 +37,7 @@
 		</dict>
 	</dict>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2022-2025 ChefKiss. Licensed under the Thou Shalt Not Profit License version 1.5. See https://github.com/ChefKissInc/NootedRed/LICENSE for details.</string>
+	<string>Copyright © 2022-2025 ChefKiss. Licensed under the ChefKiss Open Knowledge License version 1. You should have received a copy of the ChefKiss Open Knowledge License along with this work. If not, see https://git.chefkiss.dev/ChefKiss/OpenKnowledge/raw/branch/master/LICENSE-v1.md.</string>
 	<key>OSBundleCompatibleVersion</key>
 	<string>$(MODULE_VERSION)</string>
 	<key>OSBundleLibraries</key>
